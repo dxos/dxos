@@ -27,6 +27,8 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
+  '@babylonjs/core': ^7.52.5
+  '@babylonjs/loaders': ^7.54.3
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
@@ -316,6 +318,7 @@ catalog:
   assert: ^2.0.0
   astro: ^5.15.9
   autoprefixer: ^10.4.12
+  babylonjs-gltf2interface: ^7.0.0
   base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
@@ -467,6 +470,7 @@ catalog:
   luxon: ^3.4.4
   madge: 8.0.0
   main-thread-scheduling: ^14.1.1
+  manifold-3d: ^3.0.0
   marked: ^12.0.2
   mathjs: ^14.2.1
   md5-hex: 5.0.0
@@ -491,6 +495,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.6.0
+  papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
   partykit: ^0.0.103
@@ -638,7 +643,7 @@ catalog:
   ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
-  yaml: ^2.7.0
+  yaml: ^2.8.2
   yargs: ~16.2.0
   youtube-caption-extractor: ^1.9.1
   youtube-transcript: ^1.2.1
@@ -726,6 +731,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
+    manifold-3d>esbuild-wasm: '*'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'

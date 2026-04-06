@@ -106,7 +106,7 @@ describe('format', () => {
                 {{#each organizations}}
                   - {{this}}
                 {{/each}}
-                `,
+              `,
               inputs: [
                 {
                   name: 'organizations',

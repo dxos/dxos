@@ -13,6 +13,7 @@ import { AiService, GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AgentService, ToolExecutionServices } from '@dxos/assistant';
+import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
@@ -143,6 +144,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               ),
               Layer.provideMerge(aiServiceLayer),
               Layer.provideMerge(CredentialsService.layerFromDatabase()),
+              Layer.provideMerge(ClientService.fromClient(client)),
               Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
               Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),

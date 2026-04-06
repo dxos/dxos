@@ -32,7 +32,7 @@ export default Capability.makeModule(
             name:
               doc.name ||
               doc.fallbackName ||
-              translations[0]['en-US'][Markdown.Document.typename]['object name placeholder'],
+              translations[0]['en-US'][Markdown.Document.typename]['object-name.placeholder'],
             data: content.content,
             type: 'text/markdown',
           };

@@ -403,6 +403,9 @@
       "path": "packages/plugins/plugin-space/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-spacetime/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
     },
     {

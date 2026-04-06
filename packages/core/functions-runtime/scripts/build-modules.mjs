@@ -7,18 +7,35 @@ import path from 'path';
 import fs from 'node:fs/promises';
 
 const PACKAGES = [
-  // packages to vendor
+  // Effect-TS ecosystem.
   'effect',
   '@effect/platform',
+
+  // Data format parsing & querying.
+  'jsonata',
+  'yaml',
+  'fast-xml-parser',
+  'papaparse',
+
+  // Text & markup processing.
+  'turndown',
+
+  // HTML/DOM parsing (CF Worker friendly).
+  'linkedom',
+
+  // Data processing & utilities.
+  'date-fns',
+
+  // Domain-specific.
   '@automerge/automerge',
   'chess.js',
 
+  // DXOS SDK.
   '@dxos/echo',
   '@dxos/functions',
   '@dxos/functions-runtime-cloudflare',
   '@dxos/ai',
   '@dxos/echo-db',
-  '@dxos/echo',
   '@dxos/log',
   // Note: Causes circular dependency, if you will leave it in package.json.
   // '@dxos/assistant',
@@ -30,12 +47,7 @@ const PACKAGES = [
   '@dxos/operation',
 ];
 
-const IGNORED = [
-  // ignored entry points
-  'effect/.index',
-  'effect/package.json',
-  '@effect/platform/package.json',
-];
+const IGNORED = ['effect/.index', 'effect/package.json', '@effect/platform/package.json'];
 
 const entryPoints = Object.fromEntries(
   (await Promise.all(PACKAGES.map((pkg) => resolveExports(pkg))))

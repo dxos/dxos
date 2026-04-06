@@ -13,18 +13,23 @@ import { isNonNullable } from '@dxos/util';
 import { updateActiveDeck } from './helpers';
 import { DeckCapabilities, type DeckState, type LayoutMode, getMode, isLayoutMode } from '../types';
 
+/**
+ * Transitions between layout modes (multi, solo, solo--fullscreen) or reverts to the previous mode.
+ * Computes which planks become active/inactive and persists the previous mode for revert support.
+ */
 const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = LayoutOperation.SetLayoutMode.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       if ('mode' in input && !isLayoutMode(input.mode)) {
         return;
       }
+
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
       const deck = yield* DeckCapabilities.getDeck();
 
       const computeModeUpdate = (mode: LayoutMode, subject?: string): Partial<DeckState> => {
         const current = deck.solo ? [deck.solo] : deck.active;
-        const next = (mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]).filter(
+        const next = (mode !== 'multi' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]).filter(
           isNonNullable,
         );
 
@@ -32,9 +37,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
         const closed = Array.from(new Set([...deck.inactive.filter((id: string) => !next.includes(id)), ...removed]));
 
         const soloUpdate =
-          mode !== 'deck' && next[0]
+          mode !== 'multi' && next[0]
             ? { solo: next[0] }
-            : mode === 'deck' && deck.solo
+            : mode === 'multi' && deck.solo
               ? { solo: undefined, initialized: true }
               : {};
 
@@ -67,8 +72,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
           yield* Operation.schedule(LayoutOperation.Expose, { subject });
         }
       } else if ('revert' in input) {
-        const last = state.previousMode[state.activeDeck];
-        const deckUpdates = computeModeUpdate(last ?? 'solo');
+        const deckUpdates = computeModeUpdate(state.previousMode[state.activeDeck]);
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       } else {
         log.warn('Invalid layout mode', input);

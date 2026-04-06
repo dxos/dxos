@@ -29,7 +29,7 @@ export default Capability.makeModule(
           const sketch = node.data;
           const canvas = await sketch.canvas.load();
           return {
-            name: sketch.name || translations[0]['en-US'][Sketch.Sketch.typename]['object name placeholder'],
+            name: sketch.name || translations[0]['en-US'][Sketch.Sketch.typename]['object-name.placeholder'],
             data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
             type: 'application/tldraw',
           };

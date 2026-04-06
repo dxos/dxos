@@ -33,13 +33,13 @@ export default Capability.makeModule(
       if (!state.notified && notify) {
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.notice`,
-          title: ['observability toast label', { ns: meta.id }],
-          description: ['observability toast description', { ns: meta.id }],
+          title: ['observability-toast.label', { ns: meta.id }],
+          description: ['observability-toast.description', { ns: meta.id }],
           duration: Infinity,
           icon: 'ph--info--regular',
-          actionLabel: ['observability toast action label', { ns: meta.id }],
-          actionAlt: ['observability toast action alt', { ns: meta.id }],
-          closeLabel: ['observability toast close label', { ns: meta.id }],
+          actionLabel: ['observability-toast-action.label', { ns: meta.id }],
+          actionAlt: ['observability-toast-action.alt', { ns: meta.id }],
+          closeLabel: ['observability-toast-close.label', { ns: meta.id }],
           onAction: () => invokePromise(SettingsOperation.Open, { plugin: meta.id }),
         });
 

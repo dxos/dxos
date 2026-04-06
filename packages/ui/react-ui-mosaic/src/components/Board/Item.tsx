@@ -38,7 +38,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         column != null && model.onItemDelete
           ? [
               createMenuAction('delete-item', () => model.onItemDelete?.(column, data), {
-                label: t('delete menu label'),
+                label: t('delete-menu.label'),
                 icon: 'ph--trash--regular',
               }),
             ]
@@ -80,7 +80,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
-                    label={t('action menu label')}
+                    label={t('action-menu.label')}
                   />
                 </Menu.Trigger>
                 <Menu.Content items={items} />

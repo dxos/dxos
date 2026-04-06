@@ -695,6 +695,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-spacetime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-spotlight/package.json",
           "jsonpath": "$.version"
         },

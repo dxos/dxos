@@ -20,7 +20,7 @@ export const AgentConfig = ({
   const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
-      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent heading')}</h2>
+      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(textValence('error'), 'my-2')}>
           {validationMessage}
@@ -56,12 +56,12 @@ export const AgentConfig = ({
               </Avatar.Label>
             </Avatar.Root>
             {agentStatus === 'created' && (
-              <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
+              <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
                 <IconButton
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
-                  label={t('destroy agent label')}
+                  label={t('destroy-agent.label')}
                   icon='ph--power--regular'
                   iconOnly
                   onClick={onAgentDestroy}
@@ -71,7 +71,7 @@ export const AgentConfig = ({
           </div>
           {agentStatus === 'created' && (
             <p id='devices-panel.create-agent.description' className={mx('text-description', 'my-2')}>
-              {t('agent requested description')}
+              {t('agent-requested.description')}
             </p>
           )}
         </>
@@ -108,7 +108,7 @@ export const AgentConfig = ({
                   }}
                 />
               </p>
-              <p className='text-description'>{t('create agent description')}</p>
+              <p className='text-description'>{t('create-agent.description')}</p>
             </div>
           )}
         </>

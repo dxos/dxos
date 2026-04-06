@@ -29,7 +29,7 @@ export default Capability.makeModule(
             props: output.props,
             index: output.index,
           }),
-          message: ['field deleted label', { ns: meta.id }],
+          message: ['field-deleted.label', { ns: meta.id }],
         }),
         UndoMapping.make({
           operation: SpaceOperation.RemoveObjects,
@@ -44,8 +44,8 @@ export default Capability.makeModule(
           message: (input, _output) => {
             const ns = Obj.getTypename(input.objects[0]);
             return ns && input.objects.length === 1
-              ? ['object deleted label', { ns }]
-              : ['objects deleted label', { ns: meta.id }];
+              ? ['object-deleted.label', { ns }]
+              : ['objects-deleted.label', { ns: meta.id }];
           },
         }),
       ]),

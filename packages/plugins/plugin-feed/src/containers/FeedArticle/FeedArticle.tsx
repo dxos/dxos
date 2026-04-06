@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ import { meta } from '../../meta';
 import { FeedOperation } from '../../operations';
 import { Subscription } from '../../types';
 
-export type FeedArticleProps = SurfaceComponentProps<Subscription.Feed>;
+export type FeedArticleProps = ObjectSurfaceProps<Subscription.Feed>;
 
 export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const { t } = useTranslation(meta.id);
@@ -49,7 +49,7 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
           <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
           <Toolbar.Separator />
           <Toolbar.IconButton
-            label={t('sync feed label')}
+            label={t('sync-feed.label')}
             icon='ph--arrows-clockwise--regular'
             iconOnly
             onClick={handleSync}

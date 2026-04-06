@@ -25,7 +25,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'execute',
               properties: {
-                label: ['script test label', { ns: meta.id }],
+                label: ['script-test.label', { ns: meta.id }],
                 icon: 'ph--terminal--regular',
                 disposition: 'hidden',
               },
@@ -42,7 +42,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'logs',
               properties: {
-                label: ['script logs label', { ns: meta.id }],
+                label: ['script-logs.label', { ns: meta.id }],
                 icon: 'ph--clock-countdown--regular',
                 disposition: 'hidden',
               },

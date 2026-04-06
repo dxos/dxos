@@ -26,7 +26,7 @@ export default Capability.makeModule(
               type: NOT_FOUND_NODE_TYPE,
               data: null,
               properties: {
-                label: ['not found heading', { ns: 'org.dxos.i18n.os' }],
+                label: ['not-found.heading', { ns: 'org.dxos.i18n.os' }],
                 icon: 'ph--warning--regular',
                 disposition: 'hidden',
               },
@@ -69,7 +69,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['close current label', { ns: meta.id }],
+                label: ['close-current.label', { ns: meta.id }],
                 icon: 'ph--x--regular',
               },
             };
@@ -84,7 +84,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
               }),
               properties: {
-                label: ['close others label', { ns: meta.id }],
+                label: ['close-others.label', { ns: meta.id }],
                 icon: 'ph--x-square--regular',
               },
             };
@@ -96,7 +96,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(LayoutOperation.Close, { subject: deck.active });
               }),
               properties: {
-                label: ['close all label', { ns: meta.id }],
+                label: ['close-all.label', { ns: meta.id }],
                 icon: 'ph--x-circle--regular',
               },
             };

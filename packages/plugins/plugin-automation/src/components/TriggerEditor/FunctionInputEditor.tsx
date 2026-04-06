@@ -68,7 +68,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
 
   return (
     <>
-      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Label label={t('function-parameters.label')} asChild />
       <Form.Root
         key={selectedFunction.id}
         schema={effectSchema}

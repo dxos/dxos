@@ -48,10 +48,10 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
+import { DebugSettings } from '../../components';
 import {
   DebugGraph,
   DebugObjectPanel,
-  DebugSettings,
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
@@ -59,7 +59,7 @@ import {
   Wireframe,
 } from '../../containers';
 import { meta } from '../../meta';
-import { DebugCapabilities, type DebugSettingsProps, Devtools } from '../../types';
+import { DebugCapabilities, type Settings, Devtools } from '../../types';
 
 type SpaceDebug = {
   type: string;
@@ -90,6 +90,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = capabilities.get(Capabilities.AtomRegistry);
     const settingsAtom = capabilities.get(DebugCapabilities.Settings);
+    const fileUploader = capabilities.getAll(AppCapabilities.FileUploader)[0];
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
@@ -98,8 +99,15 @@ export default Capability.makeModule(
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<DebugSettingsProps>(subject.atom);
-          return <DebugSettings settings={settings} onSettingsChange={updateSettings} logBuffer={logBuffer} />;
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return (
+            <DebugSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              logBuffer={logBuffer}
+              onUpload={fileUploader}
+            />
+          );
         },
       }),
       Surface.create({

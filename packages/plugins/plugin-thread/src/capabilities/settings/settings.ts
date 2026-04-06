@@ -9,14 +9,14 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { ThreadSettingsSchema } from '../../types';
+import { Settings } from '../../types';
 import { ThreadCapabilities } from '../../types/capabilities';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.id,
-      schema: ThreadSettingsSchema,
+      schema: Settings.Settings,
       defaultValue: () => ({}),
     });
 
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
       // Contribute to common settings for UI discovery.
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
-        schema: ThreadSettingsSchema,
+        schema: Settings.Settings,
         atom: settingsAtom,
       }),
     ];

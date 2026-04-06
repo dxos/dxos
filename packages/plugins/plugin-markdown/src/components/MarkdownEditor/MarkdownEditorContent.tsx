@@ -105,7 +105,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         extensions: [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
-            placeholder: t('editor placeholder'),
+            placeholder: t('editor.placeholder'),
             scrollPastEnd: !compact,
             search: true,
           }),

@@ -55,7 +55,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
-              label: ['create space label', { ns: meta.id }],
+              label: ['create-space.label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
@@ -65,7 +65,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
-              label: ['join space label', { ns: meta.id }],
+              label: ['join-space.label', { ns: meta.id }],
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
@@ -81,7 +81,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['share space label', { ns: meta.id }],
+              label: ['share-space.label', { ns: meta.id }],
               icon: 'ph--users--regular',
               testId: 'spacePlugin.shareSpace',
               keyBinding: {
@@ -100,7 +100,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['open current space settings label', { ns: meta.id }],
+              label: ['open-current-space-settings.label', { ns: meta.id }],
               icon: 'ph--faders--regular',
               keyBinding: {
                 macos: 'meta+shift+,',
@@ -156,6 +156,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => (settings?.showHidden ? true : spaceStates[idx] !== SpaceState.SPACE_INACTIVE))
+              .filter((space) => space.tags.length === 0 || isPersonalSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,

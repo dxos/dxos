@@ -28,7 +28,7 @@ export default Capability.makeModule(
               yield* Operation.invoke(HelpOperation.Start);
             }),
             properties: {
-              label: ['open help tour', { ns: meta.id }],
+              label: ['open-help-tour.message', { ns: meta.id }],
               icon: 'ph--info--regular',
               keyBinding: {
                 macos: 'shift+meta+/',
@@ -47,7 +47,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['open shortcuts label', { ns: meta.id }],
+              label: ['open-shortcuts.label', { ns: meta.id }],
               icon: 'ph--keyboard--regular',
               keyBinding: {
                 macos: 'meta+ctrl+/',
