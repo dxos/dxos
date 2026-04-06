@@ -7,7 +7,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { meta } from '../../meta';
 import { type Model } from '../../types';
 
-type TemplateType = 'primitive' | 'preset';
+export type TemplateType = 'primitive' | 'preset';
 
 export type TemplateDefinition = {
   id: Model.ObjectTemplate;
@@ -64,10 +64,12 @@ export const templates: Record<TemplateType, TemplateDefinition[]> = {
 };
 
 export type EditorActions = {
-  onAddObject: () => void;
+  onAdd: () => void;
   onDeleteSelected: () => void;
+  onJoinSelected: () => void;
+  onSubtractSelected: () => void;
   onImport: () => void;
-  onExportSTL: () => void;
+  onExport: () => void;
 };
 
 /** Creates the object template selector with primitives and presets groups. */
@@ -96,6 +98,7 @@ export const createTemplateSelector =
           if (i++ > 0) {
             group.separator('line');
           }
+
           for (const template of items) {
             group.action(
               `${type}-${template.id}`,
@@ -112,29 +115,62 @@ export const createTemplateSelector =
     );
   };
 
-/** Creates standalone action buttons. */
+/** Creates standalone action buttons. Actions are disabled based on selection count. */
 export const createEditorActions =
-  (actions: EditorActions): ActionGroupBuilderFn =>
+  (actions: EditorActions, selectionCount: number): ActionGroupBuilderFn =>
   (builder) =>
     builder
       .action(
         'add-object',
-        { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' },
-        actions.onAddObject,
+        {
+          label: ['action.add-object.label', { ns: meta.id }],
+          icon: 'ph--plus--regular',
+        },
+        actions.onAdd,
       )
       .action(
         'delete-object',
-        { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' },
+        {
+          label: ['action.delete-object.label', { ns: meta.id }],
+          icon: 'ph--trash--regular',
+          disabled: selectionCount === 0,
+        },
         actions.onDeleteSelected,
       )
       .separator('line')
       .action(
+        'join-objects',
+        {
+          label: ['action.join-objects.label', { ns: meta.id }],
+          icon: 'ph--unite-square--regular',
+          disabled: selectionCount < 2,
+        },
+        actions.onJoinSelected,
+      )
+      .action(
+        'subtract-objects',
+        {
+          label: ['action.subtract-objects.label', { ns: meta.id }],
+          icon: 'ph--subtract-square--regular',
+          disabled: selectionCount < 2,
+        },
+        actions.onSubtractSelected,
+      )
+      .separator('line')
+      .action(
         'import',
-        { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' },
+        {
+          label: ['action.import.label', { ns: meta.id }],
+          icon: 'ph--upload-simple--regular',
+        },
         actions.onImport,
       )
       .action(
         'export',
-        { label: ['action.export.label', { ns: meta.id }], icon: 'ph--download-simple--regular' },
-        actions.onExportSTL,
+        {
+          label: ['action.export.label', { ns: meta.id }],
+          icon: 'ph--download-simple--regular',
+          disabled: selectionCount === 0,
+        },
+        actions.onExport,
       );

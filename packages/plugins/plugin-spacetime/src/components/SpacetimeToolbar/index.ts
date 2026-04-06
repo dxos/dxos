@@ -5,7 +5,5 @@
 export * from './SpacetimeToolbar';
 
 export type { EditorActions } from './actions';
-export type { PropertiesState } from './properties';
-export type { SelectionMode, SelectionState } from './selection';
+export type { SelectionMode } from './selection';
 export type { SpacetimeTool } from './tools';
-export type { ViewState } from './view';
