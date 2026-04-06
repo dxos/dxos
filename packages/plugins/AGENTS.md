@@ -18,8 +18,12 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - `src/components` and `src/containers` should contain only index files and directories.
 - Each capability module lives as a single file directly in `src/capabilities/` (e.g., `src/capabilities/react-surface.tsx`), not in a subdirectory. Multi-file capabilities (e.g., `app-graph-builder/` with `extensions/`) are the exception and keep their subdirectory.
 - `src/capabilities/index.ts` is the barrel that declares all `Capability.lazy()` exports (e.g., `export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));`).
-- Plugin files, CLI plugins, stories, and tests all import lazy capabilities from the barrel (`import { ReactSurface } from './capabilities'`).
+- Plugin packages should define local `package.json#imports` aliases for their internal barrels (`#capabilities`, `#components`, `#containers`, `#hooks`, `#meta`, `#operations`, `#types`, etc.) and keep them aligned with `src/`.
+- Plugin files, CLI plugins, stories, and tests should import internal modules through those aliases where available (e.g., `import { ReactSurface } from '#capabilities';`, `import { MyOperation } from '#operations';`, `import { MyType } from '#types';`) instead of deep relative paths.
 - Do not add non-lazy exports to the capabilities barrel unless they are static namespace re-exports from multi-file capability directories (e.g., `export * as FilesystemManager from './state/FilesystemManager'`).
+- Treat `src/index.ts` as the package's root entrypoint and keep it minimal: it should ideally export only the plugin.
+- If another plugin needs package internals, expose dedicated minimal public entrypoints for those concerns (for example `types`, `operations`, or other narrowly-scoped subpaths) instead of re-exporting them from the package root.
+- Plugins should not depend on another plugin's root entrypoint for incidental helpers, capabilities, or broad barrels; depend on the smallest public entrypoint that provides the required contract.
 - All interfaces should be real-time reactive. ECHO objects must be subscribed to using appropriate hooks (e.g., `useQuery`, `useObject`, etc.) to receive live updates; use atoms, queries, and reactive patterns so that UI updates automatically when underlying data changes without manual refresh or polling.
 
 ### General Code style
