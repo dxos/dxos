@@ -31,7 +31,7 @@ import { Organization, Person } from '@dxos/types';
 import { useProjectionModel } from '../../hooks';
 import { KanbanPlugin } from '../../KanbanPlugin';
 import { translations } from '../../translations';
-import { Kanban } from '../../types';
+import { Kanban } from '#types';
 
 faker.seed(0);
 

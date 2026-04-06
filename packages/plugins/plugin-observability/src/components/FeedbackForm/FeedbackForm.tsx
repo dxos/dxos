@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormRootProps, type FormSubmitProps } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { UserFeedback } from '../../operations';
+import { UserFeedback } from '#operations';
 
 export type FeedbackFormProps = Pick<FormRootProps<UserFeedback>, 'onSave'> & Pick<FormSubmitProps, 'disabled'>;
 

@@ -21,8 +21,8 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { Meeting, MeetingCapabilities } from '../types';
-import { MeetingOperation } from '../operations';
+import { Meeting, MeetingCapabilities } from '#types';
+import { MeetingOperation } from '#operations';
 
 /**
  * Atom families to derive meeting state properties.

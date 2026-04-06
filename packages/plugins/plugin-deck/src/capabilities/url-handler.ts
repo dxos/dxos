@@ -9,7 +9,7 @@ import { LayoutOperation, NOT_FOUND_PATH, fromUrlPath, getWorkspaceFromPath, toU
 import { invariant } from '@dxos/invariant';
 import { Node } from '@dxos/plugin-graph';
 
-import { DeckCapabilities, type StoredDeckState, defaultDeck } from '../types';
+import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

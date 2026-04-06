@@ -7,7 +7,7 @@ import React from 'react';
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 
 import { Chessboard } from '../../components';
-import { type Chess } from '../../types';
+import { type Chess } from '#types';
 
 export type ChessCardProps = ObjectSurfaceProps<Chess.Game>;
 

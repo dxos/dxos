@@ -9,8 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
 
-import { type SpotlightState } from '../types';
-import { SpotlightState as SpotlightStateCapability } from '../types';
+import { type SpotlightState } from '#types';
+import { SpotlightState as SpotlightStateCapability } from '#types';
 
 /** Commands dialog surface identifier (from plugin-navtree). */
 const COMMANDS_DIALOG = 'org.dxos.plugin.navtree.commands-dialog';

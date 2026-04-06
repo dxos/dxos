@@ -11,7 +11,7 @@ import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
-import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState } from '../types';
+import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState } from '#types';
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 

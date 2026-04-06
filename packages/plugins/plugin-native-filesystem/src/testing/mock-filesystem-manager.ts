@@ -9,7 +9,7 @@ import { Text } from '@dxos/schema';
 
 import type { FilesystemManager } from '#capabilities';
 
-import type { FilesystemEntry, FilesystemWorkspace, NativeFilesystemState } from '../types';
+import type { FilesystemEntry, FilesystemWorkspace, NativeFilesystemState } from '#types';
 
 /** In-memory mock of FilesystemManager for tests that need graph builder integration. */
 export class MockFilesystemManager implements FilesystemManager.FilesystemManager {

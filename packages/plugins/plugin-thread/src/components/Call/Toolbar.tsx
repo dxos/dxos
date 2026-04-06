@@ -22,8 +22,8 @@ import {
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { ThreadCapabilities } from '../../types';
-import { type Channel } from '../../types';
+import { ThreadCapabilities } from '#types';
+import { type Channel } from '#types';
 
 export type ToolbarProps = ThemedClassName<{
   channel?: Channel.Channel;

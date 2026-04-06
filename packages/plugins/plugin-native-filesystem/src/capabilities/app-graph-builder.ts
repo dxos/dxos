@@ -17,7 +17,7 @@ import { isNonNullable } from '@dxos/util';
 import { Expando, Text } from '@dxos/schema';
 
 import { meta } from '../meta';
-import { NativeFilesystemOperation } from '../operations';
+import { NativeFilesystemOperation } from '#operations';
 import {
   NativeFilesystemCapabilities,
   isFilesystemDirectory,
@@ -26,7 +26,7 @@ import {
   type FilesystemFile,
   type FilesystemWorkspace,
   type NativeFilesystemState,
-} from '../types';
+} from '#types';
 import { findDirectoryById } from '../util';
 
 import type { FilesystemManager } from './state';

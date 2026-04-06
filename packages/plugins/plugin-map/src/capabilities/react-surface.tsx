@@ -17,7 +17,7 @@ import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapContainer, MapViewEditor } from '../containers';
 import { meta } from '../meta';
-import { LocationAnnotationId, Map, MapCapabilities } from '../types';
+import { LocationAnnotationId, Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

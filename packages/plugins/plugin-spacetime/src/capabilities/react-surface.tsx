@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { SpacetimeSettings } from '../components';
 import { SpacetimeArticle } from '../containers';
 import { meta } from '../meta';
-import { Scene, type Settings } from '../types';
+import { Scene, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

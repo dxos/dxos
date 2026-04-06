@@ -15,7 +15,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateKanbanSchema, Kanban } from './types';
+import { CreateKanbanSchema, Kanban } from '#types';
 
 import { BlueprintDefinition, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
 

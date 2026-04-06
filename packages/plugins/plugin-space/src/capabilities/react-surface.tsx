@@ -52,7 +52,7 @@ import {
   ViewEditor,
 } from '../containers';
 import { meta } from '../meta';
-import { SpaceOperation } from '../operations';
+import { SpaceOperation } from '#operations';
 import {
   HueAnnotationId,
   IconAnnotationId,
@@ -60,7 +60,7 @@ import {
   type Settings,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
-} from '../types';
+} from '#types';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;

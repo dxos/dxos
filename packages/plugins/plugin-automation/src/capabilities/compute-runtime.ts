@@ -31,7 +31,7 @@ import { type SpaceId } from '@dxos/keys';
 import { OperationHandlerSet } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import { AutomationCapabilities } from '../types';
+import { AutomationCapabilities } from '#types';
 import { Blueprint } from '@dxos/blueprints';
 
 export default Capability.makeModule(

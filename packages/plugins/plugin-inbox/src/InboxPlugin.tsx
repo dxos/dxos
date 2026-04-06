@@ -17,8 +17,8 @@ import { Event, Message } from '@dxos/types';
 import { CalendarBlueprint, InboxBlueprint } from './blueprints';
 import { meta } from './meta';
 import { translations } from './translations';
-import { InboxOperation } from './operations';
-import { Calendar, Mailbox } from './types';
+import { InboxOperation } from '#operations';
+import { Calendar, Mailbox } from '#types';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 

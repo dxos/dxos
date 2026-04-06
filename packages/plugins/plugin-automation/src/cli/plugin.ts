@@ -9,7 +9,7 @@ import { ClientEvents } from '@dxos/plugin-client/types';
 import { ComputeRuntime } from '#capabilities';
 
 import { meta } from '../meta';
-import { AutomationEvents } from '../types';
+import { AutomationEvents } from '#types';
 
 import { trigger } from './commands';
 

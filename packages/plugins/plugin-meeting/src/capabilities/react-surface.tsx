@@ -14,7 +14,7 @@ import { Channel } from '@dxos/plugin-thread/types';
 import { MeetingSettings } from '../components';
 import { MeetingContainer, MeetingsList } from '../containers';
 import { meta } from '../meta';
-import { Meeting, Settings } from '../types';
+import { Meeting, Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

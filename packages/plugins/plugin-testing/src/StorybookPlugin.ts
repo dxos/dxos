@@ -9,7 +9,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { Layout } from './components';
 import { meta } from './meta';
-import { type LayoutStateProps } from './types';
+import { type LayoutStateProps } from '#types';
 
 import { OperationHandler, State } from '#capabilities';
 

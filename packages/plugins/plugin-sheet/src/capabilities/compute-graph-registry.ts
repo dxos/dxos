@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
-import { SheetCapabilities } from '../types';
+import { SheetCapabilities } from '#types';
 
 // Locally declare the Automation ComputeRuntime capability by ID to avoid direct import dependency.
 

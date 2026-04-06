@@ -10,7 +10,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 
-import { Mailbox } from '../types';
+import { Mailbox } from '#types';
 
 import { Builder } from './builder';
 

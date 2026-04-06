@@ -14,7 +14,7 @@ import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-import { Model, Scene } from '../../types';
+import { Model, Scene } from '#types';
 import { SpacetimeArticle } from './SpacetimeArticle';
 
 const DefaultStory = () => {

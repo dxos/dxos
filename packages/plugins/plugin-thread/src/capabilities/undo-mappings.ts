@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 
 import { meta } from '../meta';
-import { ThreadOperation } from '../operations';
+import { ThreadOperation } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

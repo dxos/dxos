@@ -11,7 +11,7 @@ import { Node } from '@dxos/plugin-graph';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { FileCapabilities } from './types';
+import { FileCapabilities } from '#types';
 
 import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 

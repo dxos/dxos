@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../meta';
-import { Settings } from '../types';
+import { Settings } from '#types';
 import { ThreadCapabilities } from '../types/capabilities';
 
 export default Capability.makeModule(() =>

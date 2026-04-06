@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useDeckState } from '../../hooks';
-import { DeckCapabilities, getMode } from '../../types';
+import { DeckCapabilities, getMode } from '#types';
 import { Deck, type DeckLayoutChangeRequest } from '../Deck';
 
 import { ActiveNode } from './ActiveNode';

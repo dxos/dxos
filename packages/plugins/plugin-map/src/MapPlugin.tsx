@@ -15,7 +15,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Map, MapAction } from './types';
+import { Map, MapAction } from '#types';
 
 import { AppGraphBuilder, BlueprintDefinition, MapState, OperationHandler, ReactSurface } from '#capabilities';
 

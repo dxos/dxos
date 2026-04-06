@@ -13,7 +13,7 @@ import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '../../hooks';
-import { type Kanban, SettingsSchema } from '../../types';
+import { type Kanban, SettingsSchema } from '#types';
 
 export type KanbanViewEditorProps = ObjectSurfaceProps<Kanban.Kanban>;
 

@@ -12,7 +12,7 @@ import { iconSize, mx } from '@dxos/ui-theme';
 
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
-import { getMode } from '../../types';
+import { getMode } from '#types';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankErrorFallback, PlankLoading } from '../Plank';
 

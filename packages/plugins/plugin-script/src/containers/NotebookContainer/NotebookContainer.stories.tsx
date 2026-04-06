@@ -25,7 +25,7 @@ import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '../../testing';
 import { translations } from '../../translations';
-import { Notebook } from '../../types';
+import { Notebook } from '#types';
 
 import { NotebookContainer } from './NotebookContainer';
 

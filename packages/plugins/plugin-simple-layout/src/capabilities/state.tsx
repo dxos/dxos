@@ -9,8 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
 
-import { type SimpleLayoutState } from '../types';
-import { SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
+import { type SimpleLayoutState } from '#types';
+import { SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
 
 const defaultState: SimpleLayoutState = {
   dialogOpen: false,

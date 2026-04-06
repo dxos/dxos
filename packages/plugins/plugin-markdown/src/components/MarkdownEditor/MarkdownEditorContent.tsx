@@ -33,7 +33,7 @@ import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { MarkdownCapabilities } from '../../types';
+import { MarkdownCapabilities } from '#types';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 

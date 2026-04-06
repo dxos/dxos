@@ -15,7 +15,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { PresenterSettings } from '../components';
 import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '../containers';
 import { meta } from '../meta';
-import { type Settings } from '../types';
+import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

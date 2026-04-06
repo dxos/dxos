@@ -14,7 +14,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { type Settings } from '../../types';
+import { type Settings } from '#types';
 
 type Toast = {
   title: string;

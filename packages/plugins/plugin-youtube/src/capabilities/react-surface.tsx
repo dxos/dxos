@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 
 import { ChannelArticle, ChannelSettings, VideoArticle, VideoCard } from '../containers';
 import { meta } from '../meta';
-import { Channel, Video } from '../types';
+import { Channel, Video } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

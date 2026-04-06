@@ -9,7 +9,7 @@ import raceObj from '../../assets/models/race.obj?raw';
 // @ts-expect-error Vite raw import.
 import taxiObj from '../../assets/models/taxi.obj?raw';
 
-import type { Model } from '../types';
+import type { Model } from '#types';
 
 /** Bundled OBJ data for preset models. */
 export const presetObjData: Record<Model.PresetType, string> = {

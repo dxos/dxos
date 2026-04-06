@@ -10,7 +10,7 @@ import { type ActionGraphProps, Menu, MenuBuilder, MenuRootProps, useMenuActions
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type Model } from '../../types';
+import { type Model } from '#types';
 import { type EditorActions, createEditorActions, createTemplateSelector } from './actions';
 import { type PropertiesState } from './properties';
 import { type SelectionState, createSelectionModeActions } from './selection';

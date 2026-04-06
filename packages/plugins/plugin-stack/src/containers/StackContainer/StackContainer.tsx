@@ -27,7 +27,7 @@ import {
   type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-} from '../../types';
+} from '#types';
 
 const collectionObjectsFamily = Atom.family((collection: Collection.Collection) =>
   Atom.make((get) => {

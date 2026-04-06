@@ -16,7 +16,7 @@ import { useDeckState } from '../../hooks';
 
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
-import { DeckCapabilities, getMode } from '../../types';
+import { DeckCapabilities, getMode } from '#types';
 
 import { Deck } from './Deck';
 

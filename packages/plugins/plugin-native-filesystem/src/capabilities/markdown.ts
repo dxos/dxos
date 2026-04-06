@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/ui-editor';
 
-import { NativeFilesystemCapabilities, type FilesystemWorkspace, type NativeFilesystemState } from '../types';
+import { NativeFilesystemCapabilities, type FilesystemWorkspace, type NativeFilesystemState } from '#types';
 import { findFileById, updateFileInWorkspace, writeFileContent } from '../util';
 
 const AUTO_SAVE_DELAY_MS = 1000;

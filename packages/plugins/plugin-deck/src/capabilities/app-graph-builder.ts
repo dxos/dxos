@@ -11,7 +11,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
-import { DeckCapabilities } from '../types';
+import { DeckCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

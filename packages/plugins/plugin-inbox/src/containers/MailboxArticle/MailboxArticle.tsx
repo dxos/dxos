@@ -23,8 +23,8 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MessageStackActionHandler, MessageStack } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 import { sortByCreated } from '../../util';
 
 import { NewMailbox } from './NewMailbox';

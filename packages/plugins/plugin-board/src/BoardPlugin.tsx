@@ -15,7 +15,7 @@ import { translations as boardTranslations } from '@dxos/react-ui-board';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Board } from './types';
+import { Board } from '#types';
 
 import { ReactSurface } from '#capabilities';
 

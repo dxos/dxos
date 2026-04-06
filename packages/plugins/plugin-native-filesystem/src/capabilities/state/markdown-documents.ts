@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
-import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from '../../types';
+import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from '#types';
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 
 import {

@@ -9,8 +9,8 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { meta } from './meta';
-import { AttentionEvents } from './types';
-import { AttentionCapabilities } from './types';
+import { AttentionEvents } from '#types';
+import { AttentionCapabilities } from '#types';
 
 import { Keyboard, OperationHandler, ReactContext } from '#capabilities';
 

@@ -14,9 +14,9 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from './meta';
-import { FeedOperation } from './operations';
+import { FeedOperation } from '#operations';
 import { translations } from './translations';
-import { Subscription } from './types';
+import { Subscription } from '#types';
 
 import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
 

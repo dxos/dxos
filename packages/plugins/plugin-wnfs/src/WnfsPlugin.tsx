@@ -16,8 +16,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { WnfsAction, WnfsCapabilities, WnfsFile } from './types';
-import { WnfsOperation } from './operations';
+import { WnfsAction, WnfsCapabilities, WnfsFile } from '#types';
+import { WnfsOperation } from '#operations';
 
 import { Blockstore, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 

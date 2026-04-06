@@ -12,7 +12,7 @@ import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui'
 
 import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';
-import { Calendar } from '../../types';
+import { Calendar } from '#types';
 
 export const CalendarSettings = ({ subject }: ObjectSurfaceProps<Calendar.Calendar>) => {
   const { t } = useTranslation(meta.id);

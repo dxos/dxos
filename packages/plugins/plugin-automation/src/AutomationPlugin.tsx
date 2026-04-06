@@ -10,7 +10,7 @@ import { ClientEvents } from '@dxos/plugin-client/types';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { AutomationEvents } from './types';
+import { AutomationEvents } from '#types';
 
 import { AppGraphBuilder, ComputeRuntime, OperationHandler, ReactSurface } from '#capabilities';
 

@@ -7,7 +7,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { SpotlightEvents } from './types';
+import { SpotlightEvents } from '#types';
 
 import { OperationHandler, ReactRoot, SpotlightDismiss, State } from '#capabilities';
 

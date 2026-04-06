@@ -14,7 +14,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Model, Scene } from './types';
+import { Model, Scene } from '#types';
 
 import { ReactSurface, SpacetimeSettings } from '#capabilities';
 

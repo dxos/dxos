@@ -7,7 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { SEARCH_RESULT, meta } from './meta';
 import { translations } from './translations';
-import { type SearchResult } from './types';
+import { type SearchResult } from '#types';
 
 import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
 

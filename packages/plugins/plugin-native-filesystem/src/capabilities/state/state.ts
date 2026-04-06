@@ -10,7 +10,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import { NativeFilesystemCapabilities, type NativeFilesystemState } from '../../types';
+import { NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
 import { loadWorkspace, refreshWorkspace } from '../../util';
 
 import { createDirectoryWatcher } from './directory-watcher';

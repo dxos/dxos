@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { Sheet, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
-import { Sheet as SheetType } from '../types';
+import { Sheet as SheetType } from '#types';
 
 import { compute, computeGraphFacet } from './compute';
 

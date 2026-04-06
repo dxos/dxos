@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { type ComputeGraph } from '../../notebook';
-import { type Notebook } from '../../types';
+import { type Notebook } from '#types';
 import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
 
 import { type NotebookMenuProps } from './NotebookMenu';

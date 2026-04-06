@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Collection, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
-import { SpaceCapabilities } from '../types';
+import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -8,7 +8,7 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 
 import { SpacetimeEditor } from '../../components';
-import { type Scene } from '../../types';
+import { type Scene } from '#types';
 
 export type SpacetimeArticleProps = ObjectSurfaceProps<Scene.Scene>;
 

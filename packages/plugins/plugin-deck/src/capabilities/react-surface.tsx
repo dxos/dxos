@@ -12,7 +12,7 @@ import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { DeckSettings } from '../components';
 import { meta } from '../meta';
-import { type Settings } from '../types';
+import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Type } from '@dxos/echo';
 
-import { ClientCapabilities } from '../types';
+import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

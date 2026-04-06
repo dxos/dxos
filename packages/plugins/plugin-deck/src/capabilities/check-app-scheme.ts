@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities } from '../types';
+import { DeckCapabilities } from '#types';
 
 const APP_SCHEME = 'composer://';
 

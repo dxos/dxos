@@ -20,7 +20,7 @@ import { parseOBJ, presetObjData } from '../../engine';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type Scene, Model } from '../../types';
+import { type Scene, Model } from '#types';
 import { handleImport as doImport, handleExportSTL as doExportSTL } from './import-export';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import {

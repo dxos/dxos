@@ -6,7 +6,7 @@ import { type ArcRotateCamera, type HighlightLayer, type Mesh, type Scene as Bab
 import type { Manifold } from 'manifold-3d';
 
 import { type SelectionState, type ViewState } from '../components/SpacetimeToolbar';
-import { type Scene, type Model } from '../types';
+import { type Scene, type Model } from '#types';
 import { type getManifold } from '../engine';
 
 /** Base selection fields shared by all selection types. */

@@ -10,7 +10,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
-import { type Settings } from '../../types';
+import { type Settings } from '#types';
 
 export type ScriptPluginSettingsProps = SettingsSurfaceProps<
   Settings.Settings,

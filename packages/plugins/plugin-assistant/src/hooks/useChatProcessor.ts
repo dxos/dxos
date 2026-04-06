@@ -15,7 +15,7 @@ import { type Queue, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../processor';
-import { type Assistant } from '../types';
+import { type Assistant } from '#types';
 
 export type UseChatProcessorProps = {
   space?: Space;

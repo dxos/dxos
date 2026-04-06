@@ -8,7 +8,7 @@ import { type Obj } from '@dxos/echo';
 
 import { SECTION_IDENTIFIER, meta } from './meta';
 import { translations } from './translations';
-import { StackViewType } from './types';
+import { StackViewType } from '#types';
 
 import { ReactSurface } from '#capabilities';
 

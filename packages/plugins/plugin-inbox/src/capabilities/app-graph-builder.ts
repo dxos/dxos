@@ -21,9 +21,9 @@ import { kebabize } from '@dxos/util';
 
 import { MAILBOXES_SECTION_TYPE, MAILBOX_ALL_MAIL_TYPE, MAILBOX_DRAFTS_TYPE } from '../constants';
 import { meta } from '../meta';
-import { InboxOperation } from '../operations';
+import { InboxOperation } from '#operations';
 import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
-import { Calendar, Mailbox } from '../types';
+import { Calendar, Mailbox } from '#types';
 
 const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
 

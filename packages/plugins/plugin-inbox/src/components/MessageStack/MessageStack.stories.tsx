@@ -23,7 +23,7 @@ import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { Builder, LABELS, initializeMailbox } from '../../testing';
-import { Mailbox } from '../../types';
+import { Mailbox } from '#types';
 
 import { MessageStack as MessageStackComponent } from './MessageStack';
 

@@ -11,7 +11,7 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../meta';
-import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '../types';
+import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '#types';
 
 const KEY = `${meta.id}.state.v1`;
 

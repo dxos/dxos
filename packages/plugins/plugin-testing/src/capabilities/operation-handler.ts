@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/operation';
 
-import { TestingOperationHandlerSet } from '../operations';
+import { TestingOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {

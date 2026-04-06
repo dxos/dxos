@@ -12,7 +12,7 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space/meta';
 
 import { meta } from '../meta';
-import { Devtools } from '../types';
+import { Devtools } from '#types';
 import { getParentId } from '@dxos/react-ui-attention';
 
 const DEVTOOLS_TYPE = `${meta.id}.devtools`;

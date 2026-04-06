@@ -23,7 +23,7 @@ import { type EditorViewMode } from '@dxos/ui-editor';
 import { MarkdownSettings } from '../components';
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '../containers';
 import { meta } from '../meta';
-import { Markdown, MarkdownCapabilities } from '../types';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

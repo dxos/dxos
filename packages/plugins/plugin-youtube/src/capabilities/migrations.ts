@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { defineObjectMigration } from '@dxos/client/echo';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import { Channel, Video } from '../types';
+import { Channel, Video } from '#types';
 
 const identityTransform = async (from: any) => ({ ...from });
 const noopCallback = async () => {};

@@ -12,7 +12,9 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "imports": {},
+  "imports": {
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",

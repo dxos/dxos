@@ -9,7 +9,7 @@ import { createKvsStore } from '@dxos/effect';
 import { createEditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
-import { type EditorViewEntry, type EditorViewRegistry, MarkdownCapabilities, MarkdownStateSchema } from '../types';
+import { type EditorViewEntry, type EditorViewRegistry, MarkdownCapabilities, MarkdownStateSchema } from '#types';
 
 const createEditorViewRegistry = (): EditorViewRegistry => {
   const views = new Map<string, EditorViewEntry>();

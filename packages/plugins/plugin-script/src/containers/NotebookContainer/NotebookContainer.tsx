@@ -28,7 +28,7 @@ import { isNonNullable } from '@dxos/util';
 import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '../../components';
 import { meta } from '../../meta';
 import { ComputeGraph } from '../../notebook';
-import { type Notebook } from '../../types';
+import { type Notebook } from '#types';
 
 const INCLUDE_BLUEPRINTS = [
   'org.dxos.blueprint.assistant',

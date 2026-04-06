@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 
-import { type MeetingCapabilities as MC, MeetingCapabilities } from '../types';
+import { type MeetingCapabilities as MC, MeetingCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

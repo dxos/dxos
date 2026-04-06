@@ -17,7 +17,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
-import { Sheet } from '../../types';
+import { Sheet } from '#types';
 
 import { useComputeGraph } from './ComputeGraphContextProvider';
 

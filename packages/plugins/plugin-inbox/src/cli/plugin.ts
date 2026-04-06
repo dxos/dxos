@@ -14,7 +14,7 @@ import { Event, Message } from '@dxos/types';
 import { OperationHandler } from '#capabilities';
 
 import { meta } from '../meta';
-import { Calendar, Mailbox } from '../types';
+import { Calendar, Mailbox } from '#types';
 
 // TODO(wittjosiah): Factor out shared modules.
 

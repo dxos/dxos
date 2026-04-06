@@ -19,9 +19,9 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { ClearSyncedVideos, Sync } from '../operations';
+import { ClearSyncedVideos, Sync } from '#operations';
 import { meta } from '../meta';
-import { Channel, Video } from '../types';
+import { Channel, Video } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

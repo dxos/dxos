@@ -16,7 +16,7 @@ import { Thread } from '@dxos/types';
 import { ThreadSettings } from '../components';
 import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '../containers';
 import { meta } from '../meta';
-import { Channel, ThreadCapabilities, type Settings } from '../types';
+import { Channel, ThreadCapabilities, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

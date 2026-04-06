@@ -12,7 +12,7 @@ import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui'
 
 import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';
-import { Mailbox } from '../../types';
+import { Mailbox } from '#types';
 
 export const MailboxSettings = ({ subject }: ObjectSurfaceProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);

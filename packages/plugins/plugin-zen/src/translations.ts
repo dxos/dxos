@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Dream } from './types';
+import { Dream } from '#types';
 
 export const translations = [
   {

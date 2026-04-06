@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Voxel } from './types';
+import { Voxel } from '#types';
 
 export const translations = [
   {

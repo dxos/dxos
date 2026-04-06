@@ -24,7 +24,7 @@ import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-sta
 import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '../../hooks';
-import { DeckOperation } from '../../operations';
+import { DeckOperation } from '#operations';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
@@ -33,7 +33,7 @@ import {
 } from '../Sidebar';
 
 import { useDeckContext } from './DeckRoot';
-import { getMode } from '../../types';
+import { getMode } from '#types';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
 

@@ -16,7 +16,7 @@ import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useChatContext } from '../components';
 import { meta } from '../meta';
-import { AssistantOperation } from '../operations';
+import { AssistantOperation } from '#operations';
 
 export type ChatToolbarActionsProps = {
   chat?: Chat.Chat;

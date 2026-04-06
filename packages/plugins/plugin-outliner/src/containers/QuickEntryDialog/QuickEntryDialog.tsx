@@ -12,7 +12,7 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { OutlineOperation } from '../../operations';
+import { OutlineOperation } from '#operations';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(

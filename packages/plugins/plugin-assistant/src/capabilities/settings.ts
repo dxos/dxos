@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../meta';
-import { Assistant, AssistantCapabilities } from '../types';
+import { Assistant, AssistantCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

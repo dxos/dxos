@@ -9,7 +9,7 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { Settings } from '../../types';
+import { Settings } from '#types';
 
 const isSocket = !!(globalThis as any).__args;
 

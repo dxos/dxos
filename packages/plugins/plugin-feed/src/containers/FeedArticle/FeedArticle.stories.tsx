@@ -12,7 +12,7 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { PostStack, type PostStackAction } from '../../components';
 import { generateFeed, generatePosts } from '../../testing';
-import { type Subscription } from '../../types';
+import { type Subscription } from '#types';
 
 type FeedArticleStoryProps = {
   feedUrl?: string;

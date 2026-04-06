@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 
 import { TemplatePanel } from '../components';
 import { meta } from '../meta';
-import { Template } from '../types';
+import { Template } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

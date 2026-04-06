@@ -17,7 +17,7 @@ import { arrayMove } from '@dxos/util';
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '../../components';
 import { useNavTreeModel, useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
-import { type NavTreeItemGraphNode } from '../../types';
+import { type NavTreeItemGraphNode } from '#types';
 import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?

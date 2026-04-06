@@ -10,7 +10,7 @@ import { Relation } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { type AnchoredTo } from '@dxos/types';
 
-import { Markdown } from '../types';
+import { Markdown } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

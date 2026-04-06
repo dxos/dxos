@@ -10,7 +10,7 @@ import { Annotation, Type } from '@dxos/echo';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Meeting, MeetingCapabilities } from './types';
+import { Meeting, MeetingCapabilities } from '#types';
 
 import {
   AppGraphBuilder,

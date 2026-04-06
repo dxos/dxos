@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 
 import { ZenArticle } from '../containers';
 import { meta } from '../meta';
-import { Dream } from '../types';
+import { Dream } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

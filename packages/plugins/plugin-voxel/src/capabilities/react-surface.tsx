@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 
 import { VoxelArticle, VoxelCard } from '../containers';
 import { meta } from '../meta';
-import { Voxel } from '../types';
+import { Voxel } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

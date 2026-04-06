@@ -13,7 +13,9 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts"
+    "#capabilities": "./src/capabilities/index.ts",
+    "#operations": "./src/operations/index.ts",
+    "#types": "./src/types/index.ts"
   },
   "exports": {
     ".": {

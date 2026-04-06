@@ -37,7 +37,7 @@ import {
 import { useThemeContext } from '@dxos/react-ui';
 import { isTruthy, safeUrl } from '@dxos/util';
 
-import { Markdown } from '../types';
+import { Markdown } from '#types';
 import { setFallbackName } from '../util';
 import { fromUrlPath } from '@dxos/app-toolkit';
 

@@ -19,8 +19,8 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { ComputeGraphContext, useComputeGraph } from '../../components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
-import { Sheet } from '../../types';
-import { SheetOperation } from '../../operations';
+import { Sheet } from '#types';
+import { SheetOperation } from '#operations';
 import RangeList from '../RangeList';
 
 import { SheetContainer } from './SheetContainer';

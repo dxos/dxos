@@ -18,8 +18,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { Sheet } from './types';
-import { SheetOperation } from './operations';
+import { Sheet } from '#types';
+import { SheetOperation } from '#operations';
 
 import {
   AnchorSort,

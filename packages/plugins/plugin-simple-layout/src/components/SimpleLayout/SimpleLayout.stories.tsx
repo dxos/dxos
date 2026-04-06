@@ -20,7 +20,7 @@ import { meta as pluginMeta } from '../../meta';
 
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
-import { SimpleLayoutEvents } from '../../types';
+import { SimpleLayoutEvents } from '#types';
 
 import { SimpleLayout } from './SimpleLayout';
 

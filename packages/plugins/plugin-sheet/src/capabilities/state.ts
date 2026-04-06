@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 
-import { type GridEntry, type GridRegistry, SheetCapabilities } from '../types';
+import { type GridEntry, type GridRegistry, SheetCapabilities } from '#types';
 
 const createGridRegistry = (): GridRegistry => {
   const grids = new Map<string, GridEntry>();

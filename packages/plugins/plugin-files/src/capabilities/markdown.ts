@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/ui-editor';
 
-import { FileCapabilities, type LocalFile } from '../types';
+import { FileCapabilities, type LocalFile } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

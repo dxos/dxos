@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Kanban } from './types';
+import { Kanban } from '#types';
 
 export const translations = [
   {

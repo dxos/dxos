@@ -15,7 +15,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { ExplorerAction, Graph } from './types';
+import { ExplorerAction, Graph } from '#types';
 
 import { ReactSurface } from '#capabilities';
 

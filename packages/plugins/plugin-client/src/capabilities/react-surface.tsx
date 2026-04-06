@@ -20,7 +20,7 @@ import {
   ResetDialog,
   type ResetDialogProps,
 } from '../containers';
-import { Account, type ClientPluginOptions } from '../types';
+import { Account, type ClientPluginOptions } from '#types';
 
 type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;

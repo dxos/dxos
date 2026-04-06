@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { CallManager } from '../calls';
-import { ThreadCapabilities } from '../types';
+import { ThreadCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

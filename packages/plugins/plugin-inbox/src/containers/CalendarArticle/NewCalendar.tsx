@@ -13,8 +13,8 @@ import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Calendar } from '../../types';
+import { InboxOperation } from '#operations';
+import { type Calendar } from '#types';
 
 export type NewCalendarProps = {
   calendar: Calendar.Calendar;

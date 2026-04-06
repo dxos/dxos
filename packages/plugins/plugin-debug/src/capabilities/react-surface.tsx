@@ -59,7 +59,7 @@ import {
   Wireframe,
 } from '../containers';
 import { meta } from '../meta';
-import { DebugCapabilities, type Settings, Devtools } from '../types';
+import { DebugCapabilities, type Settings, Devtools } from '#types';
 
 type SpaceDebug = {
   type: string;

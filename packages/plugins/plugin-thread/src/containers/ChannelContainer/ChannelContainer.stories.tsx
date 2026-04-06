@@ -14,7 +14,7 @@ import { Message, Thread } from '@dxos/types';
 
 import { createThreadPlugins } from '../../testing';
 import { translations } from '../../translations';
-import { Channel } from '../../types';
+import { Channel } from '#types';
 
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 

@@ -17,7 +17,9 @@
       "types": "./src/capabilities/index.ts",
       "browser": "./src/capabilities/index.ts",
       "node": "./src/capabilities/node.ts"
-    }
+    },
+    "#operations": "./src/operations/index.ts",
+    "#types": "./src/types/index.ts"
   },
   "exports": {
     ".": {

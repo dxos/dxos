@@ -15,7 +15,7 @@ import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { type GeoControlProps, GlobeControl, MapControl } from '../../components';
-import { type Map } from '../../types';
+import { type Map } from '#types';
 
 export type MapControlType = 'globe' | 'map';
 

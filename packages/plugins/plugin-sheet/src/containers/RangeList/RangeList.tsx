@@ -11,8 +11,8 @@ import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
-import { rangeFromIndex } from '../../types';
-import { Sheet } from '../../types';
+import { rangeFromIndex } from '#types';
+import { Sheet } from '#types';
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;

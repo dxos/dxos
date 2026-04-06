@@ -10,7 +10,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';
-import { AttentionCapabilities } from '../types';
+import { AttentionCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -11,7 +11,7 @@ import { type Hue } from '@dxos/ui-theme';
 
 import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
 import { Life, generateRandomModel } from '../../models';
-import { Voxel } from '../../types';
+import { Voxel } from '#types';
 
 export type VoxelArticleProps = ObjectSurfaceProps<Voxel.World>;
 

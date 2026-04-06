@@ -12,7 +12,7 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { NODE_TYPE } from './containers';
 import { meta } from './meta';
 import { translations } from './translations';
-import { NavTreeEvents } from './types';
+import { NavTreeEvents } from '#types';
 
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
 

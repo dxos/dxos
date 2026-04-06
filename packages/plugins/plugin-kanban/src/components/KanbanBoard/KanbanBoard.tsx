@@ -21,7 +21,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '../../hooks';
 import { meta } from '../../meta';
-import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '../../types';
+import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
 
 import { KanbanCard, type KanbanCardProps } from './KanbanCard';
 import { KanbanColumn, type KanbanColumnProps } from './KanbanColumn';

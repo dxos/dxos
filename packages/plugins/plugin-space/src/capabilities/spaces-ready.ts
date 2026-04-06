@@ -19,8 +19,8 @@ import { type Space, SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-cl
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceCapabilities } from '../types';
-import { SpaceOperation } from '../operations';
+import { SpaceCapabilities } from '#types';
+import { SpaceOperation } from '#operations';
 import { SHARED } from '../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;

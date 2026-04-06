@@ -8,7 +8,7 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type StackSettingsProps } from '../../types';
+import { type StackSettingsProps } from '#types';
 
 export const StackSettings = ({ settings }: { settings: StackSettingsProps }) => {
   const { t } = useTranslation(meta.id);

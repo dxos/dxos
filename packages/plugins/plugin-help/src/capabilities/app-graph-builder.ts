@@ -11,8 +11,8 @@ import { Operation } from '@dxos/operation';
 
 import { SHORTCUTS_DIALOG } from '../constants';
 import { meta } from '../meta';
-import { HelpCapabilities } from '../types';
-import { HelpOperation } from '../operations';
+import { HelpCapabilities } from '#types';
+import { HelpOperation } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

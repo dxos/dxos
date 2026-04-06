@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Outline } from '../../types';
+import { Outline } from '#types';
 
 import { OutlineContainer } from './OutlineContainer';
 

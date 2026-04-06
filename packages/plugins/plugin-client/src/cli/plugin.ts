@@ -8,8 +8,8 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Client, OperationHandler, SchemaDefs } from '#capabilities';
 
 import { meta } from '../meta';
-import { ClientEvents } from '../types';
-import { type ClientPluginOptions } from '../types';
+import { ClientEvents } from '#types';
+import { type ClientPluginOptions } from '#types';
 
 import { config, device, edge, halo, profile } from './commands';
 

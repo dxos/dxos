@@ -10,7 +10,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
-import { type Markdown } from '../../types';
+import { type Markdown } from '#types';
 
 export type MarkdownSettingsProps = SettingsSurfaceProps<Markdown.Settings>;
 

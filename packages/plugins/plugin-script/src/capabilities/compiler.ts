@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { Compiler } from '../compiler';
-import { ScriptCapabilities } from '../types';
+import { ScriptCapabilities } from '#types';
 
 // TODO(burdon): Document.
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';

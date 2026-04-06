@@ -12,8 +12,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { isSpace } from '@dxos/react-client/echo';
 
 import { translations } from '../translations';
-import { Markdown } from '../types';
-import { MarkdownOperation } from '../operations';
+import { Markdown } from '#types';
+import { MarkdownOperation } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

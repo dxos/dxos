@@ -18,7 +18,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { Markdown } from '../types';
+import { Markdown } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

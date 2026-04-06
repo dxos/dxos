@@ -13,8 +13,8 @@ import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 
 export type NewMailboxProps = {
   mailbox: Mailbox.Mailbox;

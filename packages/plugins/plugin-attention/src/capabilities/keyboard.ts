@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Keyboard } from '@dxos/keyboard';
 
-import { AttentionCapabilities } from '../types';
+import { AttentionCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

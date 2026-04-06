@@ -10,7 +10,7 @@ import { Text } from '@dxos/schema';
 
 import { MarkdownEditor } from '../../components';
 import { meta } from '../../meta';
-import { Markdown } from '../../types';
+import { Markdown } from '#types';
 import { getContentSnippet } from '../../util';
 
 import { snippet as snippetExtension } from './snippet';

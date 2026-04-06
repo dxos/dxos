@@ -14,7 +14,7 @@ import { Text } from '@dxos/schema';
 import { OperationHandler } from '#capabilities';
 
 import { meta } from '../meta';
-import { Markdown } from '../types';
+import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

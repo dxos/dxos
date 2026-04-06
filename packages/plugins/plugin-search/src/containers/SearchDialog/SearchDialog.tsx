@@ -16,7 +16,7 @@ import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults } from '../../hooks';
 import { meta } from '../../meta';
-import { type SearchResult } from '../../types';
+import { type SearchResult } from '#types';
 
 export type SearchDialogProps = {
   pivotId?: string;

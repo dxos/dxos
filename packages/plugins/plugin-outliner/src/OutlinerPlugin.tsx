@@ -15,7 +15,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Journal, Outline } from './types';
+import { Journal, Outline } from '#types';
 
 import { AppGraphBuilder, Migrations, OperationHandler, ReactSurface } from '#capabilities';
 

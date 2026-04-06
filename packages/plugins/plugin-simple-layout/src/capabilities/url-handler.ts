@@ -9,7 +9,7 @@ import { LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
+import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
 
 /**
  * URL handler for simple layout that syncs browser URL with layout state.

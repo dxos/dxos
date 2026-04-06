@@ -13,7 +13,7 @@ import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../meta';
 import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
-import { Mailbox } from '../types';
+import { Mailbox } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

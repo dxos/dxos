@@ -12,7 +12,7 @@ import { List } from '@dxos/react-ui-list';
 import { useCountdown } from '../../hooks';
 
 import { MixerEngine } from '../../generator';
-import { Dream, Sequence } from '../../types';
+import { Dream, Sequence } from '#types';
 import { meta } from '../../meta';
 
 import { Sound } from '../Sound';

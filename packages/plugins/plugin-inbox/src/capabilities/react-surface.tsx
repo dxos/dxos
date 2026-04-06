@@ -26,7 +26,7 @@ import {
   SaveFilterPopover,
 } from '../containers';
 import { meta } from '../meta';
-import { Calendar, Mailbox } from '../types';
+import { Calendar, Mailbox } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

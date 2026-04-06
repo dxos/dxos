@@ -15,7 +15,7 @@ import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/
 
 import { KanbanContainer, KanbanViewEditor } from '../containers';
 import { meta } from '../meta';
-import { Kanban, PivotColumnAnnotationId } from '../types';
+import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

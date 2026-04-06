@@ -20,8 +20,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
-import { FeedOperation } from '../operations';
-import { Subscription } from '../types';
+import { FeedOperation } from '#operations';
+import { Subscription } from '#types';
 
 const whenSpace = (node: Node.Node): Option.Option<Space> =>
   node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();

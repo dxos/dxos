@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 
 import { ChessArticle, ChessCard } from '../containers';
 import { meta } from '../meta';
-import { Chess } from '../types';
+import { Chess } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

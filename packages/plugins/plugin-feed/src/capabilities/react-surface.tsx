@@ -11,7 +11,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { FeedArticle, SubscriptionsArticle } from '../containers';
 import { meta } from '../meta';
-import { Subscription } from '../types';
+import { Subscription } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

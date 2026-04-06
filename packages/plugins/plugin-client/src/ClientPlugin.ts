@@ -7,8 +7,8 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { ClientEvents } from './types';
-import { type ClientPluginOptions } from './types';
+import { ClientEvents } from '#types';
+import { type ClientPluginOptions } from '#types';
 
 import {
   AppGraphBuilder,

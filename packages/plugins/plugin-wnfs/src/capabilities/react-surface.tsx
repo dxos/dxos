@@ -15,7 +15,7 @@ import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 import { FileInput } from '../components';
 import { FileContainer } from '../containers';
 import { meta } from '../meta';
-import { WnfsAction, WnfsFile } from '../types';
+import { WnfsAction, WnfsFile } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

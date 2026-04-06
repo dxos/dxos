@@ -26,8 +26,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { AssistantCapabilities } from '../types';
-import { AssistantOperation } from '../operations';
+import { AssistantCapabilities } from '#types';
+import { AssistantOperation } from '#operations';
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(

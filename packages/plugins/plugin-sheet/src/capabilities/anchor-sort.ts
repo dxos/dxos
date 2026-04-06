@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Relation } from '@dxos/echo';
 
-import { Sheet, compareIndexPositions } from '../types';
+import { Sheet, compareIndexPositions } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

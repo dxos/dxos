@@ -10,7 +10,7 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 
 import { AwaitingObject } from '../components';
 import { meta } from '../meta';
-import { SpaceCapabilities } from '../types';
+import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -12,7 +12,7 @@ import { Panel, useAsyncEffect } from '@dxos/react-ui';
 
 import { FilePreview } from '../../components';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
-import { WnfsCapabilities, type WnfsFile } from '../../types';
+import { WnfsCapabilities, type WnfsFile } from '#types';
 
 export type FileContainerProps = ObjectSurfaceProps<WnfsFile.File>;
 

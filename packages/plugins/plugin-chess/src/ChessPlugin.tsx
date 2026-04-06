@@ -15,7 +15,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { ChessBlueprint } from './blueprints';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Chess } from './types';
+import { Chess } from '#types';
 
 import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 

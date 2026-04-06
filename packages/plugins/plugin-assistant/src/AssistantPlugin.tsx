@@ -21,8 +21,8 @@ import { HasSubject } from '@dxos/types';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { AssistantOperation } from './operations';
+import { AssistantEvents } from '#types';
+import { AssistantOperation } from '#operations';
 import * as Option from 'effect/Option';
 
 import {

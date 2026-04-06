@@ -10,7 +10,7 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { DeckEvents } from './types';
+import { DeckEvents } from '#types';
 
 import {
   AppGraphBuilder,

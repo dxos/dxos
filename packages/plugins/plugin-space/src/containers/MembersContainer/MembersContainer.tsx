@@ -27,7 +27,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { SpaceOperation } from '../../operations';
+import { SpaceOperation } from '#operations';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';

@@ -17,8 +17,8 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { Meeting } from '../../types';
-import { MeetingOperation } from '../../operations';
+import { Meeting } from '#types';
+import { MeetingOperation } from '#operations';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 

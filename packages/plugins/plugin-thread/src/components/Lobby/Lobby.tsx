@@ -10,7 +10,7 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { ThreadCapabilities } from '../../types';
+import { ThreadCapabilities } from '#types';
 import { Toolbar, type ToolbarProps } from '../Call';
 import { VideoObject } from '../Media';
 import { ResponsivePanel } from '../ResponsiveGrid';

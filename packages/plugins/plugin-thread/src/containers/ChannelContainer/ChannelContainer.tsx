@@ -21,8 +21,8 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Call } from '../../components';
 import { meta } from '../../meta';
-import { ThreadCapabilities } from '../../types';
-import { type Channel } from '../../types';
+import { ThreadCapabilities } from '#types';
+import { type Channel } from '#types';
 import { ChatContainer } from '../ChatContainer';
 
 export type ChannelContainerProps = ObjectSurfaceProps<

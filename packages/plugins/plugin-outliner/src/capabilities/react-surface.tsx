@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 
 import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '../containers';
 import { QUICK_ENTRY_DIALOG, meta } from '../meta';
-import { Journal, Outline } from '../types';
+import { Journal, Outline } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

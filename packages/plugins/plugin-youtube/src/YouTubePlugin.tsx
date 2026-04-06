@@ -17,7 +17,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { YouTubeBlueprint } from './blueprints';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Channel, Video } from './types';
+import { Channel, Video } from '#types';
 
 import { AppGraphBuilder, BlueprintDefinition, Migrations, ReactSurface } from '#capabilities';
 

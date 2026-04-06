@@ -31,7 +31,7 @@ import {
   TriggerStatus,
 } from '../containers';
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { type Assistant } from '../types';
+import { type Assistant } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

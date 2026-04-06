@@ -21,7 +21,7 @@ import { ViewAnnotation } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '../../../meta';
-import { SpaceOperation } from '../../../operations';
+import { SpaceOperation } from '#operations';
 
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,

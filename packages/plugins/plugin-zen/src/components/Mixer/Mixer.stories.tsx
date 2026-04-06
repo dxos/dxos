@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 
 import { useMixerEngine } from '../../hooks';
-import { Dream, Sequence } from '../../types';
+import { Dream, Sequence } from '#types';
 
 import { Mixer } from './Mixer';
 

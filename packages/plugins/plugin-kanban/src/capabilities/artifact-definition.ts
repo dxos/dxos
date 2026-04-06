@@ -21,7 +21,7 @@ import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
-import { Kanban } from '../types';
+import { Kanban } from '#types';
 
 const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',

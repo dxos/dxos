@@ -19,7 +19,7 @@ import { Text } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '../../components';
 import { useLinkQuery } from '../../hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 export type MarkdownContainerProps = ObjectSurfaceProps<
   Markdown.Document | Text.Text,

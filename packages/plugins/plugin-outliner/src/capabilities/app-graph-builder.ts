@@ -15,7 +15,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { QUICK_ENTRY_DIALOG, meta } from '../meta';
-import { OutlineOperation } from '../operations';
+import { OutlineOperation } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

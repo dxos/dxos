@@ -15,9 +15,9 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { ScriptEvents } from './types';
-import { Notebook } from './types';
-import { ScriptOperation } from './operations';
+import { ScriptEvents } from '#types';
+import { Notebook } from '#types';
+import { ScriptOperation } from '#operations';
 
 import {
   AppGraphBuilder,

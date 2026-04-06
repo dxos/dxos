@@ -19,7 +19,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateTableSchema, TableOperation } from './operations';
+import { CreateTableSchema, TableOperation } from '#operations';
 
 import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 

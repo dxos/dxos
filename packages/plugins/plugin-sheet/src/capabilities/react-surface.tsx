@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/react-client/echo';
 
 import { RangeList, SheetContainer } from '../containers';
 import { meta } from '../meta';
-import { Sheet, SheetCapabilities } from '../types';
+import { Sheet, SheetCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

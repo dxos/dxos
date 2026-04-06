@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
 import { promptRunExtension } from '../extensions';
-import { AssistantOperation } from '../operations';
+import { AssistantOperation } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

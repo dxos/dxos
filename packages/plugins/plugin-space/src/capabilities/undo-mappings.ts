@@ -8,7 +8,7 @@ import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { meta } from '../meta';
-import { SpaceOperation } from '../operations';
+import { SpaceOperation } from '#operations';
 import { SpaceOperationConfig } from '../operations/helpers';
 
 type UndoMappingsOptions = {

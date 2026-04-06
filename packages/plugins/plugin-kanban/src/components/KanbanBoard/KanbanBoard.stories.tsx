@@ -18,7 +18,7 @@ import { Organization } from '@dxos/types';
 import { createEchoChangeCallback as createKanbanChangeCallback } from '../../hooks';
 import { KanbanCardTileSimple } from '../../testing';
 import { translations } from '../../translations';
-import { Kanban } from '../../types';
+import { Kanban } from '#types';
 
 import { KanbanBoard } from './KanbanBoard';
 

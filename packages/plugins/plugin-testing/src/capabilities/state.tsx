@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { LayoutState, type LayoutStateProps } from '../types';
+import { LayoutState, type LayoutStateProps } from '#types';
 
 const defaultState: LayoutStateProps = {
   sidebarState: 'closed',

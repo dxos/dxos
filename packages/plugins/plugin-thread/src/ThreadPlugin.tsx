@@ -17,9 +17,9 @@ import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { THREAD_ITEM, meta } from './meta';
-import { ThreadOperation } from './operations';
+import { ThreadOperation } from '#operations';
 import { translations } from './translations';
-import { Channel } from './types';
+import { Channel } from '#types';
 
 import {
   AppGraphBuilder,

@@ -14,7 +14,7 @@ import { Sketch } from '@dxos/plugin-sketch/types';
 import { SketchSettings } from '../components';
 import { SketchContainer } from '../containers';
 import { meta } from '../meta';
-import { EXCALIDRAW_SCHEMA, ExcalidrawCapabilities, type Settings } from '../types';
+import { EXCALIDRAW_SCHEMA, ExcalidrawCapabilities, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -4,7 +4,7 @@
 
 import { type AttentionManager } from '@dxos/plugin-attention';
 
-import { type DeckState } from '../types';
+import { type DeckState } from '#types';
 
 export type SetActiveOptions = {
   next: string[];

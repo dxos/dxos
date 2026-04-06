@@ -14,7 +14,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Dream } from './types';
+import { Dream } from '#types';
 
 import { ReactSurface } from '#capabilities';
 

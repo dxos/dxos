@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { SketchSettings } from '../components';
 import { SketchContainer } from '../containers';
 import { meta } from '../meta';
-import { Sketch, SketchCapabilities, type Settings } from '../types';
+import { Sketch, SketchCapabilities, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { AccessToken } from '@dxos/types';
 
 import { TokensPanel } from '../../components';
-import { TokenManagerOperation } from '../../operations';
+import { TokenManagerOperation } from '#operations';
 
 export type TokensContainerProps = {
   db: Database.Database;

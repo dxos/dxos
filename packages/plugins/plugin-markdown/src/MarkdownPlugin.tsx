@@ -18,8 +18,8 @@ import { Text } from '@dxos/schema';
 import { MarkdownBlueprint } from './blueprints';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Markdown, MarkdownEvents } from './types';
-import { MarkdownOperation } from './operations';
+import { Markdown, MarkdownEvents } from '#types';
+import { MarkdownOperation } from '#operations';
 import { serializer } from './util';
 
 import {

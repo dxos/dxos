@@ -18,7 +18,7 @@ import {
 } from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
-import { type Scene, Model } from '../../types';
+import { type Scene, Model } from '#types';
 import { type SelectionMode, type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
 
 export type SpacetimeCanvasProps = {

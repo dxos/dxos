@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../meta';
-import { MapCapabilities } from '../types';
+import { MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

@@ -21,7 +21,7 @@ import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
-import { Map } from '../types';
+import { Map } from '#types';
 
 // TODO(burdon): Factor out.
 declare global {

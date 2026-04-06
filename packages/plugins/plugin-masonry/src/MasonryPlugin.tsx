@@ -16,7 +16,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { Masonry, MasonryAction } from './types';
+import { Masonry, MasonryAction } from '#types';
 
 import { ReactSurface } from '#capabilities';
 

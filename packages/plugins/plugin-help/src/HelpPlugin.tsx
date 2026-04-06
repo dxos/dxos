@@ -7,7 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { type Step } from './types';
+import { type Step } from '#types';
 
 import { AppGraphBuilder, HelpState, OperationHandler, ReactRoot, ReactSurface } from '#capabilities';
 

@@ -10,8 +10,8 @@ import { type Observability } from '@dxos/observability';
 
 import { meta } from './meta';
 import { translations } from './translations';
-import { ClientReadyEvent, ObservabilityEvents } from './types';
-import { ObservabilityCapabilities } from './types';
+import { ClientReadyEvent, ObservabilityEvents } from '#types';
+import { ObservabilityCapabilities } from '#types';
 
 import {
   AppGraphBuilder,

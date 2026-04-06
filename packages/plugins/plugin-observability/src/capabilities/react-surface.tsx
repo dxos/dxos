@@ -12,8 +12,8 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ObservabilitySettings } from '../components';
 import { HelpContainer } from '../containers';
 import { meta } from '../meta';
-import { ObservabilityOperation } from '../operations';
-import { type Settings } from '../types';
+import { ObservabilityOperation } from '#operations';
+import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

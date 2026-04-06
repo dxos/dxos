@@ -12,7 +12,7 @@ import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { threads } from '../extensions';
-import { ThreadCapabilities } from '../types';
+import { ThreadCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

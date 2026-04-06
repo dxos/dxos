@@ -11,7 +11,7 @@ import * as THREE from 'three';
 
 import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
-import { type Voxel } from '../../types';
+import { type Voxel } from '#types';
 
 //
 // Coordinate convention:
