@@ -152,6 +152,8 @@ The `manifold-3d` package ships a `manifold.wasm` binary (~1MB) that must be loa
 
 Tools are stateful objects that handle pointer interaction on the Babylon scene. They manipulate Babylon meshes directly during interaction (visual-only), then commit the final state to the ECHO `Model.Object` when the action completes. The canvas remains a renderer — it reads ECHO state, renders meshes, and delegates all pointer events to the active tool.
 
+**Dependency rule:** `src/tools/` must NOT import from `src/components/`. The dependency direction is `components → tools`, never the reverse. Types shared between both (e.g., `SelectionMode`, `SelectionState`) are defined in `tools/` and re-exported by `components/`.
+
 **Separation of concerns:**
 
 - **Canvas** renders ECHO state and delegates pointer events to the `ToolManager`.

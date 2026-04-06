@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+// NOTE: tools/ must NOT import from ../components/ (dependency flows: components → tools).
+// Run `grep -r "from '../../components\|from '../components" src/tools/` to verify.
+
 import { ToolManager } from './tool-manager';
 import { SelectTool, MoveTool, ExtrudeTool } from './tools';
 import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObjectsAction } from './actions';
