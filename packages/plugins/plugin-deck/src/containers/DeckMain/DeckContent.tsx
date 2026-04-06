@@ -22,6 +22,7 @@ export const DeckContent = () => {
     useDeckContext(DECK_CONTENT_NAME);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, fullscreen, solo } = deck;
+
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
@@ -44,7 +45,7 @@ export const DeckContent = () => {
   const [isNotMobile] = useMediaQuery('md');
   const shouldRevert = useRef(false);
   useEffect(() => {
-    if (!isNotMobile && layoutMode === 'deck') {
+    if (!isNotMobile && layoutMode === 'multi') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
       const attended = attention.getCurrent();
@@ -59,7 +60,7 @@ export const DeckContent = () => {
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
-    if (!settings?.enableDeck && layoutMode === 'deck') {
+    if (!settings?.enableDeck && layoutMode === 'multi') {
       onLayoutChange({ subject: active[0], mode: 'solo' });
     }
   }, [settings?.enableDeck, onLayoutChange, active, layoutMode]);

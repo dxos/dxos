@@ -36,7 +36,6 @@ export const DeckViewport = () => {
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
-
   const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +56,7 @@ export const DeckViewport = () => {
       deckRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, []);
-  useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
+  useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
 
   /**
    * Save scroll position as the user scrolls.
@@ -160,11 +159,11 @@ export const DeckViewport = () => {
               <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
               <ConnectedPlank
                 id={entryId}
-                companionVariant={effectiveCompanionVariant}
-                part='deck'
-                order={order[entryId]}
+                part='multi'
                 active={active}
+                order={order[entryId]}
                 layoutMode={layoutMode}
+                companionVariant={effectiveCompanionVariant}
                 settings={settings}
               />
             </Fragment>
@@ -191,9 +190,9 @@ export const DeckViewport = () => {
         >
           <ConnectedPlank
             id={solo}
-            companionVariant={effectiveCompanionVariant}
             part='solo'
             layoutMode={layoutMode}
+            companionVariant={effectiveCompanionVariant}
             settings={settings}
           />
         </StackContext.Provider>

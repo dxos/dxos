@@ -81,11 +81,11 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>
-            <Plank.Root layoutMode='deck' part='deck' graph={graph}>
+            <Plank.Root layoutMode='multi' part='multi' graph={graph}>
               <Plank.Component
                 id={props.data.id}
-                layoutMode='deck'
-                part='deck'
+                layoutMode='multi'
+                part='multi'
                 node={{ id: props.data.id, data: props.data, type: 'test', properties: {} } as any}
               />
             </Plank.Root>

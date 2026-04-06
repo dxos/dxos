@@ -81,7 +81,7 @@ export const PlankHeading = memo(
     const capabilities = useMemo(
       () => ({
         deck: deckEnabled ?? true,
-        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
+        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'multi'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         fullscreen: !isCompanionNode,

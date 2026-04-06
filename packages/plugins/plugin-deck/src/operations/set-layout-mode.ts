@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
 
       const computeModeUpdate = (mode: LayoutMode, subject?: string): Partial<DeckState> => {
         const current = deck.solo ? [deck.solo] : deck.active;
-        const next = (mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]).filter(
+        const next = (mode !== 'multi' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]).filter(
           isNonNullable,
         );
 
@@ -32,9 +32,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
         const closed = Array.from(new Set([...deck.inactive.filter((id: string) => !next.includes(id)), ...removed]));
 
         const soloUpdate =
-          mode !== 'deck' && next[0]
+          mode !== 'multi' && next[0]
             ? { solo: next[0] }
-            : mode === 'deck' && deck.solo
+            : mode === 'multi' && deck.solo
               ? { solo: undefined, initialized: true }
               : {};
 

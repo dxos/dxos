@@ -52,7 +52,7 @@ export const PlankComponent = memo(
     const { popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
       usePlankContext('PlankComponent');
 
-    const canResize = layoutMode === 'deck';
+    const canResize = layoutMode === 'multi';
     const { findFirstFocusable } = useFocusFinders();
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
     const orderId = companioned === 'companion' ? primary?.id : id;
@@ -91,14 +91,14 @@ export const PlankComponent = memo(
 
     useLayoutEffect(() => {
       if (scrollIntoView === id) {
-        layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        layoutMode === 'multi' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         onScrollIntoView?.(undefined);
       }
     }, [id, scrollIntoView, layoutMode, onScrollIntoView]);
 
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
-      (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
+      (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
     const sizeAttrs = useMainSize();
 
     const data = useMemo(
@@ -128,7 +128,7 @@ export const PlankComponent = memo(
       part.startsWith('solo') && 'grid',
       part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-w-0',
       fullscreen && 'grid-rows-1',
-      part === 'deck' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
+      part === 'multi' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
       part === 'solo-companion' && 'border-separator! border-s',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&

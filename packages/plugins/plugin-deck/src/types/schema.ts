@@ -14,7 +14,7 @@ export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
 
 export * as Settings from './Settings';
 
-export type Part = 'solo' | 'deck' | 'complementary';
+export type Part = 'solo' | 'multi' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
 
 export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
@@ -25,12 +25,12 @@ export const DeckState = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: Schema.Boolean,
   active: Schema.mutable(Schema.Array(Schema.String)),
-  companionOpen: Schema.Boolean,
-  companionVariant: Schema.optional(Schema.String),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   solo: Schema.optional(Schema.String),
   fullscreen: Schema.Boolean,
   plankSizing: Schema.mutable(PlankSizing),
+  companionOpen: Schema.Boolean,
+  companionVariant: Schema.optional(Schema.String),
   companionFrameSizing: Schema.mutable(PlankSizing),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
@@ -38,16 +38,16 @@ export type DeckState = Schema.Schema.Type<typeof DeckState>;
 export const defaultDeck: DeckState = {
   initialized: false,
   active: [],
-  companionOpen: false,
-  companionVariant: undefined,
   inactive: [],
   solo: undefined,
   fullscreen: false,
   plankSizing: {},
+  companionOpen: false,
+  companionVariant: undefined,
   companionFrameSizing: {},
 };
 
-const LayoutMode = Schema.Literal('deck', 'solo', 'solo--fullscreen');
+const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
 
@@ -56,7 +56,7 @@ export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode =
     return deck.fullscreen ? 'solo--fullscreen' : 'solo';
   }
 
-  return 'deck';
+  return 'multi';
 };
 
 // Persisted plugin state (stored in KVS/localStorage).
