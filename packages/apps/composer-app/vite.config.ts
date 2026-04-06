@@ -61,6 +61,12 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
+  devtools: {
+    enabled: true,
+  },
+  experimental: {
+    bundledDev: true,
+  },
   root: dirname,
   server: {
     host: true,
@@ -102,9 +108,6 @@ export default defineConfig((env) => ({
       },
       output: {
         chunkFileNames,
-        manualChunks: {
-          react: ['react', 'react-dom'],
-        },
       },
     },
   },

@@ -53,6 +53,13 @@ const PluginImportSource = ({
 
     resolveId: {
       order: 'pre',
+      // TODO(dmaretskyi): More efficient to use the core include/exclude options.
+      /*
+      [PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown:
+      - plugin-import-source (56%)
+      - dxos:vite-plugin-log (37%)
+      - vite-plugin-wasm (6%)
+      */
       async handler(source, importer) {
         // Check if source looks like an npm package name or a subpath import (#).
         if (!source.match(/^[a-zA-Z@#][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {

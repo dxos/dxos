@@ -107,6 +107,7 @@
     "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-haptics": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
+    "@vitejs/devtools": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
     "isomorphic-fetch": "catalog:",
