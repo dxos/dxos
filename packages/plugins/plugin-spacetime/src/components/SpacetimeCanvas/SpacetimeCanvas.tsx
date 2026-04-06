@@ -157,6 +157,9 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             if (prev.type === 'multi-object') {
               for (const entry of prev.objects) {
                 highlightLayer.removeMesh(entry.mesh);
+                if (entry.mesh.material) {
+                  entry.mesh.material.zOffset = 0;
+                }
               }
             } else {
               if (prev.highlightMesh) {
@@ -166,16 +169,25 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
               if (prev.type === 'object') {
                 highlightLayer.removeMesh(prev.mesh);
               }
+              if (prev.mesh.material) {
+                prev.mesh.material.zOffset = 0;
+              }
             }
           }
-          // Apply new selection.
+          // Apply new selection. Selected meshes render on top (zOffset) to avoid z-fighting.
           if (next?.type === 'object') {
             highlightLayer.addMesh(next.mesh, theme.selected);
+            if (next.mesh.material) {
+              next.mesh.material.zOffset = -1;
+            }
           } else if (next?.type === 'face' && next.highlightMesh) {
             highlightLayer.addMesh(next.highlightMesh, theme.selected);
           } else if (next?.type === 'multi-object') {
             for (const entry of next.objects) {
               highlightLayer.addMesh(entry.mesh, theme.selected);
+              if (entry.mesh.material) {
+                entry.mesh.material.zOffset = -1;
+              }
             }
           }
 
