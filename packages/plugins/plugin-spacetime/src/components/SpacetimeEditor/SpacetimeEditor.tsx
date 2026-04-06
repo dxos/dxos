@@ -2,24 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
+  type RefObject,
   useEffect,
-  useState,
   useCallback,
   useMemo,
   useRef,
+  useContext,
   forwardRef,
   useImperativeHandle,
-  RefObject,
 } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type EditorState, type ActionResult } from '../../tools';
+import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
 import { type Scene, Model } from '../../types';
 import { handleImport as doImport, handleExport as doExport } from './import-export';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
@@ -42,34 +43,26 @@ const SPACETIME_EDITOR = 'SpacetimeEditor';
 type SpacetimeEditorContextValue = {
   scene?: Scene.Scene;
 
+  /** Atom holding unified editor state. */
+  editorStateAtom: Atom.Writable<EditorState>;
+
   /** Actions. */
   editorActions: EditorActions;
 
-  /** Tools. */
+  // Compatibility for toolbar (Task 5 removes these).
   toolState: ToolState;
   onToolChange: (next: Partial<ToolState>) => void;
-
-  /** View. */
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
-
-  /** Object Properties. */
   propertiesState: PropertiesState;
   onPropertiesChange: (next: Partial<PropertiesState>) => void;
-
-  /** Selection. */
   selectionState: SelectionState;
   onSelectionChange: (next: Partial<SelectionState>) => void;
-
-  selectedObjectId: string | null;
-  setSelectedObjectId: (id: string | null) => void;
-  setSelectedObjectIds: (ids: string[]) => void;
-
   selectedTemplate: Model.ObjectTemplate;
   onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
 
   /** Ref for dispatching actions through ToolManager. */
-  handleActionRef: React.MutableRefObject<(actionId: string, editorState: EditorState) => ActionResult | undefined>;
+  handleActionRef: React.MutableRefObject<(actionId: string) => void>;
 
   /** Runtime Manifold solids (provided by canvas). */
   solidsRef: RefObject<Map<string, import('manifold-3d').Manifold> | null>;
@@ -101,84 +94,32 @@ type SpacetimeEditorRootProps = PropsWithChildren<{
   scene?: Scene.Scene;
 }>;
 
-const DEFAULT_SELECTION_STATE: SelectionState = { selectionMode: 'object', selectionCount: 0 };
-const DEFAULT_VIEW_STATE: ViewState = { showGrid: true, showDebug: false };
-
 const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(
   ({ children, scene }, forwardedRef) => {
-    const [toolState, setToolState] = useState<ToolState>({ tool: 'select' });
-    const [selectionState, setSelectionState] = useState<SelectionState>(DEFAULT_SELECTION_STATE);
-    const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
-    const [selectedObjectIds, _setSelectedObjectIds] = useState<string[]>([]);
-    const selectedObjectId = selectedObjectIds[0] ?? null;
-    const setSelectedObjectIds = useCallback((ids: string[]) => {
-      _setSelectedObjectIds(ids);
-      setSelectionState((prev) => ({ ...prev, selectionCount: ids.length }));
-    }, []);
-    const setSelectedObjectId = useCallback(
-      (id: string | null) => {
-        setSelectedObjectIds(id ? [id] : []);
+    const registry = useContext(RegistryContext);
+    const editorStateAtom = useMemo(() => Atom.make<EditorState>({ ...DEFAULT_EDITOR_STATE }), []);
+    const editorState = useAtomValue(editorStateAtom);
+
+    const updateEditorState = useCallback(
+      (next: Partial<EditorState>) => {
+        registry.set(editorStateAtom, { ...registry.get(editorStateAtom), ...next });
       },
-      [setSelectedObjectIds],
+      [registry, editorStateAtom],
     );
-    const [selectedTemplate, setSelectedTemplate] = useState<Model.ObjectTemplate>('cube');
-    const [propertiesState, setPropertiesState] = useState<PropertiesState>({ hue: 'blue' });
-    const handleActionRef = useRef<(actionId: string, editorState: EditorState) => ActionResult | undefined>(
-      () => undefined,
-    );
+
+    // Derive selection values from editor state.
+    const selectedObjectIds = getSelectedObjectIds(editorState.selection);
+    const selectedObjectId = selectedObjectIds[0] ?? null;
+
+    const handleActionRef = useRef<(actionId: string) => void>(() => {});
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
     const importGLBRef = useRef<
       (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
     >(async () => undefined);
 
-    const handleToolChange = useCallback(
-      (next: Partial<ToolState>) => setToolState((prev) => ({ ...prev, ...next })),
-      [],
-    );
-    const handleSelectionChange = useCallback(
-      (next: Partial<SelectionState>) => setSelectionState((prev) => ({ ...prev, ...next })),
-      [],
-    );
-    const handleViewChange = useCallback(
-      (next: Partial<ViewState>) => setViewState((prev) => ({ ...prev, ...next })),
-      [],
-    );
-    const handleSelectedTemplateChange = useCallback(
-      (template: Model.ObjectTemplate) => setSelectedTemplate(template),
-      [],
-    );
-    const handlePropertiesChange = useCallback(
-      (next: Partial<PropertiesState>) => {
-        setPropertiesState((prev) => ({ ...prev, ...next }));
-        // Update the selected object's color if hue changed and an object is selected.
-        if (next.hue && selectedObjectId && scene?.objects) {
-          for (const ref of scene.objects) {
-            const obj = ref?.target;
-            if (obj && (obj as any).id === selectedObjectId) {
-              Obj.change(obj, (o) => {
-                o.color = next.hue!;
-              });
-              break;
-            }
-          }
-        }
-      },
-      [selectedObjectId, scene],
-    );
-
     const dispatchAction = useCallback(
-      (actionId: string): void => {
-        const editorState: EditorState = {
-          selectedObjectIds,
-          selectedTemplate,
-          hue: propertiesState.hue,
-        };
-        const result = handleActionRef.current(actionId, editorState);
-        if (result?.selectObjectIds) {
-          setSelectedObjectIds(result.selectObjectIds);
-        }
-      },
-      [selectedObjectIds, selectedTemplate, propertiesState.hue],
+      (actionId: string): void => handleActionRef.current(actionId),
+      [],
     );
 
     const handleAdd = useCallback(() => dispatchAction('add-object'), [dispatchAction]);
@@ -191,17 +132,24 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         doImport({
           scene,
           selectedObjectId,
-          hue: propertiesState.hue,
+          hue: editorState.hue,
           solidsRef,
           importGLBRef,
-          setSelectedObjectId,
+          setSelectedObjectId: (id: string | null) => {
+            if (id) {
+              updateEditorState({ pendingSelectId: id });
+            }
+          },
         }),
-      [scene, propertiesState.hue],
+      [scene, editorState.hue, selectedObjectId, updateEditorState],
     );
 
     const handleExport = useCallback(() => doExport({ selectedObjectId, solidsRef }), [selectedObjectId]);
 
-    // Sync hue picker with selected object's color.
+    // Track whether hue change is programmatic (from object sync) to avoid infinite loop.
+    const programmaticHueRef = useRef(false);
+
+    // Sync hue picker with selected object's color when selection changes.
     useEffect(() => {
       if (!selectedObjectId || !scene?.objects) {
         return;
@@ -209,11 +157,32 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       for (const ref of scene.objects) {
         const obj = ref?.target;
         if (obj && (obj as any).id === selectedObjectId && (obj as any).color) {
-          setPropertiesState((prev) => ({ ...prev, hue: (obj as any).color }));
+          programmaticHueRef.current = true;
+          updateEditorState({ hue: (obj as any).color });
           return;
         }
       }
     }, [selectedObjectId, scene]);
+
+    // Sync hue change to the ECHO object (skip when change was programmatic).
+    useEffect(() => {
+      if (programmaticHueRef.current) {
+        programmaticHueRef.current = false;
+        return;
+      }
+      if (!selectedObjectId || !scene?.objects) {
+        return;
+      }
+      for (const ref of scene.objects) {
+        const obj = ref?.target;
+        if (obj && (obj as any).id === selectedObjectId) {
+          Obj.change(obj, (draft) => {
+            draft.color = editorState.hue;
+          });
+          break;
+        }
+      }
+    }, [editorState.hue]);
 
     const editorActions: EditorActions = useMemo(
       () => ({
@@ -227,27 +196,58 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       [handleAdd, handleDeleteSelected, handleImport, handleExport, handleJoinSelected, handleSubtractSelected],
     );
 
+    // Derive compatibility values from editorState for toolbar.
+    const toolState = useMemo<ToolState>(() => ({ tool: editorState.tool as ToolState['tool'] }), [editorState.tool]);
+    const viewState = useMemo<ViewState>(
+      () => ({ showGrid: editorState.showGrid, showDebug: editorState.showDebug }),
+      [editorState.showGrid, editorState.showDebug],
+    );
+    const propertiesState = useMemo<PropertiesState>(() => ({ hue: editorState.hue }), [editorState.hue]);
+    const selectionState = useMemo<SelectionState>(
+      () => ({ selectionMode: editorState.selectionMode, selectionCount: selectedObjectIds.length }),
+      [editorState.selectionMode, selectedObjectIds.length],
+    );
+
+    const onToolChange = useCallback(
+      (next: Partial<ToolState>) => updateEditorState(next as Partial<EditorState>),
+      [updateEditorState],
+    );
+    const onViewChange = useCallback(
+      (next: Partial<ViewState>) => updateEditorState(next as Partial<EditorState>),
+      [updateEditorState],
+    );
+    const onPropertiesChange = useCallback(
+      (next: Partial<PropertiesState>) => updateEditorState(next as Partial<EditorState>),
+      [updateEditorState],
+    );
+    const onSelectionChange = useCallback(
+      (next: Partial<SelectionState>) => updateEditorState(next as Partial<EditorState>),
+      [updateEditorState],
+    );
+    const onSelectedTemplateChange = useCallback(
+      (template: Model.ObjectTemplate) => updateEditorState({ selectedTemplate: template }),
+      [updateEditorState],
+    );
+
     useImperativeHandle(forwardedRef, () => ({
-      setTool: handleToolChange,
+      setTool: onToolChange,
     }));
 
     return (
       <SpacetimeEditorProvider
         scene={scene}
+        editorStateAtom={editorStateAtom}
         toolState={toolState}
-        onToolChange={handleToolChange}
+        onToolChange={onToolChange}
         selectionState={selectionState}
-        onSelectionChange={handleSelectionChange}
+        onSelectionChange={onSelectionChange}
         viewState={viewState}
-        onViewChange={handleViewChange}
-        selectedTemplate={selectedTemplate}
-        onSelectedTemplateChange={handleSelectedTemplateChange}
+        onViewChange={onViewChange}
+        selectedTemplate={editorState.selectedTemplate}
+        onSelectedTemplateChange={onSelectedTemplateChange}
         propertiesState={propertiesState}
-        onPropertiesChange={handlePropertiesChange}
+        onPropertiesChange={onPropertiesChange}
         editorActions={editorActions}
-        selectedObjectId={selectedObjectId}
-        setSelectedObjectId={setSelectedObjectId}
-        setSelectedObjectIds={setSelectedObjectIds}
         handleActionRef={handleActionRef}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
@@ -314,22 +314,18 @@ SpacetimeEditorToolbar.displayName = SPACETIME_EDITOR_TOOLBAR;
 
 const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 
-type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
+type SpacetimeEditorCanvasProsp = Omit<
+  SpacetimeCanvasProps,
+  'showAxes' | 'showFps' | 'editorStateAtom' | 'scene' | 'objectCount' | 'parentSolidsRef' | 'importGLBRef' | 'handleActionRef'
+>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
   const {
     scene,
-    toolState,
-    onToolChange,
-    selectionState,
-    viewState,
-    propertiesState,
-    selectedObjectId,
-    setSelectedObjectIds,
+    editorStateAtom,
     solidsRef: parentSolidsRef,
     importGLBRef: parentImportGLBRef,
     handleActionRef: parentHandleActionRef,
-    editorActions,
   } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
   const [liveScene] = useObject(scene);
@@ -338,18 +334,11 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
     <SpacetimeCanvas
       {...composableProps(props)}
       scene={scene}
-      tool={toolState.tool}
-      selectionMode={selectionState.selectionMode}
-      viewState={viewState}
+      editorStateAtom={editorStateAtom}
       objectCount={objectCount}
-      onSelectionChange={setSelectedObjectIds}
       parentSolidsRef={parentSolidsRef}
       importGLBRef={parentImportGLBRef}
       handleActionRef={parentHandleActionRef}
-      selectedObjectId={selectedObjectId}
-      selectedHue={propertiesState.hue}
-      onToolChange={onToolChange}
-      onDelete={editorActions.onDeleteSelected}
       ref={forwardedRef}
     />
   );

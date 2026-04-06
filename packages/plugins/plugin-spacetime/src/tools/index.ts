@@ -18,6 +18,7 @@ export type {
   FaceSelection,
   MultiObjectSelection,
   SelectionMode,
+  SelectionState,
 } from './tool-context';
 export { getSelectedObjectIds } from './tool-context';
 export { ToolManager } from './tool-manager';

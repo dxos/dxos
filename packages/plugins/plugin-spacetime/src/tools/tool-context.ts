@@ -13,6 +13,12 @@ import { type EditorState } from './editor-state';
 /** Selection granularity mode. */
 export type SelectionMode = 'object' | 'face';
 
+/** Toolbar-facing selection state (derived from EditorState). */
+export type SelectionState = {
+  selectionMode: SelectionMode;
+  selectionCount: number;
+};
+
 /** Base selection fields shared by all selection types. */
 type SelectionBase = {
   /** ECHO object id of the selected mesh. */
