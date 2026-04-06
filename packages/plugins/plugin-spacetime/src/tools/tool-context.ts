@@ -47,7 +47,7 @@ export type ObjectSelection = SelectionBase & {
 export type MultiObjectSelection = {
   type: 'multi-object';
   /** Ordered list of selected objects (first = primary). */
-  entries: Array<{ objectId: string; mesh: Mesh }>;
+  objects: Array<{ objectId: string; mesh: Mesh }>;
 };
 
 /** Shared selection state that persists across tool switches. */
@@ -89,7 +89,7 @@ export const getSelectedObjectIds = (selection: Selection | null): string[] => {
     return [];
   }
   if (selection.type === 'multi-object') {
-    return selection.entries.map((entry) => entry.objectId);
+    return selection.objects.map((entry) => entry.objectId);
   }
   return [selection.objectId];
 };

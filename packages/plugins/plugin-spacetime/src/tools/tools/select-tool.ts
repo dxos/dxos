@@ -64,22 +64,22 @@ export class SelectTool implements Tool {
         // Multi-select: toggle this object in/out of the selection list.
         const current = ctx.selection;
         if (current?.type === 'multi-object') {
-          const existsIdx = current.entries.findIndex((entry) => entry.objectId === objectId);
+          const existsIdx = current.objects.findIndex((entry) => entry.objectId === objectId);
           if (existsIdx >= 0) {
             // Remove from multi-selection.
-            const next = current.entries.filter((_, idx) => idx !== existsIdx);
+            const next = current.objects.filter((_, idx) => idx !== existsIdx);
             if (next.length === 1) {
               ctx.setSelection({ type: 'object', objectId: next[0].objectId, mesh: next[0].mesh, highlightMesh: null });
             } else if (next.length === 0) {
               ctx.setSelection(null);
             } else {
-              ctx.setSelection({ type: 'multi-object', entries: next });
+              ctx.setSelection({ type: 'multi-object', objects: next });
             }
           } else {
             // Add to multi-selection.
             ctx.setSelection({
               type: 'multi-object',
-              entries: [...current.entries, { objectId, mesh }],
+              objects: [...current.objects, { objectId, mesh }],
             });
           }
         } else if (current?.type === 'object') {
@@ -88,7 +88,7 @@ export class SelectTool implements Tool {
           } else {
             ctx.setSelection({
               type: 'multi-object',
-              entries: [
+              objects: [
                 { objectId: current.objectId, mesh: current.mesh },
                 { objectId, mesh },
               ],

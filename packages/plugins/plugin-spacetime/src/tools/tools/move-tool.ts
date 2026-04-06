@@ -111,7 +111,7 @@ export class MoveTool implements Tool {
     // Collect companions from multi-selection.
     const companions: DragState['companions'] = [];
     if (ctx.selection?.type === 'multi-object') {
-      for (const entry of ctx.selection.entries) {
+      for (const entry of ctx.selection.objects) {
         if (entry.objectId !== objectId) {
           companions.push({
             objectId: entry.objectId,

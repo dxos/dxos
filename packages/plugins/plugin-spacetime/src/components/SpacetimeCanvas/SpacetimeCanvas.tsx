@@ -155,7 +155,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           const prev = registry.get(editorStateAtom).selection;
           if (prev) {
             if (prev.type === 'multi-object') {
-              for (const entry of prev.entries) {
+              for (const entry of prev.objects) {
                 highlightLayer.removeMesh(entry.mesh);
               }
             } else {
@@ -174,7 +174,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           } else if (next?.type === 'face' && next.highlightMesh) {
             highlightLayer.addMesh(next.highlightMesh, theme.selected);
           } else if (next?.type === 'multi-object') {
-            for (const entry of next.entries) {
+            for (const entry of next.objects) {
               highlightLayer.addMesh(entry.mesh, theme.selected);
             }
           }
@@ -458,11 +458,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             toolCtx.setSelection({ type: 'object', objectId: pendingIds[0], mesh, highlightMesh: null });
           }
         } else {
-          const entries = pendingIds
+          const objects = pendingIds
             .map((objectId) => ({ objectId, mesh: meshesRef.current.get(objectId)! }))
             .filter((entry) => entry.mesh);
-          if (entries.length > 0 && toolCtx?.setSelection) {
-            toolCtx.setSelection({ type: 'multi-object', entries });
+          if (objects.length > 0 && toolCtx?.setSelection) {
+            toolCtx.setSelection({ type: 'multi-object', objects });
           }
         }
         registry.set(editorStateAtom, { ...registry.get(editorStateAtom), pendingSelection: null });
