@@ -128,7 +128,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data,
               properties: {
-                label: [data === 'meeting' ? 'meeting list label' : 'meeting companion label', { ns: meta.id }],
+                label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
                 icon: 'ph--note--regular',
                 position: 'hoist',
                 disposition: 'hidden',

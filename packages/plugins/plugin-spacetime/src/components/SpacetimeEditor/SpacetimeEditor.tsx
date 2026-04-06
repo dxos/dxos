@@ -150,6 +150,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       if (!selectedObjectId || !scene?.objects) {
         return;
       }
+
       for (const ref of scene.objects) {
         const obj = ref?.target;
         if (obj && (obj as any).id === selectedObjectId) {
