@@ -42,4 +42,8 @@ then `Deck.Content` would access these as needed via the context.
 
 ## Phase 3 (Matrix)
 
-We will create a new 'multi' layout.
+- We will create a new 'multi' plank layout based on the AppGraph and attention.
+- The stack contains objects that represent a hierarchy of objects from the root.
+- The right-most plank will be the companion plank for the last object in the stack.
+- Planks may contain vertical stacks that support navigation to a child object, which is then added to the stack.
+- The layout supports a 'back' button that unwinds the right-most plank.
