@@ -4,12 +4,16 @@
 
 import { type PointerInfo, PointerEventTypes } from '@babylonjs/core';
 
+import { log } from '@dxos/log';
+
+import { type ActionHandler, type ActionResult, type EditorState } from './action';
 import { type Tool } from './tool';
 import { type ToolContext } from './tool-context';
 
 /** Manages registered tools and dispatches pointer events to the active tool. */
 export class ToolManager {
   private readonly _tools = new Map<string, Tool>();
+  private readonly _actions = new Map<string, ActionHandler>();
   private _activeTool: Tool | null = null;
   private _ctx: ToolContext | null = null;
 
@@ -36,6 +40,7 @@ export class ToolManager {
       this._activeTool.deactivate(this._ctx);
     }
     this._activeTool = next;
+    log.info('setActiveTool', { id });
     if (this._ctx) {
       this._activeTool.activate(this._ctx);
     }
@@ -64,6 +69,21 @@ export class ToolManager {
     }
   }
 
+  /** Register an action handler. */
+  registerAction(handler: ActionHandler): void {
+    this._actions.set(handler.id, handler);
+  }
+
+  /** Dispatch an action by id. Returns the result, or undefined if action not found or no context. */
+  handleAction(id: string, editorState: EditorState): ActionResult | undefined {
+    const handler = this._actions.get(id);
+    if (!handler || !this._ctx) {
+      return undefined;
+    }
+    log.info('handleAction', { id });
+    return handler.execute(this._ctx, editorState);
+  }
+
   /** Clean up all tools. */
   dispose(): void {
     if (this._activeTool && this._ctx) {
@@ -72,5 +92,6 @@ export class ToolManager {
     this._activeTool = null;
     this._ctx = null;
     this._tools.clear();
+    this._actions.clear();
   }
 }
