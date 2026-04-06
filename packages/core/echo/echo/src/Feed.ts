@@ -118,6 +118,7 @@ export const getQueueDxn = (feed: Feed): DXN | undefined => {
  * Provides the bridge to the underlying storage implementation.
  * Must be provided by the application layer (e.g., echo-db).
  */
+// TODO(dmaretskyi): Rename to FeedService so it shows up as "FeedService" in the TypeScript hovers instead of just "Service".
 export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
   Service,
   {

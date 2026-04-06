@@ -135,6 +135,7 @@
     "@dxos/test-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
+    "@dxos/vite-plugin-log": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",

@@ -12,7 +12,7 @@ import { Database } from '@dxos/echo';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { createEventLogger } from '@dxos/functions';
+import { createEventLogger, Trace } from '@dxos/functions';
 import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
@@ -137,6 +137,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
+              Effect.provide(Trace.writerLayerNoop),
               Effect.scoped,
             ),
         );

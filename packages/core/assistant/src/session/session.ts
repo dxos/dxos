@@ -9,28 +9,31 @@ import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
-
+import * as Array from 'effect/Array';
+import * as Option from 'effect/Option';
 import {
   AiParser,
   AiPreprocessor,
   AiSummarizer,
   type AiToolNotFoundError,
+  callTool,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
-  callTool,
   withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type FunctionInvocationService, TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type ContentBlock, Message } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
+import { pipe } from 'effect/Function';
+import { CompleteBlock, PartialBlock } from '../tracing';
 
 export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -38,14 +41,21 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService
-  | FunctionInvocationService;
+  | FunctionInvocationService
+  | Trace.TraceService
+  /**
+   * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().
+   *   New code should use Trace.TraceService instead.
+   */
+  | TracingService;
 
 export type AiSessionOptions = {
   /**
    * Summarize before executing the prompt if the existing history exceeds this threshold.
    */
   summarizationThreshold?: number;
+
+  // TODO(dmaretskyi): Plan to phase out in favor of TracingService and the return type being a stream.
   observer?: GenerationObserver;
   /**
    * Callback for when a message is received from the user, model, or tool.
@@ -128,14 +138,29 @@ export class AiSession {
     return this._pending;
   }
 
-  private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, TracingService> =>
+  private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, Trace.TraceService> =>
     Effect.gen(this, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
-      yield* TracingService.emitConverationMessage(message as any);
+      for (const block of message.blocks) {
+        yield* Trace.write(CompleteBlock, {
+          messageId: message.id,
+          role: message.sender.role!,
+          block,
+        });
+      }
       yield* this._onOutput(message);
       return message;
     });
+
+  getToolCalls = () =>
+    pipe(
+      [...this._history, ...this._pending],
+      Array.reverse,
+      Array.takeWhile((_) => _.sender.role === 'assistant'),
+      Array.flatMap((_) => _.blocks.filter(ContentBlock.is('toolCall')).map((block) => ({ block, message: _ }))),
+      Array.filter((_) => !_.block.providerExecuted),
+    );
 
   /**
    * Initialize a session: set up history, perform summarization if needed, and submit the user prompt.
@@ -174,7 +199,7 @@ export class AiSession {
    * Execute a single turn: one LLM generation followed by tool execution.
    * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled blueprints).
    */
-  runTurn = <Tools extends Record<string, Tool.Any>>({
+  runAgentTurn = <Tools extends Record<string, Tool.Any>>({
     system,
     toolkit,
   }: AiSessionTurnProps<Tools>): Effect.Effect<AiSessionTurnResult, AiSessionRunError, AiSessionRunRequirements> =>
@@ -191,6 +216,7 @@ export class AiSession {
       });
 
       const observer = this._observer;
+      let currentMessageId: Obj.ID | null = null; // Consistent IDs for pending blocks preceding the complete one.
       const messages = yield* LanguageModel.streamText({
         prompt,
         toolkit,
@@ -198,33 +224,46 @@ export class AiSession {
       }).pipe(
         withoutToolCallParising,
         AiParser.parseResponse({
+          emitPartial: true,
           onBegin: () => observer.onBegin(),
           onBlock: (block) => observer.onBlock(block),
           onPart: (part) => observer.onPart(part as any),
           onEnd: (summary) => observer.onEnd(summary),
         }),
-        Stream.mapEffect((block) =>
-          Effect.gen(this, function* () {
-            return yield* this._submitMessage(
-              Obj.make(Message.Message, {
-                created: new Date().toISOString(),
-                sender: { role: 'assistant' },
-                blocks: [block],
-              }),
-            );
-          }),
+        Stream.mapEffect(
+          (block) =>
+            Effect.gen(this, function* () {
+              if (block.pending) {
+                currentMessageId ??= Obj.ID.random();
+                log('emit ephemeral message', { id: currentMessageId, type: block._tag });
+                yield* Trace.write(PartialBlock, {
+                  messageId: currentMessageId,
+                  role: 'assistant',
+                  block,
+                });
+                return Option.none();
+              } else {
+                currentMessageId ??= Obj.ID.random();
+                const id = currentMessageId;
+                currentMessageId = null;
+                log('emit complete message', { id, type: block._tag });
+                const message = Obj.make(Message.Message, {
+                  id,
+                  created: new Date().toISOString(),
+                  sender: { role: 'assistant' },
+                  blocks: [block],
+                });
+                return Option.some(yield* this._submitMessage(message));
+              }
+            }),
+          { concurrency: 1, unordered: false },
         ),
+        Stream.filterMap((_) => _),
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
 
-      const toolCalls = messages.flatMap((message) =>
-        message.blocks
-          .filter(
-            (block): block is ContentBlock.ToolCall => block._tag === 'toolCall' && block.providerExecuted === false,
-          )
-          .map((block) => ({ block, message })),
-      );
+      const toolCalls = this.getToolCalls();
 
       if (toolCalls.length === 0) {
         this._ended = Date.now();
@@ -233,8 +272,17 @@ export class AiSession {
         throw new Error('No toolkit provided');
       }
 
+      return { messages, done: false };
+    });
+
+  runTools = <Tools extends Record<string, Tool.Any>>({ toolkit }: { toolkit?: Toolkit.WithHandler<Tools> }) =>
+    Effect.gen(this, function* () {
+      const toolCalls = this.getToolCalls();
       // TODO(burdon): Retry errors? Write result when each completes individually?
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
+        if (!toolkit) {
+          throw new Error('No toolkit provided');
+        }
         return callTool(toolkit, block).pipe(
           Effect.provide(
             TracingService.layerSubframe((context) => ({
@@ -256,10 +304,8 @@ export class AiSession {
         }),
       );
 
-      this._toolCalls++;
-      return { messages, done: false };
+      this._toolCalls += toolResults.length;
     });
-
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */
@@ -277,10 +323,11 @@ export class AiSession {
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
       do {
-        const { done } = yield* this.runTurn({ system, toolkit });
+        const { done } = yield* this.runAgentTurn({ system, toolkit });
         if (done) {
           break;
         }
+        yield* this.runTools({ toolkit });
       } while (true);
 
       log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });

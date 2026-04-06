@@ -1,0 +1,44 @@
+{
+  "name": "@dxos/vite-plugin-log",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vite dev server plugin: stream @dxos/log NDJSON to a local file via HMR channel.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": [
+    "src/runtime.ts",
+    "dist/src/runtime.js"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/src/runtime.d.ts",
+      "default": "./dist/src/runtime.js"
+    }
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "vite": "catalog:"
+  }
+}
