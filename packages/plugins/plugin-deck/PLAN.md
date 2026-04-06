@@ -4,19 +4,19 @@ TODO(burdon): Factor out Rules into plugins/AGENTS.md
 
 ## Instructions
 
-### Background
-
-- This is a complex refactor. Think deeply about these tasks and create a plan.
-- When starting a complex refactor that involves applying changes across multiple packages,
-  try to indentify an exemplar that you can copy -- and compare with the exemplar at each step.
-- If in doubt, ask the user for an exemplar.
+- This is a complex project. Think deeply about these tasks and create a plan.
+- Update these instructions to record any changes requested by the user.
 
 ### Workflow
 
-- Use this document to track progress to the user.
+- Use this document to track progress with the user.
 - Work only on the section of the document/plan that you are directed to work on.
-- After each step, check everything builds, then format, lint, commit and push.
+- Remember that the user may be working with you in parallel in the same branch.
 - If we are trying to land a PR monitor CI and address ALL PR comments and CI errors.
+- After each step, check everything builds, then format, lint, commit and push.
+- Use this document to record any complex issues and decisions, or places where you needed additional instructions.
+- Before starting a complex task, first read all of the instructions and do your research then ask the user questions that help clarify the scope.
+- When creating components, look for exemplars within the codebase (e.g., Radix-style components, slots.stories.tsx).
 
 ### Imports
 

@@ -9,10 +9,10 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
 
+export * as Settings from './Settings';
+
 export const PLANK_COMPANION_TYPE = `${meta.id}.plank-companion`;
 export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
-
-export * as Settings from './Settings';
 
 export type Part = 'solo' | 'multi' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';

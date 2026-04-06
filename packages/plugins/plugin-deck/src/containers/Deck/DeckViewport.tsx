@@ -340,6 +340,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
     [invokePromise],
   );
 
+  // TODO(burdon): Destructure props rather than passing everything to Root and Component.
   return (
     <Plank.Root
       graph={graph}
@@ -359,7 +360,6 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
         companion={hasCompanion}
         encapsulate={!!props.settings?.encapsulatedPlanks}
       >
-        {/* TODO(burdon): Destructure props rather than passing everything to Root and Component. */}
         <Plank.Component
           id={id}
           node={node}

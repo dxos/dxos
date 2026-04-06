@@ -21,6 +21,7 @@ import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
+// TOOD(burdon): Get layoutMode from root.
 export type PlankComponentProps = {
   id: string;
   part: ResolvedPart;
