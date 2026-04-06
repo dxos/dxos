@@ -32,10 +32,14 @@ describe('boolean-ops', () => {
     test('joins two overlapping cubes into a single solid', ({ expect }) => {
       const solidA = makeCube();
       const solidB = makeCube([1, 0, 0]);
-      const result = joinSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = joinSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
       const bbox = result.solid.boundingBox();
       expect(bbox.min[0]).toBeCloseTo(-1, 1);
       expect(bbox.max[0]).toBeCloseTo(2, 1);
@@ -50,10 +54,14 @@ describe('boolean-ops', () => {
     test('joins two non-overlapping cubes', ({ expect }) => {
       const solidA = makeCube();
       const solidB = makeCube([5, 0, 0]);
-      const result = joinSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = joinSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
       expect(result.solid.volume()).toBeCloseTo(16, 0);
       result.solid.delete();
       solidA.delete();
@@ -64,11 +72,15 @@ describe('boolean-ops', () => {
       const solidA = makeCube();
       const solidB = makeCube([1, 0, 0]);
       const solidC = makeCube([0, 1, 0]);
-      const result = joinSolids(wasm, [solidA, solidB, solidC], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = joinSolids(
+        wasm,
+        [solidA, solidB, solidC],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
       const bbox = result.solid.boundingBox();
       expect(bbox.min[0]).toBeCloseTo(-1, 1);
       expect(bbox.max[0]).toBeCloseTo(2, 1);
@@ -98,10 +110,14 @@ describe('boolean-ops', () => {
     test('subtracts overlapping cube from another', ({ expect }) => {
       const solidA = makeCube();
       const solidB = makeCube([1, 0, 0]);
-      const result = subtractSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = subtractSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
       const bbox = result.solid.boundingBox();
       expect(bbox.min[0]).toBeCloseTo(-1, 1);
       expect(bbox.max[0]).toBeCloseTo(0, 1);
@@ -115,11 +131,15 @@ describe('boolean-ops', () => {
       const solidA = wasm.Manifold.cube([4, 2, 2], true);
       const solidB = makeCube([1, 0, 0]);
       const solidC = makeCube([-1, 0, 0]);
-      const result = subtractSolids(wasm, [solidA, solidB, solidC], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = subtractSolids(
+        wasm,
+        [solidA, solidB, solidC],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
       expect(result.solid.volume()).toBeLessThan(16);
       result.solid.delete();
       solidA.delete();
@@ -130,10 +150,14 @@ describe('boolean-ops', () => {
     test('subtracting non-overlapping cube leaves original intact', ({ expect }) => {
       const solidA = makeCube();
       const solidB = makeCube([10, 0, 0]);
-      const result = subtractSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = subtractSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
       expect(result.solid.volume()).toBeCloseTo(8, 0);
       result.solid.delete();
       solidA.delete();

@@ -14,29 +14,30 @@
 
 ### New Files
 
-| File | Responsibility |
-|------|---------------|
-| `src/engine/boolean-ops.ts` | Pure functions: `joinSolids`, `subtractSolids` wrapping Manifold union/difference. Handles position translation to world space and back. |
-| `src/engine/boolean-ops.test.ts` | Unit tests for join and subtract operations. |
+| File                             | Responsibility                                                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/engine/boolean-ops.ts`      | Pure functions: `joinSolids`, `subtractSolids` wrapping Manifold union/difference. Handles position translation to world space and back. |
+| `src/engine/boolean-ops.test.ts` | Unit tests for join and subtract operations.                                                                                             |
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
-| `src/engine/index.ts` | Add barrel export for `boolean-ops.ts`. |
-| `src/tools/tool-context.ts` | Add `MultiObjectSelection` type variant. Extend `Selection` union. |
-| `src/tools/impl/select-tool.ts` | Handle shift-click in object mode to toggle objects in/out of multi-selection. |
-| `src/tools/impl/move-tool.ts` | (1) Support moving all objects in a multi-selection. (2) Add metaKey/altKey check to switch to vertical (Y-axis) drag plane. |
-| `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx` | (1) Update `setSelection` to handle `MultiObjectSelection` highlights. (2) Add `keydown` listener for tool shortcuts. (3) Wire `onSelectionChange` to report multi-select IDs. |
-| `src/components/SpacetimeToolbar/actions.ts` | Add join and subtract action buttons. Extend `EditorActions` type. |
-| `src/components/SpacetimeToolbar/SpacetimeToolbar.tsx` | Pass new actions through. |
-| `src/components/SpacetimeEditor/SpacetimeEditor.tsx` | (1) Track `selectedObjectIds: string[]` (ordered). (2) Implement `handleJoinSelected` and `handleSubtractSelected` callbacks. (3) Pass to toolbar and canvas. |
+| File                                                   | Changes                                                                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/engine/index.ts`                                  | Add barrel export for `boolean-ops.ts`.                                                                                                                                        |
+| `src/tools/tool-context.ts`                            | Add `MultiObjectSelection` type variant. Extend `Selection` union.                                                                                                             |
+| `src/tools/impl/select-tool.ts`                        | Handle shift-click in object mode to toggle objects in/out of multi-selection.                                                                                                 |
+| `src/tools/impl/move-tool.ts`                          | (1) Support moving all objects in a multi-selection. (2) Add metaKey/altKey check to switch to vertical (Y-axis) drag plane.                                                   |
+| `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx`   | (1) Update `setSelection` to handle `MultiObjectSelection` highlights. (2) Add `keydown` listener for tool shortcuts. (3) Wire `onSelectionChange` to report multi-select IDs. |
+| `src/components/SpacetimeToolbar/actions.ts`           | Add join and subtract action buttons. Extend `EditorActions` type.                                                                                                             |
+| `src/components/SpacetimeToolbar/SpacetimeToolbar.tsx` | Pass new actions through.                                                                                                                                                      |
+| `src/components/SpacetimeEditor/SpacetimeEditor.tsx`   | (1) Track `selectedObjectIds: string[]` (ordered). (2) Implement `handleJoinSelected` and `handleSubtractSelected` callbacks. (3) Pass to toolbar and canvas.                  |
 
 ---
 
 ## Task 1: Boolean Operations Engine (Unit Tests + Implementation)
 
 **Files:**
+
 - Create: `src/engine/boolean-ops.ts`
 - Create: `src/engine/boolean-ops.test.ts`
 - Modify: `src/engine/index.ts`
@@ -84,10 +85,14 @@ describe('boolean-ops', () => {
       const solidA = makeCube();
       const solidB = makeCube([1, 0, 0]);
 
-      const result = joinSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = joinSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
 
       const bbox = result.solid.boundingBox();
       expect(bbox.min[0]).toBeCloseTo(-1, 1);
@@ -107,10 +112,14 @@ describe('boolean-ops', () => {
       const solidA = makeCube();
       const solidB = makeCube([5, 0, 0]);
 
-      const result = joinSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = joinSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
 
       // Volume: 8 + 8 = 16 (no overlap).
       expect(result.solid.volume()).toBeCloseTo(16, 0);
@@ -125,11 +134,15 @@ describe('boolean-ops', () => {
       const solidB = makeCube([1, 0, 0]);
       const solidC = makeCube([0, 1, 0]);
 
-      const result = joinSolids(wasm, [solidA, solidB, solidC], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = joinSolids(
+        wasm,
+        [solidA, solidB, solidC],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
 
       const bbox = result.solid.boundingBox();
       expect(bbox.min[0]).toBeCloseTo(-1, 1);
@@ -167,10 +180,14 @@ describe('boolean-ops', () => {
       const solidA = makeCube();
       const solidB = makeCube([1, 0, 0]);
 
-      const result = subtractSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = subtractSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
 
       const bbox = result.solid.boundingBox();
       // After subtracting B from A, X range should be [-1, 0] (the non-overlapping part of A).
@@ -191,11 +208,15 @@ describe('boolean-ops', () => {
       const solidB = makeCube([1, 0, 0]);
       const solidC = makeCube([-1, 0, 0]);
 
-      const result = subtractSolids(wasm, [solidA, solidB, solidC], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = subtractSolids(
+        wasm,
+        [solidA, solidB, solidC],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
 
       // A volume = 16. B removes overlap [0,1]*2*2=4. C removes overlap [-1,0]*2*2=4.
       // But B and C overlap at [-1,1] with A. After A-B-C, the remaining is the center strip.
@@ -212,10 +233,14 @@ describe('boolean-ops', () => {
       const solidA = makeCube();
       const solidB = makeCube([10, 0, 0]);
 
-      const result = subtractSolids(wasm, [solidA, solidB], [
-        { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 0 },
-      ]);
+      const result = subtractSolids(
+        wasm,
+        [solidA, solidB],
+        [
+          { x: 0, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+      );
 
       // No overlap, volume should be unchanged.
       expect(result.solid.volume()).toBeCloseTo(8, 0);
@@ -290,11 +315,7 @@ const toWorldSpace = (solid: Manifold, objectPos: Model.Vec3, refPos: Model.Vec3
  * Each solid is translated to world space relative to the first object's position.
  * The result position is that of the first object.
  */
-export const joinSolids = (
-  wasm: ManifoldToplevel,
-  solids: Manifold[],
-  positions: Model.Vec3[],
-): BooleanResult => {
+export const joinSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
   const refPos = positions[0];
   const translated: Manifold[] = [];
 
@@ -323,11 +344,7 @@ export const joinSolids = (
  * Each solid is translated to world space relative to the first object's position.
  * The result position is that of the first object.
  */
-export const subtractSolids = (
-  wasm: ManifoldToplevel,
-  solids: Manifold[],
-  positions: Model.Vec3[],
-): BooleanResult => {
+export const subtractSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
   const refPos = positions[0];
   const translated: Manifold[] = [];
 
@@ -354,6 +371,7 @@ export const subtractSolids = (
 - [ ] **Step 4: Add barrel export**
 
 In `src/engine/index.ts`, add:
+
 ```typescript
 export * from './boolean-ops';
 ```
@@ -375,6 +393,7 @@ git commit -m "feat(plugin-spacetime): add boolean ops engine (join/subtract) wi
 ## Task 2: Multi-Object Selection Type
 
 **Files:**
+
 - Modify: `src/tools/tool-context.ts`
 
 - [ ] **Step 1: Extend Selection type with MultiObjectSelection**
@@ -425,6 +444,7 @@ git commit -m "feat(plugin-spacetime): add MultiObjectSelection type to selectio
 ## Task 3: Multi-Select in SelectTool
 
 **Files:**
+
 - Modify: `src/tools/impl/select-tool.ts`
 - Modify: `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx`
 
@@ -553,6 +573,7 @@ git commit -m "feat(plugin-spacetime): add shift-click multi-object selection"
 ## Task 4: Move All Selected Objects
 
 **Files:**
+
 - Modify: `src/tools/impl/move-tool.ts`
 
 - [ ] **Step 1: Extend MoveTool DragState for multi-object**
@@ -648,6 +669,7 @@ git commit -m "feat(plugin-spacetime): move all selected objects in multi-select
 ## Task 5: Vertical Axis Movement (Cmd/Alt Modifier)
 
 **Files:**
+
 - Modify: `src/tools/impl/move-tool.ts`
 
 - [ ] **Step 1: Update onPointerDown to detect modifier and choose drag plane**
@@ -713,6 +735,7 @@ git commit -m "feat(plugin-spacetime): cmd/alt modifier for vertical axis moveme
 ## Task 6: Keyboard Shortcuts
 
 **Files:**
+
 - Modify: `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx`
 
 - [ ] **Step 1: Add keydown listener in the canvas initialization effect**
@@ -747,6 +770,7 @@ canvas.addEventListener('keydown', handleKeyDown);
 ```
 
 Add cleanup in the return function:
+
 ```typescript
 canvas.removeEventListener('keydown', handleKeyDown);
 ```
@@ -771,6 +795,7 @@ export type SpacetimeCanvasProps = {
 ```
 
 Wire them in the component body:
+
 ```typescript
 onToolChangeRef.current = onToolChange ?? null;
 onDeleteRef.current = onDelete ?? null;
@@ -805,6 +830,7 @@ git commit -m "feat(plugin-spacetime): add keyboard shortcuts (m/e/x) scoped to 
 ## Task 7: Boolean Operation Toolbar Actions and Editor Wiring
 
 **Files:**
+
 - Modify: `src/components/SpacetimeToolbar/actions.ts`
 - Modify: `src/components/SpacetimeToolbar/SpacetimeToolbar.tsx`
 - Modify: `src/components/SpacetimeEditor/SpacetimeEditor.tsx`
@@ -956,11 +982,13 @@ Same pattern as join but using `subtractSolids` instead.
 Replace `selectedObjectId: string | null` with tracking both single and multi IDs. The canvas `onSelectionChange` callback needs to report multi-select:
 
 Update `SpacetimeCanvasProps`:
+
 ```typescript
 onSelectionChange?: (objectIds: string[]) => void;
 ```
 
 In `SpacetimeEditorRoot`, change state:
+
 ```typescript
 const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
 const selectedObjectId = selectedObjectIds[0] ?? null;
@@ -1013,6 +1041,7 @@ git commit -m "feat(plugin-spacetime): boolean join/subtract toolbar actions wit
 ## Task 8: Update SPEC.md and FRS.md
 
 **Files:**
+
 - Modify: `SPEC.md`
 - Modify: `FRS.md`
 

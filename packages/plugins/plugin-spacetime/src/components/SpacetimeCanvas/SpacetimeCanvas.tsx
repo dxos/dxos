@@ -331,7 +331,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           deleteObjectRef.current = (objectId: string) => {
             // Clear selection if the deleted object is currently selected.
             const currentSelection = selectionRef.current;
-            if (currentSelection && currentSelection.type !== 'multi-object' && currentSelection.objectId === objectId) {
+            if (
+              currentSelection &&
+              currentSelection.type !== 'multi-object' &&
+              currentSelection.objectId === objectId
+            ) {
               currentSelection.highlightMesh?.dispose();
               if (currentSelection.type === 'object') {
                 highlightLayer.removeMesh(currentSelection.mesh);

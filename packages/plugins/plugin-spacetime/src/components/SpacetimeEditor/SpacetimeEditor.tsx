@@ -352,7 +352,14 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onJoinSelected: handleJoinSelected,
         onSubtractSelected: handleSubtractSelected,
       }),
-      [handleAddObject, handleDeleteSelected, handleImport, handleExportSTL, handleJoinSelected, handleSubtractSelected],
+      [
+        handleAddObject,
+        handleDeleteSelected,
+        handleImport,
+        handleExportSTL,
+        handleJoinSelected,
+        handleSubtractSelected,
+      ],
     );
 
     useImperativeHandle(forwardedRef, () => ({

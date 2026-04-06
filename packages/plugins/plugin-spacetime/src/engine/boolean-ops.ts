@@ -33,11 +33,7 @@ const toWorldSpace = (solid: Manifold, objectPos: Model.Vec3, refPos: Model.Vec3
  * Each solid is translated to world space relative to the first object's position.
  * The result position is that of the first object.
  */
-export const joinSolids = (
-  wasm: ManifoldToplevel,
-  solids: Manifold[],
-  positions: Model.Vec3[],
-): BooleanResult => {
+export const joinSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
   const refPos = positions[0];
   const translated: Manifold[] = [];
 
@@ -65,11 +61,7 @@ export const joinSolids = (
  * Each solid is translated to world space relative to the first object's position.
  * The result position is that of the first object.
  */
-export const subtractSolids = (
-  wasm: ManifoldToplevel,
-  solids: Manifold[],
-  positions: Model.Vec3[],
-): BooleanResult => {
+export const subtractSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
   const refPos = positions[0];
   const translated: Manifold[] = [];
 
