@@ -101,7 +101,7 @@ type SpacetimeEditorRootProps = PropsWithChildren<{
   scene?: Scene.Scene;
 }>;
 
-const DEFAULT_SELECTION_STATE: SelectionState = { selectionMode: 'object' };
+const DEFAULT_SELECTION_STATE: SelectionState = { selectionMode: 'object', selectionCount: 0 };
 const DEFAULT_VIEW_STATE: ViewState = { showGrid: true, showDebug: false };
 
 const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(
@@ -109,11 +109,18 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [toolState, setToolState] = useState<ToolState>({ tool: 'select' });
     const [selectionState, setSelectionState] = useState<SelectionState>(DEFAULT_SELECTION_STATE);
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
-    const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
+    const [selectedObjectIds, _setSelectedObjectIds] = useState<string[]>([]);
     const selectedObjectId = selectedObjectIds[0] ?? null;
-    const setSelectedObjectId = useCallback((id: string | null) => {
-      setSelectedObjectIds(id ? [id] : []);
+    const setSelectedObjectIds = useCallback((ids: string[]) => {
+      _setSelectedObjectIds(ids);
+      setSelectionState((prev) => ({ ...prev, selectionCount: ids.length }));
     }, []);
+    const setSelectedObjectId = useCallback(
+      (id: string | null) => {
+        setSelectedObjectIds(id ? [id] : []);
+      },
+      [setSelectedObjectIds],
+    );
     const [selectedTemplate, setSelectedTemplate] = useState<Model.ObjectTemplate>('cube');
     const [propertiesState, setPropertiesState] = useState<PropertiesState>({ hue: 'blue' });
     const handleActionRef = useRef<(actionId: string, editorState: EditorState) => ActionResult | undefined>(

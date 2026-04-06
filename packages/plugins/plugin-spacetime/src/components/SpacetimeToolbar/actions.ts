@@ -114,9 +114,9 @@ export const createTemplateSelector =
     );
   };
 
-/** Creates standalone action buttons. */
+/** Creates standalone action buttons. Actions are disabled based on selection count. */
 export const createEditorActions =
-  (actions: EditorActions): ActionGroupBuilderFn =>
+  (actions: EditorActions, selectionCount: number): ActionGroupBuilderFn =>
   (builder) =>
     builder
       .action(
@@ -132,6 +132,7 @@ export const createEditorActions =
         {
           label: ['action.delete-object.label', { ns: meta.id }],
           icon: 'ph--trash--regular',
+          disabled: selectionCount === 0,
         },
         actions.onDeleteSelected,
       )
@@ -141,6 +142,7 @@ export const createEditorActions =
         {
           label: ['action.join-objects.label', { ns: meta.id }],
           icon: 'ph--unite-square--regular',
+          disabled: selectionCount < 2,
         },
         actions.onJoinSelected,
       )
@@ -149,6 +151,7 @@ export const createEditorActions =
         {
           label: ['action.subtract-objects.label', { ns: meta.id }],
           icon: 'ph--subtract-square--regular',
+          disabled: selectionCount < 2,
         },
         actions.onSubtractSelected,
       )
@@ -166,6 +169,7 @@ export const createEditorActions =
         {
           label: ['action.export.label', { ns: meta.id }],
           icon: 'ph--download-simple--regular',
+          disabled: selectionCount === 0,
         },
         actions.onExport,
       );

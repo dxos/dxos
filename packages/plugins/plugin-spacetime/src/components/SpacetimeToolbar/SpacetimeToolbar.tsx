@@ -20,19 +20,17 @@ import { type ViewState, createViewActions } from './view';
 export type SpacetimeToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> & {
   editorActions: EditorActions;
 
+  // TODO(burdon): State should be separate.
   toolState: ToolState;
-  onToolChange: (next: Partial<ToolState>) => void;
-
   viewState: ViewState;
-  onViewChange: (next: Partial<ViewState>) => void;
-
   propertiesState: PropertiesState;
-  onPropertiesChange: (next: Partial<PropertiesState>) => void;
-
   selectionState: SelectionState;
-  onSelectionChange: (next: Partial<SelectionState>) => void;
-
   selectedTemplate: Model.ObjectTemplate;
+
+  onToolChange: (next: Partial<ToolState>) => void;
+  onViewChange: (next: Partial<ViewState>) => void;
+  onPropertiesChange: (next: Partial<PropertiesState>) => void;
+  onSelectionChange: (next: Partial<SelectionState>) => void;
   onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
 };
 
@@ -117,7 +115,7 @@ const createToolbarActions = ({
       .separator('line')
       .subgraph(createTemplateSelector(selectedTemplate, onSelectedTemplateChange))
       .separator('line')
-      .subgraph(createEditorActions(editorActions))
+      .subgraph(createEditorActions(editorActions, selectionState.selectionCount))
       .separator()
       .subgraph(createViewActions(viewState, onViewChange))
       .build(),

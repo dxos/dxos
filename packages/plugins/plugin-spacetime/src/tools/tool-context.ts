@@ -11,10 +11,11 @@ import { type Scene, type Model } from '../types';
 /** Selection granularity mode. */
 export type SelectionMode = 'object' | 'face';
 
-/** Current selection mode state used by tools. */
-// TODO(burdon): Do we need this type?
+/** Current selection state used by tools and toolbar. */
 export type SelectionState = {
   selectionMode: SelectionMode;
+  /** Number of currently selected objects. */
+  selectionCount: number;
 };
 
 /** Base selection fields shared by all selection types. */

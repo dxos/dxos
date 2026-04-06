@@ -261,7 +261,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             return undefined;
           },
           get selectionState() {
-            return { selectionMode: selectionModeRef.current as SelectionMode };
+            return { selectionMode: selectionModeRef.current as SelectionMode, selectionCount: 0 };
           },
           get selection() {
             return selectionRef.current;
