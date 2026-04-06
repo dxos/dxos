@@ -1,91 +1,34 @@
 ---
 name: context-propagation
 description: >-
-  Guides adding ctx: Context as the first parameter to internal methods for
-  OTEL tracing. Use when adding context propagation, reviewing ctx usage,
-  fixing tracing, or when code uses @trace.span(), Context, or this._ctx.
+  Rules for passing ctx: Context as the first parameter to internal methods
+  so that @trace.span() produces connected trace hierarchies. Use when adding
+  context propagation, reviewing ctx usage, fixing broken traces, or when
+  code uses @trace.span(), Context, or this._ctx.
 ---
 
-# Context Propagation
+# Context Propagation — Rules for Connected Traces
 
 Every internal method takes `ctx: Context` as its first parameter (Go-style). The `@trace.span()` decorator detects `ctx` as `args[0]`, uses it as the parent span, and replaces it with a child context before calling the method body. This enables hierarchical OTEL traces without Zone.js.
+
+For how the tracing system works internally (`TracingBackend`, `RemoteSpan`, `TRACE_PROCESSOR`, all APIs), see the [tracing](../tracing/SKILL.md) skill.
 
 ```typescript
 import { Context } from '@dxos/context';
 ```
 
-## Architecture
+## Why This Matters
 
-The tracing system consists of three layers:
+The `@trace.span()` decorator reads a parent span from the incoming `ctx` attribute (`TRACE_SPAN_ATTRIBUTE`). If `ctx` has no parent span (e.g., from `Context.default()`), the decorator creates an **orphaned root span** — disconnected from the trace hierarchy. Every method between an entry point and a `@trace.span()` method must accept and forward `ctx`, even if the intermediate method itself has no `@trace.span()`.
 
-1. **`@dxos/tracing`** — defines `@trace.span()`, `TraceProcessor`, and the `TracingBackend` interface. No OTEL dependency.
-2. **`@dxos/observability`** — implements `TracingBackend` using the OTEL SDK, registers on `TRACE_PROCESSOR.tracingBackend`.
-3. **`@dxos/context`** — carries an opaque OTEL span context via `getAttribute('dxos.trace-span')`.
+## Which Methods Need ctx
 
-There are no custom span objects or global span maps. The `@trace.span()` decorator calls the OTEL backend directly through the `TracingBackend` interface.
-
-### How the decorator works
-
-```typescript
-@trace.span()
-async open(ctx: Context): Promise<void> {
-  // decorator flow:
-  // 1. Read parent's opaque OTEL context from ctx.getAttribute(TRACE_SPAN_ATTRIBUTE)
-  // 2. Call TRACE_PROCESSOR.tracingBackend.startSpan({ parentContext, name, ... })
-  // 3. Derive child context with remoteSpan.spanContext on TRACE_SPAN_ATTRIBUTE
-  // 4. Replace args[0] with child context
-  // 5. Wrap execution with remoteSpan.wrapExecution (sets OTEL active context)
-  // 6. Call remoteSpan.end() in finally block
-}
-```
-
-### Key types (`tracing-types.ts`)
-
-```typescript
-type RemoteSpan = {
-  end: () => void;
-  wrapExecution?: <T>(fn: () => T) => T;
-  spanContext?: unknown; // opaque OTEL Context
-};
-
-interface TracingBackend {
-  startSpan: (options: StartSpanOptions) => RemoteSpan;
-  inject?: (opaqueContext: unknown) => TraceContextData | undefined;
-  extract?: (traceContext: TraceContextData) => unknown;
-}
-```
-
-### Context attribute
-
-`Context` carries an opaque span context (an OTEL `Context` object) via `TRACE_SPAN_ATTRIBUTE` (`'dxos.trace-span'`). The attribute is `unknown` at the type level — only the observability package knows it's an OTEL Context.
-
-When `showInRemoteTracing = false`, the decorator does not call `startSpan` and does not set `TRACE_SPAN_ATTRIBUTE` on the derived child context. The parent chain's `getAttribute()` climb-up logic then finds the grandparent's span context, preserving trace continuity.
-
-### RPC trace context propagation
-
-`ContextRpcCodec` (in `rpc-trace-context.ts`) serializes/deserializes W3C trace context across RPC boundaries. It is hardcoded in `RpcPeer` — no configuration needed:
-
-- **`ContextRpcCodec.encode(ctx)`** — reads the opaque span context from `ctx.getAttribute(TRACE_SPAN_ATTRIBUTE)` and calls `TRACE_PROCESSOR.tracingBackend.inject()` to produce `{ traceparent, tracestate }`.
-- **`ContextRpcCodec.decode(data)`** — calls `TRACE_PROCESSOR.tracingBackend.extract()` and places the resulting opaque context on a new `Context` attribute.
-
-### OTEL initialization
-
-OTEL is initialized synchronously (static imports) before any traced code runs. The `isObservabilityDisabled` check is moved off the critical path — OTEL defaults to enabled and checks async storage after initialization, disabling if the user opted out.
-
-### Browser timeline
-
-When `showInBrowserTimeline = true`, the decorator calls `performance.measure()` in the finally block. No custom span object is needed.
-
-## Which methods need ctx
-
-**`ctx: Context` is always the first parameter.** This is a universal rule — not in an options bag, not as the last parameter, not optional. Every method that participates in context propagation takes `ctx: Context` as its very first parameter.
-
-This rule applies to `EdgeHttpClient` methods, `EdgeWsConnection.send`, signal managers, messengers, replicators, and every intermediate method in between.
+**`ctx: Context` is always the first parameter.** Not in an options bag, not as the last parameter, not optional.
 
 Add `ctx: Context` as first parameter to methods on any call chain that reaches:
 
-- **`EdgeHttpClient` methods** — all HTTP calls to EDGE services (`notarizeCredentials`, `execQuery`, `importBundle`, `exportBundle`, etc.). `EdgeHttpClient` itself takes `ctx: Context` as the first parameter in every public method.
-- **`EdgeWsConnection.send` / `EdgeClient.send`** — all WebSocket messages to EDGE (signaling, gossip, replication).
+- **`EdgeHttpClient` methods** — all HTTP calls to EDGE services.
+- **`EdgeWsConnection.send` / `EdgeClient.send`** — all WebSocket messages to EDGE.
 - **Swarm / WebRTC connections** (mesh replication, peer discovery).
 - **Feed replication** (Hypercore feed read/write over the network).
 - **Credential notarization** (writes that hit the control pipeline and propagate to peers).
@@ -94,12 +37,12 @@ Every method in the call chain — from entry point through signal managers, mes
 
 Do **not** add ctx to:
 
-- **Public user-facing APIs** (called by app/plugin developers) — these create `ctx = Context.default()` internally and forward it.
-- **RPC service methods** (proto-generated interface) — the signature is fixed by the proto definition. Treat these as new entry points: create `ctx = Context.default()` and forward it to internal methods.
-- **React components and hooks** — UI code should not propagate ctx; create `Context.default()` at the boundary if calling into SDK.
-- **Infrastructure / plumbing** — worker setup, service registry wiring, serialization, import/export helpers.
-- **Pure local operations** — in-memory data transforms, UI state, local database reads that never leave the process.
-- **Leaf utility methods** — small methods that don't call other methods (getters, simple lookups, validation helpers). Adding ctx to these adds noise without tracing value.
+- **Public user-facing APIs** — these create `ctx = Context.default()` internally and forward it.
+- **RPC service methods** (proto-generated interface) — the signature is fixed by the proto definition; you cannot add `ctx` as a parameter. Instead, read `options.ctx` which is provided by `RpcPeer` via `ContextRpcCodec` with the caller's trace context already decoded. Forward `options.ctx` (or `options?.ctx ?? Context.default()`) to internal methods.
+- **React components and hooks** — UI code should not propagate ctx; create `Context.default()` at the boundary.
+- **Infrastructure / plumbing** — worker setup, service registry wiring, serialization.
+- **Pure local operations** — in-memory data transforms, UI state, local database reads.
+- **Leaf utility methods** — small methods that don't call other methods (getters, simple lookups, validation helpers).
 - **Test utilities** — test builders, test helpers (unless they call production code that requires ctx, in which case pass `Context.default()`).
 
 ### Key entry points
@@ -183,8 +126,6 @@ async initializeAll(ctx: Context): Promise<void> {
 
 ### 5. Complete call chain: every method between entry point and @trace.span must forward ctx
 
-The `@trace.span()` decorator reads the parent span context from incoming `ctx`. If `ctx` has no `TRACE_SPAN_ATTRIBUTE` (e.g., from `Context.default()`), the decorator creates an **orphaned root span** — disconnected from the trace hierarchy.
-
 **Critical rule**: every intermediate method between an entry point and a `@trace.span()` method must accept and forward `ctx`, even if the intermediate method itself has no `@trace.span()`. Otherwise the trace chain is broken.
 
 ```typescript
@@ -245,63 +186,65 @@ class SpaceProxy {
 }
 ```
 
-Tracing who provides the root context:
-
-- **Public API entry point**: creates `Context.default()` → passes to internal chain
-- **RPC service method**: creates `Context.default()` → passes to internal chain (RPC boundaries are new entry points — the proto-generated interface does not accept `ctx`, so treat these the same as public API calls)
-- **Callback / event handler**: uses `this._ctx` (lifecycle) → passes to internal chain
-- **Detached async work**: uses `this._ctx` (lifecycle) → passes to internal chain
-
-## How context flows
+## How Context Flows
 
 ```text
 User code (no ctx)
   → public API creates ctx = Context.default()
     → intermediate method forwards ctx (no @trace.span — passes as-is)
-      → intermediate method forwards ctx (no @trace.span — passes as-is)
-        → @trace.span() method receives ctx
-          decorator: reads opaque spanContext from ctx attribute
-          calls tracingBackend.startSpan(parentContext: spanContext)
-          derives child ctx with new remoteSpan.spanContext
-          replaces args[0] with child ctx
-          wraps with remoteSpan.wrapExecution
-          → method body receives child ctx
-            → intermediate method forwards child ctx
-              → @trace.span() method receives child ctx
-                decorator: creates child span, derives grandchild ctx
-                → ...
+      → @trace.span() method receives ctx
+        decorator: reads parent span, creates child span, replaces ctx
+        → method body receives child ctx
+          → next method forwards child ctx
+            → @trace.span() method — creates grandchild span
+              → ...
+
+RPC boundary:
+  caller's @trace.span() sets TRACE_SPAN_ATTRIBUTE on ctx
+    → RpcPeer.call: ContextRpcCodec.encode(ctx) → W3C traceparent on wire
+      ──── network ────
+    → RpcPeer handler: ContextRpcCodec.decode(data) → options.ctx with parent span
+      → service method reads options.ctx → forwards to internal methods
+        → @trace.span() method — child of the remote caller's span
 
 Callback / detached async work:
   event fires → callback uses this._ctx (lifecycle context)
     → intermediate method forwards this._ctx
-      → @trace.span() method receives this._ctx — creates root span tied to object lifecycle
+      → @trace.span() method — creates root span tied to object lifecycle
 ```
 
-Each `@trace.span()` method reads the opaque OTEL span context from the incoming ctx attribute, creates a new span via `TracingMethods.startSpan()`, derives a child context with the new span's opaque context, and replaces `args[0]`. Methods without `@trace.span()` forward ctx as-is.
+## Who Provides the Root Context
 
-## Quick reference
+| Situation | Root ctx |
+| --- | --- |
+| Public API entry point | `Context.default()` |
+| RPC service method (proto-generated) | `options.ctx` (decoded from caller's W3C trace context by `ContextRpcCodec`; falls back to `Context.default()` if absent) |
+| Callback / event handler | `this._ctx` (lifecycle) |
+| Detached async work | `this._ctx` (lifecycle) |
+
+## Quick Reference
 
 | Situation                                | What ctx to use             |
 | ---------------------------------------- | --------------------------- |
 | Direct call inside a method              | Forward the method's `ctx`  |
 | Public API entry point                   | `Context.default()`         |
-| RPC service method (proto-generated)     | `Context.default()`         |
+| RPC service method (proto-generated)     | `options.ctx` (from RPC)    |
 | Event / callback subscription            | Lifecycle `this._ctx`       |
 | setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx`       |
 | queueMicrotask                           | Lifecycle `this._ctx`       |
 | Promise.all fan-out                      | Same `ctx` for all branches |
 | No caller ctx available                  | Lifecycle `this._ctx`       |
 
-## Common mistakes
+## Common Mistakes
 
 - **Breaking the chain with `Context.default()` in an intermediate method** — if a method calls `child(Context.default())` where `child` has `@trace.span()`, the span is an orphaned root. The intermediate method must accept `ctx` from its caller and forward it.
 - **Passing `this._ctx` in a direct call** when the method has `ctx` in scope — breaks trace hierarchy, creates a new root instead of a child span.
 - **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended.
 - **Adding `ctx` to Node.js protocol methods** (e.g., `[Symbol.for('nodejs.util.inspect.custom')]`) — fixed-signature methods that don't support extra parameters.
 - **Adding `ctx` to public APIs** — user-facing methods should not expose `Context`; create `Context.default()` internally.
-- **Using `this._ctx` in RPC service methods** — RPC boundaries are new entry points, not continuations of a lifecycle. Use `Context.default()`, not `this._ctx`. The proto-generated interface cannot accept `ctx`, so the RPC method is the root of a new trace.
+- **Ignoring `options.ctx` in RPC service methods** — `RpcPeer` provides `options.ctx` with the caller's trace context decoded from W3C headers. Use `options?.ctx ?? Context.default()`, not `this._ctx` or a bare `Context.default()`. Using `this._ctx` breaks the cross-process trace hierarchy; using `Context.default()` discards the propagated trace.
 
-## ESLint enforcement
+## ESLint Enforcement
 
 The `dxos-plugin/require-context-param` rule warns on class methods missing `ctx: Context` as the first parameter. Configured in `eslint.config.mjs` for core SDK packages with exemptions for public API classes.
 
