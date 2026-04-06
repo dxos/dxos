@@ -103,14 +103,14 @@ export const DeckViewport = ({ children }: PropsWithChildren) => {
 DeckViewport.displayName = DECK_VIEWPORT_NAME;
 
 //
-// MultiMode
+// DeckMultiMode
 //
 
 /**
  * Multi-plank horizontal scrolling layout.
  */
-export const MultiMode = () => {
-  const { deck, settings, layoutMode } = useDeckContext('MultiMode');
+export const DeckMultiMode = () => {
+  const { deck, settings, layoutMode } = useDeckContext('DeckMultiMode');
   const { active, companionOpen, companionVariant, fullscreen, solo } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
@@ -203,14 +203,14 @@ export const MultiMode = () => {
 };
 
 //
-// SoloMode
+// DeckSoloMode
 //
 
 /**
  * Single-plank layout with optional companion.
  */
-export const SoloMode = () => {
-  const { deck, settings, layoutMode } = useDeckContext('SoloMode');
+export const DeckSoloMode = () => {
+  const { deck, settings, layoutMode } = useDeckContext('DeckSoloMode');
   const { companionOpen, companionVariant, fullscreen, solo } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
