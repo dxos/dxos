@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, useMediaQuery } from '@dxos/react-ui';
@@ -11,13 +11,12 @@ import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { layoutAppliesTopbar } from '../../util';
 import { useDeckContext } from './DeckRoot';
 import { ComplementarySidebar, Sidebar } from '../Sidebar';
-import { DeckViewport, DeckMultiMode, DeckSoloMode } from './DeckViewport';
 import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
 
 const DECK_CONTENT_NAME = 'DeckContent';
 
-export const DeckContent = () => {
+export const DeckContent = ({ children }: PropsWithChildren) => {
   const {
     state: { sidebarState, complementarySidebarState, complementarySidebarPanel },
     deck: { active, fullscreen, solo },
@@ -93,7 +92,7 @@ export const DeckContent = () => {
       <Sidebar />
       <ComplementarySidebar current={complementarySidebarPanel} />
       <Main.Overlay />
-      <DeckViewport>{solo ? <DeckSoloMode /> : <DeckMultiMode />}</DeckViewport>
+      {children}
       {topbar && <Banner variant='topbar' />}
       {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
     </Main.Root>
