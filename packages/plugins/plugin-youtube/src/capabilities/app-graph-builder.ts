@@ -13,7 +13,7 @@ import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import type * as Runtime from 'effect/Runtime';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
@@ -12,28 +10,17 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { useClient } from '@dxos/react-client';
 
-import { type AiChatServices } from '../processor';
-
 export type UseChatServicesProps = {
   id?: Key.SpaceId;
 };
 
 /**
- * Construct service layer.
- * TracingService is provided by the compute-runtime and traces to space.properties.invocationTraceQueue.
+ * Resolves the compute runtime for a space.
  */
-export const useChatServices = ({
-  id,
-}: UseChatServicesProps): (() => Promise<Runtime.Runtime<AiChatServices>>) | undefined => {
+export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
   id ??= getPersonalSpace(client)?.id;
 
   const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
-  return useMemo(() => {
-    if (!id) {
-      return undefined;
-    }
-    const runtime = runtimeResolver.getRuntime(id);
-    return () => runtime.runPromise(Effect.runtime<AiChatServices>());
-  }, [id]);
+  return useMemo(() => (!id ? undefined : runtimeResolver.getRuntime(id)), [id]);
 };

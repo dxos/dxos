@@ -105,8 +105,8 @@ export default Capability.makeModule(
                 if (!space) {
                   return;
                 }
-                const blueprints = yield* Effect.promise((): Promise<Blueprint.Blueprint[]> =>
-                  space.db.query(Filter.type(Blueprint.Blueprint)).run(),
+                const blueprints = yield* Effect.promise(
+                  (): Promise<Blueprint.Blueprint[]> => space.db.query(Filter.type(Blueprint.Blueprint)).run(),
                 );
                 for (const blueprint of blueprints) {
                   space.db.remove(blueprint);

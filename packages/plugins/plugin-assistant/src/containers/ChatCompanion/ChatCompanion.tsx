@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -87,7 +87,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       }
     }, [currentChatState, data.subject, space, chat]);
 
-    const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
+    const feedTarget = chat?.feed.target;
+    const chatQueue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
     const binder = useContextBinder(chatQueue);
 
     // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface } from './capabilities';

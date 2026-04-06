@@ -673,6 +673,9 @@
       "path": "tools/vite-plugin-import-source/tsconfig.json"
     },
     {
+      "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
       "path": "tools/x/tsconfig.json"
     },
     {

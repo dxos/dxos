@@ -82,7 +82,7 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
           <IconButton
             icon={getIcon(triggerState)}
             iconOnly
-            label={t(`trigger status ${triggerState} label`)}
+            label={t(`trigger-status-${triggerState}.label`)}
             classNames={getIconClassNames(triggerState)}
           />
         </StatusBar.Item>
@@ -132,7 +132,7 @@ const TriggerStatusPopover = ({
       </Input.Root>
 
       <div className='flex flex-col gap-1'>
-        <div className='text-sm'>{t(`trigger status ${state} label`)}</div>
+        <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
           <div className='text-xs text-description'>{currentFunctionName}</div>
         )}

@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Ref } from '@dxos/echo';
+import { Feed, Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -23,8 +23,11 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
-      const queue = space.queues.create();
-      const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
+      const feed = space.db.add(Feed.make());
+      const queueDxn = Feed.getQueueDxn(feed);
+      invariant(queueDxn, 'Feed queue DXN not found.');
+      const queue = space.queues.get(queueDxn);
+      const chat = Chat.make({ name, feed: Ref.make(feed) });
       if (addToSpace) {
         space.db.add(chat);
       }

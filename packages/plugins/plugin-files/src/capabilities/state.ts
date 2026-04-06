@@ -8,7 +8,7 @@ import localforage from 'localforage';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 
 import { meta } from '#meta';
 import { FilesOperation } from '#operations';

@@ -77,6 +77,13 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
    * Called when the stream ends.
    */
   onEnd: (block: ContentBlock.Stats) => Effect.Effect<void>;
+
+  /**
+   * Emit partial blocks in the output stream.
+   * Partial blocks will have `pending` set to `true`.
+   * @default false
+   */
+  emitPartial?: boolean;
 }
 
 export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
@@ -89,6 +96,10 @@ export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> ex
 /**
  * Transforms the Response stream into a stream of complete ContentBlock messages.
  * Partial blocks are emitted to support streaming to the UI.
+ *
+ * Uses `Stream.mapConcatEffect` instead of `Stream.asyncPush`: `asyncPush` batches
+ * `emit.single` via `scheduler.scheduleTask`, so downstream operators often see
+ * nothing until the producer fiber yields (e.g. after many SSE parts or end of stream).
  */
 export const parseResponse =
   <Tools extends Record<string, Tool.Any>>({
@@ -97,10 +108,11 @@ export const parseResponse =
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
+    emitPartial = false,
   }: Partial<ParseResponseOptions<Tools>> = {}) =>
   <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
-    Stream.asyncPush(
-      Effect.fnUntraced(function* (emit) {
+    Stream.unwrap(
+      Effect.gen(function* () {
         const transformer = new StreamTransform();
         const start = Date.now();
 
@@ -117,44 +129,54 @@ export const parseResponse =
         let parts = 0;
         let toolCalls = 0;
 
-        const emitPartialContentBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
-          yield* onBlock({ ...block } as ContentBlock.Any);
+        const emitPartialContentBlock = Effect.fnUntraced(function* (
+          contentBlock: Types.Mutable<ContentBlock.Any>,
+          out: ContentBlock.Any[],
+        ) {
+          yield* onBlock({ ...contentBlock } as ContentBlock.Any);
+          if (emitPartial) {
+            log('emit partial content block', { type: contentBlock._tag });
+            out.push({ ...contentBlock } as ContentBlock.Any);
+          }
           blocks++;
         });
 
-        const emitFullBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
-          if (block.pending === false) {
-            delete block.pending;
+        const emitFullBlock = Effect.fnUntraced(function* (
+          contentBlock: Types.Mutable<ContentBlock.Any>,
+          out: ContentBlock.Any[],
+        ) {
+          if (contentBlock.pending === false) {
+            delete contentBlock.pending;
           }
-          yield* onBlock(block as ContentBlock.Any);
-          emit.single(block as ContentBlock.Any);
+          yield* onBlock(contentBlock as ContentBlock.Any);
+          out.push(contentBlock as ContentBlock.Any);
           blocks++;
         });
 
-        const emitPartialBlock = Effect.fnUntraced(function* (block: StreamBlock) {
-          const content = makeContentBlock(block, { parseReasoningTags });
-          if (content) {
-            content.pending = true;
-            yield* emitPartialContentBlock(content);
+        const emitPartialBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
+          if (parsed) {
+            parsed.pending = true;
+            yield* emitPartialContentBlock(parsed, out);
           }
         });
 
-        const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
-          const content = makeContentBlock(block, { parseReasoningTags });
-          if (content) {
-            yield* emitFullBlock(content);
+        const emitStreamBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
+          if (parsed) {
+            yield* emitFullBlock(parsed, out);
           }
           current = undefined;
         });
 
-        const flushText = Effect.fnUntraced(function* () {
+        const flushText = Effect.fnUntraced(function* (out: ContentBlock.Any[]) {
           if (current) {
-            yield* emitStreamBlock(current);
+            yield* emitStreamBlock(current, out);
           }
         });
 
-        const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>) {
-          log('part', { type: part.type, part });
+        const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>, out: ContentBlock.Any[]) {
+          log('part', { type: part.type });
           yield* onPart(part);
           switch (part.type) {
             case 'text-start': {
@@ -182,7 +204,7 @@ export const parseResponse =
                           top.content.push(current);
                           current = top;
                         } else {
-                          yield* emitStreamBlock(current);
+                          yield* emitStreamBlock(current, out);
                           current = undefined;
                         }
                       } else {
@@ -211,9 +233,9 @@ export const parseResponse =
                   //
                   case 'text': {
                     if (chunk.type === 'tag') {
-                      yield* emitStreamBlock(current);
+                      yield* emitStreamBlock(current, out);
                       if (chunk.selfClosing) {
-                        yield* emitStreamBlock(chunk);
+                        yield* emitStreamBlock(chunk, out);
                         current = undefined;
                       } else {
                         current = chunk;
@@ -230,7 +252,7 @@ export const parseResponse =
                   //
                   default: {
                     if (chunk.type === 'tag' && chunk.selfClosing) {
-                      yield* emitStreamBlock(chunk);
+                      yield* emitStreamBlock(chunk, out);
                     } else {
                       current = chunk;
                     }
@@ -239,13 +261,13 @@ export const parseResponse =
               }
 
               if (current) {
-                yield* emitPartialBlock(current);
+                yield* emitPartialBlock(current, out);
               }
               break;
             }
 
             case 'text-end': {
-              yield* flushText();
+              yield* flushText(out);
               break;
             }
 
@@ -259,21 +281,21 @@ export const parseResponse =
                 pending: true,
                 providerExecuted: part.providerExecuted,
               } satisfies ContentBlock.ToolCall;
-              yield* emitPartialContentBlock(block);
+              yield* emitPartialContentBlock(block, out);
               break;
             }
 
             case 'tool-params-delta': {
               invariant(block?._tag === 'toolCall');
               block.input += part.delta;
-              yield* emitPartialContentBlock(block);
+              yield* emitPartialContentBlock(block, out);
               break;
             }
 
             case 'tool-params-end': {
               invariant(block?._tag === 'toolCall');
               block.pending = false;
-              yield* emitFullBlock(block);
+              yield* emitFullBlock(block, out);
               toolCalls++;
               block = undefined;
               break;
@@ -286,13 +308,16 @@ export const parseResponse =
             }
 
             case 'tool-result': {
-              yield* emitFullBlock({
-                _tag: 'toolResult',
-                toolCallId: part.id,
-                name: part.name,
-                result: JSON.stringify(part.result),
-                providerExecuted: part.providerExecuted,
-              } satisfies ContentBlock.ToolResult);
+              yield* emitFullBlock(
+                {
+                  _tag: 'toolResult',
+                  toolCallId: part.id,
+                  name: part.name,
+                  result: JSON.stringify(part.result),
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolResult,
+                out,
+              );
               break;
             }
 
@@ -309,38 +334,38 @@ export const parseResponse =
               if (part.metadata.anthropic?.type === 'redacted_thinking') {
                 block.redactedText = part.metadata.anthropic.redactedData;
               }
-              yield* emitPartialContentBlock(block);
+              yield* emitPartialContentBlock(block, out);
               break;
             }
             case 'reasoning-delta': {
               invariant(block?._tag === 'reasoning');
               block.reasoningText += part.delta;
-              yield* emitPartialContentBlock(block);
+              yield* emitPartialContentBlock(block, out);
               break;
             }
             case 'reasoning-end': {
               invariant(block?._tag === 'reasoning');
               block.pending = false;
-              yield* emitFullBlock(block);
+              yield* emitFullBlock(block, out);
               block = undefined;
               break;
             }
 
             case 'source': {
-              yield* flushText();
+              yield* flushText(out);
               // TODO(dmaretskyi): Handle sources.
               break;
             }
 
             case 'response-metadata': {
-              yield* flushText();
+              yield* flushText(out);
               stats.model = Option.getOrUndefined(part.modelId);
               log('metadata', { metadata: part });
               break;
             }
 
             case 'finish': {
-              yield* flushText();
+              yield* flushText(out);
               const { inputTokens, outputTokens, totalTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
@@ -350,10 +375,13 @@ export const parseResponse =
                 outputTokens,
                 totalTokens,
               };
-              yield* emitFullBlock({
-                ...stats,
-                _tag: 'stats',
-              } satisfies ContentBlock.Stats);
+              yield* emitFullBlock(
+                {
+                  ...stats,
+                  _tag: 'stats',
+                } satisfies ContentBlock.Stats,
+                out,
+              );
               log('finish', { finish: part });
               break;
             }
@@ -369,12 +397,28 @@ export const parseResponse =
 
         log('begin');
         yield* onBegin();
-        yield* Stream.runForEach(input, handlePart);
 
-        yield* flushText();
-        log('end', { blocks, parts, summary: stats });
-        yield* onEnd(stats);
-        emit.end();
+        const main = input.pipe(
+          Stream.mapConcatEffect((part) =>
+            Effect.gen(function* () {
+              const out: ContentBlock.Any[] = [];
+              yield* handlePart(part, out);
+              return out;
+            }),
+          ),
+        );
+
+        const epilogue = Stream.fromIterableEffect(
+          Effect.gen(function* () {
+            const out: ContentBlock.Any[] = [];
+            yield* flushText(out);
+            log('end', { blocks, parts, summary: stats });
+            yield* onEnd(stats);
+            return out;
+          }),
+        );
+
+        return Stream.concat(main, epilogue);
       }),
     );
 

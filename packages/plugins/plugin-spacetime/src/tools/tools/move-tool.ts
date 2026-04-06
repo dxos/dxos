@@ -27,6 +27,10 @@ type DragState = {
   dragOrigin: Vector3;
   /** Horizontal plane for pointer projection (at the pick point's Y level). */
   plane: Plane;
+  /** Whether dragging on vertical (Y) axis instead of horizontal (XZ). */
+  vertical: boolean;
+  /** Other objects being moved along (multi-select). */
+  companions: Array<{ objectId: string; mesh: Mesh; startPosition: Vector3 }>;
 };
 
 /** Tool for dragging objects to translate their position. */
@@ -80,12 +84,23 @@ export class MoveTool implements Tool {
       return false;
     }
 
-    // Project the initial pick point onto a horizontal plane at the object's Y level.
-    // The drag origin is the projected point so movement is purely in the XZ plane.
-    const plane = Plane.FromPositionAndNormal(new Vector3(0, startPosition.y, 0), Vector3.Up());
-
     // Ray-cast the initial click onto the drag plane to get a consistent drag origin.
     const startEvent = info.event as PointerEvent;
+
+    // Detect platform modifier: metaKey (Cmd on macOS) or altKey (Alt on Windows/Linux).
+    const useVertical = startEvent.metaKey || startEvent.altKey;
+
+    let plane: Plane;
+    if (useVertical) {
+      // Vertical drag: use a plane facing the camera that passes through the object.
+      const cameraDir = ctx.camera.getForwardRay().direction;
+      const planeNormal = new Vector3(cameraDir.x, 0, cameraDir.z).normalize();
+      plane = Plane.FromPositionAndNormal(startPosition, planeNormal);
+    } else {
+      // Horizontal drag: XZ ground plane at object's Y level.
+      plane = Plane.FromPositionAndNormal(new Vector3(0, startPosition.y, 0), Vector3.Up());
+    }
+
     const startRay = ctx.scene.createPickingRay(startEvent.clientX, startEvent.clientY, null, ctx.camera);
     const startDist = startRay.intersectsPlane(plane);
     if (startDist === null) {
@@ -93,7 +108,21 @@ export class MoveTool implements Tool {
     }
     const dragOrigin = startRay.origin.add(startRay.direction.scale(startDist));
 
-    this._drag = { objectId, mesh, startPosition, dragOrigin, plane };
+    // Collect companions from multi-selection.
+    const companions: DragState['companions'] = [];
+    if (ctx.selection?.type === 'multi-object') {
+      for (const entry of ctx.selection.objects) {
+        if (entry.objectId !== objectId) {
+          companions.push({
+            objectId: entry.objectId,
+            mesh: entry.mesh,
+            startPosition: entry.mesh.position.clone(),
+          });
+        }
+      }
+    }
+
+    this._drag = { objectId, mesh, startPosition, dragOrigin, plane, vertical: useVertical, companions };
     ctx.camera.detachControl();
     return true;
   }
@@ -113,6 +142,11 @@ export class MoveTool implements Tool {
     const point = ray.origin.add(ray.direction.scale(distance));
     let delta = point.subtract(this._drag.dragOrigin);
 
+    // In vertical mode, only allow Y movement.
+    if (this._drag.vertical) {
+      delta = new Vector3(0, delta.y, 0);
+    }
+
     // Update visual position, snapping to global grid when shift is held.
     const newPos = this._drag.startPosition.add(delta);
     if (event.shiftKey) {
@@ -121,6 +155,18 @@ export class MoveTool implements Tool {
       newPos.z = snapToGrid(newPos.z);
     }
     this._drag.mesh.position = newPos;
+
+    // Move companions by the same delta.
+    const moveDelta = newPos.subtract(this._drag.startPosition);
+    for (const companion of this._drag.companions) {
+      const companionPos = companion.startPosition.add(moveDelta);
+      if (event.shiftKey) {
+        companionPos.x = snapToGrid(companionPos.x);
+        companionPos.y = snapToGrid(companionPos.y);
+        companionPos.z = snapToGrid(companionPos.z);
+      }
+      companion.mesh.position = companionPos;
+    }
 
     ctx.setDebugStats({
       x: this._drag.mesh.position.x.toFixed(2),
@@ -155,6 +201,20 @@ export class MoveTool implements Tool {
           z: mesh.position.z,
         };
       });
+    }
+
+    // Commit companion positions to ECHO.
+    for (const companion of this._drag.companions) {
+      const companionObj = ctx.getObject(companion.objectId);
+      if (companionObj) {
+        Obj.change(companionObj, (obj) => {
+          obj.position = {
+            x: companion.mesh.position.x,
+            y: companion.mesh.position.y,
+            z: companion.mesh.position.z,
+          };
+        });
+      }
     }
 
     // Re-select the object to refresh the debug panel.

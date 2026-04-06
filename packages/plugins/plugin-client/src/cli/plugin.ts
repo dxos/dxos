@@ -5,7 +5,7 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { Client, OperationHandler, SchemaDefs } from '#capabilities';
+import { Client, OperationHandler, SchemaDefs } from '#capabilities/node';
 
 import { meta } from '#meta';
 import { ClientEvents } from '#types';

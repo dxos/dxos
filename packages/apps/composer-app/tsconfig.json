@@ -35,6 +35,9 @@
       "path": "../../../tools/vite-plugin-import-source"
     },
     {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
       "path": "../../common/context"
     },
     {

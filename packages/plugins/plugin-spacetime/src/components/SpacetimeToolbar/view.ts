@@ -5,15 +5,14 @@
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-export type ViewState = {
-  showGrid: boolean;
-  showDebug: boolean;
-};
+import { type EditorState } from '../../tools';
 
 /** Creates the view options toggle group. */
 export const createViewActions =
-  (state: ViewState, onViewChange: (next: Partial<ViewState>) => void): ActionGroupBuilderFn =>
+  (
+    editorState: Pick<EditorState, 'showGrid' | 'showDebug'>,
+    update: (next: Partial<EditorState>) => void,
+  ): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'view',
@@ -22,20 +21,24 @@ export const createViewActions =
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'multiple',
-        value: Object.entries(state)
-          .filter(([key, value]) => key !== 'selectionMode' && value === true)
+        value: Object.entries(editorState)
+          .filter(([, value]) => value === true)
           .map(([key]) => key),
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         group.action(
           'showGrid',
-          { label: ['view.grid.label', { ns: meta.id }], checked: state.showGrid, icon: 'ph--grid-four--regular' },
-          () => onViewChange({ showGrid: !state.showGrid }),
+          {
+            label: ['view.grid.label', { ns: meta.id }],
+            checked: editorState.showGrid,
+            icon: 'ph--grid-four--regular',
+          },
+          () => update({ showGrid: !editorState.showGrid }),
         );
         group.action(
           'showDebug',
-          { label: ['view.debug.label', { ns: meta.id }], checked: state.showDebug, icon: 'ph--bug--regular' },
-          () => onViewChange({ showDebug: !state.showDebug }),
+          { label: ['view.debug.label', { ns: meta.id }], checked: editorState.showDebug, icon: 'ph--bug--regular' },
+          () => update({ showDebug: !editorState.showDebug }),
         );
       },
     );

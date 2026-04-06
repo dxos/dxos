@@ -5,15 +5,8 @@
 import React from 'react';
 
 import { Filter } from '@dxos/echo';
-import {
-  Assistant,
-  Chat,
-  useBlueprintRegistry,
-  useChatProcessor,
-  useChatServices,
-  useOnline,
-  usePresets,
-} from '@dxos/plugin-assistant';
+import { Assistant, Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
+import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
@@ -28,8 +21,8 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();
-  const services = useChatServices({ id: space?.id });
-  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
+  const runtime = useComputeRuntime(space.id);
+  const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   if (!chat || !processor) {
     return null;

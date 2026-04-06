@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { GenericToolkit } from '@dxos/ai';
-import { AiConversationService } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 
@@ -18,20 +18,23 @@ import MemoryBlueprint from './blueprint';
 import { MemoryHandlers } from './functions';
 import { Memory } from '../../types/Memory';
 import { WebSearchBlueprint, WebSearchToolkit } from '../websearch';
-import { addBlueprints } from '../testing';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
   operationHandlers: MemoryHandlers,
-  types: [Memory, Blueprint.Blueprint],
+  types: [Memory, Blueprint.Blueprint, Feed.Feed],
+  blueprints: [MemoryBlueprint.make()],
   tracing: 'pretty',
 });
 
 const TestLayerWithWebSearch = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
   operationHandlers: MemoryHandlers,
   toolkits: [GenericToolkit.make(WebSearchToolkit, Layer.empty)],
-  types: [Memory, Blueprint.Blueprint],
+  types: [Memory, Blueprint.Blueprint, Feed.Feed],
+  blueprints: [MemoryBlueprint.make(), WebSearchBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -40,15 +43,15 @@ describe('Memory Blueprint', () => {
     'save: saves a memory',
     Effect.fnUntraced(
       function* (_) {
-        yield* addBlueprints([MemoryBlueprint]);
-        yield* AiConversationService.run({
-          prompt: 'Remember that my favorite programming language is TypeScript.',
+        const agent = yield* AgentService.createSession({
+          blueprints: [MemoryBlueprint.make()],
         });
-        yield* Database.flush();
+        yield* agent.submitPrompt('Remember that my favorite programming language is TypeScript.');
+        yield* agent.waitForCompletion();
         const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
         expect(memories.length).toBeGreaterThanOrEqual(1);
       },
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -58,7 +61,6 @@ describe('Memory Blueprint', () => {
     'query: searches memories by text',
     Effect.fnUntraced(
       function* (_) {
-        yield* addBlueprints([MemoryBlueprint]);
         yield* Database.add(
           Obj.make(Memory, {
             title: 'Favorite color',
@@ -71,13 +73,13 @@ describe('Memory Blueprint', () => {
             content: 'Discussed project timeline with Alice.',
           }),
         );
-        const messages = yield* AiConversationService.run({
-          prompt: 'Search your memories for anything about colors.',
+        const agent = yield* AgentService.createSession({
+          blueprints: [MemoryBlueprint.make()],
         });
-        const lastMessage = messages.at(-1);
-        expect(lastMessage).toBeDefined();
+        yield* agent.submitPrompt('Search your memories for anything about colors.');
+        yield* agent.waitForCompletion();
       },
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -87,22 +89,22 @@ describe('Memory Blueprint', () => {
     'delete: removes a memory',
     Effect.fnUntraced(
       function* (_) {
-        yield* addBlueprints([MemoryBlueprint]);
         yield* Database.add(
           Obj.make(Memory, {
             title: 'Outdated fact',
             content: 'The sky is green.',
           }),
         );
-        yield* AiConversationService.run({
-          prompt: 'Delete the memory about "Outdated fact".',
+        const agent = yield* AgentService.createSession({
+          blueprints: [MemoryBlueprint.make()],
         });
-        yield* Database.flush();
+        yield* agent.submitPrompt('Delete the memory about "Outdated fact".');
+        yield* agent.waitForCompletion();
         const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
         const found = memories.find((memory) => memory.title === 'Outdated fact');
         expect(found).toBeUndefined();
       },
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
@@ -112,11 +114,13 @@ describe('Memory Blueprint', () => {
     'natural: saves memories from a conversation with web search',
     Effect.fnUntraced(
       function* (_) {
-        yield* addBlueprints([MemoryBlueprint, WebSearchBlueprint]);
-        yield* AiConversationService.run({
-          prompt: "I'm going to LA next week. Find me some good hotels and remember the recommendations.",
+        const agent = yield* AgentService.createSession({
+          blueprints: [MemoryBlueprint.make(), WebSearchBlueprint.make()],
         });
-        yield* Database.flush();
+        yield* agent.submitPrompt(
+          "I'm going to LA next week. Find me some good hotels and remember the recommendations.",
+        );
+        yield* agent.waitForCompletion();
         const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
         expect(memories.length).toBeGreaterThanOrEqual(1);
         const hasLAMemory = memories.some(
@@ -127,7 +131,7 @@ describe('Memory Blueprint', () => {
         );
         expect(hasLAMemory).toBe(true);
       },
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayerWithWebSearch))),
+      Effect.provide(TestLayerWithWebSearch),
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },

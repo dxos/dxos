@@ -16,7 +16,7 @@ import {
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor';
 

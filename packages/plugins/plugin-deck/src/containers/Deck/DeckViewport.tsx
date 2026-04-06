@@ -242,7 +242,7 @@ export const DeckSoloMode = () => {
 // SidebarToggles
 //
 
-const sidebarToggleStyles = 'h-(--dx-rail-item) w-(--dx-rail-item) absolute bottom-2 z-[1] !bg-deck-surface lg:hidden';
+const sidebarToggleStyles = 'h-(--dx-rail-item) w-(--dx-rail-item) absolute bottom-2 z-[1] bg-deck-surface! lg:hidden';
 
 const ToggleSidebarButton = () => <NativeToggleSidebarButton classNames={mx(sidebarToggleStyles, 'left-2')} />;
 const ToggleComplementarySidebarButton = () => (

@@ -13,11 +13,8 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "types": "./src/capabilities/index.ts",
-      "browser": "./src/capabilities/index.ts",
-      "node": "./src/capabilities/node.ts"
-    },
+    "#capabilities": "./src/capabilities/index.ts",
+    "#capabilities/node": "./src/capabilities/node.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#hooks": "./src/hooks/index.ts",

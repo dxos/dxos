@@ -9,15 +9,14 @@ import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { type Queue } from '@dxos/client/echo';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Text } from '@dxos/schema';
-import { type Message } from '@dxos/types';
 
 import { AssistantCapabilities } from '../types';
 import { CreateChat, RunPromptInNewChat } from './definitions';
@@ -30,7 +29,14 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
         const { object: chat } = yield* Operation.invoke(CreateChat, { db });
 
         if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
-          const queue = chat.queue.target as Queue<Message.Message>;
+          const feedTarget = chat.feed.target;
+          invariant(feedTarget, 'Chat feed not found.');
+          const queueDxn = Feed.getQueueDxn(feedTarget);
+          invariant(queueDxn, 'Feed queue DXN not found.');
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const space = client.spaces.get(db.spaceId);
+          invariant(space, 'Space not found.');
+          const queue = space.queues.get(queueDxn);
           const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
             binder.use(async (b: AiContextBinder) => {
