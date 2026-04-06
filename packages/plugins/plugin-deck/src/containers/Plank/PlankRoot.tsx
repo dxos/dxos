@@ -8,6 +8,7 @@ import { type Graph } from '@dxos/plugin-graph';
 
 import { type DeckOperation } from '../../operations';
 import { type LayoutMode, type PlankSizing, type ResolvedPart, type Settings } from '../../types';
+import React, { PropsWithChildren } from 'react';
 
 const PLANK_NAME = 'Plank';
 
@@ -37,3 +38,12 @@ export type PlankContextValue = {
 };
 
 export const [PlankProvider, usePlankContext] = createContext<PlankContextValue>(PLANK_NAME);
+
+type PlankRootProps = PropsWithChildren<PlankContextValue>;
+
+/**
+ * Headless root that provides plank context.
+ */
+const PlankRoot = ({ children, ...context }: PlankRootProps) => {
+  return <PlankProvider {...context}>{children}</PlankProvider>;
+};

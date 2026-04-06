@@ -4,20 +4,11 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { PlankProvider, type PlankContextValue } from './PlankContext';
+import { PlankRoot, PlankProvider, type PlankContextValue } from './PlankRoot';
 import { PlankComponent } from './PlankComponent';
 import { PlankContent } from './PlankContent';
 import { PlankHeading } from './PlankHeading';
 import { PlankControls } from './PlankControls';
-
-type PlankRootProps = PropsWithChildren<PlankContextValue>;
-
-/**
- * Headless root that provides plank context.
- */
-const PlankRoot = ({ children, ...context }: PlankRootProps) => {
-  return <PlankProvider {...context}>{children}</PlankProvider>;
-};
 
 /**
  * Radix-style composite Plank component.
