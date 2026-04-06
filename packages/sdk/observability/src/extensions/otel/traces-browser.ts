@@ -102,7 +102,9 @@ export class OtelTraces {
     const tracer = this._tracer;
 
     TRACE_PROCESSOR.tracingBackend = {
-      startSpan: (options: StartSpanOptions): { end: () => void; setError?: (err: unknown) => void; spanContext?: TraceContextData } => {
+      startSpan: (
+        options: StartSpanOptions,
+      ): { end: () => void; setError?: (err: unknown) => void; spanContext?: TraceContextData } => {
         log('begin otel trace', { options });
         const parentCtx = options.parentContext
           ? propagation.extract(ROOT_CONTEXT, {

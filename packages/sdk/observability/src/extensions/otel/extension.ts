@@ -55,8 +55,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
-  const disabled = isObservabilityDisabledSync(serviceName)
-    || (yield* Effect.promise(() => isObservabilityDisabled(serviceName)));
+  const disabled =
+    isObservabilityDisabledSync(serviceName) || (yield* Effect.promise(() => isObservabilityDisabled(serviceName)));
   const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
