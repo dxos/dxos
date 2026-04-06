@@ -27,6 +27,8 @@ type DragState = {
   dragOrigin: Vector3;
   /** Horizontal plane for pointer projection (at the pick point's Y level). */
   plane: Plane;
+  /** Whether dragging on vertical (Y) axis instead of horizontal (XZ). */
+  vertical: boolean;
 };
 
 /** Tool for dragging objects to translate their position. */
@@ -80,12 +82,23 @@ export class MoveTool implements Tool {
       return false;
     }
 
-    // Project the initial pick point onto a horizontal plane at the object's Y level.
-    // The drag origin is the projected point so movement is purely in the XZ plane.
-    const plane = Plane.FromPositionAndNormal(new Vector3(0, startPosition.y, 0), Vector3.Up());
-
     // Ray-cast the initial click onto the drag plane to get a consistent drag origin.
     const startEvent = info.event as PointerEvent;
+
+    // Detect platform modifier: metaKey (Cmd on macOS) or altKey (Alt on Windows/Linux).
+    const useVertical = startEvent.metaKey || startEvent.altKey;
+
+    let plane: Plane;
+    if (useVertical) {
+      // Vertical drag: use a plane facing the camera that passes through the object.
+      const cameraDir = ctx.camera.getForwardRay().direction;
+      const planeNormal = new Vector3(cameraDir.x, 0, cameraDir.z).normalize();
+      plane = Plane.FromPositionAndNormal(startPosition, planeNormal);
+    } else {
+      // Horizontal drag: XZ ground plane at object's Y level.
+      plane = Plane.FromPositionAndNormal(new Vector3(0, startPosition.y, 0), Vector3.Up());
+    }
+
     const startRay = ctx.scene.createPickingRay(startEvent.clientX, startEvent.clientY, null, ctx.camera);
     const startDist = startRay.intersectsPlane(plane);
     if (startDist === null) {
@@ -93,7 +106,7 @@ export class MoveTool implements Tool {
     }
     const dragOrigin = startRay.origin.add(startRay.direction.scale(startDist));
 
-    this._drag = { objectId, mesh, startPosition, dragOrigin, plane };
+    this._drag = { objectId, mesh, startPosition, dragOrigin, plane, vertical: useVertical };
     ctx.camera.detachControl();
     return true;
   }
@@ -112,6 +125,11 @@ export class MoveTool implements Tool {
 
     const point = ray.origin.add(ray.direction.scale(distance));
     let delta = point.subtract(this._drag.dragOrigin);
+
+    // In vertical mode, only allow Y movement.
+    if (this._drag.vertical) {
+      delta = new Vector3(0, delta.y, 0);
+    }
 
     // Update visual position, snapping to global grid when shift is held.
     const newPos = this._drag.startPosition.add(delta);
