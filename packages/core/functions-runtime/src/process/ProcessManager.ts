@@ -138,7 +138,8 @@ export interface SpawnOptions {
   /**
    * Target object that this process is assigned to.
    */
-  readonly target?: ObjectId;
+  // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
+  readonly target?: DXN.String;
 
   /**
    * Tracing metadata for this invocation.
@@ -173,7 +174,7 @@ export interface ListOptions {
   /**
    * Filter processes by target object ID.
    */
-  readonly target?: ObjectId;
+  readonly target?: DXN.String;
 }
 
 /**
