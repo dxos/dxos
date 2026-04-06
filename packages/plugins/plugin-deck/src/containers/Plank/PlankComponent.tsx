@@ -14,45 +14,30 @@ import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '../../hooks';
-import { type Settings, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { PLANK_COMPANION_TYPE } from '../../types';
 
-import { usePlankContext } from './PlankContext';
+import { PlankRootProps, usePlankContext } from './PlankRoot';
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
-export type PlankComponentProps = {
+export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;
-  part: ResolvedPart;
   path?: string[];
   order?: number;
   active?: string[];
-  companioned?: 'primary' | 'companion';
   node?: Node.Node;
   primary?: Node.Node;
   companions?: Node.Node[];
-  layoutMode: LayoutMode;
-  settings?: Settings.Settings;
+  companioned?: 'primary' | 'companion';
 };
 
 export const PlankComponent = memo(
-  ({
-    id,
-    part,
-    path,
-    order,
-    active,
-    companioned,
-    node,
-    primary,
-    companions,
-    layoutMode,
-    settings,
-  }: PlankComponentProps) => {
-    const { popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
+  ({ part, id, path, order, active, node, primary, companions, companioned }: PlankComponentProps) => {
+    const { layoutMode, settings, popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
       usePlankContext('PlankComponent');
 
-    const canResize = layoutMode === 'deck';
+    const canResize = layoutMode === 'multi';
     const { findFirstFocusable } = useFocusFinders();
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
     const orderId = companioned === 'companion' ? primary?.id : id;
@@ -91,14 +76,14 @@ export const PlankComponent = memo(
 
     useLayoutEffect(() => {
       if (scrollIntoView === id) {
-        layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        layoutMode === 'multi' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         onScrollIntoView?.(undefined);
       }
     }, [id, scrollIntoView, layoutMode, onScrollIntoView]);
 
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
-      (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
+      (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
     const sizeAttrs = useMainSize();
 
     const data = useMemo(
@@ -128,7 +113,7 @@ export const PlankComponent = memo(
       part.startsWith('solo') && 'grid',
       part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-w-0',
       fullscreen && 'grid-rows-1',
-      part === 'deck' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
+      part === 'multi' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
       part === 'solo-companion' && 'border-separator! border-s',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&

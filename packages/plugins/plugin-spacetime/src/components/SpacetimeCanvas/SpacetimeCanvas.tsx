@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial } from '@babylonjs/core';
+import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial, Vector3 } from '@babylonjs/core';
 import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -122,6 +122,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
                 name: objId ?? 'solid',
                 color: objectColor,
               });
+              mesh.position = new Vector3(obj.position?.x ?? 0, obj.position?.y ?? 0, obj.position?.z ?? 0);
               solidsRef.current.set(objId, solid);
               meshRef.current = mesh;
               meshesRef.current.set(objId, mesh);
@@ -134,6 +135,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
                 name: objId ?? 'raw',
                 color: objectColor,
               });
+              mesh.position = new Vector3(obj.position?.x ?? 0, obj.position?.y ?? 0, obj.position?.z ?? 0);
               meshRef.current = mesh;
               meshesRef.current.set(objId, mesh);
             }
@@ -399,6 +401,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
                 name: objId,
                 color: objectColor,
               });
+              mesh.position = new Vector3(obj.position?.x ?? 0, obj.position?.y ?? 0, obj.position?.z ?? 0);
               solidsRef.current.set(objId, solid);
               meshesRef.current.set(objId, mesh);
             } else if (obj.mesh?.vertexData && obj.mesh?.indexData) {
@@ -409,6 +412,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
                 name: objId,
                 color: objectColor,
               });
+              mesh.position = new Vector3(obj.position?.x ?? 0, obj.position?.y ?? 0, obj.position?.z ?? 0);
               meshesRef.current.set(objId, mesh);
             }
           }

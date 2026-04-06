@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { Graph } from '@dxos/app-graph';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,11 +23,12 @@ import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { DeckState } from '../../capabilities';
-import { Plank, type PlankContextValue } from '../../containers/Plank';
+import { Plank } from '../../containers/Plank';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+import { StackContext } from '@dxos/react-ui-stack';
 
 faker.seed(123);
 
@@ -68,46 +70,44 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
  * Tile that wraps a Plank for content rendering.
  */
 const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
-  const attentionAttrs = useAttentionAttributes(props.data.id);
+  const graph = useMemo(() => Graph.make(), []);
   return (
-    <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild border current={props.current}>
-        <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              <p>{Obj.getLabel(props.data)}</p>
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>
-            <Plank.Root layoutMode='deck' part='deck' graph={{} as PlankContextValue['graph']}>
-              <Plank.Component
-                id={props.data.id}
-                layoutMode='deck'
-                part='deck'
-                node={{ id: props.data.id, data: props.data, type: 'test', properties: {} } as any}
-              />
-            </Plank.Root>
-          </Panel.Content>
-        </Panel.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+    <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
+      <Plank.Root layoutMode='multi' part='multi' graph={graph}>
+        <Mosaic.Tile {...props} asChild>
+          <Plank.Content solo={false} companion={false} encapsulate={false}>
+            <Plank.Component
+              id={props.data.id}
+              part='multi'
+              node={{
+                id: props.data.id,
+                data: props.data,
+                type: 'test',
+                properties: {},
+              }}
+            />
+          </Plank.Content>
+        </Mosaic.Tile>
+      </Plank.Root>
+    </StackContext.Provider>
   );
 };
 
-const storySurfaceExtension = Capability.contributes(
+const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'story-article',
     role: 'article',
-    component: ({ data }) => {
-      const subject = (data as any)?.subject;
+    component: ({ data: { subject } }) => {
       if (!subject) {
         return <Loading />;
       }
 
       return (
         <Json.Root data={subject}>
-          <Json.Content />
+          <Json.Content>
+            <Json.Data />
+          </Json.Content>
         </Json.Root>
       );
     },
@@ -199,7 +199,7 @@ export const WithPlank: Story = {
   decorators: [
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      capabilities: [storySurfaceExtension],
+      capabilities: [TestExtension],
     }),
   ],
   parameters: {

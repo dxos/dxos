@@ -17,7 +17,7 @@ export const SpacetimeArticle = ({ subject, attendableId }: SpacetimeArticleProp
     <SpacetimeEditor.Root scene={subject}>
       <Panel.Root>
         <Panel.Toolbar asChild>
-          <SpacetimeEditor.Toolbar attendableId={attendableId} />
+          <SpacetimeEditor.Toolbar attendableId={attendableId} alwaysActive />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <SpacetimeEditor.Canvas />

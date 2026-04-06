@@ -39,6 +39,7 @@ export type SpacetimeToolbarProps = Pick<MenuRootProps, 'attendableId' | 'always
 export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps>(
   (
     {
+      attendableId,
       alwaysActive,
       editorActions,
       toolState,
@@ -86,7 +87,7 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
 
     return (
       <ElevationProvider elevation='base'>
-        <Menu.Root alwaysActive={alwaysActive} {...menuActions}>
+        <Menu.Root attendableId={attendableId} alwaysActive={alwaysActive} {...menuActions}>
           <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
             {/* TODO(burdon): Extend builder to support custom components. */}
             <HuePicker value={propertiesState.hue} onChange={(hue) => onPropertiesChange({ hue })} />

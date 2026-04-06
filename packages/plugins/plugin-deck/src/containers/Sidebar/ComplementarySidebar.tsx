@@ -25,8 +25,8 @@ export type ComplementarySidebarProps = {
 };
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
-  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const { t } = useTranslation(meta.id);
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();

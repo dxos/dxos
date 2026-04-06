@@ -19,6 +19,9 @@ const SNAP_SIZE = 1;
 /** Snaps a value to the nearest grid increment. */
 const snapToGrid = (value: number): number => Math.round(value / SNAP_SIZE) * SNAP_SIZE;
 
+/** Dot product of a Vector3 and a plain {x,y,z} vector. */
+const dotVec3 = (a: Vector3, b: Vector3): number => a.x * b.x + a.y * b.y + a.z * b.z;
+
 /** State tracked during an active extrude drag. */
 type ExtrudeState = {
   /** ECHO object id being extruded. */
@@ -173,9 +176,10 @@ export class ExtrudeTool implements Tool {
     const currentT = projectRayOntoNormal(this._state.facePoint, this._state.normalVec, ctx, event);
     let distance = -(currentT - this._state.startT);
 
-    // Snap to grid when shift is held.
+    // Snap so the resulting face lands on a global grid line.
     if (event.shiftKey) {
-      distance = snapToGrid(distance);
+      const facePos = dotVec3(this._state.facePoint, this._state.normalVec);
+      distance = snapToGrid(facePos + distance) - facePos;
     }
 
     const t0 = performance.now();
@@ -217,7 +221,8 @@ export class ExtrudeTool implements Tool {
     const currentT = projectRayOntoNormal(this._state.facePoint, this._state.normalVec, ctx, event);
     let distance = -(currentT - this._state.startT);
     if (event.shiftKey) {
-      distance = snapToGrid(distance);
+      const facePos = dotVec3(this._state.facePoint, this._state.normalVec);
+      distance = snapToGrid(facePos + distance) - facePos;
     }
 
     const finalSolid = applyExtrusion(

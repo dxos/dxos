@@ -27,7 +27,7 @@ declare global {
   interface ToolContextExtensions {
     dispatch?: PromiseIntentDispatcher;
     pivotId?: string;
-    part?: 'deck' | 'dialog';
+    part?: 'multi' | 'dialog';
   }
 }
 
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
           invariant(pivotId, 'No pivot ID');
           invariant(invokePromise, 'No operation invoker');
 
-          if (part === 'deck') {
+          if (part === 'multi') {
             const { error } = await invokePromise(DeckOperation.ChangeCompanion, {
               companion: id,
             });

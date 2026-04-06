@@ -113,13 +113,14 @@ export class MoveTool implements Tool {
     const point = ray.origin.add(ray.direction.scale(distance));
     let delta = point.subtract(this._drag.dragOrigin);
 
-    // Snap to grid when shift is held.
+    // Update visual position, snapping to global grid when shift is held.
+    const newPos = this._drag.startPosition.add(delta);
     if (event.shiftKey) {
-      delta = new Vector3(snapToGrid(delta.x), snapToGrid(delta.y), snapToGrid(delta.z));
+      newPos.x = snapToGrid(newPos.x);
+      newPos.y = snapToGrid(newPos.y);
+      newPos.z = snapToGrid(newPos.z);
     }
-
-    // Update visual position only (no ECHO write during drag).
-    this._drag.mesh.position = this._drag.startPosition.add(delta);
+    this._drag.mesh.position = newPos;
 
     ctx.setDebugStats({
       x: this._drag.mesh.position.x.toFixed(2),

@@ -8,16 +8,17 @@ import { type Graph } from '@dxos/plugin-graph';
 
 import { type DeckOperation } from '../../operations';
 import { type LayoutMode, type PlankSizing, type ResolvedPart, type Settings } from '../../types';
+import React, { PropsWithChildren } from 'react';
 
 const PLANK_NAME = 'Plank';
 
 export type PlankContextValue = {
   /** The application graph. */
   graph: Graph.ExpandableGraph;
-  /** Current layout mode. */
-  layoutMode: LayoutMode;
   /** Which part of the layout this plank occupies. */
   part: ResolvedPart;
+  /** Current layout mode. */
+  layoutMode: LayoutMode;
   /** Deck settings. */
   settings?: Settings.Settings;
   /** Popover anchor ID for heading menus. */
@@ -37,3 +38,12 @@ export type PlankContextValue = {
 };
 
 export const [PlankProvider, usePlankContext] = createContext<PlankContextValue>(PLANK_NAME);
+
+export type PlankRootProps = PropsWithChildren<PlankContextValue>;
+
+/**
+ * Headless root that provides plank context.
+ */
+export const PlankRoot = ({ children, ...context }: PlankRootProps) => {
+  return <PlankProvider {...context}>{children}</PlankProvider>;
+};

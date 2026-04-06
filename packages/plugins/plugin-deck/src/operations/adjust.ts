@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
           mode: soloOperation.mode,
         });
       } else if (soloOperation?.type === 'unsolo') {
-        yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'deck' });
+        yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'multi' });
         yield* Operation.invoke(LayoutOperation.Open, { subject: [soloOperation.entryId] });
       }
 

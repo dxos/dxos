@@ -95,7 +95,7 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push any pending changes.
+  - Commit and push all pending changes.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
