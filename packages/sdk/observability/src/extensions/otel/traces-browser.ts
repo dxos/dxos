@@ -3,7 +3,6 @@
 //
 
 import {
-  type Context,
   ROOT_CONTEXT,
   SpanStatusCode,
   type Tracer,

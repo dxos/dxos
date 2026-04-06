@@ -13,7 +13,6 @@ import {
   type TestService,
   type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts, encodeMessage } from './testing';
