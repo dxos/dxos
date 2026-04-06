@@ -63,14 +63,14 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 
       if (!result.success) {
         log.catch(result.error);
-        state.set('error', t('upload failed label'));
+        state.set('error', t('upload-failed.label'));
       }
 
       state.set('deploying', false);
     },
     {
       type: 'deploy',
-      label: [value.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
+      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: meta.id }],
       icon: value.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: value.deploying,
       classNames: value.deploying ? '[&_svg]:animate-spin' : '',

@@ -379,7 +379,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
               <Icon
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
-              <span>{t(`add ${contextMenuAxis} before label`)}</span>
+              <span>{t(`add-${contextMenuAxis}-before.label`)}</span>
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onClick={() => handleAxisMenuAction('insert-after')}
@@ -388,14 +388,14 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
               <Icon
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
-              <span>{t(`add ${contextMenuAxis} after label`)}</span>
+              <span>{t(`add-${contextMenuAxis}-after.label`)}</span>
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onClick={() => handleAxisMenuAction('drop')}
               data-testid={`grid.${contextMenuAxis}.drop`}
             >
               <Icon icon='ph--backspace--regular' />
-              <span>{t(`delete ${contextMenuAxis} label`)}</span>
+              <span>{t(`delete-${contextMenuAxis}.label`)}</span>
             </DropdownMenu.Item>
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />

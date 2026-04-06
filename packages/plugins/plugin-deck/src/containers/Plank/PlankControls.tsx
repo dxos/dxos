@@ -151,7 +151,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
         {close && !layoutIsAnySolo && (
           <PlankControl
-            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'}.label`)}
             classNames={buttonClassNames}
             data-testid='plankHeading.close'
             icon={

@@ -119,7 +119,7 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         key: 'style',
         value: styleValue as StyleValue,
         icon,
-        label: [`range value ${styleValue} label`, { ns: meta.id }],
+        label: [`range-value-${styleValue}.label`, { ns: meta.id }],
         checked: !!state[styleValue as StyleValue],
       },
     );
