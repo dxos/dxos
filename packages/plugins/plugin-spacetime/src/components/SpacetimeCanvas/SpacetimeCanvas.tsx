@@ -549,7 +549,7 @@ const resolveColor = (color: string | undefined): Color3 => {
 
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
-  selected: new Color3(0.3, 0.6, 1.0),
+  selected: new Color3(1.0, 0.2, 0.2),
 };
 
 /** Build scene overview debug info from ECHO scene data. */

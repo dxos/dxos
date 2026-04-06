@@ -17,7 +17,7 @@ import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
 
 const theme = {
-  selected: new Color3(0.2, 0.4, 0.6),
+  selected: new Color3(1.0, 0.2, 0.2),
 };
 
 /** Tool for selecting objects or faces via ray-picking. */
