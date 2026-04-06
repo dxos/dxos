@@ -112,12 +112,14 @@ const span =
           })
         : undefined;
 
-      const childCtx =
-        remoteSpan?.spanContext != null
-          ? (parentCtx ?? new Context()).derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext } })
-          : (parentCtx ?? new Context()).derive();
-
-      const callArgs = parentCtx ? [childCtx, ...args.slice(1)] : args;
+      let callArgs = args;
+      if (parentCtx) {
+        const childCtx =
+          remoteSpan?.spanContext != null
+            ? parentCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext } })
+            : parentCtx.derive();
+        callArgs = [childCtx, ...args.slice(1)];
+      }
 
       try {
         return await method.apply(this, callArgs);
@@ -151,7 +153,7 @@ export type ManualSpanParams = {
  * Creates a span that must be ended manually.
  */
 const spanStart = (params: ManualSpanParams) => {
-  if (manualSpans.has(params.id)) {
+  if (manualSpans.has(params.id) || manualSpanTimestamps.has(params.id)) {
     return;
   }
 

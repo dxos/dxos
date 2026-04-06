@@ -200,6 +200,9 @@ const detectProcessType = (): string => {
   if (typeof window !== 'undefined') {
     return 'browser';
   }
+  if (typeof (globalThis as any).ServiceWorkerGlobalScope !== 'undefined') {
+    return 'service-worker';
+  }
   if (typeof (globalThis as any).SharedWorkerGlobalScope !== 'undefined') {
     return 'shared-worker';
   }

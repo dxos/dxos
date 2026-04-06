@@ -10,6 +10,7 @@ import {
   propagation,
   trace,
 } from '@opentelemetry/api';
+import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
@@ -24,6 +25,8 @@ export class OtelTraces {
   private _tracer: Tracer;
 
   constructor(private readonly options: OtelOptions) {
+    propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+
     const tracerProvider = new BasicTracerProvider({
       resource: this.options.resource,
       spanProcessors: [
