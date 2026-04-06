@@ -122,6 +122,9 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
     <AlertDialogPrimitive.Content
       {...props}
       className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
+      // NOTE: Radix warning unless set to undefined.
+      // https://www.radix-ui.com/primitives/docs/components/dialog#description
+      aria-describedby={undefined}
       ref={forwardedRef}
     >
       <Column.Root classNames='dx-expander' gutter='sm'>

@@ -31,7 +31,12 @@ type DialogRootProps = DialogPrimitive.DialogProps;
 
 const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   <ElevationProvider elevation='dialog'>
-    <DialogPrimitive.Root {...props} />
+    <DialogPrimitive.Root
+      // NOTE: Radix warning unless set to undefined.
+      // https://www.radix-ui.com/primitives/docs/components/dialog#description
+      aria-describedby={undefined}
+      {...props}
+    />
   </ElevationProvider>
 );
 
