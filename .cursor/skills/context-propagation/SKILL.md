@@ -224,12 +224,12 @@ Callback / detached async work:
 
 ## Who Provides the Root Context
 
-| Situation | Root ctx |
-| --- | --- |
-| Public API entry point | `Context.default()` |
+| Situation                            | Root ctx                                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Public API entry point               | `Context.default()`                                                                                                       |
 | RPC service method (proto-generated) | `options.ctx` (decoded from caller's W3C trace context by `ContextRpcCodec`; falls back to `Context.default()` if absent) |
-| Callback / event handler | `this._ctx` (lifecycle) |
-| Detached async work | `this._ctx` (lifecycle) |
+| Callback / event handler             | `this._ctx` (lifecycle)                                                                                                   |
+| Detached async work                  | `this._ctx` (lifecycle)                                                                                                   |
 
 ## Quick Reference
 
