@@ -74,7 +74,7 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [x] When the move tool is selected, dragging on an object should move it relative to the ground plane.
 - [x] When a facet is selected and the extrusion tool is selected, dragging should extrude the facet and update the object model once the dragging completes.
 - [x] Show the ground plane as a transparent grid.
-- [ ] Implement pinch zoom.
+- [x] Implement pinch zoom.
 - [x] Add a menu toggle group to select either objects or faces.
   - Selection mode toggle (object/face) in toolbar via `view.ts` `createSelectionModeActions`.
   - `Selection` type is a discriminated union: `ObjectSelection | FaceSelection`.
@@ -103,15 +103,22 @@ Instead implement tool handlers that operate on the runtime properties and then 
 
 ### Phase 4 (Boolean geometry)
 
-- [ ] Key shortcuts: m => move, e => extrude, x / backspace => delete
-      Determine if we can easily use the composer shortcuts util; e.g., to specify key combination in the tool definition.
-- [ ] When the moving objects, if the CMD key is held move in the Z axis (up/down) rather then X/Y (ground plane).
-- [ ] Unit test to join/merge two mesh objects into a new single mesh object.
-- [ ] Unit test to subtract one mesh object from another and create a new single mesh object.
-- [ ] Mult-select if holding shift when clicking (ordered list of objects)
-- [ ] Support moving all selected objects
-- [ ] Menu action to join selected objects.
-- [ ] Menu action to subtract selected objects.
+- [x] Key shortcuts: m => move, e => extrude, x / backspace => delete
+      Local canvas keydown listener (scoped to canvas focus, skips text inputs).
+- [x] When the moving objects, if the CMD key is held move in the Z axis (up/down) rather then X/Y (ground plane).
+      Uses metaKey (macOS) or altKey (Windows/Linux); vertical drag projects onto camera-facing plane.
+- [x] Unit test to join/merge two mesh objects into a new single mesh object.
+      `boolean-ops.test.ts`: 4 tests for joinSolids (overlapping, non-overlapping, 3 cubes, position).
+- [x] Unit test to subtract one mesh object from another and create a new single mesh object.
+      `boolean-ops.test.ts`: 4 tests for subtractSolids (overlapping, A-B-C, non-overlapping, position).
+- [x] Mult-select if holding shift when clicking (ordered list of objects)
+      MultiObjectSelection type with ordered entries; toggle in/out via shift-click in object mode.
+- [x] Support moving all selected objects
+      MoveTool tracks companions from multi-selection; applies same delta to all on drag.
+- [x] Menu action to join selected objects.
+      Toolbar button with `ph--unite-square--regular` icon. Deletes sources, creates merged object.
+- [x] Menu action to subtract selected objects.
+      Toolbar button with `ph--subtract-square--regular` icon. A - B - C ordered difference.
 
 ### Phase 5
 
