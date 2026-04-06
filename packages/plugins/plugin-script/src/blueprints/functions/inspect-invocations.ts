@@ -45,8 +45,7 @@ export default InspectInvocations.pipe(
         timestamp: span.timestamp,
         duration: span.duration,
         outcome: `${span.outcome}`,
-        input:
-          span.input !== null && typeof span.input === 'object' ? span.input : { value: span.input },
+        input: span.input !== null && typeof span.input === 'object' ? span.input : { value: span.input },
         error: span.error ? (span.error as object) : undefined,
       }));
 
