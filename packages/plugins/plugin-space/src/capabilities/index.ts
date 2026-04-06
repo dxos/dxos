@@ -5,6 +5,7 @@
 export * from './app-graph-builder';
 export * from './app-graph-serializer';
 export * from './identity-created';
+export * from './migrations';
 export * from './navigation-handler';
 export * from './navigation-resolver';
 export * from './operation-handler';

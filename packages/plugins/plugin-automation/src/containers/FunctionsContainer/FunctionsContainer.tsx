@@ -17,14 +17,14 @@ export const FunctionsContainer = ({ space }: { space: Space }) => {
   return (
     <Settings.Root>
       <Settings.Section
-        title={t('functions verbose label', { ns: meta.id })}
-        description={t('functions description', { ns: meta.id })}
+        title={t('functions-verbose.label', { ns: meta.id })}
+        description={t('functions.description', { ns: meta.id })}
       >
         <FunctionsPanel space={space} />
       </Settings.Section>
       <Settings.Section
-        title={t('functions registry verbose label', { ns: meta.id })}
-        description={t('functions registry description', { ns: meta.id })}
+        title={t('functions-registry-verbose.label', { ns: meta.id })}
+        description={t('functions-registry.description', { ns: meta.id })}
       >
         <FunctionsRegistry space={space} />
       </Settings.Section>

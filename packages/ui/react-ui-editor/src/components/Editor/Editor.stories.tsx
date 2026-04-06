@@ -42,7 +42,7 @@ const withExtensions: Decorator<EditorContentProps> = (Story, { args }) => {
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      automerge(createDocAccessor(createObject(Text.make(args.initialValue)), ['content'])),
+      automerge(createDocAccessor(createObject(Text.make({ content: args.initialValue })), ['content'])),
     ],
     [themeMode],
   );

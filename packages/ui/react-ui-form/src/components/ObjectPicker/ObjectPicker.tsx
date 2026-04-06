@@ -116,7 +116,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
 
     return (
       <Combobox.Content {...props} onSearch={handleSearch} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
-        <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
+        <Combobox.Input placeholder={t('ref-field-combobox-input.placeholder')} autoFocus />
         <Combobox.List>
           {results.map((option) => (
             <Combobox.Item
@@ -159,7 +159,7 @@ const CreateItem = ({
 
   const label = createOptionLabel
     ? t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })
-    : t('create option label');
+    : t('create-option.label');
 
   return (
     <Combobox.Item

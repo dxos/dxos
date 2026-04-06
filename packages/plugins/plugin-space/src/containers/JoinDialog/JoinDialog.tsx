@@ -42,8 +42,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.join-success`,
           duration: 5_000,
-          title: ['join success label', { ns: meta.id }],
-          closeLabel: ['dismiss label', { ns: meta.id }],
+          title: ['join-success.label', { ns: meta.id }],
+          closeLabel: ['dismiss.label', { ns: meta.id }],
         }),
         invokePromise(LayoutOperation.UpdateDialog, { state: false }),
       ]);
@@ -94,7 +94,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
   // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
+      <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
       <Dialog.Body>
         <JoinPanel
           {...props}

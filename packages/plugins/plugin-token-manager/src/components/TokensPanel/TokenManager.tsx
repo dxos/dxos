@@ -41,11 +41,20 @@ const TokenListItem = ({ token, onDelete }: TokenListItemProps) => {
   }, [token, onDelete]);
 
   return (
-    <ListItem.Root>
-      <ListItem.Heading classNames='grow truncate'>{token.note}</ListItem.Heading>
-      <div className='flex items-center text-description text-sm truncate'>{token.source}</div>
+    <ListItem.Root classNames='grid grid-cols-[1fr_min-content]'>
+      <div className='flex flex-col'>
+        <ListItem.Heading>{token.source}</ListItem.Heading>
+        <p className='text-description'>{token.account}</p>
+        <p className='text-description'>{token.note}</p>
+      </div>
       <ListItem.Endcap>
-        <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete token')} onClick={handleDelete} />
+        <IconButton
+          iconOnly
+          icon='ph--x--regular'
+          variant='ghost'
+          label={t('delete-token.menu')}
+          onClick={handleDelete}
+        />
       </ListItem.Endcap>
     </ListItem.Root>
   );

@@ -93,7 +93,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             </Form.Root>
           )}
 
-          {sidebar === 'json' && <Json data={{ graph: graph?.graph }} classNames='text-xs' />}
+          {sidebar === 'json' && <Json.Data data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>
       )}
     </div>

@@ -176,7 +176,7 @@ export class WorkerRuntime {
     this._releaseLock();
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
-    await this._clientServices.close();
+    await this._clientServices.close(Context.default());
     await this._runtime.dispose();
     await this._onStop?.();
     await this._livenessLock.release();

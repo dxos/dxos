@@ -376,7 +376,7 @@
     "6B2210"
   ],
   "hediet.vscode-drawio.resizeImages": null,
-  "hediet.vscode-drawio.theme": "Kennedy",
+  "hediet.vscode-drawio.theme": "automatic",
   "javascript.suggest.autoImports": true,
   "json.schemas": [
     {

@@ -26,7 +26,7 @@ export default Capability.makeModule(
               type: `${meta.id}.space-settings-automation`,
               data: `${meta.id}.space-settings-automation`,
               properties: {
-                label: ['automation panel label', { ns: meta.id }],
+                label: ['automation-panel.label', { ns: meta.id }],
                 icon: 'ph--lightning--regular',
               },
             },
@@ -42,7 +42,7 @@ export default Capability.makeModule(
               type: `${meta.id}.space-settings-functions`,
               data: `${meta.id}.space-settings-functions`,
               properties: {
-                label: ['functions panel label', { ns: meta.id }],
+                label: ['functions-panel.label', { ns: meta.id }],
                 icon: 'ph--function--regular',
               },
             },
@@ -58,7 +58,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'automation',
               properties: {
-                label: ['script automation label', { ns: meta.id }],
+                label: ['script-automation.label', { ns: meta.id }],
                 icon: 'ph--lightning--regular',
                 disposition: 'hidden',
               },

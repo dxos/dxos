@@ -27,6 +27,8 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
+  '@babylonjs/core': ^7.52.5
+  '@babylonjs/loaders': ^7.54.3
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
@@ -57,6 +59,7 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
+  '@dxos/echo': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
@@ -115,6 +118,7 @@ catalog:
   '@opentelemetry/api-logs': ^0.203.0
   '@opentelemetry/auto-instrumentations-node': ^0.64.1
   '@opentelemetry/auto-instrumentations-web': ^0.51.0
+  '@opentelemetry/core': ^2.1.0
   '@opentelemetry/exporter-logs-otlp-http': ^0.203.0
   '@opentelemetry/exporter-metrics-otlp-http': ^0.203.0
   '@opentelemetry/exporter-trace-otlp-http': ^0.203.0
@@ -314,6 +318,7 @@ catalog:
   assert: ^2.0.0
   astro: ^5.15.9
   autoprefixer: ^10.4.12
+  babylonjs-gltf2interface: ^7.0.0
   base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
@@ -356,7 +361,7 @@ catalog:
   d3-force: ~3.0.0
   d3-geo-projection: ^4.0.0
   d3-hexbin: ^0.2.2
-  date-fns: ^3.3.1
+  date-fns: ^3.6.0
   debounce: ^2.2.0
   debug: ^4.3.4
   deep-equal: ^2.2.3
@@ -366,6 +371,7 @@ catalog:
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
+  dompurify: ^3.3.1
   effect: 3.20.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
@@ -389,7 +395,7 @@ catalog:
   extensionless: ^1.9.9
   fast-check: ^3.19.0
   fast-deep-equal: ^3.1.3
-  fast-xml-parser: ^5.5.7
+  fast-xml-parser: ^5.5.9
   fetch-mock: ^11.0.0
   find-process: ^1.4.7
   flame-chart-js: ^3.3.0
@@ -464,6 +470,7 @@ catalog:
   luxon: ^3.4.4
   madge: 8.0.0
   main-thread-scheduling: ^14.1.1
+  manifold-3d: ^3.0.0
   marked: ^12.0.2
   mathjs: ^14.2.1
   md5-hex: 5.0.0
@@ -488,6 +495,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.6.0
+  papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
   partykit: ^0.0.103
@@ -635,7 +643,7 @@ catalog:
   ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
-  yaml: ^2.7.0
+  yaml: ^2.8.2
   yargs: ~16.2.0
   youtube-caption-extractor: ^1.9.1
   youtube-transcript: ^1.2.1
@@ -723,6 +731,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
+    manifold-3d>esbuild-wasm: '*'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
@@ -730,5 +739,6 @@ peerDependencyRules:
 strictPeerDependencies: true
 
 trustPolicy: no-downgrade
+
 trustPolicyExclude:
   - rollup@3.30.0

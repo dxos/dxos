@@ -17,8 +17,8 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { useActiveSpace } from '@dxos/plugin-space';
 
+import { AssistantSettings } from '../../components';
 import {
-  AssistantSettings,
   BlueprintArticle,
   ChatCompanion,
   ChatContainer,

@@ -33,7 +33,7 @@ export const ContextBinding = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.context-binding',
+    typename: 'org.dxos.type.contextBinding',
     version: '0.1.0',
   }),
 );

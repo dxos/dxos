@@ -20,6 +20,7 @@ import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
+import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -46,6 +47,7 @@ import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SpacetimePlugin } from '@dxos/plugin-spacetime';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -139,9 +141,10 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
-      PipelinePlugin.meta.id,
+      FeedPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
+      PipelinePlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
@@ -191,6 +194,7 @@ export const getPlugins = ({
     DebugPlugin({ logBuffer }),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
+    FeedPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -222,6 +226,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SpacetimePlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,

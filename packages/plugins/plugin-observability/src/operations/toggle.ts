@@ -9,9 +9,8 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Observability } from '@dxos/observability';
 import { Operation } from '@dxos/operation';
 
-import { type ObservabilitySettingsProps } from '../containers';
 import { meta } from '../meta';
-import { ObservabilityCapabilities } from '../types';
+import { ObservabilityCapabilities, type Settings } from '../types';
 
 import { Toggle } from './definitions';
 
@@ -27,7 +26,7 @@ const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
       if (!settingsObj) {
         return false;
       }
-      const settings = registry.get(settingsObj.atom) as ObservabilitySettingsProps;
+      const settings = registry.get(settingsObj.atom) as Settings.Settings;
       const newEnabled = input.state ?? !settings.enabled;
       registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
       observability.events.captureEvent('observability.toggle', {

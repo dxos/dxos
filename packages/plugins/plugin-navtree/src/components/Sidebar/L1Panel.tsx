@@ -41,7 +41,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
   const shouldRenderContent = isCurrent || isActivated;
 
   return (
-    <Tabs.Tabpanel
+    <Tabs.Panel
       key={item.id}
       value={item.id}
       classNames={[
@@ -56,7 +56,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
       {...(!open && { inert: true })}
     >
       {shouldRenderContent && <L1PanelContent open={open} path={path} item={item} onBack={onBack} />}
-    </Tabs.Tabpanel>
+    </Tabs.Panel>
   );
 };
 
@@ -170,7 +170,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
-          label={t('button back')}
+          label={t('button-back.button')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
         />
@@ -216,7 +216,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
                 iconOnly
-                label={t('tree item actions label')}
+                label={t('tree-item-actions.label')}
                 data-testid='navtree.treeItem.actionsLevel0'
               />
             </Menu.Trigger>
@@ -265,7 +265,9 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
       type: Node.ActionType,
       data: () => Effect.void,
       properties: {
-        label: isAlternate ? ['button back', { ns: meta.id }] : (alternateTree.properties.label ?? alternateTree.id),
+        label: isAlternate
+          ? ['button-back.button', { ns: meta.id }]
+          : (alternateTree.properties.label ?? alternateTree.id),
         icon: isAlternate
           ? 'ph--arrow-u-down-left--regular'
           : (alternateTree.properties.icon ?? 'ph--placeholder--regular'),

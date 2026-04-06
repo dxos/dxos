@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
+import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -29,7 +28,6 @@ import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { SpaceOperation } from '../../operations';
-import { COMPOSER_SPACE_LOCK } from '../../util';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
@@ -66,18 +64,11 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   // TODO(wittjosiah): Track which was the most recently viewed object.
   const target = space.properties[Collection.Collection.typename]?.target?.objects[0]?.target;
 
-  const locked = space.properties[COMPOSER_SPACE_LOCK];
-  const handleChangeLocked = useCallback(() => {
-    Obj.change(space.properties, (obj) => {
-      obj[COMPOSER_SPACE_LOCK] = !locked;
-    });
-  }, [locked, space]);
-
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
       inviteOne: {
-        label: t('invite one label', { ns: shellTranslationKey }),
-        description: t('invite one description', { ns: shellTranslationKey }),
+        label: t('invite-one.label', { ns: shellTranslationKey }),
+        description: t('invite-one.description', { ns: shellTranslationKey }),
         icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
@@ -96,8 +87,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         },
       },
       inviteMany: {
-        label: t('invite many label', { ns: shellTranslationKey }),
-        description: t('invite many description', { ns: shellTranslationKey }),
+        label: t('invite-many.label', { ns: shellTranslationKey }),
+        description: t('invite-many.description', { ns: shellTranslationKey }),
         icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
@@ -130,46 +121,33 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   return (
     <Clipboard.Provider>
       <Settings.Root>
-        <Settings.Section title={t('members verbose label')} description={t('members description')}>
+        <Settings.Section title={t('members-verbose.label')} description={t('members.description')}>
           <Settings.Frame>
-            <Settings.FrameItem title={t('members label')}>
+            <Settings.FrameItem title={t('members.label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Settings.FrameItem>
-            {locked && (
-              <Settings.FrameItem title={t('invitations label')}>
-                <p className='text-description mb-2'>{t('locked space description')}</p>
-              </Settings.FrameItem>
-            )}
-            {!locked && (
-              <Settings.FrameItem title={t('invitations label')}>
-                {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                {!selectedInvitation && (
-                  <>
-                    <p className='text-description mb-2'>{t('space invitation description')}</p>
-                    <InvitationList
-                      className='mb-2'
-                      send={handleSend}
-                      invitations={visibleInvitations ?? []}
-                      onClickRemove={(invitation) => invitation.cancel()}
-                      createInvitationUrl={createInvitationUrl}
-                    />
-                    <BifurcatedAction
-                      actions={inviteActions}
-                      activeAction={activeAction}
-                      onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                      data-testid='membersContainer.createInvitation'
-                    />
-                  </>
-                )}
-              </Settings.FrameItem>
-            )}
+            <Settings.FrameItem title={t('invitations.label')}>
+              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+              {!selectedInvitation && (
+                <>
+                  <p className='text-description mb-2'>{t('space-invitation.description')}</p>
+                  <InvitationList
+                    className='mb-2'
+                    send={handleSend}
+                    invitations={visibleInvitations ?? []}
+                    onClickRemove={(invitation) => invitation.cancel()}
+                    createInvitationUrl={createInvitationUrl}
+                  />
+                  <BifurcatedAction
+                    actions={inviteActions}
+                    activeAction={activeAction}
+                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                    data-testid='membersContainer.createInvitation'
+                  />
+                </>
+              )}
+            </Settings.FrameItem>
           </Settings.Frame>
-          {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
-          <div className='justify-center p-0 mt-4 grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-            <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
-              <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
-            </Settings.ItemInput>
-          </div>
         </Settings.Section>
       </Settings.Root>
     </Clipboard.Provider>
@@ -227,7 +205,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div role='none' className='w-full aspect-square relative text-description'>
           <QR
@@ -245,12 +223,12 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
           </Centered>
         </div>
         <span id={qrLabel} className='sr-only'>
-          {t('qr label')}
+          {t('qr.label')}
         </span>
         <Clipboard.Button value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );
@@ -262,12 +240,12 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth other device emoji message')}</p>
+      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth code message')}</p>
+      <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );

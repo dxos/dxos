@@ -131,12 +131,11 @@ export class IdentityManager {
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
   }
 
-  async close(): Promise<void> {
-    await this._identity?.close(new Context());
+  async close(ctx: Context): Promise<void> {
+    await this._identity?.close(ctx);
   }
 
-  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
-    // TODO(nf): populate using context from ServiceContext?
+  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -153,7 +152,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx ?? Context.default());
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -244,7 +243,7 @@ export class IdentityManager {
   /**
    * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async prepareIdentity(params: JoinIdentityProps) {
+  async prepareIdentity(params: JoinIdentityProps, ctx?: Context) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -260,7 +259,7 @@ export class IdentityManager {
       },
     };
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx ?? Context.default());
     return { identity, identityRecord };
   }
 

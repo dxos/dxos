@@ -34,6 +34,7 @@ import {
   AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
+  Migrations,
   NavigationHandler,
   NavigationResolver,
   OperationHandler,
@@ -238,7 +239,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -251,6 +252,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       ClientEvents.SpacesReady,
     ),
     activate: SpacesReady,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

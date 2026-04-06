@@ -170,8 +170,8 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
-      syncQueue: async (request) => {
-        return this._feedSyncer?.syncBlocking({
+      syncQueue: async (ctx, request) => {
+        return this._feedSyncer?.syncBlocking(ctx, {
           spaceId: request.spaceId as SpaceId,
           subspaceTag: request.subspaceTag,
           shouldPush: request.shouldPush,
@@ -258,12 +258,12 @@ export class ServiceContext extends Resource {
 
     if (this._meshReplicator) {
       log('adding mesh replicator...');
-      await this.echoHost.addReplicator(this._meshReplicator);
+      await this.echoHost.addReplicator(ctx, this._meshReplicator);
       log('mesh replicator added');
     }
     if (this._echoEdgeReplicator) {
       log('adding edge replicator...');
-      await this.echoHost.addReplicator(this._echoEdgeReplicator);
+      await this.echoHost.addReplicator(ctx, this._echoEdgeReplicator);
       log('edge replicator added');
     }
 
@@ -277,7 +277,7 @@ export class ServiceContext extends Resource {
 
     if (this.identityManager.identity) {
       log('joining network...');
-      await this.identityManager.identity.joinNetwork();
+      await this.identityManager.identity.joinNetwork(ctx);
       log('network joined');
 
       log('initializing spaces...(calling _initialize)');
@@ -292,7 +292,7 @@ export class ServiceContext extends Resource {
     log('feed syncer opened');
 
     log('loading persistent invitations...');
-    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
+    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations(ctx);
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
@@ -307,13 +307,13 @@ export class ServiceContext extends Resource {
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.dataSpaceManager?.close();
+    await this.dataSpaceManager?.close(ctx);
     await this.edgeAgentManager?.close();
-    await this.identityManager.close();
+    await this.identityManager.close(ctx);
     await this.spaceManager.close();
     await this.echoHost.close(ctx);
 
-    await this.networkManager.close();
+    await this.networkManager.close(ctx);
     await this.signalManager.close();
     await this._edgeConnection?.close();
     await this.feedStore.close();
@@ -323,10 +323,11 @@ export class ServiceContext extends Resource {
   }
 
   async createIdentity(params: CreateIdentityOptions = {}) {
-    const identity = await this.identityManager.createIdentity(params);
+    const ctx = Context.default();
+    const identity = await this.identityManager.createIdentity(params, ctx);
     await this._setNetworkIdentity({ identity });
-    await identity.joinNetwork();
-    await this._initialize(new Context());
+    await identity.joinNetwork(ctx);
+    await this._initialize(ctx);
     return identity;
   }
 
@@ -350,11 +351,11 @@ export class ServiceContext extends Resource {
   }
 
   private async _acceptIdentity(params: JoinIdentityProps) {
-    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
+    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params, this._ctx);
     await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential!, identity });
-    await identity.joinNetwork();
+    await identity.joinNetwork(this._ctx);
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
-    await this._initialize(new Context());
+    await this._initialize(this._ctx);
     return identity;
   }
 
@@ -439,7 +440,7 @@ export class ServiceContext extends Resource {
 
         try {
           log('accepting space recorded in halo', { details: assertion });
-          await this.dataSpaceManager.acceptSpace({
+          await this.dataSpaceManager.acceptSpace(this._ctx, {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
           });

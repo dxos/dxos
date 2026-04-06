@@ -78,17 +78,17 @@ const meta = {
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              const createObjects = createObjectFactory(defaultSpace.db, generator);
+              const createObjects = createObjectFactory(personalSpace.db, generator);
               yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-              const queue = defaultSpace.queues.create();
+              const queue = personalSpace.queues.create();
               const kai = Obj.make(Person.Person, { fullName: 'Kai' });
               const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
               yield* Effect.promise(() => queue.append([kai, dxos]));
 
-              defaultSpace.db.add(
+              personalSpace.db.add(
                 Markdown.make({
                   name: context.args.title ?? 'Testing',
                   content: [
@@ -105,7 +105,7 @@ const meta = {
                 }),
               );
 
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
 

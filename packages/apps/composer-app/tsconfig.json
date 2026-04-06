@@ -119,6 +119,9 @@
       "path": "../../plugins/plugin-explorer"
     },
     {
+      "path": "../../plugins/plugin-feed"
+    },
+    {
       "path": "../../plugins/plugin-files"
     },
     {
@@ -201,6 +204,9 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-spacetime"
     },
     {
       "path": "../../plugins/plugin-spotlight"

@@ -97,7 +97,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['toggle presentation label', { ns: meta.id }],
+              label: ['toggle-presentation.label', { ns: meta.id }],
               icon: 'ph--presentation--regular',
               disposition: 'list-item',
               keyBinding: {

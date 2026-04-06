@@ -101,7 +101,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
           <IconButton
             icon='ph--caret-down--regular'
             size={4}
-            label={t('invite options label')}
+            label={t('invite-options.label')}
             iconOnly
             classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}

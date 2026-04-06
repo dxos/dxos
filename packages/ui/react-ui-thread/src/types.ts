@@ -16,6 +16,7 @@ export type MessageMetadata = {
 };
 
 export type ThreadEntity = {
+  id?: string;
   topicId?: string;
   topicTitle?: string;
 };

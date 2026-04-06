@@ -17,7 +17,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type Sketch as SketchNs, type SketchGridType, type SketchSettingsProps } from '../../types';
+import { type Sketch, type Settings } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 
@@ -25,23 +25,23 @@ import './theme.css';
 
 const threadToolId = 'thread';
 
-const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
+const gridComponents: Record<Settings.SketchGridType, FC<TLGridProps>> = {
   mesh: MeshGrid,
   dotted: DottedGrid,
 };
 
 export type SketchProps = ThemedClassName<{
-  sketch: SketchNs.Sketch;
+  sketch: Sketch.Sketch;
   readonly?: boolean;
   autoZoom?: boolean;
   maxZoom?: number;
   hideUi?: boolean;
   assetsBaseUrl?: string | null;
-  settings?: SketchSettingsProps;
+  settings?: Settings.Settings;
   onThreadCreate?: () => void;
 }>;
 
-export const Sketch = ({
+export const SketchComponent = ({
   sketch,
   readonly = false,
   autoZoom = true,

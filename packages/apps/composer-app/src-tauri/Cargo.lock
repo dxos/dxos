@@ -121,6 +121,7 @@ dependencies = [
  "tauri-plugin-web-auth",
  "tokio",
  "url",
+ "xattr",
 ]
 
 [[package]]

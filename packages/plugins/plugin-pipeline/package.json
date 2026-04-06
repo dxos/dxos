@@ -67,6 +67,7 @@
     "@dxos/util": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

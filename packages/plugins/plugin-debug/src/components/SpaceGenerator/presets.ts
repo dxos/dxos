@@ -21,9 +21,9 @@ import {
   createChat,
   createComputeGraph,
   createConstant,
+  createFeed,
   createFunction,
   createGpt,
-  createQueue,
   createRandom,
   createSurface,
   createTemplate,
@@ -618,7 +618,7 @@ export const generator = () => ({
             );
             const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
             const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
-            const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
+            const queue = canvasModel.createNode(createFeed(position({ x: 0, y: 12 })));
 
             builder
               .createEdge({
@@ -804,7 +804,7 @@ const setupQueue = (
     }),
   );
   const queue = canvasModel.createNode(
-    createQueue(
+    createFeed(
       args?.queuePosition ? rawPosition(args.queuePosition) : position({ x: -3, y: 3, width: 14, height: 10 }),
     ),
   );

@@ -116,7 +116,7 @@
     --dx-statusbar-size: var(--dx-rail-item); /* 32px */
 
     /** NOTE: On MBP, should have nav sidebare open with 4 column mosaic board. */
-    --dx-nav-sidebar-size: 22rem;
+    --dx-nav-sidebar-size: 21.5rem;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;
 

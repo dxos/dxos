@@ -49,12 +49,9 @@ export const TokensPanel = ({
 
   return (
     <Settings.Root>
-      <Settings.Section
-        title={t('integrations verbose label', { ns: meta.id })}
-        description={t('integrations description', { ns: meta.id })}
-      >
+      <Settings.Section title={t('integrations-verbose.label')} description={t('integrations.description')}>
         {adding ? (
-          <Settings.Item title={t('new integration label')} description={t('new integration description')}>
+          <Settings.Item title={t('new-integration.label')} description={t('new-integration.description')}>
             <Form.Root schema={FormSchema} values={initialValues} onCancel={onCancel} onSave={onAdd}>
               <Form.FieldSet />
               <Form.Actions />

@@ -62,8 +62,8 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              defaultSpace.db.add(
+              const { personalSpace } = yield* initializeIdentity(client);
+              personalSpace.db.add(
                 Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
               );
             }),

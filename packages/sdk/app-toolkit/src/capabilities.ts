@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
@@ -201,5 +202,18 @@ export namespace AppCapabilities {
 
   export const NavigationHandler = Capability$.make<NavigationHandler>(
     'org.dxos.app-toolkit.capability.navigation-handler',
+  );
+
+  /**
+   * Resolves a qualified graph path to a DXN.
+   * Each plugin recognizes its own path patterns and returns the corresponding DXN.
+   * Returns None if the path is not recognized by this resolver.
+   * Used to validate navigation targets against remote services (e.g., edge).
+   * @category Capability
+   */
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<DXN>>;
+
+  export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
+    'org.dxos.app-framework.capability.navigation-path-resolver',
   );
 }

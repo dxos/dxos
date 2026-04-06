@@ -107,7 +107,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
 
     return (
       <div
-        {...composableProps(props, { className: mx('flex flex-col h-full overflow-hidden', classNames) })}
+        {...composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
         ref={forwardedRef}
       >
         {/* TODO(burdon): Replace with Thread. */}
@@ -118,7 +118,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
             <Input.TextInput
               ref={inputRef}
               autoFocus
-              placeholder={t('function request placeholder')}
+              placeholder={t('function-request.placeholder')}
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}

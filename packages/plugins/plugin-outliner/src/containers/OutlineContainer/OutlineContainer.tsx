@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 
 import { Outline } from '../../components';
 import { type Outline as OutlineType } from '../../types';
 
-export const OutlineContainer = ({ role, subject: outline }: SurfaceComponentProps<OutlineType.Outline>) => {
+export const OutlineContainer = ({ role, subject: outline }: ObjectSurfaceProps<OutlineType.Outline>) => {
   if (!outline.content.target) {
     return null;
   }

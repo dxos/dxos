@@ -230,7 +230,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             ref={containerRef}
           >
             {commits.length < 1 ? (
-              <p className='col-span-full text-description p-trim-md'>{t('no commits message')}</p>
+              <p className='col-span-full text-description p-trim-md'>{t('no-commits.message')}</p>
             ) : (
               commits.map((commit, index) => {
                 // Skip branches that are not whitelisted.

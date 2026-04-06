@@ -70,24 +70,24 @@ export const Welcome = ({
       ...(supportsPasskeys &&
         onPasskey && {
           passkey: {
-            label: t('redeem passkey button label'),
-            description: t('redeem passkey button description'),
+            label: t('redeem-passkey-button.label'),
+            description: t('redeem-passkey-button.description'),
             icon: 'ph--key--regular',
             onClick: onPasskey,
           },
         }),
       ...(onJoinIdentity && {
         deviceInvitation: {
-          label: t('join device button label'),
-          description: t('join device button description'),
+          label: t('join-device-button.label'),
+          description: t('join-device-button.description'),
           icon: 'ph--qr-code--regular',
           onClick: onJoinIdentity,
         },
       }),
       ...(onRecoverIdentity && {
         recoveryCode: {
-          label: t('recover identity button label'),
-          description: t('recover identity button description'),
+          label: t('recover-identity-button.label'),
+          description: t('recover-identity-button.description'),
           icon: 'ph--receipt--regular',
           onClick: onRecoverIdentity,
         },
@@ -114,8 +114,8 @@ export const Welcome = ({
         {state === WelcomeState.INIT && (
           <div role='none' className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
-              <h1 className='text-2xl'>{identity ? t('existing identity title') : t('login title')}</h1>
-              {!identity && <p className='text-subdued'>{t('beta description')}</p>}
+              <h1 className='text-2xl'>{identity ? t('existing-identity.title') : t('login.title')}</h1>
+              {!identity && <p className='text-subdued'>{t('beta.description')}</p>}
             </div>
             {Object.keys(actions).length > 0 && (
               <>
@@ -136,14 +136,14 @@ export const Welcome = ({
                     autoFocus
                     ref={emailRef}
                     classNames='bg-black!'
-                    placeholder={t('email input placeholder')}
+                    placeholder={t('email-input.placeholder')}
                     value={email}
                     onChange={handleEmailChange}
                     onKeyDown={handleEmailKeyDown}
                   />
                   <Input.DescriptionAndValidation>
                     <Input.Validation classNames='flex h-4 px-2 py-1 text-rose-500'>
-                      {error && t('email error')}
+                      {error && t('email-error.message')}
                     </Input.Validation>
                   </Input.DescriptionAndValidation>
                 </div>
@@ -156,7 +156,7 @@ export const Welcome = ({
                   onClick={handleSignup}
                   data-testid='welcome.login'
                 >
-                  {t('signup button label')}
+                  {t('signup-button.label')}
                 </Button>
               </div>
             </div>
@@ -166,8 +166,8 @@ export const Welcome = ({
         {state === WelcomeState.SPACE_INVITATION && (
           <div role='none' className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
-              <h1 className='text-2xl'>{t('space invitation title')}</h1>
-              <p className='text-subdued'>{t('space invitation description')}</p>
+              <h1 className='text-2xl'>{t('space-invitation.title')}</h1>
+              <p className='text-subdued'>{t('space-invitation.description')}</p>
             </div>
             <CompoundButton
               slots={{ root: { className: 'w-full' } }}
@@ -175,11 +175,11 @@ export const Welcome = ({
               before={<Icon icon='ph--planet--regular' />}
               onClick={onSpaceInvitation}
             >
-              {t('join space button label')}
+              {t('join-space-button.label')}
             </CompoundButton>
             <div className='flex flex-col gap-2'>
-              <h1 className='text-2xl'>{t('go to login title')}</h1>
-              <p className='text-subdued'>{t('go to login description')}</p>
+              <h1 className='text-2xl'>{t('go-to-login.title')}</h1>
+              <p className='text-subdued'>{t('go-to-login.description')}</p>
             </div>
             <CompoundButton
               slots={{ root: { className: 'w-full' } }}
@@ -187,7 +187,7 @@ export const Welcome = ({
               before={<Icon icon='ph--user--regular' />}
               onClick={onGoToLogin}
             >
-              {t('go to login button label')}
+              {t('go-to-login-button.label')}
             </CompoundButton>
           </div>
         )}
@@ -195,11 +195,11 @@ export const Welcome = ({
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
           <div role='none' className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
-              <h1 className='text-2xl'>{t('check email title')}</h1>
+              <h1 className='text-2xl'>{t('check-email.title')}</h1>
               <p className='text-subdued'>
                 {state === WelcomeState.EMAIL_SENT
-                  ? t('request access email description')
-                  : t('check email description')}
+                  ? t('request-access-email.description')
+                  : t('check-email.description')}
               </p>
             </div>
           </div>

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
@@ -15,7 +15,7 @@ import { useActorContact } from '../../hooks';
 import { InboxOperation } from '../../operations';
 import { type Mailbox } from '../../types';
 
-export type MessageArticleProps = SurfaceComponentProps<
+export type MessageArticleProps = ObjectSurfaceProps<
   MessageType.Message,
   {
     mailbox: Mailbox.Mailbox; // TODO(burdon): companionTo?

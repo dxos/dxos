@@ -22,9 +22,9 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
       <h1 className="font-['Poiret One'] text-5xl" style={{ fontFamily: 'Poiret One' }}>
         composer
       </h1>
-      <p className='text-lg text-subdued'>{t('native redirect message')}</p>
+      <p className='text-lg text-subdued'>{t('native-redirect.message')}</p>
       <Button variant='ghost' onClick={onOpenHere}>
-        {t('open in browser button label')}
+        {t('open-in-browser-button.label')}
       </Button>
     </div>
   );

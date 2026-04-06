@@ -191,12 +191,12 @@ const BoardContainer = composable<HTMLDivElement, BoardContainerProps>(
     return (
       <div
         {...composableProps(props, {
-          className: mx(
+          classNames: [
             'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',
             'opacity-0 transition-opacity duration-1000',
             mounted && 'opacity-100',
             classNames,
-          ),
+          ],
         })}
         ref={composeRefs(containerRef, forwardedRef)}
         style={{
@@ -342,7 +342,7 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
         <IconButton
           icon='ph--plus--regular'
           iconOnly
-          label={t('button add')}
+          label={t('add-object.button')}
           classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
           onClick={onAddClick}
         />
@@ -369,20 +369,20 @@ const BoardToolbar = composable<HTMLDivElement, BoardToolbarProps>((props, forwa
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
-        label={t('button center')}
+        label={t('move-to-center.button')}
         onClick={() => controller.center()}
       />
       <Toolbar.IconButton
         icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
         iconOnly
-        label={t('button zoom')}
+        label={t('toggle-zoom.button')}
         onClick={() => controller.toggleZoom()}
       />
       {!readonly && onAdd && (
         <Toolbar.IconButton
           icon='ph--plus--regular'
           iconOnly
-          label={t('button add')}
+          label={t('add-object.button')}
           onClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement)}
         />
       )}

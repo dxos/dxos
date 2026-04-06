@@ -5,7 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  NOT_FOUND_PATH,
+  fromUrlPath,
+  getWorkspaceFromPath,
+  toUrlPath,
+} from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -14,7 +21,7 @@ import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
 import { shouldDeferNavigationHandlers } from '../check-app-scheme/check-app-scheme';
-import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
+import { DeckCapabilities, type StoredDeckState, defaultDeck } from '../../types';
 
 /** Dispatch all NavigationHandler contributions with a given URL. */
 const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
@@ -51,7 +58,7 @@ export default Capability.makeModule(
     };
 
     // Helper to update state.
-    const updateState = (fn: (current: DeckStateProps) => DeckStateProps) => {
+    const updateState = (fn: (current: StoredDeckState) => StoredDeckState) => {
       registry.set(stateAtom, fn(getState()));
     };
 
@@ -89,12 +96,16 @@ export default Capability.makeModule(
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
       if (activeId) {
         // Ensure the object referenced by the URL is open in the deck.
-        yield* Operation.invoke(LayoutOperation.Open, { subject: [activeId] });
-        // If not already in solo mode, switch to solo for the target object.
+        // Open validates the target and may redirect to 404, returning the resolved IDs.
+        const resolvedIds = yield* Operation.invoke(LayoutOperation.Open, { subject: [activeId] });
+        // If not already in solo mode, switch to solo for the resolved target.
         if (!deck.solo) {
-          yield* Operation.invoke(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
+          yield* Operation.invoke(LayoutOperation.SetLayoutMode, {
+            subject: resolvedIds?.[0] ?? activeId,
+            mode: 'solo',
+          });
         }
-      } else if (deck.solo) {
+      } else if (deck.solo && deck.solo !== NOT_FOUND_PATH) {
         // Stay in solo mode; redirect URL to reflect the current solo item.
         // Do not switch to deck mode here — only explicit user action should change layout mode.
         const path = toUrlPath(deck.solo);
@@ -147,7 +158,7 @@ export default Capability.makeModule(
         lastSolo = solo;
         lastActiveDeck = activeDeck;
 
-        const path = solo ? toUrlPath(solo) : toUrlPath(activeDeck);
+        const path = solo && solo !== NOT_FOUND_PATH ? toUrlPath(solo) : toUrlPath(activeDeck);
         if (window.location.pathname !== path) {
           history.pushState(null, '', `${path}${window.location.search}`);
         }

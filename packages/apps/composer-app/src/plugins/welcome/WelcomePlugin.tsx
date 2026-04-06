@@ -17,7 +17,7 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'default-content',
-    activatesOn: SpaceEvents.DefaultSpaceReady,
+    activatesOn: SpaceEvents.PersonalSpaceReady,
     activate: DefaultContent,
   }),
   Plugin.addModule({

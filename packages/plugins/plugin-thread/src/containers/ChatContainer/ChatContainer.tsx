@@ -55,7 +55,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
     const messageRef = useRef('');
     const extensions = useMemo(
       () => [
-        createBasicExtensions({ placeholder: t('message placeholder') }),
+        createBasicExtensions({ placeholder: t('message.placeholder') }),
         createThemeExtensions({ themeMode }),
         listener({ onChange: ({ text }) => (messageRef.current = text) }),
         command,
@@ -103,7 +103,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
     return (
       <ThreadComponent.Root
         {...composableProps(props, {
-          className: 'dx-container grid-rows-[1fr_min-content_min-content]',
+          classNames: 'dx-container grid-rows-[1fr_min-content_min-content]',
         })}
         id={id}
         current={current}
@@ -123,7 +123,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
         </ScrollArea.Root>
 
         <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
-        <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
+        <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
       </ThreadComponent.Root>
     );
   },

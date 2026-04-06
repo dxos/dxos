@@ -167,7 +167,7 @@ type ChatViewportProps = {};
 
 const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', className: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -376,7 +376,7 @@ const ChatPrompt = ({
           autoFocus
           lineWrapping
           classNames='col-span-2 pt-0.5'
-          placeholder={placeholder ?? t('prompt placeholder')}
+          placeholder={placeholder ?? t('prompt.placeholder')}
           extensions={extensions}
           onSubmit={handleSubmit}
         />
@@ -407,7 +407,7 @@ const ChatPrompt = ({
             {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
-                <Input.Label srOnly>{t('online switch label')}</Input.Label>
+                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
                 <Input.Switch classNames='mx-2' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}

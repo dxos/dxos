@@ -73,10 +73,10 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
   return (
     <div className={mx('grid grid-cols-2 gap-2', classNames)}>
       {types && (
-        <Picker placeholder={t('picker type placeholder')} values={types} value={type} onChange={handleTypeChange} />
+        <Picker placeholder={t('picker-type.placeholder')} values={types} value={type} onChange={handleTypeChange} />
       )}
       {tags && (
-        <Picker placeholder={t('picker tag placeholder')} values={tagOptions} value={tag} onChange={handleTagChange} />
+        <Picker placeholder={t('picker-tag.placeholder')} values={tagOptions} value={tag} onChange={handleTagChange} />
       )}
     </div>
   );

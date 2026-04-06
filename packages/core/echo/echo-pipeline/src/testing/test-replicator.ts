@@ -127,7 +127,7 @@ export class TestReplicator implements AutomergeReplicator {
   public context: AutomergeReplicatorContext | undefined = undefined;
   public connections = new Set<TestReplicatorConnection>();
 
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(_ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     log('connect', { peerId: context.peerId });
     this.context = context;
     this.connected = true;

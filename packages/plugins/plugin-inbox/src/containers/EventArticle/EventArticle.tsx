@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import { useShadowObject } from '../../hooks';
 import { InboxOperation } from '../../operations';
 import { type Calendar } from '../../types';
 
-export type EventArticleProps = SurfaceComponentProps<
+export type EventArticleProps = ObjectSurfaceProps<
   EventType.Event,
   {
     calendar: Calendar.Calendar;
@@ -55,14 +55,14 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
     <Event.Root event={subject}>
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
-          <Event.Toolbar onNoteCreate={handleNoteCreate} />
+          <Event.Toolbar alwaysActive onNoteCreate={handleNoteCreate} />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Event.Viewport>
             <Event.Header db={db} onContactCreate={handleContactCreate} />
             <Event.Content />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
-            {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
+            {notes && <Surface.Surface role='section' data={{ id, subject: notes, attendableId: id }} limit={1} />}
           </Event.Viewport>
         </Panel.Content>
       </Panel.Root>

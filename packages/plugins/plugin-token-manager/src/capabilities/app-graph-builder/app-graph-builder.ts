@@ -24,7 +24,7 @@ export default Capability.makeModule(
               type: `${meta.id}.space-settings`,
               data: `${meta.id}.space-settings`,
               properties: {
-                label: ['space panel name', { ns: meta.id }],
+                label: ['space-panel.name', { ns: meta.id }],
                 icon: 'ph--plugs--regular',
               },
             },

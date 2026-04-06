@@ -9,13 +9,13 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { DeckCapabilities, DeckSettingsSchema } from '../../types';
+import { DeckCapabilities, Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.id,
-      schema: DeckSettingsSchema,
+      schema: Settings.Settings,
       defaultValue: () => ({
         showHints: false,
         enableDeck: false,
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
       Capability.contributes(DeckCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
-        schema: DeckSettingsSchema,
+        schema: Settings.Settings,
         atom: settingsAtom,
       }),
     ];

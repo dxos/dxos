@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -44,7 +44,7 @@ export default Capability.makeModule(
               id: AssistantOperation.UpdateChatName.meta.key,
               data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
               properties: {
-                label: ['chat update name label', { ns: meta.id }],
+                label: ['chat-update-name.label', { ns: meta.id }],
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
@@ -64,7 +64,10 @@ export default Capability.makeModule(
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
                 const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
                 if (!chat) {
                   return;
@@ -78,7 +81,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['open assistant label', { ns: meta.id }],
+                label: ['open-assistant.label', { ns: meta.id }],
                 icon: 'ph--sparkle--regular',
                 disposition: 'pin-end',
                 position: 'hoist',
@@ -93,7 +96,10 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
                 const blueprints = yield* Effect.tryPromise(() =>
                   space.db.query(Query.type(Blueprint.Blueprint)).run(),
                 );
@@ -103,7 +109,7 @@ export default Capability.makeModule(
                 yield* Database.flush();
               }),
               properties: {
-                label: ['reset blueprints label', { ns: meta.id }],
+                label: ['reset-blueprints.label', { ns: meta.id }],
                 icon: 'ph--arrow-clockwise--regular',
               },
             },
@@ -126,7 +132,7 @@ export default Capability.makeModule(
                   type: PLANK_COMPANION_TYPE,
                   data: 'assistant-chat',
                   properties: {
-                    label: ['assistant chat label', { ns: meta.id }],
+                    label: ['assistant-chat.label', { ns: meta.id }],
                     icon: 'ph--sparkle--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -148,7 +154,7 @@ export default Capability.makeModule(
                 type: PLANK_COMPANION_TYPE,
                 data: Obj.isObject(currentChat) ? currentChat : 'assistant-chat',
                 properties: {
-                  label: ['assistant chat label', { ns: meta.id }],
+                  label: ['assistant-chat.label', { ns: meta.id }],
                   icon: 'ph--sparkle--regular',
                   position: 'hoist',
                   disposition: 'hidden',
@@ -171,7 +177,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'invocations',
               properties: {
-                label: ['invocations label', { ns: meta.id }],
+                label: ['invocations.label', { ns: meta.id }],
                 icon: 'ph--clock-countdown--regular',
                 disposition: 'hidden',
               },
@@ -189,7 +195,7 @@ export default Capability.makeModule(
               type: DECK_COMPANION_TYPE,
               data: 'trace' as const,
               properties: {
-                label: ['trace label', { ns: meta.id }],
+                label: ['trace.label', { ns: meta.id }],
                 icon: 'ph--line-segments--regular',
                 disposition: 'hidden',
                 position: 'fallback',

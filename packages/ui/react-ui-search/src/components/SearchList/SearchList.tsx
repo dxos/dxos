@@ -239,8 +239,8 @@ const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, fo
     <div
       {...composableProps(props, {
         role: 'none',
-        className:
-          'flex flex-col min-h-0 [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
+        classNames:
+          'dx-expander [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
       })}
       ref={forwardedRef}
     >
@@ -266,17 +266,14 @@ type SearchListInputProps = ThemedClassName<
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  (
-    { classNames, density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props },
-    forwardedRef,
-  ) => {
+  ({ density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { hasIosKeyboard, tx } = useThemeContext();
+    const { hasIosKeyboard } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const defaultPlaceholder = t('search placeholder');
+    const defaultPlaceholder = t('search.placeholder');
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -358,7 +355,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
       <Input.Root>
         <Input.TextInput
           {...props}
-          classNames='p-0 px-2'
           variant='subdued'
           autoFocus={props.autoFocus && !hasIosKeyboard}
           placeholder={placeholder ?? defaultPlaceholder}
@@ -461,7 +457,8 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
+          'py-1 px-2 rounded-xs select-none',
+          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay', // TODO(burdon): Replace with classes.
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}
@@ -482,12 +479,13 @@ SearchListItem.displayName = 'SearchList.Item';
 // Empty
 //
 
-type SearchListEmptyProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListEmptyProps = ThemedClassName;
 
-const SearchListEmpty = ({ classNames, children }: SearchListEmptyProps) => {
+const SearchListEmpty = ({ classNames }: SearchListEmptyProps) => {
+  const { t } = useTranslation(translationKey);
   return (
-    <div role='status' className={mx('flex flex-col w-full px-2 py-1', classNames)}>
-      {children}
+    <div role='status' className={mx(classNames)}>
+      {t('empty-results.message')}
     </div>
   );
 };

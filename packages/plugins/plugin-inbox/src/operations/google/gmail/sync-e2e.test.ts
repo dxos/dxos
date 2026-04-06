@@ -11,6 +11,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Trigger } from '@dxos/functions';
@@ -52,6 +53,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const result = await functionsServiceClient.invoke(
+      Context.default(),
       func,
       {
         mailbox: Ref.make(mailbox),
@@ -83,7 +85,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     await space.internal.syncToEdge({
       onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
     });
-    const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
     console.log(result);
     if (result._kind === 'error') {
       throw ErrorCodec.decode(result.error);
@@ -155,9 +157,9 @@ const setup = async () => {
   }
   space.db.add(
     Obj.make(AccessToken.AccessToken, {
-      note: 'Email read access.',
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
+      note: 'Email read access.',
     }),
   );
 
@@ -178,7 +180,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
     entryPoint,
     verbose: true,
   });
-  const func = await functionsServiceClient.deploy({
+  const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
