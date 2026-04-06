@@ -16,7 +16,7 @@ import { SHARED } from '@dxos/plugin-space/types';
 import { isNonNullable } from '@dxos/util';
 import { Expando, Text } from '@dxos/schema';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#operations';
 import {
   NativeFilesystemCapabilities,

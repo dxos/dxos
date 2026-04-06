@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;

@@ -16,7 +16,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { Meeting } from '#types';
 import { MeetingOperation } from '#operations';
 

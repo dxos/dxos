@@ -9,11 +9,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 
-import { TokensContainer } from '../containers';
+import { TokensContainer } from '#containers';
 
 import { OAUTH_PRESETS } from '../defs';
-import { meta } from '../meta';
-import { IntegrationAuthButton } from '../components';
+import { meta } from '#meta';
+import { IntegrationAuthButton } from '#components';
 
 const oauthSources = new Set(OAUTH_PRESETS.map((p) => p.source));
 

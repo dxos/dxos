@@ -14,7 +14,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { ViewModel } from '@dxos/schema';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { Masonry, MasonryAction } from '#types';
 

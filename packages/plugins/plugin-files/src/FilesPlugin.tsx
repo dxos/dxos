@@ -9,7 +9,7 @@ import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolk
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { FileCapabilities } from '#types';
 

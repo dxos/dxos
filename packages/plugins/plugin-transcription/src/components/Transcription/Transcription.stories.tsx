@@ -21,14 +21,14 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
 
-import { useQueueModelAdapter } from '../../hooks';
+import { useQueueModelAdapter } from '#hooks';
 import { SerializationModel } from '../../model';
 import {
   MessageBuilder,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
-} from '../../testing';
+} from '#testing';
 import { translations } from '../../translations';
 import { renderByline } from '../../util';
 

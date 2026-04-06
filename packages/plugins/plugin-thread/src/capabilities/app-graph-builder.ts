@@ -15,7 +15,7 @@ import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/typ
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Channel, ThreadCapabilities, type ThreadState } from '#types';
 import { ThreadOperation } from '#operations';
 import { getAnchor } from '../util';

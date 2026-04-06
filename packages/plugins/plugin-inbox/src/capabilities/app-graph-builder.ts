@@ -20,7 +20,7 @@ import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { MAILBOXES_SECTION_TYPE, MAILBOX_ALL_MAIL_TYPE, MAILBOX_DRAFTS_TYPE } from '../constants';
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { InboxOperation } from '#operations';
 import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
 import { Calendar, Mailbox } from '#types';

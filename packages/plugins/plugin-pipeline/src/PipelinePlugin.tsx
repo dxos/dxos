@@ -13,7 +13,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Pipeline } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 
 import { AppGraphBuilder, ReactSurface } from '#capabilities';

@@ -15,6 +15,9 @@
   "type": "module",
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#types": "./src/types/index.ts"
   },

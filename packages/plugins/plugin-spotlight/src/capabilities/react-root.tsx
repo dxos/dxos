@@ -7,8 +7,8 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 
-import { SpotlightLayout } from '../components';
-import { meta } from '../meta';
+import { SpotlightLayout } from '#components';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

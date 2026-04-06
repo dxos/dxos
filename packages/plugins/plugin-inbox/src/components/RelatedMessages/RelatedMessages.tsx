@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type RelatedMessagesProps = {
   messages: Message.Message[];

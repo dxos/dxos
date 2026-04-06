@@ -21,8 +21,8 @@ import {
   useBlueprints,
   useContextObjects,
   useFilteredTypes,
-} from '../../hooks';
-import { meta } from '../../meta';
+} from '#hooks';
+import { meta } from '#meta';
 
 const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-document-width';
 

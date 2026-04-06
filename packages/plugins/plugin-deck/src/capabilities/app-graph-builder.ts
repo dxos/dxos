@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
 
 export default Capability.makeModule(

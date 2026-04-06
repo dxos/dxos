@@ -12,7 +12,7 @@ import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
-import { createThreadPlugins } from '../../testing';
+import { createThreadPlugins } from '#testing';
 import { translations } from '../../translations';
 import { Channel } from '#types';
 

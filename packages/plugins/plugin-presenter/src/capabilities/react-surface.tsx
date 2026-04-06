@@ -12,9 +12,9 @@ import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
-import { PresenterSettings } from '../components';
-import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '../containers';
-import { meta } from '../meta';
+import { PresenterSettings } from '#components';
+import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '#containers';
+import { meta } from '#meta';
 import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>

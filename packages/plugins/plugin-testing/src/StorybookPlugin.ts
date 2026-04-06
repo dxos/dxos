@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { Layout } from './components';
-import { meta } from './meta';
+import { Layout } from '#components';
+import { meta } from '#meta';
 import { type LayoutStateProps } from '#types';
 
 import { OperationHandler, State } from '#capabilities';

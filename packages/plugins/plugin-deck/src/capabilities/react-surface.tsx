@@ -10,8 +10,8 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities, NOT_FOUND_PATH } from '@dxos/app-toolkit';
 import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 
-import { DeckSettings } from '../components';
-import { meta } from '../meta';
+import { DeckSettings } from '#components';
+import { meta } from '#meta';
 import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>

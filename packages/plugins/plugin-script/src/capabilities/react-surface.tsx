@@ -16,7 +16,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
-import { ScriptPluginSettings } from '../components';
+import { ScriptPluginSettings } from '#components';
 import { DEPLOYMENT_DIALOG } from '../constants';
 import {
   DeploymentDialog,
@@ -25,9 +25,9 @@ import {
   ScriptObjectSettings,
   ScriptProperties,
   TestContainer,
-} from '../containers';
-import { useCompiler } from '../hooks';
-import { meta } from '../meta';
+} from '#containers';
+import { useCompiler } from '#hooks';
+import { meta } from '#meta';
 import { Notebook, ScriptCapabilities, type Settings } from '#types';
 import { getAccessCredential } from '../util';
 

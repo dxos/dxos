@@ -7,7 +7,7 @@ import React from 'react';
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
 
-import { Outline } from '../../components';
+import { Outline } from '#components';
 import { type Outline as OutlineType } from '#types';
 
 export const OutlineCard = ({ subject }: ObjectSurfaceProps<OutlineType.Outline>) => {

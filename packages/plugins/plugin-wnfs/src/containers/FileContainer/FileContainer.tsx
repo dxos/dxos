@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useAsyncEffect } from '@dxos/react-ui';
 
-import { FilePreview } from '../../components';
+import { FilePreview } from '#components';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
 import { WnfsCapabilities, type WnfsFile } from '#types';
 

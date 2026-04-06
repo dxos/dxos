@@ -14,8 +14,8 @@ import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plug
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
-import { TemplateEditor } from '../../components';
-import { meta } from '../../meta';
+import { TemplateEditor } from '#components';
+import { meta } from '#meta';
 
 export type PromptArticleProps = ObjectSurfaceProps<Prompt.Prompt>;
 

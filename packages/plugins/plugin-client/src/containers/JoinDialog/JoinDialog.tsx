@@ -12,7 +12,7 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 
 export const JoinDialog = (props: JoinPanelProps) => {

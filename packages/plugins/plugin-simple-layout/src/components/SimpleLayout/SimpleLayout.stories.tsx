@@ -16,7 +16,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-search';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';

@@ -13,8 +13,13 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {

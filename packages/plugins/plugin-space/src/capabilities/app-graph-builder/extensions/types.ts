@@ -20,7 +20,7 @@ import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';
 
-import { meta } from '../../../meta';
+import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
 import {

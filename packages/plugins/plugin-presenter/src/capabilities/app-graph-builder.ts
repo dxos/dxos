@@ -23,7 +23,7 @@ import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { PresenterCapabilities } from '#types';
 import { PresenterOperation } from '#operations';
 

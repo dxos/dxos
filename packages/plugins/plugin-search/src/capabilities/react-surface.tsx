@@ -11,8 +11,8 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG } from '../constants';
-import { SearchArticle, SearchDialog, type SearchDialogProps } from '../containers';
-import { SearchContextProvider } from '../hooks';
+import { SearchArticle, SearchDialog, type SearchDialogProps } from '#containers';
+import { SearchContextProvider } from '#hooks';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

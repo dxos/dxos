@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
 import { createEditorStateStore } from '@dxos/ui-editor';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { type EditorViewEntry, type EditorViewRegistry, MarkdownCapabilities, MarkdownStateSchema } from '#types';
 
 const createEditorViewRegistry = (): EditorViewRegistry => {

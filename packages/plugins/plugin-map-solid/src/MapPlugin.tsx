@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 import { Surface } from '#capabilities';
 

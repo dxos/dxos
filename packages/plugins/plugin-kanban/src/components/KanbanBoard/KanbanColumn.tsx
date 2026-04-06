@@ -7,7 +7,7 @@ import React, { FC, forwardRef, RefObject, useRef } from 'react';
 import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
-import { useKanbanItemEventHandler } from '../../hooks';
+import { useKanbanItemEventHandler } from '#hooks';
 import { type ColumnStructure, UNCATEGORIZED_VALUE } from '#types';
 
 import { useKanbanBoard } from './KanbanBoard';

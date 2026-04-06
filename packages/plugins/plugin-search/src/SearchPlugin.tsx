@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { SEARCH_RESULT, meta } from './meta';
+import { SEARCH_RESULT, meta } from '#meta';
 import { translations } from './translations';
 import { type SearchResult } from '#types';
 

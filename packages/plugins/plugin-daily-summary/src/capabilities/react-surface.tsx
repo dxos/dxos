@@ -9,8 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 
-import { DailySummarySettings } from '../containers';
-import { meta } from '../meta';
+import { DailySummarySettings } from '#containers';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

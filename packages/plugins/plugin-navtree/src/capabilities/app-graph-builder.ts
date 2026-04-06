@@ -9,7 +9,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { COMMANDS_DIALOG, meta } from '../meta';
+import { COMMANDS_DIALOG, meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

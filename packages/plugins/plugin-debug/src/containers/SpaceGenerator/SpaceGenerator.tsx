@@ -18,7 +18,7 @@ import { Organization, Person, Task } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '../../components';
+import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '#components';
 
 export type SpaceGeneratorProps = {
   space: Space;

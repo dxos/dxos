@@ -11,8 +11,8 @@ import { Obj } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { AutomationSettings, FunctionsContainer } from '../containers';
-import { meta } from '../meta';
+import { AutomationSettings, FunctionsContainer } from '#containers';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

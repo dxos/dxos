@@ -17,7 +17,7 @@ import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosai
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { type ItemProps, usePipeline } from './PipelineComponent';
 import { Menu } from '@dxos/react-ui-menu';

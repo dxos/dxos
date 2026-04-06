@@ -13,7 +13,7 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;

@@ -14,7 +14,7 @@ import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import { type GeoControlProps, GlobeControl, MapControl } from '../../components';
+import { type GeoControlProps, GlobeControl, MapControl } from '#components';
 import { type Map } from '#types';
 
 export type MapControlType = 'globe' | 'map';

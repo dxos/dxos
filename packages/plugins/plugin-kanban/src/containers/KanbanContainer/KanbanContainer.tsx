@@ -14,8 +14,8 @@ import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
-import { KanbanBoard } from '../../components';
-import { useEchoChangeCallback, useProjectionModel } from '../../hooks';
+import { KanbanBoard } from '#components';
+import { useEchoChangeCallback, useProjectionModel } from '#hooks';
 import { type Kanban } from '#types';
 import { KanbanOperation } from '#operations';
 

@@ -6,7 +6,7 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Organization, Person } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 
 import { PreviewPopover, ReactSurface } from '#capabilities';

@@ -12,8 +12,8 @@ import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { GenerateSummary } from '../../blueprints';
-import { meta } from '../../meta';
+import { GenerateSummary } from '#blueprints';
+import { meta } from '#meta';
 
 export type DailySummarySettingsProps = {
   space: Space;

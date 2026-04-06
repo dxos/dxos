@@ -12,8 +12,8 @@ import { Panel } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps } from '../../components';
-import { useShadowObject } from '../../hooks';
+import { Event, type EventHeaderProps } from '#components';
+import { useShadowObject } from '#hooks';
 import { InboxOperation } from '#operations';
 import { type Calendar } from '#types';
 

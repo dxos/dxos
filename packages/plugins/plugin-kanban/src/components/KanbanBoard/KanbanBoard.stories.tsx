@@ -15,8 +15,8 @@ import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/sche
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
-import { createEchoChangeCallback as createKanbanChangeCallback } from '../../hooks';
-import { KanbanCardTileSimple } from '../../testing';
+import { createEchoChangeCallback as createKanbanChangeCallback } from '#hooks';
+import { KanbanCardTileSimple } from '#testing';
 import { translations } from '../../translations';
 import { Kanban } from '#types';
 

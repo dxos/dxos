@@ -10,8 +10,8 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
-import { useActorContact } from '../../hooks';
+import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { useActorContact } from '#hooks';
 import { InboxOperation } from '#operations';
 import { type Mailbox } from '#types';
 

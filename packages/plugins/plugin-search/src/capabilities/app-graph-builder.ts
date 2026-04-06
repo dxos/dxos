@@ -11,7 +11,7 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { SearchOperation } from '#operations';
 
 export default Capability.makeModule(

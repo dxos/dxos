@@ -19,7 +19,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Chess } from '#types';
 
 // TODO(burdon): Factor out.

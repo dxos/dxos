@@ -11,7 +11,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { Sketch } from '#types';
 import { serializer } from './util';

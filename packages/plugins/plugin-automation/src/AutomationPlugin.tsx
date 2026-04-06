@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { AutomationEvents } from '#types';
 

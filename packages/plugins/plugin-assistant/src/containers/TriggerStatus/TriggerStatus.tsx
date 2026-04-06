@@ -11,7 +11,7 @@ import { StatusBar } from '@dxos/plugin-status-bar';
 import { type Database } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'error';
 

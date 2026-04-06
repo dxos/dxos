@@ -14,7 +14,7 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type SheetModel } from '../../model';
 import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '#types';
 import { useSheetContext } from '../SheetRoot';

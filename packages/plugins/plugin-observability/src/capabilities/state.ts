@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
 import { Observability } from '@dxos/observability';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { ObservabilityCapabilities } from '#types';
 
 export default Capability.makeModule(

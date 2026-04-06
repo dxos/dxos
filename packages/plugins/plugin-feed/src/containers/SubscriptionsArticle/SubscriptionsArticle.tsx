@@ -16,8 +16,8 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { invariant } from '@dxos/invariant';
 
-import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
-import { meta } from '../../meta';
+import { SubscriptionStack, type SubscriptionStackAction } from '#components';
+import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { Subscription } from '#types';
 

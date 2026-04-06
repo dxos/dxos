@@ -9,8 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 
-import { ZenArticle } from '../containers';
-import { meta } from '../meta';
+import { ZenArticle } from '#containers';
+import { meta } from '#meta';
 import { Dream } from '#types';
 
 export default Capability.makeModule(() =>

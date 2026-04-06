@@ -19,7 +19,7 @@ import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { HasSubject } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { AssistantEvents } from '#types';
 import { AssistantOperation } from '#operations';

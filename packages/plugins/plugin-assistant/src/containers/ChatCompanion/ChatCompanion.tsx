@@ -17,8 +17,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type ChatEvent } from '../../components';
-import { useBlueprintRegistry, useContextBinder } from '../../hooks';
+import { type ChatEvent } from '#components';
+import { useBlueprintRegistry, useContextBinder } from '#hooks';
 import { Assistant, AssistantCapabilities } from '#types';
 import { AssistantOperation } from '#operations';
 import ChatContainer from '../ChatContainer';

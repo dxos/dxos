@@ -18,7 +18,7 @@ import { Loading } from '@dxos/react-ui/testing';
 import { StackContext } from '@dxos/react-ui-stack';
 import { Organization } from '@dxos/types';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 import { translations } from '../../translations';
 

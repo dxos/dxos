@@ -19,7 +19,7 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { Subscription } from '#types';
 

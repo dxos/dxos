@@ -19,8 +19,8 @@ import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActi
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { Call } from '../../components';
-import { meta } from '../../meta';
+import { Call } from '#components';
+import { meta } from '#meta';
 import { ThreadCapabilities } from '#types';
 import { type Channel } from '#types';
 import { ChatContainer } from '../ChatContainer';

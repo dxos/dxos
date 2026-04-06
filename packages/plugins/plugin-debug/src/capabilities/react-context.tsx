@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { DevtoolsContextProvider } from '@dxos/devtools';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

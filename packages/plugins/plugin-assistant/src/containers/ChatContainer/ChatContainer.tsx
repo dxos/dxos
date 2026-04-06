@@ -12,8 +12,8 @@ import { type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { getParentId } from '@dxos/react-ui-attention';
 
-import { Chat as ChatComponent, type ChatRootProps } from '../../components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
+import { Chat as ChatComponent, type ChatRootProps } from '#components';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatContainerProps = ObjectSurfaceProps<

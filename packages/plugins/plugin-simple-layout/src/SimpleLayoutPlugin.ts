@@ -5,7 +5,7 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { SimpleLayoutEvents } from '#types';
 

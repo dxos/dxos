@@ -22,7 +22,7 @@ import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 
 import { type Message, Organization, Person } from '@dxos/types';
 
-import { createMessageGenerator } from '../../testing';
+import { createMessageGenerator } from '#testing';
 import { translations } from '../../translations';
 
 import { ChatThread, type ChatThreadProps } from './ChatThread';

@@ -17,7 +17,7 @@ import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { Builder } from '../../testing';
+import { Builder } from '#testing';
 import { Calendar } from '#types';
 
 import { CalendarArticle } from './CalendarArticle';

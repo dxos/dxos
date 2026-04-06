@@ -20,9 +20,9 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { MarkdownSettings } from '../components';
-import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '../containers';
-import { meta } from '../meta';
+import { MarkdownSettings } from '#components';
+import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '#containers';
+import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
 export default Capability.makeModule(() =>

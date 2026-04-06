@@ -10,7 +10,7 @@ import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { Journal as JournalType, getDateString, parseDateString } from '#types';
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 

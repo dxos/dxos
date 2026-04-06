@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { type Obj } from '@dxos/echo';
 
-import { SECTION_IDENTIFIER, meta } from './meta';
+import { SECTION_IDENTIFIER, meta } from '#meta';
 import { translations } from './translations';
 import { StackViewType } from '#types';
 

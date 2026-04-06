@@ -10,7 +10,7 @@ import { createKvsStore } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
 /** Default persisted state. */

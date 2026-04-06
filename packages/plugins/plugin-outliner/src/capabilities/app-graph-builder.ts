@@ -14,7 +14,7 @@ import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
-import { QUICK_ENTRY_DIALOG, meta } from '../meta';
+import { QUICK_ENTRY_DIALOG, meta } from '#meta';
 import { OutlineOperation } from '#operations';
 
 export default Capability.makeModule(

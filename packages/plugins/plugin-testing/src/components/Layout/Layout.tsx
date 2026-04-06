@@ -23,7 +23,7 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { LayoutState, type LayoutStateProps } from '#types';
 
 const debounce_delay = 100;

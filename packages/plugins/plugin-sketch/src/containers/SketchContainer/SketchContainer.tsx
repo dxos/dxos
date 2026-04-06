@@ -12,7 +12,7 @@ import { Panel as DxPanel, Flex } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { SketchComponent } from '../../components';
+import { SketchComponent } from '#components';
 import { type Sketch, type Settings } from '#types';
 
 export type SketchContainerProps = ObjectSurfaceProps<

@@ -10,7 +10,7 @@ import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
-import { data } from '../../testing';
+import { data } from '#testing';
 import { Sketch } from '#types';
 
 import { SketchComponent } from './Sketch';

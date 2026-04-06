@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { type Step } from '#types';
 

@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

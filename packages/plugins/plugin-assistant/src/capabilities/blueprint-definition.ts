@@ -27,7 +27,7 @@ import {
   AutomationBlueprint,
 } from '@dxos/assistant-toolkit';
 
-import { AssistantBlueprint } from '../blueprints';
+import { AssistantBlueprint } from '#blueprints';
 
 // TODO(dmaretskyi): Force this type for all Capability.makeModule calls.
 const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]> = Capability.makeModule(() =>

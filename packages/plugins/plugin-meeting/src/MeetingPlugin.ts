@@ -8,7 +8,7 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { Meeting, MeetingCapabilities } from '#types';
 

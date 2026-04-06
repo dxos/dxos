@@ -24,7 +24,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { Plank } from '../../containers/Plank';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 import { translations } from '../../translations';
 
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';

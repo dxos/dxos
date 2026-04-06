@@ -10,7 +10,7 @@ import { type Node } from '@dxos/plugin-graph';
 import { ErrorFallback, type ErrorFallbackProps, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { PlankHeading, type PlankHeadingProps } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';

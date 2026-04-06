@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { FileCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(() =>

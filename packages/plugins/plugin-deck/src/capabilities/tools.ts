@@ -19,7 +19,7 @@ import { type OperationInvoker } from '@dxos/app-framework/plugin-operation/invo
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { DeckOperation } from '#operations';
 
 // TODO(burdon): Factor out.

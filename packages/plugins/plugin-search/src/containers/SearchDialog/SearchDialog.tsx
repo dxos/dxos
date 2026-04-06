@@ -14,8 +14,8 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
-import { useGlobalSearch, useGlobalSearchResults } from '../../hooks';
-import { meta } from '../../meta';
+import { useGlobalSearch, useGlobalSearchResults } from '#hooks';
+import { meta } from '#meta';
 import { type SearchResult } from '#types';
 
 export type SearchDialogProps = {

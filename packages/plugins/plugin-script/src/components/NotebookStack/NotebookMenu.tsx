@@ -6,7 +6,7 @@ import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type Notebook } from '#types';
 
 export type NotebookMenuProps = {

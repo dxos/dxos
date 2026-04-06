@@ -15,7 +15,7 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
 import { Sheet } from '#types';

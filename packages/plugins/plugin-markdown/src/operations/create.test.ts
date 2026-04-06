@@ -20,7 +20,7 @@ import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 
-import { WithProperties } from '../testing';
+import { WithProperties } from '#testing';
 import MarkdownBlueprint from '../blueprints/markdown-blueprint';
 
 import { Create } from './definitions';

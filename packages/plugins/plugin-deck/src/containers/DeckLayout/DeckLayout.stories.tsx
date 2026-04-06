@@ -10,7 +10,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 import { translations } from '../../translations';
 

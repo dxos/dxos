@@ -11,7 +11,7 @@ import { Format } from '@dxos/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { OutlineOperation } from '#operations';
 
 const QuickEntryForm = Schema.Struct({

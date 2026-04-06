@@ -15,8 +15,8 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { MapContainer, MapViewEditor } from '../containers';
-import { meta } from '../meta';
+import { MapContainer, MapViewEditor } from '#containers';
+import { meta } from '#meta';
 import { LocationAnnotationId, Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>

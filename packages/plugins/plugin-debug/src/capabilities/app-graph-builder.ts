@@ -11,7 +11,7 @@ import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/typ
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space/meta';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Devtools } from '#types';
 import { getParentId } from '@dxos/react-ui-attention';
 

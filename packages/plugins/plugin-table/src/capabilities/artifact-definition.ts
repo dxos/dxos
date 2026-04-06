@@ -21,7 +21,7 @@ import { Table, TableView } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Factor out.
 declare global {

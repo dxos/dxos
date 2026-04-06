@@ -11,7 +11,7 @@ import { Keyboard } from '@dxos/keyboard';
 import { Graph, Node, runAction } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
 
-import { KEY_BINDING } from '../meta';
+import { KEY_BINDING } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

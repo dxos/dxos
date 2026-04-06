@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const DECK_COMPANION_TYPE = 'org.dxos.plugin.deck.deck-companion';
 

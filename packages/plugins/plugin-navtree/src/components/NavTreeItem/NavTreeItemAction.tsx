@@ -10,7 +10,7 @@ import { IconButton, toLocalizedString, useDensityContext, useTranslation } from
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { composable, composableProps, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type ActionProperties } from '#types';
 
 const fallbackIcon = 'ph--placeholder--regular';

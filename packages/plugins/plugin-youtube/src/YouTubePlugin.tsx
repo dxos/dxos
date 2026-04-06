@@ -14,8 +14,8 @@ import { ClientEvents } from '@dxos/plugin-client/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { YouTubeBlueprint } from './blueprints';
-import { meta } from './meta';
+import { YouTubeBlueprint } from '#blueprints';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { Channel, Video } from '#types';
 

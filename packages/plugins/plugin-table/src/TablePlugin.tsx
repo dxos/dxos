@@ -17,7 +17,7 @@ import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { CreateTableSchema, TableOperation } from '#operations';
 

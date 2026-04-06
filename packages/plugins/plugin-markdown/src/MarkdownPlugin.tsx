@@ -15,8 +15,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
-import { MarkdownBlueprint } from './blueprints';
-import { meta } from './meta';
+import { MarkdownBlueprint } from '#blueprints';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { Markdown, MarkdownEvents } from '#types';
 import { MarkdownOperation } from '#operations';

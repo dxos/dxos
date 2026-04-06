@@ -11,7 +11,7 @@ import { Database, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
 import { Mailbox } from '#types';
 

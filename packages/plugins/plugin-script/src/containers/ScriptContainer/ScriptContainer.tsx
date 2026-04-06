@@ -13,8 +13,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
-import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '../../components';
-import { useDeployState, useToolbarState } from '../../hooks';
+import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
+import { useDeployState, useToolbarState } from '#hooks';
 import { type Settings } from '#types';
 
 export type ScriptEditorProps = ObjectSurfaceProps<

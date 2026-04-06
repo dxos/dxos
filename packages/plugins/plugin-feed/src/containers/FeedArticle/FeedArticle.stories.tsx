@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
-import { PostStack, type PostStackAction } from '../../components';
-import { generateFeed, generatePosts } from '../../testing';
+import { PostStack, type PostStackAction } from '#components';
+import { generateFeed, generatePosts } from '#testing';
 import { type Subscription } from '#types';
 
 type FeedArticleStoryProps = {

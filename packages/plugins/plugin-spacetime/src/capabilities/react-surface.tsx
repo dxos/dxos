@@ -10,9 +10,9 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 
-import { SpacetimeSettings } from '../components';
-import { SpacetimeArticle } from '../containers';
-import { meta } from '../meta';
+import { SpacetimeSettings } from '#components';
+import { SpacetimeArticle } from '#containers';
+import { meta } from '#meta';
 import { Scene, type Settings } from '#types';
 
 export default Capability.makeModule(() =>

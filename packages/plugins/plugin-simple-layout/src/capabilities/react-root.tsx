@@ -7,8 +7,8 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 
-import { SimpleLayout } from '../components';
-import { meta } from '../meta';
+import { SimpleLayout } from '#components';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

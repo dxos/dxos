@@ -24,8 +24,8 @@ import {
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
-} from '../containers';
-import { meta } from '../meta';
+} from '#containers';
+import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
 
 export default Capability.makeModule(() =>

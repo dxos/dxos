@@ -30,7 +30,7 @@ import {
   Task,
 } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { SpaceEvents } from '#types';
 import { type CreateObject, type SpacePluginOptions } from '#types';

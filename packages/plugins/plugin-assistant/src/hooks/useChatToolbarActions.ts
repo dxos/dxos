@@ -14,8 +14,8 @@ import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
-import { useChatContext } from '../components';
-import { meta } from '../meta';
+import { useChatContext } from '#components';
+import { meta } from '#meta';
 import { AssistantOperation } from '#operations';
 
 export type ChatToolbarActionsProps = {

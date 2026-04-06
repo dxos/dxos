@@ -10,8 +10,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { TableCard, TableContainer } from '../containers';
-import { meta } from '../meta';
+import { TableCard, TableContainer } from '#containers';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

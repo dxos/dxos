@@ -26,7 +26,7 @@ import {
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type ObjectViewerProps, SpaceCapabilities } from '#types';
 
 // TODO(thure): Get/derive these values from protocol

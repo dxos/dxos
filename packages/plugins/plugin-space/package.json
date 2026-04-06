@@ -18,6 +18,10 @@
       "browser": "./src/capabilities/index.ts",
       "node": "./src/capabilities/node.ts"
     },
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#types": "./src/types/index.ts"
   },

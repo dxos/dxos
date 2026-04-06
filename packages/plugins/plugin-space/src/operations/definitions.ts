@@ -11,7 +11,7 @@ import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { SpaceForm } from '../types';
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 

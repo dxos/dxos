@@ -20,7 +20,7 @@ import { Filter, type Space } from '@dxos/react-client/echo';
 import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Kanban } from '#types';
 
 const QualifiedId = Schema.String.annotations({

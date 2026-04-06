@@ -18,7 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space } from '@dxos/react-client/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Factor out.
 declare global {

@@ -15,7 +15,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
-import { RelatedEvents, RelatedMessages } from '../../components';
+import { RelatedEvents, RelatedMessages } from '#components';
 import { Calendar, Mailbox } from '#types';
 
 export const RelatedToContact = ({ subject: contact }: ObjectSurfaceProps<Person.Person>) => {

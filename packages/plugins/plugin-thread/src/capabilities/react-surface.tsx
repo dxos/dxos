@@ -13,9 +13,9 @@ import { Obj, type Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
 
-import { ThreadSettings } from '../components';
-import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '../containers';
-import { meta } from '../meta';
+import { ThreadSettings } from '#components';
+import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '#containers';
+import { meta } from '#meta';
 import { Channel, ThreadCapabilities, type Settings } from '#types';
 
 export default Capability.makeModule(() =>

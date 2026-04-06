@@ -13,7 +13,10 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts"
+    "#blueprints": "./src/blueprints/index.ts",
+    "#capabilities": "./src/capabilities/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#meta": "./src/meta.ts"
   },
   "exports": {
     ".": {

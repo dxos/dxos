@@ -12,7 +12,7 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const isToolMessage = (message: Message.Message) => {
   return message.blocks.some((block: ContentBlock.Any) => block._tag === 'toolCall' || block._tag === 'toolResult');

@@ -13,7 +13,7 @@ import { AtomObj } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { MapOperation } from '#operations';
 import { Map } from '#types';
 

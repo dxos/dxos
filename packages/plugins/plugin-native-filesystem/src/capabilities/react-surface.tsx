@@ -8,9 +8,9 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { WorkspaceSettingsContainer } from '../containers';
-import { useActiveFilesystemWorkspace } from '../hooks';
-import { meta } from '../meta';
+import { WorkspaceSettingsContainer } from '#containers';
+import { useActiveFilesystemWorkspace } from '#hooks';
+import { meta } from '#meta';
 
 const GENERAL_TYPE = `${meta.id}.general`;
 

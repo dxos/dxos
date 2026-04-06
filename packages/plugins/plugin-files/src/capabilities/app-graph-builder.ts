@@ -10,7 +10,7 @@ import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolki
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { FilesOperation } from '#operations';
 import { FileCapabilities } from '#types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';

@@ -31,8 +31,8 @@ import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
-import { TestItem } from '../../testing';
+import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '#hooks';
+import { TestItem } from '#testing';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';

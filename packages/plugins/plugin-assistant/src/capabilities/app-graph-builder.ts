@@ -25,7 +25,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
 
-import { ASSISTANT_DIALOG, meta } from '../meta';
+import { ASSISTANT_DIALOG, meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 import { AssistantOperation } from '#operations';
 

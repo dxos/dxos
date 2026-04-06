@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
+import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '#components';
 import { Life, generateRandomModel } from '../../models';
 import { Voxel } from '#types';
 

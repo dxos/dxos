@@ -8,7 +8,7 @@ import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { DeckEvents } from '#types';
 

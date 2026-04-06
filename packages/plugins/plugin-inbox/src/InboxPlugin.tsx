@@ -14,8 +14,8 @@ import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
-import { CalendarBlueprint, InboxBlueprint } from './blueprints';
-import { meta } from './meta';
+import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { InboxOperation } from '#operations';
 import { Calendar, Mailbox } from '#types';

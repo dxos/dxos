@@ -28,7 +28,7 @@ import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
-import { useProjectionModel } from '../../hooks';
+import { useProjectionModel } from '#hooks';
 import { KanbanPlugin } from '../../KanbanPlugin';
 import { translations } from '../../translations';
 import { Kanban } from '#types';

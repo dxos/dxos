@@ -19,7 +19,7 @@ import {
   RecoveryCredentialsContainer,
   ResetDialog,
   type ResetDialogProps,
-} from '../containers';
+} from '#containers';
 import { Account, type ClientPluginOptions } from '#types';
 
 type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {

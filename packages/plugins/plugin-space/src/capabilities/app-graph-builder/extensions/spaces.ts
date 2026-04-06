@@ -15,7 +15,7 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Expando } from '@dxos/schema';
 
-import { meta } from '../../../meta';
+import { meta } from '#meta';
 import { SPACE_TYPE, SpaceCapabilities } from '#types';
 import { SpaceOperation } from '#operations';
 import { SHARED, getSpaceDisplayName } from '../../../util';

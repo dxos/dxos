@@ -13,7 +13,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { useMainSize } from '../../hooks';
+import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
 
 import { PlankRootProps, usePlankContext } from './PlankRoot';

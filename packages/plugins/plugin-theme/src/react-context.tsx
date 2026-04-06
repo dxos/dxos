@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/ui-theme';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {

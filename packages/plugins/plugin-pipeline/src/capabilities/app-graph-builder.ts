@@ -10,7 +10,7 @@ import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Pipeline } from '@dxos/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

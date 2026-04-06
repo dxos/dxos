@@ -10,8 +10,8 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { RangeList, SheetContainer } from '../containers';
-import { meta } from '../meta';
+import { RangeList, SheetContainer } from '#containers';
+import { meta } from '#meta';
 import { Sheet, SheetCapabilities } from '#types';
 
 export default Capability.makeModule(() =>

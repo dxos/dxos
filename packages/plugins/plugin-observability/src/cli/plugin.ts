@@ -8,7 +8,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { ObservabilityOperation } from '#operations';
 
 // TODO(wittjosiah): Hook up.

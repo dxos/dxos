@@ -8,8 +8,8 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 
-import { WelcomeTour } from '../components';
-import { meta } from '../meta';
+import { WelcomeTour } from '#components';
+import { meta } from '#meta';
 import { HelpCapabilities, type Step } from '#types';
 
 export default Capability.makeModule(

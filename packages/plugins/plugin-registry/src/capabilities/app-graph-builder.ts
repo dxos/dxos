@@ -9,7 +9,7 @@ import { AppCapabilities, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '../meta';
+import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

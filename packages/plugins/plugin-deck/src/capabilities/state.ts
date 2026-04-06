@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
 import { sanitizePersistedState } from '../util';
 

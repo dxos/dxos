@@ -10,7 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { TokenManager } from './TokenManager';
 import { NewTokenSelector } from './NewTokenSelector';

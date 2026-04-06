@@ -12,9 +12,9 @@ import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
-import { FileInput } from '../components';
-import { FileContainer } from '../containers';
-import { meta } from '../meta';
+import { FileInput } from '#components';
+import { FileContainer } from '#containers';
+import { meta } from '#meta';
 import { WnfsAction, WnfsFile } from '#types';
 
 export default Capability.makeModule(() =>

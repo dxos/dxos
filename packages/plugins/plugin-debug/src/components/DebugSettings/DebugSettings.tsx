@@ -13,7 +13,7 @@ import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type Settings } from '#types';
 
 type Toast = {

@@ -13,7 +13,7 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { ComposeEmailPanel } from '../../components';
+import { ComposeEmailPanel } from '#components';
 import { GmailFunctions } from '../../operations/google/gmail';
 
 export type DraftMessageArticleProps = ObjectSurfaceProps<Message.Message>;

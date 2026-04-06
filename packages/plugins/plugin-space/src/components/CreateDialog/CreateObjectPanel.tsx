@@ -14,8 +14,8 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { type MaybePromise } from '@dxos/util';
 
-import { useInputSurfaceLookup } from '../../hooks';
-import { meta } from '../../meta';
+import { useInputSurfaceLookup } from '#hooks';
+import { meta } from '#meta';
 import { type CreateObject } from '#types';
 import { getSpaceDisplayName } from '../../util';
 

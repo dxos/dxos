@@ -9,7 +9,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { type LogBuffer } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';

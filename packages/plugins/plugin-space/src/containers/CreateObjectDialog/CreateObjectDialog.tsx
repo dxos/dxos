@@ -23,8 +23,8 @@ import {
   CreateObjectPanel,
   type CreateObjectPanelProps,
   type Metadata,
-} from '../../components';
-import { meta } from '../../meta';
+} from '#components';
+import { meta } from '#meta';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 

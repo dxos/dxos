@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
-import { useAudioStream, usePipeline } from '../../hooks';
+import { useAudioStream, usePipeline } from '#hooks';
 
 import { DebugInfo } from './DebugInfo';
 

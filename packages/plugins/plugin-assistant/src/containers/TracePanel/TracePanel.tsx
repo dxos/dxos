@@ -23,7 +23,7 @@ import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Message, type ContentBlock } from '@dxos/types';
 
 import { extractFirstDxnFromToolInput, extractFirstDxnFromToolResult } from './dxn-extractor';
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);

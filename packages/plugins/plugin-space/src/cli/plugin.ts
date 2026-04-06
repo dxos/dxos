@@ -26,7 +26,7 @@ import {
 
 import { IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { SpaceEvents } from '#types';
 import { type CreateObject, type SpacePluginOptions } from '#types';
 import { SpaceOperation } from '#operations';

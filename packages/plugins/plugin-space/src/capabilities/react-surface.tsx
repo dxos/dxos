@@ -21,7 +21,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-import { SpacePluginSettings } from '../components';
+import { SpacePluginSettings } from '#components';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -50,8 +50,8 @@ import {
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
-} from '../containers';
-import { meta } from '../meta';
+} from '#containers';
+import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import {
   HueAnnotationId,

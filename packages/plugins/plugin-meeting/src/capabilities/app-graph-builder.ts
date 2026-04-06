@@ -20,7 +20,7 @@ import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Meeting, MeetingCapabilities } from '#types';
 import { MeetingOperation } from '#operations';
 

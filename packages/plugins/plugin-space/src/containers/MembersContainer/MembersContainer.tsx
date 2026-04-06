@@ -26,7 +26,7 @@ import {
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
 // TODO(wittjosiah): Copied from Shell.

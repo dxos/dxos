@@ -9,8 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 
-import { TemplatePanel } from '../components';
-import { meta } from '../meta';
+import { TemplatePanel } from '#components';
+import { meta } from '#meta';
 import { Template } from '#types';
 
 export default Capability.makeModule(() =>

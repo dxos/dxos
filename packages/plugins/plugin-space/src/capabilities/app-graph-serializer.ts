@@ -10,7 +10,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { translations } from '../translations';
 import { SPACE_TYPE } from '#types';
 import { SpaceOperation } from '#operations';

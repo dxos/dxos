@@ -23,7 +23,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
-import { createNotebook } from '../../testing';
+import { createNotebook } from '#testing';
 import { translations } from '../../translations';
 import { Notebook } from '#types';
 

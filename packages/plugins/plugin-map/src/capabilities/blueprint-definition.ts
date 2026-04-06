@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { MapBlueprint } from '../blueprints';
+import { MapBlueprint } from '#blueprints';
 
 const blueprintDefinition = Capability.makeModule<
   [],

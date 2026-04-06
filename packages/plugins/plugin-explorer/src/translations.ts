@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { Graph } from '#types';
 
 export const translations = [

@@ -11,7 +11,7 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const ASSISTANT_OPERATION = `${meta.id}.operation`;
 

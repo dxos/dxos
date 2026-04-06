@@ -8,9 +8,9 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 
-import { useMixerEngine } from '../../hooks';
+import { useMixerEngine } from '#hooks';
 import { type Dream } from '#types';
-import { Mixer } from '../../components';
+import { Mixer } from '#components';
 
 export type ZenArticleProps = ObjectSurfaceProps<Dream.Dream>;
 

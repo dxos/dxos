@@ -9,7 +9,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Map } from '@dxos/plugin-map/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import '../components/MapSurface';
 

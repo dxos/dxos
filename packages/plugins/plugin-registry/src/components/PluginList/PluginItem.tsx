@@ -9,7 +9,7 @@ import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, us
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
 export type PluginItemProps = {

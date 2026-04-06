@@ -18,7 +18,7 @@ import { Database, Entity, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -12,9 +12,9 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { useDeckState } from '../../hooks';
+import { useDeckState } from '#hooks';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 import { translations } from '../../translations';
 import { DeckCapabilities, getMode } from '#types';
 

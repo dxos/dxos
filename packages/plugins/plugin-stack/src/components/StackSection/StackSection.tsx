@@ -11,7 +11,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type StackSectionItem } from '#types';
 import { useStack } from '../StackContext';
 

@@ -10,8 +10,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { CanvasContainer } from '../containers';
-import { meta } from '../meta';
+import { CanvasContainer } from '#containers';
+import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

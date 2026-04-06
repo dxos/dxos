@@ -8,8 +8,8 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 
-import { AwaitingObject } from '../components';
-import { meta } from '../meta';
+import { AwaitingObject } from '#components';
+import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(() =>

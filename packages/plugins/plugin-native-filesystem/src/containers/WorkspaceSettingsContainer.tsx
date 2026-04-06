@@ -15,7 +15,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#operations';
 import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '#types';
 import { writeComposerConfig } from '../util';

@@ -10,9 +10,9 @@ import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
-import { Chat, type ChatRootProps } from '../../components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
-import { meta } from '../../meta';
+import { Chat, type ChatRootProps } from '#components';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
 export type ChatDialogProps = {

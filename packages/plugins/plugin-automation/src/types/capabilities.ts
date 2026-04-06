@@ -12,7 +12,7 @@ import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runti
 import type { SpaceId } from '@dxos/keys';
 import type { Blueprint } from '@dxos/blueprints';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace AutomationCapabilities {
   /**

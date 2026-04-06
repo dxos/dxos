@@ -10,7 +10,7 @@ import { Annotation, Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { renderByline } from './util';
 

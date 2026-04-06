@@ -48,7 +48,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { DebugSettings } from '../components';
+import { DebugSettings } from '#components';
 import {
   DebugGraph,
   DebugObjectPanel,
@@ -57,8 +57,8 @@ import {
   DevtoolsOverviewContainer,
   SpaceGenerator,
   Wireframe,
-} from '../containers';
-import { meta } from '../meta';
+} from '#containers';
+import { meta } from '#meta';
 import { DebugCapabilities, type Settings, Devtools } from '#types';
 
 type SpaceDebug = {

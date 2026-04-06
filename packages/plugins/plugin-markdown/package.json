@@ -13,12 +13,18 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": {
       "types": "./src/capabilities/index.ts",
       "browser": "./src/capabilities/index.ts",
       "node": "./src/capabilities/node.ts"
     },
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {

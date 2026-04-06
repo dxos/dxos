@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceOperationConfig } from '../operations/helpers';
 

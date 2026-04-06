@@ -7,7 +7,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { NativeFilesystemCapabilities } from '#types';
 import { translations } from './translations';
 

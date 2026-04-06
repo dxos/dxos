@@ -37,7 +37,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus } from '../../integrations';
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
 import { SheetOperation } from '#operations';
 import { useSheetContext } from '../SheetRoot';

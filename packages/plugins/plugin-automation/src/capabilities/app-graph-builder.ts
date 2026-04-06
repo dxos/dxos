@@ -11,7 +11,7 @@ import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space/meta';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

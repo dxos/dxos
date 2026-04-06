@@ -17,7 +17,7 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 
-import { AssistantSettings } from '../components';
+import { AssistantSettings } from '#components';
 import {
   BlueprintArticle,
   ChatCompanion,
@@ -29,8 +29,8 @@ import {
   PromptList,
   TracePanel,
   TriggerStatus,
-} from '../containers';
-import { ASSISTANT_DIALOG, meta } from '../meta';
+} from '#containers';
+import { ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant } from '#types';
 
 export default Capability.makeModule(() =>

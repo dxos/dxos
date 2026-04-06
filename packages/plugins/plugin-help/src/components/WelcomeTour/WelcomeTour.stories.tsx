@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { useHelp } from '../../hooks';
+import { useHelp } from '#hooks';
 
 import { WelcomeTour, type WelcomeTourProps } from './WelcomeTour';
 

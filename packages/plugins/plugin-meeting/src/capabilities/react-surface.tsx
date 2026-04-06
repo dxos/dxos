@@ -11,9 +11,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/plugin-thread/types';
 
-import { MeetingSettings } from '../components';
-import { MeetingContainer, MeetingsList } from '../containers';
-import { meta } from '../meta';
+import { MeetingSettings } from '#components';
+import { MeetingContainer, MeetingsList } from '#containers';
+import { meta } from '#meta';
 import { Meeting, Settings } from '#types';
 
 export default Capability.makeModule(() =>

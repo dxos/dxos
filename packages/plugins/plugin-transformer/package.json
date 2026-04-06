@@ -13,6 +13,9 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#components": "./src/components/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {

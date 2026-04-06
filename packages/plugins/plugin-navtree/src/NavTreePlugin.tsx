@@ -9,8 +9,8 @@ import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
-import { NODE_TYPE } from './containers';
-import { meta } from './meta';
+import { NODE_TYPE } from '#containers';
+import { meta } from '#meta';
 import { translations } from './translations';
 import { NavTreeEvents } from '#types';
 

@@ -9,7 +9,7 @@ import { IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';

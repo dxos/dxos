@@ -10,8 +10,8 @@ import { Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
-import { PostStack, type PostStackAction } from '../../components';
-import { meta } from '../../meta';
+import { PostStack, type PostStackAction } from '#components';
+import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { Subscription } from '#types';
 
