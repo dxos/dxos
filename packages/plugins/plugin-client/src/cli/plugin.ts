@@ -5,10 +5,8 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-// NOTE: Must not import from index to avoid pulling in react dependencies.
-import { Client } from '../capabilities/client';
-import { OperationHandler } from '../capabilities/operation-handler';
-import { SchemaDefs } from '../capabilities/schema-defs';
+import { Client, OperationHandler, SchemaDefs } from '#capabilities';
+
 import { meta } from '../meta';
 import { ClientEvents } from '../types';
 import { type ClientPluginOptions } from '../types';

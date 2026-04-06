@@ -11,7 +11,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AssistantBlueprint } from '../blueprints';
 import { CreateChat } from './definitions';

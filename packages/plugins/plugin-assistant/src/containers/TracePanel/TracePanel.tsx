@@ -16,7 +16,7 @@ import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { dbg, LogLevel } from '@dxos/log';
-import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
+import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';

@@ -5,9 +5,10 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationHandler, SettingsAppGraphBuilder } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
+
+import { OperationHandler, SettingsAppGraphBuilder } from '#capabilities';
 
 export const SettingsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: SettingsAppGraphBuilder }),

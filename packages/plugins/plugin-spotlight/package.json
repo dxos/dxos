@@ -13,6 +13,9 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",

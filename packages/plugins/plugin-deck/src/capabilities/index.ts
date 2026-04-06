@@ -2,12 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './app-graph-builder';
-export * from './check-app-scheme';
-export * from './operation-handler';
-export * from './react-root';
-export * from './react-surface';
-export * from './settings';
-export * from './state';
-// export * from './tools';
-export * from './url-handler';
+import { Capability } from '@dxos/app-framework';
+import { OperationHandlerSet } from '@dxos/operation';
+
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const CheckAppScheme = Capability.lazy('CheckAppScheme', () => import('./check-app-scheme'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const DeckSettings = Capability.lazy('DeckSettings', () => import('./settings'));
+export const DeckState = Capability.lazy('DeckState', () => import('./state'));
+export const Tools = Capability.lazy('Tools', () => import('./tools'));
+export const UrlHandler = Capability.lazy('UrlHandler', () => import('./url-handler'));

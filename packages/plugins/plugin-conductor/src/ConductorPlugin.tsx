@@ -14,9 +14,10 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
+
+import { ReactSurface } from '#capabilities';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

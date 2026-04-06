@@ -14,7 +14,7 @@ import { ObservabilityOperation } from '../operations';
 // TODO(wittjosiah): Hook up.
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({
-    activate: Capability.lazy<OperationHandlerSet.OperationHandlerSet>('OperationHandler', () =>
+    activate: Capability.lazy('OperationHandler', () =>
       Promise.resolve({
         default: Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
           Effect.fnUntraced(function* () {

@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
-import { useActiveSpace } from '@dxos/plugin-space';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';

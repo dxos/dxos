@@ -10,10 +10,11 @@ import { Annotation, Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 
-import { BlueprintDefinition, OperationHandler, ReactSurface, Transcriber } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { renderByline } from './util';
+
+import { BlueprintDefinition, OperationHandler, ReactSurface, Transcriber } from '#capabilities';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

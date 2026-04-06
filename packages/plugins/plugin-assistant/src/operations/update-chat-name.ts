@@ -10,7 +10,7 @@ import { type Queue } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../processor';

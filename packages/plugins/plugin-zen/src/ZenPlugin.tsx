@@ -12,10 +12,11 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Dream } from './types';
+
+import { ReactSurface } from '#capabilities';
 
 export const ZenPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

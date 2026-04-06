@@ -14,7 +14,8 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 

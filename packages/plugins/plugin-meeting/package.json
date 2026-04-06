@@ -11,6 +11,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",

@@ -16,6 +16,12 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
 import { MarkdownBlueprint } from './blueprints';
+import { meta } from './meta';
+import { translations } from './translations';
+import { Markdown, MarkdownEvents } from './types';
+import { MarkdownOperation } from './operations';
+import { serializer } from './util';
+
 import {
   AnchorSort,
   AppGraphSerializer,
@@ -24,12 +30,7 @@ import {
   MarkdownState,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { Markdown, MarkdownEvents } from './types';
-import { MarkdownOperation } from './operations';
-import { serializer } from './util';
+} from '#capabilities';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

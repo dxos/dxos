@@ -10,18 +10,18 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { BlueprintDefinition, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateTableSchema, TableOperation } from './operations';
+
+import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

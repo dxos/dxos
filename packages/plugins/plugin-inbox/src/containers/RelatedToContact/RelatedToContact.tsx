@@ -11,7 +11,7 @@ import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/ap
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { useActiveSpace } from '@dxos/plugin-space';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 

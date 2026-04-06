@@ -1,0 +1,29 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { createKvsStore } from '@dxos/effect';
+import { Observability } from '@dxos/observability';
+
+import { meta } from '../meta';
+import { ObservabilityCapabilities } from '../types';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
+    const stateAtom = createKvsStore({
+      key: meta.id,
+      schema: ObservabilityCapabilities.StateSchema,
+      defaultValue: () => ({}),
+    });
+
+    // NOTE: Group is set at runtime, not persisted.
+    const group = yield* Effect.tryPromise(() => Observability.getObservabilityGroup(namespace));
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    registry.set(stateAtom, { ...registry.get(stateAtom), group });
+
+    return Capability.contributes(ObservabilityCapabilities.State, stateAtom);
+  }),
+);

@@ -9,13 +9,17 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
+
+import { THREAD_ITEM, meta } from './meta';
+import { ThreadOperation } from './operations';
+import { translations } from './translations';
+import { Channel } from './types';
 
 import {
   AppGraphBuilder,
@@ -27,17 +31,14 @@ import {
   ReactRoot,
   ReactSurface,
   ThreadState,
-} from './capabilities';
-import { THREAD_ITEM, meta } from './meta';
-import { ThreadOperation } from './operations';
-import { translations } from './translations';
-import { Channel } from './types';
+} from '#capabilities';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
 
 // TODO(wittjosiah): Rename to ChatPlugin.
 // TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
+
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

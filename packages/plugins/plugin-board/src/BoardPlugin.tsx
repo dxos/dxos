@@ -13,10 +13,11 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
-import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Board } from './types';
+
+import { ReactSurface } from '#capabilities';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

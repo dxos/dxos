@@ -10,11 +10,13 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { DeckSettings, DeckState, OperationHandler } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
+
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
+
+import { DeckSettings, DeckState, OperationHandler } from '#capabilities';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({

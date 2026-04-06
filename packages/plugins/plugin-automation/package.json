@@ -12,6 +12,13 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": {
+      "types": "./src/capabilities/index.ts",
+      "browser": "./src/capabilities/index.ts",
+      "node": "./src/capabilities/node.ts"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",

@@ -30,8 +30,13 @@ import {
   Task,
 } from '@dxos/types';
 
+import { meta } from './meta';
+import { translations } from './translations';
+import { SpaceEvents } from './types';
+import { type CreateObject, type SpacePluginOptions } from './types';
+import { SpaceOperation } from './operations';
+
 import {
-  AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
   Migrations,
@@ -44,12 +49,8 @@ import {
   SpaceSettings,
   SpaceState,
   SpacesReady,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { SpaceEvents } from './types';
-import { type CreateObject, type SpacePluginOptions } from './types';
-import { SpaceOperation } from './operations';
+  AppGraphBuilder,
+} from '#capabilities';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({

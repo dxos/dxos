@@ -14,7 +14,7 @@ import { Script, Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { useTypeOptions } from '@dxos/plugin-space';
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';

@@ -9,16 +9,17 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { Blockstore, FileUploader, Markdown, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { WnfsAction, WnfsCapabilities, WnfsFile } from './types';
 import { WnfsOperation } from './operations';
+
+import { Blockstore, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
