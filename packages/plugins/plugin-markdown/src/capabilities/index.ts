@@ -7,7 +7,6 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
 export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
-export const ArtifactDefinition = Capability.lazy('ArtifactDefinition', () => import('./artifact-definition'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

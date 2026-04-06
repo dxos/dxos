@@ -6,7 +6,6 @@ import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/operation';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const ArtifactDefinition = Capability.lazy('ArtifactDefinition', () => import('./artifact-definition'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const Compiler = Capability.lazy('Compiler', () => import('./compiler'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
