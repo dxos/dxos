@@ -45,7 +45,7 @@ async open(ctx: Context): Promise<void> {
 type RemoteSpan = {
   end: () => void;
   wrapExecution?: <T>(fn: () => T) => T;
-  spanContext?: unknown;  // opaque OTEL Context
+  spanContext?: unknown; // opaque OTEL Context
 };
 
 interface TracingBackend {
