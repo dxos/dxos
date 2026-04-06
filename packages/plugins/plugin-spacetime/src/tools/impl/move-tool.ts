@@ -29,6 +29,8 @@ type DragState = {
   plane: Plane;
   /** Whether dragging on vertical (Y) axis instead of horizontal (XZ). */
   vertical: boolean;
+  /** Other objects being moved along (multi-select). */
+  companions: Array<{ objectId: string; mesh: Mesh; startPosition: Vector3 }>;
 };
 
 /** Tool for dragging objects to translate their position. */
@@ -106,7 +108,21 @@ export class MoveTool implements Tool {
     }
     const dragOrigin = startRay.origin.add(startRay.direction.scale(startDist));
 
-    this._drag = { objectId, mesh, startPosition, dragOrigin, plane, vertical: useVertical };
+    // Collect companions from multi-selection.
+    const companions: DragState['companions'] = [];
+    if (ctx.selection?.type === 'multi-object') {
+      for (const entry of ctx.selection.entries) {
+        if (entry.objectId !== objectId) {
+          companions.push({
+            objectId: entry.objectId,
+            mesh: entry.mesh,
+            startPosition: entry.mesh.position.clone(),
+          });
+        }
+      }
+    }
+
+    this._drag = { objectId, mesh, startPosition, dragOrigin, plane, vertical: useVertical, companions };
     ctx.camera.detachControl();
     return true;
   }
@@ -139,6 +155,18 @@ export class MoveTool implements Tool {
       newPos.z = snapToGrid(newPos.z);
     }
     this._drag.mesh.position = newPos;
+
+    // Move companions by the same delta.
+    const moveDelta = newPos.subtract(this._drag.startPosition);
+    for (const companion of this._drag.companions) {
+      const companionPos = companion.startPosition.add(moveDelta);
+      if (event.shiftKey) {
+        companionPos.x = snapToGrid(companionPos.x);
+        companionPos.y = snapToGrid(companionPos.y);
+        companionPos.z = snapToGrid(companionPos.z);
+      }
+      companion.mesh.position = companionPos;
+    }
 
     ctx.setDebugStats({
       x: this._drag.mesh.position.x.toFixed(2),
@@ -173,6 +201,20 @@ export class MoveTool implements Tool {
           z: mesh.position.z,
         };
       });
+    }
+
+    // Commit companion positions to ECHO.
+    for (const companion of this._drag.companions) {
+      const companionObj = ctx.getObject(companion.objectId);
+      if (companionObj) {
+        Obj.change(companionObj, (obj) => {
+          obj.position = {
+            x: companion.mesh.position.x,
+            y: companion.mesh.position.y,
+            z: companion.mesh.position.z,
+          };
+        });
+      }
     }
 
     // Re-select the object to refresh the debug panel.
