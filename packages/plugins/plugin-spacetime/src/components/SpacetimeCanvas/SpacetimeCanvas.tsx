@@ -41,6 +41,10 @@ export type SpacetimeCanvasProps = {
   /** Currently selected object id and hue for material updates. */
   selectedObjectId?: string | null;
   selectedHue?: string;
+  /** Called when a keyboard shortcut requests a tool change. */
+  onToolChange?: (next: { tool: SpacetimeTool }) => void;
+  /** Called when a keyboard shortcut requests deletion. */
+  onDelete?: () => void;
 };
 
 /**
@@ -61,6 +65,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       deleteObjectRef,
       selectedObjectId,
       selectedHue,
+      onToolChange,
+      onDelete,
       ...props
     },
     forwardedRef,
@@ -90,6 +96,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     viewStateRef.current = viewState;
     const onSelectionChangeRef = useRef(onSelectionChange);
     onSelectionChangeRef.current = onSelectionChange;
+    const onToolChangeRef = useRef<((next: { tool: SpacetimeTool }) => void) | null>(null);
+    const onDeleteRef = useRef<(() => void) | null>(null);
+    onToolChangeRef.current = onToolChange ?? null;
+    onDeleteRef.current = onDelete ?? null;
+    const keyDownHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
     const fpsRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
 
@@ -161,7 +172,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         const setSelection = (next: Selection | null) => {
           // Clean up previous selection.
           const prev = selectionRef.current;
-          if (prev) {
+          if (prev && prev.type !== 'multi-object') {
             if (prev.highlightMesh) {
               highlightLayer.removeMesh(prev.highlightMesh);
               prev.highlightMesh.dispose();
@@ -177,10 +188,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           } else if (next?.type === 'face' && next.highlightMesh) {
             highlightLayer.addMesh(next.highlightMesh, theme.selected);
           }
-          onSelectionChangeRef.current?.(next?.objectId ?? null);
+          const nextObjectId = next && next.type !== 'multi-object' ? next.objectId : null;
+          onSelectionChangeRef.current?.(nextObjectId);
 
           // Show vertex table for selected object, or scene overview when nothing selected.
-          if (next) {
+          if (next && next.type !== 'multi-object') {
             const solid = solidsRef.current.get(next.objectId);
             const meshPos = next.mesh?.position;
             const position: [number, number, number] | undefined = meshPos
@@ -246,6 +258,30 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         // Set initial tool.
         toolManager.setActiveTool(tool ?? 'select');
 
+        // Keyboard shortcuts scoped to canvas focus.
+        keyDownHandlerRef.current = (event: KeyboardEvent) => {
+          const target = event.target as HTMLElement;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+            return;
+          }
+
+          switch (event.key.toLowerCase()) {
+            case 'm':
+              onToolChangeRef.current?.({ tool: 'move' });
+              break;
+            case 'e':
+              onToolChangeRef.current?.({ tool: 'extrude' });
+              break;
+            case 'x':
+            case 'backspace':
+              onDeleteRef.current?.();
+              break;
+          }
+        };
+
+        canvas.setAttribute('tabindex', '0');
+        canvas.addEventListener('keydown', keyDownHandlerRef.current);
+
         // Provide GLB import callback to parent.
         if (importGLBRef) {
           importGLBRef.current = async (data: ArrayBuffer | string) => {
@@ -281,10 +317,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         if (deleteObjectRef) {
           deleteObjectRef.current = (objectId: string) => {
             // Clear selection if the deleted object is currently selected.
-            if (selectionRef.current?.objectId === objectId) {
-              selectionRef.current.highlightMesh?.dispose();
-              if (selectionRef.current.type === 'object') {
-                highlightLayer.removeMesh(selectionRef.current.mesh);
+            const currentSelection = selectionRef.current;
+            if (currentSelection && currentSelection.type !== 'multi-object' && currentSelection.objectId === objectId) {
+              currentSelection.highlightMesh?.dispose();
+              if (currentSelection.type === 'object') {
+                highlightLayer.removeMesh(currentSelection.mesh);
               }
               selectionRef.current = null;
             }
@@ -312,7 +349,14 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       }, 500);
 
       return () => {
-        selectionRef.current?.highlightMesh?.dispose();
+        if (keyDownHandlerRef.current) {
+          canvas.removeEventListener('keydown', keyDownHandlerRef.current);
+          keyDownHandlerRef.current = null;
+        }
+        const cleanupSelection = selectionRef.current;
+        if (cleanupSelection && cleanupSelection.type !== 'multi-object') {
+          cleanupSelection.highlightMesh?.dispose();
+        }
         selectionRef.current = null;
         toolManagerRef.current?.dispose();
         toolManagerRef.current = null;
@@ -430,7 +474,9 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       }
 
       // Programmatically select object when selectedObjectId is set but not yet selected.
-      if (selectedObjectId && selectionRef.current?.objectId !== selectedObjectId) {
+      const currentSelectionObjectId =
+        selectionRef.current && selectionRef.current.type !== 'multi-object' ? selectionRef.current.objectId : null;
+      if (selectedObjectId && currentSelectionObjectId !== selectedObjectId) {
         const mesh = meshesRef.current.get(selectedObjectId);
         if (mesh && setSelectionRef.current) {
           setSelectionRef.current({ type: 'object', objectId: selectedObjectId, mesh, highlightMesh: null });
