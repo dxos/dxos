@@ -1,7 +1,9 @@
 # Process Manager Overhaul Plan
 
 ## Branch: dm/process
+
 ## Status: In Progress
+
 ## Last Updated: 2026-04-05 (iteration 3)
 
 ## Overview
@@ -31,6 +33,7 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 **Goal**: AiSession should only depend on `Trace.TraceService`, not `TracingService`.
 
 #### 1.1 Remove TracingService from AiSession requirements
+
 - **File**: `packages/core/assistant/src/session/session.ts`
 - `AiSessionRunRequirements` currently includes `TracingService`
 - `runTools()` uses `TracingService.layerSubframe()` for tool execution scoping
@@ -38,13 +41,15 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 - **Risk**: Tool tracing context (parentMessage, toolCallId) currently flows through TracingService
 
 #### 1.2 Update session.ts tool execution tracing
+
 - The `runTools` method at line 274-304 uses `TracingService.layerSubframe` to scope trace context for tool calls
 - Need to either:
   a. Pass trace context via Trace.Meta instead, OR
   b. Keep TracingService just for backward compatibility with operations that still emit via it
-- **Decision**: Keep TracingService in scope for now since many operations use `TracingService.emitStatus()`. Remove from AiSession's *type* requirements but provide it via the process layer.
+- **Decision**: Keep TracingService in scope for now since many operations use `TracingService.emitStatus()`. Remove from AiSession's _type_ requirements but provide it via the process layer.
 
 #### 1.3 Remove TracingService requirement from AiSessionRunRequirements type
+
 - Remove `TracingService` from the union type
 - Ensure all callers provide it via Effect layers rather than as a direct requirement
 
@@ -53,6 +58,7 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 **Goal**: Ensure agent processes emit proper trace events for observability.
 
 #### 2.1 Agent process trace events
+
 - **File**: `packages/core/assistant/src/service/agent-process.ts`
 - Currently imports `TracingService` for the services list
 - Need to emit trace events for:
@@ -62,6 +68,7 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 - Use `Trace.write()` with appropriate EventTypes
 
 #### 2.2 Define trace event types for agent operations
+
 - **File**: `packages/core/assistant/src/tracing.ts` (already has CompleteBlock, PartialBlock)
 - Add event types:
   - `AgentTurnStarted` - when agent begins processing
@@ -69,6 +76,7 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
   - `ToolCallStarted` / `ToolCallCompleted` - for tool execution tracking
 
 #### 2.3 Wire trace events in AiSession
+
 - In `runAgentTurn()` - emit turn start/end events
 - In `runTools()` - emit tool execution events
 - These should flow through `Trace.TraceService` (new API)
@@ -76,32 +84,39 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 ### Phase 3: Verify All Tests Pass
 
 #### 3.1 Project blueprint tests
+
 - **File**: `packages/core/assistant-toolkit/src/blueprints/project/blueprint.test.ts`
 - Currently passing, verify they stay passing after changes
 
 #### 3.2 Trigger dispatcher tests
+
 - **File**: `packages/core/functions-runtime/src/triggers/trigger-dispatcher.test.ts`
 - Currently passing (18 tests, 1 skipped)
 
 #### 3.3 ProcessManager tests
+
 - **File**: `packages/core/functions-runtime/src/process/ProcessManager.test.ts`
 - Currently passing (15 tests)
 
 #### 3.4 Assistant tests
+
 - **File**: `packages/core/assistant/src/session/session.test.ts`
 - Currently passing (28 tests, 6 skipped)
 
 ### Phase 4: Verify No Degraded Functionality
 
 #### 4.1 Composer working
+
 - Run `moon run composer-app:build` to verify build
 - Check that the processor still streams messages properly
 
 #### 4.2 Pipeline working
+
 - Verify conductor/compute pipeline still works
 - Check `packages/core/conductor/` tests
 
 #### 4.3 Observability via trace feed
+
 - Verify FeedTraceSink writes trace messages
 - Verify TracePanel reads from trace feed
 - Verify ephemeral streaming works end-to-end
@@ -117,12 +132,14 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 ### TracingService (Legacy) vs Trace.TraceService (New)
 
 **TracingService** (deprecated):
+
 - Queue-based, writes ECHO objects to invocation trace queues
 - Has context scoping (parentMessage, toolCallId, invocation)
 - Used by ~40 files across the codebase
 - Manages invocation lifecycle (start/end events)
 
 **Trace.TraceService** (new):
+
 - Event-type-based, writes typed events with metadata
 - Events buffered in ProcessManager, flushed to TraceSink
 - Supports ephemeral events for streaming
