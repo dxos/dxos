@@ -1,7 +1,5 @@
 # Deck Refactor
 
-TODO(burdon): Factor out Rules into plugins/AGENTS.md
-
 ## Instructions
 
 - This is a complex project. Think deeply about these tasks and create a plan.
@@ -41,3 +39,7 @@ then `Deck.Content` would access these as needed via the context.
 - [x] Rename Deck.Main => Deck.Content (the layout shell: Main.Root, sidebars, overlay, topbar, statusbar, responsive effects).
 - [x] Extract Deck.Viewport from Deck.Content (Main.Content: CSS vars, empty state, deck-mode Stack, solo-mode StackContext).
 - [x] Move ConnectedPlank to its own file.
+
+## Phase 3 (Matrix)
+
+- We will

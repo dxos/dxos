@@ -16,7 +16,9 @@ import { Banner } from './Banner';
 
 const DECK_CONTENT_NAME = 'DeckContent';
 
-export const DeckContent = ({ children }: PropsWithChildren) => {
+export type DeckContentProps = PropsWithChildren;
+
+export const DeckContent = ({ children }: DeckContentProps) => {
   const {
     state: { sidebarState, complementarySidebarState, complementarySidebarPanel },
     deck: { active, fullscreen, solo },

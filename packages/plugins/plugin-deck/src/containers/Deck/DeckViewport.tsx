@@ -13,6 +13,7 @@ import React, {
   useRef,
 } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -39,11 +40,13 @@ const DECK_VIEWPORT_NAME = 'DeckViewport';
 // DeckViewport
 //
 
+export type DeckViewportProps = PropsWithChildren;
+
 /**
  * Deck viewport that renders the main content area.
  * Handles empty state and CSS var sizing; children provide mode-specific content.
  */
-export const DeckViewport = ({ children }: PropsWithChildren) => {
+export const DeckViewport = ({ children }: DeckViewportProps) => {
   const { deck, state, settings, layoutMode } = useDeckContext(DECK_VIEWPORT_NAME);
   const { active, solo, plankSizing } = deck;
   const { sidebarState, complementarySidebarState } = state;
@@ -76,20 +79,20 @@ export const DeckViewport = ({ children }: PropsWithChildren) => {
       style={
         {
           '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
-          '--dx-main-sidebar-width':
+          '--main-sidebar-width':
             sidebarState === 'expanded'
               ? 'var(--dx-nav-sidebar-size)'
               : sidebarState === 'collapsed'
                 ? 'var(--dx-l0-size)'
                 : '0',
-          '--dx-main-complementary-width':
+          '--main-complementary-width':
             complementarySidebarState === 'expanded'
               ? 'var(--dx-complementary-sidebar-size)'
               : complementarySidebarState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
-          '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-          '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+          '--main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+          '--main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
         } as MainContentProps['style']
       }
     >
@@ -108,30 +111,32 @@ DeckViewport.displayName = DECK_VIEWPORT_NAME;
  * Multi-plank horizontal scrolling layout.
  */
 export const DeckMultiMode = () => {
-  const { deck, settings, layoutMode } = useDeckContext('DeckMultiMode');
-  const { active, companionOpen, companionVariant, fullscreen } = deck;
+  const {
+    deck: { active, companionOpen, companionVariant, fullscreen },
+    settings,
+    layoutMode,
+  } = useDeckContext('DeckMultiMode');
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-
-  const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
   /** Clear scroll restoration state if the window is resized. */
-  const handleResize = useCallback(() => {
-    scrollLeftRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [handleResize]);
+  const scrollLeftRef = useRef<number>(null);
+  useEffect(
+    () =>
+      addEventListener(window, 'resize', () => {
+        scrollLeftRef.current = null;
+      }),
+    [],
+  );
 
   const restoreScroll = useCallback(() => {
     if (deckRef.current && scrollLeftRef.current != null) {
       deckRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, []);
+
   useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
 
   /** Save scroll position as the user scrolls. */
@@ -141,14 +146,8 @@ export const DeckMultiMode = () => {
     }
   }, []);
 
-  const padding = useMemo(() => {
-    if (settings?.overscroll === 'centering') {
-      return calculateOverscroll(active.length);
-    }
-    return {};
-  }, [settings?.overscroll, active.length]);
-
-  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
+  // Create order map.
+  const { order, itemsCount } = useMemo(() => {
     return active.reduce(
       (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
         acc.order[entryId] = acc.itemsCount + 1;
@@ -158,6 +157,11 @@ export const DeckMultiMode = () => {
       { order: {}, itemsCount: 0 },
     );
   }, [active, companionOpen]);
+
+  const padding = useMemo(
+    () => (settings?.overscroll === 'centering' ? calculateOverscroll(active.length) : {}),
+    [settings?.overscroll, active.length],
+  );
 
   return (
     <div role='none' className='relative bg-deck-surface overflow-hidden'>
