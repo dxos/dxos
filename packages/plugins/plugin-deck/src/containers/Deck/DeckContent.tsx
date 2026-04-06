@@ -11,7 +11,7 @@ import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { layoutAppliesTopbar } from '../../util';
 import { useDeckContext } from './DeckRoot';
 import { ComplementarySidebar, Sidebar } from '../Sidebar';
-import { DeckViewport } from './DeckViewport';
+import { DeckViewport, MultiMode, SoloMode } from './DeckViewport';
 import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
 
@@ -89,7 +89,10 @@ export const DeckContent = () => {
       <Sidebar />
       <ComplementarySidebar current={complementarySidebarPanel} />
       <Main.Overlay />
-      <DeckViewport />
+      <DeckViewport>
+        <MultiMode />
+        <SoloMode />
+      </DeckViewport>
       {topbar && <Banner variant='topbar' />}
       {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
     </Main.Root>

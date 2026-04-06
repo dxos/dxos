@@ -2,7 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, memo, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+  Fragment,
+  memo,
+  type PropsWithChildren,
+  type UIEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -32,9 +41,9 @@ const DECK_VIEWPORT_NAME = 'DeckViewport';
 
 /**
  * Deck viewport that renders the main content area.
- * Handles empty state, then delegates to MultiMode and SoloMode.
+ * Handles empty state and CSS var sizing; children provide mode-specific content.
  */
-export const DeckViewport = () => {
+export const DeckViewport = ({ children }: PropsWithChildren) => {
   const { deck, state, settings, layoutMode } = useDeckContext(DECK_VIEWPORT_NAME);
   const { active, fullscreen, solo, plankSizing } = deck;
   const { sidebarState, complementarySidebarState } = state;
@@ -86,8 +95,7 @@ export const DeckViewport = () => {
         } as MainContentProps['style']
       }
     >
-      <MultiMode />
-      <SoloMode />
+      {children}
     </Main.Content>
   );
 };
@@ -101,7 +109,7 @@ DeckViewport.displayName = DECK_VIEWPORT_NAME;
 /**
  * Multi-plank horizontal scrolling layout.
  */
-const MultiMode = () => {
+export const MultiMode = () => {
   const { deck, settings, layoutMode } = useDeckContext('MultiMode');
   const { active, companionOpen, companionVariant, fullscreen, solo } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
@@ -201,7 +209,7 @@ const MultiMode = () => {
 /**
  * Single-plank layout with optional companion.
  */
-const SoloMode = () => {
+export const SoloMode = () => {
   const { deck, settings, layoutMode } = useDeckContext('SoloMode');
   const { companionOpen, companionVariant, fullscreen, solo } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
