@@ -40,7 +40,7 @@ export const [DeckProvider, useDeckContext] = createContext<DeckContextValue>(DE
 export type DeckRootProps = PropsWithChildren<DeckContextValue>;
 
 /**
- * Headless root that provides DeckMain context.
+ * Headless root that provides Deck context.
  */
 export const DeckRoot = ({ children, ...context }: DeckRootProps) => {
   return <DeckProvider {...context}>{children}</DeckProvider>;

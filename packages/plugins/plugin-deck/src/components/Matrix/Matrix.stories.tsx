@@ -75,7 +75,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
     <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
       <Plank.Root layoutMode='multi' part='multi' graph={graph}>
         <Mosaic.Tile {...props} asChild>
-          <Plank.Content solo companion={false} encapsulate={false}>
+          <Plank.Content solo={false} companion={false} encapsulate={false}>
             <Plank.Component
               id={props.data.id}
               part='multi'
