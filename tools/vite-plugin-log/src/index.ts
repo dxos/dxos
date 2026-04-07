@@ -8,7 +8,7 @@ export type {
   DxosLogPluginTransform,
   LogMetaTransformOptions,
   LogMetaTransformSpec,
-} from './definitions';
-export { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions';
+} from './definitions.ts';
+export { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions.ts';
 
-export { DxosLogPlugin } from './plugin';
+export { DxosLogPlugin } from './plugin.ts';

@@ -14,7 +14,7 @@ import type {
 import type { RolldownMagicString } from 'rolldown';
 import { Visitor } from 'rolldown/utils';
 
-import type { LogMetaTransformSpec } from './definitions';
+import type { LogMetaTransformSpec } from './definitions.ts';
 
 /**
  * Applies meta transformations to the magic string in `code`.

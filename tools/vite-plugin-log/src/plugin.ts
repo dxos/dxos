@@ -14,8 +14,8 @@ import {
   DEFAULT_LOG_META_TRANSFORM_SPEC,
   type DxosLogPluginOptions,
   type LogMetaTransformOptions,
-} from './definitions';
-import { computeLogMetaEdits, transform as applyLogMetaTransform } from './transform';
+} from './definitions.ts';
+import { computeLogMetaEdits, transform as applyLogMetaTransform } from './transform.ts';
 
 /** Virtual module id resolved to the client runtime (uses the app’s @dxos/log). */
 export const VITE_PLUGIN_LOG_RUNTIME_ID = '/@dxos-plugin-log/runtime';

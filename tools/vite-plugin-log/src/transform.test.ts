@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 import { parseAst } from 'rolldown/parseAst';
 import { RolldownMagicString } from 'rolldown';
 
-import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions';
-import { transform } from './transform';
+import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions.ts';
+import { transform } from './transform.ts';
 
 /**
  * Core transform only (no Rolldown id / moduleType / exclude filters): `meta.ast` + MagicString.
