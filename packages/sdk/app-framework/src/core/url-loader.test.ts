@@ -48,5 +48,32 @@ describe('UrlLoader', () => {
       const result = await UrlLoader.preload({ storage });
       expect(result).toEqual([]);
     });
+
+    it('returns empty array when storage contains null', async ({ expect }) => {
+      const storage: UrlLoader.Storage = {
+        get: () => 'null',
+        set: () => {},
+      };
+      const result = await UrlLoader.preload({ storage });
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when storage contains an object', async ({ expect }) => {
+      const storage: UrlLoader.Storage = {
+        get: () => '{}',
+        set: () => {},
+      };
+      const result = await UrlLoader.preload({ storage });
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when entries are missing required fields', async ({ expect }) => {
+      const storage: UrlLoader.Storage = {
+        get: () => '[{"title":"no url"}]',
+        set: () => {},
+      };
+      const result = await UrlLoader.preload({ storage });
+      expect(result).toEqual([]);
+    });
   });
 });

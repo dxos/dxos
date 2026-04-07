@@ -14,7 +14,7 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { UrlLoader } from '@dxos/app-framework';
+import { type Plugin, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -228,7 +228,12 @@ const main = async () => {
   };
 
   const builtinPlugins = getPlugins(conf);
-  const remotePlugins = await UrlLoader.preload();
+  let remotePlugins: Plugin.Plugin[] = [];
+  try {
+    remotePlugins = await UrlLoader.preload();
+  } catch (error) {
+    log.warn('failed to preload remote plugins', { error });
+  }
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);

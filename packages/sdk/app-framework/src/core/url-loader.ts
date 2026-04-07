@@ -35,22 +35,33 @@ const defaultStorage = (): Storage => ({
 
 const getPersistedRemotePlugins = (storage: Storage, key: string): RemotePluginEntry[] => {
   try {
-    return JSON.parse(storage.get(key) ?? '[]');
+    const parsed: unknown = JSON.parse(storage.get(key) ?? '[]');
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter(
+      (entry): entry is RemotePluginEntry =>
+        typeof entry === 'object' && entry !== null && typeof entry.id === 'string' && typeof entry.url === 'string',
+    );
   } catch {
     return [];
   }
 };
 
 const persistRemotePlugin = (storage: Storage, key: string, entry: RemotePluginEntry): void => {
-  const entries = getPersistedRemotePlugins(storage, key).filter((existing) => existing.id !== entry.id);
-  entries.push(entry);
-  storage.set(key, JSON.stringify(entries));
+  try {
+    const entries = getPersistedRemotePlugins(storage, key).filter((existing) => existing.id !== entry.id);
+    entries.push(entry);
+    storage.set(key, JSON.stringify(entries));
+  } catch (error) {
+    log.warn('failed to persist remote plugin entry', { entry, error });
+  }
 };
 
 const isUrl = (locator: string): boolean => {
   try {
-    new URL(locator);
-    return true;
+    const url = new URL(locator);
+    return url.protocol === 'http:' || url.protocol === 'https:';
   } catch {
     return false;
   }

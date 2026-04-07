@@ -165,7 +165,10 @@ export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
 ): LazyCapability<T, R> => {
   const lazyFn: LazyCapability<T, R> = (props: T) =>
     Effect.gen(function* () {
-      const { default: getCapability } = yield* Effect.promise(() => c());
+      const { default: getCapability } = yield* Effect.tryPromise({
+        try: () => c(),
+        catch: (reason) => (reason instanceof Error ? reason : new Error(String(reason))),
+      });
       const result = yield* getCapability(props);
       const normalized = result == null ? [] : Array.isArray(result) ? Array.from(result) : [result];
       return normalized as NormalizeReturn<R>;

@@ -189,11 +189,15 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
   let imports: Record<string, string> = {};
   let modules: string[] = [];
   let importMapIsDev = false;
+  let base = '/';
 
   return [
     // Phase 1: Resolve all package entrypoints and emit chunks (or record dev paths).
     {
       name: 'import-map:get-chunk-ref-ids',
+      configResolved(config) {
+        base = config.base ?? '/';
+      },
       async buildStart() {
         importMapIsDev = this.environment.mode === 'dev';
         await initCjsLexer();
@@ -281,7 +285,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         imports = Object.fromEntries(
           modules
             .filter((specifier) => chunkRefIds[specifier] !== undefined)
-            .map((specifier) => [specifier, `/${this.getFileName(chunkRefIds[specifier])}`]),
+            .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
         );
       },
     },

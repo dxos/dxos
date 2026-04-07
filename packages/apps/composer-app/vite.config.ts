@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
-import devtoolsJson from 'vite-plugin-devtools-json';
+// import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
@@ -447,7 +447,7 @@ export default defineConfig((env) => ({
  * Default makes most chunks have names like index-[hash].js.
  */
 function chunkFileNames(chunkInfo: any) {
-  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
