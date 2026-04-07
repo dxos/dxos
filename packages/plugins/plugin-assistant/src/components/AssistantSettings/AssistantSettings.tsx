@@ -9,8 +9,8 @@ import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { type Assistant, LLM_PROVIDERS } from '../../types';
+import { meta } from '#meta';
+import { type Assistant, LLM_PROVIDERS } from '#types';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';

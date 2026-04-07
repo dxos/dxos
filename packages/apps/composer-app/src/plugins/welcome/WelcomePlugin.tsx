@@ -4,7 +4,7 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface } from './capabilities';

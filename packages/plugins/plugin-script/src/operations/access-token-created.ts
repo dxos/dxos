@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/operations';
 
 import { DEPLOYMENT_DIALOG } from '../constants';
-import { defaultScriptsForIntegration } from '../meta';
+import { defaultScriptsForIntegration } from '#meta';
 import { templates } from '../templates';
 
 const handler: Operation.WithHandler<typeof TokenManagerOperation.AccessTokenCreated> =

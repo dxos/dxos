@@ -9,16 +9,17 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { YouTubeBlueprint } from './blueprints';
-import { AppGraphBuilder, BlueprintDefinition, Migrations, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { YouTubeBlueprint } from '#blueprints';
+import { meta } from '#meta';
 import { translations } from './translations';
-import { Channel, Video } from './types';
+import { Channel, Video } from '#types';
+
+import { AppGraphBuilder, BlueprintDefinition, Migrations, ReactSurface } from '#capabilities';
 
 export const YouTubePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

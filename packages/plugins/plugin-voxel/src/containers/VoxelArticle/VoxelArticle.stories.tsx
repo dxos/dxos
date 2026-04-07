@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-import { Voxel } from '../../types';
+import { Voxel } from '#types';
 
 import { VoxelArticle } from './VoxelArticle';
 

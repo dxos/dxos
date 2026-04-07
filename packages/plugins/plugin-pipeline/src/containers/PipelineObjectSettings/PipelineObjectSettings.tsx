@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
-import { useTypeOptions } from '@dxos/plugin-space';
-import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
@@ -18,7 +18,7 @@ import { Pipeline } from '@dxos/types';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';

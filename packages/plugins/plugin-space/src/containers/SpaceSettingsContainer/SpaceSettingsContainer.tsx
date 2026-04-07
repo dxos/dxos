@@ -16,9 +16,9 @@ import { Button, Input, useFileDownload, useMulticastObservable, useTranslation 
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { meta } from '../../meta';
-import { SpaceOperation } from '../../operations';
-import { SpaceCapabilities, SpaceForm } from '../../types';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceForm } from '#types';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(

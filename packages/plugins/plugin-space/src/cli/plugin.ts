@@ -24,13 +24,12 @@ import {
   Task,
 } from '@dxos/types';
 
-import { IdentityCreated } from '../capabilities/identity-created';
-import { OperationHandler } from '../capabilities/operation-handler';
-import { UndoMappings } from '../capabilities/undo-mappings';
-import { meta } from '../meta';
-import { SpaceEvents } from '../types';
-import { type CreateObject, type SpacePluginOptions } from '../types';
-import { SpaceOperation } from '../operations';
+import { IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
+
+import { meta } from '#meta';
+import { SpaceEvents } from '#types';
+import { type CreateObject, type SpacePluginOptions } from '#types';
+import { SpaceOperation } from '#operations';
 
 import { database, queue, space } from './commands';
 

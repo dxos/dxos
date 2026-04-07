@@ -5,6 +5,11 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { ClientEvents } from '#types';
+import { type ClientPluginOptions } from '#types';
+
 import {
   AppGraphBuilder,
   Client,
@@ -14,11 +19,7 @@ import {
   ReactContext,
   ReactSurface,
   SchemaDefs,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { ClientEvents } from './types';
-import { type ClientPluginOptions } from './types';
+} from '#capabilities';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

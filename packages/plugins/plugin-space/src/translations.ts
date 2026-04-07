@@ -7,7 +7,7 @@ import { Collection } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Disambiguate with sdk/shell.
 export const translations = [

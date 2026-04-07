@@ -24,8 +24,8 @@ import { Message } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { useChatToolbarActions } from '../../hooks';
-import { meta } from '../../meta';
+import { useChatToolbarActions } from '#hooks';
+import { meta } from '#meta';
 import { type AiChatProcessor } from '../../processor';
 import {
   ChatActions,

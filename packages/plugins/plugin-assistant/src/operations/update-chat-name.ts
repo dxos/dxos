@@ -10,8 +10,8 @@ import { Feed, Obj } from '@dxos/echo';
 import { Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../processor';

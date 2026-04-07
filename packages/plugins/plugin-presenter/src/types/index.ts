@@ -7,7 +7,7 @@ import { type Context, createContext } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import * as Settings from './Settings';
 

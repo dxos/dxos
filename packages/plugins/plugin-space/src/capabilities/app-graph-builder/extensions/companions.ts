@@ -14,7 +14,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import type { Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { meta } from '../../../meta';
+import { meta } from '#meta';
 
 //
 // Extension Factory

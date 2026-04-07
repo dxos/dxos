@@ -8,6 +8,10 @@ import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { DeckEvents } from '#types';
+
 import {
   AppGraphBuilder,
   CheckAppScheme,
@@ -17,10 +21,7 @@ import {
   ReactRoot,
   ReactSurface,
   UrlHandler,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { DeckEvents } from './types';
+} from '#capabilities';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.

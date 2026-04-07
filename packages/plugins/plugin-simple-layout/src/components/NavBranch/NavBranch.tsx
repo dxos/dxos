@@ -14,7 +14,7 @@ import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { useExpandPath } from '../hooks';
 
 export type NavBranchProps = {

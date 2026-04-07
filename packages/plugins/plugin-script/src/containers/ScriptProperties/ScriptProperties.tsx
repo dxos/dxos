@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptPropertiesProps = {
   object: Script.Script;

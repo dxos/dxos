@@ -13,7 +13,7 @@ import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { type AiChatProcessor } from '../../processor';
-import { ServiceType } from '../../types';
+import { ServiceType } from '#types';
 
 export type ToolboxProps = {
   services?: { service: ServiceType }[];

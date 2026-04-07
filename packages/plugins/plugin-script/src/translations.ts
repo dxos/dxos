@@ -5,8 +5,8 @@
 import { Script } from '@dxos/functions';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Notebook } from './types';
+import { meta } from '#meta';
+import { Notebook } from '#types';
 
 export const translations = [
   {

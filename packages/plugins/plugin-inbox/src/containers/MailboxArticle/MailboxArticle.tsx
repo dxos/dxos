@@ -20,11 +20,11 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MessageStackActionHandler, MessageStack } from '../../components';
+import { type MessageStackActionHandler, MessageStack } from '#components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 import { sortByCreated } from '../../util';
 
 import { NewMailbox } from './NewMailbox';

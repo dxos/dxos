@@ -19,7 +19,7 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Markdown } from '../../types';
+import { Markdown } from '#types';
 
 import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 

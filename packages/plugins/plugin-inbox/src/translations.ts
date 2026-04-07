@@ -6,8 +6,8 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
-import { meta } from './meta';
-import { Calendar, Mailbox } from './types';
+import { meta } from '#meta';
+import { Calendar, Mailbox } from '#types';
 
 export const translations = [
   {

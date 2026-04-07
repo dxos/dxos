@@ -14,7 +14,7 @@ import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 import { composable, composableProps, slottable } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { PipelineColumn } from './PipelineColumn';
 

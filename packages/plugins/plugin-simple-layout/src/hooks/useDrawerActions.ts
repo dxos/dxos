@@ -12,9 +12,9 @@ import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, createGapSeparator } from '@dxos/react-ui-menu';
 
-import { useMobileLayout } from '../components';
-import { meta } from '../meta';
-import { SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
+import { useMobileLayout } from '#components';
+import { meta } from '#meta';
+import { SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
 
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';

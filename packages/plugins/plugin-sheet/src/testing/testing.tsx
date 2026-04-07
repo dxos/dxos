@@ -10,8 +10,8 @@ import { createMockedComputeRuntimeProvider } from '@dxos/compute/testing';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
-import { ComputeGraphContextProvider } from '../components';
-import { Sheet } from '../types';
+import { ComputeGraphContextProvider } from '#components';
+import { Sheet } from '#types';
 
 export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: Sheet.SheetProps) => {
   const [sheet] = useAsyncState(async () => {

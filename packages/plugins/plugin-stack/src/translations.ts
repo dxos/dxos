@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {

@@ -15,9 +15,9 @@ import { Operation } from '@dxos/operation';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../../meta';
-import { SpaceCapabilities } from '../../../types';
-import { SpaceOperation } from '../../../operations';
+import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
+import { SpaceOperation } from '#operations';
 
 import {
   COLLECTIONS_SECTION_TYPE,
