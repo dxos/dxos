@@ -94,7 +94,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
 
     if (this._context !== null) {
       for (const spaceId of spaces) {
-        await this._openConnection(spaceId);
+        await this._openConnection(this._ctx!, spaceId);
       }
     }
   }
@@ -109,7 +109,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     this._connections.clear();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'replication' })
   async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
     using _guard = await this._mutex.acquire();
@@ -119,9 +119,8 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     }
     this._connectedSpaces.add(spaceId);
 
-    // Check if AM-repo requested that we connect to remote peers.
     if (this._context !== null) {
-      await this._openConnection(spaceId);
+      await this._openConnection(ctx, spaceId);
     }
   }
 
@@ -137,7 +136,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     }
   }
 
-  private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
+  private async _openConnection(ctx: Context, spaceId: SpaceId, reconnects: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
 
@@ -176,14 +175,14 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
               return;
             }
 
-            const ctx = this._ctx;
-            await connection.close(); // Will call onRemoteDisconnected
+            const replicatorCtx = this._ctx;
+            await connection.close();
             this._connections.delete(spaceId);
-            if (ctx?.disposed) {
+            if (replicatorCtx?.disposed) {
               return;
             }
             log.trace('dxos.echo.edge.replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(spaceId, reconnects + 1);
+            await this._openConnection(replicatorCtx!, spaceId, reconnects + 1);
           },
           restartDelay,
         );
@@ -191,7 +190,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     });
     this._connections.set(spaceId, connection);
 
-    await connection.open();
+    await connection.open(ctx);
   }
 }
 

@@ -935,7 +935,7 @@ export class CoreDatabase {
     maxFrequency: THROTTLED_UPDATE_FREQUENCY,
   });
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);

@@ -342,7 +342,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000, ctx: Context.default() });
+      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000, ctx: this._ctx });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -561,7 +561,7 @@ export class Client {
     invariant(this.services.services.SystemService, 'SystemService is not available.');
     await this.services.services.SystemService.updateStatus(
       { status: SystemStatus.ACTIVE },
-      { ctx: Context.default() },
+      { ctx: this._ctx },
     );
   }
 
@@ -579,7 +579,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    await this._services?.services.SystemService.reset(undefined, { ctx: Context.default() });
+    await this._services?.services.SystemService.reset(undefined, { ctx: this._ctx });
     await this._close();
 
     // TODO(wittjosiah): Re-open after reset.

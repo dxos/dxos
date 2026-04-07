@@ -124,10 +124,10 @@ export class CollectionSynchronizer extends Resource {
    */
   onConnectionOpen(peerId: PeerId): void {
     log('onConnectionOpen', { peerId });
-    const spanId = getSpanName(peerId);
+    const spanId = getSpanId(peerId);
     trace.spanStart({
       id: spanId,
-      methodName: spanId,
+      methodName: SYNC_SPAN_METHOD,
       instance: this,
       parentCtx: this._ctx,
       showInBrowserTimeline: true,
@@ -194,13 +194,13 @@ export class CollectionSynchronizer extends Resource {
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
     const diff = diffCollectionState(localState, remoteState);
-    const spanId = getSpanName(peerId);
+    const spanId = getSpanId(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
     } else {
       trace.spanStart({
         id: spanId,
-        methodName: spanId,
+        methodName: SYNC_SPAN_METHOD,
         instance: this,
         parentCtx: this._ctx,
         showInBrowserTimeline: true,
@@ -305,6 +305,8 @@ const isValidDocumentId = (documentId: DocumentId) => {
   return typeof documentId === 'string' && !documentId.includes(':');
 };
 
-const getSpanName = (peerId: PeerId) => {
+const SYNC_SPAN_METHOD = 'syncPeer';
+
+const getSpanId = (peerId: PeerId) => {
   return `collection-sync-${peerId}`;
 };

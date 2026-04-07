@@ -262,6 +262,15 @@ export class HaloProxy implements Halo {
    * @param deviceProfile - optional device profile that will be merged with defaults
    */
   async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
+    return this._createIdentityInternal(Context.default(), profile, deviceProfile);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _createIdentityInternal(
+    ctx: Context,
+    profile: ProfileDocument = {},
+    deviceProfile?: DeviceProfileDocument,
+  ): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     invariant(!this.identity.get(), 'Identity already exists');
     const deviceProfileWithDefaults = {
@@ -273,7 +282,7 @@ export class HaloProxy implements Halo {
         profile,
         deviceProfile: deviceProfileWithDefaults,
       },
-      { timeout: RPC_TIMEOUT, ctx: Context.default() },
+      { timeout: RPC_TIMEOUT, ctx },
     );
     this._identityChanged.emit(identity);
     return identity;
@@ -290,10 +299,15 @@ export class HaloProxy implements Halo {
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
+    return this._updateProfileInternal(Context.default(), profile);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile, {
       timeout: RPC_TIMEOUT,
-      ctx: Context.default(),
+      ctx,
     });
     this._identityChanged.emit(identity);
     return identity;

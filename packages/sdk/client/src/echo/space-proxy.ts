@@ -353,6 +353,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     if (isFirstTimeInitializing) {
       await this._initialize(ctx);
     } else if (isReopening) {
+      this._ctx = new Context({ parent: ctx });
       await this._initializeDb(ctx);
     } else if (shouldReset) {
       await this._reset();
@@ -388,6 +389,8 @@ export class SpaceProxy implements Space, CustomInspectable {
     if (this._initializing || this._initialized) {
       return;
     }
+
+    this._ctx = new Context({ parent: ctx });
 
     log('initializing...', { space: this.key });
     this._initializing = true;
@@ -471,19 +474,29 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   async open(): Promise<void> {
+    await this._openInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _openInternal(ctx: Context): Promise<void> {
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_ACTIVE },
-      { timeout: RPC_TIMEOUT, ctx: Context.default() },
+      { timeout: RPC_TIMEOUT, ctx },
     );
   }
 
   async close(): Promise<void> {
+    await this._closeInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _closeInternal(ctx: Context): Promise<void> {
     if (this._databaseOpen) {
       await this._db.flush();
     }
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
-      { timeout: RPC_TIMEOUT, ctx: Context.default() },
+      { timeout: RPC_TIMEOUT, ctx },
     );
   }
 
@@ -509,7 +522,7 @@ export class SpaceProxy implements Space, CustomInspectable {
           '@type': message['@type'] || 'google.protobuf.Struct',
         },
       },
-      { timeout: RPC_TIMEOUT, ctx: Context.default() },
+      { timeout: RPC_TIMEOUT, ctx: this._ctx },
     );
   }
 
@@ -520,7 +533,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     const stream = this._clientServices.services.SpacesService.subscribeMessages(
       { spaceKey: this.key, channel },
-      { timeout: RPC_TIMEOUT, ctx: Context.default() },
+      { timeout: RPC_TIMEOUT, ctx: this._ctx },
     );
     stream.subscribe(callback);
     return () => stream.close();
@@ -542,7 +555,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         role: HaloSpaceMember.Role.ADMIN,
         contact,
       },
-      { ctx: Context.default() },
+      { ctx: this._ctx },
     );
   }
 
@@ -557,7 +570,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         memberKey: request.memberKey,
         newRole: request.newRole,
       },
-      { ctx: Context.default() },
+      { ctx: this._ctx },
     );
   }
 
@@ -576,7 +589,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         memberKey,
         newRole: HaloSpaceMember.Role.REMOVED,
       },
-      { ctx: Context.default() },
+      { ctx: this._ctx },
     );
   }
 
@@ -587,6 +600,20 @@ export class SpaceProxy implements Space, CustomInspectable {
     migration?: CreateEpochRequest.Migration;
     automergeRootUrl?: string;
   } = {}): Promise<void> {
+    await this._createEpochInternal(this._ctx, { migration, automergeRootUrl });
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _createEpochInternal(
+    ctx: Context,
+    {
+      migration,
+      automergeRootUrl,
+    }: {
+      migration?: CreateEpochRequest.Migration;
+      automergeRootUrl?: string;
+    } = {},
+  ): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
     const { controlTimeframe: targetTimeframe } = await this._clientServices.services.SpacesService!.createEpoch(
       {
@@ -594,7 +621,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         migration,
         automergeRootUrl,
       },
-      { timeout: EPOCH_CREATION_TIMEOUT, ctx: Context.default() },
+      { timeout: EPOCH_CREATION_TIMEOUT, ctx },
     );
 
     if (targetTimeframe) {
@@ -613,7 +640,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         spaceKey: this.key,
         noTail: true,
       },
-      { ctx: Context.default() },
+      { ctx: this._ctx },
     );
     invariant(stream, 'SpacesService not available');
     return await Stream.consumeData(stream);
@@ -645,7 +672,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         spaceKey: this.key,
         edgeReplication: setting,
       },
-      { timeout: RPC_TIMEOUT, ctx: Context.default() },
+      { timeout: RPC_TIMEOUT, ctx: this._ctx },
     );
     // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
     await asyncTimeout(
@@ -661,7 +688,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     timeout?: number;
     onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
   }): Promise<void> {
-    await using ctx = Context.default();
+    await using ctx = new Context({ parent: this._ctx });
 
     if (this._data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
       throw new Error('Edge replication is disabled');
@@ -718,7 +745,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await this._db.flush();
     const { archive } = await this._clientServices.services.SpacesService!.exportSpace(
       { spaceId: this.id },
-      { ctx: Context.default() },
+      { ctx: this._ctx },
     );
     return archive;
   }

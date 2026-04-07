@@ -267,7 +267,7 @@ export class DataSpaceManager extends Resource {
    * Creates a new space writing the genesis credentials to the control feed.
    */
   @synchronized
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async createSpace(ctx: Context, options: CreateSpaceOptions = {}): Promise<DataSpace> {
     assertArgument(
       !!options.rootUrl === !!options.documents,
@@ -373,7 +373,7 @@ export class DataSpaceManager extends Resource {
    */
   // TODO(burdon): Rename join space.
   @synchronized
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async acceptSpace(ctx: Context, opts: AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');

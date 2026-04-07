@@ -50,7 +50,7 @@ export class InvitationsManager {
     private readonly _metadataStore: MetadataStore,
   ) {}
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async createInvitation(
     ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,

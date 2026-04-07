@@ -290,6 +290,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private _createConnectionContext(): Context {
     const connectionCtx = new Context({
+      parent: this._ctx,
       onError: async (err: any) => {
         if (connectionCtx !== this._connectionCtx) {
           return;
