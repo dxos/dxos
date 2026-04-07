@@ -9,11 +9,12 @@ import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
-import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from './capabilities';
-import { NODE_TYPE } from './containers';
-import { meta } from './meta';
+import { NODE_TYPE } from '#containers';
+import { meta } from '#meta';
 import { translations } from './translations';
-import { NavTreeEvents } from './types';
+import { NavTreeEvents } from '#types';
+
+import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

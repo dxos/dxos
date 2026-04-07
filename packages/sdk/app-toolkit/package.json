@@ -19,6 +19,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./query": {
+      "source": "./src/query.ts",
+      "types": "./dist/types/src/query.d.ts",
+      "browser": "./dist/lib/browser/query.mjs",
+      "node": "./dist/lib/node-esm/query.mjs"
+    },
     "./ui": {
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
@@ -29,6 +35,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "query": [
+        "dist/types/src/query.d.ts"
+      ],
       "ui": [
         "dist/types/src/ui/index.d.ts"
       ]
@@ -47,10 +56,12 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -59,7 +70,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/cli": "catalog:"
+    "@effect/cli": "catalog:",
+    "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

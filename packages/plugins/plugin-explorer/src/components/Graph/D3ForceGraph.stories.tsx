@@ -18,8 +18,8 @@ import { type ValueGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import { useGraphModel } from '../../hooks';
-import { Graph } from '../../types';
+import { useGraphModel } from '#hooks';
+import { Graph } from '#types';
 
 import { D3ForceGraph } from './D3ForceGraph';
 import { generate } from './testing';

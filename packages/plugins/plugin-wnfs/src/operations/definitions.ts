@@ -9,7 +9,7 @@ import { FileInfoSchema } from '@dxos/app-toolkit';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { WnfsFile, WnfsAction } from '../types';
 
 const WNFS_OPERATION = `${meta.id}.operation`;

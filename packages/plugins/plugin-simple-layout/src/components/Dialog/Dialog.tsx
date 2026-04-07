@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 import { ErrorFallback } from '@dxos/react-ui';
 
-import { useSimpleLayoutState } from '../../hooks';
+import { useSimpleLayoutState } from '#hooks';
 
 export const Dialog = () => {
   const { state, updateState } = useSimpleLayoutState();

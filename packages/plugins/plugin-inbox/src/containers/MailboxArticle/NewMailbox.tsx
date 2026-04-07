@@ -12,9 +12,9 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 
 export type NewMailboxProps = {
   mailbox: Mailbox.Mailbox;

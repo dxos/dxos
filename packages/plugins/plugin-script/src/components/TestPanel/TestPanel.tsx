@@ -9,7 +9,7 @@ import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTran
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type State = 'pending';
 

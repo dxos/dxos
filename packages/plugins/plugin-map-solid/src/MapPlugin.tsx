@@ -4,8 +4,9 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 
-import { Surface } from './capabilities';
-import { meta } from './meta';
+import { meta } from '#meta';
+
+import { Surface } from '#capabilities';
 
 export const MapPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({

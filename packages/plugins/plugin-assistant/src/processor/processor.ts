@@ -39,7 +39,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
-import type { AutomationCapabilities } from '@dxos/plugin-automation';
+import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.

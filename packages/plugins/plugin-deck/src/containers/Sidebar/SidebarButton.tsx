@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { useDeckCompanions, useDeckState } from '../../hooks';
-import { meta } from '../../meta';
+import { useDeckCompanions, useDeckState } from '#hooks';
+import { meta } from '#meta';
 
 export const ToggleSidebarButton = ({
   classNames,

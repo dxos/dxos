@@ -13,10 +13,11 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { ViewModel } from '@dxos/schema';
 
-import { ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
-import { ExplorerAction, Graph } from './types';
+import { ExplorerAction, Graph } from '#types';
+
+import { ReactSurface } from '#capabilities';
 
 export const ExplorerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

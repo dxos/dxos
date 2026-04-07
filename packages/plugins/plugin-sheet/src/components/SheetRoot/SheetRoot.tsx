@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { type SheetModel, useSheetModel } from '../../model';
-import { type Sheet } from '../../types';
+import { type Sheet } from '#types';
 
 export type SheetContextValue = {
   id: string;

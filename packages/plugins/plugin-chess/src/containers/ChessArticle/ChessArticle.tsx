@@ -9,9 +9,9 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '../../components';
-import { meta } from '../../meta';
-import { type Chess } from '../../types';
+import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
+import { meta } from '#meta';
+import { type Chess } from '#types';
 
 export type ChessArticleProps = ObjectSurfaceProps<Chess.Game>;
 

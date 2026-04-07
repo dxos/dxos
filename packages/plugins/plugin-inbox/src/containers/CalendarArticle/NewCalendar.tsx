@@ -12,9 +12,9 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Calendar } from '../../types';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { type Calendar } from '#types';
 
 export type NewCalendarProps = {
   calendar: Calendar.Calendar;

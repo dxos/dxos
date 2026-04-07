@@ -11,10 +11,10 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { FeedbackForm } from '../../components';
-import { meta } from '../../meta';
-import { ObservabilityCapabilities } from '../../types';
-import { ObservabilityOperation, type UserFeedback } from '../../operations';
+import { FeedbackForm } from '#components';
+import { meta } from '#meta';
+import { ObservabilityCapabilities } from '#types';
+import { ObservabilityOperation, type UserFeedback } from '#operations';
 
 /** Renders the feedback form, disabling it when the feedback survey is unavailable. */
 export const HelpContainer = () => {

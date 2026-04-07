@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
-import { useDeckState } from '../../hooks';
+import { useDeckState } from '#hooks';
 import { PlankErrorFallback } from '../Plank';
 
 export const Dialog = () => {

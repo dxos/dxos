@@ -9,8 +9,8 @@ import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
-import { meta } from '../../meta';
-import { type Settings } from '../../types';
+import { meta } from '#meta';
+import { type Settings } from '#types';
 
 export type ScriptPluginSettingsProps = SettingsSurfaceProps<
   Settings.Settings,
@@ -23,44 +23,42 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticat
   const { t } = useTranslation(meta.id);
 
   return (
-    <SettingsForm.Root>
+    <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Group>
-          {/* TODO(wittjosiah): Hide outside of dev environments. */}
-          <SettingsForm.ItemInput title={t('authenticate-action.label')}>
-            <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
-              {t('authenticate-button.label')}
-            </Button>
-          </SettingsForm.ItemInput>
+        {/* TODO(wittjosiah): Hide outside of dev environments. */}
+        <SettingsForm.Item title={t('authenticate-action.label')} description={t('authenticate-action.description')}>
+          <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
+            {t('authenticate-button.label')}
+          </Button>
+        </SettingsForm.Item>
 
-          <SettingsForm.ItemInput title={t('editor-input-mode.label')}>
-            <Select.Root
+        <SettingsForm.Item title={t('editor-input-mode.label')} description={t('editor-input-mode.description')}>
+          <Select.Root
+            disabled={!onSettingsChange}
+            value={settings.editorInputMode ?? 'default'}
+            onValueChange={(value) => {
+              onSettingsChange?.((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
+            }}
+          >
+            <Select.TriggerButton
               disabled={!onSettingsChange}
-              value={settings.editorInputMode ?? 'default'}
-              onValueChange={(value) => {
-                onSettingsChange?.((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
-              }}
-            >
-              <Select.TriggerButton
-                disabled={!onSettingsChange}
-                placeholder={t('select-editor-input-mode.placeholder')}
-              />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {EditorInputModes.map((mode) => (
-                      <Select.Option key={mode} value={mode}>
-                        {t(`settings-editor-input-mode.${mode}.label`)}
-                      </Select.Option>
-                    ))}
-                  </Select.Viewport>
-                  <Select.Arrow />
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </SettingsForm.ItemInput>
-        </SettingsForm.Group>
+              placeholder={t('select-editor-input-mode.placeholder')}
+            />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {EditorInputModes.map((mode) => (
+                    <Select.Option key={mode} value={mode}>
+                      {t(`settings.editor-input-mode.${mode}.label`)}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+                <Select.Arrow />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </SettingsForm.Item>
       </SettingsForm.Section>
-    </SettingsForm.Root>
+    </SettingsForm.Viewport>
   );
 };

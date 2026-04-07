@@ -14,7 +14,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
-import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation';
+import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Panel, Separator, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
@@ -22,7 +22,7 @@ import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { ProcessTree } from './ProcessTree';
 
 export const TracePanel = ({ space }: { space: Space }) => {

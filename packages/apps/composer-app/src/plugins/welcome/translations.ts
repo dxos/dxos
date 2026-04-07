@@ -46,6 +46,9 @@ export const translations = [
         'passkey-setup-toast-action.label': 'Setup',
         'passkey-setup-toast-action.alt': 'Navigate to the passkeys management page.',
 
+        'native-redirect.message': 'Opening in the Composer app...',
+        'open-in-browser-button.label': 'Open here instead',
+
         'open-about.label': 'About Composer',
         'version.label': 'Version {{version}}',
         'published.label': 'Published {{timestamp}}',

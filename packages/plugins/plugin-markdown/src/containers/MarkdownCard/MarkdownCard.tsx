@@ -8,9 +8,9 @@ import { Obj } from '@dxos/echo';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 
-import { MarkdownEditor } from '../../components';
-import { meta } from '../../meta';
-import { Markdown } from '../../types';
+import { MarkdownEditor } from '#components';
+import { meta } from '#meta';
+import { Markdown } from '#types';
 import { getContentSnippet } from '../../util';
 
 import { snippet as snippetExtension } from './snippet';

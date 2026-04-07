@@ -28,7 +28,7 @@ import {
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { type Chess } from '../../types';
+import { type Chess } from '#types';
 
 import { Info, type InfoProps } from './Info';
 import { ExtendedChessModel } from './types';

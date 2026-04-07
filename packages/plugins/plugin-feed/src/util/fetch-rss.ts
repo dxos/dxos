@@ -4,7 +4,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 
-import { Subscription } from '../types';
+import { Subscription } from '#types';
 import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 
 /** Fetches and parses an RSS/Atom feed URL into Subscription objects. */

@@ -20,7 +20,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message, Thread, Transcript } from '@dxos/types';
 
-import { Meeting } from '../../types';
+import { Meeting } from '#types';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 

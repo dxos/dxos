@@ -10,10 +10,10 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
-import { useActorContact } from '../../hooks';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { useActorContact } from '#hooks';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 
 export type MessageArticleProps = ObjectSurfaceProps<
   MessageType.Message,
@@ -43,21 +43,26 @@ export const MessageArticle = ({ role, subject: message, mailbox, attendableId }
 
   const handleReply = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message, mailbox });
     }
-  }, [db, invokePromise, message]);
+  }, [db, invokePromise, message, mailbox]);
 
   const handleReplyAll = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply-all', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, {
+        db,
+        mode: 'reply-all',
+        replyToMessage: message,
+        mailbox,
+      });
     }
-  }, [db, invokePromise, message]);
+  }, [db, invokePromise, message, mailbox]);
 
   const handleForward = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message, mailbox });
     }
-  }, [db, invokePromise, message]);
+  }, [db, invokePromise, message, mailbox]);
 
   return (
     <Message.Root

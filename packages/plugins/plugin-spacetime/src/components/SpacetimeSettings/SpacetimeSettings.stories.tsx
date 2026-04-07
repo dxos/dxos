@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-import { type Settings } from '../../types';
+import { type Settings } from '#types';
 import { SpacetimeSettings } from './SpacetimeSettings';
 
 const DefaultStory = () => {
@@ -20,7 +20,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-spacetime/components/SpacetimeSettings',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

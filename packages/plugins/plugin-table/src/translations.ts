@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {

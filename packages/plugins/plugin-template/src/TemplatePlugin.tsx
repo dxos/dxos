@@ -12,10 +12,11 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
-import { Template } from './types';
+import { Template } from '#types';
+
+import { ReactSurface } from '#capabilities';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

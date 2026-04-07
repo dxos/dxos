@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { isFilesystemFile, type FilesystemEntry, type FilesystemFile } from '../../types';
+import { isFilesystemFile, type FilesystemEntry, type FilesystemFile } from '#types';
 
 /** Collect all markdown file ids from a tree of entries. */
 export const collectMarkdownFileIds = (entries: FilesystemEntry[]): string[] => {

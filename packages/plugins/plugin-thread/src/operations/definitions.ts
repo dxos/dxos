@@ -12,7 +12,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import { Channel } from '../types';
 

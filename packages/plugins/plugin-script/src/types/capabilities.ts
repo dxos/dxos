@@ -7,7 +7,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 
 import { type Compiler } from '../compiler';
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import * as Settings from './Settings';
 

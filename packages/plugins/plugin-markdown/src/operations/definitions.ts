@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 import { trim } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Markdown } from '../types';
 
 const MARKDOWN_OPERATION = `${meta.id}.operation`;

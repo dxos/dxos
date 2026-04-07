@@ -13,7 +13,7 @@ import { SketchSettings } from './SketchSettings';
 const meta = {
   title: 'plugins/plugin-excalidraw/components/SketchSettings',
   component: SketchSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',

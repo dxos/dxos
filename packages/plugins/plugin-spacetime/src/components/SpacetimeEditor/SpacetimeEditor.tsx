@@ -21,7 +21,7 @@ import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
-import { type Scene } from '../../types';
+import { type Scene } from '#types';
 import { handleImport as doImport, handleExport as doExport } from './import-export';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
@@ -150,6 +150,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       if (!selectedObjectId || !scene?.objects) {
         return;
       }
+
       for (const ref of scene.objects) {
         const obj = ref?.target;
         if (obj && (obj as any).id === selectedObjectId) {

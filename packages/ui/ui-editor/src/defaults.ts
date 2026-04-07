@@ -6,6 +6,13 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ThemeExtensionsOptions } from './extensions';
 
+// NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
+export const editorClassNames = (role?: string) =>
+  mx(
+    'dx-attention-surface p-0.5 data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
+    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'dx-container overflow-hidden',
+  );
+
 export const documentSlots: ThemeExtensionsOptions['slots'] = {
   content: {
     /**
@@ -23,10 +30,3 @@ export const compactSlots: ThemeExtensionsOptions['slots'] = {
     className: 'mx-2! w-full',
   },
 };
-
-// NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
-export const stackItemContentEditorClassNames = (role?: string) =>
-  mx(
-    'dx-attention-surface p-0.5 dx-focus-ring-inset data-[toolbar=disabled]:pt-2',
-    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'dx-container overflow-hidden',
-  );

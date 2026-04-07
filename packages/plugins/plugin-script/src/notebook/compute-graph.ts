@@ -6,7 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { log } from '@dxos/log';
 
-import { type Notebook } from '../types';
+import { type Notebook } from '#types';
 
 import { evalScript } from './eval';
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';

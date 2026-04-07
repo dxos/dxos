@@ -11,7 +11,7 @@ import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Message, Transcript } from '@dxos/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const TRANSCRIPT_OPERATION = `${meta.id}.operation`;
 

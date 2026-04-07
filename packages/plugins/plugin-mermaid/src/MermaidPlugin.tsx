@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
 
 import { mermaid } from './extensions';
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const MermaidPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({

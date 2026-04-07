@@ -6,10 +6,10 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
-// NOTE: Must not import from index to avoid pulling in react dependencies.
-import { ComputeRuntime } from '../capabilities/compute-runtime';
-import { meta } from '../meta';
-import { AutomationEvents } from '../types';
+import { ComputeRuntime } from '#capabilities';
+
+import { meta } from '#meta';
+import { AutomationEvents } from '#types';
 
 import { trigger } from './commands';
 

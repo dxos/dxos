@@ -9,15 +9,16 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import { FeedOperation } from './operations';
+import { meta } from '#meta';
+import { FeedOperation } from '#operations';
 import { translations } from './translations';
-import { Subscription } from './types';
+import { Subscription } from '#types';
+
+import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
 
 export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

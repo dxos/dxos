@@ -10,7 +10,7 @@ import { type Client } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 
 import * as Settings from './Settings';
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace ObservabilityCapabilities {
   export const Namespace = Capability.make<string>(`${meta.id}.capability.namespace`);

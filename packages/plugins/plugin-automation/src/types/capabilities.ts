@@ -19,7 +19,7 @@ import type { SpaceId } from '@dxos/keys';
 import type { Blueprint } from '@dxos/blueprints';
 import { AgentService } from '@dxos/assistant';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace AutomationCapabilities {
   /**

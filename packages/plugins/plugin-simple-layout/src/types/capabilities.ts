@@ -7,7 +7,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Label } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type DrawerState = 'closed' | 'open' | 'expanded';
 

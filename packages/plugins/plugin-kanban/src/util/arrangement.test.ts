@@ -10,7 +10,7 @@ import { type View } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
-import { Kanban, UNCATEGORIZED_VALUE } from '../types';
+import { Kanban, UNCATEGORIZED_VALUE } from '#types';
 
 import {
   computeColumnStructure,

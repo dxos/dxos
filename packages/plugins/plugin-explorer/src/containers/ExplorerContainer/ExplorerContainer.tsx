@@ -13,8 +13,8 @@ import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 
-import { D3ForceGraph } from '../../components';
-import { useGraphModel } from '../../hooks';
+import { D3ForceGraph } from '#components';
+import { useGraphModel } from '#hooks';
 
 export type ExplorerContainerProps = ObjectSurfaceProps<View.View>;
 

@@ -21,9 +21,9 @@ import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
 
-import { NavTreeContainer } from '../../containers';
+import { NavTreeContainer } from '#containers';
 import { NavTreePlugin } from '../../NavTreePlugin';
-import { storybookGraphBuilders } from '../../testing';
+import { storybookGraphBuilders } from '#testing';
 import { translations } from '../../translations';
 
 faker.seed(1234);

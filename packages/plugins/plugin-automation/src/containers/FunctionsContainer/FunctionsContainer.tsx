@@ -10,12 +10,12 @@ import { Settings } from '@dxos/react-ui-form';
 
 import { FunctionsPanel } from '../../components/FunctionsPanel';
 import { FunctionsRegistry } from '../../components/FunctionsRegistry';
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const FunctionsContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section
         title={t('functions-verbose.label', { ns: meta.id })}
         description={t('functions.description', { ns: meta.id })}
@@ -28,6 +28,6 @@ export const FunctionsContainer = ({ space }: { space: Space }) => {
       >
         <FunctionsRegistry space={space} />
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

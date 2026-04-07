@@ -26,7 +26,7 @@ import {
   DEFAULT_EDITOR_STATE,
   getSelectedObjectIds,
 } from '../../tools';
-import { type Scene, Model } from '../../types';
+import { type Scene, Model } from '#types';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;
@@ -420,6 +420,15 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             continue;
           }
           objectIds.add(objId);
+
+          // Sync positions of existing objects from ECHO.
+          const existingMesh = meshesRef.current.get(objId);
+          if (existingMesh) {
+            const echoPos = obj.position;
+            existingMesh.position.x = echoPos?.x ?? 0;
+            existingMesh.position.y = echoPos?.y ?? 0;
+            existingMesh.position.z = echoPos?.z ?? 0;
+          }
 
           // Add new objects.
           if (!meshesRef.current.has(objId)) {

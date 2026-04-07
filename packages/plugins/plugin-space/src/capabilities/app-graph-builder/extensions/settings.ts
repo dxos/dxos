@@ -10,7 +10,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Node } from '@dxos/plugin-graph';
 
-import { meta } from '../../../meta';
+import { meta } from '#meta';
 
 //
 // Extension Factory

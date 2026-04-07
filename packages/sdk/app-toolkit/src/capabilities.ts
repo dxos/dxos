@@ -193,6 +193,18 @@ export namespace AppCapabilities {
   );
 
   /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
+  );
+
+  /**
    * Resolves a qualified graph path to a DXN.
    * Each plugin recognizes its own path patterns and returns the corresponding DXN.
    * Returns None if the path is not recognized by this resolver.

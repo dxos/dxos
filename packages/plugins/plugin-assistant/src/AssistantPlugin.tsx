@@ -19,6 +19,12 @@ import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { HasSubject } from '@dxos/types';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { AssistantEvents } from '#types';
+import { AssistantOperation } from '#operations';
+import * as Option from 'effect/Option';
+
 import {
   AiService,
   AppGraphBuilder,
@@ -32,12 +38,7 @@ import {
   ReactSurface,
   Settings,
   Toolkit,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { AssistantOperation } from './operations';
-import * as Option from 'effect/Option';
+} from '#capabilities';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

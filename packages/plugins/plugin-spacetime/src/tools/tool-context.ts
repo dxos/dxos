@@ -6,7 +6,7 @@ import { type ArcRotateCamera, type HighlightLayer, type Mesh, type Scene as Bab
 import type { Manifold } from 'manifold-3d';
 
 import { type getManifold } from '../engine';
-import { type Scene, type Model } from '../types';
+import { type Scene, type Model } from '#types';
 
 import { type EditorState } from './editor-state';
 

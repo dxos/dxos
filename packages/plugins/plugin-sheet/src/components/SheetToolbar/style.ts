@@ -14,9 +14,9 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type SheetModel } from '../../model';
-import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '../../types';
+import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '#types';
 import { useSheetContext } from '../SheetRoot';
 
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
@@ -119,7 +119,7 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         key: 'style',
         value: styleValue as StyleValue,
         icon,
-        label: [`range value ${styleValue} label`, { ns: meta.id }],
+        label: [`range-value-${styleValue}.label`, { ns: meta.id }],
         checked: !!state[styleValue as StyleValue],
       },
     );

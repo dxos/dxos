@@ -12,7 +12,7 @@ import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { type Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 
-import { AutomationCapabilities } from '../types';
+import { AutomationCapabilities } from '#types';
 import { useComputeRuntime } from './useComputeRuntime';
 
 /**
