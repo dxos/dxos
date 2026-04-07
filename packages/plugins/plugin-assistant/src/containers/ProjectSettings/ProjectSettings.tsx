@@ -102,8 +102,8 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
           <Input.Label>{t('subscriptions.label')}</Input.Label>
         </Input.Root>
         {subscribableObjects.map((object) => (
-          <Input.Root>
-            <div key={object.id} className='flex items-center gap-2'>
+          <Input.Root key={object.id}>
+            <div className='flex items-center gap-2'>
               <Input.Checkbox
                 checked={existingSubscripts.includes(object)}
                 onCheckedChange={(checked) => {

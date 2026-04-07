@@ -9,12 +9,12 @@ import { Process } from '@dxos/functions-runtime';
 import { Icon, ScrollArea, Treegrid } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-export type ProceesTreeProps = {
+export type ProcessTreeProps = {
   processes: readonly Process.Info[];
   onProcessSelect?: (process: Process.Info) => void;
 };
 
-export const ProcessTree = composable<HTMLDivElement, ProceesTreeProps>(
+export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
   ({ processes, onProcessSelect, ...props }, forwardedRef) => {
     const fileterdProcesses: Process.Info[] = [
       ...processes.filter((process) => [Process.State.RUNNING, Process.State.HYBERNATING].includes(process.state)),
