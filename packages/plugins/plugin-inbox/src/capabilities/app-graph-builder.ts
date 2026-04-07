@@ -7,23 +7,31 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { type Feed, Filter, Obj, Query } from '@dxos/echo';
-import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { type Feed, Filter, Key, Obj, Query } from '@dxos/echo';
+import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { MAILBOXES_SECTION_TYPE, MAILBOX_ALL_MAIL_TYPE, MAILBOX_DRAFTS_TYPE } from '../constants';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
+import { Calendar, DraftMessage, Mailbox } from '#types';
+
+import {
+  MAILBOXES_SECTION_TYPE,
+  MAILBOX_ALL_MAIL_TYPE,
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_DRAFTS_TYPE,
+} from '../constants';
 import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
-import { Calendar, Mailbox } from '#types';
 
 const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
 
@@ -32,11 +40,6 @@ const whenSpace = (node: Node.Node): Option.Option<Space> =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
@@ -113,12 +116,11 @@ export default Capability.makeModule(
                   {
                     id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
-                    data: null,
+                    data: MAILBOX_DRAFTS_NODE_DATA,
                     properties: {
                       label: ['drafts.label', { ns: meta.id }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
-                      role: 'branch',
                       mailbox,
                     },
                   },
@@ -169,17 +171,23 @@ export default Capability.makeModule(
           }
 
           const mailboxDxn = Obj.getDXN(mailbox).toString();
-          const allMessages = get(AtomQuery.make(db, Filter.type(Message.Message)));
-          const drafts = allMessages.filter((message) => {
-            get(AtomObj.make(message));
-            return message.properties?.mailbox === mailboxDxn;
-          });
-
-          return Effect.succeed(
-            drafts
-              .map((draft: Message.Message) => createObjectNode({ db, object: draft, resolve, disposition: undefined }))
-              .filter((node): node is NonNullable<typeof node> => node !== null),
-          );
+          const messageId = get(selectedId(node.id));
+          const message = messageId
+            ? get(AtomQuery.make<Message.Message>(db, Query.select(Filter.id(messageId))))[0]
+            : undefined;
+          const draft = message && DraftMessage.belongsTo(message, mailboxDxn) ? message : undefined;
+          return Effect.succeed([
+            {
+              id: linkedSegment('message'),
+              type: PLANK_COMPANION_TYPE,
+              data: draft ?? 'message',
+              properties: {
+                label: ['message.label', { ns: meta.id }],
+                icon: 'ph--envelope-open--regular',
+                disposition: 'hidden',
+              },
+            },
+          ]);
         },
         actions: (node) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
@@ -224,7 +232,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: 'message',
+              id: linkedSegment('message'),
               type: PLANK_COMPANION_TYPE,
               data: message ?? 'message',
               properties: {
@@ -235,6 +243,77 @@ export default Capability.makeModule(
             },
           ]);
         },
+      }),
+
+      // Feed object node extension: creates hidden, navigable nodes for mailbox messages.
+      // Uses ~ prefix for attention propagation to the parent mailbox.
+      GraphBuilder.createExtension({
+        id: `${meta.id}.feed-object-node`,
+        match: (node) => {
+          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
+          return node.type === Mailbox.Mailbox.typename && mailbox
+            ? Option.some({ mailbox, nodeId: node.id })
+            : Option.none();
+        },
+        resolver: (qualifiedId, get) =>
+          Effect.gen(function* () {
+            const segments = qualifiedId.split('/');
+            if (!isLinkedSegment(qualifiedId)) {
+              return null;
+            }
+
+            const messageId = getLinkedVariant(qualifiedId);
+            const spaceId = getSpaceIdFromPath(qualifiedId);
+            const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
+            const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
+
+            if (!spaceId || !mailboxId || !Key.ObjectId.isValid(messageId)) {
+              return null;
+            }
+
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const space = client.spaces.get(spaceId);
+            if (!space) {
+              return null;
+            }
+
+            const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
+            const mailbox = mailboxes.find((m: Mailbox.Mailbox) => m.id === mailboxId);
+            if (!mailbox) {
+              return null;
+            }
+
+            const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+            const mailboxDxn = Obj.getDXN(mailbox).toString();
+
+            // TODO(wittjosiah): This is awkward, clean it up.
+            let message: Message.Message | undefined;
+            if (feed) {
+              message = get(
+                AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId)).from(feed)),
+              )[0];
+            }
+            if (!message) {
+              const fromDb = get(AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId))))[0];
+              if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxn)) {
+                message = fromDb;
+              }
+            }
+            if (!message) {
+              return null;
+            }
+
+            return {
+              id: qualifiedId,
+              type: Message.Message.typename,
+              data: message,
+              properties: {
+                label: message.properties?.subject ?? ['message.label', { ns: meta.id }],
+                icon: 'ph--envelope-open--regular',
+                disposition: 'hidden',
+              },
+            };
+          }),
       }),
 
       GraphBuilder.createExtension({
@@ -255,7 +334,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: 'event',
+              id: linkedSegment('event'),
               type: PLANK_COMPANION_TYPE,
               data: event ?? 'event',
               properties: {

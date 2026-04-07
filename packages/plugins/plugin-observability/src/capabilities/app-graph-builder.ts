@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
@@ -21,7 +22,7 @@ export default Capability.makeModule(
         connector: (node) =>
           Effect.succeed([
             {
-              id: companionSegment('help'),
+              id: linkedSegment('help'),
               type: DECK_COMPANION_TYPE,
               data: null,
               properties: {

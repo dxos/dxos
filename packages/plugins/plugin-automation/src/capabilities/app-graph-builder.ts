@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Script } from '@dxos/functions';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -54,7 +55,7 @@ export default Capability.makeModule(
         connector: (script) =>
           Effect.succeed([
             {
-              id: companionSegment('automation'),
+              id: linkedSegment('automation'),
               type: PLANK_COMPANION_TYPE,
               data: 'automation',
               properties: {

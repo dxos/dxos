@@ -6,14 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  companionId,
-  companionSegment,
-  getObjectPathFromObject,
-  getSpacePath,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
@@ -53,7 +47,7 @@ export default Capability.makeModule(
 
         return Effect.succeed([
           {
-            id: companionSegment('presenter'),
+            id: linkedSegment('presenter'),
             data: { type: meta.id, object },
             type: PLANK_COMPANION_TYPE,
             properties: {
@@ -84,7 +78,7 @@ export default Capability.makeModule(
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const presenterId = companionId(objectPath, 'presenter');
+              const presenterId = `${objectPath}/${linkedSegment('presenter')}`;
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,

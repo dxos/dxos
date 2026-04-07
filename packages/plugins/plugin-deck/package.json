@@ -19,6 +19,7 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing/index.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -100,6 +101,7 @@
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",

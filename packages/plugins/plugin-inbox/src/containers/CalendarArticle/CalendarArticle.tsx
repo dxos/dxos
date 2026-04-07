@@ -6,7 +6,8 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { companionSegment, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
@@ -71,7 +72,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
             selection: { mode: 'single', id: action.eventId },
           });
 
-          const companion = companionSegment('event');
+          const companion = linkedSegment('event');
           if (layout.mode === 'simple') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,

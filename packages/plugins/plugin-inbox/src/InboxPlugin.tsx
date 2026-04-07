@@ -10,6 +10,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
@@ -36,7 +37,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addMetadataModule({
     metadata: [
       {

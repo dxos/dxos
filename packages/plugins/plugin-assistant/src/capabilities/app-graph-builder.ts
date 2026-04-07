@@ -3,15 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import { pipe } from 'effect/Function';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  companionSegment,
-  getActiveSpace,
-  getPersonalSpace,
-  LayoutOperation,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, getActiveSpace, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -24,8 +20,9 @@ import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/typ
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { ASSISTANT_DIALOG, meta } from '#meta';
+import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 import { AssistantOperation } from '#operations';
 
@@ -128,36 +125,25 @@ export default Capability.makeModule(
         connector: (object, get) =>
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
-            const currentChatState = state.currentChat[Obj.getDXN(object).toString()];
-            // If no state, continue to allow chat initialization.
-            if (!currentChatState) {
-              return [
-                {
-                  id: 'assistant-chat',
-                  type: PLANK_COMPANION_TYPE,
-                  data: 'assistant-chat',
-                  properties: {
-                    label: ['assistant-chat.label', { ns: meta.id }],
-                    icon: 'ph--sparkle--regular',
-                    position: 'hoist',
-                    disposition: 'hidden',
-                  },
-                },
-              ];
-            }
+            const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
+            const objectDxn = Obj.getDXN(object).toString();
 
-            const db = Obj.getDatabase(object);
-            const currentChatDxn = DXN.tryParse(currentChatState);
-            const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
-            const currentChat = currentChatRef ? get(AtomObj.make(currentChatRef as Ref.Ref<Obj.Unknown>)) : undefined;
+            // Resolve chat from persisted state or transient cache.
+            const chat = pipe(
+              Option.fromNullable(state.currentChat[objectDxn]),
+              Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryParse(dxnStr))),
+              Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
+              Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
+              Option.filter(Obj.isObject),
+              Option.orElse(() => pipe(Option.fromNullable(cache[objectDxn]), Option.filter(Obj.isObject))),
+              Option.getOrNull,
+            );
 
-            // Return the resolved chat object, or fall back to 'assistant-chat' string if it can't be resolved.
-            // This ensures the companion remains visible even during transient states.
             return [
               {
-                id: 'assistant-chat',
+                id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
                 type: PLANK_COMPANION_TYPE,
-                data: Obj.isObject(currentChat) ? currentChat : 'assistant-chat',
+                data: chat,
                 properties: {
                   label: ['assistant-chat.label', { ns: meta.id }],
                   icon: 'ph--sparkle--regular',
@@ -196,7 +182,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: companionSegment('trace'),
+              id: linkedSegment('trace'),
               type: DECK_COMPANION_TYPE,
               data: 'trace' as const,
               properties: {

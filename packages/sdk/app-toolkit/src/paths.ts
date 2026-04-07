@@ -7,40 +7,6 @@ import { Key, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 /**
- * Prefix for companion node segment IDs (e.g., `~settings`, `~comments`).
- * Chosen from RFC 1738's `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
- */
-export const COMPANION_PREFIX = '~';
-
-/**
- * Build a companion segment ID for use as a node ID in graph extensions.
- */
-export const companionSegment = (variant: string): string => `${COMPANION_PREFIX}${variant}`;
-
-/**
- * Build a fully qualified companion node ID from a parent path and variant name.
- */
-export const companionId = (parentPath: string, variant: string): string =>
-  `${parentPath}/${companionSegment(variant)}`;
-
-/**
- * Check whether a qualified ID represents a companion node.
- */
-export const isCompanion = (qualifiedId: string): boolean => {
-  const lastSegment = qualifiedId.split('/').pop() ?? '';
-  return lastSegment.startsWith(COMPANION_PREFIX);
-};
-
-/**
- * Extract the companion variant name from a qualified companion node ID.
- * Takes the last `/`-separated segment and strips the optional `~` prefix.
- */
-export const getCompanionVariant = (qualifiedId: string): string => {
-  const lastSegment = qualifiedId.split('/').pop() ?? '';
-  return lastSegment.startsWith(COMPANION_PREFIX) ? lastSegment.slice(COMPANION_PREFIX.length) : lastSegment;
-};
-
-/**
  * Prefix for pinned (non-space) workspace IDs in the graph.
  */
 const PINNED_WORKSPACE_PREFIX = '!';

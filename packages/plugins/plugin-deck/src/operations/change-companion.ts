@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { getCompanionVariant } from '@dxos/app-toolkit';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Operation } from '@dxos/operation';
 
 import { ChangeCompanion } from './definitions';
@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof ChangeCompanion> = ChangeCompanion.p
           updateActiveDeck(state, { companionOpen: false }),
         );
       } else {
-        const variant = getCompanionVariant(input.companion);
+        const variant = getLinkedVariant(input.companion);
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, {
             companionOpen: true,

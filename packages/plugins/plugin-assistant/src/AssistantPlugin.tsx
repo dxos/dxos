@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Chat, Memory, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -30,6 +30,7 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  CompanionChatProvisioner,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
@@ -203,6 +204,14 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Use a different event.
     activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      AppActivationEvents.LayoutReady,
+    ),
+    activate: CompanionChatProvisioner,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
