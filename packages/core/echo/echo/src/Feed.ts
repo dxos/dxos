@@ -211,8 +211,14 @@ export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Ef
 //                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
 // ... unify for Database and schema queries.
 export const query: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
+  <Q extends Query.Any>(
+    feed: Feed,
+    query: Q,
+  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
+  <F extends Filter.Any>(
+    feed: Feed,
+    filter: F,
+  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
   FeedService.pipe(Effect.map((service) => service.query(feed, queryOrFilter as any) as QueryResult.QueryResult<any>));
 
