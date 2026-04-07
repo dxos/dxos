@@ -33,25 +33,25 @@ state -> store -> tlschema -> editor -> tldraw
                               state-react (bridges signals to React)
 ```
 
-| Package | Purpose |
-|---------|---------|
-| `state` | Custom signals/reactivity library (Atom, Computed, EffectScheduler, transactions). |
-| `state-react` | React bindings: `track()` HOC, `useValue()` hook via `useSyncExternalStore`. |
-| `store` | Generic reactive record store with history, change listeners, side effects, validation, serialization. |
-| `tlschema` | Schema definitions for all record types (shapes, pages, cameras, instances, assets, bindings). Includes migrations and validation. |
-| `validate` | Runtime validation library used by schema and store. |
-| `editor` | Core engine: `Editor` class, ShapeUtil/BindingUtil/AssetUtil, tool state machine, managers, geometry primitives (Box, Vec, Mat, Geometry2d), rendering pipeline. |
-| `tldraw` | Main entry point: bundles default shapes, tools, bindings, UI, canvas components, and the `<Tldraw />` React component. |
-| `sync-core` | Core sync protocol logic for multiplayer collaboration. |
-| `sync` | Higher-level sync layer with Cloudflare Durable Objects support. |
-| `utils` | Shared utilities: `IndexKey` (fractional indexing), `uniqueId`, `compact`, `debounce`, `FileHelpers`, `PerformanceTracker`. |
-| `assets` | Static assets (fonts, icons) for the default UI. |
-| `driver` | Platform-specific driver abstraction. |
-| `mermaid` | Mermaid diagram rendering integration. |
-| `dotcom-shared` | Shared utilities for tldraw.com hosted product. |
-| `worker-shared` | Shared utilities for Cloudflare Worker deployments. |
-| `create-tldraw` | CLI scaffolding tool (`npx create-tldraw@latest`). |
-| `namespaced-tldraw` | Namespaced variant of the tldraw package. |
+| Package             | Purpose                                                                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `state`             | Custom signals/reactivity library (Atom, Computed, EffectScheduler, transactions).                                                                               |
+| `state-react`       | React bindings: `track()` HOC, `useValue()` hook via `useSyncExternalStore`.                                                                                     |
+| `store`             | Generic reactive record store with history, change listeners, side effects, validation, serialization.                                                           |
+| `tlschema`          | Schema definitions for all record types (shapes, pages, cameras, instances, assets, bindings). Includes migrations and validation.                               |
+| `validate`          | Runtime validation library used by schema and store.                                                                                                             |
+| `editor`            | Core engine: `Editor` class, ShapeUtil/BindingUtil/AssetUtil, tool state machine, managers, geometry primitives (Box, Vec, Mat, Geometry2d), rendering pipeline. |
+| `tldraw`            | Main entry point: bundles default shapes, tools, bindings, UI, canvas components, and the `<Tldraw />` React component.                                          |
+| `sync-core`         | Core sync protocol logic for multiplayer collaboration.                                                                                                          |
+| `sync`              | Higher-level sync layer with Cloudflare Durable Objects support.                                                                                                 |
+| `utils`             | Shared utilities: `IndexKey` (fractional indexing), `uniqueId`, `compact`, `debounce`, `FileHelpers`, `PerformanceTracker`.                                      |
+| `assets`            | Static assets (fonts, icons) for the default UI.                                                                                                                 |
+| `driver`            | Platform-specific driver abstraction.                                                                                                                            |
+| `mermaid`           | Mermaid diagram rendering integration.                                                                                                                           |
+| `dotcom-shared`     | Shared utilities for tldraw.com hosted product.                                                                                                                  |
+| `worker-shared`     | Shared utilities for Cloudflare Worker deployments.                                                                                                              |
+| `create-tldraw`     | CLI scaffolding tool (`npx create-tldraw@latest`).                                                                                                               |
+| `namespaced-tldraw` | Namespaced variant of the tldraw package.                                                                                                                        |
 
 ---
 
@@ -98,9 +98,9 @@ Writable signal -- the fundamental reactive primitive.
 import { atom } from '@tldraw/state';
 
 const count = atom('count', 0);
-count.get();        // 0 (creates dependency if inside computed/effect)
-count.set(1);       // triggers dependents
-count.update(n => n + 1);  // functional update
+count.get(); // 0 (creates dependency if inside computed/effect)
+count.set(1); // triggers dependents
+count.update((n) => n + 1); // functional update
 ```
 
 - Supports custom equality via `isEqual` option.
@@ -115,7 +115,7 @@ Derived signal -- lazily evaluated, cached until dependencies change.
 import { computed } from '@tldraw/state';
 
 const doubled = computed('doubled', () => count.get() * 2);
-doubled.get();  // 2 (recomputes only when count changes)
+doubled.get(); // 2 (recomputes only when count changes)
 ```
 
 - Uses parent-tracking: captures which signals are read during computation via `startCapturingParents()` / `stopCapturingParents()`.
@@ -159,10 +159,10 @@ transact(() => {
 Records are stored in an `AtomMap<Id, R>` -- each record is its own atom, enabling fine-grained reactivity.
 
 ```ts
-store.get(id);           // Reactive read (tracks dependency)
-store.unsafeGetWithoutCapture(id);  // Non-reactive read
-store.put([record]);     // Add or update
-store.remove([id]);      // Delete
+store.get(id); // Reactive read (tracks dependency)
+store.unsafeGetWithoutCapture(id); // Non-reactive read
+store.put([record]); // Add or update
+store.remove([id]); // Delete
 ```
 
 ### Change Tracking
@@ -188,9 +188,9 @@ store.listen(
     // entry.source: 'user' | 'remote'
   },
   {
-    source: 'user',        // 'user' | 'remote' | 'all'
-    scope: 'document',     // 'document' | 'session' | 'presence' | 'all'
-  }
+    source: 'user', // 'user' | 'remote' | 'all'
+    scope: 'document', // 'document' | 'session' | 'presence' | 'all'
+  },
 );
 ```
 
@@ -208,7 +208,7 @@ store.sideEffects.registerBeforeCreateHandler('shape', (record, source) => {
 });
 
 store.sideEffects.registerBeforeDeleteHandler('shape', (record) => {
-  return false;  // Prevent deletion.
+  return false; // Prevent deletion.
 });
 ```
 
@@ -217,9 +217,9 @@ Available hooks: `beforeCreate`, `afterCreate`, `beforeChange`, `afterChange`, `
 ### Serialization
 
 ```ts
-store.getStoreSnapshot(scope);     // Returns { store, schema }
-store.loadStoreSnapshot(snapshot);  // Migrates then replaces all data
-store.serialize(scope);             // Data only, filtered by scope
+store.getStoreSnapshot(scope); // Returns { store, schema }
+store.loadStoreSnapshot(snapshot); // Migrates then replaces all data
+store.serialize(scope); // Data only, filtered by scope
 ```
 
 ### Computed Caches
@@ -257,21 +257,21 @@ const editor = new Editor({
 
 ### 13 Manager Subsystems
 
-| Manager | Responsibility |
-|---------|---------------|
-| `ClickManager` | Click detection and double-click. |
-| `EdgeScrollManager` | Auto-scroll when dragging near edges. |
-| `FocusManager` | Editor focus tracking. |
-| `FontManager` | Font loading. |
-| `HistoryManager` | Undo/redo stacks. |
-| `InputsManager` | Pointer/keyboard state. |
-| `ScribbleManager` | Free-drawing scribble effects. |
-| `SnapManager` | Snapping guides. |
-| `SpatialIndexManager` | R-tree spatial indexing for shapes. |
-| `TextManager` | Text measurement. |
-| `ThemeManager` | Theme/color scheme management. |
-| `TickManager` | `requestAnimationFrame` tick loop. |
-| `UserPreferencesManager` | User settings. |
+| Manager                  | Responsibility                        |
+| ------------------------ | ------------------------------------- |
+| `ClickManager`           | Click detection and double-click.     |
+| `EdgeScrollManager`      | Auto-scroll when dragging near edges. |
+| `FocusManager`           | Editor focus tracking.                |
+| `FontManager`            | Font loading.                         |
+| `HistoryManager`         | Undo/redo stacks.                     |
+| `InputsManager`          | Pointer/keyboard state.               |
+| `ScribbleManager`        | Free-drawing scribble effects.        |
+| `SnapManager`            | Snapping guides.                      |
+| `SpatialIndexManager`    | R-tree spatial indexing for shapes.   |
+| `TextManager`            | Text measurement.                     |
+| `ThemeManager`           | Theme/color scheme management.        |
+| `TickManager`            | `requestAnimationFrame` tick loop.    |
+| `UserPreferencesManager` | User settings.                        |
 
 ### Key Computed Properties
 
@@ -326,14 +326,14 @@ Every shape extends `TLBaseShape<Type, Props>`:
 
 ```ts
 type TLBaseShape<Type, Props> = {
-  id: TLShapeId;        // 'shape:uniqueId'
+  id: TLShapeId; // 'shape:uniqueId'
   typeName: 'shape';
-  type: Type;            // String literal discriminator
+  type: Type; // String literal discriminator
   x: number;
   y: number;
   rotation: number;
-  index: IndexKey;       // Fractional indexing for ordering
-  parentId: TLParentId;  // page:* or shape:* (for frames/groups)
+  index: IndexKey; // Fractional indexing for ordering
+  parentId: TLParentId; // page:* or shape:* (for frames/groups)
   isLocked: boolean;
   opacity: number;
   props: Props;
@@ -345,9 +345,9 @@ Props use `@tldraw/validate` validators and `StyleProp` for style-based properti
 
 ```ts
 const geoShapeProps: RecordProps<TLGeoShape> = {
-  geo: GeoShapeGeoStyle,      // StyleProp enum
-  w: T.nonZeroNumber,          // Plain validator
-  color: DefaultColorStyle,    // StyleProp (sticky across creations)
+  geo: GeoShapeGeoStyle, // StyleProp enum
+  w: T.nonZeroNumber, // Plain validator
+  color: DefaultColorStyle, // StyleProp (sticky across creations)
   richText: richTextValidator,
 };
 ```
@@ -416,16 +416,16 @@ Tools are hierarchical state machines built on `StateNode`.
 ```ts
 abstract class StateNode {
   static id: string;
-  static initial?: string;          // Default child state
-  static children(): StateNode[];   // Child state constructors
-  static isLockable?: boolean;      // Stay active after shape creation
+  static initial?: string; // Default child state
+  static children(): StateNode[]; // Child state constructors
+  static isLockable?: boolean; // Stay active after shape creation
 
   type: 'root' | 'branch' | 'leaf';
   parent: StateNode;
 
   enter(info, from): void;
   exit(info, to): void;
-  transition(childId, info): void;  // Supports dotted paths: 'select.resizing'
+  transition(childId, info): void; // Supports dotted paths: 'select.resizing'
 }
 ```
 
@@ -464,7 +464,9 @@ Standard tool for creating box-like shapes:
 ```ts
 abstract class BaseBoxShapeTool extends StateNode {
   static initial = 'idle';
-  static children() { return [Idle, Pointing]; }
+  static children() {
+    return [Idle, Pointing];
+  }
   abstract shapeType: string;
   onCreate?(shape: TLShape | null): void;
 }
@@ -591,9 +593,9 @@ const count = useValue('selection-count', () => editor.getSelectedShapeIds().len
 
 ```tsx
 <Tldraw
-  persistenceKey="my-drawing"        // Auto-persist to localStorage
-  snapshot={savedSnapshot}           // Load from snapshot
-  migrations={[myMigrations]}       // Custom migrations
+  persistenceKey='my-drawing' // Auto-persist to localStorage
+  snapshot={savedSnapshot} // Load from snapshot
+  migrations={[myMigrations]} // Custom migrations
 />
 ```
 
@@ -623,8 +625,10 @@ const overrides: TLUiOverrides = {
     actions['my-action'] = {
       id: 'my-action',
       label: 'My Action',
-      kbd: '$m',  // Cmd+M
-      onSelect(source) { /* ... */ },
+      kbd: '$m', // Cmd+M
+      onSelect(source) {
+        /* ... */
+      },
     };
     return actions;
   },
@@ -634,7 +638,9 @@ const overrides: TLUiOverrides = {
       icon: 'my-icon',
       label: 'My Tool',
       kbd: 't',
-      onSelect(source) { editor.setCurrentTool('my-tool'); },
+      onSelect(source) {
+        editor.setCurrentTool('my-tool');
+      },
     };
     return tools;
   },
@@ -660,9 +666,9 @@ Uses `hotkeys-js`. Syntax: `!` = Shift, `$` = Cmd/Ctrl, `?` = Alt.
 
 ```ts
 // Examples:
-'$z'       // Cmd+Z (undo)
-'!$z'      // Cmd+Shift+Z (redo)
-'$i'       // Cmd+I (insert embed)
+'$z'; // Cmd+Z (undo)
+'!$z'; // Cmd+Shift+Z (redo)
+'$i'; // Cmd+I (insert embed)
 ```
 
 ---
@@ -678,7 +684,7 @@ localStorage.setItem('drawing', JSON.stringify(snapshot));
 
 // Load
 const snapshot = JSON.parse(localStorage.getItem('drawing'));
-store.loadStoreSnapshot(snapshot);  // Runs migrations automatically
+store.loadStoreSnapshot(snapshot); // Runs migrations automatically
 ```
 
 ### Sync Protocol (v8)
@@ -687,20 +693,20 @@ Client-server WebSocket protocol with optimistic concurrency:
 
 **Client -> Server:**
 
-| Message | Purpose |
-|---------|---------|
+| Message   | Purpose                                        |
+| --------- | ---------------------------------------------- |
 | `connect` | `{ lastServerClock, protocolVersion, schema }` |
-| `push` | `{ clientClock, diff?, presence? }` |
-| `ping` | Keepalive |
+| `push`    | `{ clientClock, diff?, presence? }`            |
+| `ping`    | Keepalive                                      |
 
 **Server -> Client:**
 
-| Message | Purpose |
-|---------|---------|
-| `connect` | `{ hydrationType, diff, serverClock, schema, isReadonly }` |
-| `patch` | `{ diff: NetworkDiff, serverClock }` |
+| Message       | Purpose                                                                |
+| ------------- | ---------------------------------------------------------------------- |
+| `connect`     | `{ hydrationType, diff, serverClock, schema, isReadonly }`             |
+| `patch`       | `{ diff: NetworkDiff, serverClock }`                                   |
 | `push_result` | `{ clientClock, action: 'commit' \| 'discard' \| { rebaseWithDiff } }` |
-| `data` | Batched `patch` + `push_result` messages |
+| `data`        | Batched `patch` + `push_result` messages                               |
 
 **NetworkDiff** is a compact wire format:
 
@@ -779,13 +785,19 @@ const migrations = createShapePropsMigrationSequence({
   sequence: [
     {
       id: versions.AddColor,
-      up: (props) => { props.color = 'black'; },
-      down: (props) => { delete props.color; },
+      up: (props) => {
+        props.color = 'black';
+      },
+      down: (props) => {
+        delete props.color;
+      },
     },
     {
       id: versions.AddLabel,
-      up: (props) => { props.label = ''; },
-      down: 'retired',  // No longer supported
+      up: (props) => {
+        props.label = '';
+      },
+      down: 'retired', // No longer supported
     },
   ],
 });
@@ -884,13 +896,13 @@ React hook managing adapter lifecycle:
 
 ### Custom UI Components
 
-| Component | Description |
-|-----------|-------------|
-| `MeshGrid` | SVG crosshatch grid with multi-level zoom steps. Uses `React.useId()` for unique pattern IDs. |
-| `DottedGrid` | SVG dotted grid, same zoom steps. |
-| `CustomMenu` | Wraps `DefaultQuickActions`, adds "Snap" action. |
-| `CustomStylePanel` | Wraps `DefaultStylePanelContent`. |
-| `CustomToolbar` | Lists standard toolbar items, splices in thread (comment) tool at position 8. |
+| Component          | Description                                                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| `MeshGrid`         | SVG crosshatch grid with multi-level zoom steps. Uses `React.useId()` for unique pattern IDs. |
+| `DottedGrid`       | SVG dotted grid, same zoom steps.                                                             |
+| `CustomMenu`       | Wraps `DefaultQuickActions`, adds "Snap" action.                                              |
+| `CustomStylePanel` | Wraps `DefaultStylePanelContent`.                                                             |
+| `CustomToolbar`    | Lists standard toolbar items, splices in thread (comment) tool at position 8.                 |
 
 ### Tldraw Configuration
 
@@ -1007,4 +1019,4 @@ React hook managing adapter lifecycle:
 
 ---
 
-*Generated 2026-04-05. Based on tldraw v3.x (github.com/tldraw/tldraw) and DXOS plugin-sketch (@dxos/plugin-sketch v0.8.3).*
+_Generated 2026-04-05. Based on tldraw v3.x (github.com/tldraw/tldraw) and DXOS plugin-sketch (@dxos/plugin-sketch v0.8.3)._
