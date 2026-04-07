@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-thread/components/ThreadSettings',
   component: ThreadSettings,
   tags: ['settings'],
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
