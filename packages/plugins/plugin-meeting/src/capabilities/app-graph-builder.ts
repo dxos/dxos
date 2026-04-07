@@ -6,13 +6,12 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, companionSegment } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -92,17 +91,13 @@ export default Capability.makeModule(
           }
 
           return [
-            {
+            AppNode.makeCompanion({
               id: 'meeting-thread',
-              type: PLANK_COMPANION_TYPE,
+              label: ['meeting-thread.label', { ns: meta.id }],
+              icon: 'ph--chat-text--regular',
               data: get(AtomObj.make(meeting.thread)),
-              properties: {
-                label: ['meeting-thread.label', { ns: meta.id }],
-                icon: 'ph--chat-text--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
+              position: 'hoist',
+            }),
           ];
         }),
       }),
@@ -123,17 +118,13 @@ export default Capability.makeModule(
           const data = get(activeMeetingOrPlaceholderFamily(store));
 
           return [
-            {
+            AppNode.makeCompanion({
               id: 'meeting',
-              type: PLANK_COMPANION_TYPE,
+              label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
+              icon: 'ph--note--regular',
               data,
-              properties: {
-                label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
-                icon: 'ph--note--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
+              position: 'hoist',
+            }),
           ];
         }),
       }),
@@ -199,17 +190,13 @@ export default Capability.makeModule(
           }
 
           return [
-            {
+            AppNode.makeCompanion({
               id: 'transcript',
-              type: PLANK_COMPANION_TYPE,
+              label: ['transcript-companion.label', { ns: meta.id }],
+              icon: 'ph--subtitles--regular',
               data: get(AtomObj.make(meeting.transcript)),
-              properties: {
-                label: ['transcript-companion.label', { ns: meta.id }],
-                icon: 'ph--subtitles--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
+              position: 'hoist',
+            }),
           ];
         }),
       }),
@@ -219,17 +206,13 @@ export default Capability.makeModule(
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: 'transcript',
-              type: PLANK_COMPANION_TYPE,
+              label: ['transcript-companion.label', { ns: meta.id }],
+              icon: 'ph--subtitles--regular',
               data: get(AtomObj.make(meeting.transcript)),
-              properties: {
-                label: ['transcript-companion.label', { ns: meta.id }],
-                icon: 'ph--subtitles--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
+              position: 'hoist',
+            }),
           ]),
       }),
     ]);

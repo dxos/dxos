@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
 import { log } from '@dxos/log';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { faker } from '@dxos/random';
 
 export const storybookGraphBuilders = (): BuilderExtensions => {
@@ -49,7 +49,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            {
+            Node.make({
               id: 'user-account',
               type: 'user-account',
               properties: {
@@ -62,32 +62,32 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 status: 'active',
               },
               nodes: [
-                {
+                Node.make({
                   id: 'profile',
                   type: 'profile',
                   properties: {
                     label: 'Profile',
                     icon: 'ph--user--regular',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: 'devices',
                   type: 'devices',
                   properties: {
                     label: 'Devices',
                     icon: 'ph--devices--regular',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: 'security',
                   type: 'security',
                   properties: {
                     label: 'Security',
                     icon: 'ph--key--regular',
                   },
-                },
+                }),
               ],
-            },
+            }),
           ]),
       }),
       // Create space (workspace) nodes directly under root.
@@ -111,16 +111,18 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               return value;
             });
 
-            return Array.from({ length: get(count) }, (_, i) => ({
-              id: `space-${i}`,
-              type: 'space',
-              properties: getProperties(`space-${i}`, {
-                label: `Space ${i}`,
-                icon: faker.properties.icon(),
-                hue: faker.properties.hue(),
-                disposition: 'workspace',
+            return Array.from({ length: get(count) }, (_, i) =>
+              Node.make({
+                id: `space-${i}`,
+                type: 'space',
+                properties: getProperties(`space-${i}`, {
+                  label: `Space ${i}`,
+                  icon: faker.properties.icon(),
+                  hue: faker.properties.hue(),
+                  disposition: 'workspace',
+                }),
               }),
-            }));
+            );
           }),
       }),
       // Create space actions.
@@ -162,14 +164,16 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               return value;
             });
 
-            return Array.from({ length: get(count) }, (_, i) => ({
-              id: `object-${i}`,
-              type: 'object',
-              properties: getProperties(`object-${i}`, {
-                label: `Object ${i}`,
-                icon: faker.properties.icon(),
+            return Array.from({ length: get(count) }, (_, i) =>
+              Node.make({
+                id: `object-${i}`,
+                type: 'object',
+                properties: getProperties(`object-${i}`, {
+                  label: `Object ${i}`,
+                  icon: faker.properties.icon(),
+                }),
               }),
-            }));
+            );
           }),
       }),
       // Create object actions.

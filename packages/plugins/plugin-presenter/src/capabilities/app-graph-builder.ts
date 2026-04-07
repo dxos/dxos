@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
+  AppNode,
   LayoutOperation,
   companionId,
   companionSegment,
@@ -18,7 +19,6 @@ import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -52,16 +52,12 @@ export default Capability.makeModule(
         }
 
         return Effect.succeed([
-          {
+          AppNode.makeCompanion({
             id: companionSegment('presenter'),
+            label: 'Presenter',
+            icon: 'ph--presentation--regular',
             data: { type: meta.id, object },
-            type: PLANK_COMPANION_TYPE,
-            properties: {
-              label: 'Presenter',
-              icon: 'ph--presentation--regular',
-              disposition: 'hidden',
-            },
-          },
+          }),
         ]);
       },
       actions: (object, get) => {

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
+  AppNode,
   companionSegment,
   getActiveSpace,
   getPersonalSpace,
@@ -20,7 +21,6 @@ import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
@@ -132,17 +132,13 @@ export default Capability.makeModule(
             // If no state, continue to allow chat initialization.
             if (!currentChatState) {
               return [
-                {
+                AppNode.makeCompanion({
                   id: 'assistant-chat',
-                  type: PLANK_COMPANION_TYPE,
+                  label: ['assistant-chat.label', { ns: meta.id }],
+                  icon: 'ph--sparkle--regular',
                   data: 'assistant-chat',
-                  properties: {
-                    label: ['assistant-chat.label', { ns: meta.id }],
-                    icon: 'ph--sparkle--regular',
-                    position: 'hoist',
-                    disposition: 'hidden',
-                  },
-                },
+                  position: 'hoist',
+                }),
               ];
             }
 
@@ -154,17 +150,13 @@ export default Capability.makeModule(
             // Return the resolved chat object, or fall back to 'assistant-chat' string if it can't be resolved.
             // This ensures the companion remains visible even during transient states.
             return [
-              {
+              AppNode.makeCompanion({
                 id: 'assistant-chat',
-                type: PLANK_COMPANION_TYPE,
+                label: ['assistant-chat.label', { ns: meta.id }],
+                icon: 'ph--sparkle--regular',
                 data: Obj.isObject(currentChat) ? currentChat : 'assistant-chat',
-                properties: {
-                  label: ['assistant-chat.label', { ns: meta.id }],
-                  icon: 'ph--sparkle--regular',
-                  position: 'hoist',
-                  disposition: 'hidden',
-                },
-              },
+                position: 'hoist',
+              }),
             ];
           }),
       }),
@@ -177,16 +169,12 @@ export default Capability.makeModule(
         ),
         connector: () =>
           Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: 'invocations',
-              type: PLANK_COMPANION_TYPE,
+              label: ['invocations.label', { ns: meta.id }],
+              icon: 'ph--clock-countdown--regular',
               data: 'invocations',
-              properties: {
-                label: ['invocations.label', { ns: meta.id }],
-                icon: 'ph--clock-countdown--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]),
       }),
 
@@ -195,17 +183,13 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            {
+            AppNode.makeDeckCompanion({
               id: companionSegment('trace'),
-              type: DECK_COMPANION_TYPE,
+              label: ['trace.label', { ns: meta.id }],
+              icon: 'ph--line-segments--regular',
               data: 'trace' as const,
-              properties: {
-                label: ['trace.label', { ns: meta.id }],
-                icon: 'ph--line-segments--regular',
-                disposition: 'hidden',
-                position: 'fallback',
-              },
-            },
+              position: 'fallback',
+            }),
           ]),
       }),
     ]);

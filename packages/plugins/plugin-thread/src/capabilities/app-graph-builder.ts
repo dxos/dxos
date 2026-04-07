@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, companionSegment } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
@@ -78,17 +77,13 @@ export default Capability.makeModule(
           return Effect.succeed(
             joined
               ? [
-                  {
+                  AppNode.makeDeckCompanion({
                     id: 'active-call',
-                    type: DECK_COMPANION_TYPE,
+                    label: ['call-panel.label', { ns: meta.id }],
+                    icon: 'ph--video-conference--regular',
                     data: null,
-                    properties: {
-                      label: ['call-panel.label', { ns: meta.id }],
-                      icon: 'ph--video-conference--regular',
-                      position: 'hoist',
-                      disposition: 'hidden',
-                    },
-                  },
+                    position: 'hoist',
+                  }),
                 ]
               : [],
           );
@@ -108,17 +103,13 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: 'chat',
-              type: PLANK_COMPANION_TYPE,
+              label: ['channel-companion.label', { ns: meta.id }],
+              icon: 'ph--hash--regular',
               data: 'chat',
-              properties: {
-                label: ['channel-companion.label', { ns: meta.id }],
-                icon: 'ph--hash--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
+              position: 'hoist',
+            }),
           ]);
         },
       }),
@@ -133,17 +124,13 @@ export default Capability.makeModule(
         },
         connector: () =>
           Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: companionSegment('comments'),
-              type: PLANK_COMPANION_TYPE,
+              label: ['comments.label', { ns: meta.id }],
+              icon: 'ph--chat-text--regular',
               data: 'comments',
-              properties: {
-                label: ['comments.label', { ns: meta.id }],
-                icon: 'ph--chat-text--regular',
-                disposition: 'hidden',
-                position: 'hoist',
-              },
-            },
+              position: 'hoist',
+            }),
           ]),
       }),
       GraphBuilder.createExtension({

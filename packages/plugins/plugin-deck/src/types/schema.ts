@@ -11,8 +11,7 @@ import { meta } from '#meta';
 
 export * as Settings from './Settings';
 
-export const PLANK_COMPANION_TYPE = `${meta.id}.plank-companion`;
-export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
+export { PLANK_COMPANION_TYPE, DECK_COMPANION_TYPE } from '@dxos/app-toolkit';
 
 export type Part = 'solo' | 'multi' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
