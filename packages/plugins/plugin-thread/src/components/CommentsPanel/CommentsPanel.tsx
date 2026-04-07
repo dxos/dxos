@@ -8,7 +8,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { Icon, Message, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo, type Thread } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { CommentsThread, type CommentsThreadProps } from './CommentsThread';
 

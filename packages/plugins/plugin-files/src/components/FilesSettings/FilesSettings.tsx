@@ -8,8 +8,8 @@ import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { type Settings, type FilesState } from '../../types';
+import { meta } from '#meta';
+import { type Settings, type FilesState } from '#types';
 
 export type FilesSettingsProps = SettingsSurfaceProps<
   Settings.Settings,

@@ -14,9 +14,9 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { type SheetModel } from '../../model';
-import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '../../types';
+import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '#types';
 import { useSheetContext } from '../SheetRoot';
 
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';

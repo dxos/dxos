@@ -13,7 +13,7 @@ import { byPosition } from '@dxos/util';
 
 import { Export } from './definitions';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { FileCapabilities, type FilesState } from '../types';
 
 const handler: Operation.WithHandler<typeof Export> = Export.pipe(

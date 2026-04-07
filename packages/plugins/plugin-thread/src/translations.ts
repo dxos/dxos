@@ -5,8 +5,8 @@
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Channel } from './types';
+import { meta } from '#meta';
+import { Channel } from '#types';
 
 export const translations = [
   {

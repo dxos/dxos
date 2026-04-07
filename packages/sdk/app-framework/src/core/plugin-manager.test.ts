@@ -85,6 +85,27 @@ describe('PluginManager', () => {
     }),
   );
 
+  it.effect('should add plugin when locator differs from meta.id', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.make(Plugin.define(testMeta));
+      const testPlugin = Test();
+
+      const urlLocator = 'https://example.com/plugin.mjs';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return testPlugin;
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: urlLoader });
+      const added = yield* manager.add(urlLocator);
+      assert.isTrue(added);
+      assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.id]);
+    }),
+  );
+
   it.effect('should support factory pattern with options', () =>
     Effect.gen(function* () {
       type TestPluginOptions = { count: number };

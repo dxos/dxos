@@ -12,7 +12,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { functions } from '../../testing';
+import { functions } from '#testing';
 import { translations } from '../../translations';
 
 import { AutomationPanel } from './AutomationPanel';

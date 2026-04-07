@@ -13,6 +13,12 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { ScriptEvents } from '#types';
+import { Notebook } from '#types';
+import { ScriptOperation } from '#operations';
+
 import {
   AppGraphBuilder,
   BlueprintDefinition,
@@ -20,12 +26,7 @@ import {
   OperationHandler,
   ReactSurface,
   ScriptSettings,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { ScriptEvents } from './types';
-import { Notebook } from './types';
-import { ScriptOperation } from './operations';
+} from '#capabilities';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

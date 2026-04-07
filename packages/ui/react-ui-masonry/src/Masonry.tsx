@@ -109,7 +109,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
     }
 
     return (
-      <ScrollArea.Root {...composableProps(props, { role: 'none', classNames: 'w-' })} thin padding ref={composedRef}>
+      <ScrollArea.Root {...composableProps(props, { classNames: 'w-' })} thin padding ref={composedRef}>
         <ScrollArea.Viewport asChild>
           {width > 0 && (
             <ComposableVirtuosoMasonry

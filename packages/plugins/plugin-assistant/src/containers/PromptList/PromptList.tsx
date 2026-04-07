@@ -12,7 +12,7 @@ import { IconButton } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
 import { ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 
-import { AssistantOperation } from '../../operations';
+import { AssistantOperation } from '#operations';
 
 export type PromptListProps = ObjectSurfaceProps<Obj.Unknown>;
 

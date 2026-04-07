@@ -11,10 +11,10 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Text } from '@dxos/schema';
 
-// NOTE: Must not import from index to avoid pulling in react dependencies.
-import { OperationHandler } from '../capabilities/operation-handler';
-import { meta } from '../meta';
-import { Markdown } from '../types';
+import { OperationHandler } from '#capabilities';
+
+import { meta } from '#meta';
+import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

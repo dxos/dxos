@@ -17,9 +17,9 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { EventStack, type EventStackActionHandler } from '../../components';
-import { meta } from '../../meta';
-import { type Calendar } from '../../types';
+import { EventStack, type EventStackActionHandler } from '#components';
+import { meta } from '#meta';
+import { type Calendar } from '#types';
 
 import { NewCalendar } from './NewCalendar';
 

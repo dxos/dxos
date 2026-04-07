@@ -26,7 +26,7 @@ import {
   DEFAULT_EDITOR_STATE,
   getSelectedObjectIds,
 } from '../../tools';
-import { type Scene, Model } from '../../types';
+import { type Scene, Model } from '#types';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;

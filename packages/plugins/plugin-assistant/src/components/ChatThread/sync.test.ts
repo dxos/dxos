@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { type ContentBlock } from '@dxos/types';
 
-import { createMessage } from '../../testing';
+import { createMessage } from '#testing';
 
 import { blockToMarkdown } from './registry';
 import { MessageSyncer, type TextModel } from './sync';

@@ -24,8 +24,8 @@ import { Message } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { useChatToolbarActions } from '../../hooks';
-import { meta } from '../../meta';
+import { useChatToolbarActions } from '#hooks';
+import { meta } from '#meta';
 import { type AiChatProcessor } from '../../processor';
 import {
   ChatActions,
@@ -168,7 +168,7 @@ type ChatViewportProps = {};
 
 const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );

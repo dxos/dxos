@@ -8,8 +8,8 @@ import React, { type FC, type PropsWithChildren } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { useDebugMode } from '../../hooks';
-import { ThreadCapabilities } from '../../types';
+import { useDebugMode } from '#hooks';
+import { ThreadCapabilities } from '#types';
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';
 

@@ -8,7 +8,7 @@ import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const PRESENTER_OPERATION = `${meta.id}.operation`;
 

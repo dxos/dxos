@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
 import { GlobalFilterProvider } from '@dxos/react-ui-search';
 
-import { type SearchResult } from '../types';
+import { type SearchResult } from '#types';
 
 import { filterObjectsSync, queryStringToMatch } from './sync';
 

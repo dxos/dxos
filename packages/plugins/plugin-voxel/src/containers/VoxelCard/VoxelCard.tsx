@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
 
-import { VoxelEditor } from '../../components';
-import { Voxel } from '../../types';
+import { VoxelEditor } from '#components';
+import { Voxel } from '#types';
 
 export type VoxelCardProps = ObjectSurfaceProps<Voxel.World>;
 

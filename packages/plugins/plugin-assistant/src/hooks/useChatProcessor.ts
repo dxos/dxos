@@ -12,10 +12,10 @@ import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
 import { type Queue, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
 
 import { AiChatProcessor, type AiServicePreset } from '../processor';
-import { type Assistant } from '../types';
+import { type Assistant } from '#types';
 
 export type UseChatProcessorProps = {
   space?: Space;

@@ -11,7 +11,7 @@ import { type Message } from '@dxos/types';
 import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
 
 import { GoogleMail } from '../../apis';
-import { type Mailbox as MailboxType } from '../../types';
+import { type Mailbox as MailboxType } from '#types';
 import { getMessageProps } from '../../util';
 
 export type MessageStackAction =

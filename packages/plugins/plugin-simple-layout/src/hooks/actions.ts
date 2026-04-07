@@ -10,7 +10,7 @@ import { Node } from '@dxos/plugin-graph';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { byPosition } from '@dxos/util';
 
-import { type SimpleLayoutState } from '../types';
+import { type SimpleLayoutState } from '#types';
 
 // TODO(wittjosiah): Factor out to shared location with plugin-deck.
 export const PLANK_COMPANION_TYPE = 'org.dxos.plugin.deck.plank-companion';

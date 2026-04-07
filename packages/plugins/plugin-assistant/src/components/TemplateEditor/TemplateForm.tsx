@@ -10,7 +10,7 @@ import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { TemplateEditor } from './TemplateEditor';
 

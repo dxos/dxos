@@ -10,7 +10,7 @@ import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
-import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
+import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '#types';
 
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';

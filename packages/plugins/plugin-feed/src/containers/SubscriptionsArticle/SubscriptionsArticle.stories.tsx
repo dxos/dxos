@@ -18,7 +18,7 @@ import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { FeedPlugin } from '../../FeedPlugin';
-import { Subscription } from '../../types';
+import { Subscription } from '#types';
 import { translations } from '../../translations';
 
 import { SubscriptionsArticle } from './SubscriptionsArticle';

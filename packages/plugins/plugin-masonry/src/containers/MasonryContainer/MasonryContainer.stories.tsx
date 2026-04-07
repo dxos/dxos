@@ -18,7 +18,7 @@ import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
 
-import { Masonry } from '../../types';
+import { Masonry } from '#types';
 
 import { MasonryContainer } from './MasonryContainer';
 

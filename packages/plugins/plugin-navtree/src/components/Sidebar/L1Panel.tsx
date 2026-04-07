@@ -17,8 +17,8 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useActions, useIsAlternateTree, useLoadDescendents } from '../../hooks';
-import { meta } from '../../meta';
+import { useActions, useIsAlternateTree, useLoadDescendents } from '#hooks';
+import { meta } from '#meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemAction, NavTreeItemColumns } from '../NavTreeItem';

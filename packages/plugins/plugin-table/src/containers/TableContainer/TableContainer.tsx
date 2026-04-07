@@ -31,8 +31,8 @@ import {
 } from '@dxos/react-ui-table';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
-import { meta } from '../../meta';
-import { type Table } from '../../operations';
+import { meta } from '#meta';
+import { type Table } from '#operations';
 
 export type TableContainerProps = ObjectSurfaceProps<Table.Table>;
 

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import * as Settings from './Settings';
 import { type EphemeralDeckState, type DeckState, type StoredDeckState } from './schema';
 

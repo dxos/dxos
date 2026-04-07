@@ -47,15 +47,17 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Defa
       </Panel.Toolbar>
       <Panel.Content>
         <ScrollContainer.Root {...props} ref={scroller}>
-          <ScrollContainer.Viewport>
-            {lines.map((line, index) => (
-              <div key={index} className='p-2 text-description'>
-                {line}
-              </div>
-            ))}
-          </ScrollContainer.Viewport>
-          <ScrollContainer.ScrollDownButton />
-          <ScrollContainer.Fade />
+          <ScrollContainer.Content>
+            <ScrollContainer.Viewport>
+              {lines.map((line, index) => (
+                <div key={index} className='p-2 text-description'>
+                  {line}
+                </div>
+              ))}
+            </ScrollContainer.Viewport>
+            <ScrollContainer.ScrollDownButton />
+            <ScrollContainer.Fade />
+          </ScrollContainer.Content>
         </ScrollContainer.Root>
       </Panel.Content>
     </Panel.Root>

@@ -9,7 +9,7 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(

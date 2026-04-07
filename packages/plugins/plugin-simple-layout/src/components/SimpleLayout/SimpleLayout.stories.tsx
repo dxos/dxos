@@ -16,13 +16,15 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-search';
 
-import { ReactRoot, ReactSurface, State } from '../../capabilities';
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
+
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
-import { SimpleLayoutEvents } from '../../types';
+import { SimpleLayoutEvents } from '#types';
 
 import { SimpleLayout } from './SimpleLayout';
+
+import { ReactRoot, ReactSurface, State } from '#capabilities';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({

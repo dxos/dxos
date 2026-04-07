@@ -8,7 +8,7 @@ import React, { memo, useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 
 import { type EncodedTrackName, type UserState } from '../../calls';
-import { ThreadCapabilities } from '../../types';
+import { ThreadCapabilities } from '#types';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 

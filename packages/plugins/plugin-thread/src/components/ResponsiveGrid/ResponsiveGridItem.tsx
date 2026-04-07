@@ -8,7 +8,7 @@ import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/re
 import { Waveform } from '@dxos/react-ui-sfx';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{

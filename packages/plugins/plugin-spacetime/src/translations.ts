@@ -4,8 +4,8 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Model, Scene } from './types';
+import { meta } from '#meta';
+import { Model, Scene } from '#types';
 
 export const translations = [
   {

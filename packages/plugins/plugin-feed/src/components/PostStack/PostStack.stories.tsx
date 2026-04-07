@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
-import { generatePosts } from '../../testing';
+import { generatePosts } from '#testing';
 
 import { PostStack, type PostStackProps } from './PostStack';
 

@@ -11,7 +11,7 @@ import { getIconAnnotation } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 
 import { search } from '../search';
-import { type SearchResult } from '../types';
+import { type SearchResult } from '#types';
 
 import { getStringProperty } from './sync';
 

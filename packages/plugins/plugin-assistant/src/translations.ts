@@ -8,7 +8,7 @@ import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Standardize translation names.
 export const translations = [
@@ -150,6 +150,11 @@ export const translations = [
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
+
+        // ProjectSettings
+        'instructions.label': 'Instructions',
+        'reset-history.button': 'Reset',
+        'subscriptions.label': 'Subscriptions',
       },
     },
   },

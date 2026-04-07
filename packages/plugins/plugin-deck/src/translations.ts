@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
@@ -26,7 +26,7 @@ export const translations = [
         'toggle-fullscreen.label': 'Toggle fullscreen',
         'settings.show-hints.label': 'Show hints',
         'settings.show-hints.description': 'Show helpful tips and keyboard shortcut hints in the interface.',
-        'settings.native-redirect.label': 'Enable native url redirect (experimental)',
+        'settings.native-redirect.label': 'Enable native url redirect',
         'settings.native-redirect.description': 'Redirect supported URLs to the native desktop application.',
         'settings.new-plank-position.start.label': 'Start',
         'settings.new-plank-position.end.label': 'End',

@@ -15,7 +15,7 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 const createFieldMap: FormFieldMap = {
   hue: ({ type, label, layout, getValue, onValueChange }) => {

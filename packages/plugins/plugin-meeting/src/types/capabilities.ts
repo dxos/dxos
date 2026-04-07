@@ -7,7 +7,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type TranscriptionManager } from '@dxos/plugin-transcription';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Meeting, type Settings } from '../types';
 
 export namespace MeetingCapabilities {

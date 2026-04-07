@@ -4,14 +4,15 @@
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Sketch } from '@dxos/plugin-sketch/types';
-import { Panel as DxPanel, useThemeContext } from '@dxos/react-ui';
+import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/ui-theme';
 
-import { useStoreAdapter } from '../../hooks';
-import { type Settings } from '../../types';
+import { useStoreAdapter } from '#hooks';
+import { type Settings } from '#types';
 
 export type SketchContainerProps = ObjectSurfaceProps<
   Sketch.Sketch,
@@ -23,7 +24,7 @@ export type SketchContainerProps = ObjectSurfaceProps<
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps) => {
+export const SketchContainer = ({ role, subject: sketch, attendableId }: SketchContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
@@ -88,37 +89,39 @@ export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps)
     }
   };
 
-  const excalidraw = (
-    <Excalidraw
-      excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
-      initialData={{ elements: adapter.getElements() }}
-      // gridModeEnabled={true}
-      // detectScroll={false}
-      theme={themeMode}
-      onChange={handleChange}
-      onPointerUpdate={handlePointerUpdate}
-    >
-      <MainMenu>
-        <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
-      </MainMenu>
-    </Excalidraw>
-  );
+  const Comp = role === 'section' ? Container : Article;
 
   // NOTE: Min 500px height (for tools palette to be visible).
   // TODO(burdon): Disable scrolling with mouse pad unless focused.
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
-  if (role === 'section') {
-    return (
-      <div ref={containerRef} className='aspect-square'>
-        {excalidraw}
-      </div>
-    );
-  }
-
   return (
-    <DxPanel.Root>
-      <DxPanel.Content ref={containerRef}>{excalidraw}</DxPanel.Content>
-    </DxPanel.Root>
+    <Comp ref={containerRef}>
+      <Excalidraw
+        // Force instance per sketch object. Otherwise, sketch shares the same instance.
+        key={attendableId}
+        excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
+        initialData={{ elements: adapter.getElements() }}
+        // gridModeEnabled={true}
+        // detectScroll={false}
+        theme={themeMode}
+        onChange={handleChange}
+        onPointerUpdate={handlePointerUpdate}
+      >
+        <MainMenu>
+          <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
+        </MainMenu>
+      </Excalidraw>
+    </Comp>
   );
 };
+
+const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
+  <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+    <Panel.Content>{props.children}</Panel.Content>
+  </Panel.Root>
+));
+
+const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
+  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef} />
+));

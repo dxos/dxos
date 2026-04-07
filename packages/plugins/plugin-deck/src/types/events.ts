@@ -5,7 +5,7 @@
 import { type ActivationEvent } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import { DeckCapabilities } from './capabilities';
 

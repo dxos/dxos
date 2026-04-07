@@ -26,7 +26,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { translations } from '../../translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '../../types';
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 faker.seed(1);
 

@@ -177,7 +177,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
     // http://localhost:51204/__inspect/#/
     plugins: [
       ...plugins,
-      PluginImportSource(),
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Add react plugin to enable SWC transfors.
       react({
