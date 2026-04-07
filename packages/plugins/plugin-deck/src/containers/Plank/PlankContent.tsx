@@ -29,10 +29,10 @@ export const PlankContent = composable<HTMLDivElement, PlankContentProps>(
           role: 'none',
           classNames: [
             'absolute inset-(--main-spacing) grid',
-            encapsulate && 'border border-separator rounded-sm overflow-hidden',
-            companion && 'grid-cols-[6fr_4fr]', // Ration of primary to companion.
             railGridHorizontal,
             mainIntrinsicSize,
+            companion && 'grid-cols-[6fr_4fr]', // Ration of primary to companion.
+            encapsulate && 'border border-separator rounded-sm overflow-hidden',
           ],
         })}
         data-popover-collision-boundary={true}
