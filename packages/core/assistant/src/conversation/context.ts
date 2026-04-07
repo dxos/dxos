@@ -7,12 +7,12 @@ import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { DXN, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
@@ -60,7 +60,8 @@ export class Bindings {
 }
 
 export type AiContextBinderOptions = {
-  queue: Queue;
+  feed: Feed.Feed;
+  feedRuntime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 
@@ -72,12 +73,15 @@ export class AiContextBinder extends Resource {
   private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: Registry.Registry;
-  private readonly _queue: Queue;
+  private readonly _feed: Feed.Feed;
+  private readonly _feedRuntime: Runtime.Runtime<Feed.FeedService>;
 
   constructor(options: AiContextBinderOptions) {
     super();
-    assertArgument(options.queue, 'options.queue', 'Queue is required');
-    this._queue = options.queue;
+    assertArgument(options.feed, 'options.feed', 'Feed is required');
+    assertArgument(options.feedRuntime, 'options.feedRuntime', 'Feed runtime is required');
+    this._feed = options.feed;
+    this._feedRuntime = options.feedRuntime;
     this._registry = options.registry ?? Registry.make();
   }
 
@@ -124,7 +128,7 @@ export class AiContextBinder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    const query = this._queue.query(Query.type(ContextBinding));
+    const query = await Runtime.runPromise(this._feedRuntime)(Feed.query(this._feed, Query.type(ContextBinding)));
 
     // Process initial state before returning.
     const initialResults = await query.run();
@@ -183,18 +187,20 @@ export class AiContextBinder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
-    await this._queue.append([
-      Obj.make(ContextBinding, {
-        blueprints: {
-          added: addedBlueprints,
-          removed: [],
-        },
-        objects: {
-          added: addedObjects,
-          removed: [],
-        },
-      }),
-    ]);
+    await Runtime.runPromise(this._feedRuntime)(
+      Feed.append(this._feed, [
+        Obj.make(ContextBinding, {
+          blueprints: {
+            added: addedBlueprints,
+            removed: [],
+          },
+          objects: {
+            added: addedObjects,
+            removed: [],
+          },
+        }),
+      ]),
+    );
   }
 
   async unbind({ blueprints, objects }: BindingProps): Promise<void> {
@@ -203,18 +209,20 @@ export class AiContextBinder extends Resource {
     }
 
     log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
-    await this._queue.append([
-      Obj.make(ContextBinding, {
-        blueprints: {
-          added: [],
-          removed: blueprints ?? [],
-        },
-        objects: {
-          added: [],
-          removed: objects ?? [],
-        },
-      }),
-    ]);
+    await Runtime.runPromise(this._feedRuntime)(
+      Feed.append(this._feed, [
+        Obj.make(ContextBinding, {
+          blueprints: {
+            added: [],
+            removed: blueprints ?? [],
+          },
+          objects: {
+            added: [],
+            removed: objects ?? [],
+          },
+        }),
+      ]),
+    );
   }
 
   /**

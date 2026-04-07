@@ -20,7 +20,6 @@ import { acquireReleaseResource } from '@dxos/effect';
 import {
   CredentialsService,
   FunctionInvocationService,
-  QueueService,
   type ServiceCredential,
   ServiceNotAvailableError,
   Trace,
@@ -87,7 +86,6 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | QueueService
   // Registries
   | Blueprint.RegistryService
   | OperationRegistry.Service
@@ -103,7 +101,7 @@ export type AssistantTestServices =
   | TracingService
   | Trace.TraceService
   | Trace.TraceSink
-  // Deperacted
+  // Deprecated
   | ToolExecutionService
   | ToolResolverService
   | FunctionInvocationService;
@@ -136,8 +134,8 @@ export const AssistantTestLayer = ({
       Layer.effect(
         ServiceResolver.ServiceResolver,
         Effect.gen(function* () {
-          const services = yield* Effect.context<Database.Service | QueueService>().pipe(
-            Effect.map(Context.pick(Database.Service, QueueService)),
+          const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
+            Effect.map(Context.pick(Database.Service, Feed.FeedService)),
             Effect.map(Layer.succeedContext),
           );
           // AiContextBinder.
@@ -148,11 +146,12 @@ export const AssistantTestLayer = ({
                   return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-                const queue = yield* QueueService.getQueue(Feed.getQueueDxn(feed)!);
+                const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
                 const binder = yield* acquireReleaseResource(
                   () =>
                     new AiContextBinder({
-                      queue,
+                      feed,
+                      feedRuntime,
                     }),
                 );
                 return { binder };
@@ -165,11 +164,12 @@ export const AssistantTestLayer = ({
                   return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-                const queue = yield* QueueService.getQueue<ContextBinding | Message.Message>(Feed.getQueueDxn(feed)!);
+                const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
                 const conversation = yield* acquireReleaseResource(
                   () =>
                     new AiConversation({
-                      queue,
+                      feed,
+                      feedRuntime,
                     }),
                 );
                 return conversation;
@@ -178,7 +178,7 @@ export const AssistantTestLayer = ({
             yield* ServiceResolver.fromRequirements(
               Database.Service,
               GenericToolkit.GenericToolkitProvider,
-              QueueService,
+              Feed.FeedService,
               AiService.AiService,
               OperationRegistry.Service,
               Blueprint.RegistryService,
@@ -202,7 +202,6 @@ export const AssistantTestLayer = ({
           types,
         }),
         CredentialsService.configuredLayer(credentials),
-        Feed.notAvailable,
         Match.value(tracing).pipe(
           Match.when('noop', () => TracingService.layerNoop),
           Match.when('console', () => TracingServiceExt.layerLogInfo()),

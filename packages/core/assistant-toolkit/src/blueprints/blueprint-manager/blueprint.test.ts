@@ -28,7 +28,7 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer)));
+const provideTestLayers = Effect.provide(AiConversationService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
 
 describe('Blueprint Manager', () => {
   it.effect(

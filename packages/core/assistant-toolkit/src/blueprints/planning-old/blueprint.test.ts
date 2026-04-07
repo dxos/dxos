@@ -9,19 +9,18 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding, ToolExecutionServices } from '@dxos/assistant';
+import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService, Trace, TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
-import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type TestStep, runSteps } from '../testing';
@@ -35,8 +34,10 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        const feed = Feed.make();
+        yield* Database.add(feed);
+        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, feedRuntime }));
 
         yield* Database.add(blueprint);
         yield* Effect.promise(() =>

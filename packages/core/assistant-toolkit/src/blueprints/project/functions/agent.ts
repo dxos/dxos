@@ -6,18 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import {
-  AiConversation,
-  functionInvocationServiceFromOperations,
-  ToolExecutionServices,
-  type ContextBinding,
-} from '@dxos/assistant';
+import { AiConversation, functionInvocationServiceFromOperations, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { type Message } from '@dxos/types';
 
 import { Project } from '../../../types';
 import { Agent } from './definitions';
@@ -35,10 +28,8 @@ export default Agent.pipe(
           Effect.flatMap((chat) => Database.load(chat.feed)),
         );
         invariant(chatFeed, 'Project chat feed not found.');
-        const queueDxn = Feed.getQueueDxn(chatFeed);
-        invariant(queueDxn, 'Feed queue DXN not found.');
-        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, feedRuntime }));
 
         const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
         if (iniativesInContext.length !== 1) {

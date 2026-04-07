@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
@@ -44,5 +44,5 @@ export const CreateProject = Operation.make({
     }),
   }),
   output: Project.Project,
-  services: [Blueprint.RegistryService, Database.Service, QueueService],
+  services: [Blueprint.RegistryService, Database.Service, QueueService, Feed.FeedService],
 });

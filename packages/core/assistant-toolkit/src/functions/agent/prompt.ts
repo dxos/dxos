@@ -11,9 +11,8 @@ import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiConversation, type ContextBinding, AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService, Trace, TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -84,12 +83,10 @@ export default AgentPrompt.pipe(
           invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
           const chatFeed = yield* Database.load(chat.feed);
           invariant(chatFeed, 'Chat feed not found.');
-          const queueDxn = Feed.getQueueDxn(chatFeed);
-          invariant(queueDxn, 'Feed queue DXN not found.');
-          const chatQueue = yield* QueueService.getQueue(queueDxn);
+          const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
 
           const conversation = yield* acquireReleaseResource(
-            () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
+            () => new AiConversation({ feed: chatFeed, feedRuntime }),
           );
 
           yield* Effect.promise(() =>
