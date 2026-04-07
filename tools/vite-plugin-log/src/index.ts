@@ -25,6 +25,7 @@ const PLUGIN_NAME = 'dxos:vite-plugin-log';
  * Dev-only: forwards browser @dxos/log output as NDJSON chunks over the Vite HMR WebSocket,
  * appends them to a local file, and truncates that file when the dev server starts.
  */
+// TODO(dmaretskyi): Move to ./plugin.ts (keep index.ts just for re-exports)
 export const vitePluginLog = (options: VitePluginLogOptions = {}): Plugin => {
   const logFilename = options.logFilename ?? 'app.log';
 
@@ -85,4 +86,9 @@ export const vitePluginLog = (options: VitePluginLogOptions = {}): Plugin => {
 export default vitePluginLog;
 
 export type { LogMetaTransformOptions, LogMetaTransformSpec } from './rolldown-log-meta-types';
-export { rolldownLogMetaPlugin } from './rolldown-log-meta-plugin';
+export {
+  ROLLDOWN_LOG_META_PLUGIN_NAME,
+  rolldownLogMetaPlugin,
+  rolldownLogMetaTransform,
+} from './rolldown-log-meta-plugin';
+export type { RolldownLogMetaHookContext } from './rolldown-log-meta-plugin';

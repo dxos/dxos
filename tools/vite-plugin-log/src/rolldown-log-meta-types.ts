@@ -5,6 +5,7 @@
 /**
  * Same shape as `@dxos/swc-log-plugin` / `to_transform` in Vitest and Vite React configs.
  */
+// TODO(dmaretskyi): Move those to ./definitions (and move types that are in index.ts )
 export interface LogMetaTransformSpec {
   name: string;
   package: string;

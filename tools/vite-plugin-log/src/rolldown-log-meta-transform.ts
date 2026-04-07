@@ -2,15 +2,37 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Argument, CallExpression, Expression, ImportDeclaration, ImportSpecifier, NewExpression, Program } from '@oxc-project/types';
+import type {
+  Argument,
+  CallExpression,
+  Expression,
+  ImportDeclaration,
+  ImportSpecifier,
+  NewExpression,
+  Program,
+} from '@oxc-project/types';
 import { Visitor } from 'rolldown/utils';
 
 import type { LogMetaTransformSpec } from './rolldown-log-meta-types';
+import type { RolldownMagicString } from 'rolldown';
 
-export function collectImportBindings(
-  program: Program,
-  specs: LogMetaTransformSpec[],
-): Map<string, LogMetaTransformSpec> {
+/**
+ * Applies meta transformations to the magic string in `code`.
+ */
+export function transform(
+  code: RolldownMagicString,
+  ast: Program,
+  filename: string,
+  { specs }: { specs: LogMetaTransformSpec[] },
+): void {
+  const edits = computeLogMetaEdits(ast, code.toString(), specs, filename);
+  const sorted = [...edits].sort((a, b) => b.pos - a.pos);
+  for (const { pos, text } of sorted) {
+    code.appendLeft(pos, text);
+  }
+}
+
+function collectImportBindings(program: Program, specs: LogMetaTransformSpec[]): Map<string, LogMetaTransformSpec> {
   const byPackage = new Map<string, LogMetaTransformSpec[]>();
   for (const s of specs) {
     const list = byPackage.get(s.package) ?? [];
@@ -59,7 +81,10 @@ function importedBindingName(sp: ImportSpecifier): string | null {
   return null;
 }
 
-function resolveSpecForCallee(callee: Expression, bindings: Map<string, LogMetaTransformSpec>): LogMetaTransformSpec | undefined {
+function resolveSpecForCallee(
+  callee: Expression,
+  bindings: Map<string, LogMetaTransformSpec>,
+): LogMetaTransformSpec | undefined {
   switch (callee.type) {
     case 'Identifier': {
       return bindings.get(callee.name);
@@ -92,11 +117,7 @@ function argumentSnippet(code: string, arg: Argument): string {
   return code.slice(arg.start, arg.end);
 }
 
-function buildMetaLiteral(options: {
-  line: number;
-  spec: LogMetaTransformSpec;
-  argSnippets: string[];
-}): string {
+function buildMetaLiteral(options: { line: number; spec: LogMetaTransformSpec; argSnippets: string[] }): string {
   const { line, spec, argSnippets } = options;
   const parts: string[] = [`F:__dxlog_file`, `L:${line}`];
   if (spec.include_scope) {
@@ -120,7 +141,11 @@ function closingParenIndex(code: string, expr: CallExpression | NewExpression): 
   return code[i] === ')' ? i : -1;
 }
 
-function buildCallInsertion(code: string, expr: CallExpression | NewExpression, spec: LogMetaTransformSpec): string | null {
+function buildCallInsertion(
+  code: string,
+  expr: CallExpression | NewExpression,
+  spec: LogMetaTransformSpec,
+): string | null {
   if (closingParenIndex(code, expr) < 0) {
     return null;
   }
@@ -180,7 +205,12 @@ export interface LogMetaEdit {
  * Computes text insertions for `__dxlog_file` + per-call metadata (same semantics as the SWC plugin).
  * Uses {@link https://rolldown.rs/apis/javascript-api#utilities | `Visitor` from `rolldown/utils`} to traverse the Oxc AST.
  */
-export function computeLogMetaEdits(program: Program, code: string, specs: LogMetaTransformSpec[], displayPath: string): LogMetaEdit[] {
+export function computeLogMetaEdits(
+  program: Program,
+  code: string,
+  specs: LogMetaTransformSpec[],
+  displayPath: string,
+): LogMetaEdit[] {
   if (specs.length === 0) {
     return [];
   }
