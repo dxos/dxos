@@ -22,7 +22,10 @@ export const ObservabilitySettings = ({ settings, onSettingsChange }: Observabil
         <Message.Root valence='info'>
           <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>
-        <SettingsForm.Item title={t('observability-enabled.label')} description={t('observability-enabled.description')}>
+        <SettingsForm.Item
+          title={t('observability-enabled.label')}
+          description={t('observability-enabled.description')}
+        >
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.enabled}

@@ -19,27 +19,29 @@ export const translations = [
         'debug.label': 'Debug',
         'debug-app-graph.label': 'App Graph',
 
-        'settings-wireframe.label': 'Show wireframes.',
-        'settings-wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
-        'settings-repair.label': 'Run repair tool.',
-        'settings-repair.description': 'Attempt to detect and fix inconsistencies in local data storage.',
-        'settings-download-diagnostics.label': 'Download diagnostics.',
-        'settings-download-diagnostics.description': 'Export a JSON file containing client diagnostics for troubleshooting.',
-        'settings-download-logs.label': 'Download log buffer.',
-        'settings-download-logs.description': 'Export the in-memory log buffer as an NDJSON file.',
-        'settings-uploaded.message': 'Settings uploaded.',
-        'settings-uploaded.description': 'URL copied to clipboard.',
-        'settings-choose-storage-adaptor.label': 'Storage adaptor (worker reload required).',
-        'settings-choose-storage-adaptor.description': 'Select the browser storage backend. Changing this requires a worker reload and may make existing data unavailable.',
-        'settings-repair-success.message': 'Repair succeeded',
-        'settings-repair-failed.message': 'Repair failed',
+        'settings.wireframe.label': 'Show wireframes.',
+        'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
+        'settings.repair.label': 'Run repair tool.',
+        'settings.repair.description': 'Attempt to detect and fix inconsistencies in local data storage.',
+        'settings.download-diagnostics.label': 'Download diagnostics.',
+        'settings.download-diagnostics.description':
+          'Export a JSON file containing client diagnostics for troubleshooting.',
+        'settings.download-logs.label': 'Download log buffer.',
+        'settings.download-logs.description': 'Export the in-memory log buffer as an NDJSON file.',
+        'settings.uploaded.message': 'Settings uploaded.',
+        'settings.uploaded.description': 'URL copied to clipboard.',
+        'settings.choose-storage-adaptor.label': 'Storage adaptor (worker reload required).',
+        'settings.choose-storage-adaptor.description':
+          'Select the browser storage backend. Changing this requires a worker reload and may make existing data unavailable.',
+        'settings.repair-success.message': 'Repair succeeded',
+        'settings.repair-failed.message': 'Repair failed',
 
-        'settings-storage-adaptor.idb.label': 'IndexedDB',
-        'settings-storage-adaptor.opfs.label': 'OPFS',
-        'settings-storage-adapter.changed-alert.message':
+        'settings.storage-adaptor.idb.label': 'IndexedDB',
+        'settings.storage-adaptor.opfs.label': 'OPFS',
+        'settings.storage-adapter.changed-alert.message':
           'Warning: Swapping the storage adapter will make your data unavailable.',
 
-        'settings-data-store.label': 'Data Store',
+        'settings.data-store.label': 'Data Store',
 
         'open-debug-panel.label': 'Show Debug',
         'client.label': 'Client',

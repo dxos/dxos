@@ -19,14 +19,14 @@ export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsPro
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('settings-hover-tools.label')} description={t('settings-hover-tools.description')}>
+        <SettingsForm.Item title={t('settings.hover-tools.label')} description={t('settings.hover-tools.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.autoHideControls}
             onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, autoHideControls: !!checked }))}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-grid-type.label')} description={t('settings-grid-type.description')}>
+        <SettingsForm.Item title={t('settings.grid-type.label')} description={t('settings.grid-type.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.gridType === 'dotted'}

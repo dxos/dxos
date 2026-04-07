@@ -74,16 +74,16 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
         return;
       }
       handleToast({
-        title: t('settings-uploaded.message'),
-        description: t('settings-uploaded.description'),
+        title: t('settings.uploaded.message'),
+        description: t('settings.uploaded.description'),
       });
 
       // TODO(nf): move to IpfsPlugin?
       const url = client.config.values.runtime!.services!.ipfs!.gateway + '/' + info.cid;
       void navigator.clipboard.writeText(url);
       handleToast({
-        title: t('settings-uploaded.message'),
-        description: t('settings-uploaded.description'),
+        title: t('settings.uploaded.message'),
+        description: t('settings.uploaded.description'),
       });
       log.info('diagnostics', { url });
     }
@@ -101,12 +101,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
       const info = await client.repair();
       setStorageConfig(await Storage());
       handleToast({
-        title: t('settings-repair-success.message'),
+        title: t('settings.repair-success.message'),
         description: JSON.stringify(info, undefined, 2),
       });
     } catch (err: any) {
       handleToast({
-        title: t('settings-repair-failed.message'),
+        title: t('settings.repair-failed.message'),
         description: err.message,
       });
     }
@@ -119,7 +119,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
 
   const handleStorageAdapterChange = useCallback(
     (value: string) => {
-      if (confirm(t('settings-storage-adapter.changed-alert.message'))) {
+      if (confirm(t('settings.storage-adapter.changed-alert.message'))) {
         updateConfig(
           storageConfig,
           setStorageConfig,
@@ -134,35 +134,41 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('settings-wireframe.label')} description={t('settings-wireframe.description')}>
+        <SettingsForm.Item title={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.wireframe}
             onCheckedChange={handleWireframeChange}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-download-diagnostics.label')} description={t('settings-download-diagnostics.description')}>
+        <SettingsForm.Item
+          title={t('settings.download-diagnostics.label')}
+          description={t('settings.download-diagnostics.description')}
+        >
           <IconButton
             icon='ph--download-simple--regular'
             iconOnly
             disabled={!onUpload}
-            label={t('settings-download-diagnostics.label')}
+            label={t('settings.download-diagnostics.label')}
             onClick={handleDownload}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-download-logs.label')} description={t('settings-download-logs.description')}>
+        <SettingsForm.Item
+          title={t('settings.download-logs.label')}
+          description={t('settings.download-logs.description')}
+        >
           <IconButton
             icon='ph--download-simple--regular'
             iconOnly
-            label={t('settings-download-logs.label')}
+            label={t('settings.download-logs.label')}
             onClick={handleDownloadLogs}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-repair.label')} description={t('settings-repair.description')}>
+        <SettingsForm.Item title={t('settings.repair.label')} description={t('settings.repair.description')}>
           <IconButton
             icon='ph--first-aid-kit--regular'
             iconOnly
-            label={t('settings-repair.label')}
+            label={t('settings.repair.label')}
             onClick={handleRepair}
           />
         </SettingsForm.Item>
@@ -180,7 +186,10 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
           </Toast.Root>
         )}
 
-        <SettingsForm.Item title={t('settings-choose-storage-adaptor.label')} description={t('settings-choose-storage-adaptor.description')}>
+        <SettingsForm.Item
+          title={t('settings.choose-storage-adaptor.label')}
+          description={t('settings.choose-storage-adaptor.description')}
+        >
           <Select.Root
             disabled={!onSettingsChange}
             value={
@@ -190,7 +199,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
             }
             onValueChange={handleStorageAdapterChange}
           >
-            <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-data-store.label')} />
+            <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings.data-store.label')} />
             <Select.Portal>
               <Select.Content>
                 <Select.Viewport>

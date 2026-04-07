@@ -54,7 +54,7 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
 
   return (
     <Settings.Viewport>
-      <Settings.Section title={t('settings-summary.label')}>
+      <Settings.Section title={t('settings.summary.label')}>
         <Settings.Panel>
           <IconButton
             icon={existingTrigger ? 'ph--check--regular' : 'ph--plus--regular'}
