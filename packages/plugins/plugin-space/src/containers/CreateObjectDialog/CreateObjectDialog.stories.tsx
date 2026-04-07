@@ -13,7 +13,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '../../components';
+import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '#components';
 import { translations } from '../../translations';
 
 const mockOptions: CreateObjectOption[] = [

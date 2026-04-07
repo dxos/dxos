@@ -24,9 +24,9 @@ import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { useAudioFile, useQueueModelAdapter, useTranscriber } from '#hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
-import { TestItem } from '../../testing';
+import { TestItem } from '#testing';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';

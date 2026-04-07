@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { type DependencyList, useCallback } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
 import { type Key } from '@dxos/echo';
 import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { type Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 
-import { AutomationCapabilities } from '../types';
+import { AutomationCapabilities } from '#types';
+import { useComputeRuntime } from './useComputeRuntime';
 
 /**
  * Create an effectful function that has access to compute services
@@ -24,8 +24,7 @@ export const useComputeRuntimeCallback = <T>(
   fn: () => Effect.Effect<T, any, AutomationCapabilities.ComputeServices>,
   deps?: DependencyList,
 ): (() => Promise<T>) => {
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-  const runtime = id !== undefined ? computeRuntime.getRuntime(id) : undefined;
+  const runtime = useComputeRuntime(id);
 
   return useCallback(() => {
     if (!runtime) {

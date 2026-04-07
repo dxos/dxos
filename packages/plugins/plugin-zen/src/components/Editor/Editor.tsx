@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Form, omitId } from '@dxos/react-ui-form';
 
-import { type Dream } from '../../types';
+import { type Dream } from '#types';
 
 export type EditorProps = {
   dream: Dream.Dream;

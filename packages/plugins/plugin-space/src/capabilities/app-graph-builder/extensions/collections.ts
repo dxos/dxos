@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, Segments, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, Segments, getObjectPathFromObject, toUrlPath } from '@dxos/app-toolkit';
 import { SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -15,9 +15,9 @@ import { Operation } from '@dxos/operation';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../../meta';
-import { SpaceCapabilities } from '../../../types';
-import { SpaceOperation } from '../../../operations';
+import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
+import { SpaceOperation } from '#operations';
 
 import {
   COLLECTIONS_SECTION_TYPE,
@@ -323,8 +323,8 @@ const constructObjectActions = ({
             type: Node.ActionType,
             data: () =>
               Effect.promise(async () => {
-                const url = `${shareableLinkOrigin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
-                await navigator.clipboard.writeText(url);
+                const url = new URL(toUrlPath(nodeId), shareableLinkOrigin);
+                await navigator.clipboard.writeText(url.toString());
               }),
             properties: {
               label: COPY_LINK_LABEL,

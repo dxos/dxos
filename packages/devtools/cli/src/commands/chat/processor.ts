@@ -21,7 +21,7 @@ import {
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type OperationHandlerSet } from '@dxos/operation';
@@ -114,8 +114,11 @@ export class ChatProcessor {
       })
       .filter(isTruthy);
 
-    const queue = space.queues.create<Message.Message>();
-    const chat = Chat.make({ queue: Ref.fromDXN(queue.dxn) });
+    const feed = space.db.add(Feed.make());
+    const feedQueueDxn = Feed.getQueueDxn(feed)!;
+    const queue = space.queues.get<Message.Message>(feedQueueDxn);
+    const chat = Chat.make({ feed: Ref.make(feed) });
+    Obj.setParent(feed, chat);
     space.db.add(chat);
 
     const conversation = new AiConversation({ queue, registry: this._registry });

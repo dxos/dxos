@@ -18,12 +18,19 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { type Key } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
-import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Database, type Key } from '@dxos/echo';
+import { ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import {
+  FunctionImplementationResolver,
+  ProcessManager,
+  TriggerDispatcher,
+  TriggerStateStore,
+} from '@dxos/functions-runtime';
+import { OperationHandlerSet } from '@dxos/operation';
 
 import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
 
 export type TriggerRuntimeServices =
   | TriggerDispatcher
@@ -81,13 +88,18 @@ export const triggerRuntimeLayer = ({
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
+        Layer.provide(ProcessManager.layer()),
+        Layer.provide(ServiceResolver.layerRequirements(Database.Service, GenericToolkit.GenericToolkitProvider)),
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
         Layer.provideMerge(TracingService.layerNoop),
+        Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
         Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: blueprintOperationHandlers })),
         Layer.provideMerge(baseChatLayer),
+        Layer.provideMerge(OperationHandlerSet.provide(blueprintOperationHandlers)),
+        Layer.provide(KeyValueStore.layerMemory),
       );
     }),
   );

@@ -10,7 +10,7 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -61,7 +61,13 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
+    const feedTarget = await chat.feed.load();
+    const queueDxn = Feed.getQueueDxn(feedTarget);
+    if (!queueDxn) {
+      return;
+    }
+    const queue = space.queues.get(queueDxn);
+    const binder = new AiContextBinder({ queue, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
@@ -70,7 +76,10 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
   }, []);
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
+  const feedTarget = chats.at(-1)?.feed.target;
+  const queueDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+  const chatQueue = space && queueDxn ? space.queues.get(queueDxn) : undefined;
+  const binder = useContextBinder(chatQueue);
   const objects = binder?.getObjects() ?? [];
 
   if (!space) {

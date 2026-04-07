@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ClientOperation } from '../../../../operations';
+import { ClientOperation } from '#operations';
 import { printIdentity } from '../util';
 
 export const handler = Effect.fn(function* ({

@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
 import type { Key } from '@dxos/echo';
-
+import type { NoHandlerError } from './errors';
 import type * as Operation from './Operation';
 
 /**
@@ -15,6 +15,8 @@ import type * as Operation from './Operation';
 export interface InvokeOptions {
   /** Space ID to provide database context for the handler. */
   spaceId?: Key.SpaceId;
+  /** Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired). */
+  tracing?: unknown;
 }
 
 /**
@@ -29,7 +31,7 @@ export interface OperationService {
   invoke: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-  ) => Effect.Effect<O, Error>;
+  ) => Effect.Effect<O, NoHandlerError>;
 
   /**
    * Schedule an operation to run as a followup.
@@ -84,7 +86,7 @@ export class Service extends Context.Tag('@dxos/operation/Service')<Service, Ope
 export const invoke = <I, O>(
   op: Operation.Definition<I, O>,
   ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-): Effect.Effect<O, Error, Service> =>
+): Effect.Effect<O, NoHandlerError, Service> =>
   Effect.flatMap(Service, (ops) => ops.invoke(op, ...(args as [I, InvokeOptions?])));
 
 /**

@@ -11,11 +11,12 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphSerializer, OperationHandler, ReactSurface, SketchSettings } from './capabilities';
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
-import { Sketch } from './types';
+import { Sketch } from '#types';
 import { serializer } from './util';
+
+import { AppGraphSerializer, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

@@ -11,7 +11,7 @@ import { CredentialsService, QueueService } from '@dxos/functions';
 import { Actor, Message } from '@dxos/types';
 
 import { Calendar, Mailbox } from '../types';
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 

@@ -342,6 +342,7 @@ catalog:
   chartjs-node-canvas: ^5.0.0
   chess.js: ^1.0.0
   chromatic: ^13.0.1
+  cjs-module-lexer: ^2.2.0
   classnames: ^2.3.2
   cli-highlight: ^2.1.11
   codemirror: ^6.0.1

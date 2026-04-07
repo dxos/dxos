@@ -11,11 +11,11 @@ import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
-import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
+import { createDataExtensions, listener, editorClassNames } from '@dxos/ui-editor';
 
-import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '../../components';
-import { useDeployState, useToolbarState } from '../../hooks';
-import { type Settings } from '../../types';
+import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
+import { useDeployState, useToolbarState } from '#hooks';
+import { type Settings } from '#types';
 
 export type ScriptEditorProps = ObjectSurfaceProps<
   Script.Script,
@@ -71,7 +71,7 @@ export const ScriptContainer = ({
       </Panel.Toolbar>
       <Panel.Content asChild>
         <TypescriptEditor
-          classNames={stackItemContentEditorClassNames(role)}
+          classNames={editorClassNames(role)}
           id={script.id}
           env={env}
           initialValue={script.source?.target?.content}

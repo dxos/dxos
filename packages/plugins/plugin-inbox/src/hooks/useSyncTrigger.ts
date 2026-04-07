@@ -13,7 +13,7 @@ import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { Query, useObject, useQuery } from '@dxos/react-client/echo';
 
-import { Calendar } from '../types';
+import { Calendar } from '#types';
 
 /**
  * Finds or imports a function by key from Edge into the space database.

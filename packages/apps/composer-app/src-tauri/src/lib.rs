@@ -36,7 +36,9 @@ pub fn run() {
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]
-    let builder = builder.plugin(tauri_nspanel::init());
+    let builder = builder
+        .plugin(tauri_nspanel::init())
+        .plugin(tauri_plugin_macos_passkey::init());
 
     // Initialize haptics plugin for mobile platforms.
     // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).

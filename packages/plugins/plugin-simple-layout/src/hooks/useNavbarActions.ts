@@ -16,8 +16,8 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../meta';
-import { SimpleLayoutState } from '../types';
+import { meta } from '#meta';
+import { SimpleLayoutState } from '#types';
 
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';

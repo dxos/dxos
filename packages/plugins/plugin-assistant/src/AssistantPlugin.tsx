@@ -19,6 +19,12 @@ import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { HasSubject } from '@dxos/types';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { AssistantEvents } from '#types';
+import { AssistantOperation } from '#operations';
+import * as Option from 'effect/Option';
+
 import {
   AiService,
   AppGraphBuilder,
@@ -33,12 +39,7 @@ import {
   ReactSurface,
   Settings,
   Toolkit,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { AssistantOperation } from './operations';
-import * as Option from 'effect/Option';
+} from '#capabilities';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -205,7 +206,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: Toolkit,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, AppActivationEvents.AppGraphReady, AppActivationEvents.LayoutReady),
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      AppActivationEvents.LayoutReady,
+    ),
     activate: CompanionChatProvisioner,
   }),
   Plugin.addModule({
@@ -218,12 +223,12 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
 // TODO(dmaretskyi): Extract to a helper module.
 const withComputeRuntime =
   (spaceId: SpaceId) =>
-    <A, E, R>(
-      effect: Effect.Effect<A, E, R>,
-    ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
-      Effect.gen(function* () {
-        // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
-        const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
-        const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
-        return yield* effect.pipe(Effect.provide(runtime));
-      });
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
+    Effect.gen(function* () {
+      // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
+      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
+      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
+      return yield* effect.pipe(Effect.provide(runtime));
+    });

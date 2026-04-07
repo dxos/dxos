@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type UseEventToolbarActionsProps = {
   onNoteCreate?: () => void;

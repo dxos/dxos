@@ -11,7 +11,7 @@ import { Config } from '@dxos/react-client';
 import { corePlugins } from '@dxos/plugin-testing';
 
 import { ThreadPlugin } from '../ThreadPlugin';
-import { Channel } from '../types';
+import { Channel } from '#types';
 
 export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ...corePlugins(),

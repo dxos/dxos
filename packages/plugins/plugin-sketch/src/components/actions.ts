@@ -7,7 +7,7 @@ import { isShape } from '@tldraw/tlschema';
 
 import { createDocAccessor } from '@dxos/echo-db';
 
-import type { Sketch } from '../types';
+import type { Sketch } from '#types';
 import { getDeep } from '../util';
 
 /**

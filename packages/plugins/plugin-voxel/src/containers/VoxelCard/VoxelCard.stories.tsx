@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Voxel } from '../../types';
+import { Voxel } from '#types';
 
 import { VoxelCard } from './VoxelCard';
 

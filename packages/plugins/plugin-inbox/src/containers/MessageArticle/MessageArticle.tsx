@@ -12,17 +12,17 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
-import { useActorContact } from '../../hooks';
-import { InboxOperation } from '../../operations';
+import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { useActorContact } from '#hooks';
+import { InboxOperation } from '#operations';
+import { Mailbox } from '#types';
+
 import { getMailboxMessagePath } from '../../paths';
 
-export type MessageArticleProps = ObjectSurfaceProps<
-  MessageType.Message
->;
-
+export type MessageArticleProps = ObjectSurfaceProps<MessageType.Message>;
 export const MessageArticle = ({ role, subject: message, attendableId, companionTo }: MessageArticleProps) => {
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : undefined;
 
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
@@ -44,31 +44,37 @@ export const MessageArticle = ({ role, subject: message, attendableId, companion
 
   const handleReply = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message, mailbox });
     }
-  }, [db, invokePromise, message]);
+  }, [db, invokePromise, message, mailbox]);
 
   const handleReplyAll = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply-all', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, {
+        db,
+        mode: 'reply-all',
+        replyToMessage: message,
+        mailbox,
+      });
     }
-  }, [db, invokePromise, message]);
+  }, [db, invokePromise, message, mailbox]);
 
   const handleForward = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message, mailbox });
     }
-  }, [db, invokePromise, message]);
+  }, [db, invokePromise, message, mailbox]);
 
   const handleOpen = useMemo(() => {
-    if (!companionTo || !db) {
+    if (!mailbox || !db) {
       return undefined;
     }
-    const messagePath = getMailboxMessagePath(db.spaceId, companionTo.id, message.id);
+
+    const messagePath = getMailboxMessagePath(db.spaceId, mailbox.id, message.id);
     return () => {
       void invokePromise(LayoutOperation.Open, { subject: [messagePath] });
     };
-  }, [companionTo, db, message.id, invokePromise]);
+  }, [mailbox, db, message.id, invokePromise]);
 
   return (
     <Message.Root

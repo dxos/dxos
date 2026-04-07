@@ -19,15 +19,15 @@ import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { StackContext, StackSection } from '../../components';
-import { meta } from '../../meta';
+import { StackContext, StackSection } from '#components';
+import { meta } from '#meta';
 import {
   type AddSectionPosition,
   type CollapsedSections,
   type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-} from '../../types';
+} from '#types';
 
 const collectionObjectsFamily = Atom.family((collection: Collection.Collection) =>
   Atom.make((get) => {

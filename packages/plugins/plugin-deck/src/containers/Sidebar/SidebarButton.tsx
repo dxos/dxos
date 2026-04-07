@@ -9,8 +9,8 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { useDeckCompanions, useDeckState } from '../../hooks';
-import { meta } from '../../meta';
+import { useDeckCompanions, useDeckState } from '#hooks';
+import { meta } from '#meta';
 
 export const ToggleSidebarButton = ({
   classNames,

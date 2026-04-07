@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Message } from '@dxos/types';
 
 import { DraftMessage } from '../types';
+import { getMailboxDraftsPath } from '../paths';
 import { buildDraftMessageProps } from '../util';
 
 import { DraftEmailAndOpen } from './definitions';
@@ -30,7 +32,13 @@ const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOp
         target: db,
         hidden: true,
       });
-      yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(draft)] });
+
+      // Navigate to the draft under the mailbox drafts section so the graph can resolve it.
+      const mailboxId = mailbox ? (Obj.isObject(mailbox) ? mailbox.id : undefined) : undefined;
+      const draftPath = mailboxId ? `${getMailboxDraftsPath(db.spaceId, mailboxId)}/${draft.id}` : undefined;
+      if (draftPath) {
+        yield* Operation.invoke(LayoutOperation.Open, { subject: [draftPath] });
+      }
     }),
   ),
 );

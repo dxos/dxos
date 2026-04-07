@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Journal, Outline, getDateString } from '../../types';
+import { Journal, Outline, getDateString } from '#types';
 
 import { Journal as JournalComponent } from './Journal';
 

@@ -4,7 +4,7 @@
 
 import { produce } from 'immer';
 
-import { type DeckAction, type Settings } from './types';
+import { type DeckAction, type Settings } from '#types';
 
 type OpenLayoutEntryOptions = {
   key?: string;

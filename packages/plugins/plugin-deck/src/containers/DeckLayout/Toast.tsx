@@ -14,7 +14,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 // TODO(wittjosiah): Render remaining duration as a progress bar within the toast.
 export const Toast = ({

@@ -19,8 +19,8 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useOnEditAnalytics } from '../../hooks';
-import { meta } from '../../meta';
+import { useOnEditAnalytics } from '#hooks';
+import { meta } from '#meta';
 import { getMessageMetadata } from '../../util';
 
 import { command } from '../../extensions/command';

@@ -8,7 +8,7 @@ import type { BoardModel, MosaicEventHandler, MosaicTileData } from '@dxos/react
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_VALUE } from '../types';
+import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_VALUE } from '#types';
 
 /**
  * Builds the column drag-and-drop handler for the kanban board (reorder columns).

@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
@@ -20,7 +20,7 @@ export type UseMessageToolbarActionsProps = {
   onForward?: () => void;
 };
 
-export const useMessageToolbarActions = ({
+export const useMessageActions = ({
   viewMode,
   setViewMode,
   onOpen,

@@ -1,0 +1,60 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { isSpace } from '@dxos/react-client/echo';
+
+import { translations } from '../translations';
+import { Sketch } from '#types';
+import { SketchOperation } from '#operations';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
+    return Capability.contributes(AppCapabilities.AppGraphSerializer, [
+      {
+        inputType: Sketch.Sketch.typename,
+        outputType: 'application/tldraw',
+        // Reconcile with metadata serializers.
+        serialize: async (node) => {
+          const sketch = node.data;
+          const canvas = await sketch.canvas.load();
+          return {
+            name: sketch.name || translations[0]['en-US'][Sketch.Sketch.typename]['object-name.placeholder'],
+            data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
+            type: 'application/tldraw',
+          };
+        },
+        deserialize: async (data, ancestors) => {
+          const space = ancestors.find(isSpace);
+          const target =
+            ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
+            space?.properties[Collection.Collection.typename]?.target;
+          if (!space || !target) {
+            return;
+          }
+
+          const { schema, content } = JSON.parse(data.data);
+
+          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+          const createResult = await invokePromise(SketchOperation.Create, { name: data.name, schema, content });
+          if (!createResult.data?.object) {
+            return undefined;
+          }
+          await invokePromise(SpaceOperation.AddObject, { target, object: createResult.data.object });
+
+          return createResult.data.object;
+        },
+      },
+    ]);
+  }),
+);

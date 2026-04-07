@@ -4,7 +4,7 @@
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import {
   type MediaStreamRecorderProps,
   type Transcriber,

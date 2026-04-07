@@ -20,3 +20,17 @@ tasks:
       - '--entryPoint=src/common/activation-events.ts'
       - '--entryPoint=src/ui/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/core/url-loader.ts'
+    deps:
+      - compile-plugin
+  compile-plugin:
+    command: dx-compile
+    args:
+      - '--entryPoint=src/vite-plugin/index.ts'
+      - '--outputPath=dist/plugin'
+      - '--platform=node'
+    deps:
+      - ^:compile
+      - dx-compile:compile
+    outputs:
+      - dist/plugin

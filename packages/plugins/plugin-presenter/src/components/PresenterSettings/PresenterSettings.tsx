@@ -8,8 +8,8 @@ import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { type Settings } from '../../types';
+import { meta } from '#meta';
+import { type Settings } from '#types';
 
 export type PresenterSettingsProps = SettingsSurfaceProps<Settings.Settings>;
 
@@ -17,18 +17,16 @@ export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSetti
   const { t } = useTranslation(meta.id);
 
   return (
-    <SettingsForm.Root>
+    <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Group>
-          <SettingsForm.ItemInput title={t('present-collections.label')}>
-            <Input.Switch
-              disabled={!onSettingsChange}
-              checked={settings.presentCollections}
-              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, presentCollections: !!checked }))}
-            />
-          </SettingsForm.ItemInput>
-        </SettingsForm.Group>
+        <SettingsForm.Item title={t('present-collections.label')} description={t('present-collections.description')}>
+          <Input.Switch
+            disabled={!onSettingsChange}
+            checked={settings.presentCollections}
+            onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, presentCollections: !!checked }))}
+          />
+        </SettingsForm.Item>
       </SettingsForm.Section>
-    </SettingsForm.Root>
+    </SettingsForm.Viewport>
   );
 };

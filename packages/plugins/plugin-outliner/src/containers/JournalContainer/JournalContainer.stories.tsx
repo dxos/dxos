@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Journal, Outline } from '../../types';
+import { Journal, Outline } from '#types';
 
 import { JournalContainer } from './JournalContainer';
 

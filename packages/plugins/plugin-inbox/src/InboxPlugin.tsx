@@ -9,27 +9,27 @@ import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
-import { CalendarBlueprint, InboxBlueprint } from './blueprints';
+import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
+import { meta } from '#meta';
+import { translations } from './translations';
+import { InboxOperation } from '#operations';
+import { Calendar, Mailbox } from '#types';
+import { CreateCalendarSchema } from './types/Calendar';
+import { CreateMailboxSchema } from './types/Mailbox';
+
 import {
   AppGraphBuilder,
   BlueprintDefinition,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { InboxOperation } from './operations';
-import { Calendar, Mailbox } from './types';
-import { CreateCalendarSchema } from './types/Calendar';
-import { CreateMailboxSchema } from './types/Mailbox';
+} from '#capabilities';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

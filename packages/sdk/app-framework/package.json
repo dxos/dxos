@@ -55,6 +55,16 @@
       "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
       "types": "./dist/types/src/plugin-manager/index.d.ts"
     },
+    "./UrlLoader": {
+      "source": "./src/core/url-loader.ts",
+      "browser": "./dist/lib/browser/url-loader/index.mjs",
+      "node": "./dist/lib/node-esm/url-loader/index.mjs",
+      "types": "./dist/types/src/url-loader/index.d.ts"
+    },
+    "./vite-plugin": {
+      "import": "./dist/plugin/node-esm/index.mjs",
+      "types": "./dist/types/src/vite-plugin/index.d.ts"
+    },
     "./cli": {
       "source": "./src/cli/index.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
@@ -95,6 +105,12 @@
       "PluginManager": [
         "dist/types/src/plugin-manager/index.d.ts"
       ],
+      "UrlLoader": [
+        "dist/types/src/url-loader/index.d.ts"
+      ],
+      "vite-plugin": [
+        "dist/types/src/vite-plugin/index.d.ts"
+      ],
       "cli": [
         "dist/types/src/cli/index.d.ts"
       ],
@@ -123,7 +139,8 @@
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
-    "@effect/cli": "catalog:"
+    "@effect/cli": "catalog:",
+    "cjs-module-lexer": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
@@ -139,7 +156,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "typedoc": "catalog:"
+    "typedoc": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",

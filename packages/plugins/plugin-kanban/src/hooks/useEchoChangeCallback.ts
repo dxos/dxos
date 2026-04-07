@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 
-import { type Kanban, type KanbanChangeCallback } from '../types';
+import { type Kanban, type KanbanChangeCallback } from '#types';
 
 /**
  * Creates a change callback for ECHO-backed kanban and items (plain function, no hooks).

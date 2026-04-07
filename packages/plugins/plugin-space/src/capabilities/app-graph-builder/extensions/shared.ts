@@ -15,8 +15,8 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 
-import { meta } from '../../../meta';
-import { SPACE_TYPE } from '../../../types';
+import { meta } from '#meta';
+import { SPACE_TYPE } from '#types';
 
 export {
   type MetadataResolver,

@@ -966,6 +966,9 @@ catalogs:
     chromatic:
       specifier: ^13.0.1
       version: 13.1.2
+    cjs-module-lexer:
+      specifier: ^2.2.0
+      version: 2.2.0
     classnames:
       specifier: ^2.3.2
       version: 2.3.2
@@ -1965,6 +1968,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:tools/vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:tools/vite-plugin-log
       '@effect/language-service':
         specifier: 'catalog:'
         version: 0.73.1
@@ -2618,6 +2624,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -2642,6 +2651,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-log
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
@@ -2663,9 +2675,15 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      cjs-module-lexer:
+        specifier: 'catalog:'
+        version: 2.2.0
       jsdom:
         specifier: 'catalog:'
         version: 27.0.0(canvas@3.2.0)(postcss@8.5.6)
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.1
       pwa-asset-generator:
         specifier: 'catalog:'
         version: 6.4.0
@@ -5162,6 +5180,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@effect/ai-anthropic':
         specifier: 'catalog:'
         version: 0.23.0(@effect/ai@0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0))(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)
@@ -5981,6 +6002,9 @@ importers:
 
   packages/core/operation:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
@@ -7949,6 +7973,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)
+      '@tauri-apps/api':
+        specifier: 'catalog:'
+        version: 2.10.1
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -8514,6 +8541,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
+      '@tauri-apps/plugin-deep-link':
+        specifier: 'catalog:'
+        version: 2.4.7
       immer:
         specifier: 'catalog:'
         version: 10.1.1
@@ -8856,6 +8886,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
@@ -8887,9 +8920,6 @@ importers:
         specifier: '>=5.3.6'
         version: 5.3.7
     devDependencies:
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -12032,6 +12062,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14253,6 +14286,9 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      cjs-module-lexer:
+        specifier: 'catalog:'
+        version: 2.2.0
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
@@ -14296,6 +14332,9 @@ importers:
       typedoc:
         specifier: 'catalog:'
         version: 0.28.1(typescript@5.9.3)
+      vite:
+        specifier: '>=7.1.11'
+        version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/app-graph:
     dependencies:
@@ -14436,6 +14475,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -14448,6 +14490,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -14475,6 +14520,9 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@tauri-apps/api':
+        specifier: 'catalog:'
+        version: 2.10.1
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -19810,6 +19858,18 @@ importers:
       '@types/minimatch':
         specifier: 'catalog:'
         version: 5.1.2
+
+  tools/vite-plugin-log:
+    devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../packages/common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../packages/common/util
+      vite:
+        specifier: '>=7.1.11'
+        version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   tools/vscode-file-templates:
     devDependencies:
@@ -29297,6 +29357,9 @@ packages:
 
   cjs-module-lexer@1.3.1:
     resolution: {integrity: sha512-a3KdPAANPbNE4ZUv9h6LckSl9zLsYOP4MBmhIPkRaeyybt+r4UghLvq+xw/YwUcC1gqylCkL4rdVs3Lwupjm4Q==}
+
+  cjs-module-lexer@2.2.0:
+    resolution: {integrity: sha512-4bHTS2YuzUvtoLjdy+98ykbNB5jS0+07EvFNXerqZQJ89F7DI6ET7OQo/HJuW6K0aVsKA9hj9/RVb2kQVOrPDQ==}
 
   classcat@5.0.5:
     resolution: {integrity: sha512-JhZUT7JFcQy/EzW605k/ktHtncoo9vnyW/2GspNYwFlN1C/WmjuV/xtS04e9SOkL2sTdw0VAZ2UGCcQ9lR6p6w==}
@@ -49689,6 +49752,8 @@ snapshots:
   ci-info@4.3.1: {}
 
   cjs-module-lexer@1.3.1: {}
+
+  cjs-module-lexer@2.2.0: {}
 
   classcat@5.0.5: {}
 

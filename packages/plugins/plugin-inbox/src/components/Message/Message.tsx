@@ -22,7 +22,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
 
-import { type ViewMode, useMessageToolbarActions } from './useToolbar';
+import { type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -88,11 +88,10 @@ const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-
-  const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
       <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );

@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type UseEditorMenuOptionsProps = {
   editorView?: EditorView;

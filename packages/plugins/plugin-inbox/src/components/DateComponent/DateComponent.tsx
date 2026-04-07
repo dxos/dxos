@@ -7,7 +7,7 @@ import React from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; icon?: boolean }) => {
   const { t } = useTranslation(meta.id);

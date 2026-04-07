@@ -14,6 +14,7 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { type Plugin, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -42,6 +43,9 @@ declare global {
   interface ImportMetaEnv {
     DEV: string;
   }
+
+  // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
+  var downloadLogs: () => void;
 }
 
 const main = async () => {
@@ -64,6 +68,24 @@ const main = async () => {
 
   const logBuffer = new LogBuffer();
   log.addProcessor(logBuffer.logProcessor);
+
+  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
+  const downloadFile = (data: Blob | string, filename: string) => {
+    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+    const element = document.createElement('a');
+    element.setAttribute('href', url);
+    element.setAttribute('download', filename);
+    element.setAttribute('target', 'download');
+    element.click();
+  };
+
+  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
+  globalThis.downloadLogs = () => {
+    const ndjson = logBuffer.serialize();
+    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    downloadFile(file, fileName);
+  };
 
   profiler?.mark('dynamic-imports:start');
 
@@ -205,7 +227,15 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const plugins = getPlugins(conf);
+  const builtinPlugins = getPlugins(conf);
+  let remotePlugins: Plugin.Plugin[] = [];
+  try {
+    remotePlugins = await UrlLoader.preload();
+  } catch (error) {
+    log.warn('failed to preload remote plugins', { error });
+  }
+  const plugins = [...builtinPlugins, ...remotePlugins];
+  const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -245,6 +275,7 @@ const main = async () => {
     const App = useApp({
       fallback: Fallback,
       placeholder: Placeholder,
+      pluginLoader,
       plugins,
       core,
       defaults,

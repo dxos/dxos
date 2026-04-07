@@ -12,7 +12,7 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export const FormCard = ({ subject, projection }: ObjectSurfaceProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);

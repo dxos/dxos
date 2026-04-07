@@ -17,7 +17,7 @@ import type { Blueprint } from '@dxos/blueprints';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiConversationRunProps, 'prompt' | 'system'> & {
+export type TestStep = Pick<AiConversationRunProps<{}>, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 

@@ -11,7 +11,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -30,11 +30,17 @@ import {
   Task,
 } from '@dxos/types';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { SpaceEvents } from '#types';
+import { type CreateObject, type SpacePluginOptions } from '#types';
+import { SpaceOperation } from '#operations';
+
 import {
-  AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
   Migrations,
+  NavigationHandler,
   NavigationResolver,
   OperationHandler,
   UndoMappings,
@@ -44,12 +50,8 @@ import {
   SpaceSettings,
   SpaceState,
   SpacesReady,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { SpaceEvents } from './types';
-import { type CreateObject, type SpacePluginOptions } from './types';
-import { SpaceOperation } from './operations';
+  AppGraphBuilder,
+} from '#capabilities';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -149,6 +151,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),

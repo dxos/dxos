@@ -6,16 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { Queue } from '@dxos/echo-db';
 
 /**
  * AI chat.
  */
 export const Chat = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  queue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.assistant.chat',

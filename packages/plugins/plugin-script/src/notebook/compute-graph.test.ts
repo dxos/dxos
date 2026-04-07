@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { createNotebook } from '../testing';
+import { createNotebook } from '#testing';
 
 import { ComputeGraph } from './compute-graph';
 

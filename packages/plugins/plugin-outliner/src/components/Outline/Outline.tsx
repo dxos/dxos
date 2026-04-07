@@ -37,7 +37,7 @@ import {
 } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 //
 // Controller

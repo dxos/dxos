@@ -16,8 +16,8 @@ import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useStoreAdapter } from '../../hooks';
-import { type Sketch, type Settings } from '../../types';
+import { useStoreAdapter } from '#hooks';
+import { type Sketch, type Settings } from '#types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 

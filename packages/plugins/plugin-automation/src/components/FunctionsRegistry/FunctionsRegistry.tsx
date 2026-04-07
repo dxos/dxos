@@ -16,7 +16,7 @@ import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-h-[2.5rem]';
 
@@ -66,7 +66,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   );
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {functions.length > 0 && (
         <List.Root<OperationModule.Operation.PersistentOperation>
           items={functions}
@@ -109,6 +109,6 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
       )}
 
       {loading && <div className='text-center py-4 text-gray-500'>{t('loading-functions.message')}</div>}
-    </Settings.Container>
+    </Settings.Panel>
   );
 };

@@ -11,7 +11,7 @@ import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
-import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
+import { useCompanions, useDrawerActions, useSimpleLayoutState } from '#hooks';
 import { Loading } from '../Loading';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';

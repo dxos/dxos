@@ -4,8 +4,8 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Model, Scene } from './types';
+import { meta } from '#meta';
+import { Model, Scene } from '#types';
 
 export const translations = [
   {
@@ -48,6 +48,8 @@ export const translations = [
         'action.add-object.label': 'Add object',
         'action.delete-object.label': 'Delete object',
         'action.import.label': 'Import',
+        'action.join-objects.label': 'Join',
+        'action.subtract-objects.label': 'Subtract',
         'action.export.label': 'Export',
 
         'view.label': 'View',

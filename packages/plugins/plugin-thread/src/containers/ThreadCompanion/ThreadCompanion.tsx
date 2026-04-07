@@ -16,10 +16,10 @@ import { getParentId, useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { CommentsPanel, type CommentsPanelProps } from '../../components';
-import { meta } from '../../meta';
-import { ThreadCapabilities, type ViewState } from '../../types';
-import { ThreadOperation } from '../../operations';
+import { CommentsPanel, type CommentsPanelProps } from '#components';
+import { meta } from '#meta';
+import { ThreadCapabilities, type ViewState } from '#types';
+import { ThreadOperation } from '#operations';
 import { ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };

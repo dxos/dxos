@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
-import { TRANSCRIPTION_URL } from '../types';
+import { TRANSCRIPTION_URL } from '#types';
 import { mergeFloat64Arrays } from '../util';
 
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';

@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-deck/components/DeckSettings',
   tags: ['settings'],
   component: DeckSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

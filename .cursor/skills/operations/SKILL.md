@@ -162,6 +162,19 @@ export default MyOp.pipe(
 
 Note: Services need to be explicitly listed in the operation definition.
 
+### Troubleshooting: TS2742 on `export default`
+
+If the build fails with **TS2742** ("The inferred type of 'default' cannot be named without a reference to ..."), it means the handler's inferred type includes service tags (e.g. `TraceService`) whose module path isn't directly imported in the handler file. Fix this by piping through `Operation.opaqueHandler` as the last step, which erases the complex service types to `Operation.WithHandler<Definition.Any>`:
+
+```ts
+export default MyOp.pipe(
+  Operation.withHandler(
+    Effect.fn(function* (input) { ... }),
+  ),
+  Operation.opaqueHandler,
+);
+```
+
 ## File Structure
 
 For deployable operations, follow this layout (see `packages/core/functions/src/example/` for reference):

@@ -222,9 +222,7 @@ export const linkedSegment = (variant: string): string => `${LINKED_PREFIX}${var
  */
 export const getLinkedVariant = (qualifiedId: string): string => {
   const lastSegment = qualifiedId.split('/').pop() ?? '';
-  return lastSegment.startsWith(LINKED_PREFIX)
-    ? lastSegment.slice(LINKED_PREFIX.length)
-    : lastSegment;
+  return lastSegment.startsWith(LINKED_PREFIX) ? lastSegment.slice(LINKED_PREFIX.length) : lastSegment;
 };
 
 /**

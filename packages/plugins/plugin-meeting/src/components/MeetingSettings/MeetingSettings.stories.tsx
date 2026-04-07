@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-meeting/components/MeetingSettings',
   tags: ['settings'],
   component: MeetingSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

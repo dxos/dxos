@@ -14,7 +14,7 @@ import { Script, Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { useTypeOptions } from '@dxos/plugin-space';
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
@@ -121,7 +121,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {filteredTriggers.length > 0 && (
         <List.Root<Trigger.Trigger>
           items={filteredTriggers}
@@ -148,7 +148,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
       {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
       <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
-    </Settings.Container>
+    </Settings.Panel>
   );
 };
 

@@ -21,8 +21,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
 import { type Pipeline } from '@dxos/types';
 
-import { type ItemProps, PipelineComponent } from '../../components';
-import { usePipelineBoardModel } from '../../hooks';
+import { type ItemProps, PipelineComponent } from '#components';
+import { usePipelineBoardModel } from '#hooks';
 
 const PIPELINE_ITEM = 'PipelineItem';
 

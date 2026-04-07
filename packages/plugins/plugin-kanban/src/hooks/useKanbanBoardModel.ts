@@ -10,7 +10,7 @@ import { AtomObj } from '@dxos/echo-atom';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type BaseKanbanItem, type ColumnStructure, type Kanban } from '../types';
+import { type BaseKanbanItem, type ColumnStructure, type Kanban } from '#types';
 import {
   computeColumnStructure,
   getOrderByColumnFromArrangement,

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AttentionManager } from '@dxos/plugin-attention';
+import { type AttentionManager } from '@dxos/react-ui-attention';
 
-import { type DeckState } from '../types';
+import { type DeckState } from '#types';
 
 export type SetActiveOptions = {
   next: string[];

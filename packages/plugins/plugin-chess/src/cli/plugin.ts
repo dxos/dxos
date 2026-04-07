@@ -10,8 +10,8 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { meta } from '../meta';
-import { Chess } from '../types';
+import { meta } from '#meta';
+import { Chess } from '#types';
 
 // TODO(wittjosiah): Factor out shared modules.
 export const ChessPlugin = Plugin.define(meta).pipe(

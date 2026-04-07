@@ -11,7 +11,7 @@ import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 import { DateComponent } from '../DateComponent';
 
 import { EventAttendee } from './EventAttendee';

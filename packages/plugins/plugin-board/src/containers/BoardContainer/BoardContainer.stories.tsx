@@ -19,7 +19,7 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../../translations';
-import { Board } from '../../types';
+import { Board } from '#types';
 
 import { BoardContainer } from './BoardContainer';
 

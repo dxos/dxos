@@ -6,9 +6,9 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
-import type { FilesystemManager } from '../capabilities';
+import type { FilesystemManager } from '#capabilities';
 
 import type { NativeFilesystemState } from './types';
 
