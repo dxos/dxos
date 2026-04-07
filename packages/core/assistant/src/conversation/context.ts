@@ -152,9 +152,14 @@ export class AiContextBinder extends Resource {
     const resolvedBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
     const resolvedObjects = await this._resolve(bindings.objects, currentObjects);
 
-    // Merge resolved items into current state — never shrink. bind()/unbind() manage direct atom writes.
-    const mergedBlueprints = this._mergeInto(currentBlueprints, resolvedBlueprints);
-    const mergedObjects = this._mergeInto(currentObjects, resolvedObjects);
+    // Filter current state to only items still in the reduced binding set,
+    // then merge in newly resolved items. This ensures unbind events are respected.
+    const reducedBlueprintDxns = new ComplexSet<DXN>(DXN.hash, [...bindings.blueprints].map((ref) => ref.dxn));
+    const reducedObjectDxns = new ComplexSet<DXN>(DXN.hash, [...bindings.objects].map((ref) => ref.dxn));
+    const filteredBlueprints = currentBlueprints.filter((obj) => reducedBlueprintDxns.has(Obj.getDXN(obj)));
+    const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
+    const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
+    const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._blueprints, mergedBlueprints);
     this._registry.set(this._objects, mergedObjects);
@@ -206,20 +211,20 @@ export class AiContextBinder extends Resource {
     }
 
     // Immediately update atom state so removals are reflected before the queue round-trips.
-    const removedBlueprintDxns = new Set((blueprints ?? []).map((ref) => ref.dxn.toString()));
-    const removedObjectDxns = new Set((objects ?? []).map((ref) => ref.dxn.toString()));
-    if (removedBlueprintDxns.size > 0) {
+    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.dxn);
+    const removedObjectDxns = (objects ?? []).map((ref) => ref.dxn);
+    if (removedBlueprintDxns.length > 0) {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
         this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.has(Obj.getDXN(obj).toString())),
+        current.filter((obj) => !removedBlueprintDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
       );
     }
-    if (removedObjectDxns.size > 0) {
+    if (removedObjectDxns.length > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.has(Obj.getDXN(obj).toString())),
+        current.filter((obj) => !removedObjectDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
       );
     }
 

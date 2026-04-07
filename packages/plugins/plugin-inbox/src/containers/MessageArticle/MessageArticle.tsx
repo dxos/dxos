@@ -71,15 +71,11 @@ export const MessageArticle = ({
     }
   }, [db, invokePromise, message, mailbox]);
 
-  const handleOpen = useMemo(() => {
+  const handleOpen = useCallback(() => {
     if (!mailbox || !db) {
-      return undefined;
+      return;
     }
-
-    const messagePath = getMailboxMessagePath(db.spaceId, mailbox.id, message.id);
-    return () => {
-      void invokePromise(LayoutOperation.Open, { subject: [messagePath] });
-    };
+    void invokePromise(LayoutOperation.Open, { subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)] });
   }, [mailbox, db, message.id, invokePromise]);
 
   return (

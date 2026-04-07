@@ -81,7 +81,7 @@ export default Capability.makeModule(
         .invokePromise(AssistantOperation.EnsureCompanionChat, { db, companionTo: object })
         .catch((error) => log.warn('Failed to provision companion chat', { plankId, error }));
 
-      return true;
+      return false;
     };
 
     const provision = () => {

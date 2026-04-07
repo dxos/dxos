@@ -43,7 +43,10 @@ const handler: Operation.WithHandler<typeof EnsureCompanionChat> = EnsureCompani
       const { data } = yield* Effect.promise(() =>
         operationInvoker.invokePromise(CreateChat, { db, addToSpace: false }),
       );
-      const chat = data!.object;
+      if (!data?.object) {
+        return yield* Effect.fail(new Error('CreateChat did not return a chat object'));
+      }
+      const chat = data.object;
       yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
         ...current,
         [companionDxn]: chat,

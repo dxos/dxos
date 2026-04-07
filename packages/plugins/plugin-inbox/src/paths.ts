@@ -36,7 +36,7 @@ export const getDraftsId = (): string => Segments.drafts;
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${Segments.drafts}`;
 
-/** Segment ID for a feed object message node. Uses ~ prefix for attention propagation to parent. */
+/** Segment ID for a feed object message node, linked to its parent for attention propagation via {@link linkedSegment}. */
 export const getMessageSegmentId = (messageId: string): string => linkedSegment(messageId);
 
 /** Canonical qualified path to a message within a mailbox. */
