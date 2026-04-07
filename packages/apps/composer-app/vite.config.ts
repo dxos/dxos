@@ -447,7 +447,7 @@ export default defineConfig((env) => ({
  * Default makes most chunks have names like index-[hash].js.
  */
 function chunkFileNames(chunkInfo: any) {
-  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^/]+$/gm)) {
+  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
