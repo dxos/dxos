@@ -3,12 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, SettingsOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
+import { LOAD_PLUGIN_DIALOG } from '../containers';
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
 export default Capability.makeModule(
@@ -97,16 +99,23 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: `${meta.id}.actions`,
-        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        match: NodeMatcher.whenAny(NodeMatcher.whenId(`root/${REGISTRY_ID}`), (node) =>
+          node.properties.key === REGISTRY_KEY ? Option.some(node) : Option.none(),
+        ),
         actions: () =>
           Effect.succeed([
             {
               id: `${meta.id}.load-by-url`,
-              data: Effect.fnUntraced(function* () {}),
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+                  subject: LOAD_PLUGIN_DIALOG,
+                  state: true,
+                });
+              }),
               properties: {
                 label: ['load-by-url.label', { ns: meta.id }],
                 icon: 'ph--cloud-arrow-down--regular',
-                disabled: true,
+                disposition: 'list-item-primary',
               },
             },
           ]),

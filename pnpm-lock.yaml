@@ -966,6 +966,9 @@ catalogs:
     chromatic:
       specifier: ^13.0.1
       version: 13.1.2
+    cjs-module-lexer:
+      specifier: ^2.2.0
+      version: 2.2.0
     classnames:
       specifier: ^2.3.2
       version: 2.3.2
@@ -2621,6 +2624,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -2669,9 +2675,15 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      cjs-module-lexer:
+        specifier: 'catalog:'
+        version: 2.2.0
       jsdom:
         specifier: 'catalog:'
         version: 27.0.0(canvas@3.2.0)(postcss@8.5.6)
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.1
       pwa-asset-generator:
         specifier: 'catalog:'
         version: 6.4.0
@@ -14259,6 +14271,9 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      cjs-module-lexer:
+        specifier: 'catalog:'
+        version: 2.2.0
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
@@ -14302,6 +14317,9 @@ importers:
       typedoc:
         specifier: 'catalog:'
         version: 0.28.1(typescript@5.9.3)
+      vite:
+        specifier: '>=7.1.11'
+        version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/app-graph:
     dependencies:
@@ -29324,6 +29342,9 @@ packages:
 
   cjs-module-lexer@1.3.1:
     resolution: {integrity: sha512-a3KdPAANPbNE4ZUv9h6LckSl9zLsYOP4MBmhIPkRaeyybt+r4UghLvq+xw/YwUcC1gqylCkL4rdVs3Lwupjm4Q==}
+
+  cjs-module-lexer@2.2.0:
+    resolution: {integrity: sha512-4bHTS2YuzUvtoLjdy+98ykbNB5jS0+07EvFNXerqZQJ89F7DI6ET7OQo/HJuW6K0aVsKA9hj9/RVb2kQVOrPDQ==}
 
   classcat@5.0.5:
     resolution: {integrity: sha512-JhZUT7JFcQy/EzW605k/ktHtncoo9vnyW/2GspNYwFlN1C/WmjuV/xtS04e9SOkL2sTdw0VAZ2UGCcQ9lR6p6w==}
@@ -49716,6 +49737,8 @@ snapshots:
   ci-info@4.3.1: {}
 
   cjs-module-lexer@1.3.1: {}
+
+  cjs-module-lexer@2.2.0: {}
 
   classcat@5.0.5: {}
 
