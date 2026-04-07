@@ -154,8 +154,14 @@ export class AiContextBinder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new ComplexSet<DXN>(DXN.hash, [...bindings.blueprints].map((ref) => ref.dxn));
-    const reducedObjectDxns = new ComplexSet<DXN>(DXN.hash, [...bindings.objects].map((ref) => ref.dxn));
+    const reducedBlueprintDxns = new ComplexSet<DXN>(
+      DXN.hash,
+      [...bindings.blueprints].map((ref) => ref.dxn),
+    );
+    const reducedObjectDxns = new ComplexSet<DXN>(
+      DXN.hash,
+      [...bindings.objects].map((ref) => ref.dxn),
+    );
     const filteredBlueprints = currentBlueprints.filter((obj) => reducedBlueprintDxns.has(Obj.getDXN(obj)));
     const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
     const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);

@@ -50,17 +50,13 @@ export default Capability.makeModule(() =>
           const attendableId = data.attendableId as string | undefined;
           const lastSegment = typeof attendableId === 'string' ? attendableId.split('/').pop() : undefined;
           return (
-            lastSegment === getDraftsId() &&
-            Mailbox.instanceOf(mailbox) &&
-            data.subject === MAILBOX_DRAFTS_NODE_DATA
+            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
           );
         },
         component: ({ data, role }) => {
           const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
           const space = useActiveSpace();
-          return (
-            <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />
-          );
+          return <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
         },
       }),
       Surface.create({

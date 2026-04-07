@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -23,15 +24,37 @@ import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
 
-import { DeckSettings, DeckState, OperationHandler } from '#capabilities';
+import { DeckState, OperationHandler } from '#capabilities';
+import { DeckCapabilities, type Settings } from '#types';
+
+/**
+ * Same as {@link DeckSettings} but `enableDeck: true` so `DeckContent` does not force solo
+ * whenever layout is multi (see `DeckContent` when `!settings.enableDeck`).
+ */
+const storyDeckSettings = Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = Atom.make<Settings.Settings>({
+      showHints: false,
+      enableDeck: true,
+      enableStatusbar: false,
+      enableNativeRedirect: false,
+      newPlankPositioning: 'start',
+      overscroll: 'none',
+      encapsulatedPlanks: false,
+    }).pipe(Atom.keepAlive);
+
+    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+  }),
+);
 
 const STORY_ITEM_SEGMENTS = ['story-a', 'story-b', 'story-c', 'story-d', 'story-e'];
 const STORY_ITEMS = STORY_ITEM_SEGMENTS.map((id) => `${Node.RootId}/${id}`);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
+    id: 'story-deck-settings',
     activatesOn: AppActivationEvents.SetupSettings,
-    activate: DeckSettings,
+    activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(DeckState),
@@ -78,7 +101,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed(
-            STORY_ITEMS.map((id, index) => ({
+            STORY_ITEM_SEGMENTS.map((id, index) => ({
               id,
               type: 'story-item',
               data: { id, title: `Story Item ${index + 1}` },
@@ -136,10 +159,10 @@ const MultiStory = () => {
   const { invokePromise } = useOperationInvoker();
 
   useAsyncEffect(async () => {
+    await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0]], navigation: 'immediate' });
     await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
-    await invokePromise(LayoutOperation.Open, {
+    await invokePromise(LayoutOperation.Set, {
       subject: [STORY_ITEMS[0], STORY_ITEMS[1], STORY_ITEMS[2]],
-      navigation: 'immediate',
     });
   });
 

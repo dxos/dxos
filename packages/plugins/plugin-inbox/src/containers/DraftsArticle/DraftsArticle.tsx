@@ -48,7 +48,10 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
 
   const mailboxScopedMessages = useQuery(db, draftsFilter);
   const drafts = useMemo(
-    () => [...mailboxScopedMessages].filter((m) => DraftMessage.belongsTo(m, mailboxDxn)).sort(sortByCreated('created', true)),
+    () =>
+      [...mailboxScopedMessages]
+        .filter((m) => DraftMessage.belongsTo(m, mailboxDxn))
+        .sort(sortByCreated('created', true)),
     [mailboxDxn, mailboxScopedMessages],
   );
 
