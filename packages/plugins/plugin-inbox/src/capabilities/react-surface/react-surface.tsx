@@ -67,8 +67,11 @@ export default Capability.makeModule(() =>
         } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Message.Message, data.subject),
-        component: ({ data: { attendableId, subject }, role }) => {
-          return <MessageArticle role={role} subject={subject} attendableId={attendableId} />;
+        component: ({ data: { attendableId, subject, companionTo }, role }) => {
+
+          return (
+            <MessageArticle role={role} subject={subject} attendableId={attendableId} companionTo={companionTo} />
+          );
         },
       }),
       Surface.create({

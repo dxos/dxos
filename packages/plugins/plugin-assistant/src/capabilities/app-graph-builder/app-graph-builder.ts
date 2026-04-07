@@ -142,7 +142,7 @@ export default Capability.makeModule(
 
             return [
               {
-                id: ASSISTANT_COMPANION_VARIANT,
+                id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
                 type: PLANK_COMPANION_TYPE,
                 data: chat,
                 properties: {

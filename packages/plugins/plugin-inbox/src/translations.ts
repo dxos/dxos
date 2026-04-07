@@ -85,6 +85,7 @@ export const translations = [
         'event-toolbar-create-note.menu': 'Create note',
 
         'message-toolbar.label': 'Message toolbar',
+        'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',

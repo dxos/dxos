@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, createObjectNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
+import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { type Feed, Filter, Key, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
@@ -226,7 +226,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: 'message',
+              id: linkedSegment('message'),
               type: PLANK_COMPANION_TYPE,
               data: message ?? 'message',
               properties: {
@@ -320,7 +320,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: 'event',
+              id: linkedSegment('event'),
               type: PLANK_COMPANION_TYPE,
               data: event ?? 'event',
               properties: {
