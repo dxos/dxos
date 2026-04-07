@@ -7,7 +7,7 @@ import { parseAst } from 'rolldown/parseAst';
 import { RolldownMagicString } from 'rolldown';
 
 import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions';
-import { transform } from './log-meta-transform';
+import { transform } from './transform';
 
 /**
  * Core transform only (no Rolldown id / moduleType / exclude filters): `meta.ast` + MagicString.

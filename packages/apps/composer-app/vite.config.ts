@@ -52,7 +52,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && dxosLogPlugin(),
+  DxosLogPlugin(),
   wasm(),
 ];
 
