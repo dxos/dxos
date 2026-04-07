@@ -24,9 +24,9 @@ export function transform(
   code: RolldownMagicString,
   ast: Program,
   filename: string,
-  options: { specs: LogMetaTransformSpec[]; edits?: LogMetaEdit[] },
+  options: { specs: LogMetaTransformSpec[] },
 ): void {
-  const edits = options.edits ?? computeLogMetaEdits(ast, code.toString(), options.specs, filename);
+  const edits = computeLogMetaEdits(ast, code.toString(), options.specs, filename);
   const sorted = [...edits].sort((a, b) => b.pos - a.pos);
   for (const { pos, text } of sorted) {
     code.appendLeft(pos, text);
