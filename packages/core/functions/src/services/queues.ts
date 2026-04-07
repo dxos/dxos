@@ -12,7 +12,7 @@ import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
 /**
  * Gives access to all queues.
- * @deprecated Use FeedService instead.
+ * @deprecated Use Feed.FeedService instead.
  */
 export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   QueueService,
@@ -72,6 +72,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
 
 /**
  * Gives access to a specific queue passed as a context.
+ * @deprecated Use Feed.FeedService instead.
  */
 export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
   ContextQueueService,
