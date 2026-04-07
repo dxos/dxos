@@ -2252,7 +2252,7 @@ importers:
         version: 9.0.1
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-node:
         specifier: 'catalog:'
         version: 6.0.0(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -2276,7 +2276,7 @@ importers:
         version: 6.1.1(typescript@5.9.3)(vite@8.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
       wait-on:
         specifier: 'catalog:'
         version: 8.0.3
@@ -2701,7 +2701,7 @@ importers:
         version: 5.12.0(rollup@3.30.0)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-pwa:
         specifier: 'catalog:'
         version: 1.2.0(@types/babel__core@7.20.5)(vite@8.0.3)(workbox-window@7.4.0)
@@ -2867,7 +2867,7 @@ importers:
         version: 1.4.0(vite@8.0.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -2940,7 +2940,7 @@ importers:
         version: 4.2.0
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -3079,7 +3079,7 @@ importers:
         version: 0.0.103
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -3152,7 +3152,7 @@ importers:
         version: 6.0.1(vite@8.0.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -4038,7 +4038,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   packages/common/web-context-solid:
     dependencies:
@@ -5055,7 +5055,7 @@ importers:
         version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3))(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   packages/core/echo/feed:
     dependencies:
@@ -6056,7 +6056,7 @@ importers:
         version: 3.20.0
       vitest:
         specifier: 'catalog:'
-        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   packages/core/protocols:
     dependencies:
@@ -6346,7 +6346,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 'catalog:'
-        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3))(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   packages/devtools/cli-util:
     dependencies:
@@ -6398,7 +6398,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 'catalog:'
-        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   packages/devtools/devtools:
     dependencies:
@@ -6654,7 +6654,7 @@ importers:
         version: 1.4.0(vite@8.0.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-pwa:
         specifier: 'catalog:'
         version: 1.2.0(@types/babel__core@7.20.5)(vite@8.0.3)(workbox-window@7.4.0)
@@ -6787,7 +6787,7 @@ importers:
         version: 1.4.0(vite@8.0.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -7081,7 +7081,7 @@ importers:
         version: 19.2.3(@types/react@19.2.7)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/experimental/discord-bot:
     dependencies:
@@ -7464,7 +7464,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-attention:
     dependencies:
@@ -7658,7 +7658,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-board:
     dependencies:
@@ -7785,7 +7785,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-chess:
     dependencies:
@@ -7906,7 +7906,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-client:
     dependencies:
@@ -8030,7 +8030,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-conductor:
     dependencies:
@@ -8124,7 +8124,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-daily-summary:
     dependencies:
@@ -8224,7 +8224,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-debug:
     dependencies:
@@ -8432,7 +8432,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-deck:
     dependencies:
@@ -8598,7 +8598,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-excalidraw:
     dependencies:
@@ -8713,7 +8713,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-explorer:
     dependencies:
@@ -8861,7 +8861,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-feed:
     dependencies:
@@ -8964,7 +8964,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-files:
     dependencies:
@@ -9061,7 +9061,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-graph:
     dependencies:
@@ -9119,7 +9119,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-help:
     dependencies:
@@ -9216,7 +9216,7 @@ importers:
         version: 4.10.1
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-inbox:
     dependencies:
@@ -9451,7 +9451,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-kanban:
     dependencies:
@@ -9587,7 +9587,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-map:
     dependencies:
@@ -9926,7 +9926,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-masonry:
     dependencies:
@@ -10023,7 +10023,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-meeting:
     dependencies:
@@ -10283,7 +10283,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-native:
     dependencies:
@@ -10341,7 +10341,7 @@ importers:
         version: link:../../ui/react-ui
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-native-filesystem:
     dependencies:
@@ -10441,7 +10441,7 @@ importers:
         version: 19.2.3
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-navtree:
     dependencies:
@@ -10583,7 +10583,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-observability:
     dependencies:
@@ -10671,7 +10671,7 @@ importers:
         version: 19.2.3
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-outliner:
     dependencies:
@@ -10807,7 +10807,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-pipeline:
     dependencies:
@@ -10952,7 +10952,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-presenter:
     dependencies:
@@ -11085,7 +11085,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-preview:
     dependencies:
@@ -11200,7 +11200,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-pwa:
     dependencies:
@@ -11249,7 +11249,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-pwa:
         specifier: 'catalog:'
         version: 1.2.0(@types/babel__core@7.20.5)(vite@8.0.3)(workbox-window@7.4.0)
@@ -11343,7 +11343,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-script:
     dependencies:
@@ -11635,7 +11635,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-search:
     dependencies:
@@ -11771,7 +11771,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-settings:
     dependencies:
@@ -12040,7 +12040,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-simple-layout:
     dependencies:
@@ -12149,7 +12149,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-sketch:
     dependencies:
@@ -12291,7 +12291,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-space:
     dependencies:
@@ -12514,7 +12514,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-spacetime:
     dependencies:
@@ -12617,7 +12617,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-spotlight:
     dependencies:
@@ -12666,7 +12666,7 @@ importers:
         version: 19.2.3
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-stack:
     dependencies:
@@ -12775,7 +12775,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-status-bar:
     dependencies:
@@ -12848,7 +12848,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-table:
     dependencies:
@@ -12966,7 +12966,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-template:
     dependencies:
@@ -13036,7 +13036,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-testing:
     dependencies:
@@ -13097,7 +13097,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-theme:
     dependencies:
@@ -13146,7 +13146,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-thread:
     dependencies:
@@ -13363,7 +13363,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-token-manager:
     dependencies:
@@ -13508,7 +13508,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-transcription:
     dependencies:
@@ -13804,7 +13804,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-voxel:
     dependencies:
@@ -13886,7 +13886,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-wnfs:
     dependencies:
@@ -14019,7 +14019,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-youtube:
     dependencies:
@@ -14161,7 +14161,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/plugins/plugin-zen:
     dependencies:
@@ -14234,7 +14234,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/app-framework:
     dependencies:
@@ -14398,7 +14398,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/app-solid:
     dependencies:
@@ -14973,7 +14973,7 @@ importers:
         version: 4.2.0
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -15250,7 +15250,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/schema:
     dependencies:
@@ -15326,7 +15326,7 @@ importers:
         version: 3.23.2
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk/shell:
     dependencies:
@@ -15444,7 +15444,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     optionalDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -15527,7 +15527,7 @@ importers:
         version: 3.23.2
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/stories/stories-assistant:
     dependencies:
@@ -15795,7 +15795,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/stories/stories-ui:
     dependencies:
@@ -15928,7 +15928,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/brand:
     dependencies:
@@ -16338,7 +16338,7 @@ importers:
         version: 8.5.5
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-attention:
     dependencies:
@@ -16411,7 +16411,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-board:
     dependencies:
@@ -16511,7 +16511,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-calendar:
     dependencies:
@@ -16578,7 +16578,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-canvas:
     dependencies:
@@ -16642,7 +16642,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-canvas-compute:
     dependencies:
@@ -16802,7 +16802,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-canvas-editor:
     dependencies:
@@ -16932,7 +16932,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-chat:
     dependencies:
@@ -17035,7 +17035,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-components:
     dependencies:
@@ -17177,7 +17177,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-dnd:
     dependencies:
@@ -17208,7 +17208,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-editor:
     dependencies:
@@ -17470,7 +17470,7 @@ importers:
         version: 19.2.0(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -17606,7 +17606,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-gameboard:
     dependencies:
@@ -17676,7 +17676,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-geo:
     dependencies:
@@ -17959,7 +17959,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-list:
     dependencies:
@@ -18032,7 +18032,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-markdown:
     dependencies:
@@ -18138,7 +18138,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-masonry:
     dependencies:
@@ -18217,7 +18217,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-menu:
     dependencies:
@@ -18293,7 +18293,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-mosaic:
     dependencies:
@@ -18414,7 +18414,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-pickers:
     dependencies:
@@ -18463,7 +18463,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-search:
     dependencies:
@@ -18521,7 +18521,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-sfx:
     dependencies:
@@ -18612,7 +18612,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-stack:
     dependencies:
@@ -18724,7 +18724,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
@@ -18770,7 +18770,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-table:
     dependencies:
@@ -18924,7 +18924,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-tabs:
     dependencies:
@@ -18982,7 +18982,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-text-tooltip:
     dependencies:
@@ -19010,7 +19010,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-thread:
     dependencies:
@@ -19068,7 +19068,7 @@ importers:
         version: 19.2.3(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/solid-ui:
     dependencies:
@@ -19416,7 +19416,7 @@ importers:
         version: 10.6.0
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.3)
@@ -19504,7 +19504,7 @@ importers:
         version: 0.27.3
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/ui-types:
     dependencies:
@@ -19645,7 +19645,7 @@ importers:
         version: 10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   tools/storybook-react:
     devDependencies:
@@ -19723,7 +19723,7 @@ importers:
         version: 10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-turbosnap:
         specifier: 'catalog:'
         version: 1.0.3
@@ -19765,7 +19765,7 @@ importers:
         version: 10.0.12(@testing-library/jest-dom@6.9.1)(esbuild@0.27.3)(rollup@3.30.0)(solid-js@1.9.11)(storybook@10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)(vite@8.0.3)(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.27.3))
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.0.3)
@@ -19819,7 +19819,7 @@ importers:
         version: 2.3.1
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     devDependencies:
       '@types/picomatch':
         specifier: 'catalog:'
@@ -19846,9 +19846,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../packages/common/util
+      '@oxc-project/types':
+        specifier: 0.122.0
+        version: 0.122.0
+      rolldown:
+        specifier: 1.0.0-rc.12
+        version: 1.0.0-rc.12
       vite:
         specifier: '>=8.0.0'
-        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   tools/vscode-file-templates:
     devDependencies:
@@ -38141,6 +38150,7 @@ packages:
       '@vitest/ui': 4.1.2
       happy-dom: '*'
       jsdom: '*'
+      vite: '>=8.0.0'
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
@@ -40725,7 +40735,7 @@ snapshots:
       cjs-module-lexer: 1.3.1
       esbuild: 0.27.3
       miniflare: 4.20260401.0
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
       wrangler: 4.68.1(@cloudflare/workers-types@4.20260303.0)
       zod: 3.25.76
     transitivePeerDependencies:
@@ -41063,7 +41073,7 @@ snapshots:
       react-refresh: 0.13.0
       rollup: 2.79.2
       rxjs: 7.5.7
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -41396,7 +41406,7 @@ snapshots:
   '@effect/vitest@0.29.0(effect@3.20.0)(vitest@4.1.2)':
     dependencies:
       effect: 3.20.0
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3))(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   '@effect/wa-sqlite@0.1.2': {}
 
@@ -42343,7 +42353,7 @@ snapshots:
     dependencies:
       glob: 13.0.3
       react-docgen-typescript: 2.2.2(typescript@5.9.3)
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     optionalDependencies:
       typescript: 5.9.3
 
@@ -45714,12 +45724,12 @@ snapshots:
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.52':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.53':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-rc.12':
@@ -46470,7 +46480,7 @@ snapshots:
       '@vitest/browser': 4.1.2(vite@8.0.3)(vitest@4.1.2)
       '@vitest/browser-playwright': 4.1.2(playwright@1.57.0)(vite@8.0.3)(vitest@4.1.2)
       '@vitest/runner': 4.1.2
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -46480,7 +46490,7 @@ snapshots:
       '@storybook/csf-plugin': 10.3.4(esbuild@0.27.3)(rollup@3.30.0)(storybook@10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.3)(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.27.3))
       storybook: 10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       ts-dedent: 2.2.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - esbuild
       - rollup
@@ -46493,7 +46503,7 @@ snapshots:
     optionalDependencies:
       esbuild: 0.27.3
       rollup: 3.30.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       webpack: 5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.27.3)
 
   '@storybook/csf-plugin@10.3.4(esbuild@0.27.3)(rollup@3.30.0)(storybook@10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.3)(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.27.3))':
@@ -46503,7 +46513,7 @@ snapshots:
     optionalDependencies:
       esbuild: 0.27.3
       rollup: 3.30.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       webpack: 5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.27.3)
 
   '@storybook/global@5.0.0': {}
@@ -46558,7 +46568,7 @@ snapshots:
       resolve: 1.22.10
       storybook: 10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tsconfig-paths: 4.2.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - esbuild
       - rollup
@@ -47902,7 +47912,7 @@ snapshots:
       '@vitejs/devtools-rpc': 0.1.13(typescript@5.9.3)(ws@8.18.3)
       birpc: 4.0.0
       ohash: 2.0.11
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - typescript
       - ws
@@ -47991,7 +48001,7 @@ snapshots:
       perfect-debounce: 2.1.0
       sirv: 3.0.2
       tinyexec: 1.0.4
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vue: 3.5.32(typescript@5.9.3)
       ws: 8.18.3
     transitivePeerDependencies:
@@ -48022,7 +48032,7 @@ snapshots:
   '@vitejs/plugin-react@6.0.1(vite@8.0.3)':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.7
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/browser-playwright@4.1.2(playwright@1.57.0)(vite@8.0.3)(vitest@4.1.2)':
     dependencies:
@@ -48030,7 +48040,7 @@ snapshots:
       '@vitest/mocker': 4.1.2(vite@8.0.3)
       playwright: 1.57.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -48046,7 +48056,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.0
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -48066,7 +48076,7 @@ snapshots:
       obug: 2.1.1
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
     optionalDependencies:
       '@vitest/browser': 4.1.2(vite@8.0.3)(vitest@4.1.2)
 
@@ -48093,7 +48103,7 @@ snapshots:
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -48130,7 +48140,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.1.0
-      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -49432,7 +49442,7 @@ snapshots:
       unist-util-visit: 5.0.0
       unstorage: 1.17.4(@azure/identity@4.13.0)(idb-keyval@6.2.1)
       vfile: 6.0.3
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vitefu: 1.1.1(vite@8.0.3)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -59220,7 +59230,7 @@ snapshots:
       '@storybook/global': 5.0.0
       solid-js: 1.9.11
       storybook: 10.3.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vite-plugin-solid: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.0.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -60341,7 +60351,7 @@ snapshots:
     dependencies:
       fast-glob: 3.3.3
       unplugin: 2.3.5
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   unplugin-utils@0.3.1:
     dependencies:
@@ -60622,7 +60632,7 @@ snapshots:
       es-module-lexer: 2.0.0
       obug: 2.1.1
       pathe: 2.0.3
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'
@@ -60640,7 +60650,7 @@ snapshots:
   vite-plugin-devtools-json@0.4.1(vite@8.0.3):
     dependencies:
       uuid: 11.1.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-plugin-glslify@2.3.0(rollup@3.30.0)(vite@8.0.3):
     dependencies:
@@ -60649,7 +60659,7 @@ snapshots:
       estree-walker: 2.0.2
       glslify: 7.1.1
       magic-string: 0.25.9
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - rollup
 
@@ -60664,7 +60674,7 @@ snapshots:
       perfect-debounce: 2.1.0
       sirv: 3.0.2
       unplugin-utils: 0.3.1
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - typescript
       - ws
@@ -60674,7 +60684,7 @@ snapshots:
       debug: 4.4.3(supports-color@5.5.0)
       pretty-bytes: 6.1.1
       tinyglobby: 0.2.15
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       workbox-build: 7.4.0(@types/babel__core@7.20.5)
       workbox-window: 7.4.0
     transitivePeerDependencies:
@@ -60689,7 +60699,7 @@ snapshots:
       merge-anything: 5.1.7
       solid-js: 1.9.11
       solid-refresh: 0.6.3(solid-js@1.9.11)
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       vitefu: 1.1.1(vite@8.0.3)
     optionalDependencies:
       '@testing-library/jest-dom': 6.9.1
@@ -60702,7 +60712,7 @@ snapshots:
       '@swc/core': 1.13.5(@swc/helpers@0.5.17)
       '@swc/wasm': 1.13.3
       uuid: 10.0.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
@@ -60711,36 +60721,19 @@ snapshots:
 
   vite-plugin-wasm@3.6.0(vite@8.0.3):
     dependencies:
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-tsconfig-paths@6.1.1(typescript@5.9.3)(vite@8.0.3):
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
       globrex: 0.1.2
       tsconfck: 3.1.6(typescript@5.9.3)
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vite@8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
-    dependencies:
-      lightningcss: 1.32.0
-      picomatch: 4.0.4
-      postcss: 8.5.8
-      rolldown: 1.0.0-rc.12
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 22.10.2
-      '@vitejs/devtools': 0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3)
-      esbuild: 0.27.3
-      fsevents: 2.3.3
-      jiti: 2.6.1
-      terser: 5.46.0
-      tsx: 4.21.0
-      yaml: 2.8.2
-
-  vite@8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
+  vite@8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -60759,9 +60752,9 @@ snapshots:
 
   vitefu@1.1.1(vite@8.0.3):
     optionalDependencies:
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  vitest@4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3))(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
+  vitest@4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(happy-dom@20.7.0)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(vite@8.0.3):
     dependencies:
       '@vitest/expect': 4.1.2
       '@vitest/mocker': 4.1.2(vite@8.0.3)
@@ -60775,13 +60768,13 @@ snapshots:
       magic-string: 0.30.21
       obug: 2.1.1
       pathe: 2.0.3
-      picomatch: 4.0.3
+      picomatch: 4.0.4
       std-env: 4.0.0
       tinybench: 2.9.0
-      tinyexec: 1.0.2
+      tinyexec: 1.0.4
       tinyglobby: 0.2.15
       tinyrainbow: 3.1.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(ioredis@5.3.2)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
@@ -60791,61 +60784,7 @@ snapshots:
       happy-dom: 20.7.0
       jsdom: 27.0.0(canvas@3.2.0)(postcss@8.5.8)
     transitivePeerDependencies:
-      - '@vitejs/devtools'
-      - esbuild
-      - jiti
-      - less
       - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
-
-  vitest@4.1.2(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.2)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.8))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
-    dependencies:
-      '@vitest/expect': 4.1.2
-      '@vitest/mocker': 4.1.2(vite@8.0.3)
-      '@vitest/pretty-format': 4.1.2
-      '@vitest/runner': 4.1.2
-      '@vitest/snapshot': 4.1.2
-      '@vitest/spy': 4.1.2
-      '@vitest/utils': 4.1.2
-      es-module-lexer: 2.0.0
-      expect-type: 1.3.0
-      magic-string: 0.30.21
-      obug: 2.1.1
-      pathe: 2.0.3
-      picomatch: 4.0.3
-      std-env: 4.0.0
-      tinybench: 2.9.0
-      tinyexec: 1.0.2
-      tinyglobby: 0.2.15
-      tinyrainbow: 3.1.0
-      vite: 8.0.3(@types/node@22.10.2)(@vitejs/devtools@0.1.13(@azure/identity@4.13.0)(@pnpm/logger@1001.0.1)(idb-keyval@6.2.1)(typescript@5.9.3)(vite@8.0.3))(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      '@types/node': 22.10.2
-      '@vitest/browser-playwright': 4.1.2(playwright@1.57.0)(vite@8.0.3)(vitest@4.1.2)
-      '@vitest/ui': 4.1.2(vitest@4.1.2)
-      happy-dom: 20.7.0
-      jsdom: 27.0.0(canvas@3.2.0)(postcss@8.5.8)
-    transitivePeerDependencies:
-      - '@vitejs/devtools'
-      - esbuild
-      - jiti
-      - less
-      - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
 
   void-elements@3.1.0: {}
 
