@@ -50,7 +50,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
       if (
         (serviceTags.includes(Database.Service.key) ||
           serviceTags.includes(QueueService.key) ||
-          serviceTags.includes(Feed.Service.key)) &&
+          serviceTags.includes(Feed.FeedService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({

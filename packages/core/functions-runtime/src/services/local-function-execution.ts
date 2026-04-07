@@ -42,7 +42,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const credentials = yield* CredentialsService;
       const database = yield* Database.Service;
       const queues = yield* QueueService;
-      const feedService = yield* Feed.Service;
+      const feedService = yield* Feed.FeedService;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
         invokeFunction: <I, O>(
@@ -58,7 +58,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
             Effect.provideService(CredentialsService, credentials),
             Effect.provideService(Database.Service, database),
             Effect.provideService(QueueService, queues),
-            Effect.provideService(Feed.Service, feedService),
+            Effect.provideService(Feed.FeedService, feedService),
             Effect.provideService(FunctionInvocationService, functionInvocationService),
             Effect.provide(Trace.writerLayerNoop),
           ),

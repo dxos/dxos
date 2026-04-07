@@ -110,7 +110,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               Database.Service,
               GenericToolkit.GenericToolkitProvider,
               QueueService,
-              Feed.Service,
+              Feed.FeedService,
               OperationRegistry.Service,
               AiService.AiService,
               CredentialsService,

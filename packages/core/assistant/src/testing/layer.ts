@@ -82,7 +82,7 @@ interface TestLayerOptions {
 export type AssistantTestServices =
   // Convinience
   | LanguageModel.LanguageModel
-  | Feed.Service
+  | Feed.FeedService
   | CredentialsService
   | AgentService.AgentService
   | AiService.AiService
