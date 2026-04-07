@@ -118,7 +118,7 @@ export default Capability.makeModule(
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
     // Initial navigation.
-    yield* handleNavigation();
+    yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
 
     // Tauri deep link support.
@@ -131,7 +131,7 @@ export default Capability.makeModule(
         if (launchUrls && launchUrls.length > 0) {
           log('app launched with deep links', { urls: launchUrls });
           for (const urlString of launchUrls) {
-            yield* handleDeepLink(urlString, handleNavigation);
+            yield* provideServices(handleDeepLink(urlString, handleNavigation));
           }
         }
 
