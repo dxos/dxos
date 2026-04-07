@@ -55,7 +55,7 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  LabelAnnotation.set(['source', 'account']),
+  LabelAnnotation.set(['account', 'source']), // Account as first precedence to differentiate multiple google tokens.
   Annotation.IconAnnotation.set({
     icon: 'ph--key--regular',
     hue: 'yellow',
