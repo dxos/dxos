@@ -10,6 +10,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -31,13 +32,12 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
         if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
           const feedTarget = chat.feed.target;
           invariant(feedTarget, 'Chat feed not found.');
-          const queueDxn = Feed.getQueueDxn(feedTarget);
-          invariant(queueDxn, 'Feed queue DXN not found.');
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found.');
-          const queue = space.queues.get(queueDxn);
-          const binder = new AiContextBinder({ queue, registry });
+          const feedServiceLayer = createFeedServiceLayer(space.queues);
+          const feedRuntime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+          const binder = new AiContextBinder({ feed: feedTarget, feedRuntime, registry });
           yield* Effect.promise(() =>
             binder.use(async (b: AiContextBinder) => {
               const bindingProps: Parameters<AiContextBinder['bind']>[0] = {};

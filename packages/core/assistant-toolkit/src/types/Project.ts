@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
+import { AiContextBinder, AiContextService } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Annotation, Database, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';

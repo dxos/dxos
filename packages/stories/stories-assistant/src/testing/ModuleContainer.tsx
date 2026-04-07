@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
@@ -10,6 +11,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { useSpace } from '@dxos/react-client/echo';
@@ -54,12 +56,11 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       .filter(isNonNullable);
 
     const feedTarget = await chat.feed.load();
-    const queueDxn = Feed.getQueueDxn(feedTarget);
-    if (!queueDxn) {
-      return;
-    }
-    const queue = space.queues.get(queueDxn);
-    const binder = new AiContextBinder({ queue, registry: atomRegistry });
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const feedRuntime = await Effect.runPromise(
+      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    );
+    const binder = new AiContextBinder({ feed: feedTarget, feedRuntime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 

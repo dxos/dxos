@@ -34,7 +34,7 @@ import {
   formatSystemPrompt,
 } from '../session';
 
-import { AiContextBinder, AiContextService, type ContextBinding } from './context';
+import { AiContextBinder, AiContextService } from './context';
 
 export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {
   prompt: string;

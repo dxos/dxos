@@ -12,15 +12,13 @@ import * as Stream from 'effect/Stream';
 
 import { Blueprint } from '@dxos/blueprints';
 import { ProcessManager } from '@dxos/functions-runtime';
-import { failedInvariant } from '@dxos/invariant';
 import { AgentProcess } from './agent-process';
 
 import { Ref } from '@dxos/echo';
 import { type Trace } from '@dxos/functions';
-import { type Message } from '@dxos/types';
 
 import { acquireReleaseResource } from '@dxos/effect';
-import { AiContextBinder, ContextBinding } from '../conversation';
+import { AiContextBinder } from '../conversation';
 
 export interface Service {
   /**

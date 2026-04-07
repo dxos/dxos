@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
-import { AiConversation, type ContextBinding, AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
+import { AiConversation, AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';

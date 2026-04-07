@@ -9,6 +9,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Filter, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -24,9 +25,6 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
       const feed = space.db.add(Feed.make());
-      const queueDxn = Feed.getQueueDxn(feed);
-      invariant(queueDxn, 'Feed queue DXN not found.');
-      const queue = space.queues.get(queueDxn);
       const chat = Chat.make({ name, feed: Ref.make(feed) });
       if (addToSpace) {
         space.db.add(chat);
@@ -56,7 +54,9 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
         defaultBlueprintManagerBlueprint = db.add(BlueprintManagerBlueprint.make());
       }
 
-      const binder = new AiContextBinder({ queue, registry });
+      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const feedRuntime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+      const binder = new AiContextBinder({ feed, feedRuntime, registry });
       yield* Effect.promise(() =>
         binder.use((b: AiContextBinder) =>
           b.bind({

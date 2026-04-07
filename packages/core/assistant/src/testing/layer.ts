@@ -20,6 +20,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import {
   CredentialsService,
   FunctionInvocationService,
+  QueueService,
   type ServiceCredential,
   ServiceNotAvailableError,
   Trace,
@@ -34,7 +35,6 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Message } from '@dxos/types';
 
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
@@ -51,7 +51,6 @@ import {
   AiContextService,
   AiConversation,
   AiConversationService,
-  type ContextBinding,
 } from '../conversation';
 import * as Array from 'effect/Array';
 import { CompleteBlock } from '../tracing';
@@ -86,6 +85,7 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
+  | QueueService
   // Registries
   | Blueprint.RegistryService
   | OperationRegistry.Service

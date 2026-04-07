@@ -4,18 +4,18 @@
 
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Runtime from 'effect/Runtime';
 import { useContext, useMemo, useState } from 'react';
 
-import { Feed, Ref } from '@dxos/echo';
 import { AiConversation } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
+import { Feed, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
 
 import { AiChatProcessor, type AiServicePreset } from '../processor';
 import { type Assistant } from '#types';
@@ -53,7 +53,7 @@ export const useChatProcessor = ({
       return;
     }
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const feedRuntime = await Effect.runPromise(
+    const feedRuntime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const conversation = new AiConversation({

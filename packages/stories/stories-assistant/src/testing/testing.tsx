@@ -30,6 +30,7 @@ import {
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Feed, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -310,13 +311,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               invariant(space, 'Space not found');
 
               const feed = space.db.add(Feed.make());
-              const queueDxn = Feed.getQueueDxn(feed)!;
-              const queue = space.queues.get(queueDxn);
               const chat = Obj.make(Assistant.Chat, {
                 name,
                 feed: Ref.make(feed),
               });
-              const binder = new AiContextBinder({ queue, registry });
+              const feedServiceLayer = createFeedServiceLayer(space.queues);
+              const feedRuntime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+              const binder = new AiContextBinder({ feed, feedRuntime, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);

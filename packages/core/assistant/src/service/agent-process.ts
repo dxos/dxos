@@ -10,7 +10,6 @@ import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
-import { Message } from '@dxos/types';
 
 import { trim } from '@dxos/util';
 import * as Tool from '@effect/ai/Tool';
@@ -19,7 +18,7 @@ import * as Duration from 'effect/Duration';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import { AiConversation, type ContextBinding } from '../conversation';
+import { AiConversation } from '../conversation';
 import {
   functionInvocationServiceFromOperations,
   getOperationFromTool,
