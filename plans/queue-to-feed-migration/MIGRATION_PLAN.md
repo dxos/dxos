@@ -1,5 +1,16 @@
 # Migration Plan: QueueService → Feed.FeedService
 
+## Status
+
+**Phase 1 COMPLETE**: Renamed `Feed.Service` → `Feed.FeedService` and updated all references across the codebase.
+
+**Remaining Work**: The actual migration of operation handlers from `QueueService` to `Feed.FeedService` API is a larger undertaking that requires:
+1. Refactoring code that uses `QueueService.getQueue()` to use `Feed.query()` and `Feed.append()` instead
+2. Updating trigger dispatcher to work with Feed objects instead of queue DXNs
+3. Updating conversation/session code to use Feed API
+
+The `feedServiceFromQueueServiceLayer` escape hatch remains available for gradual migration.
+
 ## Overview
 
 This plan describes the migration from `QueueService` (deprecated) to `Feed.FeedService` (new API).
