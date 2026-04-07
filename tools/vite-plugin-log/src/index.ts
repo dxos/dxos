@@ -83,3 +83,6 @@ export const vitePluginLog = (options: VitePluginLogOptions = {}): Plugin => {
 };
 
 export default vitePluginLog;
+
+export type { LogMetaTransformOptions, LogMetaTransformSpec } from './rolldown-log-meta-types';
+export { rolldownLogMetaPlugin } from './rolldown-log-meta-plugin';
