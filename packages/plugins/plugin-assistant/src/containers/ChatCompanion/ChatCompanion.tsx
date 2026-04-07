@@ -5,14 +5,14 @@
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -44,37 +44,20 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     const space = getSpace(companionTo);
     const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
 
-    // Watch the state atom directly to detect when plus button clears the chat selection.
     const state = useAtomCapability(AssistantCapabilities.State);
     const companionToId = Obj.getDXN(companionTo).toString();
     const currentChatState = state?.currentChat[companionToId];
 
-    // Track if initial setup has been done (to distinguish initial mount from plus button click).
-    // Reset when companionTo changes.
-    const initialSetupDoneRef = useRef(false);
-    const prevCompanionToIdRef = useRef(companionToId);
-    if (prevCompanionToIdRef.current !== companionToId) {
-      initialSetupDoneRef.current = false;
-      prevCompanionToIdRef.current = companionToId;
-    }
-
-    // Sync local chat state with the state atom.
-    // When currentChatState is undefined (plus button clicked), reset local chat.
-    // When data.subject is a Chat object, use it directly.
-    // When currentChatState is a different chat, fetch and set it.
+    // Resolve chat from state or data.subject, and ensure a companion chat exists.
     useEffect(() => {
-      // If state says no chat selected AND current chat is persisted, reset local state (handles plus button click).
-      // Don't reset in-memory chats - they're expected to have currentChatState === undefined.
       if (!currentChatState && chat && getSpace(chat)) {
+        // State cleared (new thread) — drop the persisted chat so ensure-companion-chat creates a fresh transient.
         setChat(undefined);
       } else if (data.subject !== 'assistant-chat') {
-        // If data.subject is a Chat object (resolved from graph), use it.
         setChat(data.subject);
       } else if (currentChatState && space) {
-        // currentChatState is set but graph couldn't resolve it - fetch manually.
         const currentChatDxnStr = chat ? Obj.getDXN(chat).toString() : undefined;
         if (currentChatState !== currentChatDxnStr) {
-          // Parse DXN and fetch the chat object from the database.
           const parsedDxn = DXN.tryParse(currentChatState);
           if (parsedDxn) {
             const chatRef = space.db.makeRef(parsedDxn);
@@ -87,49 +70,31 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       }
     }, [currentChatState, data.subject, space, chat]);
 
-    const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
-    const binder = useContextBinder(chatQueue);
-
-    // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.
+    // When there is no chat, use the centralized ensure-companion-chat operation.
     useAsyncEffect(async () => {
       if (!space || chat) {
         return;
       }
 
-      // Only query for existing chats on initial mount, not when plus button is clicked.
-      if (!initialSetupDoneRef.current) {
-        // Query for existing companion chats linked to this object.
-        const existingChats = await space.db
-          .query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source())
-          .run();
-
-        initialSetupDoneRef.current = true;
-
-        // Use existing chat if found on initial mount.
-        if (existingChats.length > 0) {
-          const existingChat = existingChats.at(-1) as Assistant.Chat;
-          setChat(existingChat);
-          await invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: existingChat });
-          return;
-        }
-      }
-
-      // Create chat in-memory only - it will be added to space on first message.
-      const { data: createResult } = await invokePromise(AssistantOperation.CreateChat, {
+      const { data: result } = await invokePromise(AssistantOperation.EnsureCompanionChat, {
         db: space.db,
-        addToSpace: false,
+        companionTo,
       });
-      setChat(createResult?.object);
+      if (result) {
+        setChat(result.chat);
+      }
     }, [chat, space, companionTo, invokePromise]);
 
-    // Add chat to space and create relation when user submits the first message.
+    const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
+    const binder = useContextBinder(chatQueue);
+
+    // Persist chat on first submit.
     const handleEvent = useCallback(
       async (event: ChatEvent) => {
         if (!chat || !space) {
           return;
         }
 
-        // If chat is not in space yet, persist it on first submit.
         if (event.type === 'submit' && !getSpace(chat)) {
           await invokePromise(SpaceOperation.AddObject, {
             object: chat,

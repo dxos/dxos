@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
@@ -20,6 +20,12 @@ const handler: Operation.WithHandler<typeof SetCurrentChat> = SetCurrentChat.pip
         ...current,
         currentChat: { ...current.currentChat, [companionToId]: chatId },
       }));
+
+      // When clearing the selection (new thread), evict the cached transient chat so a fresh one is created.
+      if (!chat) {
+        const cache = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
+        cache.delete(companionToId);
+      }
     }),
   ),
 );

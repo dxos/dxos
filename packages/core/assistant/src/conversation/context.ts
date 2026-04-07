@@ -15,7 +15,7 @@ import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ComplexSet, isTruthy } from '@dxos/util';
+import { ComplexSet, isNonNullable } from '@dxos/util';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
@@ -139,26 +139,27 @@ export class AiContextBinder extends Resource {
   }
 
   private async _updateBindings(items: ContextBinding[]): Promise<void> {
-    // Skip update if no items - preserve existing state set by bind().
     if (items.length === 0) {
       return;
     }
 
     const bindings = this._reduce(items);
 
-    // Resolve references (loading them first if needed).
     const currentBlueprints = this._registry.get(this._blueprints);
     const currentObjects = this._registry.get(this._objects);
-    const newBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
-    const newObjects = await this._resolve(bindings.objects, currentObjects);
+    const resolvedBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
+    const resolvedObjects = await this._resolve(bindings.objects, currentObjects);
 
-    // Atomic updates - subscribers notified automatically.
-    this._registry.set(this._blueprints, newBlueprints);
-    this._registry.set(this._objects, newObjects);
+    // Merge resolved items into current state — never shrink. bind()/unbind() manage direct atom writes.
+    const mergedBlueprints = this._mergeInto(currentBlueprints, resolvedBlueprints);
+    const mergedObjects = this._mergeInto(currentObjects, resolvedObjects);
+
+    this._registry.set(this._blueprints, mergedBlueprints);
+    this._registry.set(this._objects, mergedObjects);
 
     log('updated bindings', {
-      blueprints: newBlueprints.length,
-      objects: newObjects.length,
+      blueprints: mergedBlueprints.length,
+      objects: mergedObjects.length,
     });
   }
 
@@ -200,6 +201,24 @@ export class AiContextBinder extends Resource {
   async unbind({ blueprints, objects }: BindingProps): Promise<void> {
     if (!blueprints?.length && !objects?.length) {
       return;
+    }
+
+    // Immediately update atom state so removals are reflected before the queue round-trips.
+    const removedBlueprintDxns = new Set((blueprints ?? []).map((ref) => ref.dxn.toString()));
+    const removedObjectDxns = new Set((objects ?? []).map((ref) => ref.dxn.toString()));
+    if (removedBlueprintDxns.size > 0) {
+      const current = this._registry.get(this._blueprints);
+      this._registry.set(
+        this._blueprints,
+        current.filter((obj) => !removedBlueprintDxns.has(Obj.getDXN(obj).toString())),
+      );
+    }
+    if (removedObjectDxns.size > 0) {
+      const current = this._registry.get(this._objects);
+      this._registry.set(
+        this._objects,
+        current.filter((obj) => !removedObjectDxns.has(Obj.getDXN(obj).toString())),
+      );
     }
 
     log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
@@ -275,9 +294,25 @@ export class AiContextBinder extends Resource {
   }
 
   /**
+   * Merge resolved items into the current set, adding only items not already present (by DXN).
+   */
+  private _mergeInto<T extends Obj.Unknown>(current: T[], resolved: T[]): T[] {
+    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    const merged = [...current];
+    for (const obj of resolved) {
+      const dxn = Obj.getDXN(obj).toString();
+      if (!seen.has(dxn)) {
+        seen.add(dxn);
+        merged.push(obj);
+      }
+    }
+    return merged;
+  }
+
+  /**
    * Resolve references to objects, loading them first if needed and falling back to existing objects.
    */
-  private async _resolve<T>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
+  private async _resolve<T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
     const refArray = [...refs];
 
     // Load all refs that need loading.
@@ -294,7 +329,7 @@ export class AiContextBinder extends Resource {
         // Fallback to existing object.
         return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
       })
-      .filter(isTruthy);
+      .filter(isNonNullable);
   }
 }
 

@@ -13,22 +13,18 @@ import { type Message as MessageType } from '@dxos/types';
 import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
 import { useActorContact } from '../../hooks';
 import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
 
 export type MessageArticleProps = ObjectSurfaceProps<
-  MessageType.Message,
-  {
-    mailbox: Mailbox.Mailbox; // TODO(burdon): companionTo?
-  }
+  MessageType.Message
 >;
 
-export const MessageArticle = ({ role, subject: message, mailbox, attendableId }: MessageArticleProps) => {
+export const MessageArticle = ({ role, subject: message, attendableId }: MessageArticleProps) => {
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const db = Obj.getDatabase(mailbox);
+  const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
 
   const { invokePromise } = useOperationInvoker();

@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Message } from '@dxos/types';
+import { type Message } from '@dxos/types';
 
+import { DraftMessage } from '../types';
 import { buildDraftMessageProps } from '../util';
 
 import { DraftEmailAndOpen } from './definitions';
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOp
         body,
         mailbox,
       });
-      const draft = Obj.make(Message.Message, props);
+      const draft = DraftMessage.make(props);
       yield* Operation.invoke(SpaceOperation.AddObject, {
         object: draft,
         target: db,

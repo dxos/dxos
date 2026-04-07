@@ -26,7 +26,7 @@ import {
   SaveFilterPopover,
 } from '../../containers';
 import { meta } from '../../meta';
-import { Calendar, Mailbox } from '../../types';
+import { Calendar, DraftMessage, Mailbox } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -48,6 +48,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
+        id: `${meta.id}.draft-message`,
+        role: ['article'],
+        filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
+        component: ({ data: { subject }, role }) => {
+          return <DraftMessageArticle role={role} subject={subject} />;
+        },
+      }),
+      Surface.create({
         id: `${meta.id}.message`,
         role: ['article', 'section'],
         filter: (
@@ -55,22 +63,12 @@ export default Capability.makeModule(() =>
         ): data is {
           attendableId: string;
           subject: Message.Message;
-          companionTo: Mailbox.Mailbox;
+          companionTo?: Mailbox.Mailbox;
         } =>
           typeof data.attendableId === 'string' &&
-          Obj.instanceOf(Message.Message, data.subject) &&
-          Mailbox.instanceOf(data.companionTo),
-        component: ({ data: { attendableId, companionTo, subject }, role }) => {
-          return <MessageArticle role={role} subject={subject} mailbox={companionTo} attendableId={attendableId} />;
-        },
-      }),
-      Surface.create({
-        id: `${meta.id}.draft-message`,
-        role: ['article'],
-        filter: (data): data is { subject: Message.Message } =>
-          Obj.instanceOf(Message.Message, data.subject) && !Mailbox.instanceOf(data.companionTo),
-        component: ({ data: { subject }, role }) => {
-          return <DraftMessageArticle role={role} subject={subject} />;
+          Obj.instanceOf(Message.Message, data.subject),
+        component: ({ data: { attendableId, subject }, role }) => {
+          return <MessageArticle role={role} subject={subject} attendableId={attendableId} />;
         },
       }),
       Surface.create({

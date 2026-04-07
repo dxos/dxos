@@ -25,7 +25,7 @@ import { MAILBOXES_SECTION_TYPE, MAILBOX_ALL_MAIL_TYPE, MAILBOX_DRAFTS_TYPE } fr
 import { meta } from '../../meta';
 import { InboxOperation } from '../../operations';
 import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../../paths';
-import { Calendar, Mailbox } from '../../types';
+import { Calendar, DraftMessage, Mailbox } from '../../types';
 
 const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
 
@@ -174,7 +174,7 @@ export default Capability.makeModule(
           const allMessages = get(AtomQuery.make(db, Filter.type(Message.Message)));
           const drafts = allMessages.filter((message) => {
             get(AtomObj.make(message));
-            return message.properties?.mailbox === mailboxDxn;
+            return DraftMessage.belongsTo(message, mailboxDxn);
           });
 
           return Effect.succeed(
