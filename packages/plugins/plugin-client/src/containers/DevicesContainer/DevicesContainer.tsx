@@ -44,55 +44,55 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
 
   return (
     <Clipboard.Provider>
-      <Settings.Root>
+      <Settings.Viewport>
         <Settings.Section
           title={t('devices-verbose.label', { ns: meta.id })}
           description={t('devices.description', { ns: meta.id })}
         >
-          <Settings.Frame>
-            <Settings.FrameItem title={t('devices.label', { ns: meta.id })}>
+          <Settings.Panel>
+            <div role='group' className='min-w-0'>
+              <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.id })}</h3>
               <List>
                 {devices.map((device: Device) => (
                   <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
                 ))}
               </List>
-            </Settings.FrameItem>
+            </div>
             {createInvitationUrl && (
-              <Settings.FrameItem title={t('add-device.label')}>
+              <div role='group' className='min-w-0'>
+                <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
                 <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-              </Settings.FrameItem>
+              </div>
             )}
-          </Settings.Frame>
+          </Settings.Panel>
         </Settings.Section>
         <Settings.Section
           title={t('danger-zone.title', { ns: meta.id })}
           description={t('danger-zone.description', { ns: meta.id })}
         >
-          <Settings.Group>
-            <Settings.Item title={t('reset-device.label')} description={t('reset-device.description', { ns: meta.id })}>
-              <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
-                {t('reset-device.label')}
-              </Button>
-            </Settings.Item>
-            <Settings.Item
-              title={t('recover-identity.label')}
-              description={t('recover-identity.description', { ns: meta.id })}
-            >
-              <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                {t('recover-identity.label')}
-              </Button>
-            </Settings.Item>
-            <Settings.Item
-              title={t('join-new-identity.label')}
-              description={t('join-new-identity.description', { ns: meta.id })}
-            >
-              <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
-                {t('join-new-identity.label')}
-              </Button>
-            </Settings.Item>
-          </Settings.Group>
+          <Settings.Item title={t('reset-device.label')} description={t('reset-device.description', { ns: meta.id })}>
+            <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
+              {t('reset-device.label')}
+            </Button>
+          </Settings.Item>
+          <Settings.Item
+            title={t('recover-identity.label')}
+            description={t('recover-identity.description', { ns: meta.id })}
+          >
+            <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+              {t('recover-identity.label')}
+            </Button>
+          </Settings.Item>
+          <Settings.Item
+            title={t('join-new-identity.label')}
+            description={t('join-new-identity.description', { ns: meta.id })}
+          >
+            <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
+              {t('join-new-identity.label')}
+            </Button>
+          </Settings.Item>
         </Settings.Section>
-      </Settings.Root>
+      </Settings.Viewport>
     </Clipboard.Provider>
   );
 };

@@ -19,7 +19,7 @@ export type UseMessageToolbarActionsProps = {
   onForward?: () => void;
 };
 
-export const useMessageToolbarActions = ({
+export const useMessageActions = ({
   viewMode,
   setViewMode,
   onReply,

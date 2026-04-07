@@ -20,7 +20,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-spacetime/components/SpacetimeSettings',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

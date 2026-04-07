@@ -25,7 +25,6 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
-// TODO(burdon): Standardize Object/Plugin settings.
 export type PipelineObjectSettingsProps = ThemedClassName<{
   pipeline: Pipeline.Pipeline;
 }>;

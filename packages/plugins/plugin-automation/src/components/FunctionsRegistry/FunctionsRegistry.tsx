@@ -66,7 +66,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   );
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {functions.length > 0 && (
         <List.Root<OperationModule.Operation.PersistentOperation>
           items={functions}
@@ -109,6 +109,6 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
       )}
 
       {loading && <div className='text-center py-4 text-gray-500'>{t('loading-functions.message')}</div>}
-    </Settings.Container>
+    </Settings.Panel>
   );
 };

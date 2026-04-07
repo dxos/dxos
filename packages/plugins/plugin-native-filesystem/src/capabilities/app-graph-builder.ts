@@ -208,7 +208,7 @@ export default Capability.makeModule(
                     type: SETTINGS_TYPE,
                     data: null,
                     properties: {
-                      label: ['settings-panel.label', { ns: meta.id }],
+                      label: ['settings.panel.label', { ns: meta.id }],
                       icon: 'ph--faders--regular',
                       disposition: 'alternate-tree',
                     },
@@ -230,7 +230,7 @@ export default Capability.makeModule(
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
               properties: {
-                label: ['settings-general.label', { ns: meta.id }],
+                label: ['settings.general.label', { ns: meta.id }],
                 icon: 'ph--sliders--regular',
                 position: 'hoist',
               },

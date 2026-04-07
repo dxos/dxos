@@ -14,7 +14,7 @@ import { TriggersSettings } from '../TriggerSettings';
 export const AutomationSettings = (props: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section
         title={t('automation-verbose.label', { ns: meta.id })}
         description={t('automation.description', { ns: meta.id })}
@@ -22,6 +22,6 @@ export const AutomationSettings = (props: AutomationPanelProps) => {
         <AutomationPanel {...props} />
         <TriggersSettings db={props.space.db} />
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

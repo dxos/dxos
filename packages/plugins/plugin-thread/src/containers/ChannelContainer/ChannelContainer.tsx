@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { Button, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -163,19 +163,19 @@ const DisplayNameMissing = () => {
   const handleSave = useCallback(() => client.halo.updateProfile({ displayName }), [client, displayName]);
 
   return (
-    <Settings.Group classNames='p-4 place-content-center'>
-      <Settings.ItemInput title={t('display-name.label')} description={t('display-name.description')}>
+    <div className='space-y-trim-md p-4 place-content-center'>
+      <Settings.Item title={t('display-name.label')} description={t('display-name.description')}>
         <Input.TextInput
           value={displayName}
           onChange={handleChange}
           placeholder={t('display-name-input.placeholder')}
           classNames='md:min-w-64'
         />
-      </Settings.ItemInput>
-      <Settings.GroupButton disabled={!displayName} onClick={handleSave}>
+      </Settings.Item>
+      <Button classNames='md:col-span-2' disabled={!displayName} onClick={handleSave}>
         {t('set-display-name.label')}
-      </Settings.GroupButton>
-    </Settings.Group>
+      </Button>
+    </div>
   );
 };
 

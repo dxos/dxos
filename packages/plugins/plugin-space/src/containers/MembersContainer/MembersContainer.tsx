@@ -120,13 +120,15 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <Settings.Root>
+      <Settings.Viewport>
         <Settings.Section title={t('members-verbose.label')} description={t('members.description')}>
-          <Settings.Frame>
-            <Settings.FrameItem title={t('members.label')}>
+          <Settings.Panel>
+            <div role='group' className='min-w-0'>
+              <h3 className='text-lg mb-2'>{t('members.label')}</h3>
               <SpaceMemberList spaceKey={space.key} includeSelf />
-            </Settings.FrameItem>
-            <Settings.FrameItem title={t('invitations.label')}>
+            </div>
+            <div role='group' className='min-w-0'>
+              <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
               {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
               {!selectedInvitation && (
                 <>
@@ -146,10 +148,10 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                   />
                 </>
               )}
-            </Settings.FrameItem>
-          </Settings.Frame>
+            </div>
+          </Settings.Panel>
         </Settings.Section>
-      </Settings.Root>
+      </Settings.Viewport>
     </Clipboard.Provider>
   );
 };
