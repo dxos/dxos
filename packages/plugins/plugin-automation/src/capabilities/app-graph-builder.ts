@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Script } from '@dxos/functions';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
@@ -47,7 +48,7 @@ export default Capability.makeModule(
         connector: (script) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: companionSegment('automation'),
+              id: linkedSegment('automation'),
               label: ['script-automation.label', { ns: meta.id }],
               icon: 'ph--lightning--regular',
               data: 'automation',

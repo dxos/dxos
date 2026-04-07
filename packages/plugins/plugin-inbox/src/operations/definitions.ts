@@ -61,6 +61,9 @@ export const DraftEmail = Operation.make({
     replyTo: Schema.optional(Ref.Ref(Message.Message)).annotations({
       description: 'The message to reply to.',
     }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox to scope the draft to.',
+    }),
   }),
   output: Schema.Struct({
     newMessageDXN: Schema.String,

@@ -98,6 +98,7 @@ Examples:
   - Check `moon run :test` succeeds.
   - Commit and push all pending changes.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
+  - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
   - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".

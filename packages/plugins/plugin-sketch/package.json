@@ -87,6 +87,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",

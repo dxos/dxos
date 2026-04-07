@@ -75,7 +75,7 @@ type EventViewportProps = {};
 
 const EventViewport = composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

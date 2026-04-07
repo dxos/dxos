@@ -66,7 +66,7 @@ const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
     const Comp = asChild ? Slot : 'div';
     return (
       <Board.Root model={model}>
-        <Comp {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+        <Comp {...composableProps(props)} ref={forwardedRef}>
           {children}
         </Comp>
       </Board.Root>

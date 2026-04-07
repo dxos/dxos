@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppNode, companionSegment } from '@dxos/app-toolkit';
+import { AppNode } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // TODO(wittjosiah): This is currently necessary for type portability.
@@ -29,7 +30,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       connector: (node) =>
         Effect.succeed([
           AppNode.makeCompanion({
-            id: companionSegment('settings'),
+            id: linkedSegment('settings'),
             label: ['object-settings.label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
             data: 'settings',
@@ -60,7 +61,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       connector: (node) =>
         Effect.succeed([
           AppNode.makeCompanion({
-            id: companionSegment('selected-objects'),
+            id: linkedSegment('selected-objects'),
             label: ['companion-selected-objects.label', { ns: meta.id }],
             icon: 'ph--tree-view--regular',
             data: 'selected-objects',

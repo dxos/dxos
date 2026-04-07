@@ -5,7 +5,8 @@
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { IconButton, type Label, Main, Panel, toLocalizedString, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
@@ -34,8 +35,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   const companions = useDeckCompanions();
-  const activeCompanion = companions.find((companion) => getCompanionVariant(companion.id) === current);
-  const activeId = activeCompanion && getCompanionVariant(activeCompanion.id);
+  const activeCompanion = companions.find((companion) => getLinkedVariant(companion.id) === current);
+  const activeId = activeCompanion && getLinkedVariant(activeCompanion.id);
   const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
-      {/* TODO(burdon): asChild. */}
+      {/* R0 Tabs */}
       <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
         <div
           data-tauri-drag-region
@@ -97,15 +98,15 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           {/* TODO(burdon): ScrollArea. */}
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto'>
             {companions.map((companion) => (
-              <Tabs.Tab key={getCompanionVariant(companion.id)} value={getCompanionVariant(companion.id)} asChild>
+              <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
                 <IconButton
                   label={toLocalizedString(companion.properties.label, t)}
                   icon={companion.properties.icon}
                   iconOnly
                   tooltipSide='left'
-                  data-value={getCompanionVariant(companion.id)}
+                  data-value={getLinkedVariant(companion.id)}
                   variant={
-                    activeId === getCompanionVariant(companion.id)
+                    activeId === getLinkedVariant(companion.id)
                       ? state.complementarySidebarState === 'expanded'
                         ? 'primary'
                         : 'ghost'
@@ -129,11 +130,13 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             <ToggleComplementarySidebarButton />
           </div>
         </div>
+
+        {/* R1 Content. */}
         {activeId &&
           companions.map((companion) => (
             <Tabs.Panel
-              key={getCompanionVariant(companion.id)}
-              value={getCompanionVariant(companion.id)}
+              key={getLinkedVariant(companion.id)}
+              value={getLinkedVariant(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
                 'inset-y-0 start-0 w-[calc(100%-var(--dx-r0-size))] lg:w-(--dx-r1-size)',
@@ -166,7 +169,7 @@ type ComplementarySidebarPanelProps = {
 const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.id);
 
-  if (getCompanionVariant(companion.id) !== activeId && !data) {
+  if (getLinkedVariant(companion.id) !== activeId && !data) {
     return null;
   }
 
@@ -179,7 +182,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
-            data-value={getCompanionVariant(companion.id)}
+            data-value={getLinkedVariant(companion.id)}
             classNames='h-10 w-10'
             variant='default'
           />
@@ -190,7 +193,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       </Panel.Toolbar>
       <Panel.Content classNames='bg-base-surface'>
         <Surface.Surface
-          role={`deck-companion--${getCompanionVariant(companion.id)}`}
+          role={`deck-companion--${getLinkedVariant(companion.id)}`}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}

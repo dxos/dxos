@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
@@ -19,7 +20,7 @@ export default Capability.makeModule(
         connector: (node) =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: companionSegment('help'),
+              id: linkedSegment('help'),
               label: ['help.label', { ns: meta.id }],
               icon: 'ph--question--regular',
               data: null,

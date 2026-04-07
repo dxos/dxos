@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, companionSegment, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -28,7 +29,7 @@ export default Capability.makeModule(
 
           return [
             AppNode.makeDeckCompanion({
-              id: companionSegment('search'),
+              id: linkedSegment('search'),
               label: ['search.label', { ns: meta.id }],
               icon: 'ph--magnifying-glass--regular',
               data: space,

@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -57,7 +58,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: companionSegment('video'),
+              id: linkedSegment('video'),
               label: ['video.label', { ns: meta.id }],
               icon: 'ph--play--regular',
               data: video ?? 'video',

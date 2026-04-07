@@ -6,7 +6,7 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { getCompanionVariant } from '@dxos/app-toolkit';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -49,7 +49,7 @@ export const PlankComponent = memo(
 
     const rootElement = useRef<HTMLDivElement | null>(null);
 
-    const variant = node?.type === PLANK_COMPANION_TYPE ? getCompanionVariant(id) : undefined;
+    const variant = node?.type === PLANK_COMPANION_TYPE ? getLinkedVariant(id) : undefined;
     const sizeKey = id.split('+')[0];
     const size = plankSizing?.[sizeKey] as number | undefined;
 

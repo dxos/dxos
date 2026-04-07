@@ -9,7 +9,7 @@ import React from 'react';
 import { composableProps, mx, slottable } from '@dxos/ui-theme';
 
 export const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps<HTMLDivElement>(props, { role: 'none' });
+  const { className, ...rest } = composableProps<HTMLDivElement>(props);
   const Comp = asChild ? Slot : Primitive.div;
   return (
     <Comp {...rest} className={mx('dx-container', className)} ref={forwardedRef}>

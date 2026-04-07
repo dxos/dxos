@@ -6,7 +6,8 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -135,7 +136,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companion = companionSegment('message');
+          const companion = linkedSegment('message');
           if (layout.mode === 'simple') {
             // Simple layout: open drawer with message companion.
             void invokePromise(LayoutOperation.UpdateComplementary, {
@@ -187,10 +188,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
-        {!isEmpty && (
-          <ElevationProvider elevation='positioned'>
-            <Menu.Root {...menuActions} attendableId={id}>
+      {!isEmpty && (
+        <ElevationProvider elevation='positioned'>
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Panel.Toolbar asChild>
               <Menu.Toolbar>
                 <QueryEditor
                   ref={filterEditorRef}
@@ -215,10 +216,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                   onClick={() => handleClear()}
                 />
               </Menu.Toolbar>
-            </Menu.Root>
-          </ElevationProvider>
-        )}
-      </Panel.Toolbar>
+            </Panel.Toolbar>
+          </Menu.Root>
+        </ElevationProvider>
+      )}
       <Panel.Content asChild>
         {isEmpty ? (
           <NewMailbox mailbox={mailbox} />

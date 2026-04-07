@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
@@ -125,7 +126,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: companionSegment('comments'),
+              id: linkedSegment('comments'),
               label: ['comments.label', { ns: meta.id }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
