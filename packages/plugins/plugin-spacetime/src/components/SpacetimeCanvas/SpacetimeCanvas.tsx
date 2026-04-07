@@ -421,6 +421,15 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           }
           objectIds.add(objId);
 
+          // Sync positions of existing objects from ECHO.
+          const existingMesh = meshesRef.current.get(objId);
+          if (existingMesh) {
+            const echoPos = obj.position;
+            existingMesh.position.x = echoPos?.x ?? 0;
+            existingMesh.position.y = echoPos?.y ?? 0;
+            existingMesh.position.z = echoPos?.z ?? 0;
+          }
+
           // Add new objects.
           if (!meshesRef.current.has(objId)) {
             const objectColor = resolveColor(obj.color);
