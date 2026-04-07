@@ -15,11 +15,6 @@ const SETTINGS_SECTION_NAME = 'Settings.Section';
 const SETTINGS_PANEL_NAME = 'Settings.Panel';
 const SETTINGS_ITEM_NAME = 'Settings.Item';
 
-const styles = {
-  title: 'pb-trim-md text-base-surface-text text-lg',
-  description: 'text-base text-description',
-  grid: 'grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trim-lg',
-};
 
 //
 // Root (headless — no styling, no scroll).
@@ -65,7 +60,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   return (
     <>
       <h2 className='px-trim-md mt-trim-md mb-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
-      {description && <p className='px-trim-md my-trim-md text-description'>{toLocalizedString(description, t)}</p>}
+      {description && <p className='px-trim-md text-description'>{toLocalizedString(description, t)}</p>}
       <div className='w-full pt-trim-md space-y-trim-md'>{children}</div>
     </>
   );
@@ -103,10 +98,12 @@ const SettingsItem = ({ title, description = '', children }: SettingsItemProps) 
 
   return (
     <Input.Root>
-      <SettingsPanel classNames={styles.grid}>
-        <Input.Label classNames={mx(styles.title, 'md:col-span-2')}>{toLocalizedString(title, t)}</Input.Label>
+      <SettingsPanel classNames='grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trim-lg gap-y-0'>
+        <Input.Label classNames='pb-trim-md text-base-surface-text text-lg md:col-span-2'>
+          {toLocalizedString(title, t)}
+        </Input.Label>
         <Input.DescriptionAndValidation>
-          <Input.Description classNames={styles.description}>{toLocalizedString(description, t)}</Input.Description>
+          <Input.Description classNames='text-base text-description'>{toLocalizedString(description, t)}</Input.Description>
         </Input.DescriptionAndValidation>
         <div role='none' className='text-end py-1'>
           {children}
