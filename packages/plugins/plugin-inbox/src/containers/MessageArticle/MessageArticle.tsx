@@ -19,10 +19,16 @@ import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
-export type MessageArticleProps = ObjectSurfaceProps<MessageType.Message>;
-export const MessageArticle = ({ role, subject: message, attendableId, companionTo }: MessageArticleProps) => {
+export type MessageArticleProps = ObjectSurfaceProps<MessageType.Message, { mailbox?: Mailbox.Mailbox }>;
+export const MessageArticle = ({
+  role,
+  subject: message,
+  attendableId,
+  companionTo,
+  mailbox: mailboxProp,
+}: MessageArticleProps) => {
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
-  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : undefined;
+  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
@@ -85,7 +91,7 @@ export const MessageArticle = ({ role, subject: message, attendableId, companion
       onReply={handleReply}
       onReplyAll={handleReplyAll}
       onForward={handleForward}
-      onOpen={handleOpen}
+      onOpen={companionTo ? handleOpen : undefined}
     >
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>

@@ -71,8 +71,16 @@ export default Capability.makeModule(() =>
           const { graph } = useAppGraph();
           const parentId = getParentId(attendableId);
           const parent = useNode(graph, parentId);
-          const mailbox = companionTo ?? parent?.properties.mailbox;
-          return <MessageArticle role={role} subject={subject} attendableId={attendableId} companionTo={mailbox} />;
+          const mailbox = parent?.properties.mailbox;
+          return (
+            <MessageArticle
+              role={role}
+              subject={subject}
+              attendableId={attendableId}
+              companionTo={companionTo}
+              mailbox={companionTo ? undefined : mailbox}
+            />
+          );
         },
       }),
       Surface.create({
