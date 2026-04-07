@@ -118,6 +118,7 @@ export class ChatProcessor {
     const feedQueueDxn = Feed.getQueueDxn(feed)!;
     const queue = space.queues.get<Message.Message>(feedQueueDxn);
     const chat = Chat.make({ feed: Ref.make(feed) });
+    Obj.setParent(feed, chat);
     space.db.add(chat);
 
     const conversation = new AiConversation({ queue, registry: this._registry });
