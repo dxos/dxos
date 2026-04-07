@@ -94,7 +94,6 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
     ),
   );
 
-  // TODO(burdon): Form.
   return (
     <div role='none' className='dx-container grid grid-rows-[min-content_1fr_min-content] gap-2 pb-trim-md'>
       <div role='none' className='flex flex-col'>
@@ -126,12 +125,14 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
       <div className='dx-expander flex flex-col'>
         <Input.Root>
           <Input.Label>{t('instructions.label')}</Input.Label>
-          <MarkdownEditor.Root id={spec?.id ?? ''} object={spec}>
-            <MarkdownEditor.Content initialValue={specInitialValue} />
-          </MarkdownEditor.Root>
+          {spec && (
+            <MarkdownEditor.Root id={spec.id} object={spec}>
+              <MarkdownEditor.Content initialValue={specInitialValue} />
+            </MarkdownEditor.Root>
+          )}
         </Input.Root>
       </div>
-      {/* TODO(burdon): Move into toolbar. */}
+      {/* TODO(burdon): Move into toolbar in parent. */}
       <Button onClick={handleResetHistory}>{t('reset-history.button')}</Button>
     </div>
   );
