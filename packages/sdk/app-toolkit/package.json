@@ -70,7 +70,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/cli": "catalog:"
+    "@effect/cli": "catalog:",
+    "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

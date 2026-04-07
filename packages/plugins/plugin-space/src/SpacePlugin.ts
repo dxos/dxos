@@ -40,6 +40,7 @@ import {
   AppGraphSerializer,
   IdentityCreated,
   Migrations,
+  NavigationHandler,
   NavigationResolver,
   OperationHandler,
   UndoMappings,
@@ -150,6 +151,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
   AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),

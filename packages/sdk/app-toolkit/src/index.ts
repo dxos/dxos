@@ -13,6 +13,7 @@ export * from './not-found';
 export * from './operations';
 export * from './paths';
 export * from './plugin';
+export * from './native-passkey';
 export * from './personal-space';
 export * from './type-options';
 export * from './translations';

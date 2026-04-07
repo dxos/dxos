@@ -39,7 +39,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: DeckEvents.SettingsReady,
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.OperationInvokerReady),
     activate: CheckAppScheme,
   }),
   Plugin.addModule({

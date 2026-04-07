@@ -10,7 +10,14 @@ import { Surface } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { ABOUT_DIALOG, AboutDialog, WELCOME_SCREEN, WelcomeScreen } from '../components';
+import {
+  ABOUT_DIALOG,
+  AboutDialog,
+  NATIVE_REDIRECT_DIALOG,
+  NativeRedirectDialog,
+  WELCOME_SCREEN,
+  WelcomeScreen,
+} from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
@@ -26,6 +33,12 @@ export default Capability.makeModule(() =>
           invariant(hubUrl, 'Hub URL not found');
           return <WelcomeScreen hubUrl={hubUrl} />;
         },
+      }),
+      Surface.create({
+        id: `${meta.id}.native-redirect`,
+        role: 'dialog',
+        filter: (data): data is any => data.component === NATIVE_REDIRECT_DIALOG,
+        component: ({ data }) => <NativeRedirectDialog {...data.props} />,
       }),
       Surface.create({
         id: ABOUT_DIALOG,

@@ -10,6 +10,8 @@ export * from './app-graph-builder';
 export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
 export const Migrations = Capability.lazy('SpaceMigrations', () => import('./migrations'));
+export { NavigationHandler } from './navigation-handler';
+export type { NavigationHandlerOptions } from './navigation-handler';
 export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

@@ -14,6 +14,7 @@ import {
   AppGraphBuilder,
   Client,
   Migrations,
+  NavigationHandler,
   OperationHandler,
   ReactContext,
   ReactSurface,
@@ -22,6 +23,9 @@ import {
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),
   AppPlugin.addTranslationsModule({ translations }),

@@ -101,6 +101,7 @@
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
+    "@tauri-apps/api": "catalog:",
     "effect": "catalog:",
     "react-qr-rounded": "catalog:",
     "yaml": "catalog:"

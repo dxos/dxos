@@ -94,6 +94,7 @@
     "@effect/experimental": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "@tauri-apps/plugin-deep-link": "catalog:",
     "immer": "catalog:"
   },
   "devDependencies": {
