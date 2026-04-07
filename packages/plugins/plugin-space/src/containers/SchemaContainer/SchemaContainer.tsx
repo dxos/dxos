@@ -19,7 +19,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const schemas = useQuerySpaceSchemas(space);
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section title={t('schema-verbose.label')} description={t('schema.description')}>
         <div
           role='none'
@@ -37,7 +37,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
           ))}
         </div>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

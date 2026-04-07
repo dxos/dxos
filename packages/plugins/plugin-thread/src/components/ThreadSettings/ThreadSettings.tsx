@@ -16,5 +16,5 @@ export type ThreadSettingsProps = SettingsSurfaceProps<Settings.Settings>;
 // TODO(burdon): Settings.
 export const ThreadSettings = ({ settings: _settings }: ThreadSettingsProps) => {
   const { t: _t } = useTranslation(meta.id);
-  return <SettingsForm.Root></SettingsForm.Root>;
+  return <SettingsForm.Viewport></SettingsForm.Viewport>;
 };

@@ -14,7 +14,7 @@ import { DebugSettings } from './DebugSettings';
 const meta = {
   title: 'plugins/plugin-debug/components/DebugSettings',
   component: DebugSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' }), withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',

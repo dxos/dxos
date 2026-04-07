@@ -13,7 +13,7 @@ import { PresenterSettings } from './PresenterSettings';
 const meta = {
   title: 'plugins/plugin-presenter/components/PresenterSettings',
   component: PresenterSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
