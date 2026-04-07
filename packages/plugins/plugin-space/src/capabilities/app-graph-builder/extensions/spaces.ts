@@ -5,22 +5,19 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Expando } from '@dxos/schema';
 
-import { getActiveSpace } from '../../../hooks';
-import { meta } from '../../../meta';
-import { SPACE_TYPE, SpaceCapabilities } from '../../../types';
-import { SpaceOperation } from '../../../operations';
-import { getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
-
+import { meta } from '#meta';
+import { SPACE_TYPE, SpaceCapabilities } from '#types';
+import { SpaceOperation } from '#operations';
 import { SHARED, getSpaceDisplayName } from '../../../util';
 
 import {
@@ -75,7 +72,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
@@ -94,7 +91,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }

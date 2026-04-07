@@ -12,7 +12,7 @@ import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;

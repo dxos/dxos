@@ -14,7 +14,7 @@ import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { messageValence } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };

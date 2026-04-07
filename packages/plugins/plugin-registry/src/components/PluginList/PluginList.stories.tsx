@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { translations } from '../../translations';
-import { RegistryTagType } from '../../types';
+import { RegistryTagType } from '#types';
 
 import { PluginList } from './PluginList';
 

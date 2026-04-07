@@ -7,8 +7,8 @@ import React, { Fragment, memo, useMemo } from 'react';
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useActions } from '../../hooks';
-import { meta } from '../../meta';
+import { useActions } from '#hooks';
+import { meta } from '#meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { type NavTreeItemColumnsProps } from '../types';

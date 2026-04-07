@@ -4,10 +4,10 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Main, useMediaQuery } from '@dxos/react-ui';
 
-import { useBreakpoints, useHoistStatusbar } from '../../hooks';
+import { useBreakpoints, useHoistStatusbar } from '#hooks';
 import { layoutAppliesTopbar } from '../../util';
 import { useDeckContext } from './DeckRoot';
 import { ComplementarySidebar, Sidebar } from '../Sidebar';

@@ -17,8 +17,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { initializeMailbox } from '../../testing';
-import { Mailbox } from '../../types';
+import { initializeMailbox } from '#testing';
+import { Mailbox } from '#types';
 
 import { MailboxArticle } from './MailboxArticle';
 

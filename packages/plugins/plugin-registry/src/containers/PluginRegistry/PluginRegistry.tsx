@@ -14,8 +14,8 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { PluginList } from '../../components';
-import { getPluginPath } from '../../meta';
+import { PluginList } from '#components';
+import { getPluginPath } from '#meta';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);

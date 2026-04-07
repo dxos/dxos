@@ -15,7 +15,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { KEY_BINDING, meta } from '../../meta';
+import { KEY_BINDING, meta } from '#meta';
 
 export type CommandsDialogContentProps = {
   selected?: string;

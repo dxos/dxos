@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { type LayoutOperation } from '@dxos/app-toolkit';
 import { type Label } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type LayoutStateProps = {
   sidebarState?: 'expanded' | 'collapsed' | 'closed';

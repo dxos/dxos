@@ -3,6 +3,7 @@
 //
 
 export * from './activation-events';
+export * from './active-space';
 export * from './capabilities';
 export * from './collaboration';
 export * from './file';
@@ -13,4 +14,5 @@ export * from './operations';
 export * from './paths';
 export * from './plugin';
 export * from './personal-space';
+export * from './type-options';
 export * from './translations';

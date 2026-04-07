@@ -12,6 +12,21 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./src/capabilities/index.ts",
+      "browser": "./src/capabilities/index.ts",
+      "node": "./src/capabilities/node.ts"
+    },
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing/index.ts",
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",

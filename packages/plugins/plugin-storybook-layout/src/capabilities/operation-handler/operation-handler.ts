@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { OperationHandlerSet as OperationHandlerSet$ } from '@dxos/operation';
 
-import { LayoutState } from '../../types';
+import { LayoutState } from '#types';
 
 export default Capability.makeModule<OperationHandlerSet$.OperationHandlerSet>(
   Effect.fnUntraced(function* () {

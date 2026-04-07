@@ -20,7 +20,7 @@ import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTransl
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptObjectSettingsProps = {
   object: Script.Script;

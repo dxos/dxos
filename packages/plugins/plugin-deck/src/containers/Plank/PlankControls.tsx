@@ -7,9 +7,9 @@ import React, { forwardRef, useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-import { type DeckAction, type LayoutMode } from '../../types';
-import { DeckOperation } from '../../operations';
+import { meta } from '#meta';
+import { type DeckAction, type LayoutMode } from '#types';
+import { DeckOperation } from '#operations';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 

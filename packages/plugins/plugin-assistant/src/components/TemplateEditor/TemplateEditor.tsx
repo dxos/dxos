@@ -20,7 +20,7 @@ import {
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { handlebars, xmlDecorator } from './extensions';
 

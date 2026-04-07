@@ -9,7 +9,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
 import { useAttended } from '@dxos/react-ui-attention';
 
-import { useNodeActionExpander } from '../../hooks';
+import { useNodeActionExpander } from '#hooks';
 
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {

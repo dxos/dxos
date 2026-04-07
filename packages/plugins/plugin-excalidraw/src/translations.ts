@@ -5,7 +5,7 @@
 import { Sketch } from '@dxos/plugin-sketch/types';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {

@@ -9,7 +9,7 @@ import { Icon } from '@dxos/react-ui';
 
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { mapFormulaIndicesToRefs } from '../../types';
+import { mapFormulaIndicesToRefs } from '#types';
 import { useSheetContext } from '../SheetRoot';
 
 export type SheetStatusbarProps = {};

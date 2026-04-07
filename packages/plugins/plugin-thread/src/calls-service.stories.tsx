@@ -18,7 +18,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
-import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
+import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from '#hooks';
 
 // TODO(burdon): THIS IS TOO COMPLEX FOR A TEST SETUP.
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {

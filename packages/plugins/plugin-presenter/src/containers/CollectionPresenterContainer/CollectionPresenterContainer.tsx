@@ -9,8 +9,8 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Collection } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { PageNumber, Pager, Layout as PresenterLayout } from '../../components';
-import { PresenterContext } from '../../types';
+import { PageNumber, Pager, Layout as PresenterLayout } from '#components';
+import { PresenterContext } from '#types';
 import { useExitPresenter } from '../../useExitPresenter';
 
 type CollectionPresenterContainerProps = ObjectSurfaceProps<Collection.Collection>;

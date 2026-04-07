@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 //
 // Constants

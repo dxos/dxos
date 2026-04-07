@@ -18,13 +18,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
-import {
-  type CreateObjectOption,
-  CreateObjectPanel,
-  type CreateObjectPanelProps,
-  type Metadata,
-} from '../../components';
-import { meta } from '../../meta';
+import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from '#components';
+import { meta } from '#meta';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 

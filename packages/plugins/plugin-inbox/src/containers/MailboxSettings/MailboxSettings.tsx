@@ -10,9 +10,9 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { useSyncTrigger } from '../../hooks';
-import { meta } from '../../meta';
-import { Mailbox } from '../../types';
+import { useSyncTrigger } from '#hooks';
+import { meta } from '#meta';
+import { Mailbox } from '#types';
 
 export const MailboxSettings = ({ subject }: ObjectSurfaceProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);

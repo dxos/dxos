@@ -10,7 +10,7 @@ import { debounce } from '@dxos/async';
 
 import { watchDirectory } from './disk-io';
 
-import type { FilesystemWorkspace } from '../../types';
+import type { FilesystemWorkspace } from '#types';
 
 const WATCHER_DEBOUNCE_MS = 500;
 

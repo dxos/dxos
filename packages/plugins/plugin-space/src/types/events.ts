@@ -5,7 +5,7 @@
 import { ActivationEvent } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace SpaceEvents {
   export const StateReady = AppActivationEvents.createStateEvent(`${meta.id}.event.state-ready`);

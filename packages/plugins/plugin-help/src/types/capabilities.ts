@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace HelpCapabilities {
   export const StateSchema = Schema.mutable(

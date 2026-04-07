@@ -15,7 +15,7 @@ import {
   type DeckPluginState,
   type DeckState,
   type StoredDeckState,
-} from '../types';
+} from '#types';
 
 export type DeckStateHook = {
   /** Combined state value (reactive). Includes both persisted and ephemeral state. */

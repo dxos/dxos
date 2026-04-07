@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
-import { functions } from '../../testing';
+import { functions } from '#testing';
 import { translations } from '../../translations';
 
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';

@@ -10,8 +10,8 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
-import { useCreateAndDeployScriptTemplates } from '../../hooks';
-import { meta } from '../../meta';
+import { useCreateAndDeployScriptTemplates } from '#hooks';
+import { meta } from '#meta';
 import { type Template } from '../../templates';
 
 // TODO(ZaymonFC):

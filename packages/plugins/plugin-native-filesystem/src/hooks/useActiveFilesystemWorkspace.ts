@@ -6,7 +6,7 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { getWorkspaceFromPath } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 
-import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '../types';
+import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '#types';
 
 /** Extracts the raw workspace id from a qualified graph path (e.g. `root/fs:dir` → `fs:dir`). */
 const getWorkspaceId = (qualifiedPath: string): string => {

@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 import { railGridHorizontal } from '@dxos/react-ui-stack';
 import { composable, composableProps, mainIntrinsicSize } from '@dxos/ui-theme';
 
-import { useMainSize } from '../../hooks';
+import { useMainSize } from '#hooks';
 
 export type PlankContentProps = PropsWithChildren<{
   solo: boolean;

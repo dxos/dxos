@@ -13,8 +13,9 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities } from '../types';

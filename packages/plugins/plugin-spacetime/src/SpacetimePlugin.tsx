@@ -12,10 +12,11 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { ReactSurface, SpacetimeSettings } from './capabilities';
-import { meta } from './meta';
+import { meta } from '#meta';
 import { translations } from './translations';
-import { Model, Scene } from './types';
+import { Model, Scene } from '#types';
+
+import { ReactSurface, SpacetimeSettings } from '#capabilities';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

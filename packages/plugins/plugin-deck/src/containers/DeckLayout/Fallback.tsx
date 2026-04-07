@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const Fallback = () => {
   const { t } = useTranslation(meta.id);

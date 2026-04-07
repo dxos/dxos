@@ -7,7 +7,7 @@ import { createContext } from '@radix-ui/react-context';
 import { type PluginManager } from '@dxos/app-framework';
 
 import { type DeckStateHook } from '../../hooks/useDeckState';
-import { type LayoutMode, type Settings } from '../../types';
+import { type LayoutMode, type Settings } from '#types';
 import React, { PropsWithChildren } from 'react';
 
 const DECK_NAME = 'Deck';

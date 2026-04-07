@@ -19,7 +19,7 @@ import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { Message, Thread } from '@dxos/types';
 
 import { translations } from '../../translations';
-import { Channel } from '../../types';
+import { Channel } from '#types';
 
 import { ChatContainer } from './ChatContainer';
 import { corePlugins } from '@dxos/plugin-testing';
