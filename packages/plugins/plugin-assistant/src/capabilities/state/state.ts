@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -24,9 +25,11 @@ export default Capability.makeModule(() =>
       }),
     });
 
+    const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
+
     return [
       Capability.contributes(AssistantCapabilities.State, stateAtom),
-      Capability.contributes(AssistantCapabilities.CompanionChatCache, new Map<string, Obj.Unknown>()),
+      Capability.contributes(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
     ];
   }),
 );

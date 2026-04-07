@@ -5,31 +5,27 @@
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '../../components';
 import { useBlueprintRegistry, useContextBinder } from '../../hooks';
-import { Assistant, AssistantCapabilities } from '../../types';
 import { AssistantOperation } from '../../operations';
 import ChatContainer from '../ChatContainer';
-
-// TODO(burdon): Use definition.
-// export type ChatCompanionProps = ObjectSurfaceProps<Chat.Chat>;
 
 export type ChatCompanionProps = {
   role?: string;
   data: {
-    subject: Chat.Chat | 'assistant-chat';
+    subject: Chat.Chat | null;
     attendableId: string;
     companionTo: Obj.Unknown;
   };
@@ -42,48 +38,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 
     const companionTo = data.companionTo;
     const space = getSpace(companionTo);
-    const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
-
-    const state = useAtomCapability(AssistantCapabilities.State);
-    const companionToId = Obj.getDXN(companionTo).toString();
-    const currentChatState = state?.currentChat[companionToId];
-
-    // Resolve chat from state or data.subject, and ensure a companion chat exists.
-    useEffect(() => {
-      if (!currentChatState && chat && getSpace(chat)) {
-        // State cleared (new thread) — drop the persisted chat so ensure-companion-chat creates a fresh transient.
-        setChat(undefined);
-      } else if (data.subject !== 'assistant-chat') {
-        setChat(data.subject);
-      } else if (currentChatState && space) {
-        const currentChatDxnStr = chat ? Obj.getDXN(chat).toString() : undefined;
-        if (currentChatState !== currentChatDxnStr) {
-          const parsedDxn = DXN.tryParse(currentChatState);
-          if (parsedDxn) {
-            const chatRef = space.db.makeRef(parsedDxn);
-            const resolvedChat = chatRef?.target;
-            if (Obj.instanceOf(Assistant.Chat, resolvedChat)) {
-              setChat(resolvedChat);
-            }
-          }
-        }
-      }
-    }, [currentChatState, data.subject, space, chat]);
-
-    // When there is no chat, use the centralized ensure-companion-chat operation.
-    useAsyncEffect(async () => {
-      if (!space || chat) {
-        return;
-      }
-
-      const { data: result } = await invokePromise(AssistantOperation.EnsureCompanionChat, {
-        db: space.db,
-        companionTo,
-      });
-      if (result) {
-        setChat(result.chat);
-      }
-    }, [chat, space, companionTo, invokePromise]);
+    const chat = data.subject;
 
     const chatQueue = space && chat ? space.queues.get(chat.queue.dxn) : undefined;
     const binder = useContextBinder(chatQueue);
@@ -186,7 +141,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         role={role}
         attendableId={data.attendableId}
         space={space}
-        subject={chat}
+        subject={chat ?? undefined}
         companionTo={companionTo}
         onEvent={handleEvent}
         ref={forwardedRef}

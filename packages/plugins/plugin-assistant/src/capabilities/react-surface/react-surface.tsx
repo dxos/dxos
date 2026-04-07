@@ -17,6 +17,7 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { useActiveSpace } from '@dxos/plugin-space';
 
+import { ASSISTANT_COMPANION_VARIANT } from '../../meta';
 import { AssistantSettings } from '../../components';
 import {
   BlueprintArticle,
@@ -52,7 +53,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Chat.Chat, data.subject) &&
-          data.variant !== 'assistant-chat',
+          data.variant !== ASSISTANT_COMPANION_VARIANT,
         component: ({ data, role, ref }) => (
           <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
         ),
@@ -69,26 +70,17 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
-      // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({
         id: `${meta.id}.companion-chat`,
         role: 'article',
         filter: (
           data,
-        ): data is { subject: Chat.Chat | 'assistant-chat'; attendableId: string; companionTo: Obj.Unknown } =>
+        ): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
-          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
+          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
         component: ({ data, role, ref }) => (
-          <ChatCompanion
-            role={role}
-            data={data}
-            // TODO(burdon): See comment in ChatCompanion.tsx
-            // data={data.subject}
-            // companionTo={data.companionTo}
-            // attendableId={data.attendableId}
-            ref={ref}
-          />
+          <ChatCompanion role={role} data={data} ref={ref} />
         ),
       }),
       Surface.create({

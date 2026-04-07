@@ -16,7 +16,6 @@ const handler: Operation.WithHandler<typeof EnsureCompanionChat> = EnsureCompani
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, companionTo }) {
       const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-      const cache = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
       const companionDxn = Obj.getDXN(companionTo).toString();
 
       // 1. Look for an existing persisted companion chat in the space.
@@ -25,15 +24,17 @@ const handler: Operation.WithHandler<typeof EnsureCompanionChat> = EnsureCompani
       );
       if (existingChats.length > 0) {
         const chat = existingChats.at(-1) as Chat.Chat;
-        cache.delete(companionDxn);
-        yield* Effect.promise(() =>
-          operationInvoker.invokePromise(SetCurrentChat, { companionTo, chat }),
-        );
+        yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => {
+          const { [companionDxn]: _, ...rest } = current;
+          return rest;
+        });
+        yield* Effect.promise(() => operationInvoker.invokePromise(SetCurrentChat, { companionTo, chat }));
         return { chat, persisted: true };
       }
 
       // 2. Return cached transient chat for this companion if present.
-      const cached = cache.get(companionDxn) as Chat.Chat | undefined;
+      const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.CompanionChatCache);
+      const cached = cache[companionDxn] as Chat.Chat | undefined;
       if (cached) {
         return { chat: cached, persisted: false };
       }
@@ -43,7 +44,10 @@ const handler: Operation.WithHandler<typeof EnsureCompanionChat> = EnsureCompani
         operationInvoker.invokePromise(CreateChat, { db, addToSpace: false }),
       );
       const chat = data!.object;
-      cache.set(companionDxn, chat);
+      yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
+        ...current,
+        [companionDxn]: chat,
+      }));
       return { chat, persisted: false };
     }),
   ),

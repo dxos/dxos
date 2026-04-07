@@ -5,6 +5,7 @@
 export * from './ai-service';
 export * from './app-graph-builder';
 export * from './blueprint-definition';
+export * from './companion-chat-provisioner';
 export * from './edge-model-resolver';
 export * from './local-model-resolver';
 export * from './markdown';
