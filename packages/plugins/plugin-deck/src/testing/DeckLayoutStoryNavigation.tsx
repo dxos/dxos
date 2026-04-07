@@ -45,7 +45,9 @@ export const DeckLayoutStoryNavigation = forwardRef<HTMLDivElement, DeckLayoutSt
                   <Icon icon={node.properties.icon} size={4} />
                 </ListItem.Endcap>
               )}
-              <ListItem.Heading>{typeof node.properties.label === 'string' ? node.properties.label : node.id}</ListItem.Heading>
+              <ListItem.Heading>
+                {typeof node.properties.label === 'string' ? node.properties.label : node.id}
+              </ListItem.Heading>
             </ListItem.Root>
           ))}
         </List>
