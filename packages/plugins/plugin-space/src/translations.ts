@@ -135,6 +135,8 @@ export const translations = [
         'space-settings.description':
           'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
         'show-hidden-spaces.label': 'Show archived spaces',
+        'show-hidden-spaces.description':
+          'Display archived spaces in the sidebar so they can be accessed or unarchived.',
         'save-files-to-directory.label': 'Save files to disk',
         'select-path.label': 'Select path',
         'snapshot-by-schema.label': 'Snapshot of objects',
@@ -230,7 +232,7 @@ export const translations = [
         'space-locked.label': 'Lock space',
         'space-locked.description': 'Locking a space prevents new members from being invited to the space.',
 
-        'settings-panel.label': 'Space Settings',
+        'settings.panel.label': 'Space Settings',
         'open-current-space-settings.label': 'Open current space settings',
         'space-settings-properties.label': 'General settings',
         'space-properties-settings-verbose.label': 'Manage space properties',

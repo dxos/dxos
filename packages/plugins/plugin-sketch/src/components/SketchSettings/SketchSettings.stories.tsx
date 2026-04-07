@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-sketch/components/SketchSettings',
   component: SketchSettings,
   tags: ['settings'],
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

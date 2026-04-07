@@ -123,7 +123,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
   );
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section title={t('folder-properties.title')}>
         <Form.Root
           fieldMap={fieldMap}
@@ -135,13 +135,13 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         </Form.Root>
       </Settings.Section>
       <Settings.Section title={t('remove-folder.label')}>
-        <Settings.ItemInput title={t('remove-folder.label')} description={t('remove-folder.description')}>
+        <Settings.Item title={t('remove-folder.label')} description={t('remove-folder.description')}>
           <Button variant='destructive' onClick={handleRemove}>
             {t('remove-folder.label')}
           </Button>
-        </Settings.ItemInput>
+        </Settings.Item>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

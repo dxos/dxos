@@ -17,10 +17,8 @@ export const SpacetimeSettings = ({ settings, onSettingsChange }: SpacetimeSetti
   const { t } = useTranslation(meta.id);
 
   return (
-    <SettingsForm.Root>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Group></SettingsForm.Group>
-      </SettingsForm.Section>
-    </SettingsForm.Root>
+    <SettingsForm.Viewport>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}></SettingsForm.Section>
+    </SettingsForm.Viewport>
   );
 };

@@ -51,7 +51,7 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

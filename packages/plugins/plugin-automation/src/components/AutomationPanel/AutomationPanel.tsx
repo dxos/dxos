@@ -121,7 +121,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {filteredTriggers.length > 0 && (
         <List.Root<Trigger.Trigger>
           items={filteredTriggers}
@@ -148,7 +148,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
       {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
       <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
-    </Settings.Container>
+    </Settings.Panel>
   );
 };
 

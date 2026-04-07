@@ -115,14 +115,14 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
               [onValueChange, type],
             );
             return (
-              <Settings.ItemInput title={label} description={t('display-name.description')}>
+              <Settings.Item title={label} description={t('display-name.description')}>
                 <Input.TextInput
                   value={getValue()}
                   onChange={handleChange}
                   placeholder={t('display-name-input.placeholder')}
                   classNames='min-w-64'
                 />
-              </Settings.ItemInput>
+              </Settings.Item>
             );
           },
       icon: personal
@@ -153,9 +153,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <Settings.ItemInput title={label} description={t('edge-replication.description')}>
+          <Settings.Item title={label} description={t('edge-replication.description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-          </Settings.ItemInput>
+          </Settings.Item>
         );
       },
       archived: personal
@@ -163,11 +163,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         : ({ type, label, getValue, onValueChange }) => {
             const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
             return (
-              <Settings.ItemInput title={label} description={t('archive-space.description')}>
+              <Settings.Item title={label} description={t('archive-space.description')}>
                 <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
                   {getValue() ? t('unarchive-space.label') : t('archive-space.label')}
                 </Button>
-              </Settings.ItemInput>
+              </Settings.Item>
             );
           },
     }),
@@ -186,7 +186,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   }, [space, repairs]);
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section
         title={t('space-properties-settings-verbose.label')}
         description={t('space-properties-settings.description', { ns: meta.id })}
@@ -202,14 +202,14 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         </Form.Root>
       </Settings.Section>
       <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-        <Settings.ItemInput title={t('backup-space.title')} description={t('backup-space.description')}>
+        <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
           <Button onClick={handleBackup}>{t('download-backup.label')}</Button>
-        </Settings.ItemInput>
-        <Settings.ItemInput title={t('repair-space.title')} description={t('repair-space.description')}>
+        </Settings.Item>
+        <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
           <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
-        </Settings.ItemInput>
+        </Settings.Item>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

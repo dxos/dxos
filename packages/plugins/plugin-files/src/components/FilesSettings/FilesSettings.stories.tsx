@@ -13,7 +13,7 @@ import { FilesSettings } from './FilesSettings';
 const meta = {
   title: 'plugins/plugin-files/components/FilesSettings',
   component: FilesSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
