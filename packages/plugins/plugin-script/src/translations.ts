@@ -35,7 +35,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Scripts',
-        'settings.title': 'Scripts plugin settings',
+        'settings.title': 'Scripts settings',
         'description.label': 'Description',
         'description.placeholder': 'Enter description',
         'binding.placeholder': 'Function name',

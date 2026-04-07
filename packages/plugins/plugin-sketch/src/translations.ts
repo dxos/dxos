@@ -23,7 +23,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Sketch',
-        'settings.title': 'Sketch plugin settings',
+        'settings.title': 'Sketch settings',
         'settings.hover-tools.label': 'Auto hide controls',
         'settings.grid-show.label': 'Show grid',
         'settings.grid-show.description': 'Display a background grid on the sketch canvas.',
