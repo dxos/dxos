@@ -6,46 +6,8 @@ import { describe, test } from 'vitest';
 import { parseAst } from 'rolldown/parseAst';
 import { RolldownMagicString } from 'rolldown';
 
-import type { LogMetaTransformSpec } from './rolldown-log-meta-types';
-import { transform } from './rolldown-log-meta-transform';
-
-/**
- * Same `to_transform` as Composer’s compile pipeline (`tools/dx-compile/src/main.ts`).
- */
-const SPEC: LogMetaTransformSpec[] = [
-  {
-    name: 'log',
-    package: '@dxos/log',
-    param_index: 2,
-    include_args: false,
-    include_call_site: true,
-    include_scope: true,
-  },
-  {
-    name: 'dbg',
-    package: '@dxos/log',
-    param_index: 1,
-    include_args: true,
-    include_call_site: false,
-    include_scope: false,
-  },
-  {
-    name: 'invariant',
-    package: '@dxos/invariant',
-    param_index: 2,
-    include_args: true,
-    include_call_site: false,
-    include_scope: true,
-  },
-  {
-    name: 'Context',
-    package: '@dxos/context',
-    param_index: 1,
-    include_args: false,
-    include_call_site: false,
-    include_scope: false,
-  },
-];
+import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions';
+import { transform } from './log-meta-transform';
 
 /**
  * Core transform only (no Rolldown id / moduleType / exclude filters): `meta.ast` + MagicString.
@@ -53,7 +15,7 @@ const SPEC: LogMetaTransformSpec[] = [
 const runTransform = (filename: string, code: string): string => {
   const program = parseAst(code, { astType: 'ts', lang: 'ts' });
   const magicString = new RolldownMagicString(code);
-  transform(magicString, program, filename, { specs: SPEC });
+  transform(magicString, program, filename, { specs: DEFAULT_LOG_META_TRANSFORM_SPEC });
   return magicString.toString();
 };
 

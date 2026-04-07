@@ -125,4 +125,4 @@ Add more fragments by copying a path prefix from an **`app.log`** line (`f` fiel
 
 - Log processors and filters: `packages/common/log/src/context.ts`, `packages/common/log/src/options.ts` (`parseFilter`).
 - NDJSON capture shape: `packages/common/log/src/log-buffer.ts`.
-- Composer wiring: `tools/vite-plugin-log`, `packages/apps/composer-app/vite.config.ts` (`vitePluginLog` in `sharedPlugins`).
+- Composer wiring: `tools/vite-plugin-log`, `packages/apps/composer-app/vite.config.ts` (`dxosLogPlugin` in `sharedPlugins`).

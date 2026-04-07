@@ -11,21 +11,22 @@ import type {
   NewExpression,
   Program,
 } from '@oxc-project/types';
+import type { RolldownMagicString } from 'rolldown';
 import { Visitor } from 'rolldown/utils';
 
-import type { LogMetaTransformSpec } from './rolldown-log-meta-types';
-import type { RolldownMagicString } from 'rolldown';
+import type { LogMetaTransformSpec } from './definitions';
 
 /**
  * Applies meta transformations to the magic string in `code`.
+ * Pass `edits` when {@link computeLogMetaEdits} was already run (e.g. Rolldown hook) to avoid recomputing.
  */
 export function transform(
   code: RolldownMagicString,
   ast: Program,
   filename: string,
-  { specs }: { specs: LogMetaTransformSpec[] },
+  options: { specs: LogMetaTransformSpec[]; edits?: LogMetaEdit[] },
 ): void {
-  const edits = computeLogMetaEdits(ast, code.toString(), specs, filename);
+  const edits = options.edits ?? computeLogMetaEdits(ast, code.toString(), options.specs, filename);
   const sorted = [...edits].sort((a, b) => b.pos - a.pos);
   for (const { pos, text } of sorted) {
     code.appendLeft(pos, text);

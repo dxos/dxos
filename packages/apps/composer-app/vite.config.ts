@@ -3,7 +3,7 @@
 //
 
 import importSource from '@dxos/vite-plugin-import-source';
-import { vitePluginLog } from '@dxos/vite-plugin-log';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -52,7 +52,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && vitePluginLog(),
+  env.command === 'serve' && dxosLogPlugin(),
   wasm(),
 ];
 
