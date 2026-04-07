@@ -8,7 +8,6 @@ import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-// import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
 import inspect from 'vite-plugin-inspect';
@@ -54,7 +53,6 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
     }),
   env.command === 'serve' && vitePluginLog(),
   wasm(),
-  // sourcemaps(),
 ];
 
 /**
