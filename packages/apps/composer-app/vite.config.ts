@@ -10,12 +10,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
+import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
+import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -325,33 +327,7 @@ export default defineConfig((env) => ({
       ],
     }),
 
-    importMapPlugin({
-      modules: [
-        '@dxos/app-framework',
-        '@dxos/app-graph',
-        '@dxos/client',
-        '@dxos/client/devtools',
-        '@dxos/client/echo',
-        '@dxos/client/halo',
-        '@dxos/client/invitations',
-        '@dxos/client/mesh',
-        '@dxos/client-protocol',
-        '@dxos/client-services',
-        '@dxos/config',
-        '@dxos/echo',
-        '@dxos/react-client',
-        '@dxos/react-client/devtools',
-        '@dxos/react-client/echo',
-        '@dxos/react-client/halo',
-        '@dxos/react-client/invitations',
-        '@dxos/react-client/mesh',
-        '@dxos/schema',
-        '@effect/platform',
-        'effect',
-        'react',
-        'react-dom',
-      ],
-    }),
+    importMapPlugin(),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
@@ -485,57 +461,4 @@ function chunkFileNames(chunkInfo: any) {
   }
 
   return 'assets/[name]-[hash].js';
-}
-
-function importMapPlugin(options: { modules: string[] }): Plugin[] {
-  const chunkRefIds: Record<string, string> = {};
-  let imports: Record<string, string> = {};
-
-  return [
-    {
-      name: 'import-map:get-chunk-ref-ids',
-      async buildStart() {
-        if (this.environment.mode === 'dev') {
-          return;
-        }
-
-        for (const m of options.modules) {
-          const resolved = await this.resolve(m);
-          if (resolved) {
-            // Emit the chunk during build start.
-            chunkRefIds[m] = this.emitFile({
-              type: 'chunk',
-              id: resolved.id,
-              // Preserve the original exports.
-              preserveSignature: 'strict',
-            });
-          }
-        }
-      },
-
-      generateBundle() {
-        imports = Object.fromEntries(options.modules.map((m) => [m, `/${this.getFileName(chunkRefIds[m])}`]));
-      },
-    },
-    {
-      name: 'import-map:transform-index-html',
-      enforce: 'post',
-      transformIndexHtml(html: string) {
-        const tags = [
-          {
-            tag: 'script',
-            attrs: {
-              type: 'importmap',
-            },
-            children: JSON.stringify({ imports }, null, 2),
-          },
-        ];
-
-        return {
-          html,
-          tags,
-        };
-      },
-    },
-  ];
 }

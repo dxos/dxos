@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 
-import { PluginArticle, PluginRegistry } from '../../containers';
+import { LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry } from '../../containers';
 import { registryCategoryId, meta } from '../../meta';
 
 export default Capability.makeModule(() =>
@@ -82,6 +82,12 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
         },
+      }),
+      Surface.create({
+        id: LOAD_PLUGIN_DIALOG,
+        role: 'dialog',
+        filter: (data): data is any => data.component === LOAD_PLUGIN_DIALOG,
+        component: () => <LoadPluginDialog />,
       }),
     ]),
   ),

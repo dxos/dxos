@@ -14,6 +14,7 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -226,7 +227,10 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const plugins = getPlugins(conf);
+  const builtinPlugins = getPlugins(conf);
+  const remotePlugins = await UrlLoader.preload();
+  const plugins = [...builtinPlugins, ...remotePlugins];
+  const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -266,6 +270,7 @@ const main = async () => {
     const App = useApp({
       fallback: Fallback,
       placeholder: Placeholder,
+      pluginLoader,
       plugins,
       core,
       defaults,
