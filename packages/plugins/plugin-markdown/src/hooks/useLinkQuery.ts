@@ -96,7 +96,10 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         },
       };
 
-      return [{ id: 'echo', items }, { id: 'create', items: [createItem] }];
+      return [
+        { id: 'echo', items },
+        { id: 'create', items: [createItem] },
+      ];
     },
     [db, filter, resolve, t],
   );

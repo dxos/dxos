@@ -33,10 +33,8 @@ const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOp
       });
 
       // Navigate to the draft under the mailbox drafts section so the graph can resolve it.
-      const mailboxId = mailbox ? Obj.isObject(mailbox) ? mailbox.id : undefined : undefined;
-      const draftPath = mailboxId
-        ? `${getMailboxDraftsPath(db.spaceId, mailboxId)}/${draft.id}`
-        : undefined;
+      const mailboxId = mailbox ? (Obj.isObject(mailbox) ? mailbox.id : undefined) : undefined;
+      const draftPath = mailboxId ? `${getMailboxDraftsPath(db.spaceId, mailboxId)}/${draft.id}` : undefined;
 
       if (draftPath) {
         yield* Operation.invoke(LayoutOperation.Open, { subject: [draftPath] });
