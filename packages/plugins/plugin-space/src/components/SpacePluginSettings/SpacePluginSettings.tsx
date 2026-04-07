@@ -31,19 +31,17 @@ export const SpacePluginSettings = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <SettingsForm.Root>
+    <SettingsForm.Viewport>
       <SettingsForm.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-        <SettingsForm.Group>
-          <SettingsForm.ItemInput title={t('show-hidden-spaces.label')}>
-            <Input.Switch
-              disabled={!onSettingsChange}
-              checked={settings.showHidden}
-              onCheckedChange={(checked) => onSettingsChange?.((state) => ({ ...state, showHidden: !!checked }))}
-            />
-          </SettingsForm.ItemInput>
-        </SettingsForm.Group>
+        <SettingsForm.Item title={t('show-hidden-spaces.label')}>
+          <Input.Switch
+            disabled={!onSettingsChange}
+            checked={settings.showHidden}
+            onCheckedChange={(checked) => onSettingsChange?.((state) => ({ ...state, showHidden: !!checked }))}
+          />
+        </SettingsForm.Item>
 
-        <SettingsForm.Container>
+        <SettingsForm.Panel>
           <Input.Root>
             <Input.Label>{t('settings.space-list.label')}</Input.Label>
           </Input.Root>
@@ -68,8 +66,8 @@ export const SpacePluginSettings = ({
               </ListItem.Root>
             ))}
           </List>
-        </SettingsForm.Container>
+        </SettingsForm.Panel>
       </SettingsForm.Section>
-    </SettingsForm.Root>
+    </SettingsForm.Viewport>
   );
 };

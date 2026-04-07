@@ -53,17 +53,17 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
   }, [space, existingTrigger]);
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section title={t('settings-summary.label')}>
-        <Settings.Frame>
+        <Settings.Panel>
           <IconButton
             icon={existingTrigger ? 'ph--check--regular' : 'ph--plus--regular'}
             label={t('create-trigger.label')}
             onClick={handleCreateTrigger}
             disabled={!!existingTrigger}
           />
-        </Settings.Frame>
+        </Settings.Panel>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

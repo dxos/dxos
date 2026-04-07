@@ -132,83 +132,81 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
   );
 
   return (
-    <SettingsForm.Root>
+    <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Group>
-          <SettingsForm.ItemInput title={t('settings-wireframe.label')}>
-            <Input.Switch
-              disabled={!onSettingsChange}
-              checked={settings.wireframe}
-              onCheckedChange={handleWireframeChange}
-            />
-          </SettingsForm.ItemInput>
-          <SettingsForm.ItemInput title={t('settings-download-diagnostics.label')}>
-            <IconButton
-              icon='ph--download-simple--regular'
-              iconOnly
-              disabled={!onUpload}
-              label={t('settings-download-diagnostics.label')}
-              onClick={handleDownload}
-            />
-          </SettingsForm.ItemInput>
-          <SettingsForm.ItemInput title={t('settings-download-logs.label')}>
-            <IconButton
-              icon='ph--download-simple--regular'
-              iconOnly
-              label={t('settings-download-logs.label')}
-              onClick={handleDownloadLogs}
-            />
-          </SettingsForm.ItemInput>
-          <SettingsForm.ItemInput title={t('settings-repair.label')}>
-            <IconButton
-              icon='ph--first-aid-kit--regular'
-              iconOnly
-              label={t('settings-repair.label')}
-              onClick={handleRepair}
-            />
-          </SettingsForm.ItemInput>
+        <SettingsForm.Item title={t('settings-wireframe.label')}>
+          <Input.Switch
+            disabled={!onSettingsChange}
+            checked={settings.wireframe}
+            onCheckedChange={handleWireframeChange}
+          />
+        </SettingsForm.Item>
+        <SettingsForm.Item title={t('settings-download-diagnostics.label')}>
+          <IconButton
+            icon='ph--download-simple--regular'
+            iconOnly
+            disabled={!onUpload}
+            label={t('settings-download-diagnostics.label')}
+            onClick={handleDownload}
+          />
+        </SettingsForm.Item>
+        <SettingsForm.Item title={t('settings-download-logs.label')}>
+          <IconButton
+            icon='ph--download-simple--regular'
+            iconOnly
+            label={t('settings-download-logs.label')}
+            onClick={handleDownloadLogs}
+          />
+        </SettingsForm.Item>
+        <SettingsForm.Item title={t('settings-repair.label')}>
+          <IconButton
+            icon='ph--first-aid-kit--regular'
+            iconOnly
+            label={t('settings-repair.label')}
+            onClick={handleRepair}
+          />
+        </SettingsForm.Item>
 
-          {/* TODO(burdon): Move to layout? */}
-          {toast && (
-            <Toast.Root>
-              <Toast.Body>
-                <Toast.Title>
-                  <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
-                  <span>{toast.title}</span>
-                </Toast.Title>
-                {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-              </Toast.Body>
-            </Toast.Root>
-          )}
+        {/* TODO(burdon): Move to layout? */}
+        {toast && (
+          <Toast.Root>
+            <Toast.Body>
+              <Toast.Title>
+                <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
+                <span>{toast.title}</span>
+              </Toast.Title>
+              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+            </Toast.Body>
+          </Toast.Root>
+        )}
 
-          <SettingsForm.ItemInput title={t('settings-choose-storage-adaptor.label')}>
-            <Select.Root
-              disabled={!onSettingsChange}
-              value={
-                Object.entries(StorageAdapters).find(
-                  ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-                )?.[0]
-              }
-              onValueChange={handleStorageAdapterChange}
-            >
-              <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-data-store.label')} />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {Object.keys(StorageAdapters).map((key) => (
-                      <Select.Option key={key} value={key}>
-                        {t(`settings-storage-adaptor.${key}.label`)}
-                      </Select.Option>
-                    ))}
-                  </Select.Viewport>
-                  <Select.Arrow />
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </SettingsForm.ItemInput>
-        </SettingsForm.Group>
+        <SettingsForm.Item title={t('settings-choose-storage-adaptor.label')}>
+          <Select.Root
+            disabled={!onSettingsChange}
+            value={
+              Object.entries(StorageAdapters).find(
+                ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+              )?.[0]
+            }
+            onValueChange={handleStorageAdapterChange}
+          >
+            <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-data-store.label')} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {Object.keys(StorageAdapters).map((key) => (
+                    <Select.Option key={key} value={key}>
+                      {t(`settings-storage-adaptor.${key}.label`)}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+                <Select.Arrow />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </SettingsForm.Item>
       </SettingsForm.Section>
-    </SettingsForm.Root>
+    </SettingsForm.Viewport>
   );
 };
 

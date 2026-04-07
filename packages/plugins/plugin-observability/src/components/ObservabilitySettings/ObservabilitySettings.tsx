@@ -17,21 +17,19 @@ export const ObservabilitySettings = ({ settings, onSettingsChange }: Observabil
   const { t } = useTranslation(meta.id);
 
   return (
-    <SettingsForm.Root>
+    <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
         <Message.Root valence='info'>
           <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>
-        <SettingsForm.Group>
-          <SettingsForm.ItemInput title={t('observability-enabled.label')}>
-            <Input.Switch
-              disabled={!onSettingsChange}
-              checked={settings.enabled}
-              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enabled: !!checked }))}
-            />
-          </SettingsForm.ItemInput>
-        </SettingsForm.Group>
+        <SettingsForm.Item title={t('observability-enabled.label')}>
+          <Input.Switch
+            disabled={!onSettingsChange}
+            checked={settings.enabled}
+            onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enabled: !!checked }))}
+          />
+        </SettingsForm.Item>
       </SettingsForm.Section>
-    </SettingsForm.Root>
+    </SettingsForm.Viewport>
   );
 };

@@ -70,7 +70,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   );
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {functions.length > 0 && (
         <List.Root<Operation.PersistentOperation>
           items={functions}
@@ -112,6 +112,6 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
           )}
         </List.Root>
       )}
-    </Settings.Container>
+    </Settings.Panel>
   );
 };

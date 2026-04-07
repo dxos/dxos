@@ -17,25 +17,25 @@ faker.seed(132);
 
 const DefaultStory = () => {
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section title='Settings' description={faker.lorem.paragraphs(1)}>
-        <Settings.Group>
-          <Settings.ItemInput title={faker.lorem.sentence(2)} description={faker.lorem.paragraphs(1)}>
-            <Input.Root>
-              <Input.TextInput placeholder='Input' />
-            </Input.Root>
-          </Settings.ItemInput>
-          <Settings.ItemInput title={faker.lorem.sentence(2)} description={faker.lorem.paragraphs(2)}>
-            <Input.Root>
-              <Input.Switch />
-            </Input.Root>
-          </Settings.ItemInput>
-          <Settings.ItemInput title={faker.lorem.sentence(3)} description={faker.lorem.paragraphs(2)}>
-            <Button>Test</Button>
-          </Settings.ItemInput>
-        </Settings.Group>
+        <Settings.Item title={faker.lorem.sentence(2)} description={faker.lorem.paragraphs(1)}>
+          <Input.TextInput placeholder='Input' />
+        </Settings.Item>
+        <Settings.Item title={faker.lorem.sentence(2)} description={faker.lorem.paragraphs(2)}>
+          <Input.Switch />
+        </Settings.Item>
+        <Settings.Item title={faker.lorem.sentence(3)} description={faker.lorem.paragraphs(2)}>
+          <Button>Test</Button>
+        </Settings.Item>
       </Settings.Section>
-    </Settings.Root>
+      <Settings.Section title='Panel Example'>
+        <Settings.Panel>
+          <h3 className='text-lg mb-2'>Members</h3>
+          <p className='text-description'>Content inside a panel.</p>
+        </Settings.Panel>
+      </Settings.Section>
+    </Settings.Viewport>
   );
 };
 
