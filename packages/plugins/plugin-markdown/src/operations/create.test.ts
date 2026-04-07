@@ -4,14 +4,13 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiConversationService } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { DXN, Database, Obj, Query, Ref } from '@dxos/echo';
+import { DXN, Database, Feed, Obj, Query } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
@@ -29,8 +28,17 @@ import { MarkdownOperationHandlerSet } from './index';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+  types: [
+    SpaceProperties,
+    Collection.Collection,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+  ],
+  blueprints: [MarkdownBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -57,18 +65,15 @@ describe('create', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* AiContextService.bindContext({
-          blueprints: [Ref.make(markdownBlueprint)],
+        const agent = yield* AgentService.createSession({
+          blueprints: [MarkdownBlueprint.make()],
         });
-
-        yield* AiConversationService.run({
-          prompt: `Create a document with a cookie recipe.`,
-        });
+        yield* agent.submitPrompt('Create a document with a cookie recipe.');
+        yield* agent.waitForCompletion();
 
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
@@ -85,7 +90,7 @@ describe('create', () => {
         }
       },
       WithProperties,
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,

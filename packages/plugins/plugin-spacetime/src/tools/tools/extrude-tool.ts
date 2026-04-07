@@ -5,7 +5,9 @@
 import { type Mesh, PointerEventTypes, Vector3, type PointerInfo } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
-import { applyExtrusion, updateMeshFromManifold } from '../../engine';
+import { Obj } from '@dxos/echo';
+
+import { applyExtrusion, serializeManifold, updateMeshFromManifold } from '../../engine';
 import { selectFace } from './select-tool';
 import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
@@ -244,7 +246,16 @@ export class ExtrudeTool implements Tool {
     // Clear face selection (geometry changed, face ids invalid) but keep object selected.
     ctx.setSelection({ type: 'object', objectId: this._state.objectId, mesh: this._state.mesh, highlightMesh: null });
 
-    // TODO(burdon): Serialize geometry to Model.Object once geometry field is added.
+    // Persist the extruded geometry to ECHO.
+    const modelObject = ctx.getObject(this._state.objectId);
+    if (modelObject) {
+      const meshData = serializeManifold(finalSolid);
+      Obj.change(modelObject, (obj) => {
+        obj.primitive = undefined;
+        obj.mesh = meshData;
+      });
+    }
+
     ctx.camera.attachControl(ctx.canvas, true);
     this._state = null;
     return true;

@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-observability/components/ObservabilitySettings',
   component: ObservabilitySettings,
   tags: ['settings'],
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

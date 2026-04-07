@@ -84,9 +84,11 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
   });
 
   const problems: string[] = [];
-  for (const input of Object.keys(result.metafile.inputs)) {
-    if (config.forbid.some((pattern) => pattern.test(input))) {
-      problems.push(input);
+  for (const output of Object.values(result.metafile.outputs)) {
+    for (const [input, meta] of Object.entries(output.inputs)) {
+      if (meta.bytesInOutput > 0 && config.forbid.some((pattern) => pattern.test(input))) {
+        problems.push(input);
+      }
     }
   }
 

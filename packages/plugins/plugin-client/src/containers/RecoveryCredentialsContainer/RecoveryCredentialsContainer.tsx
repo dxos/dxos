@@ -23,26 +23,24 @@ export const RecoveryCredentialsContainer = () => {
   );
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section title={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
-        <Settings.Group>
-          <Settings.Item title={t('create-passkey.label')} description={t('create-passkey.description')}>
-            <IconButton
-              label={t('create-passkey.label')}
-              icon='ph--key--duotone'
-              variant='primary'
-              onClick={() => invokePromise(ClientOperation.CreatePasskey)}
-            />
-          </Settings.Item>
-          <Settings.Item title={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
-            <IconButton
-              label={t('create-recovery-code.label')}
-              icon='ph--receipt--duotone'
-              variant='default'
-              onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
-            />
-          </Settings.Item>
-        </Settings.Group>
+        <Settings.Item title={t('create-passkey.label')} description={t('create-passkey.description')}>
+          <IconButton
+            label={t('create-passkey.label')}
+            icon='ph--key--duotone'
+            variant='primary'
+            onClick={() => invokePromise(ClientOperation.CreatePasskey)}
+          />
+        </Settings.Item>
+        <Settings.Item title={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
+          <IconButton
+            label={t('create-recovery-code.label')}
+            icon='ph--receipt--duotone'
+            variant='default'
+            onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
+          />
+        </Settings.Item>
       </Settings.Section>
       <Settings.Section title={t('credentials-list.label')}>
         {recoveryCredentials.length < 1 ? (
@@ -63,6 +61,6 @@ export const RecoveryCredentialsContainer = () => {
           </List>
         )}
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

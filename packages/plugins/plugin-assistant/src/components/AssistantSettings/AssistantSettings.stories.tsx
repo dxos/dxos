@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-assistant/components/AssistantSettings',
   tags: ['settings'],
   component: AssistantSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

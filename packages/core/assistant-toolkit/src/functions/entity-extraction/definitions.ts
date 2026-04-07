@@ -9,6 +9,7 @@ import { Database, Obj } from '@dxos/echo';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
+import { Trace } from '@dxos/functions';
 
 export const EntityExtraction = Operation.make({
   meta: {
@@ -32,5 +33,12 @@ export const EntityExtraction = Operation.make({
       }),
     ),
   }),
-  services: [AiService.AiService, Database.Service, TracingService, FunctionInvocationService, QueueService],
+  services: [
+    AiService.AiService,
+    Database.Service,
+    TracingService,
+    FunctionInvocationService,
+    QueueService,
+    Trace.TraceService,
+  ],
 });

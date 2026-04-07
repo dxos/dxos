@@ -16,7 +16,7 @@ import {
 } from '@dxos/ai';
 import { type AiAssistantError, AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
@@ -61,6 +61,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       ToolExecutionService.layerEmpty,
       TracingService.layerNoop,
       FunctionInvocationService.layerNotAvailable,
+      Trace.writerLayerNoop,
     ),
   ),
 );

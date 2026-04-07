@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Filter } from '@dxos/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 
@@ -15,7 +15,10 @@ import { Surface } from '@dxos/app-framework/ui';
 
 export const ContextModule = ({ space }: ComponentProps) => {
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
+  const feedTarget = chats.at(-1)?.feed.target;
+  const queueDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+  const queue = space && queueDxn ? space.queues.get(queueDxn) : undefined;
+  const binder = useContextBinder(queue);
   const objects = binder?.getObjects() ?? [];
 
   return (

@@ -44,7 +44,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
       const validatedSubjects = yield* Effect.all(
         input.subject.map((subjectId) =>
-          validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
+          input.navigation === 'immediate'
+            ? Effect.succeed(subjectId)
+            : validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
         ),
       );
       input = { ...input, subject: validatedSubjects };

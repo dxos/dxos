@@ -520,7 +520,8 @@ export class CoreDatabase {
     invariant(mappedData['@type'] === undefined);
     invariant(mappedData['@meta'] === undefined);
 
-    const existingStruct: ObjectStructure = core.getDecoded([]) as any;
+    // deepMapValues is used to clone the automerge doc to avoid "Cannot create a reference to an existing document object" error.
+    const existingStruct: ObjectStructure = deepMapValues(core.getDecoded([]), (value, recurse) => recurse(value));
     const newStruct: ObjectStructure = {
       ...existingStruct,
       data: mappedData,

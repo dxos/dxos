@@ -104,7 +104,7 @@ const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackR
         key: alignKey,
         value: alignValue as AlignValue,
         checked: state[alignKey] === alignValue,
-        label: [`range value ${alignValue} label`, { ns: meta.id }],
+        label: [`range-value-${alignValue}.label`, { ns: meta.id }],
         icon,
         testId: `grid.toolbar.${alignKey}.${alignValue}`,
       },

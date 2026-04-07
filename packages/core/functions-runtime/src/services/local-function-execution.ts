@@ -17,6 +17,7 @@ import {
   FunctionNotFoundError,
   type InvocationServices,
   QueueService,
+  Trace,
 } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -59,6 +60,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
             Effect.provideService(QueueService, queues),
             Effect.provideService(Feed.Service, feedService),
             Effect.provideService(FunctionInvocationService, functionInvocationService),
+            Effect.provide(Trace.writerLayerNoop),
           ),
         resolveFunction: (key: string) =>
           Effect.gen(function* () {

@@ -3,7 +3,8 @@
 //
 
 import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial, Vector3 } from '@babylonjs/core';
-import React, { type RefObject, useEffect, useRef, useState } from 'react';
+import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import React, { type RefObject, useContext, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -17,30 +18,31 @@ import {
   rawDataToBabylon,
 } from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
-import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
+import {
+  createToolManager,
+  ToolManager,
+  type Selection,
+  type EditorState,
+  DEFAULT_EDITOR_STATE,
+  getSelectedObjectIds,
+} from '../../tools';
 import { type Scene, Model } from '../../types';
-import { type SelectionMode, type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;
   scene?: Scene.Scene;
-  tool?: SpacetimeTool;
-  selectionMode?: string;
-  viewState?: ViewState;
+  /** Atom holding unified editor state. */
+  editorStateAtom: Atom.Writable<EditorState>;
   /** Reactive object count from ECHO subscription. Triggers sync when objects are added/removed. */
   objectCount?: number;
-  /** Called when the selected object changes. */
-  onSelectionChange?: (objectId: string | null) => void;
   /** Parent ref to expose the solids map for export. */
   parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
   /** Ref to set the importGLB callback (canvas provides the implementation). */
   importGLBRef?: React.MutableRefObject<
     (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
   >;
-  deleteObjectRef?: React.MutableRefObject<(objectId: string) => void>;
-  /** Currently selected object id and hue for material updates. */
-  selectedObjectId?: string | null;
-  selectedHue?: string;
+  /** Ref for editor to dispatch actions through ToolManager. */
+  handleActionRef?: React.MutableRefObject<(actionId: string) => void>;
 };
 
 /**
@@ -51,20 +53,20 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     {
       showFps = true,
       scene: sceneData,
-      tool = 'select',
-      selectionMode,
-      viewState,
+      editorStateAtom,
       objectCount = 0,
-      onSelectionChange,
       parentSolidsRef,
       importGLBRef,
-      deleteObjectRef,
-      selectedObjectId,
-      selectedHue,
+      handleActionRef,
       ...props
     },
     forwardedRef,
   ) => {
+    const registry = useContext(RegistryContext);
+    const editorState = useAtomValue(editorStateAtom);
+    const editorStateRef = useRef<EditorState>(DEFAULT_EDITOR_STATE);
+    editorStateRef.current = editorState;
+
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const managerRef = useRef<SceneManager | null>(null);
@@ -79,17 +81,10 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       (parentSolidsRef as React.MutableRefObject<Map<string, import('manifold-3d').Manifold> | null>).current =
         solidsRef.current;
     }
-    const selectionRef = useRef<Selection | null>(null);
-    const setSelectionRef = useRef<((next: Selection | null) => void) | null>(null);
-    const selectionModeRef = useRef(selectionMode);
-    selectionModeRef.current = selectionMode;
     const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
     const setDebugInfoRef = useRef(setDebugInfo);
     setDebugInfoRef.current = setDebugInfo;
-    const viewStateRef = useRef<ViewState | undefined>(viewState);
-    viewStateRef.current = viewState;
-    const onSelectionChangeRef = useRef(onSelectionChange);
-    onSelectionChangeRef.current = onSelectionChange;
+    const keyDownHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
     const fpsRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
 
@@ -142,11 +137,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           }
         }
 
-        // Set up tool manager.
-        const toolManager = new ToolManager();
-        toolManager.register(new SelectTool());
-        toolManager.register(new MoveTool());
-        toolManager.register(new ExtrudeTool());
+        // Set up tool manager with all tools and actions.
+        const toolManager = createToolManager();
         toolManagerRef.current = toolManager;
 
         // Create highlight layer for object selection glow.
@@ -160,27 +152,50 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         // Selection handler shared between tool context and programmatic selection.
         const setSelection = (next: Selection | null) => {
           // Clean up previous selection.
-          const prev = selectionRef.current;
+          const prev = registry.get(editorStateAtom).selection;
           if (prev) {
-            if (prev.highlightMesh) {
-              highlightLayer.removeMesh(prev.highlightMesh);
-              prev.highlightMesh.dispose();
-            }
-            if (prev.type === 'object') {
-              highlightLayer.removeMesh(prev.mesh);
+            if (prev.type === 'multi-object') {
+              for (const entry of prev.objects) {
+                highlightLayer.removeMesh(entry.mesh);
+                if (entry.mesh.material) {
+                  entry.mesh.material.zOffset = 0;
+                }
+              }
+            } else {
+              if (prev.highlightMesh) {
+                highlightLayer.removeMesh(prev.highlightMesh);
+                prev.highlightMesh.dispose();
+              }
+              if (prev.type === 'object') {
+                highlightLayer.removeMesh(prev.mesh);
+              }
+              if (prev.mesh.material) {
+                prev.mesh.material.zOffset = 0;
+              }
             }
           }
-          // Apply new selection.
-          selectionRef.current = next;
+          // Apply new selection. Selected meshes render on top (zOffset) to avoid z-fighting.
           if (next?.type === 'object') {
             highlightLayer.addMesh(next.mesh, theme.selected);
+            if (next.mesh.material) {
+              next.mesh.material.zOffset = -1;
+            }
           } else if (next?.type === 'face' && next.highlightMesh) {
             highlightLayer.addMesh(next.highlightMesh, theme.selected);
+          } else if (next?.type === 'multi-object') {
+            for (const entry of next.objects) {
+              highlightLayer.addMesh(entry.mesh, theme.selected);
+              if (entry.mesh.material) {
+                entry.mesh.material.zOffset = -1;
+              }
+            }
           }
-          onSelectionChangeRef.current?.(next?.objectId ?? null);
+
+          // Write to atom (triggers toolbar re-render).
+          registry.set(editorStateAtom, { ...registry.get(editorStateAtom), selection: next });
 
           // Show vertex table for selected object, or scene overview when nothing selected.
-          if (next) {
+          if (next && next.type !== 'multi-object') {
             const solid = solidsRef.current.get(next.objectId);
             const meshPos = next.mesh?.position;
             const position: [number, number, number] | undefined = meshPos
@@ -204,14 +219,13 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             setDebugInfoRef.current(extractSceneDebugInfo(sceneData));
           }
         };
-        setSelectionRef.current = setSelection;
 
         // Create tool context.
         toolManager.setContext({
+          manifold: wasm,
           scene: manager.scene,
           camera: manager.camera,
           canvas: canvas,
-          manifold: wasm,
           echoScene: sceneData,
           meshes: meshesRef.current,
           solids: solidsRef.current,
@@ -228,14 +242,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             }
             return undefined;
           },
-          get selectionState() {
-            return { selectionMode: selectionModeRef.current as SelectionMode };
-          },
-          get viewState() {
-            return viewStateRef.current ?? { showGrid: true, showDebug: false };
+          get editorState() {
+            return registry.get(editorStateAtom);
           },
           get selection() {
-            return selectionRef.current;
+            return registry.get(editorStateAtom).selection;
           },
           setSelection,
           setDebugStats: (stats: Record<string, string | number>) => {
@@ -244,7 +255,36 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         });
 
         // Set initial tool.
-        toolManager.setActiveTool(tool ?? 'select');
+        const initialTool = registry.get(editorStateAtom).tool;
+        toolManager.setActiveTool(initialTool ?? 'select');
+
+        if (handleActionRef) {
+          handleActionRef.current = (actionId) => toolManager.handleAction(actionId);
+        }
+
+        // Keyboard shortcuts scoped to canvas focus.
+        keyDownHandlerRef.current = (event: KeyboardEvent) => {
+          const target = event.target as HTMLElement;
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+            return;
+          }
+
+          switch (event.key.toLowerCase()) {
+            case 'm':
+              registry.set(editorStateAtom, { ...registry.get(editorStateAtom), tool: 'move' });
+              break;
+            case 'e':
+              registry.set(editorStateAtom, { ...registry.get(editorStateAtom), tool: 'extrude' });
+              break;
+            case 'x':
+            case 'backspace':
+              handleActionRef?.current('delete-objects');
+              break;
+          }
+        };
+
+        canvas.setAttribute('tabindex', '0');
+        canvas.addEventListener('keydown', keyDownHandlerRef.current);
 
         // Provide GLB import callback to parent.
         if (importGLBRef) {
@@ -258,6 +298,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             if (!solid) {
               return undefined;
             }
+
             // Serialize mesh data for ECHO storage.
             const meshData = solid.getMesh();
             const { vertProperties, triVerts, numProp } = meshData;
@@ -277,26 +318,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           };
         }
 
-        // Provide delete callback to parent.
-        if (deleteObjectRef) {
-          deleteObjectRef.current = (objectId: string) => {
-            // Clear selection if the deleted object is currently selected.
-            if (selectionRef.current?.objectId === objectId) {
-              selectionRef.current.highlightMesh?.dispose();
-              if (selectionRef.current.type === 'object') {
-                highlightLayer.removeMesh(selectionRef.current.mesh);
-              }
-              selectionRef.current = null;
-            }
-            const mesh = meshesRef.current.get(objectId);
-            mesh?.dispose();
-            meshesRef.current.delete(objectId);
-            solidsRef.current.get(objectId)?.delete();
-            solidsRef.current.delete(objectId);
-            setDebugInfoRef.current(extractSceneDebugInfo(sceneData));
-          };
-        }
-
         setReady(true);
         setDebugInfo(extractSceneDebugInfo(sceneData));
       });
@@ -312,8 +333,15 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       }, 500);
 
       return () => {
-        selectionRef.current?.highlightMesh?.dispose();
-        selectionRef.current = null;
+        if (keyDownHandlerRef.current) {
+          canvas.removeEventListener('keydown', keyDownHandlerRef.current);
+          keyDownHandlerRef.current = null;
+        }
+        const cleanupSelection = registry.get(editorStateAtom).selection;
+        if (cleanupSelection && cleanupSelection.type !== 'multi-object') {
+          cleanupSelection.highlightMesh?.dispose();
+        }
+        registry.set(editorStateAtom, { ...registry.get(editorStateAtom), selection: null });
         toolManagerRef.current?.dispose();
         toolManagerRef.current = null;
         for (const solid of solidsRef.current.values()) {
@@ -344,30 +372,32 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       };
     }, [ready]);
 
-    // Sync active tool from props.
+    // Sync active tool from editor state.
     useEffect(() => {
-      if (toolManagerRef.current && tool) {
-        toolManagerRef.current.setActiveTool(tool);
+      if (toolManagerRef.current && editorState.tool) {
+        toolManagerRef.current.setActiveTool(editorState.tool);
       }
-    }, [tool, ready]);
+    }, [editorState.tool, ready]);
 
     // Sync view state.
     useEffect(() => {
-      if (managerRef.current && viewState) {
-        managerRef.current.showGrid = viewState.showGrid;
+      if (managerRef.current) {
+        managerRef.current.showGrid = editorState.showGrid;
       }
-    }, [viewState, ready]);
+    }, [editorState.showGrid, ready]);
 
     // Sync selected object material color when hue changes.
     useEffect(() => {
-      if (!selectedObjectId || !selectedHue) {
+      const selectedIds = getSelectedObjectIds(editorState.selection);
+      const selectedId = selectedIds[0];
+      if (!selectedId) {
         return;
       }
-      const mesh = meshesRef.current.get(selectedObjectId);
+      const mesh = meshesRef.current.get(selectedId);
       if (mesh?.material instanceof StandardMaterial) {
-        mesh.material.diffuseColor = resolveColor(selectedHue);
+        mesh.material.diffuseColor = resolveColor(editorState.hue);
       }
-    }, [selectedHue, selectedObjectId]);
+    }, [editorState.hue, editorState.selection]);
 
     // Sync scene objects — add/remove meshes when ECHO scene changes.
     useEffect(() => {
@@ -390,6 +420,15 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             continue;
           }
           objectIds.add(objId);
+
+          // Sync positions of existing objects from ECHO.
+          const existingMesh = meshesRef.current.get(objId);
+          if (existingMesh) {
+            const echoPos = obj.position;
+            existingMesh.position.x = echoPos?.x ?? 0;
+            existingMesh.position.y = echoPos?.y ?? 0;
+            existingMesh.position.z = echoPos?.z ?? 0;
+          }
 
           // Add new objects.
           if (!meshesRef.current.has(objId)) {
@@ -429,17 +468,33 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         }
       }
 
-      // Programmatically select object when selectedObjectId is set but not yet selected.
-      if (selectedObjectId && selectionRef.current?.objectId !== selectedObjectId) {
-        const mesh = meshesRef.current.get(selectedObjectId);
-        if (mesh && setSelectionRef.current) {
-          setSelectionRef.current({ type: 'object', objectId: selectedObjectId, mesh, highlightMesh: null });
+      // Handle pending selection from actions.
+      const currentState = registry.get(editorStateAtom);
+      const pendingIds = currentState.pendingSelection;
+      if (pendingIds && pendingIds.length > 0) {
+        const toolCtx = (toolManagerRef.current as any)?._ctx;
+        if (pendingIds.length === 1) {
+          const mesh = meshesRef.current.get(pendingIds[0]);
+          if (mesh && toolCtx?.setSelection) {
+            toolCtx.setSelection({ type: 'object', objectId: pendingIds[0], mesh, highlightMesh: null });
+          }
+        } else {
+          const objects = pendingIds
+            .map((objectId) => ({ objectId, mesh: meshesRef.current.get(objectId)! }))
+            .filter((entry) => entry.mesh);
+          if (objects.length > 0 && toolCtx?.setSelection) {
+            toolCtx.setSelection({ type: 'multi-object', objects });
+          }
         }
-      } else if (!selectionRef.current) {
+        registry.set(editorStateAtom, { ...registry.get(editorStateAtom), pendingSelection: null });
+      } else {
         // Refresh scene overview when nothing is selected.
-        setDebugInfo(extractSceneDebugInfo(sceneData));
+        const currentSelection = currentState.selection;
+        if (!currentSelection) {
+          setDebugInfo(extractSceneDebugInfo(sceneData));
+        }
       }
-    }, [objectCount, selectedObjectId, ready]);
+    }, [objectCount, ready]);
 
     return (
       <div
@@ -463,13 +518,14 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           <span className='absolute bottom-2 left-2 text-xs font-mono opacity-50 pointer-events-none' ref={fpsRef} />
         )}
 
-        {viewState?.showDebug && <DebugPanel info={debugInfo} />}
+        {editorState.showDebug && <DebugPanel info={debugInfo} />}
       </div>
     );
   },
 );
 
 /** Map DXOS hue names to approximate Babylon Color3 values. */
+// TODO(burdon): Use TW config.
 const hueColors: Record<string, Color3> = {
   red: new Color3(0.8, 0.2, 0.2),
   orange: new Color3(0.9, 0.5, 0.1),
@@ -503,20 +559,18 @@ const resolveColor = (color: string | undefined): Color3 => {
 
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
-  selected: new Color3(0.3, 0.6, 1.0),
+  selected: new Color3(1.0, 0.2, 0.2),
 };
 
 /** Build scene overview debug info from ECHO scene data. */
 const extractSceneDebugInfo = (sceneData?: Scene.Scene): DebugInfo => {
-  if (!sceneData?.objects?.length) {
-    return { type: 'scene', objects: [] };
-  }
-  const objects = sceneData.objects
+  const objects = sceneData?.objects
     .map((ref) => {
       const obj = ref?.target as (Model.Object & { id?: string }) | undefined;
       if (!obj) {
         return undefined;
       }
+
       return {
         id: (obj as any).id as string,
         label: obj.label,
@@ -526,5 +580,9 @@ const extractSceneDebugInfo = (sceneData?: Scene.Scene): DebugInfo => {
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry != null);
-  return { type: 'scene', objects };
+
+  return {
+    type: 'scene',
+    objects: objects ?? [],
+  };
 };

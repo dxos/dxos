@@ -14,7 +14,7 @@ const meta = {
   title: 'plugins/plugin-space/components/SpacePluginSettings',
   component: SpacePluginSettings,
   tags: ['settings'],
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

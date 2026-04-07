@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ModelName, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import * as Chat from '../../types/Chat';
@@ -44,6 +44,7 @@ export const AgentPrompt = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
+    QueueService,
     TracingService,
     ToolExecutionService,
     ToolResolverService,
