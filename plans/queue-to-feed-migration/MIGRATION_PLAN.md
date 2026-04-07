@@ -4,6 +4,8 @@
 
 **Phase 1 COMPLETE**: Renamed `Feed.Service` → `Feed.FeedService` and updated all references across the codebase.
 
+**Phase 2 COMPLETE**: Migrated `AiConversation` and `AiContextBinder` to use `Feed` object and `feedRuntime` instead of `Queue`.
+
 ## Decisions (from PR review)
 
 Based on feedback from @dmaretskyi:
@@ -59,27 +61,48 @@ This plan describes the migration from `QueueService` (deprecated) to `Feed.Feed
 15. `packages/ui/react-ui-canvas-compute/src/graph/controller.ts`
 16. `packages/devtools/cli/src/util/runtime.ts`
 
-## Remaining Work (Future Phases)
+## What Was Done (Phase 2)
 
-### Phase 2: Migrate AiConversation to use Feed
+### Migrated AiConversation to use Feed
 
-**File:** `packages/core/assistant/src/conversation/conversation.ts`
-
-AiConversation currently takes a `Queue` object in its constructor. This should be changed to take a `Feed` object instead.
+Changed `AiConversation` and `AiContextBinder` to take a `Feed` object and `feedRuntime` instead of `Queue`:
 
 ```ts
-// Current
+// Before
 export type AiConversationOptions = {
   queue: Queue<Message.Message | ContextBinding>;
   registry?: Registry.Registry;
 };
 
-// Target
+// After
 export type AiConversationOptions = {
   feed: Feed.Feed;
+  feedRuntime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 ```
+
+### Files Updated
+
+1. `packages/core/assistant/src/conversation/conversation.ts` - Changed to use Feed and feedRuntime
+2. `packages/core/assistant/src/conversation/context.ts` - Changed AiContextBinder to use Feed
+3. `packages/core/assistant/src/service/AgentService.ts` - Updated session methods
+4. `packages/core/assistant/src/service/agent-process.ts` - Updated to use Feed.FeedService
+5. `packages/core/assistant/src/testing/layer.ts` - Updated test layer
+6. `packages/core/assistant-toolkit/src/functions/agent/prompt.ts` - Updated to use Feed
+7. `packages/core/assistant-toolkit/src/types/Project.ts` - Updated makeInitialized
+8. `packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx` - Updated useContextBinder call
+9. `packages/plugins/plugin-assistant/src/hooks/useChatProcessor.ts` - Updated to create feedRuntime
+10. `packages/plugins/plugin-assistant/src/hooks/useContextBinder.ts` - Changed signature to (space, feed)
+11. `packages/plugins/plugin-assistant/src/operations/create-chat.ts` - Updated to use Feed
+12. `packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts` - Updated to use Feed
+13. `packages/stories/stories-assistant/src/components/CommentsModule.tsx` - Updated
+14. `packages/stories/stories-assistant/src/components/ContextModule.tsx` - Updated
+15. `packages/stories/stories-assistant/src/stories/Projects.stories.tsx` - Updated
+16. `packages/stories/stories-assistant/src/testing/ModuleContainer.tsx` - Updated
+17. `packages/stories/stories-assistant/src/testing/testing.tsx` - Updated
+
+## Remaining Work (Future Phases)
 
 ### Phase 3: Migrate Operation Handlers (selective)
 
