@@ -121,6 +121,7 @@ export const makeInitialized = (
         feed: Ref.make(feed),
       }),
     );
+    Obj.setParent(feed, chat);
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
@@ -183,6 +184,7 @@ export const resetChatHistory = (
         feed: Ref.make(feed),
       }),
     );
+    Obj.setParent(feed, chat);
 
     Obj.change(project, (project) => {
       project.chat = Ref.make(chat);
