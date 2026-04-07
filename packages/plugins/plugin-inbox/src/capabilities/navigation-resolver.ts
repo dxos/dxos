@@ -8,14 +8,15 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
-import { Database, Filter, Key, Query } from '@dxos/echo';
+import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '#meta';
 import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
-import { Mailbox } from '#types';
+import { DraftMessage, Mailbox } from '#types';
+import { Message } from '@dxos/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -54,7 +55,7 @@ export default Capability.makeModule(
       })) as AppCapabilities.NavigationTargetResolver;
 
     // Resolve mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) to DXNs.
-    // For message paths (~<messageId>), validates the message exists in the mailbox feed.
+    // For message paths (~<messageId>), validates the message exists in the mailbox feed or as a draft in the DB.
     // For mailbox paths, validates the mailbox exists.
     const client = yield* Capability.get(ClientCapabilities.Client);
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
@@ -88,16 +89,28 @@ export default Capability.makeModule(
             return Effect.succeed(Option.some(mailboxDxn));
           }
 
-          // For message paths, verify the message exists in the feed.
+          // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.
           const mailbox = mailboxOption.value as Mailbox.Mailbox;
-          if (!mailbox.feed) {
-            return Effect.succeed(Option.none<DXN>());
-          }
+          const mailboxDxnString = Obj.getDXN(mailbox).toString();
 
           return Effect.tryPromise(async () => {
-            const feed = await mailbox.feed.load();
-            const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
-            return messages.length > 0 ? Option.some(mailboxDxn) : Option.none<DXN>();
+            // TODO(wittjosiah): This is awkward, clean it up.
+            if (mailbox.feed) {
+              const feed = await mailbox.feed.load();
+              const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
+              if (messages.length > 0) {
+                return Option.some(mailboxDxn);
+              }
+            }
+
+            const fromDb = (await space.db.query(Query.select(Filter.id(messageId))).first()) as
+              | Message.Message
+              | undefined;
+            if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
+              return Option.some(mailboxDxn);
+            }
+
+            return Option.none<DXN>();
           }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<DXN>())));
         }),
       );

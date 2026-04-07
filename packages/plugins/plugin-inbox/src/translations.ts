@@ -103,6 +103,8 @@ export const translations = [
         'mailboxes-section.label': 'Mailboxes',
         'all-mail.label': 'All Mail',
         'drafts.label': 'Drafts',
+        'drafts.article.description': 'Draft list (coming soon).',
+        'drafts.empty.message': 'No drafts yet.',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',
