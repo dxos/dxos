@@ -58,7 +58,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) 
                 <Select.Viewport>
                   {Settings.NewPlankPositions.map((position) => (
                     <Select.Option key={position} value={position}>
-                      {t(`settings-new-plank-position.${position}.label`)}
+                      {t(`settings.new-plank-position.${position}.label`)}
                     </Select.Option>
                   ))}
                 </Select.Viewport>
@@ -79,7 +79,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) 
                 <Select.Viewport>
                   {Settings.OverScrollToProps.map((option) => (
                     <Select.Option key={option} value={option}>
-                      {t(`settings-overscroll.${option}.label`)}
+                      {t(`settings.overscroll.${option}.label`)}
                     </Select.Option>
                   ))}
                 </Select.Viewport>

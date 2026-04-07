@@ -205,7 +205,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
                 <Select.Viewport>
                   {Object.keys(StorageAdapters).map((key) => (
                     <Select.Option key={key} value={key}>
-                      {t(`settings-storage-adaptor.${key}.label`)}
+                      {t(`settings.storage-adaptor.${key}.label`)}
                     </Select.Option>
                   ))}
                 </Select.Viewport>
