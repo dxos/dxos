@@ -165,12 +165,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [
-      ...plugins,
-      PluginImportSource(),
-      process.env.VITE_INSPECT ? Inspect() : undefined,
-      react(),
-    ],
+    plugins: [...plugins, PluginImportSource(), process.env.VITE_INSPECT ? Inspect() : undefined, react()],
   });
 
 /** Detect which project filter is active from CLI args to split coverage/results by project type. */
