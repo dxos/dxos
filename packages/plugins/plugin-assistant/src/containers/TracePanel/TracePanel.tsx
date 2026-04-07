@@ -13,7 +13,7 @@ import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
-import { LogLevel } from '@dxos/log';
+import { dbg, LogLevel } from '@dxos/log';
 import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Panel, Separator, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -109,6 +109,8 @@ const getExecutionGraph = (
               ...event,
             })),
           );
+
+        dbg(events);
 
         for (const event of events) {
           if (Trace.isOfType(CompleteBlock, event)) {
