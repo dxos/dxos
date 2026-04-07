@@ -80,7 +80,7 @@ describe('GraphBuilder', () => {
       }
     });
 
-    test('connects resolved node to parent via child edge', async () => {
+    test('connects resolved node to parent via child edge', async ({ expect }) => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
       const childId = qualifyId('root', '~child');
@@ -110,7 +110,7 @@ describe('GraphBuilder', () => {
       }
     });
 
-    test('out-of-order: resolver fires before parent exists', async () => {
+    test('out-of-order: resolver fires before parent exists', async ({ expect }) => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
       const parentId = qualifyId('root', 'parent');
@@ -163,7 +163,7 @@ describe('GraphBuilder', () => {
       }
     });
 
-    test('onNone does not remove connector-owned node', async () => {
+    test('onNone does not remove connector-owned node', async ({ expect }) => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
       const nodeId = qualifyId('root', 'shared');

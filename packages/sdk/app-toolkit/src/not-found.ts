@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
 import { DXN, Filter, Key, Query } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention';
 
 import { type AppCapabilities } from './capabilities';
@@ -77,10 +78,8 @@ export const validateNavigationTarget = (params: {
       Option.isSome(acc)
         ? Effect.succeed(acc)
         : resolver(subjectId).pipe(
-            Effect.map((result) => {
-              return result;
-            }),
             Effect.catchAll((error) => {
+              log.warn('path resolver failed', { subjectId, error });
               return Effect.succeed(Option.none<DXN>());
             }),
           ),
@@ -94,6 +93,7 @@ export const validateNavigationTarget = (params: {
     if (checkRemoteExistence) {
       const exists = yield* checkRemoteExistence(dxn.value).pipe(
         Effect.catchAll((error) => {
+          log.warn('remote existence check failed', { subjectId, error });
           return Effect.succeed(false);
         }),
       );
