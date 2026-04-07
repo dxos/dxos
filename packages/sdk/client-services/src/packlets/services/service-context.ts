@@ -225,7 +225,7 @@ export class ServiceContext extends Resource {
     }
   }
 
-  @Trace.span()
+  @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     await this._checkStorageVersion();
 
@@ -241,11 +241,11 @@ export class ServiceContext extends Resource {
     log('network identity set');
 
     log('opening edge connection...');
-    await this._edgeConnection?.open();
+    await this._edgeConnection?.open(ctx);
     log('edge connection opened');
 
     log('opening signal manager...');
-    await this.signalManager.open();
+    await this.signalManager.open(ctx);
     log('signal manager opened');
 
     log('opening network manager...');
@@ -288,7 +288,7 @@ export class ServiceContext extends Resource {
     }
 
     log('opening feed syncer...');
-    await this._feedSyncer?.open();
+    await this._feedSyncer?.open(ctx);
     log('feed syncer opened');
 
     log('loading persistent invitations...');
