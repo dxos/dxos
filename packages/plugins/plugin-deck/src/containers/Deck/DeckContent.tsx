@@ -4,10 +4,10 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Main, useMediaQuery } from '@dxos/react-ui';
 
-import { useBreakpoints, useHoistStatusbar } from '../../hooks';
+import { useBreakpoints, useHoistStatusbar } from '#hooks';
 import { layoutAppliesTopbar } from '../../util';
 import { useDeckContext } from './DeckRoot';
 import { ComplementarySidebar, Sidebar } from '../Sidebar';
@@ -16,7 +16,9 @@ import { Banner } from './Banner';
 
 const DECK_CONTENT_NAME = 'DeckContent';
 
-export const DeckContent = ({ children }: PropsWithChildren) => {
+export type DeckContentProps = PropsWithChildren;
+
+export const DeckContent = ({ children }: DeckContentProps) => {
   const {
     state: { sidebarState, complementarySidebarState, complementarySidebarPanel },
     deck: { active, fullscreen, solo },

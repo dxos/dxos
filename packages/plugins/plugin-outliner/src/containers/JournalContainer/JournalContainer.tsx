@@ -9,8 +9,8 @@ import { Panel, useMediaQuery } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
-import { Journal as JournalComponent, type JournalProps } from '../../components';
-import { type Journal } from '../../types';
+import { Journal as JournalComponent, type JournalProps } from '#components';
+import { type Journal } from '#types';
 
 export type JournalContainerProps = ObjectSurfaceProps<Journal.Journal> & { showCalendar?: boolean };
 

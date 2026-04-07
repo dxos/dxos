@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type TokenManagerProps = {
   tokens: AccessToken.AccessToken[];

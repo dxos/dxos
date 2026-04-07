@@ -4,13 +4,10 @@
 
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+import { type SelectionMode } from '../../tools';
 
-export type SelectionMode = 'object' | 'face';
-
-export type SelectionState = {
-  selectionMode: SelectionMode;
-};
+export type { SelectionMode };
 
 const selectionModes: Record<SelectionMode, string> = {
   object: 'ph--cube--regular',
@@ -19,7 +16,7 @@ const selectionModes: Record<SelectionMode, string> = {
 
 /** Creates the selection mode toggle group. */
 export const createSelectionModeActions =
-  (state: SelectionState, onViewChange: (next: Partial<SelectionState>) => void): ActionGroupBuilderFn =>
+  (currentMode: SelectionMode, onModeChange: (mode: SelectionMode) => void): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'selection-mode',
@@ -28,14 +25,14 @@ export const createSelectionModeActions =
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
-        value: state.selectionMode,
+        value: currentMode,
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const [mode, icon] of Object.entries(selectionModes)) {
           group.action(
             mode,
-            { label: [`selection-mode.${mode}.label`, { ns: meta.id }], checked: state.selectionMode === mode, icon },
-            () => onViewChange({ selectionMode: mode as SelectionMode }),
+            { label: [`selection-mode.${mode}.label`, { ns: meta.id }], checked: currentMode === mode, icon },
+            () => onModeChange(mode as SelectionMode),
           );
         }
       },

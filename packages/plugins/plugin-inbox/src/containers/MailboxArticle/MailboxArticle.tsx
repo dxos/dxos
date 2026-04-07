@@ -20,11 +20,11 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MessageStackActionHandler, MessageStack } from '../../components';
+import { type MessageStackActionHandler, MessageStack } from '#components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 import { sortByCreated } from '../../util';
 
 import { NewMailbox } from './NewMailbox';
@@ -52,7 +52,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({ db, sortDescending: sortDescending.atom });
+  const menuActions = useMailboxActions({ db, mailbox, sortDescending: sortDescending.atom });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
@@ -299,9 +299,11 @@ const useMessageTagsMap = (
 
 const useMailboxActions = ({
   db,
+  mailbox,
   sortDescending,
 }: {
   db?: Database.Database;
+  mailbox?: Mailbox.Mailbox;
   sortDescending: Atom.Writable<boolean>;
 }) => {
   const { t } = useTranslation(meta.id);
@@ -330,11 +332,11 @@ const useMailboxActions = ({
               icon: 'ph--paper-plane-right--regular',
               label: t('compose-email.label'),
             },
-            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
+            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
           )
           .build();
       }),
-    [sortDescending, invokePromise, db],
+    [sortDescending, invokePromise, db, mailbox],
   );
 
   return useMenuActions(menu);

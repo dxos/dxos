@@ -22,13 +22,15 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { DeckState } from '../../capabilities';
 import { Plank } from '../../containers/Plank';
-import { meta as pluginMeta } from '../../meta';
+
+import { meta as pluginMeta } from '#meta';
 import { translations } from '../../translations';
 
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 import { StackContext } from '@dxos/react-ui-stack';
+
+import { DeckState } from '#capabilities';
 
 faker.seed(123);
 

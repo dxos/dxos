@@ -12,13 +12,15 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { DeckSettings, DeckState } from '../../capabilities';
-import { useDeckState } from '../../hooks';
-import { meta as pluginMeta } from '../../meta';
+import { useDeckState } from '#hooks';
+
+import { meta as pluginMeta } from '#meta';
 import { translations } from '../../translations';
-import { DeckCapabilities, getMode } from '../../types';
+import { DeckCapabilities, getMode } from '#types';
 
 import { Deck } from './Deck';
+
+import { DeckSettings, DeckState } from '#capabilities';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({

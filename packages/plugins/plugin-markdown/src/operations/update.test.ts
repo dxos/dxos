@@ -4,14 +4,13 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiConversationService } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
@@ -21,7 +20,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { WithProperties } from '../testing';
+import { WithProperties } from '#testing';
 import MarkdownBlueprint from '../blueprints/markdown-blueprint';
 
 import { Update } from './definitions';
@@ -30,8 +29,17 @@ import { MarkdownOperationHandlerSet } from './index';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+  types: [
+    SpaceProperties,
+    Collection.Collection,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+  ],
+  blueprints: [MarkdownBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -62,18 +70,16 @@ describe('update', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'create and update a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* AiContextService.bindContext({
-          blueprints: [Ref.make(markdownBlueprint)],
+        const agent = yield* AgentService.createSession({
+          blueprints: [MarkdownBlueprint.make()],
         });
 
-        yield* AiConversationService.run({
-          prompt: `Create a document with a cookie recipe.`,
-        });
+        yield* agent.submitPrompt('Create a document with a cookie recipe.');
+        yield* agent.waitForCompletion();
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
@@ -88,9 +94,8 @@ describe('update', () => {
           });
         }
 
-        yield* AiConversationService.run({
-          prompt: 'Add a section with a holiday-themed variation.',
-        });
+        yield* agent.submitPrompt('Add a section with a holiday-themed variation.');
+        yield* agent.waitForCompletion();
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
           if (docs.length !== 1) {
@@ -106,13 +111,13 @@ describe('update', () => {
         }
       },
       WithProperties,
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  it.effect(
     'update existing document',
     Effect.fnUntraced(
       function* (_) {
@@ -128,15 +133,13 @@ describe('update', () => {
           `,
           }),
         );
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* AiContextService.bindContext({
-          blueprints: [Ref.make(markdownBlueprint)],
-          objects: [Ref.make(document)],
+        const agent = yield* AgentService.createSession({
+          blueprints: [MarkdownBlueprint.make()],
+          context: [Ref.make(document)],
         });
 
-        yield* AiConversationService.run({
-          prompt: 'Add the missing ingredient (its flour).',
-        });
+        yield* agent.submitPrompt('Add the missing ingredient (its flour).');
+        yield* agent.waitForCompletion();
 
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
@@ -155,13 +158,13 @@ describe('update', () => {
         }
       },
       WithProperties,
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  it.effect(
     'add lines to document one by one',
     Effect.fnUntraced(
       function* (_) {
@@ -173,21 +176,17 @@ describe('update', () => {
             `,
           }),
         );
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* AiContextService.bindContext({
-          blueprints: [Ref.make(markdownBlueprint)],
-          objects: [Ref.make(document)],
+        const agent = yield* AgentService.createSession({
+          blueprints: [MarkdownBlueprint.make()],
+          context: [Ref.make(document)],
         });
 
-        yield* AiConversationService.run({
-          prompt: 'Add milk to the shopping list.',
-        });
-        yield* AiConversationService.run({
-          prompt: 'Add bread to the shopping list.',
-        });
-        yield* AiConversationService.run({
-          prompt: 'Add eggs to the shopping list.',
-        });
+        yield* agent.submitPrompt('Add milk to the shopping list.');
+        yield* agent.waitForCompletion();
+        yield* agent.submitPrompt('Add bread to the shopping list.');
+        yield* agent.waitForCompletion();
+        yield* agent.submitPrompt('Add eggs to the shopping list.');
+        yield* agent.waitForCompletion();
 
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
@@ -208,7 +207,7 @@ describe('update', () => {
         }
       },
       WithProperties,
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,

@@ -12,7 +12,7 @@ import {
   type ColumnStructure,
   type KanbanChangeCallback,
   UNCATEGORIZED_VALUE,
-} from '../types';
+} from '#types';
 
 function findColumn<T extends BaseKanbanItem>(
   id: string,

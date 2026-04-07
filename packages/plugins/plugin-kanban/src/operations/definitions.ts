@@ -6,7 +6,7 @@ import { Capability } from '@dxos/app-framework';
 import { View } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const KANBAN_OPERATION = `${meta.id}.operation`;
 

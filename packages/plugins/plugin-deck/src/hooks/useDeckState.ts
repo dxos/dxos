@@ -11,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 
 import {
   DeckCapabilities,
-  type DeckEphemeralStateProps,
+  type EphemeralDeckState,
   type DeckPluginState,
   type DeckState,
-  type DeckStateProps,
-} from '../types';
+  type StoredDeckState,
+} from '#types';
 
 export type DeckStateHook = {
   /** Combined state value (reactive). Includes both persisted and ephemeral state. */
@@ -23,9 +23,9 @@ export type DeckStateHook = {
   /** The active deck, computed from decks[activeDeck]. */
   deck: DeckState;
   /** Update persisted state. */
-  updateState: (fn: (current: DeckStateProps) => DeckStateProps) => void;
+  updateState: (fn: (current: StoredDeckState) => StoredDeckState) => void;
   /** Update ephemeral state. */
-  updateEphemeral: (fn: (current: DeckEphemeralStateProps) => DeckEphemeralStateProps) => void;
+  updateEphemeral: (fn: (current: EphemeralDeckState) => EphemeralDeckState) => void;
 };
 
 /**
@@ -56,14 +56,14 @@ export const useDeckState = (): DeckStateHook => {
   );
 
   const updateState = useCallback(
-    (fn: (current: DeckStateProps) => DeckStateProps) => {
+    (fn: (current: StoredDeckState) => StoredDeckState) => {
       registry.set(stateAtom, fn(registry.get(stateAtom)));
     },
     [registry, stateAtom],
   );
 
   const updateEphemeral = useCallback(
-    (fn: (current: DeckEphemeralStateProps) => DeckEphemeralStateProps) => {
+    (fn: (current: EphemeralDeckState) => EphemeralDeckState) => {
       registry.set(ephemeralAtom, fn(registry.get(ephemeralAtom)));
     },
     [registry, ephemeralAtom],

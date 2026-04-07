@@ -18,13 +18,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
-import {
-  type CreateObjectOption,
-  CreateObjectPanel,
-  type CreateObjectPanelProps,
-  type Metadata,
-} from '../../components';
-import { meta } from '../../meta';
+import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from '#components';
+import { meta } from '#meta';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
@@ -113,6 +108,7 @@ export const CreateObjectDialog = ({
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
           yield* operationInvoker.invoke(LayoutOperation.Open, {
             subject: [...result.subject],
+            navigation: 'immediate',
           });
         }
 

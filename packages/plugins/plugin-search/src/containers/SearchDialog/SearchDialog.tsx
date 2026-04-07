@@ -8,15 +8,15 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
-import { useActiveSpace } from '@dxos/plugin-space';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
-import { useGlobalSearch, useGlobalSearchResults } from '../../hooks';
-import { meta } from '../../meta';
-import { type SearchResult } from '../../types';
+import { useGlobalSearch, useGlobalSearchResults } from '#hooks';
+import { meta } from '#meta';
+import { type SearchResult } from '#types';
 
 export type SearchDialogProps = {
   pivotId?: string;

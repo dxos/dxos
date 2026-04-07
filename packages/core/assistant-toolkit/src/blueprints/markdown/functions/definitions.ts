@@ -44,6 +44,23 @@ export const Read = Operation.make({
   services: [Database.Service],
 });
 
+export const Open = Operation.make({
+  meta: {
+    key: 'org.dxos.function.markdown.open',
+    name: 'Open',
+    description: 'Opens and reads the contents of a markdown document.',
+  },
+  input: Schema.Struct({
+    doc: Ref.Ref(Markdown.Document).annotations({
+      description: 'The ID of the markdown document.',
+    }),
+  }),
+  output: Schema.Struct({
+    content: Schema.String,
+  }),
+  services: [Database.Service],
+});
+
 export const Update = Operation.make({
   meta: {
     key: 'org.dxos.function.markdown.update',

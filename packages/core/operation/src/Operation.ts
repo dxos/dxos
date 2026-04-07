@@ -11,6 +11,7 @@ import type * as Types from 'effect/Types';
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
 import type { Service } from './service';
+import type { Operation } from './index';
 
 // @import-as-namespace
 
@@ -223,6 +224,37 @@ export const withHandler: {
     handler,
   } as any;
 };
+
+/**
+ * Helper to make the handler type opaque.
+ * Workaround for TypeScript's inability to infer the handler type from the operation definition:
+ * ```
+ * error TS2742: The inferred type of 'default' cannot be named without a reference.
+ * ```
+ *
+ * Most of the time the exact handler type is not needed.
+ *
+ * @example
+ * ```ts
+ * const MyOp = Operation.make({
+ *   input: Schema.Void,
+ *   output: Schema.Void,
+ *   meta: { key: 'my-op' },
+ *   services: [DatabaseService],
+ * });
+ *
+ * export default MyOp.pipe(
+ *   Operation.withHandler(
+ *     Effect.fn(function* (input) {
+ *       return { result: 'ok' };
+ *     }),
+ *   ),
+ *   Operation.opaqueHandler,
+ * );
+ * ```
+ */
+export const opaqueHandler = (handler: Operation.WithHandler<Definition.Any>): Operation.WithHandler<Definition.Any> =>
+  handler;
 
 //
 // Invocation Interfaces

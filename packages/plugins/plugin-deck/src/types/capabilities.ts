@@ -8,18 +8,18 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 import * as Settings from './Settings';
-import { type DeckEphemeralStateProps, type DeckState, type DeckStateProps } from './schema';
+import { type EphemeralDeckState, type DeckState, type StoredDeckState } from './schema';
 
 export namespace DeckCapabilities {
   export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
 
   /** Persisted state (stored in KVS/localStorage). */
-  export const State = Capability.make<Atom.Writable<DeckStateProps>>(`${meta.id}.capability.state`);
+  export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.id}.capability.state`);
 
   /** Transient/ephemeral state (not persisted). */
-  export const EphemeralState = Capability.make<Atom.Writable<DeckEphemeralStateProps>>(
+  export const EphemeralState = Capability.make<Atom.Writable<EphemeralDeckState>>(
     `${meta.id}.capability.ephemeral-state`,
   );
 

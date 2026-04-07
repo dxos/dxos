@@ -7,9 +7,9 @@ import React, { forwardRef, useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-import { type DeckAction, type LayoutMode } from '../../types';
-import { DeckOperation } from '../../operations';
+import { meta } from '#meta';
+import { type DeckAction, type LayoutMode } from '#types';
+import { DeckOperation } from '#operations';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 
@@ -101,10 +101,10 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                 <PlankControl
                   label={t(
                     layoutMode === 'solo--fullscreen'
-                      ? 'exit fullscreen label'
+                      ? 'exit-fullscreen.label'
                       : layoutIsAnySolo
-                        ? 'show deck plank label'
-                        : 'show solo plank label',
+                        ? 'show-deck-plank.label'
+                        : 'show-solo-plank.label',
                   )}
                   classNames={buttonClassNames}
                   icon={
@@ -141,7 +141,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
         ) : (
           capabilities.fullscreen && (
             <PlankControl
-              label={t(layoutMode === 'solo--fullscreen' ? 'exit fullscreen label' : 'show fullscreen plank label')}
+              label={t(layoutMode === 'solo--fullscreen' ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
               classNames={buttonClassNames}
               icon={layoutMode === 'solo--fullscreen' ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
               onClick={() => onClick?.('solo--fullscreen')}
@@ -151,7 +151,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
         {close && !layoutIsAnySolo && (
           <PlankControl
-            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'}.label`)}
             classNames={buttonClassNames}
             data-testid='plankHeading.close'
             icon={

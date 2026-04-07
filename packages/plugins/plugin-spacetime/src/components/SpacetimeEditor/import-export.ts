@@ -7,7 +7,7 @@ import { type RefObject } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 
 import { exportSTL, downloadFile } from '../../engine';
-import { type Scene, Model } from '../../types';
+import { type Scene, Model } from '#types';
 
 export type ImportExportOptions = {
   scene: Scene.Scene | undefined;
@@ -53,7 +53,7 @@ export const handleImport = ({ scene, hue, importGLBRef, setSelectedObjectId }: 
 };
 
 /** Exports the selected object as a binary STL file. */
-export const handleExportSTL = ({
+export const handleExport = ({
   selectedObjectId,
   solidsRef,
 }: Pick<ImportExportOptions, 'selectedObjectId' | 'solidsRef'>) => {

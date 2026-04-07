@@ -15,7 +15,7 @@ import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 /**
  * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.

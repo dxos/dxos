@@ -11,12 +11,14 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 import { mx } from '@dxos/ui-theme';
 
+import { supportsNativePasskeys } from '@dxos/app-toolkit';
+
 import { meta } from '../../meta';
 
 import { hero } from './hero-image';
 import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
-const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
+const supportsPasskeys = (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
 
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };

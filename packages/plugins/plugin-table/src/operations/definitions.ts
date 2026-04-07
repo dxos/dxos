@@ -9,7 +9,7 @@ import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export { Table };
 

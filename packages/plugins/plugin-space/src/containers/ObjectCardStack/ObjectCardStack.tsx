@@ -13,8 +13,8 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { ObjectForm } from '../../components';
-import { meta } from '../../meta';
+import { ObjectForm } from '#components';
+import { meta } from '#meta';
 
 export type ObjectCardStackProps = {
   view: View.View;

@@ -523,6 +523,22 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.organization.target?.id).to.be.a('string');
     });
 
+    test('Obj.clone(deep) then add: top-level Ref on echo object loads (sanity)', async () => {
+      const { db, graph } = await builder.createDatabase();
+      await graph.schemaRegistry.register([Organization, Contact]);
+
+      const original = Obj.make(Contact, {
+        name: 'John',
+        organization: Ref.make(Obj.make(Organization, { name: 'DXOS' })),
+      });
+      const cloned = Obj.clone(original, { deep: true });
+      const person = db.add(cloned);
+
+      expect(cloned.organization.target?.id).not.to.eq(original.organization.target?.id);
+      const nested = await person.organization.load();
+      expect(nested?.name).to.eq('DXOS');
+    });
+
     test('adding objects with nested arrays to DB', async () => {
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([Organization, Contact]);

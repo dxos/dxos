@@ -17,8 +17,8 @@ import {
   createFormat,
   createTemplateSelect,
   useDeployDeps,
-} from '../../hooks';
-import { meta } from '../../meta';
+} from '#hooks';
+import { meta } from '#meta';
 
 export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   script: Script.Script;

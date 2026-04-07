@@ -7,9 +7,9 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { type Label, Main } from '@dxos/react-ui';
 
-import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
-import { meta } from '../../meta';
-import { getMode } from '../../types';
+import { useBreakpoints, useDeckState, useHoistStatusbar } from '#hooks';
+import { meta } from '#meta';
+import { getMode } from '#types';
 import { layoutAppliesTopbar } from '../../util';
 
 const label = ['sidebar.title', { ns: meta.id }] satisfies Label;

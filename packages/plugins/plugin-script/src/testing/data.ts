@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 
-import { Notebook } from '../types';
+import { Notebook } from '#types';
 
 // TODO(burdon): NOTE: createObject is required for tests.
 

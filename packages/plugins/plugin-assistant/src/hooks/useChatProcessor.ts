@@ -3,25 +3,25 @@
 //
 
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
-import type * as Runtime from 'effect/Runtime';
 import { useContext, useMemo, useState } from 'react';
 
-import { Ref } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { AiConversation } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
 import { type Queue, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
 
-import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../processor';
-import { type Assistant } from '../types';
+import { AiChatProcessor, type AiServicePreset } from '../processor';
+import { type Assistant } from '#types';
 
 export type UseChatProcessorProps = {
   space?: Space;
   chat?: Chat.Chat;
   preset?: AiServicePreset;
-  services?: () => Promise<Runtime.Runtime<AiChatServices>>;
+  runtime?: AutomationCapabilities.ComputeRuntime;
   blueprintRegistry?: Blueprint.Registry;
   settings?: Assistant.Settings;
 };
@@ -33,22 +33,24 @@ export const useChatProcessor = ({
   space,
   chat,
   preset,
-  services,
+  runtime,
   blueprintRegistry,
   settings,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
-  // Create conversation from chat queue.
   const [conversation, setConversation] = useState<AiConversation>();
   useAsyncEffect(async () => {
     if (!space || !chat) {
       return;
     }
 
-    // NOTE: Passing in space and getting queue from space rather than resolving the reference.
-    //  This is because if the chat isn't in a space yet, the reference will not be resolvable.
-    const queue = space.queues.get(chat.queue.dxn);
+    const feedTarget = chat.feed.target;
+    const queueDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+    if (!queueDxn) {
+      return;
+    }
+    const queue = space.queues.get(queueDxn);
     const conversation = new AiConversation({
       queue: queue as Queue<any>,
       registry: observableRegistry as Registry.Registry,
@@ -59,22 +61,23 @@ export const useChatProcessor = ({
       void conversation.close();
       setConversation(undefined);
     };
-  }, [space, chat?.queue.dxn.toString()]);
+  }, [space, chat?.feed.target]);
 
-  // Create processor.
+  const feed = chat?.feed.target;
+
   const processor = useMemo(() => {
-    if (!services || !conversation) {
+    if (!runtime || !conversation || !chat || !feed) {
       return undefined;
     }
 
     log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(conversation, services, {
+    return new AiChatProcessor(conversation, runtime, feed, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       blueprintRegistry,
       model: preset?.model,
     });
-  }, [services, conversation, blueprintRegistry, preset]);
+  }, [runtime, conversation, blueprintRegistry, preset, feed]);
 
   return processor;
 };

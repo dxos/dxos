@@ -20,8 +20,8 @@ import {
 } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 
-import { useDeckState } from '../../hooks';
-import { meta } from '../../meta';
+import { useDeckState } from '#hooks';
+import { meta } from '#meta';
 
 const DEBOUNCE_DELAY = 40;
 

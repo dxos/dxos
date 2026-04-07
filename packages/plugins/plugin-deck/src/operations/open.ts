@@ -15,8 +15,8 @@ import {
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
@@ -44,7 +44,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
 
       const validatedSubjects = yield* Effect.all(
         input.subject.map((subjectId) =>
-          validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
+          input.navigation === 'immediate'
+            ? Effect.succeed(subjectId)
+            : validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
         ),
       );
       input = { ...input, subject: validatedSubjects };

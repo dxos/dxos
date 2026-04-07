@@ -8,6 +8,11 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
+import { meta } from '#meta';
+import { translations } from './translations';
+import { ClientReadyEvent, ObservabilityEvents } from '#types';
+import { ObservabilityCapabilities } from '#types';
+
 import {
   AppGraphBuilder,
   ClientReady,
@@ -15,11 +20,7 @@ import {
   ObservabilityState,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { ClientReadyEvent, ObservabilityEvents } from './types';
-import { ObservabilityCapabilities } from './types';
+} from '#capabilities';
 
 export type ObservabilityPluginOptions = {
   namespace: string;

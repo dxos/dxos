@@ -18,17 +18,17 @@ import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
+import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '../../components';
-import { meta } from '../../meta';
+import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
+import { meta } from '#meta';
 import { ComputeGraph } from '../../notebook';
-import { type Notebook } from '../../types';
+import { type Notebook } from '#types';
 
 const INCLUDE_BLUEPRINTS = [
   'org.dxos.blueprint.assistant',

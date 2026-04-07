@@ -15,9 +15,9 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { meta } from '../meta';
-import { NativeFilesystemOperation } from '../operations';
-import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '../types';
+import { meta } from '#meta';
+import { NativeFilesystemOperation } from '#operations';
+import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '#types';
 import { writeComposerConfig } from '../util';
 
 const WorkspaceSettingsSchema = Schema.Struct({
@@ -123,7 +123,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
   );
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section title={t('folder-properties.title')}>
         <Form.Root
           fieldMap={fieldMap}
@@ -135,13 +135,13 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         </Form.Root>
       </Settings.Section>
       <Settings.Section title={t('remove-folder.label')}>
-        <Settings.ItemInput title={t('remove-folder.label')} description={t('remove-folder.description')}>
+        <Settings.Item title={t('remove-folder.label')} description={t('remove-folder.description')}>
           <Button variant='destructive' onClick={handleRemove}>
             {t('remove-folder.label')}
           </Button>
-        </Settings.ItemInput>
+        </Settings.Item>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
-import { type Mailbox } from './types';
+import { type Mailbox } from '#types';
 
 export type CreateDraftOptions = {
   mode?: 'compose' | 'reply' | 'reply-all' | 'forward';

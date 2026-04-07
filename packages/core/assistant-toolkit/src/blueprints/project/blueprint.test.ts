@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation } from '@dxos/assistant';
+import { AiConversation, type ContextBinding } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -28,7 +28,7 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan, Project } from '../../types';
-import { PlanningBlueprint } from '../planning';
+import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import { MarkdownHandlers } from '../markdown';
 
 import ProjectBlueprintDef from './blueprint';
@@ -38,7 +38,7 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownHandlers),
+  operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownHandlers, PlanningHandlers),
   types: [
     Project.Project,
     Plan.Plan,
@@ -77,8 +77,11 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
             blueprint,
           ),
         );
-        const chatQueue = project.chat?.target?.queue?.target as any;
-        invariant(chatQueue, 'Project chat queue not found.');
+        const chatFeed = project.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Project chat feed not found.');
+        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
+        invariant(chatQueueDxn, 'Feed queue DXN not found.');
+        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
         yield* Database.flush();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
@@ -192,8 +195,11 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
         );
         yield* Database.flush();
 
-        const chatQueue = project.chat?.target?.queue?.target as any;
-        invariant(chatQueue, 'Project chat queue not found.');
+        const chatFeed = project.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Project chat feed not found.');
+        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
+        invariant(chatQueueDxn, 'Feed queue DXN not found.');
+        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
         yield* Database.flush();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());

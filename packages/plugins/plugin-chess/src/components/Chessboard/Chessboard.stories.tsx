@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Player } from '@dxos/react-ui-gameboard';
 
 import { translations } from '../../translations';
-import { Chess } from '../../types';
+import { Chess } from '#types';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
 

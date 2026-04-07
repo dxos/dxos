@@ -22,6 +22,7 @@ import { type FunctionProtocol } from '@dxos/protocols';
 import { FunctionError } from '../errors';
 import { type FunctionServices } from '../sdk';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
+import * as Trace from '../Trace';
 import { Operation } from '@dxos/operation';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
@@ -174,7 +175,17 @@ class FunctionContext extends Resource {
         )
       : AiService.notAvailable;
 
-    return Layer.mergeAll(dbLayer, queuesLayer, feedLayer, credentials, functionInvocationService, aiLayer, tracing);
+    return Layer.mergeAll(
+      dbLayer,
+      queuesLayer,
+      feedLayer,
+      credentials,
+      functionInvocationService,
+      aiLayer,
+      tracing,
+      // TODO(dmaretskyi): Forward trace events.
+      Trace.writerLayerNoop,
+    );
   }
 }
 

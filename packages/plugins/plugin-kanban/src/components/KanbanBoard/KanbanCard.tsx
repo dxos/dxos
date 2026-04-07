@@ -11,7 +11,7 @@ import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { useKanbanBoard } from './KanbanBoard';
 

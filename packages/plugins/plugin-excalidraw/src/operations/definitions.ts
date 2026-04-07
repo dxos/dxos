@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/operation';
 import { Sketch } from '@dxos/plugin-sketch/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const SKETCH_OPERATION = `${meta.id}.operation`;
 

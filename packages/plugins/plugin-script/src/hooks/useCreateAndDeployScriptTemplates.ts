@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
 import { type Template } from '../templates';
-import { ScriptOperation } from '../operations';
+import { ScriptOperation } from '#operations';
 import { deployScript } from '../util';
 
 type DeploymentStatus = 'idle' | 'pending' | 'success' | 'error';

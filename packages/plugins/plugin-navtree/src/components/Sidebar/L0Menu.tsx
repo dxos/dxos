@@ -44,8 +44,8 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { useNavTreeState } from '../../hooks';
-import { meta } from '../../meta';
+import { useNavTreeState } from '#hooks';
+import { meta } from '#meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { UserAccountAvatar } from '../UserAccountAvatar';

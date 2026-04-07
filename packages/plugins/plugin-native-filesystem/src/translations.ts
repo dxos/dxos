@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
@@ -14,8 +14,8 @@ export const translations = [
         'open-directory.label': 'Open folder',
         'open-directory.description': 'Open a folder from your filesystem as a workspace',
         'close-directory.label': 'Close folder',
-        'settings-panel.label': 'Settings',
-        'settings-general.label': 'General',
+        'settings.panel.label': 'Settings',
+        'settings.general.label': 'General',
         'icon.description': 'Choose an icon for this folder',
         'hue.description': 'Choose a color for this folder',
         'folder-properties.title': 'Folder properties',

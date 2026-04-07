@@ -38,8 +38,8 @@ import {
   insertIndices,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
-} from '../types';
-import { type Sheet, type SheetAction } from '../types';
+} from '#types';
+import { type Sheet, type SheetAction } from '#types';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.

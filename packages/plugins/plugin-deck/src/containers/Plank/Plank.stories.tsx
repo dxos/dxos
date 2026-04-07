@@ -18,11 +18,13 @@ import { Loading } from '@dxos/react-ui/testing';
 import { StackContext } from '@dxos/react-ui-stack';
 import { Organization } from '@dxos/types';
 
-import { DeckSettings, DeckState } from '../../capabilities';
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
+
 import { translations } from '../../translations';
 
 import { Plank } from './Plank';
+
+import { DeckSettings, DeckState } from '#capabilities';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({

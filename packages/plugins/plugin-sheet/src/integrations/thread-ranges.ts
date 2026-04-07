@@ -14,7 +14,7 @@ import { ThreadOperation } from '@dxos/plugin-thread/operations';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { useSheetContext } from '../components';
+import { useSheetContext } from '#components';
 
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
   return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;

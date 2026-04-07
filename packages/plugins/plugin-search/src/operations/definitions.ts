@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const SEARCH_OPERATION = `${meta.id}.operation`;
 

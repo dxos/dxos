@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DeckStateProps } from '../types';
+import { type StoredDeckState } from '#types';
 
 /**
  * Sanitizes persisted deck state on startup.
@@ -20,7 +20,7 @@ import { type DeckStateProps } from '../types';
  *
  * Returns a new state object if any changes were made, or the original state if clean.
  */
-export const sanitizePersistedState = (state: DeckStateProps): DeckStateProps => {
+export const sanitizePersistedState = (state: StoredDeckState): StoredDeckState => {
   let needsUpdate = false;
   const cleanedDecks = { ...state.decks };
 

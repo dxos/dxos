@@ -7,21 +7,19 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding, GenerationObserver } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService, QueueService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { HasSubject, type Message, Organization } from '@dxos/types';
+import { HasSubject, Organization } from '@dxos/types';
 
 import ResearchBlueprint from '../blueprint';
 import { ResearchHandlers } from '../functions';
@@ -40,7 +38,23 @@ const TestLayer = AssistantTestLayer({
     Blueprint.Blueprint,
     Markdown.Document,
     HasSubject.HasSubject,
+    Feed.Feed,
   ],
+  blueprints: [ResearchBlueprint.make(), MarkdownBlueprint.make()],
+});
+
+const AgentTestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
+  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownHandlers),
+  types: [
+    ...ResearchDataTypes,
+    ResearchGraph.ResearchGraph,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+  ],
+  blueprints: [ResearchBlueprint.make(), MarkdownBlueprint.make()],
 });
 
 describe('Research', () => {
@@ -77,7 +91,7 @@ describe('Research', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  it.effect(
     'create and update research report',
     Effect.fnUntraced(
       function* (_) {
@@ -88,25 +102,13 @@ describe('Research', () => {
           }),
         );
 
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
-
-        yield* Database.flush();
-        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint.make()));
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(researchBlueprint), Ref.make(markdownBlueprint)],
-            objects: [Ref.make(organization)],
-          }),
-        );
-
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-
-        yield* conversation.createRequest({
-          observer,
-          prompt: `Create a research summary about ${organization.name}.`,
+        const agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint.make(), MarkdownBlueprint.make()],
+          context: [Ref.make(organization)],
         });
+
+        yield* agent.submitPrompt(`Create a research summary about ${organization.name}.`);
+        yield* agent.waitForCompletion();
         {
           const docs = yield* Database.runQuery(
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
@@ -123,10 +125,8 @@ describe('Research', () => {
           });
         }
 
-        yield* conversation.createRequest({
-          observer,
-          prompt: 'Add a section about their portfolio.',
-        });
+        yield* agent.submitPrompt('Add a section about their portfolio.');
+        yield* agent.waitForCompletion();
         {
           const docs = yield* Database.runQuery(
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
@@ -143,7 +143,7 @@ describe('Research', () => {
           });
         }
       },
-      Effect.provide(TestLayer),
+      Effect.provide(AgentTestLayer),
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('flaky'),
     ),

@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
-import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosai
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { type ItemProps, usePipeline } from './PipelineComponent';
 import { Menu } from '@dxos/react-ui-menu';

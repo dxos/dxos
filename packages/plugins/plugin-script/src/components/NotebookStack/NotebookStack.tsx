@@ -8,8 +8,8 @@ import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '
 import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { type Notebook } from '../../types';
+import { meta } from '#meta';
+import { type Notebook } from '#types';
 import { type TypescriptEditorProps } from '../TypescriptEditor';
 
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
