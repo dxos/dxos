@@ -64,5 +64,7 @@ const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef
 ));
 
 const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
-  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef} />
+  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+    {props.children}
+  </Flex>
 ));

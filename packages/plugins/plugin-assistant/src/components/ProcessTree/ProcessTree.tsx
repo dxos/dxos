@@ -16,7 +16,7 @@ export type ProcessTreeProps = {
 
 export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
   ({ processes, onProcessSelect, ...props }, forwardedRef) => {
-    const fileterdProcesses: Process.Info[] = [
+    const filteredProcesses: Process.Info[] = [
       ...processes.filter((process) => [Process.State.RUNNING, Process.State.HYBERNATING].includes(process.state)),
       ...processes.filter((process) => [Process.State.IDLE].includes(process.state)).slice(0, 3),
       ...processes
@@ -30,11 +30,13 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
       <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expander' })} thin ref={forwardedRef}>
         <ScrollArea.Viewport>
           <Treegrid.Root gridTemplateColumns='1fr'>
-            {fileterdProcesses
+            {filteredProcesses
               .filter((process) => process.parentPid === null)
               .map((process) => {
-                const activeChildren = fileterdProcesses.filter(
-                  (p) => p.parentPid?.toString() === process.pid.toString() && p.state === Process.State.RUNNING,
+                const activeChildren = filteredProcesses.filter(
+                  (candidate) =>
+                    candidate.parentPid?.toString() === process.pid.toString() &&
+                    candidate.state === Process.State.RUNNING,
                 );
                 return (
                   <Treegrid.Row

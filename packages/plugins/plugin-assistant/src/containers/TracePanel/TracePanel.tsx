@@ -13,10 +13,11 @@ import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
-import { dbg, LogLevel } from '@dxos/log';
+import { LogLevel } from '@dxos/log';
 import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 
 import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
@@ -57,11 +58,9 @@ export const TracePanel = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Content className='grid grid-rows-[min-content_1fr_min-content]'>
+      <Panel.Content className='grid grid-rows-[min-content_1fr]'>
         <ProcessTree
-          classNames={['max-h-[8lh] px-2', activeProcesses.length > 0 && 'border-b border-separator']
-            .filter(Boolean)
-            .join(' ')}
+          classNames={mx('max-h-[8lh] px-2', activeProcesses.length > 0 && 'border-b border-separator')}
           processes={activeProcesses}
         />
         <Timeline classNames='py-1' branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
