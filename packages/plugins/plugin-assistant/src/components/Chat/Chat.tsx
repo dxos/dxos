@@ -168,7 +168,7 @@ type ChatViewportProps = {};
 
 const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );

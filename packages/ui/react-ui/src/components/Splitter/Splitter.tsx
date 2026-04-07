@@ -59,7 +59,7 @@ const Root = slottable<HTMLDivElement, RootOwnProps>(
 
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
-        <Comp role='none' {...restProps} ref={forwardedRef} className={tx('splitter.root', {}, className)}>
+        <Comp {...restProps} ref={forwardedRef} className={tx('splitter.root', {}, className)}>
           {children}
         </Comp>
       </SplitterProvider>
@@ -107,7 +107,6 @@ const Panel = slottable<HTMLDivElement, PanelOwnProps>(
 
     return (
       <Comp
-        role='none'
         {...restProps}
         ref={forwardedRef}
         className={tx('splitter.panel', {}, className)}

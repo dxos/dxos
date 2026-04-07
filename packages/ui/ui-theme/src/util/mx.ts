@@ -69,13 +69,14 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
  */
 // TODO(burdon): Move to react-ui.
 export const composableProps = <P extends HTMLElement = HTMLElement>(
-  { className, classNames, ...props }: ComposableProps,
+  { className, classNames, role, ...props }: ComposableProps,
   { classNames: defaultClassNames, ...defaults }: ThemedClassName<Partial<HTMLAttributes<P>>> | undefined = {},
 ) => ({
   // Default props.
   ...(defaults as object),
 
-  // Spread supplied props.
+  // Spread supplied props; prefer explicit role, then defaults role, then 'none'.
+  role: (role ?? (defaults as Record<string, string>).role ?? 'none') as string,
   ...props,
 
   // Compose classnames.
