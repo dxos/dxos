@@ -26,6 +26,7 @@ export * from './modes';
 export * from './outliner';
 export * from './preview';
 export * from './replacer';
+export * from './scroll-past-end';
 export * from './scroller';
 export * from './selection';
 export * from './state';
