@@ -19,14 +19,14 @@ export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsPro
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('settings-grid-show.label')}>
+        <SettingsForm.Item title={t('settings-grid-show.label')} description={t('settings-grid-show.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.showGrid !== false}
             onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showGrid: checked }))}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-grid-type.label')}>
+        <SettingsForm.Item title={t('settings-grid-type.label')} description={t('settings-grid-type.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.gridType === 'dotted'}

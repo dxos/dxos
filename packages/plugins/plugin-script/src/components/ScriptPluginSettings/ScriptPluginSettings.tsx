@@ -26,13 +26,13 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticat
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
         {/* TODO(wittjosiah): Hide outside of dev environments. */}
-        <SettingsForm.Item title={t('authenticate-action.label')}>
+        <SettingsForm.Item title={t('authenticate-action.label')} description={t('authenticate-action.description')}>
           <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
             {t('authenticate-button.label')}
           </Button>
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('editor-input-mode.label')}>
+        <SettingsForm.Item title={t('editor-input-mode.label')} description={t('editor-input-mode.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={settings.editorInputMode ?? 'default'}

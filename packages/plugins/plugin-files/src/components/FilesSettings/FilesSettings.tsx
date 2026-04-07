@@ -49,7 +49,7 @@ export const FilesSettings = ({
             onClick={() => onSelectRoot?.()}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('trigger-export.label')}>
+        <SettingsForm.Item title={t('trigger-export.label')} description={t('trigger-export.description')}>
           <IconButton
             classNames='ms-2'
             icon='ph--floppy-disk--regular'
@@ -58,7 +58,7 @@ export const FilesSettings = ({
             onClick={() => onExport?.()}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('trigger-import.label')}>
+        <SettingsForm.Item title={t('trigger-import.label')} description={t('trigger-import.description')}>
           <IconButton
             classNames='ms-2'
             icon='ph--folder-open--regular'
@@ -67,14 +67,14 @@ export const FilesSettings = ({
             onClick={() => onImport?.()}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('auto-export.label')}>
+        <SettingsForm.Item title={t('auto-export.label')} description={t('auto-export.description')}>
           <Input.Switch
             disabled={!onSettingsChange || !state.rootHandle}
             checked={state.rootHandle ? settings.autoExport : false}
             onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, autoExport: !!checked }))}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('auto-export-interval.label')}>
+        <SettingsForm.Item title={t('auto-export-interval.label')} description={t('auto-export-interval.description')}>
           <Input.TextInput
             disabled={!onSettingsChange}
             type='number'
@@ -88,7 +88,7 @@ export const FilesSettings = ({
             }
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('open-local-files.label')}>
+        <SettingsForm.Item title={t('open-local-files.label')} description={t('open-local-files.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.openLocalFiles}

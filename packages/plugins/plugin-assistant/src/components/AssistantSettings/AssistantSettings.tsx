@@ -29,7 +29,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('settings-custom-prompts.label')}>
+        <SettingsForm.Item title={t('settings-custom-prompts.label')} description={t('settings-custom-prompts.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={!!settings.customPrompts}
@@ -37,7 +37,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
           />
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-llm-provider.label')}>
+        <SettingsForm.Item title={t('settings-llm-provider.label')} description={t('settings-llm-provider.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={settings.llmProvider ?? 'edge'}
@@ -65,7 +65,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
           </Select.Root>
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-edge-llm-model.label')}>
+        <SettingsForm.Item title={t('settings-edge-llm-model.label')} description={t('settings-edge-llm-model.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={settings.edgeModel ?? DEFAULT_VALUE}
@@ -90,7 +90,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
           </Select.Root>
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-ollama-llm-model.label')}>
+        <SettingsForm.Item title={t('settings-ollama-llm-model.label')} description={t('settings-ollama-llm-model.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={settings.ollamaModel ?? DEFAULT_VALUE}

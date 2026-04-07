@@ -33,7 +33,7 @@ export const SpacePluginSettings = ({
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-        <SettingsForm.Item title={t('show-hidden-spaces.label')}>
+        <SettingsForm.Item title={t('show-hidden-spaces.label')} description={t('show-hidden-spaces.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.showHidden}

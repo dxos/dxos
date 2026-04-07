@@ -135,6 +135,7 @@ export const translations = [
         'space-settings.description':
           'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
         'show-hidden-spaces.label': 'Show archived spaces',
+        'show-hidden-spaces.description': 'Display archived spaces in the sidebar so they can be accessed or unarchived.',
         'save-files-to-directory.label': 'Save files to disk',
         'select-path.label': 'Select path',
         'snapshot-by-schema.label': 'Snapshot of objects',

@@ -15,7 +15,6 @@ const SETTINGS_SECTION_NAME = 'Settings.Section';
 const SETTINGS_PANEL_NAME = 'Settings.Panel';
 const SETTINGS_ITEM_NAME = 'Settings.Item';
 
-
 //
 // Root (headless — no styling, no scroll).
 //
@@ -34,7 +33,7 @@ SettingsRoot.displayName = SETTINGS_ROOT_NAME;
 
 const SettingsViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered thin ref={forwardedRef}>
       <ScrollArea.Viewport classNames='px-4 pointer-coarse:px-2'>
         <div role='none' className='dx-document flex flex-col gap-2 py-4'>
           {children}
@@ -59,7 +58,7 @@ const SettingsSection = ({ title, description, children }: SettingsSectionProps)
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='px-trim-md mt-trim-md mb-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
+      <h2 className='px-trim-md mt-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
       {description && <p className='px-trim-md text-description'>{toLocalizedString(description, t)}</p>}
       <div className='w-full pt-trim-md space-y-trim-md'>{children}</div>
     </>
@@ -76,7 +75,7 @@ type SettingsPanelProps = ThemedClassName<PropsWithChildren>;
 
 const SettingsPanel = ({ classNames, children }: SettingsPanelProps) => {
   return (
-    <div role='none' className={mx('flex flex-col gap-3 p-trim-md border border-separator rounded-md', classNames)}>
+    <div role='none' className={mx('flex flex-col gap-3 p-trim-md border border-separator rounded-sm', classNames)}>
       {children}
     </div>
   );
@@ -103,7 +102,9 @@ const SettingsItem = ({ title, description = '', children }: SettingsItemProps) 
           {toLocalizedString(title, t)}
         </Input.Label>
         <Input.DescriptionAndValidation>
-          <Input.Description classNames='text-base text-description'>{toLocalizedString(description, t)}</Input.Description>
+          <Input.Description classNames='text-base text-description'>
+            {toLocalizedString(description, t)}
+          </Input.Description>
         </Input.DescriptionAndValidation>
         <div role='none' className='text-end py-1'>
           {children}

@@ -21,7 +21,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('default-view-mode.label')}>
+        <SettingsForm.Item title={t('default-view-mode.label')} description={t('default-view-mode.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={settings.defaultViewMode}
@@ -45,7 +45,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           </Select.Root>
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('editor-input-mode.label')}>
+        <SettingsForm.Item title={t('editor-input-mode.label')} description={t('editor-input-mode.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={settings.editorInputMode ?? 'default'}
@@ -72,7 +72,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           </Select.Root>
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-toolbar.label')}>
+        <SettingsForm.Item title={t('settings-toolbar.label')} description={t('settings-toolbar.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.toolbar}
@@ -80,7 +80,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           />
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-numbered-headings.label')}>
+        <SettingsForm.Item title={t('settings-numbered-headings.label')} description={t('settings-numbered-headings.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.numberedHeadings}
@@ -88,7 +88,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           />
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-folding.label')}>
+        <SettingsForm.Item title={t('settings-folding.label')} description={t('settings-folding.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.folding}
@@ -96,7 +96,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           />
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-experimental.label')}>
+        <SettingsForm.Item title={t('settings-experimental.label')} description={t('settings-experimental.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.experimental}
@@ -104,7 +104,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           />
         </SettingsForm.Item>
 
-        <SettingsForm.Item title={t('settings-debug.label')}>
+        <SettingsForm.Item title={t('settings-debug.label')} description={t('settings-debug.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.debug}
@@ -113,7 +113,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
         </SettingsForm.Item>
 
         {settings.debug && (
-          <SettingsForm.Item title={t('settings-debug-typewriter.label', { ns: meta.id })}>
+          <SettingsForm.Item title={t('settings-debug-typewriter.label', { ns: meta.id })} description={t('settings-debug-typewriter.description')}>
             <Input.TextArea
               disabled={!onSettingsChange}
               rows={5}

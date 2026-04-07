@@ -19,7 +19,7 @@ export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSetti
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('present-collections.label')}>
+        <SettingsForm.Item title={t('present-collections.label')} description={t('present-collections.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.presentCollections}

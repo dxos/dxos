@@ -134,14 +134,14 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('settings-wireframe.label')}>
+        <SettingsForm.Item title={t('settings-wireframe.label')} description={t('settings-wireframe.description')}>
           <Input.Switch
             disabled={!onSettingsChange}
             checked={settings.wireframe}
             onCheckedChange={handleWireframeChange}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-download-diagnostics.label')}>
+        <SettingsForm.Item title={t('settings-download-diagnostics.label')} description={t('settings-download-diagnostics.description')}>
           <IconButton
             icon='ph--download-simple--regular'
             iconOnly
@@ -150,7 +150,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
             onClick={handleDownload}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-download-logs.label')}>
+        <SettingsForm.Item title={t('settings-download-logs.label')} description={t('settings-download-logs.description')}>
           <IconButton
             icon='ph--download-simple--regular'
             iconOnly
@@ -158,7 +158,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
             onClick={handleDownloadLogs}
           />
         </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings-repair.label')}>
+        <SettingsForm.Item title={t('settings-repair.label')} description={t('settings-repair.description')}>
           <IconButton
             icon='ph--first-aid-kit--regular'
             iconOnly
@@ -180,7 +180,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
           </Toast.Root>
         )}
 
-        <SettingsForm.Item title={t('settings-choose-storage-adaptor.label')}>
+        <SettingsForm.Item title={t('settings-choose-storage-adaptor.label')} description={t('settings-choose-storage-adaptor.description')}>
           <Select.Root
             disabled={!onSettingsChange}
             value={

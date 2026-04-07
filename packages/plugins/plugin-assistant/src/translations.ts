@@ -126,9 +126,13 @@ export const translations = [
 
         'settings-default.label': 'Default',
         'settings-custom-prompts.label': 'Use custom prompts',
+        'settings-custom-prompts.description': 'Allow the assistant to use custom prompts defined in your spaces.',
         'settings-llm-provider.label': 'LLM provider',
+        'settings-llm-provider.description': 'Select which language model service to use for AI responses.',
         'settings-edge-llm-model.label': 'Remote language model',
+        'settings-edge-llm-model.description': 'Choose the remote language model used for AI requests.',
         'settings-ollama-llm-model.label': 'Ollama language model',
+        'settings-ollama-llm-model.description': 'Choose the locally hosted Ollama model for AI requests.',
         'settings-default-llm-model.label': 'Default language model',
 
         // Trigger status
