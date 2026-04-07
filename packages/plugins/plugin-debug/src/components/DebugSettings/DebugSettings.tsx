@@ -148,7 +148,6 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
           <IconButton
             icon='ph--download-simple--regular'
             iconOnly
-            disabled={!onUpload}
             label={t('settings.download-diagnostics.label')}
             onClick={handleDownload}
           />
