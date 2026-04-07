@@ -48,7 +48,9 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           onLayoutChange={handleLayoutChange}
         >
           <Deck.Content>
-            <Deck.Viewport>{deck.solo ? <Deck.SoloMode /> : <Deck.MultiMode />}</Deck.Viewport>
+            <Deck.Viewport>
+              {deck.solo ? <Deck.SoloMode /> : deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.MultiMode />}
+            </Deck.Viewport>
           </Deck.Content>
         </Deck.Root>
         <PopoverContent />
