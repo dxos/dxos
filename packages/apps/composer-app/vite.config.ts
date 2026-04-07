@@ -210,6 +210,7 @@ export default defineConfig((env) => ({
     ...sharedPlugins(env),
 
     // RSS proxy middleware for CORS-free feed fetching.
+    // TODO(dmaretskyi): replace with hosted CORS proxy on CF.
     {
       name: 'rss-proxy',
       configureServer(server) {
