@@ -25,9 +25,8 @@ import {
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
-import { type TraceContextData } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
+import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
 
@@ -103,7 +102,7 @@ export class OtelTraces {
     TRACE_PROCESSOR.tracingBackend = {
       startSpan: (
         options: StartSpanOptions,
-      ): { end: () => void; setError?: (err: unknown) => void; spanContext?: TraceContextData } => {
+      ): RemoteSpan => {
         log('begin otel trace', { options });
         const parentCtx = options.parentContext
           ? propagation.extract(ROOT_CONTEXT, {
