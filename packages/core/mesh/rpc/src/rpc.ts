@@ -513,7 +513,11 @@ export class RpcPeer {
   private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
     const handlerOptions: RequestOptions = { ...this._params.handlerRpcOptions };
     if (req.traceContext) {
-      handlerOptions.ctx = ContextRpcCodec.decode(req.traceContext);
+      try {
+        handlerOptions.ctx = ContextRpcCodec.decode(req.traceContext);
+      } catch (err) {
+        log.warn('failed to decode trace context', { traceContext: req.traceContext, err });
+      }
     }
     return Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined;
   }
