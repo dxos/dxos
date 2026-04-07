@@ -14,6 +14,7 @@ import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
+import { DevTools } from '@vitejs/devtools';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
@@ -88,7 +89,7 @@ export default defineConfig((env) => ({
     minify: !isFalse(process.env.DX_MINIFY),
     // Target modern browsers for better performance and smaller bundle sizes.
     target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
-    rollupOptions: {
+    rolldownOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
       input: {
@@ -101,6 +102,7 @@ export default defineConfig((env) => ({
       output: {
         chunkFileNames,
       },
+      devtools: {}, // enable devtools mode
     },
   },
   optimizeDeps: {
@@ -250,10 +252,6 @@ export default defineConfig((env) => ({
       },
     },
 
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
-
     // env.command === 'serve' && devtoolsJson(),
 
     // Solid JSX transform for Solid packages.
@@ -344,6 +342,8 @@ export default defineConfig((env) => ({
         ],
       },
     }),
+
+    DevTools(),
 
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // Open: http://localhost:5173/__inspect
