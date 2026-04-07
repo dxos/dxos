@@ -144,6 +144,7 @@
     "@types/jsdom": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "jsdom": "catalog:",
     "pwa-asset-generator": "catalog:",
     "rollup-plugin-visualizer": "catalog:",

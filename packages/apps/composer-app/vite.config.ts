@@ -4,7 +4,7 @@
 
 import importSource from '@dxos/vite-plugin-import-source';
 import { vitePluginLog } from '@dxos/vite-plugin-log';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -64,9 +64,6 @@ export default defineConfig((env) => ({
   devtools: {
     enabled: true,
   },
-  experimental: {
-    bundledDev: true,
-  },
   root: dirname,
   server: {
     host: true,
@@ -86,9 +83,6 @@ export default defineConfig((env) => ({
         rootDir,
       ],
     },
-  },
-  esbuild: {
-    keepNames: true,
   },
   build: {
     outDir: 'out/composer',
@@ -278,55 +272,7 @@ export default defineConfig((env) => ({
       ],
     }),
 
-    react({
-      tsDecorators: true,
-      useAtYourOwnRisk_mutateSwcOptions: (options) => {
-        // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
-        options.jsc ??= {};
-        options.jsc.target = 'esnext';
-      },
-      plugins: [
-        [
-          '@dxos/swc-log-plugin',
-          {
-            to_transform: [
-              {
-                name: 'log',
-                package: '@dxos/log',
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
-                include_scope: true,
-              },
-              {
-                name: 'dbg',
-                package: '@dxos/log',
-                param_index: 1,
-                include_args: true,
-                include_call_site: false,
-                include_scope: false,
-              },
-              {
-                name: 'invariant',
-                package: '@dxos/invariant',
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-                include_scope: true,
-              },
-              {
-                name: 'Context',
-                package: '@dxos/context',
-                param_index: 1,
-                include_args: false,
-                include_call_site: false,
-                include_scope: false,
-              },
-            ],
-          },
-        ],
-      ],
-    }),
+    react(),
 
     importMapPlugin({
       modules: [

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,7 +72,7 @@ export default defineConfig({
     ThemePlugin({}),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    react({ tsDecorators: true }),
+    react(),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,

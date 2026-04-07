@@ -93,7 +93,7 @@
     "@types/zen-observable": "catalog:",
     "@typescript/native-preview": "catalog:",
     "@vitejs/devtools": "catalog:",
-    "@vitejs/plugin-react-swc": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",

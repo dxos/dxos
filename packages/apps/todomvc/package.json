@@ -35,6 +35,7 @@
     "@dxos/test-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "vite": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"

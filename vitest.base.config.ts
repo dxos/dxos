@@ -3,7 +3,7 @@
 //
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -169,56 +169,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       ...plugins,
       PluginImportSource(),
       process.env.VITE_INSPECT ? Inspect() : undefined,
-      // Add react plugin to enable SWC transfors.
-      react({
-        tsDecorators: true,
-        useAtYourOwnRisk_mutateSwcOptions: (options) => {
-          // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
-          options.jsc ??= {};
-          options.jsc.target = 'esnext';
-        },
-        plugins: [
-          [
-            '@dxos/swc-log-plugin',
-            {
-              to_transform: [
-                {
-                  name: 'log',
-                  package: '@dxos/log',
-                  param_index: 2,
-                  include_args: false,
-                  include_call_site: true,
-                  include_scope: true,
-                },
-                {
-                  name: 'dbg',
-                  package: '@dxos/log',
-                  param_index: 1,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-                {
-                  name: 'invariant',
-                  package: '@dxos/invariant',
-                  param_index: 2,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: true,
-                },
-                {
-                  name: 'Context',
-                  package: '@dxos/context',
-                  param_index: 1,
-                  include_args: false,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-              ],
-            },
-          ],
-        ],
-      }),
+      react(),
     ],
   });
 

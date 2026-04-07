@@ -3,7 +3,7 @@
 //
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
@@ -39,6 +39,6 @@ export default defineConfig({
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    ReactPlugin({ tsDecorators: true }),
+    ReactPlugin(),
   ],
 });

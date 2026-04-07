@@ -55,6 +55,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "partykit": "catalog:",
     "vite": "catalog:",
     "vite-plugin-top-level-await": "catalog:",

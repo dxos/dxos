@@ -28,6 +28,7 @@
     "autoprefixer": "catalog:",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "vite": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:",

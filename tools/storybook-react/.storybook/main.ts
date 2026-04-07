@@ -94,17 +94,22 @@ export const createConfig = ({
     }
 
     // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
-    const { default: react } = await import('@vitejs/plugin-react-swc');
+    const { default: react } = await import('@vitejs/plugin-react');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
 
     const finalConfig = mergeConfig(
       {
         ...config,
-        // Prevent duplicate react-swc plugin.
+        // Prevent duplicate React plugins from the Storybook + DXOS merge.
         plugins: config.plugins?.filter((plugin) =>
           Array.isArray(plugin)
-            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-swc') === -1
+            ? plugin.findIndex(
+                (p) =>
+                  p &&
+                  'name' in p &&
+                  (p.name === 'vite:react-swc' || p.name === 'vite:react-babel'),
+              ) === -1
             : true,
         ),
       },
@@ -271,8 +276,8 @@ export const createConfig = ({
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
 
-          // https://www.npmjs.com/package/@vitejs/plugin-react-swc
-          react({ tsDecorators: true }),
+          // https://www.npmjs.com/package/@vitejs/plugin-react
+          react(),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({

@@ -295,7 +295,6 @@ catalog:
   '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/devtools': ^0.1.13
   '@vitejs/plugin-react': ^6.0.1
-  '@vitejs/plugin-react-swc': ^4.3.0
   '@vitest/browser': ^4.1.2
   '@vitest/browser-playwright': ^4.1.2
   '@vitest/coverage-v8': ^4.1.2
@@ -691,7 +690,6 @@ overrides:
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
-  '@vitejs/plugin-react-swc>@swc/core': 'catalog:'
   ajv@8: '>=8.18.0'
   axios: 1.14.0
   base-x@4: 4.0.1
@@ -747,5 +745,5 @@ trustPolicy: no-downgrade
 
 trustPolicyExclude:
   - rollup@3.30.0
-  # @vitejs/plugin-react-swc@4.3.x depends on @swc/core without provenance attestation pnpm expects.
+  # @swc/core is used by @dxos/swc-log-plugin tooling without provenance attestation pnpm expects.
   - '@swc/core@1.13.5'
