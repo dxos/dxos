@@ -11,7 +11,7 @@ type FlexOwnProps = { column?: boolean; grow?: boolean };
 export type FlexProps = FlexOwnProps;
 
 export const Flex = composable<HTMLDivElement, FlexOwnProps>(({ children, column, grow, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { role: 'none' });
+  const { className, ...rest } = composableProps(props);
   return (
     <div
       ref={forwardedRef}

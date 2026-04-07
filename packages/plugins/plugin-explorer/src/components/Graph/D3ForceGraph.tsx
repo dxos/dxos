@@ -71,7 +71,7 @@ export const D3ForceGraph = composable<HTMLDivElement, D3ForceGraphProps>(
     );
 
     return (
-      <div {...composableProps(props, { role: 'none', classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         <SVG.Root ref={svgRef}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}

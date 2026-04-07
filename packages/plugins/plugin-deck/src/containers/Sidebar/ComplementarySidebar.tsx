@@ -82,7 +82,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
-      {/* TODO(burdon): asChild. */}
+      {/* R0 Tabs */}
       <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
         <div
           data-tauri-drag-region
@@ -129,6 +129,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             <ToggleComplementarySidebarButton />
           </div>
         </div>
+
+        {/* R1 Content. */}
         {activeId &&
           companions.map((companion) => (
             <Tabs.Panel

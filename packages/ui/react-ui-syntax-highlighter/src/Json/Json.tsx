@@ -103,7 +103,7 @@ type JsonContentProps = ComposableProps;
 const JsonContent = composable<HTMLDivElement, JsonContentProps>(({ children, ...props }, forwardedRef) => {
   return (
     <div
-      {...composableProps(props, { role: 'none', classNames: 'flex flex-col h-full min-h-0 overflow-hidden' })}
+      {...composableProps(props, { classNames: 'flex flex-col h-full min-h-0 overflow-hidden' })}
       ref={forwardedRef}
     >
       {children}
