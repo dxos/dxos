@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -191,7 +192,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: companionSegment('trace'),
+              id: linkedSegment('trace'),
               type: DECK_COMPANION_TYPE,
               data: 'trace' as const,
               properties: {

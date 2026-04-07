@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, createObjectNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { type Feed, Filter, Key, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
@@ -235,6 +237,69 @@ export default Capability.makeModule(
             },
           ]);
         },
+      }),
+
+      // Feed object node extension: creates hidden, navigable nodes for mailbox messages.
+      // Uses ~ prefix for attention propagation to the parent mailbox.
+      GraphBuilder.createExtension({
+        id: `${meta.id}.feed-object-node`,
+        match: (node) => {
+          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
+          return node.type === Mailbox.Mailbox.typename && mailbox
+            ? Option.some({ mailbox, nodeId: node.id })
+            : Option.none();
+        },
+        resolver: (qualifiedId, get) =>
+          Effect.gen(function* () {
+            const segments = qualifiedId.split('/');
+            if (!isLinkedSegment(qualifiedId)) {
+              return null;
+            }
+
+            const messageId = getLinkedVariant(qualifiedId);
+            const spaceId = getSpaceIdFromPath(qualifiedId);
+            const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
+            const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
+
+            if (!spaceId || !mailboxId || !Key.ObjectId.isValid(messageId)) {
+              return null;
+            }
+
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const space = client.spaces.get(spaceId);
+            if (!space) {
+              return null;
+            }
+
+            const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
+            const mailbox = mailboxes.find((m: Mailbox.Mailbox) => m.id === mailboxId);
+            if (!mailbox) {
+              return null;
+            }
+
+            const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+            if (!feed) {
+              return null;
+            }
+
+            const message = get(
+              AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId)).from(feed)),
+            )[0];
+            if (!message) {
+              return null;
+            }
+
+            return {
+              id: qualifiedId,
+              type: Message.Message.typename,
+              data: message,
+              properties: {
+                label: message.properties?.subject ?? ['message.label', { ns: meta.id }],
+                icon: 'ph--envelope-open--regular',
+                disposition: 'hidden',
+              },
+            };
+          }),
       }),
 
       GraphBuilder.createExtension({

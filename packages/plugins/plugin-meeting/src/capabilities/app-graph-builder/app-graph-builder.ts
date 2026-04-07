@@ -6,7 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -177,7 +178,7 @@ export default Capability.makeModule(
                 if (!transcriptionEnabled) {
                   log.warn('transcription disabled');
                 } else {
-                  const companion = companionSegment('transcript');
+                  const companion = linkedSegment('transcript');
                   yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),

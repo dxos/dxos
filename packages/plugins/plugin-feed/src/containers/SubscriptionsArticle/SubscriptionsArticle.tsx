@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { type SpaceSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
@@ -41,7 +42,7 @@ export const SubscriptionsArticle = ({ role, attendableId, space }: Subscription
             selection: { mode: 'single', id: action.feedId },
           });
 
-          const companion = companionSegment('feed');
+          const companion = linkedSegment('feed');
           if (layout.mode === 'simple') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,

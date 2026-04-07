@@ -16,6 +16,7 @@ import {
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../../meta';
@@ -62,20 +63,32 @@ export default Capability.makeModule(
       })) as AppCaps.NavigationTargetResolver;
 
     // Resolve canonical object paths (root/<spaceId>/types/<typename>/all/<objectId>) to DXNs.
+    // Validates that the object actually exists in the space before returning a DXN.
+    const client = yield* Capability.get(ClientCapabilities.Client);
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
       const spaceId = getSpaceIdFromPath(qualifiedPath);
       const objectId = segments[segments.length - 1];
       if (
-        spaceId &&
-        objectId &&
-        Key.ObjectId.isValid(objectId) &&
-        segments.includes(Segments.types) &&
-        segments.includes('all')
+        !spaceId ||
+        !objectId ||
+        !Key.ObjectId.isValid(objectId) ||
+        !segments.includes(Segments.types) ||
+        !segments.includes('all')
       ) {
-        return Effect.succeed(Option.some(DXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId)));
+        return Effect.succeed(Option.none());
       }
-      return Effect.succeed(Option.none());
+
+      const space = client.spaces.get(spaceId);
+      if (!space) {
+        return Effect.succeed(Option.none());
+      }
+
+      const dxn = DXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
+      const ref = space.db.makeRef(dxn);
+      return Database.loadOption(ref).pipe(
+        Effect.map((option) => (Option.isSome(option) ? Option.some(dxn) : Option.none<DXN>())),
+      );
     };
 
     return [

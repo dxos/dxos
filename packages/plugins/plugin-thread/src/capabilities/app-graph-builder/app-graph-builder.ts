@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -134,7 +135,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: companionSegment('comments'),
+              id: linkedSegment('comments'),
               type: PLANK_COMPANION_TYPE,
               data: 'comments',
               properties: {

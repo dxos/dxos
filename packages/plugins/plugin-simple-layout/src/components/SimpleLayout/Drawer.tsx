@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { getCompanionVariant } from '@dxos/app-toolkit';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
@@ -79,7 +79,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((c) => getCompanionVariant(c.id) === preferredVariant);
+      const preferred = companions.find((c) => getLinkedVariant(c.id) === preferredVariant);
       if (preferred) {
         return preferred;
       }
@@ -90,7 +90,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
   }, [companions, preferredVariant]);
 
   const companionId = selectedCompanion?.id;
-  const variant = companionId ? getCompanionVariant(companionId) : undefined;
+  const variant = companionId ? getLinkedVariant(companionId) : undefined;
 
   return { selectedCompanion, companionId, variant };
 };

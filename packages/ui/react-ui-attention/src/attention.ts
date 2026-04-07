@@ -92,8 +92,8 @@ export class AttentionManager {
    * Takes the array of qualified IDs collected from the DOM; the first element is the primary attended item.
    * Ancestry is derived from the progressive prefixes of the primary ID.
    * Relatedness is derived from the segment ID: any tracked key whose last `/` segment matches the
-   * attended ID's segment ID is marked `isRelated`. Additionally, if the primary ID has a
-   * separator-prefixed last segment (starts with `~`), its immediate parent gets `isRelated` alongside `isAncestor`.
+   * attended ID's segment ID is marked `isRelated`. Additionally, if the primary ID is a linked segment
+   * (starts with `~`), its immediate parent gets `isRelated` alongside `isAncestor`.
    *
    * @internal
    */
@@ -124,12 +124,12 @@ export class AttentionManager {
     // Set ancestors and primary.
     const prefixes = expandAttendableId(primaryId);
     const prefixSet = new Set(prefixes);
-    const separatedParent = isSeparatorPrefixed(primaryId) ? getParentId(primaryId) : undefined;
+    const linkedParent = isLinkedSegment(primaryId) ? getParentId(primaryId) : undefined;
 
     for (const prefix of prefixes) {
       if (prefix === primaryId) {
         this._set(prefix, { hasAttention: true });
-      } else if (prefix === separatedParent) {
+      } else if (prefix === linkedParent) {
         this._set(prefix, { isAncestor: true, isRelated: true });
       } else {
         this._set(prefix, { isAncestor: true });
@@ -185,7 +185,11 @@ export type AttendableId = { attendableId?: string };
 
 export type Related = { related?: boolean };
 
-const ATTENDABLE_PATH_SEPARATOR = '~';
+/**
+ * Prefix for linked segments. A linked segment's attention state is shared with its parent:
+ * when a linked node has attention, the parent is marked as both ancestor and related.
+ */
+const LINKED_PREFIX = '~';
 
 /**
  * Decompose a qualified graph ID into progressive prefixes for ancestry tracking.
@@ -197,11 +201,30 @@ export const expandAttendableId = (qualifiedId: string): string[] => {
 };
 
 /**
- * Whether the last segment of a qualified ID starts with the attendable path separator.
+ * Whether the last segment of a qualified ID is a linked segment (starts with `~`).
+ * Linked segments share their attention state with the parent node.
  */
-export const isSeparatorPrefixed = (qualifiedId: string): boolean => {
+export const isLinkedSegment = (qualifiedId: string): boolean => {
   const lastSegment = qualifiedId.split('/').pop() ?? '';
-  return lastSegment.startsWith(ATTENDABLE_PATH_SEPARATOR);
+  return lastSegment.startsWith(LINKED_PREFIX);
+};
+
+/**
+ * Build a linked segment ID from a variant name (e.g., `'settings'` -> `'~settings'`).
+ * Nodes identified by linked segments share their attention state with the parent node.
+ */
+export const linkedSegment = (variant: string): string => `${LINKED_PREFIX}${variant}`;
+
+/**
+ * Extract the variant name from the last segment of a qualified ID, stripping the linked prefix.
+ * e.g. `'root/space/obj/~settings'` -> `'settings'`.
+ * If the segment is not linked (no `~` prefix), returns the segment as-is.
+ */
+export const getLinkedVariant = (qualifiedId: string): string => {
+  const lastSegment = qualifiedId.split('/').pop() ?? '';
+  return lastSegment.startsWith(LINKED_PREFIX)
+    ? lastSegment.slice(LINKED_PREFIX.length)
+    : lastSegment;
 };
 
 /**
