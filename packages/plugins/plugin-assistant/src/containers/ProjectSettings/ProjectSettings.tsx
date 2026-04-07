@@ -118,7 +118,7 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
                   });
                 }}
               />
-              <Input.Label>{Obj.getLabel(object) ?? t('unnamed-object.label')}</Input.Label>
+              <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
             </div>
           </Input.Root>
         ))}

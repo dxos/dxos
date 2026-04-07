@@ -20,10 +20,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.sketch`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Sketch.Sketch } => Sketch.isSketch(data.subject, Sketch.TLDRAW_SCHEMA),
-        component: ({ data, role }) => {
+        filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
+          Sketch.isSketch(data.subject, Sketch.TLDRAW_SCHEMA),
+        component: ({ data: { subject, attendableId }, role }) => {
           const settings = useAtomCapability(SketchCapabilities.Settings);
-          return <SketchContainer role={role} subject={data.subject} settings={settings} />;
+          return <SketchContainer role={role} attendableId={attendableId} subject={subject} settings={settings} />;
         },
       }),
       Surface.create({

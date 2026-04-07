@@ -59,7 +59,9 @@ export const TracePanel = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Content className='grid grid-rows-[min-content_1fr_min-content]'>
         <ProcessTree
-          classNames={['max-h-[8lh] px-2', activeProcesses.length > 0 && 'border-b border-separator'].filter(Boolean).join(' ')}
+          classNames={['max-h-[8lh] px-2', activeProcesses.length > 0 && 'border-b border-separator']
+            .filter(Boolean)
+            .join(' ')}
           processes={activeProcesses}
         />
         <Timeline classNames='py-1' branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
@@ -103,8 +105,6 @@ const getExecutionGraph = (
               ...event,
             })),
           );
-
-        dbg(events);
 
         for (const event of events) {
           if (Trace.isOfType(CompleteBlock, event)) {
