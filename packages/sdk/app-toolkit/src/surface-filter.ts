@@ -4,8 +4,10 @@
 
 import type * as Schema from 'effect/Schema';
 
+import { Plugin } from '@dxos/app-framework';
+import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
-import { Obj, type Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import { AppCapabilities } from './capabilities';
 
@@ -13,7 +15,7 @@ import { AppCapabilities } from './capabilities';
  * Surface filter factories and paired component prop types for the Composer ontology.
  *
  * Each filter factory has a corresponding prop type for the component it matches:
- * - `AppSurface.subject()` pairs with `AppSurface.SubjectProps`
+ * - `AppSurface.object()` pairs with `AppSurface.ObjectProps`
  * - `AppSurface.settings()` pairs with `AppSurface.SettingsProps`
  * - `AppSurface.companion()` pairs with `AppSurface.CompanionProps`
  * - `AppSurface.component()` pairs with `AppSurface.ComponentProps`
@@ -28,7 +30,7 @@ export namespace AppSurface {
   export type Role = 'article' | 'card--content' | 'complementary' | 'item' | 'section';
 
   /** Props for components rendering a specific ECHO object subject. Pairs with `subject()`. */
-  export type SubjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
+  export type ObjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
     /** Surface role (superset of WAI-ARIA role). */
     role?: string;
 
@@ -43,8 +45,8 @@ export namespace AppSurface {
   } & Props;
 
   /** Props for attendable subject surfaces (article role). Pairs with `subject(schema, { attendable: true })`. */
-  export type AttendableSubjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> =
-    SubjectProps<Subject, Props & { attendableId: string }>;
+  export type AttendableObjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> =
+    ObjectProps<Subject, Props & { attendableId: string }>;
 
   /** Props for settings surfaces. Pairs with `settings()`. */
   export type SettingsProps<T extends {}, Props extends {} = {}> = {
@@ -84,6 +86,51 @@ export namespace AppSurface {
     attendableId?: string;
   } & Props;
 
+  /** Props for literal/string constant surfaces. Pairs with `literal()`. */
+  export type LiteralProps<L extends string | null = string, Props extends {} = {}> = {
+    /** Surface role (superset of WAI-ARIA role). */
+    role?: string;
+
+    /** The string or null literal identifying this surface. */
+    subject: L;
+  } & Props;
+
+  /** Props for graph node surfaces. Pairs with `graphNode()`. */
+  export type NodeProps<Props extends {} = {}> = {
+    /** Surface role (superset of WAI-ARIA role). */
+    role?: string;
+
+    /** The graph node being displayed. */
+    subject: Node.Node;
+  } & Props;
+
+  /** Props for plugin descriptor surfaces. Pairs with `plugin()`. */
+  export type PluginProps<Props extends {} = {}> = {
+    /** Surface role (superset of WAI-ARIA role). */
+    role?: string;
+
+    /** The plugin descriptor. */
+    subject: Plugin.Plugin;
+  } & Props;
+
+  /** Props for ECHO schema surfaces. Pairs with `schema()`. */
+  export type SchemaProps<Props extends {} = {}> = {
+    /** Surface role (superset of WAI-ARIA role). */
+    role?: string;
+
+    /** The ECHO schema object. */
+    subject: Type.AnyEntity;
+  } & Props;
+
+  /** Props for ECHO snapshot surfaces. Pairs with `snapshot()`. */
+  export type SnapshotProps<T extends Obj.Unknown = Obj.Unknown, Props extends {} = {}> = {
+    /** Surface role (superset of WAI-ARIA role). */
+    role?: string;
+
+    /** The snapshot of the ECHO object. */
+    subject: Obj.Snapshot<T>;
+  } & Props;
+
   //
   // Filter Factories
   //
@@ -94,32 +141,32 @@ export namespace AppSurface {
    * @example
    * ```ts
    * // Single type.
-   * filter: AppSurface.subject(Chess.Game)
+   * filter: AppSurface.object(Chess.Game)
    *
    * // Union of types.
-   * filter: AppSurface.subject([Masonry.Masonry, View.View])
+   * filter: AppSurface.object([Masonry.Masonry, View.View])
    *
    * // Require attendableId.
-   * filter: AppSurface.subject(Table.Table, { attendable: true })
+   * filter: AppSurface.object(Table.Table, { attendable: true })
    * ```
    */
-  export function subject<S extends Type.AnyEntity>(
+  export function object<S extends Type.AnyEntity>(
     schema: S,
     options?: { attendable?: false },
   ): (data: Record<string, unknown>) => data is { subject: Schema.Schema.Type<S> };
-  export function subject<S extends Type.AnyEntity>(
+  export function object<S extends Type.AnyEntity>(
     schema: S,
     options: { attendable: true },
   ): (data: Record<string, unknown>) => data is { attendableId: string; subject: Schema.Schema.Type<S> };
-  export function subject<S extends Type.AnyEntity[]>(
+  export function object<S extends Type.AnyEntity[]>(
     schemas: [...S],
     options?: { attendable?: false },
   ): (data: Record<string, unknown>) => data is { subject: Schema.Schema.Type<S[number]> };
-  export function subject<S extends Type.AnyEntity[]>(
+  export function object<S extends Type.AnyEntity[]>(
     schemas: [...S],
     options: { attendable: true },
   ): (data: Record<string, unknown>) => data is { attendableId: string; subject: Schema.Schema.Type<S[number]> };
-  export function subject(
+  export function object(
     schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
     options?: { attendable?: boolean },
   ): (data: Record<string, unknown>) => data is any {
@@ -207,4 +254,78 @@ export namespace AppSurface {
       return true;
     };
   }
+
+  /**
+   * Matches when `data.subject` is a string or null literal.
+   * Used for companion panes, settings pages, and branch/group nodes.
+   *
+   * @example
+   * ```ts
+   * filter: AppSurface.literal('chat')
+   * filter: AppSurface.literal(null)
+   * ```
+   */
+  export const literal = <L extends string | null>(
+    value: L,
+  ): ((data: Record<string, unknown>) => data is { subject: L }) => {
+    return (data: Record<string, unknown>): data is { subject: L } => data.subject === value;
+  };
+
+  /**
+   * Matches when `data.subject` is a graph node (`Node.Node`).
+   *
+   * @example
+   * ```ts
+   * filter: AppSurface.graphNode()
+   * ```
+   */
+  export const graphNode = (): ((data: Record<string, unknown>) => data is { subject: Node.Node }) => {
+    return (data: Record<string, unknown>): data is { subject: Node.Node } => Node.isGraphNode(data.subject);
+  };
+
+  /**
+   * Matches when `data.subject` is a plugin descriptor.
+   *
+   * @example
+   * ```ts
+   * filter: AppSurface.plugin()
+   * ```
+   */
+  export const plugin = (): ((data: Record<string, unknown>) => data is { subject: Plugin.Plugin }) => {
+    return (data: Record<string, unknown>): data is { subject: Plugin.Plugin } => Plugin.isPlugin(data.subject);
+  };
+
+  /**
+   * Matches when `data.subject` is an ECHO schema object (e.g., a type created with `Type.object()`).
+   *
+   * @example
+   * ```ts
+   * filter: AppSurface.schema()
+   * ```
+   */
+  export const schema = (): ((data: Record<string, unknown>) => data is { subject: Type.AnyEntity }) => {
+    return (data: Record<string, unknown>): data is { subject: Type.AnyEntity } => {
+      const value = data.subject;
+      if (value == null) {
+        return false;
+      }
+      const candidate = value as Type.AnyEntity;
+      return Type.isObjectSchema(candidate) || Type.isRelationSchema(candidate);
+    };
+  };
+
+  /**
+   * Matches when `data.subject` is a snapshot of the given ECHO schema.
+   *
+   * @example
+   * ```ts
+   * filter: AppSurface.snapshot(Thread.Thread)
+   * ```
+   */
+  export const snapshot = <S extends Type.AnyEntity>(
+    schema: S,
+  ): ((data: Record<string, unknown>) => data is { subject: Obj.Snapshot<Schema.Schema.Type<S>> }) => {
+    return (data: Record<string, unknown>): data is { subject: Obj.Snapshot<Schema.Schema.Type<S>> } =>
+      Obj.snapshotOf(schema, data.subject);
+  };
 }

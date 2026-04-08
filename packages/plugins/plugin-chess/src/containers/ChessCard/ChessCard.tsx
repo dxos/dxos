@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit';
 import { Chessboard } from '#components';
 import { type Chess } from '#types';
 
-export type ChessCardProps = AppSurface.SubjectProps<Chess.Game>;
+export type ChessCardProps = AppSurface.ObjectProps<Chess.Game>;
 
 export const ChessCard = ({ subject: game }: ChessCardProps) => {
   return (

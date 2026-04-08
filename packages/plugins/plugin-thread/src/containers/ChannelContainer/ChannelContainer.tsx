@@ -25,7 +25,7 @@ import { ThreadCapabilities } from '#types';
 import { type Channel } from '#types';
 import { ChatContainer } from '../ChatContainer';
 
-export type ChannelContainerProps = AppSurface.AttendableSubjectProps<
+export type ChannelContainerProps = AppSurface.AttendableObjectProps<
   Channel.Channel | undefined,
   {
     roomId?: string;

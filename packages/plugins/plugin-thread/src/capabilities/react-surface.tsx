@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.channel`,
         role: 'article',
-        filter: AppSurface.subject(Channel.Channel, { attendable: true }),
+        filter: AppSurface.object(Channel.Channel, { attendable: true }),
         component: ({ data: { subject, attendableId }, role }) => (
           <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
         ),
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.thread`,
         role: 'article',
-        filter: AppSurface.subject(Thread.Thread, { attendable: true }),
+        filter: AppSurface.object(Thread.Thread, { attendable: true }),
         component: ({ data: { subject } }) => {
           const space = getSpace(subject);
           if (!space || !subject) {

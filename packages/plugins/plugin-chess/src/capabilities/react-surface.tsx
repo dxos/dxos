@@ -19,13 +19,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: AppSurface.subject(Chess.Game, { attendable: true }),
+        filter: AppSurface.object(Chess.Game, { attendable: true }),
         component: ({ data, role }) => <ChessArticle role={role} subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: meta.id,
         role: ['card--content'],
-        filter: AppSurface.subject(Chess.Game),
+        filter: AppSurface.object(Chess.Game),
         component: ({ data, role }) => <ChessCard role={role} subject={data.subject} />,
       }),
     ]),

@@ -19,40 +19,40 @@ const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
 );
 
 describe('AppSurface', () => {
-  describe('subject', () => {
+  describe('object', () => {
     test('matches single schema', ({ expect }) => {
-      const filter = AppSurface.subject(TypeA);
+      const filter = AppSurface.object(TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter({ subject: objectA })).toBe(true);
     });
 
     test('rejects non-matching schema', ({ expect }) => {
-      const filter = AppSurface.subject(TypeA);
+      const filter = AppSurface.object(TypeA);
       const objectB = Obj.make(TypeB, { value: 42 });
       expect(filter({ subject: objectB })).toBe(false);
     });
 
     test('rejects non-object subject', ({ expect }) => {
-      const filter = AppSurface.subject(TypeA);
+      const filter = AppSurface.object(TypeA);
       expect(filter({ subject: 'not-an-object' })).toBe(false);
       expect(filter({})).toBe(false);
     });
 
     test('matches with attendable option', ({ expect }) => {
-      const filter = AppSurface.subject(TypeA, { attendable: true });
+      const filter = AppSurface.object(TypeA, { attendable: true });
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter({ subject: objectA, attendableId: 'some-id' })).toBe(true);
     });
 
     test('rejects missing attendableId when attendable required', ({ expect }) => {
-      const filter = AppSurface.subject(TypeA, { attendable: true });
+      const filter = AppSurface.object(TypeA, { attendable: true });
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter({ subject: objectA })).toBe(false);
       expect(filter({ subject: objectA, attendableId: 123 })).toBe(false);
     });
 
     test('matches union of schemas', ({ expect }) => {
-      const filter = AppSurface.subject([TypeA, TypeB]);
+      const filter = AppSurface.object([TypeA, TypeB]);
       const objectA = Obj.make(TypeA, { name: 'hello' });
       const objectB = Obj.make(TypeB, { value: 42 });
       expect(filter({ subject: objectA })).toBe(true);
@@ -60,7 +60,7 @@ describe('AppSurface', () => {
     });
 
     test('rejects non-matching schema in union', ({ expect }) => {
-      const filter = AppSurface.subject([TypeA]);
+      const filter = AppSurface.object([TypeA]);
       const objectB = Obj.make(TypeB, { value: 42 });
       expect(filter({ subject: objectB })).toBe(false);
     });
@@ -163,6 +163,107 @@ describe('AppSurface', () => {
     test('rejects missing companionTo', ({ expect }) => {
       const filter = AppSurface.companion(TypeA);
       expect(filter({ subject: 'chat' })).toBe(false);
+    });
+  });
+
+  describe('literal', () => {
+    test('matches string literal', ({ expect }) => {
+      const filter = AppSurface.literal('chat');
+      expect(filter({ subject: 'chat' })).toBe(true);
+    });
+
+    test('rejects non-matching string', ({ expect }) => {
+      const filter = AppSurface.literal('chat');
+      expect(filter({ subject: 'comments' })).toBe(false);
+    });
+
+    test('matches null literal', ({ expect }) => {
+      const filter = AppSurface.literal(null);
+      expect(filter({ subject: null })).toBe(true);
+    });
+
+    test('rejects non-null when null expected', ({ expect }) => {
+      const filter = AppSurface.literal(null);
+      expect(filter({ subject: 'chat' })).toBe(false);
+    });
+
+    test('rejects ECHO objects', ({ expect }) => {
+      const filter = AppSurface.literal('chat');
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter({ subject: objectA })).toBe(false);
+    });
+  });
+
+  describe('graphNode', () => {
+    test('matches graph node', ({ expect }) => {
+      const filter = AppSurface.graphNode();
+      const node = { id: 'test', type: 'test', properties: {}, data: {} };
+      expect(filter({ subject: node })).toBe(true);
+    });
+
+    test('rejects non-node values', ({ expect }) => {
+      const filter = AppSurface.graphNode();
+      expect(filter({ subject: 'string' })).toBe(false);
+      expect(filter({ subject: { id: 'test' } })).toBe(false);
+      expect(filter({})).toBe(false);
+    });
+  });
+
+  describe('plugin', () => {
+    test('rejects non-plugin values', ({ expect }) => {
+      const filter = AppSurface.plugin();
+      expect(filter({ subject: 'string' })).toBe(false);
+      expect(filter({ subject: { meta: {} } })).toBe(false);
+      expect(filter({})).toBe(false);
+    });
+  });
+
+  describe('schema', () => {
+    test('matches ECHO object schema', ({ expect }) => {
+      const filter = AppSurface.schema();
+      expect(filter({ subject: TypeA })).toBe(true);
+      expect(filter({ subject: TypeB })).toBe(true);
+    });
+
+    test('rejects non-schema values', ({ expect }) => {
+      const filter = AppSurface.schema();
+      expect(filter({ subject: 'string' })).toBe(false);
+      expect(filter({ subject: { typename: 'fake' } })).toBe(false);
+      expect(filter({})).toBe(false);
+    });
+
+    test('rejects ECHO object instances', ({ expect }) => {
+      const filter = AppSurface.schema();
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter({ subject: objectA })).toBe(false);
+    });
+  });
+
+  describe('snapshot', () => {
+    test('matches snapshot of correct type', ({ expect }) => {
+      const filter = AppSurface.snapshot(TypeA);
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      const snap = Obj.getSnapshot(objectA);
+      expect(filter({ subject: snap })).toBe(true);
+    });
+
+    test('rejects snapshot of wrong type', ({ expect }) => {
+      const filter = AppSurface.snapshot(TypeA);
+      const objectB = Obj.make(TypeB, { value: 42 });
+      const snap = Obj.getSnapshot(objectB);
+      expect(filter({ subject: snap })).toBe(false);
+    });
+
+    test('rejects live ECHO objects', ({ expect }) => {
+      const filter = AppSurface.snapshot(TypeA);
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter({ subject: objectA })).toBe(false);
+    });
+
+    test('rejects non-objects', ({ expect }) => {
+      const filter = AppSurface.snapshot(TypeA);
+      expect(filter({ subject: 'string' })).toBe(false);
+      expect(filter({})).toBe(false);
     });
   });
 });
