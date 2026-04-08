@@ -18,6 +18,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: `${meta.id}.spec`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Spec.Spec; attendableId?: string } =>
           Spec.isSpec(data.subject) && (data.attendableId === undefined || typeof data.attendableId === 'string'),

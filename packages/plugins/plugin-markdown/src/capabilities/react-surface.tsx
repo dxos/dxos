@@ -29,6 +29,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: `${meta.id}.surface.document`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
@@ -46,6 +47,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${meta.id}.surface.text`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
         filter: AppSurface.objectArticle(Text.Text),

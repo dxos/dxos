@@ -28,6 +28,7 @@ export default Capability.makeModule(() =>
       // Companion view: FeedArticle shown alongside the feeds-root.
       Surface.create({
         id: `${meta.id}.feed-article`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.and(AppSurface.objectArticle(Subscription.Feed), AppSurface.companionArticle('feeds-root')),
         component: ({ data, role }) => (

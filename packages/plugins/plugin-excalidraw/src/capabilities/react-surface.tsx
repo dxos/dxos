@@ -20,6 +20,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: `${meta.id}.sketch`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
           typeof data.attendableId === 'string' && Sketch.isSketch(data.subject, EXCALIDRAW_SCHEMA),

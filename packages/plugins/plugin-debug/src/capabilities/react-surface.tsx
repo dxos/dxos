@@ -156,6 +156,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: `${meta.id}.wireframe`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         position: 'hoist',
         filter: (data): data is { subject: Obj.Unknown } => {

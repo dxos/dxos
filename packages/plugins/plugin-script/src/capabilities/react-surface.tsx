@@ -55,6 +55,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${meta.id}.script.article`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Script.Script),
         component: ({ data, role }) => {

@@ -22,6 +22,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: `${meta.id}.article`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: AppSurface.objectArticle(WnfsFile.File),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
