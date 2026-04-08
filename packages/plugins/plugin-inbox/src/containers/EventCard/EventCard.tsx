@@ -10,7 +10,9 @@ import { type Event } from '@dxos/types';
 
 import { DateComponent } from '#components';
 
-export const EventCard = ({ subject: event }: AppSurface.ObjectProps<Event.Event>) => {
+export type EventCardProps = AppSurface.ObjectProps<Event.Event>;
+
+export const EventCard = ({ subject: event }: EventCardProps) => {
   return (
     <Card.Content>
       <Card.Row icon='ph--calendar--regular'>

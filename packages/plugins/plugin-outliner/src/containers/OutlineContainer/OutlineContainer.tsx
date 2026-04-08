@@ -10,7 +10,9 @@ import { Panel } from '@dxos/react-ui';
 import { Outline } from '#components';
 import { type Outline as OutlineType } from '#types';
 
-export const OutlineContainer = ({ role, subject: outline }: AppSurface.AttendableObjectProps<OutlineType.Outline>) => {
+export type OutlineContainerProps = AppSurface.AttendableObjectProps<OutlineType.Outline>;
+
+export const OutlineContainer = ({ role, attendableId: _attendableId, subject: outline }: OutlineContainerProps) => {
   if (!outline.content.target) {
     return null;
   }

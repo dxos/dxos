@@ -60,7 +60,7 @@ export const SpacePluginSettings = ({
                 <IconButton
                   icon='ph--faders--regular'
                   label={t('settings.open-settings.label')}
-                  disabled={!!onOpenSpaceSettings}
+                  disabled={!onOpenSpaceSettings}
                   onClick={() => onOpenSpaceSettings?.(space)}
                 />
               </ListItem.Root>

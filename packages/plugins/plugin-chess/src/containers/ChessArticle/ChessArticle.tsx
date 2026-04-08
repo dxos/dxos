@@ -15,7 +15,7 @@ import { type Chess } from '#types';
 
 export type ChessArticleProps = AppSurface.AttendableObjectProps<Chess.Game>;
 
-export const ChessArticle = ({ role, attendableId, subject: game }: ChessArticleProps) => {
+export const ChessArticle = ({ role, attendableId: _attendableId, subject: game }: ChessArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);

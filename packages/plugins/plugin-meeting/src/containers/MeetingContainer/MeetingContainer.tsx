@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { type Meeting } from '#types';
 import { MeetingOperation } from '#operations';
 
-export type MeetingContainerProps = AppSurface.ObjectProps<Meeting.Meeting>;
+export type MeetingContainerProps = AppSurface.AttendableObjectProps<Meeting.Meeting>;
 
 export const MeetingContainer = ({ attendableId, role, subject: meeting }: MeetingContainerProps) => {
   const { t } = useTranslation(meta.id);

@@ -10,7 +10,9 @@ import { Card } from '@dxos/react-ui';
 import { Outline } from '#components';
 import { type Outline as OutlineType } from '#types';
 
-export const OutlineCard = ({ subject }: AppSurface.ObjectProps<OutlineType.Outline>) => {
+export type OutlineCardProps = AppSurface.ObjectProps<OutlineType.Outline>;
+
+export const OutlineCard = ({ subject }: OutlineCardProps) => {
   if (!subject.content.target) {
     return null;
   }

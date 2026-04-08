@@ -110,13 +110,17 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.blueprint`,
         role: 'article',
         filter: AppSurface.object(Blueprint.Blueprint, { attendable: true }),
-        component: ({ data }) => <BlueprintArticle subject={data.subject} />,
+        component: ({ data, role }) => (
+          <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.prompt`,
         role: 'article',
         filter: AppSurface.object(Prompt.Prompt, { attendable: true }),
-        component: ({ data }) => <PromptArticle subject={data.subject} />,
+        component: ({ data, role }) => (
+          <PromptArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,

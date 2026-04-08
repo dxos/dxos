@@ -14,7 +14,9 @@ import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
 import { Calendar } from '#types';
 
-export const CalendarSettings = ({ subject }: AppSurface.ObjectProps<Calendar.Calendar>) => {
+export type CalendarSettingsProps = AppSurface.ObjectProps<Calendar.Calendar>;
+
+export const CalendarSettings = ({ subject }: CalendarSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);

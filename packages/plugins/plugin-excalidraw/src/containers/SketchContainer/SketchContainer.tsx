@@ -14,7 +14,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { useStoreAdapter } from '#hooks';
 import { type Settings } from '#types';
 
-export type SketchContainerProps = AppSurface.ObjectProps<
+export type SketchContainerProps = AppSurface.AttendableObjectProps<
   Sketch.Sketch,
   {
     settings: Settings.Settings;

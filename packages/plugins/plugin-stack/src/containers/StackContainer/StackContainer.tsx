@@ -146,7 +146,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
       </Toolbar.Root>
       <StackContext.Provider
         value={{
-          attendableId: attendableId!,
+          attendableId,
           onCollapse: handleCollapse,
           onNavigate: handleNavigate,
           onDelete: handleDelete,

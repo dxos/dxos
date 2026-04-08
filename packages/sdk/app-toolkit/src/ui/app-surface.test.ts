@@ -210,6 +210,12 @@ describe('AppSurface', () => {
   });
 
   describe('plugin', () => {
+    test('matches plugin descriptor', ({ expect }) => {
+      const filter = AppSurface.plugin();
+      const pluginObj = { [Symbol.for('@dxos/app-framework/Plugin')]: Symbol.for('@dxos/app-framework/Plugin') };
+      expect(filter({ subject: pluginObj })).toBe(true);
+    });
+
     test('rejects non-plugin values', ({ expect }) => {
       const filter = AppSurface.plugin();
       expect(filter({ subject: 'string' })).toBe(false);

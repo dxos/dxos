@@ -32,7 +32,9 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.meeting`,
         role: 'article',
         filter: AppSurface.object(Meeting.Meeting, { attendable: true }),
-        component: ({ role, data }) => <MeetingContainer role={role} subject={data.subject} />,
+        component: ({ role, data }) => (
+          <MeetingContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.meeting-companion`,

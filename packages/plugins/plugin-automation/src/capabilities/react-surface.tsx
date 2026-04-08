@@ -47,7 +47,11 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: AppSurface.and(AppSurface.literal('automation'), AppSurface.companion()),
         component: ({ data }) => {
-          return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;
+          const space = getSpace(data.companionTo);
+          if (!space) {
+            return null;
+          }
+          return <AutomationSettings space={space} object={data.companionTo} />;
         },
       }),
     ]),

@@ -10,7 +10,9 @@ import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export const CollectionSection = ({ role, subject }: AppSurface.ObjectProps<Collection.Collection>) => {
+export type CollectionSectionProps = AppSurface.ObjectProps<Collection.Collection>;
+
+export const CollectionSection = ({ role, subject }: CollectionSectionProps) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Better placeholder.

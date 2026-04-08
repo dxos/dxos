@@ -14,7 +14,7 @@ import { type Journal } from '#types';
 
 export type JournalContainerProps = AppSurface.AttendableObjectProps<Journal.Journal> & { showCalendar?: boolean };
 
-export const JournalContainer = ({ role, subject: journal, showCalendar }: JournalContainerProps) => {
+export const JournalContainer = ({ role, attendableId: _attendableId, subject: journal, showCalendar }: JournalContainerProps) => {
   const controllerRef = useRef<CalendarController>(null);
 
   // TODO(burdon): Instead of media query should check physical geometry of plank.
