@@ -10,13 +10,11 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
-import CHESS_2_MDL from '../../../docs/examples/chess-2.mdl?raw';
-import CHESS_3_MDL from '../../../docs/examples/chess-3.mdl?raw';
 
 import { translations } from '../../translations';
-import { Spec } from '#types';
-
 import { DeusArticle } from './DeusArticle';
+
+import { Spec } from '#types';
 
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
@@ -42,7 +40,7 @@ const meta = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec] }),
     withTheme(),
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column', classNames: 'w-[50rem]' }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -56,14 +54,8 @@ type Story = StoryObj;
 
 export const Default: Story = {};
 
-export const Chess1: Story = {
-  args: { content: CHESS_1_MDL },
-};
-
-export const Chess2: Story = {
-  args: { content: CHESS_2_MDL },
-};
-
-export const Chess3: Story = {
-  args: { content: CHESS_3_MDL },
+export const Chess: Story = {
+  args: {
+    content: CHESS_1_MDL,
+  },
 };

@@ -10,21 +10,37 @@ import { BLOCK_TYPES } from './constants';
 const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
 
 /**
- * Shared regex for matching fenced block headers in MDL documents.
- * Matches: ```<type> [id][: label]
+ * Regex matching the opening fence of a Deus mdl block.
+ * All Deus blocks use ```mdl; the block type lives on the first body line.
  */
-export const FENCE_REGEX = /^```(\w+)(?:\s+([^\n:]+))?(?::\s*[^\n]*)?\s*$/gm;
+export const FENCE_REGEX = /^```mdl\s*$/gm;
 
 /**
  * Extracts block headers from the raw document text.
- * Returns { type, id, from, to } for each fenced block opening.
+ * Returns { type, id, from, to } for each fenced block opening,
+ * reading the block type from the first line of the block body.
  */
 const parseBlockHeaders = (text: string): { type: string; id: string; from: number; to: number }[] => {
   const results: { type: string; id: string; from: number; to: number }[] = [];
-  const regex = new RegExp(FENCE_REGEX.source, FENCE_REGEX.flags);
+  const fenceRe = new RegExp(FENCE_REGEX.source, FENCE_REGEX.flags);
   let match: RegExpExecArray | null;
-  while ((match = regex.exec(text)) !== null) {
-    results.push({ type: match[1], id: match[2]?.trim() ?? '', from: match.index, to: match.index + match[0].length });
+  while ((match = fenceRe.exec(text)) !== null) {
+    const fenceEnd = match.index + match[0].length;
+    const bodyStart = text.indexOf('\n', fenceEnd);
+    if (bodyStart === -1) {
+      continue;
+    }
+    const firstBodyLineStart = bodyStart + 1;
+    const firstBodyLineEnd = text.indexOf('\n', firstBodyLineStart);
+    const firstBodyLine = (
+      firstBodyLineEnd === -1 ? text.slice(firstBodyLineStart) : text.slice(firstBodyLineStart, firstBodyLineEnd)
+    ).trim();
+
+    // First body line: "<blockType> [name][: label]"
+    const lineMatch = firstBodyLine.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
+    const blockType = lineMatch?.[1] ?? '';
+    const id = lineMatch?.[2]?.trim() ?? '';
+    results.push({ type: blockType, id, from: match.index, to: match.index + match[0].length });
   }
   return results;
 };
@@ -33,7 +49,7 @@ const parseBlockHeaders = (text: string): { type: string; id: string; from: numb
  * Lint extension for Deus .mdl documents.
  *
  * Checks:
- *   - Unknown block types → error
+ *   - Unknown block types (first body line of ```mdl blocks) → error
  *   - (future) Missing required fields → error
  *   - (future) Unresolved cross-references → error
  */
@@ -43,7 +59,7 @@ export const mdlLint = linter((view: EditorView): Diagnostic[] => {
   const headers = parseBlockHeaders(text);
 
   for (const { type, from, to } of headers) {
-    if (!KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
+    if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
       diagnostics.push({
         from,
         to,

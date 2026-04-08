@@ -9,7 +9,7 @@ All domain constructs — type, op, feat, test, ui, db, service, etc. — are ex
 
 ## Document Format
 
-A `.spec` file has three parts:
+A `.mdl` file has three parts:
 
 1. **Frontmatter** — YAML block delimited by `---`. Contains document metadata.
 2. **Body** — Standard Markdown prose, headings, and lists.
@@ -26,16 +26,20 @@ extends?:  URI[]         # specs this document extends (transitive)
 
 ### Blocks
 
-A block is a fenced section with a declared type, optional identifier, and optional title:
+All blocks use the `mdl` fence. The first line of the body declares the block
+type, optional identifier, and optional title:
 
 ```
-```<type> [<id>][: <title>]
-...body...
+```mdl
+<type> [<id>][: <title>]
+  key: value
+  key?: TypeExpr
+  key: a | b | c
 ```
 ```
 
 - `<type>` must be declared in the Extensions section of this document or an ancestor.
-- `<id>` is an optional locally-scoped identifier (e.g. `FR-1.1`, `Board`).
+- `<id>` is an optional locally-scoped identifier (e.g. `F-1.1`, `Board`).
 - `<title>` is optional human-readable prose after the colon.
 - Block identifiers must be unique within the document.
 
@@ -45,7 +49,7 @@ Within a block, the body is a sequence of key-value pairs:
 
 ```
 key: value                # scalar
-key: a | b | c            # union list (variants)
+key: a | b | c            # union list (literals)
 key?: TypeExpr            # optional field declaration
 key:                      # multi-line value
   - item one
@@ -53,11 +57,12 @@ key:                      # multi-line value
 # comment
 ```
 
-When an extension declares `inline-prose: true`, the first line may be
-bare prose with no key:
+When an extension declares `inline-prose: true`, prose may appear between
+the header line and the first key-value pair:
 
 ```
-```feat F-1: Start Game
+```mdl
+feat F-1: Start Game
   A new Board is created with pieces in starting positions.  ← inline prose
   req F-1.1: White moves first.
 ```
@@ -97,7 +102,8 @@ inline `ext` blocks for custom or experimental ones.
 `ext` is the only block type the core language natively provides.
 It is self-describing — defined here using itself:
 
-```ext ext
+```mdl
+ext ext
   uri: dxos.spec.core/ext
   desc: Declares a new block type or extends an existing one.
   fields:
@@ -122,13 +128,13 @@ They are the vocabulary of the meta-language.
 | Type         | Description                                                  |
 |--------------|--------------------------------------------------------------|
 | `Prose`      | Free-form text, single or multi-line                         |
-| `Identifier` | Alphanumeric name, hyphens allowed — e.g. `Board`, `FR-1`   |
+| `Identifier` | Alphanumeric name, hyphens allowed — e.g. `Board`, `F-1`    |
 | `URI`        | Dot-path or URL identifier — e.g. `dxos.spec/ext/type@1.0`  |
 | `SemVer`     | Semantic version string — e.g. `1.0.0`                      |
 | `Boolean`    | `true` or `false`                                            |
 | `TypeExpr`   | Type reference or inline type — e.g. `Color`, `Piece?`       |
 | `FieldMap`   | Named fields: `name[?]: TypeExpr  # comment`                 |
-| `UnionList`  | Pipe-separated variants: `a \| b \| c`                       |
+| `UnionList`  | Pipe-separated literals: `a \| b \| c`                       |
 | `ProseList`  | Bulleted list of prose items                                 |
 | `CodeBlock`  | Literal indented or fenced text                              |
 | `ExtRef`     | Reference to a declared extension name                       |
@@ -151,7 +157,7 @@ They are the vocabulary of the meta-language.
 
 The core language deliberately omits:
 
-- Execution semantics — `.spec` is a specification, not a program.
+- Execution semantics — `.mdl` is a specification, not a program.
 - Type checking — field values are not verified against TypeExpr at the core level.
 - Ordering constraints — sections may appear in any order.
 - Verification — requirements are semi-formal; the language is not a proof system.

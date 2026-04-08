@@ -10,6 +10,8 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
+import { meta } from '../meta';
+
 export const Spec = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
@@ -19,8 +21,8 @@ export const Spec = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
-    icon: 'ph--flower-lotus--regular',
-    hue: 'lime',
+    icon: meta.icon!,
+    hue: meta.iconHue,
   }),
 );
 

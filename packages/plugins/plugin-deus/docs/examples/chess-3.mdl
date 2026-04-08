@@ -21,7 +21,8 @@ game state transitions, and the chess engine service dependency.
 
 ## Services
 
-```service ChessEngine
+```mdl
+service ChessEngine
   desc: Validates moves and computes game state. May be local (WASM) or remote.
   loading: lazy
   ops:
@@ -32,7 +33,8 @@ game state transitions, and the chess engine service dependency.
     EngineNotReady: engine has not finished loading
 ```
 
-```service GameStore
+```mdl
+service GameStore
   desc: Persists and replicates Game state via ECHO.
   ops:
     create(white: Player, black: Player) → Game
@@ -46,7 +48,8 @@ game state transitions, and the chess engine service dependency.
 
 Pure operations (no effects, no service dependencies) — safe to call anywhere.
 
-```op getLegalMoves
+```mdl
+op getLegalMoves
   desc: Returns legal target squares for the piece on the given square.
   input:
     board: Board
@@ -58,7 +61,8 @@ Pure operations (no effects, no service dependencies) — safe to call anywhere.
   requires: [ChessEngine]
 ```
 
-```op validateMove
+```mdl
+op validateMove
   desc: Checks a move against chess rules without mutating state.
   input:
     board: Board
@@ -71,7 +75,8 @@ Pure operations (no effects, no service dependencies) — safe to call anywhere.
   requires: [ChessEngine]
 ```
 
-```op applyMove
+```mdl
+op applyMove
   desc: Applies a validated move and returns the next board state.
   input:
     board: Board
@@ -83,7 +88,8 @@ Pure operations (no effects, no service dependencies) — safe to call anywhere.
 
 Effectful operations — mutate persistent state.
 
-```op startGame
+```mdl
+op startGame
   desc: Creates a new Game with two players and an initial Board.
   input:
     white: Player
@@ -93,7 +99,8 @@ Effectful operations — mutate persistent state.
   requires: [GameStore]
 ```
 
-```op submitMove
+```mdl
+op submitMove
   desc: Validates and applies a move, then persists the updated Game.
   input:
     game: Game
@@ -111,7 +118,8 @@ Effectful operations — mutate persistent state.
     Atomic: Game is not persisted if validation fails.
 ```
 
-```op resignGame
+```mdl
+op resignGame
   desc: Player forfeits; opponent wins.
   input:
     game: Game
@@ -125,7 +133,8 @@ Effectful operations — mutate persistent state.
 
 ## Features
 
-```feat F-5: Move Validation
+```mdl
+feat F-5: Move Validation
 
   req F-5.1:
     when: Gameboard calls submitMove
@@ -140,7 +149,8 @@ Effectful operations — mutate persistent state.
     then: op:getLegalMoves called; results drive component:Gameboard.highlights
 ```
 
-```feat F-6: Game Persistence
+```mdl
+feat F-6: Game Persistence
 
   req F-6.1:
     when: op:startGame completes
@@ -158,7 +168,8 @@ Effectful operations — mutate persistent state.
 
 ## Acceptance
 
-```test T-6: Submit valid move
+```mdl
+test T-6: Submit valid move
   given: active game, white's turn, white player logged in
   when: white submits pawn e2→e4
   then:
@@ -168,7 +179,8 @@ Effectful operations — mutate persistent state.
     - Game persisted to ECHO
 ```
 
-```test T-7: Submit invalid move rejected atomically
+```mdl
+test T-7: Submit invalid move rejected atomically
   given: active game, white's turn
   when: white submits an illegal move (e2→e5)
   then:
@@ -177,7 +189,8 @@ Effectful operations — mutate persistent state.
     - no ECHO write occurs
 ```
 
-```test T-8: Legal moves highlighted
+```mdl
+test T-8: Legal moves highlighted
   given: new game, white's turn, Gameboard shown
   when: player selects e2
   then:
@@ -189,7 +202,8 @@ Effectful operations — mutate persistent state.
 
 ## Appendix: Extension Definitions
 
-```ext op
+```mdl
+ext op
   uri: dxos.org/ext/op@1.0
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
@@ -204,7 +218,8 @@ Effectful operations — mutate persistent state.
     note?: Prose                # implementation guidance (non-normative)
 ```
 
-```ext service
+```mdl
+ext service
   uri: dxos.org/ext/service@1.0
   desc: An external or system-level dependency providing named operations.
   fields:

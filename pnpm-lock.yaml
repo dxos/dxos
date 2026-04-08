@@ -8662,6 +8662,9 @@ importers:
       '@lezer/highlight':
         specifier: 'catalog:'
         version: 1.2.1
+      '@lezer/lr':
+        specifier: ^1.4.2
+        version: 1.4.2
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -8672,6 +8675,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@lezer/generator':
+        specifier: 'catalog:'
+        version: 1.7.1
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7

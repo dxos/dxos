@@ -98,24 +98,24 @@ extends?:  URI[]         # specs this document extends (transitive)
 ---
 ```
 
-A block is a fenced section with a declared type, optional identifier, and optional title:
+All blocks use the `mdl` fence. The first body line declares the block type,
+optional identifier, and optional title:
 
 ````
-```<type> [<id>][: <title>]
+```mdl
+type [id][: title]
   key: value
   key?: TypeExpr
   key: a | b | c
-````
-
 ```
+````
 
 ### The `ext` Primitive
 
 `ext` is the only block type the core language provides. It is self-describing:
 
-```
-
-```ext ext
+```mdl
+ext ext
   uri: deus.org/core/ext
   desc: Declares a new block type or extends an existing one.
   fields:
@@ -129,30 +129,28 @@ A block is a fenced section with a declared type, optional identifier, and optio
     example?:      CodeBlock
 ```
 
-```
-
 ### Primitive Types
 
 The meta-vocabulary used within `ext` field declarations:
 
-| Type        | Description                                          |
-|-------------|------------------------------------------------------|
-| `Prose`     | Free-form text, single or multi-line                 |
-| `Identifier`| Alphanumeric name, hyphens allowed                   |
-| `URI`       | Dot-path or URL identifier                           |
-| `SemVer`    | Semantic version string                              |
-| `Boolean`   | `true` or `false`                                    |
-| `TypeExpr`  | Type reference or inline type — e.g. `Color`, `Piece?` |
-| `FieldMap`  | Named fields: `name[?]: TypeExpr  # comment`         |
-| `UnionList` | Pipe-separated variants: `a \| b \| c`               |
-| `ProseList` | Bulleted list of prose items                         |
-| `CodeBlock` | Literal indented or fenced text                      |
-| `ExtRef`    | Reference to a declared extension name               |
-| `TagList`   | Space or comma-separated tag identifiers             |
+| Type         | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| `Prose`      | Free-form text, single or multi-line                   |
+| `Identifier` | Alphanumeric name, hyphens allowed                     |
+| `URI`        | Dot-path or URL identifier                             |
+| `SemVer`     | Semantic version string                                |
+| `Boolean`    | `true` or `false`                                      |
+| `TypeExpr`   | Type reference or inline type — e.g. `Color`, `Piece?` |
+| `FieldMap`   | Named fields: `name[?]: TypeExpr  # comment`           |
+| `UnionList`  | Pipe-separated literals: `a \| b \| c`                 |
+| `ProseList`  | Bulleted list of prose items                           |
+| `CodeBlock`  | Literal indented or fenced text                        |
+| `ExtRef`     | Reference to a declared extension name                 |
+| `TagList`    | Space or comma-separated tag identifiers               |
 
 ### Cross-References
 
-Any declared block identifier may be referenced elsewhere as `[<id>]`.
+Any declared block identifier may be referenced elsewhere as `[id]`.
 Blocks in other layers may be referenced with a type prefix: `op:submitMove`,
 `component:Gameboard`. The linter verifies all references resolve.
 
@@ -170,14 +168,12 @@ Blocks in other layers may be referenced with a type prefix: `op:submitMove`,
 Every document lists its vocabulary upfront in an Extensions table:
 
 ```
-
 ## Extensions
 
 | Term        | URI                        |
 | ----------- | -------------------------- |
 | `type`      | deus.org/std/type@1.0      |
 | `component` | deus.org/std/component@1.0 |
-
 ```
 
 This is the manifest — agents know which dialects apply before reading the body.
@@ -187,9 +183,8 @@ This is the manifest — agents know which dialects apply before reading the bod
 Extensions are defined with `ext` blocks, either inline in the Appendix
 or in a shared `.mdl` file referenced by URI:
 
-```
-
-```ext component
+```mdl
+ext component
   uri: deus.org/std/component@1.0
   desc: A UI component with props, state, slots, actions, and events.
   fields:
@@ -201,22 +196,17 @@ or in a shared `.mdl` file referenced by URI:
     layout?:  CodeBlock
 ```
 
-```
-
 ### Extending Extensions
 
 An extension may extend another, inheriting all its fields:
 
-```
-
-```ext echo-type
+```mdl
+ext echo-type
   uri: deus.org/dxos/echo-type@1.0
   extends: type
   adds-fields:
     echo-schema: TypeExpr
     space?:      SpaceRef
-```
-
 ```
 
 ### Extension Inheritance
@@ -234,19 +224,17 @@ All constructs are `ext` declarations — there is no privileged status.
 
 A named data structure with typed fields, variants, and invariants.
 
+```mdl
+type Color
+  literals: white | black
 ```
 
-```type Color
-  variants: white | black
-```
-
-```type Board
+```mdl
+type Board
   fields:
     squares: Square[8][8]
     turn:    Color
     status:  playing | check | checkmate | stalemate
-```
-
 ```
 
 ### op
@@ -255,22 +243,33 @@ A named operation with typed inputs, outputs, and declared errors.
 Operations are either **pure** (no `effects`, no `requires`) or **effectful**.
 This distinction maps directly to Effect-TS's `Effect<A, E, R>`.
 
+```mdl
+op validateMove
+  desc: Checks a move against chess rules without mutating state.
+  input:
+    board: Board
+    move: Move
+  output: Move
+  errors:
+    IllegalMove: move violates chess rules
+    WrongTurn: piece does not belong to the active side
+  requires: [ChessEngine]
 ```
 
-````op validateMove          # pure
-  input:  { board: Board, move: Move }
-  output: Move
-  errors: { IllegalMove, WrongTurn, GameOver }
-  requires: [ChessEngine]
-
-```op submitMove            # effectful
-  input:  { game: Game, player: Player, move: Move }
+```mdl
+op submitMove
+  desc: Validates and applies a move, then persists the updated Game.
+  input:
+    game: Game
+    player: Player
+    move: Move
   output: Game
-  errors: { WrongTurn, IllegalMove, GameOver }
+  errors:
+    WrongTurn: player is not the active side
+    IllegalMove: move violates chess rules
+    GameOver: game has already ended
   effects: [echo:write]
   requires: [ChessEngine, GameStore]
-````
-
 ```
 
 ### feat / req
@@ -278,15 +277,13 @@ This distinction maps directly to Effect-TS's `Effect<A, E, R>`.
 Features group requirements. Requirements are atomic behavioural constraints,
 written as prose or structured `when/then` blocks.
 
-```
+```mdl
+feat F-2: Make Move
 
-```feat F-2: Make Move
   req F-2.1:
     when: player submits a Move on their turn
     then: Move validated; Board updated; turn advances
     errors: [InvalidMove, WrongTurn]
-```
-
 ```
 
 ### test
@@ -294,9 +291,8 @@ written as prose or structured `when/then` blocks.
 Acceptance scenarios expressed as given / when / then steps.
 Tests serve as both human-readable criteria and agent-executable verification targets.
 
-```
-
-```test T-6: Submit valid move
+```mdl
+test T-6: Submit valid move
   given: active game, white's turn
   when: white submits pawn e2→e4
   then:
@@ -305,16 +301,13 @@ Tests serve as both human-readable criteria and agent-executable verification ta
     - Game persisted to ECHO
 ```
 
-```
-
 ### component
 
 A UI component with props, internal state, named slots, actions, and emitted events.
 Slots follow the `SlottableProps` pattern — named `ReactNode` injection points.
 
-```
-
-```component Gameboard
+```mdl
+component Gameboard
   props:   { game: Game, playerId: string }
   state:   { selected?: Square, highlights: Square[] }
   slots:   { toolbar?: ReactNode, overlay?: ReactNode }
@@ -322,22 +315,18 @@ Slots follow the `SlottableProps` pattern — named `ReactNode` injection points
   emits:   { onMove(move: Move), onResign() }
 ```
 
-```
-
 ### service
 
 An external or system-level dependency. Services are injected into `op` blocks
 via `requires`. They may be local (WASM), remote (HTTP), or platform-provided (ECHO).
 
-```
-
-```service ChessEngine
+```mdl
+service ChessEngine
+  desc: Validates moves and computes game state. May be local (WASM) or remote.
   loading: lazy
   ops:
     validate(board: Board, move: Move) → Move
     legalMoves(board: Board, square: Square) → Square[]
-```
-
 ```
 
 ### db
@@ -418,11 +407,11 @@ with the CodeMirror extension for editing and a rendered FRS view alongside.
 
 The chess plugin trilogy demonstrates incremental spec evolution:
 
-| File | New Extensions | What It Introduces |
-|------|---------------|-------------------|
-| `chess-1.mdl` | `type`, `feat`, `test` | Data model, game rules, acceptance criteria |
-| `chess-2.mdl` | `component` | Lobby and Gameboard UI components |
-| `chess-3.mdl` | `op`, `service` | Move validation, game persistence, chess engine |
+| File          | New Extensions         | What It Introduces                              |
+| ------------- | ---------------------- | ----------------------------------------------- |
+| `chess-1.mdl` | `type`, `feat`, `test` | Data model, game rules, acceptance criteria     |
+| `chess-2.mdl` | `component`            | Lobby and Gameboard UI components               |
+| `chess-3.mdl` | `op`, `service`        | Move validation, game persistence, chess engine |
 
 See also `FRS.spec` in `plugin-spacetime` for a full real-world example.
 
@@ -443,4 +432,3 @@ See also `FRS.spec` in `plugin-spacetime` for a full real-world example.
 
 See `core.mdl` for the formal definition of the core language and primitive types.
 See `examples/` for the chess trilogy and the spacetime plugin spec.
-```

@@ -2,14 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Language, defineLanguageFacet } from '@codemirror/language';
-import { parser } from './parser';
+import { LRLanguage } from '@codemirror/language';
 
-const languageData = defineLanguageFacet({ commentTokens: { line: '#' } });
+import { parser } from './gen/mdl';
 
 /**
  * Language definition for the interior of Deus fenced blocks.
- * Uses the base Language class since our parser is hand-written (not an LRParser).
- * Will switch to LRLanguage once the Lezer grammar is generated.
+ * Uses the generated Lezer LR parser for structural parsing (completion, linting).
+ * Syntax highlighting is handled separately by the regex-based ViewPlugin in fences.ts
+ * so that it is immune to LR error-recovery false positives on prose content.
  */
-export const mdlBlockLanguage = new Language(languageData, parser, [], 'deus-block');
+export const mdlBlockLanguage = LRLanguage.define({
+  name: 'deus-block',
+  parser: parser.configure({}),
+  languageData: {
+    commentTokens: { line: '#' },
+  },
+});

@@ -15,6 +15,8 @@ import {
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
+  documentSlots,
   editorClassNames,
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
@@ -39,7 +41,8 @@ export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role,
       [
         createBasicExtensions(),
         createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: documentSlots }),
+        decorateMarkdown(),
         target &&
           createDataExtensions({
             id: spec.id,

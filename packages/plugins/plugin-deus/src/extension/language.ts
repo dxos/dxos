@@ -6,18 +6,16 @@ import { type Extension } from '@codemirror/state';
 import { LanguageDescription, LanguageSupport } from '@codemirror/language';
 
 import { mdlBlockLanguage } from './syntax';
-import { mdlHighlight } from './highlight';
 import { mdlFenceHighlight } from './fences';
-import { BLOCK_TYPES } from './constants';
 
 /**
  * LanguageDescription for MDL fenced block bodies.
- * Pass this to createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] })
- * so the MDL inner grammar is used for all known block types.
+ * All Deus blocks use ```mdl fences; the block type is the first body line.
+ * Pass this to createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }).
  */
 export const mdlBlockDescription = LanguageDescription.of({
   name: 'deus-block',
-  alias: [...BLOCK_TYPES],
+  alias: ['mdl'],
   support: new LanguageSupport(mdlBlockLanguage),
 });
 
@@ -26,4 +24,4 @@ export const mdlBlockDescription = LanguageDescription.of({
  * Does NOT include the Markdown language itself — pass mdlBlockDescription to
  * createMarkdownExtensions() instead so it merges cleanly with the standard language set.
  */
-export const deus = (): Extension => [mdlHighlight, mdlFenceHighlight];
+export const deus = (): Extension => mdlFenceHighlight;

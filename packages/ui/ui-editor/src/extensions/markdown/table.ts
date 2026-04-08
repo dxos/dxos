@@ -107,6 +107,20 @@ const update = (state: EditorState, _options: TableOptions) => {
   return builder.finish();
 };
 
+/** Renders cell text into el, treating `backtick spans` as inline code elements. */
+const renderCellContent = (el: HTMLElement, text: string): void => {
+  const parts = text.split(/(`[^`\n]+`)/);
+  for (const part of parts) {
+    if (part.length > 2 && part.startsWith('`') && part.endsWith('`')) {
+      const code = document.createElement('code');
+      code.textContent = part.slice(1, -1);
+      el.appendChild(code);
+    } else {
+      el.appendChild(document.createTextNode(part));
+    }
+  }
+};
+
 class TableWidget extends WidgetType {
   constructor(readonly _table: Table) {
     super();
@@ -132,7 +146,7 @@ class TableWidget extends WidgetType {
     this._table.header?.forEach((cell) => {
       const th = document.createElement('th');
       th.setAttribute('class', 'cm-table-head');
-      tr.appendChild(th).textContent = cell;
+      renderCellContent(tr.appendChild(th), cell);
     });
 
     const body = table.appendChild(document.createElement('tbody'));
@@ -141,7 +155,7 @@ class TableWidget extends WidgetType {
       row.forEach((cell) => {
         const td = document.createElement('td');
         td.setAttribute('class', 'cm-table-cell');
-        tr.appendChild(td).textContent = cell;
+        renderCellContent(tr.appendChild(td), cell);
       });
     });
 

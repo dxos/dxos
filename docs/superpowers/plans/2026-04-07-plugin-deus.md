@@ -12,28 +12,29 @@
 
 ## File Map
 
-| File | Purpose |
-|------|---------|
-| `package.json` | Package manifest with deps and subpath imports |
-| `moon.yml` | Moon build config |
-| `tsconfig.json` | TypeScript project references |
-| `src/meta.ts` | Plugin metadata (id, name, icon) |
-| `src/translations.ts` | i18n strings for Spec typename |
-| `src/types/Spec.ts` | `Spec` Effect Schema type + `make` factory + `isSpec` guard |
-| `src/types/index.ts` | Re-exports from `types/` |
-| `src/capabilities/react-surface.tsx` | `ReactSurface` capability — registers `SpecArticle` surface |
-| `src/capabilities/index.ts` | Re-exports capabilities |
-| `src/containers/SpecArticle/SpecArticle.tsx` | Container component |
-| `src/containers/SpecArticle/index.ts` | Re-export |
-| `src/containers/index.ts` | Re-exports from `containers/` |
-| `src/DeusPlugin.tsx` | Plugin definition |
-| `src/index.ts` | Public exports |
+| File                                         | Purpose                                                     |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| `package.json`                               | Package manifest with deps and subpath imports              |
+| `moon.yml`                                   | Moon build config                                           |
+| `tsconfig.json`                              | TypeScript project references                               |
+| `src/meta.ts`                                | Plugin metadata (id, name, icon)                            |
+| `src/translations.ts`                        | i18n strings for Spec typename                              |
+| `src/types/Spec.ts`                          | `Spec` Effect Schema type + `make` factory + `isSpec` guard |
+| `src/types/index.ts`                         | Re-exports from `types/`                                    |
+| `src/capabilities/react-surface.tsx`         | `ReactSurface` capability — registers `SpecArticle` surface |
+| `src/capabilities/index.ts`                  | Re-exports capabilities                                     |
+| `src/containers/SpecArticle/SpecArticle.tsx` | Container component                                         |
+| `src/containers/SpecArticle/index.ts`        | Re-export                                                   |
+| `src/containers/index.ts`                    | Re-exports from `containers/`                               |
+| `src/DeusPlugin.tsx`                         | Plugin definition                                           |
+| `src/index.ts`                               | Public exports                                              |
 
 ---
 
 ### Task 1: Package scaffold (package.json, moon.yml, tsconfig.json)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deus/package.json`
 - Create: `packages/plugins/plugin-deus/moon.yml`
 - Create: `packages/plugins/plugin-deus/tsconfig.json`
@@ -77,15 +78,10 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
+      "types": ["dist/types/src/types/index.d.ts"]
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -138,23 +134,12 @@ tasks:
 
 ```json
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
       "path": "../../common/util"
@@ -196,9 +181,11 @@ tasks:
 - [ ] **Step 4: Install dependencies**
 
 Run from the repo root:
+
 ```bash
 pnpm install
 ```
+
 Expected: no errors (DEPOT_TOKEN warning is normal and can be ignored).
 
 - [ ] **Step 5: Commit**
@@ -214,6 +201,7 @@ git commit -m "feat(plugin-deus): scaffold package"
 ### Task 2: Meta and translations
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deus/src/meta.ts`
 - Create: `packages/plugins/plugin-deus/src/translations.ts`
 
@@ -287,6 +275,7 @@ git commit -m "feat(plugin-deus): add meta and translations"
 ### Task 3: `Spec` type
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deus/src/types/Spec.ts`
 - Create: `packages/plugins/plugin-deus/src/types/index.ts`
 
@@ -343,9 +332,11 @@ export * from './Spec';
 - [ ] **Step 3: Verify the types compile**
 
 Run from repo root:
+
 ```bash
 moon run plugin-deus:build 2>&1 | grep -v "DEPOT_TOKEN" | head -40
 ```
+
 Expected: build succeeds (or type errors only — no import errors).
 
 - [ ] **Step 4: Commit**
@@ -360,6 +351,7 @@ git commit -m "feat(plugin-deus): add Spec type"
 ### Task 4: `SpecArticle` container
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deus/src/containers/SpecArticle/SpecArticle.tsx`
 - Create: `packages/plugins/plugin-deus/src/containers/SpecArticle/index.ts`
 - Create: `packages/plugins/plugin-deus/src/containers/index.ts`
@@ -438,6 +430,7 @@ git commit -m "feat(plugin-deus): add SpecArticle container"
 ### Task 5: `ReactSurface` capability
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deus/src/capabilities/react-surface.tsx`
 - Create: `packages/plugins/plugin-deus/src/capabilities/index.ts`
 
@@ -500,6 +493,7 @@ git commit -m "feat(plugin-deus): add ReactSurface capability"
 ### Task 6: `DeusPlugin` + public index
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deus/src/DeusPlugin.tsx`
 - Create: `packages/plugins/plugin-deus/src/index.ts`
 
@@ -577,9 +571,11 @@ git commit -m "feat(plugin-deus): add DeusPlugin"
 - [ ] **Step 1: Build the plugin**
 
 Run from repo root:
+
 ```bash
 moon run plugin-deus:build 2>&1 | grep -v "DEPOT_TOKEN"
 ```
+
 Expected: exits 0, no TypeScript errors.
 
 - [ ] **Step 2: Lint**
@@ -587,6 +583,7 @@ Expected: exits 0, no TypeScript errors.
 ```bash
 moon run plugin-deus:lint -- --fix 2>&1 | grep -v "DEPOT_TOKEN"
 ```
+
 Expected: exits 0, no lint errors.
 
 - [ ] **Step 3: Commit any lint fixes**

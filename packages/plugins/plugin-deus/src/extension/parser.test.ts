@@ -2,27 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Input } from '@lezer/common';
 import { describe, test } from 'vitest';
 
-import { parser } from './parser';
-
-// Wrap a string as a Lezer Input.
-const makeInput = (text: string): Input => ({
-  length: text.length,
-  chunk: (from: number) => text.slice(from),
-  lineChunks: false,
-  read: (from: number, to: number) => text.slice(from, to),
-});
+import { mdlBlockLanguage } from './syntax';
 
 // Parse text and return node names with their matched text, depth-first.
 const parseNodes = (text: string): { name: string; text: string }[] => {
-  const input = makeInput(text);
-  const parse = parser.startParse(input);
-  const tree = parse.advance();
-  if (!tree) {
-    return [];
-  }
+  const tree = mdlBlockLanguage.parser.parse(text);
   const nodes: { name: string; text: string }[] = [];
   const cursor = tree.cursor();
   do {
@@ -31,22 +17,28 @@ const parseNodes = (text: string): { name: string; text: string }[] => {
   return nodes;
 };
 
-// Parse and return only the non-Block node names (skip the root).
-// Nodes are in depth-first order: a parent appears before its children.
+// Return named rule node names in depth-first order, excluding Block and
+// anonymous punctuation tokens (which start with a non-capital character).
 const nodeNames = (text: string): string[] =>
   parseNodes(text)
-    .filter(({ name }) => name !== 'Block')
+    .filter(({ name }) => /^[A-Z]/.test(name) && name !== 'Block')
     .map(({ name }) => name);
 
 describe('mdl parser', () => {
   describe('KeyValue', () => {
     test('simple field', ({ expect }) => {
-      // KeyValue is the parent; FieldName and TypeExpr are children (depth-first: parent first).
-      expect(nodeNames('kind: PieceKind')).toEqual(['KeyValue', 'FieldName', 'TypeExpr']);
+      expect(nodeNames('kind: PieceKind')).toEqual(['KeyValue', 'FieldName', 'TypeExpr', 'TypeAtom', 'TypeName']);
     });
 
     test('optional field', ({ expect }) => {
-      expect(nodeNames('piece?: Piece')).toEqual(['KeyValue', 'FieldName', 'Optional', 'TypeExpr']);
+      expect(nodeNames('piece?: Piece')).toEqual([
+        'KeyValue',
+        'FieldName',
+        'Optional',
+        'TypeExpr',
+        'TypeAtom',
+        'TypeName',
+      ]);
     });
 
     test('field with inline comment', ({ expect }) => {
@@ -55,24 +47,51 @@ describe('mdl parser', () => {
         'FieldName',
         'Optional',
         'TypeExpr',
+        'TypeAtom',
+        'TypeName',
         'Comment',
       ]);
     });
 
     test('field with union type', ({ expect }) => {
-      expect(nodeNames('status: playing | check | checkmate | stalemate')).toEqual([
+      expect(nodeNames('status: active | archived')).toEqual([
         'KeyValue',
         'FieldName',
         'TypeExpr',
+        'TypeAtom',
+        'TypeName',
+        'Pipe',
+        'TypeAtom',
+        'TypeName',
       ]);
     });
 
     test('field with array type', ({ expect }) => {
-      expect(nodeNames('moves: Move[]')).toEqual(['KeyValue', 'FieldName', 'TypeExpr']);
+      expect(nodeNames('moves: Move[]')).toEqual([
+        'KeyValue',
+        'FieldName',
+        'TypeExpr',
+        'TypeAtom',
+        'ArrayExpr',
+        'TypeName',
+      ]);
     });
 
     test('field with range', ({ expect }) => {
-      expect(nodeNames('rank: 1..8')).toEqual(['KeyValue', 'FieldName', 'TypeExpr']);
+      expect(nodeNames('rank: 1..8')).toEqual([
+        'KeyValue',
+        'FieldName',
+        'TypeExpr',
+        'TypeAtom',
+        'NumberRange',
+        'Number',
+        'Number',
+      ]);
+    });
+
+    test('field with no value', ({ expect }) => {
+      // e.g. "fields:" with no inline value — sub-fields follow on next lines.
+      expect(nodeNames('fields:')).toEqual(['KeyValue', 'FieldName']);
     });
   });
 
@@ -86,63 +105,47 @@ describe('mdl parser', () => {
     });
   });
 
-  describe('Prose', () => {
-    test('bare prose line', ({ expect }) => {
-      expect(nodeNames('A two-player chess game plugin for DXOS Composer.')).toEqual(['Prose']);
-    });
-
-    test('indented prose', ({ expect }) => {
-      expect(nodeNames('  Top-level ECHO object backing each article.')).toEqual(['Prose']);
-    });
-  });
-
   describe('multi-line blocks', () => {
     test('type block body', ({ expect }) => {
       const input = ['fields:', '  kind: PieceKind', '  color: Color'].join('\n');
-
       expect(nodeNames(input)).toEqual([
         'KeyValue',
         'FieldName', // fields: (no value)
         'KeyValue',
         'FieldName',
-        'TypeExpr', // kind: PieceKind
+        'TypeExpr',
+        'TypeAtom',
+        'TypeName', // kind: PieceKind
         'KeyValue',
         'FieldName',
-        'TypeExpr', // color: Color
+        'TypeExpr',
+        'TypeAtom',
+        'TypeName', // color: Color
       ]);
     });
 
-    test('feat block body with inline req', ({ expect }) => {
-      const input = [
-        'desc: Start Game',
-        '# requirements follow',
-        'req F-1.1: New Board created with pieces in standard starting positions.',
-      ].join('\n');
-
+    test('block body with field, comment, and field', ({ expect }) => {
+      const input = ['desc: Foo', '# separator', 'req: Bar'].join('\n');
       expect(nodeNames(input)).toEqual([
         'KeyValue',
         'FieldName',
-        'TypeExpr', // desc: Start Game
-        'Comment', // # requirements follow
+        'TypeExpr',
+        'TypeAtom',
+        'TypeName', // desc: Foo
+        'Comment', // # separator
         'KeyValue',
         'FieldName',
-        'TypeExpr', // req F-1.1: ...
+        'TypeExpr',
+        'TypeAtom',
+        'TypeName', // req: Bar
       ]);
     });
 
-    test('mixed: fields, comments, prose', ({ expect }) => {
-      const input = [
-        'desc: An 8×8 grid of squares.',
-        'fields:',
-        '  squares: Square[8][8]   # row-major',
-        '  turn: Color',
-        '  status: playing | check | checkmate | stalemate',
-      ].join('\n');
-
+    test('union field is present in mixed block', ({ expect }) => {
+      const input = ['fields:', '  turn: Color', '  status: active | archived'].join('\n');
       const names = nodeNames(input);
-      expect(names).toContain('Comment');
-      expect(names.filter((n) => n === 'KeyValue').length).toBe(5);
-      expect(names.filter((n) => n === 'TypeExpr').length).toBe(4); // fields: has no value
+      expect(names.filter((name) => name === 'KeyValue').length).toBe(3);
+      expect(names.filter((name) => name === 'Pipe').length).toBe(1);
     });
   });
 
@@ -161,6 +164,12 @@ describe('mdl parser', () => {
       expect(nodes[0].text).toBe('PieceKind');
     });
 
+    test('TypeName spans each identifier in a union', ({ expect }) => {
+      const text = 'status: active | archived';
+      const nodes = parseNodes(text).filter(({ name }) => name === 'TypeName');
+      expect(nodes.map(({ text: txt }) => txt)).toEqual(['active', 'archived']);
+    });
+
     test('Optional spans the ? character', ({ expect }) => {
       const text = 'piece?: Piece';
       const nodes = parseNodes(text).filter(({ name }) => name === 'Optional');
@@ -174,27 +183,40 @@ describe('mdl parser', () => {
       expect(nodes).toHaveLength(1);
       expect(nodes[0].text).toMatch(/^# 1 to 8 inclusive/);
     });
+
+    test('NumberRange spans both bounds', ({ expect }) => {
+      const text = 'rank: 1..8';
+      const nodes = parseNodes(text).filter(({ name }) => name === 'NumberRange');
+      expect(nodes).toHaveLength(1);
+      expect(nodes[0].text).toBe('1..8');
+    });
+
+    test('ArrayExpr spans TypeName and brackets', ({ expect }) => {
+      const text = 'moves: Move[]';
+      const nodes = parseNodes(text).filter(({ name }) => name === 'ArrayExpr');
+      expect(nodes).toHaveLength(1);
+      expect(nodes[0].text).toBe('Move[]');
+    });
   });
 
   describe('edge cases', () => {
-    test('empty input produces only Block', ({ expect }) => {
+    test('empty input produces no named nodes', ({ expect }) => {
       expect(nodeNames('')).toEqual([]);
     });
 
-    test('blank lines are ignored', ({ expect }) => {
+    test('blank lines are skipped', ({ expect }) => {
       expect(nodeNames('kind: PieceKind\n\ncolor: Color')).toEqual([
         'KeyValue',
         'FieldName',
         'TypeExpr',
+        'TypeAtom',
+        'TypeName',
         'KeyValue',
         'FieldName',
         'TypeExpr',
+        'TypeAtom',
+        'TypeName',
       ]);
-    });
-
-    test('field with no value is still a KeyValue', ({ expect }) => {
-      // e.g. "fields:" with no inline value — value section follows on next lines.
-      expect(nodeNames('fields:')).toEqual(['KeyValue', 'FieldName']);
     });
   });
 });

@@ -52,6 +52,7 @@ Defined in `src/capabilities/react-surface.tsx`.
 Defined in `src/DeusPlugin.tsx` using `Plugin.define(meta).pipe(...)`.
 
 Modules:
+
 1. `addMetadataModule` — icon, createObject via `SpaceOperation.AddObject`
 2. `addSchemaModule` — registers `[Spec]`
 3. `addSurfaceModule` — `ReactSurface` capability
@@ -85,6 +86,7 @@ packages/plugins/plugin-deus/
 ## Dependencies
 
 Runtime (workspace):
+
 - `@dxos/app-framework`
 - `@dxos/app-toolkit`
 - `@dxos/echo`
@@ -96,7 +98,9 @@ Runtime (workspace):
 - `@dxos/schema`
 
 Catalog:
+
 - `effect`
 
 Dev/peer:
+
 - `@dxos/ui-theme`, `react`, `react-dom`, `@types/react`, `vite`
