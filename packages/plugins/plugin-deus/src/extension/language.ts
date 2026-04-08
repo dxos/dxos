@@ -8,6 +8,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 
 import { mdlBlockLanguage } from './syntax';
 import { mdlHighlight } from './highlight';
+import { mdlFenceHighlight } from './fences';
 import { BLOCK_TYPES } from './constants';
 
 // The CM Markdown language uses the info string (the word after the opening fence)
@@ -29,4 +30,5 @@ export const deus = (): Extension => [
     codeLanguages: [mdlBlockDescription],
   }),
   mdlHighlight,
+  mdlFenceHighlight,
 ];
