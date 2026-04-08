@@ -25,7 +25,7 @@ import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
 import { DeckOperation } from '#operations';
-import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
+import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NativeToggleComplementarySidebarButton,
@@ -207,11 +207,6 @@ export const DeckMultiMode = () => {
     );
   }, [active, companionOpen]);
 
-  const padding = useMemo(
-    () => (settings?.overscroll === 'centering' ? calculateOverscroll(active.length) : {}),
-    [settings?.overscroll, active.length],
-  );
-
   return (
     <div role='none' className='relative bg-deck-surface overflow-hidden'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
@@ -220,7 +215,6 @@ export const DeckMultiMode = () => {
           'absolute h-[calc(100%-2*var(--main-spacing))] w-full inset-y-(--main-spacing) -inset-w-px',
           mainPaddingTransitions,
         ]}
-        style={padding}
         orientation='horizontal'
         size='contain'
         itemsCount={itemsCount - 1}
@@ -365,11 +359,11 @@ const PlankContainer = memo(
             order={order}
             {...(part === 'solo'
               ? {
-                  part: 'solo-primary',
-                }
+                part: 'solo-primary',
+              }
               : {
-                  part,
-                })}
+                part,
+              })}
           />
           {hasCompanion && (
             <Plank.Component
@@ -381,13 +375,13 @@ const PlankContainer = memo(
               primary={node}
               {...(part === 'solo'
                 ? {
-                    part: 'solo-companion',
-                    order,
-                  }
+                  part: 'solo-companion',
+                  order,
+                }
                 : {
-                    part,
-                    order: (order ?? 0) + 1,
-                  })}
+                  part,
+                  order: (order ?? 0) + 1,
+                })}
             />
           )}
         </Plank.Content>

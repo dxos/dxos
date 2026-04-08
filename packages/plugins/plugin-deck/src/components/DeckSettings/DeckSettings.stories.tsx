@@ -33,8 +33,6 @@ export const Default: Story = {
       enableStatusbar: true,
       showHints: true,
       enableNativeRedirect: false,
-      newPlankPositioning: 'end',
-      overscroll: 'none',
     },
   },
 };

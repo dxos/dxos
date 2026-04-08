@@ -18,7 +18,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
-import { DeckLayoutStoryNavigation } from '#testing';
+import { DeckLayoutStoryNavigationRail, DeckLayoutStoryPlankOpenList } from '#testing';
 
 import { translations } from '../../translations';
 
@@ -28,8 +28,8 @@ import { DeckState, OperationHandler } from '#capabilities';
 import { DeckCapabilities, type Settings } from '#types';
 
 /**
- * Same as {@link DeckSettings} but `enableDeck: true` so `DeckContent` does not force solo
- * whenever layout is multi (see `DeckContent` when `!settings.enableDeck`).
+ * Same as {@link DeckSettings} but with `enableDeck: true`.
+ * Prevents `DeckContent` from forcing solo whenever layout is multi when `!settings.enableDeck`.
  */
 const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
@@ -38,8 +38,6 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableDeck: true,
       enableStatusbar: false,
       enableNativeRedirect: false,
-      newPlankPositioning: 'start',
-      overscroll: 'none',
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
@@ -73,20 +71,26 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             id: 'story-navigation',
             role: 'navigation',
             filter: (data): data is { current: string } => typeof (data as any).current === 'string',
-            component: ({ data, ref }) => <DeckLayoutStoryNavigation current={data.current} ref={ref} />,
+            component: ({ data, ref }) => <DeckLayoutStoryNavigationRail current={data.current} ref={ref} />,
           }),
           Surface.create({
             id: 'story-article',
             role: 'article',
             component: ({ data }) => {
               const subject = (data as any)?.subject;
+              const attendableId = (data as any)?.attendableId as string | undefined;
               if (!subject) {
                 return <Loading />;
               }
               return (
-                <Json.Root data={subject}>
-                  <Json.Content />
-                </Json.Root>
+                <div className='flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>
+                  {attendableId && <DeckLayoutStoryPlankOpenList pivotId={attendableId} />}
+                  <div className='min-h-0 min-w-0 flex-1 overflow-auto'>
+                    <Json.Root data={subject}>
+                      <Json.Content />
+                    </Json.Root>
+                  </div>
+                </div>
               );
             },
           }),

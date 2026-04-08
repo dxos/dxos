@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { DeckLayoutStoryNavigation } from './DeckLayoutStoryNavigation';
+export { DeckLayoutStoryNavigationRail } from './DeckLayoutStoryNavigationRail';
+export { DeckLayoutStoryPlankOpenList } from './DeckLayoutStoryPlankOpenList';

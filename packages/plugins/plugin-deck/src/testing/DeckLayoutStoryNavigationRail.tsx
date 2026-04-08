@@ -10,15 +10,16 @@ import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { Icon, List, ListItem } from '@dxos/react-ui';
 
-export type DeckLayoutStoryNavigationProps = {
+export type DeckLayoutStoryNavigationRailProps = {
   current?: string;
 };
 
 /**
- * Minimal test-only navigation list for DeckLayout stories.
- * Renders root graph children and opens them via LayoutOperation.Open on click.
+ * Test-only sidebar navigation for DeckLayout stories.
+ * Uses {@link LayoutOperation.Set} to a single plank.
+ * Rows in `layout.active` use `bg-active-surface`.
  */
-export const DeckLayoutStoryNavigation = forwardRef<HTMLDivElement, DeckLayoutStoryNavigationProps>(
+export const DeckLayoutStoryNavigationRail = forwardRef<HTMLDivElement, DeckLayoutStoryNavigationRailProps>(
   (_props, forwardedRef) => {
     const { graph } = useAppGraph();
     const layout = useLayout();
@@ -32,13 +33,13 @@ export const DeckLayoutStoryNavigation = forwardRef<HTMLDivElement, DeckLayoutSt
     const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
     return (
-      <div ref={forwardedRef} className='overflow-y-auto p-2'>
+      <div ref={forwardedRef} className='box-border h-full min-h-0 w-full overflow-y-auto p-2'>
         <List>
           {items.map((node) => (
             <ListItem.Root
               key={node.id}
               classNames={activeSet.has(node.id) ? 'bg-active-surface' : undefined}
-              onClick={() => void invokePromise(LayoutOperation.Open, { subject: [node.id] })}
+              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
             >
               {node.properties.icon && (
                 <ListItem.Endcap>
