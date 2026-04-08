@@ -540,11 +540,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-deus/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
@@ -701,6 +696,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-spacetime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-spec/package.json",
           "jsonpath": "$.version"
         },
         {

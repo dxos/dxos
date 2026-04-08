@@ -6,7 +6,7 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Feed, Obj, Query } from '@dxos/echo';
@@ -78,6 +78,15 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               subject: companion,
               state: 'expanded',
             });
+          } else if (layout.mode === 'multi') {
+            const event = events.find((entry) => entry.id === action.eventId);
+            if (event) {
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getObjectPathFromObject(event)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+            }
           } else {
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
@@ -87,7 +96,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
         }
       }
     },
-    [id, invokePromise, layout.mode],
+    [events, id, invokePromise, layout.mode],
   );
 
   return (
