@@ -10,7 +10,7 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
-import { Agent, Qualifier, SyncTriggers } from './definitions';
+import { SyncTriggers } from './definitions';
 import { Project } from '../../../types';
 
 export default SyncTriggers.pipe(
@@ -59,6 +59,9 @@ const syncProjectTriggers = (project: Project.Project): Effect.Effect<void, neve
         yield* Database.remove(trigger);
       }
     }
+
+    // lazy import to avoid circular dependency issues
+    const { Qualifier, Agent } = yield* Effect.promise(() => import('../../project'));
 
     for (const subscription of project.subscriptions) {
       const relevantTrigger = triggers.find((trigger) =>

@@ -89,19 +89,3 @@ export const AddArtifact = Operation.make({
   output: Schema.Void,
   services: [AiContextService, Database.Service],
 });
-
-export const SyncTriggers = Operation.make({
-  meta: {
-    key: 'org.dxos.function.project.sync-triggers',
-    name: 'Sync triggers',
-    description:
-      'Synchronizes triggers in the database with the project subscriptions. Call this after editing the subscriptions array.',
-  },
-  input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotations({
-      description: 'The project whose triggers should be synced.',
-    }),
-  }),
-  output: Schema.Void,
-  services: [Database.Service],
-});

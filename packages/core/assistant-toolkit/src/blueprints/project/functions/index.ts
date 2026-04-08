@@ -11,5 +11,4 @@ export const ProjectHandlers = OperationHandlerSet.lazy(
   () => import('./agent'),
   () => import('./get-context'),
   () => import('./qualifier'),
-  () => import('./sync-triggers'),
 );
