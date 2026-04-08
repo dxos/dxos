@@ -13,11 +13,11 @@ import { AppCapabilities } from '../capabilities';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Combines two filters with intersection types. Both must match. */
-export const and = <A extends Record<string, any>, B extends Record<string, any>>(
-  a: (data: Record<string, unknown>) => data is A,
-  b: (data: Record<string, unknown>) => data is B,
-): ((data: Record<string, unknown>) => data is A & B) => {
-  return (data: Record<string, unknown>): data is A & B => a(data) && b(data);
+export const and = <Left extends Record<string, any>, Right extends Record<string, any>>(
+  left: (data: Record<string, unknown>) => data is Left,
+  right: (data: Record<string, unknown>) => data is Right,
+): ((data: Record<string, unknown>) => data is Left & Right) => {
+  return (data: Record<string, unknown>): data is Left & Right => left(data) && right(data);
 };
 
 // ─── Article ─────────────────────────────────────────────────────────────────
@@ -75,10 +75,10 @@ export const objectArticle: {
 };
 
 /** Filter: article-role literal subject. */
-export const literalArticle = <L extends string | null>(
-  value: L,
-): ((data: Record<string, unknown>) => data is ArticleData<L>) => {
-  return (data: Record<string, unknown>): data is ArticleData<L> => {
+export const literalArticle = <T extends string | null>(
+  value: T,
+): ((data: Record<string, unknown>) => data is ArticleData<T>) => {
+  return (data: Record<string, unknown>): data is ArticleData<T> => {
     return typeof data.attendableId === 'string' && data.subject === value;
   };
 };
@@ -89,7 +89,7 @@ export const companionArticle: {
   <S extends Type.AnyEntity>(
     schema: S,
   ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S> };
-  <L extends string>(value: L): (data: Record<string, unknown>) => data is { companionTo: L };
+  <T extends string>(value: T): (data: Record<string, unknown>) => data is { companionTo: T };
 } = (schemaOrValue?: Type.AnyEntity | string) => {
   return (data: Record<string, unknown>): data is any => {
     if (schemaOrValue === undefined) {
@@ -180,16 +180,22 @@ export const objectSettings: {
 };
 
 /** Surface data for section-role literal. */
-export type LiteralSectionData<L extends string | null = string, Props extends {} = {}> = SectionData<L, Props>;
+export type TSectionData<T extends string | null = string, Props extends {} = {}> = SectionData<
+  T,
+  Props
+>;
 
 /** Component props for section-role literal. */
-export type LiteralSectionProps<L extends string | null = string, Props extends {} = {}> = SectionProps<L, Props>;
+export type TSectionProps<T extends string | null = string, Props extends {} = {}> = SectionProps<
+  T,
+  Props
+>;
 
 /** Filter: section-role literal string/null subject. */
-export const literalSection = <L extends string | null>(
-  value: L,
-): ((data: Record<string, unknown>) => data is LiteralSectionData<L>) => {
-  return (data: Record<string, unknown>): data is LiteralSectionData<L> => data.subject === value;
+export const literalSection = <T extends string | null>(
+  value: T,
+): ((data: Record<string, unknown>) => data is TSectionData<T>) => {
+  return (data: Record<string, unknown>): data is TSectionData<T> => data.subject === value;
 };
 
 /** Surface data for section-role any ECHO object (fallback). */
@@ -305,25 +311,34 @@ export const objectCard: {
 // ─── Dialog / Popover ────────────────────────────────────────────────────────
 
 /** Surface data for dialog/popover role. */
-export type DialogData<C extends string = string, P extends {} = {}> = {
-  component: C;
-  props?: P;
+export type DialogData<Component extends string = string, ComponentProps extends {} = {}> = {
+  component: Component;
+  props?: ComponentProps;
 };
 
 /** Component props for dialog role. */
-export type DialogProps<C extends string = string, P extends {} = {}> = DialogData<C, P>;
+export type DialogProps<Component extends string = string, ComponentProps extends {} = {}> = DialogData<
+  Component,
+  ComponentProps
+>;
 
 /** Component props for popover role. */
-export type PopoverProps<C extends string = string, P extends {} = {}> = DialogData<C, P>;
+export type PopoverProps<Component extends string = string, ComponentProps extends {} = {}> = DialogData<
+  Component,
+  ComponentProps
+>;
 
 /** Alias for dialog/popover component props. */
-export type ComponentProps<C extends string = string, P extends {} = {}> = DialogData<C, P>;
+export type ComponentProps<Component extends string = string, ComponentProps extends {} = {}> = DialogData<
+  Component,
+  ComponentProps
+>;
 
 /** Filter: dialog/popover component routing. */
-export const componentDialog = <C extends string>(
-  id: C,
-): ((data: Record<string, unknown>) => data is DialogData<C>) => {
-  return (data: Record<string, unknown>): data is DialogData<C> => data.component === id;
+export const componentDialog = <Component extends string>(
+  id: Component,
+): ((data: Record<string, unknown>) => data is DialogData<Component>) => {
+  return (data: Record<string, unknown>): data is DialogData<Component> => data.component === id;
 };
 
 // ─── Chrome ──────────────────────────────────────────────────────────────────
