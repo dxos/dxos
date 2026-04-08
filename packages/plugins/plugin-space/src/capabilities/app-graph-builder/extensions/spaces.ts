@@ -48,7 +48,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
+          Node.makeAction({
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
@@ -57,8 +57,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
@@ -67,8 +67,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -86,8 +86,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 windows: 'alt+.',
               },
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -104,7 +104,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 windows: 'ctrl+shift+,',
               },
             },
-          },
+          }),
         ]),
     }),
 
