@@ -8,6 +8,11 @@ import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 
+/**
+ * HTTP header sent on every Edge request to classify traffic for metering.
+ */
+export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
+
 // TODO(burdon): Rename EdgerRouterEndpoint.
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {

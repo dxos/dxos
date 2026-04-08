@@ -9,6 +9,7 @@ tasks:
       - vite.config.ts
       - '@group(production)'
       - $CONFIG_DYNAMIC
+      - $DX_EDGE_BASE_URL
       - $DX_ENVIRONMENT
       - $DX_HOST
       - $DX_HUB_URL
