@@ -170,7 +170,7 @@ const buildDecorations = (view: EditorView): DecorationSet => {
           const headerMatch = line.match(/^(\s*)(\w+)(?:\s+([\w][\w.\-]*))?(\s*:\s*)?(.*)?$/);
           if (headerMatch) {
             const [, leadingSpace, blockType, id, colon, label] = headerMatch;
-            const color = BLOCK_TYPE_COLORS[blockType];
+            const color = BLOCK_TYPE_COLORS[blockType as (typeof BLOCK_TYPES)[number]];
             if (color) {
               // Block type keyword.
               const typeFrom = lineFrom + leadingSpace.length;
