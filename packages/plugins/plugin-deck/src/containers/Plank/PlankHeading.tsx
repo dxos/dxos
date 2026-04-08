@@ -211,17 +211,16 @@ export const PlankHeading = memo(
         {node && part !== 'complementary' && (
           <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
         )}
-        {layoutMode !== 'multi' &&
-          (companioned === 'companion' ? (
-            <PlankCompanionControls primary={primaryId} />
-          ) : (
-            <PlankControls
-              capabilities={capabilities}
-              layoutMode={layoutMode}
-              close={part === 'complementary' ? 'minify-end' : true}
-              onClick={handlePlankAction}
-            />
-          ))}
+        {companioned === 'companion' ? (
+          <PlankCompanionControls primary={primaryId} />
+        ) : (
+          <PlankControls
+            capabilities={capabilities}
+            layoutMode={layoutMode}
+            close={part === 'complementary' ? 'minify-end' : true}
+            onClick={handlePlankAction}
+          />
+        )}
       </StackItem.Heading>
     );
   },
