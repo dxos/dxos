@@ -10,8 +10,8 @@ import { BLOCK_TYPES } from './constants';
 const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
 
 /**
- * Regex matching the opening fence of a Deus mdl block.
- * All Deus blocks use ```mdl; the block type lives on the first body line.
+ * Regex matching the opening fence of a Spec mdl block.
+ * All Spec blocks use ```mdl; the block type lives on the first body line.
  */
 export const FENCE_REGEX = /^```mdl\s*$/gm;
 
@@ -46,7 +46,7 @@ const parseBlockHeaders = (text: string): { type: string; id: string; from: numb
 };
 
 /**
- * Lint extension for Deus .mdl documents.
+ * Lint extension for Spec .mdl documents.
  *
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error

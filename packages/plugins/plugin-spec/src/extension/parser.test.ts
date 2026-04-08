@@ -89,6 +89,32 @@ describe('mdl parser', () => {
       ]);
     });
 
+    test('field with list expression', ({ expect }) => {
+      expect(nodeNames('errors: [InvalidMove, WrongTurn, GameOver]')).toEqual([
+        'KeyValue',
+        'FieldName',
+        'TypeExpr',
+        'TypeAtom',
+        'ListExpr',
+        'TypeName',
+        'Comma',
+        'TypeName',
+        'Comma',
+        'TypeName',
+      ]);
+    });
+
+    test('field with single-element list', ({ expect }) => {
+      expect(nodeNames('requires: [ChessEngine]')).toEqual([
+        'KeyValue',
+        'FieldName',
+        'TypeExpr',
+        'TypeAtom',
+        'ListExpr',
+        'TypeName',
+      ]);
+    });
+
     test('field with no value', ({ expect }) => {
       // e.g. "fields:" with no inline value — sub-fields follow on next lines.
       expect(nodeNames('fields:')).toEqual(['KeyValue', 'FieldName']);

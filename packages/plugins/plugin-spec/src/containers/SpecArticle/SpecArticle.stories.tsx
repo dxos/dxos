@@ -34,7 +34,7 @@ const DefaultStory = ({ content }: { content?: string }) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-deus/containers/SpecArticle',
+  title: 'plugins/plugin-spec/containers/SpecArticle',
   render: (args: { content?: string }) => <DefaultStory {...args} />,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec] }),

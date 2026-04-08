@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/plugin-deus",
+  "name": "@dxos/plugin-spec",
   "version": "0.1.0",
   "private": true,
-  "description": "Deus plugin",
+  "description": "Spec plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

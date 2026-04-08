@@ -19,7 +19,7 @@ import { ReactSurface } from '#capabilities';
 
 const iconAnnotation = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
 
-export const DeusPlugin = Plugin.define(meta).pipe(
+export const SpecPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Spec.Spec.typename,

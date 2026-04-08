@@ -21,7 +21,7 @@ const BLOCK_FIELDS: Record<string, string[]> = {
 };
 
 /**
- * Returns field-name completions when inside a Deus fenced block.
+ * Returns field-name completions when inside a Spec fenced block.
  * Detects the block type from the first line of the block body and suggests known fields.
  */
 const mdlCompletionSource = (context: CompletionContext): CompletionResult | null => {
@@ -84,6 +84,6 @@ const mdlCompletionSource = (context: CompletionContext): CompletionResult | nul
 };
 
 /**
- * Autocompletion extension for Deus .mdl documents.
+ * Autocompletion extension for Spec .mdl documents.
  */
 export const mdlComplete: Extension = autocompletion({ override: [mdlCompletionSource] });

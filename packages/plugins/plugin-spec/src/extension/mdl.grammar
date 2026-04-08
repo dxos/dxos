@@ -29,12 +29,15 @@ Optional  { "?" }
 TypeExpr { TypeAtom (Pipe TypeAtom)* }
 
 TypeAtom {
+  ListExpr    |
   ArrayExpr   |
   NumberRange |
   TypeName
 }
 
 Pipe        { "|" }
+ListExpr    { "[" TypeName (Comma TypeName)* "]" }
+Comma       { "," }
 ArrayExpr   { TypeName "[" "]" }
 NumberRange { Number ".." Number }
 TypeName    { name }
@@ -51,7 +54,7 @@ Comment { lineComment }
   newline     { "\n" | "\r\n" }
 
   ".."
-  "?" ":" "|" "[" "]"
+  "?" ":" "|" "[" "]" ","
 
   @precedence { lineComment, name }
 }

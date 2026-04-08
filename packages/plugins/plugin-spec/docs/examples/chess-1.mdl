@@ -1,21 +1,21 @@
 ---
-id: dxos.plugin.chess
+id: org.dxos.plugin.chess
 name: ChessPlugin
 version: 0.1.0
 ---
 
-A two-player chess game plugin for DXOS Composer.
+A two-player chess game plugin for `DXOS` Composer.
 
 ## Extensions
 
 The following extension dialects are used in this document.
 Each extension is defined in the Appendix or resolved via its URI.
 
-| Term   | URI                        |
-|--------|----------------------------|
-| `type` | dxos.org/ext/type@1.0     |
-| `feat` | dxos.org/ext/feat@1.0     |
-| `test` | dxos.org/ext/test@1.0     |
+| Term   | URI                         |
+|--------|-----------------------------|
+| `type` | `org.dxos.mdl.type@1.0`     |
+| `feat` | `org.dxos.mdl.feat@1.0`     |
+| `test` | `org.dxos.mdl.test@1.0`     |
 
 ## Types
 

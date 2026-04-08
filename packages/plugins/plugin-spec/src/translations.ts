@@ -6,7 +6,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-const SPEC_TYPENAME = 'org.dxos.plugin.deus.spec';
+const SPEC_TYPENAME = 'org.dxos.plugin.spec.spec';
 
 export const translations = [
   {
@@ -23,7 +23,7 @@ export const translations = [
         'object-deleted.label': 'Spec deleted',
       },
       [meta.id]: {
-        'plugin.name': 'Deus',
+        'plugin.name': 'Spec',
       },
     },
   },

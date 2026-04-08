@@ -6,12 +6,12 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.deus',
-  name: 'Deus',
+  id: 'org.dxos.plugin.spec',
+  name: 'Spec',
   description: trim`
-    Deus plugin for structured specs with rich text content.
+    Spec plugin for structured specs with rich text content.
   `,
   icon: 'ph--flower-lotus--regular',
   iconHue: 'rose',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-deus',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-spec',
 };

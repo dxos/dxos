@@ -1,5 +1,5 @@
 ---
-id: dxos.plugin.spacetime
+id: org.dxos.plugin.spacetime
 name: SpacetimePlugin
 version: 0.1.0
 extends: [dxos.plugin.base]
@@ -13,13 +13,13 @@ and ECHO for collaborative persistence.
 
 ## Extensions
 
-| Term        | URI                        |
-|-------------|----------------------------|
-| `type`      | deus.org/std/type@1.0      |
-| `feat`      | deus.org/std/feat@1.0      |
-| `test`      | deus.org/std/test@1.0      |
-| `component` | deus.org/std/component@1.0 |
-| `service`   | deus.org/std/service@1.0   |
+| Term        | URI                          |
+|-------------|------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `service`   | `org.dxos.mdl.service@1.0`   |
 
 ## Types
 

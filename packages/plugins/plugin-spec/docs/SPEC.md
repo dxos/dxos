@@ -116,7 +116,7 @@ type [id][: title]
 
 ```mdl
 ext ext
-  uri: deus.org/core/ext
+  uri: org.dxos/core/ext
   desc: Declares a new block type or extends an existing one.
   fields:
     uri:           URI
@@ -172,8 +172,8 @@ Every document lists its vocabulary upfront in an Extensions table:
 
 | Term        | URI                        |
 | ----------- | -------------------------- |
-| `type`      | deus.org/std/type@1.0      |
-| `component` | deus.org/std/component@1.0 |
+| `type`      | org.dxos.mdl.type@1.0      |
+| `component` | org.dxos.mdl.component@1.0 |
 ```
 
 This is the manifest — agents know which dialects apply before reading the body.
@@ -185,7 +185,7 @@ or in a shared `.mdl` file referenced by URI:
 
 ```mdl
 ext component
-  uri: deus.org/std/component@1.0
+  uri: org.dxos.mdl.component@1.0
   desc: A UI component with props, state, slots, actions, and events.
   fields:
     props?:   FieldMap
@@ -202,7 +202,7 @@ An extension may extend another, inheriting all its fields:
 
 ```mdl
 ext echo-type
-  uri: deus.org/dxos/echo-type@1.0
+  uri: org.dxos/dxos/echo-type@1.0
   extends: type
   adds-fields:
     echo-schema: TypeExpr

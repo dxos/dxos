@@ -1,5 +1,5 @@
 ---
-id: dxos.plugin.chess
+id: org.dxos.plugin.chess
 name: ChessPlugin
 version: 0.3.0
 extends: [dxos.plugin.chess@0.2.0]
@@ -12,12 +12,12 @@ game state transitions, and the chess engine service dependency.
 
 | Term        | URI                            |
 |-------------|--------------------------------|
-| `type`      | dxos.org/ext/type@1.0          |
-| `feat`      | dxos.org/ext/feat@1.0          |
-| `test`      | dxos.org/ext/test@1.0          |
-| `component` | dxos.org/ext/component@1.0     |
-| `op`        | dxos.org/ext/op@1.0            |
-| `service`   | dxos.org/ext/service@1.0       |
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
 
 ## Services
 
@@ -204,7 +204,7 @@ test T-8: Legal moves highlighted
 
 ```mdl
 ext op
-  uri: dxos.org/ext/op@1.0
+  uri: org.dxos.mdl.op@1.0
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
@@ -220,7 +220,7 @@ ext op
 
 ```mdl
 ext service
-  uri: dxos.org/ext/service@1.0
+  uri: org.dxos.mdl.service@1.0
   desc: An external or system-level dependency providing named operations.
   fields:
     desc?: Prose

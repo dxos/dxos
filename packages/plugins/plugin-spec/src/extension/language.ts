@@ -10,18 +10,18 @@ import { mdlFenceHighlight } from './fences';
 
 /**
  * LanguageDescription for MDL fenced block bodies.
- * All Deus blocks use ```mdl fences; the block type is the first body line.
+ * All Spec blocks use ```mdl fences; the block type is the first body line.
  * Pass this to createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }).
  */
 export const mdlBlockDescription = LanguageDescription.of({
-  name: 'deus-block',
+  name: 'spec-block',
   alias: ['mdl'],
   support: new LanguageSupport(mdlBlockLanguage),
 });
 
 /**
- * CodeMirror extensions for Deus .mdl block-body highlighting and fence decoration.
+ * CodeMirror extensions for Spec .mdl block-body highlighting and fence decoration.
  * Does NOT include the Markdown language itself — pass mdlBlockDescription to
  * createMarkdownExtensions() instead so it merges cleanly with the standard language set.
  */
-export const deus = (): Extension => mdlFenceHighlight;
+export const mdl = (): Extension => mdlFenceHighlight;

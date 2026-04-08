@@ -92,9 +92,35 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
     builder.add(abs(commentOffset + 1), abs(lineText.length), Decoration.mark({ class: 'cm-mdl-comment' }));
   }
 
-  // Pipe separators in union types (e.g. "a | b | c").
+  // Value expression highlighting.
   const valueStart = pos;
   const valuePart = lineText.slice(valueStart, valueEnd);
+
+  // Bracketed identifier list (e.g. "[InvalidMove, WrongTurn, GameOver]").
+  // RangeSetBuilder requires decorations in ascending order, so we scan left-to-right.
+  const bracketMatch = valuePart.match(/^\s*\[([^\]]*)\]/);
+  if (bracketMatch) {
+    const openIdx = valueStart + valuePart.indexOf('[');
+    const closeIdx = valueStart + valuePart.indexOf(']');
+    builder.add(abs(openIdx), abs(openIdx + 1), Decoration.mark({ class: 'cm-mdl-punct' }));
+
+    // Scan inner content left-to-right for identifiers and commas.
+    const inner = bracketMatch[1];
+    const tokenRe = /(\w[\w-]*)|,/g;
+    let token: RegExpExecArray | null;
+    while ((token = tokenRe.exec(inner)) !== null) {
+      const tokenFrom = openIdx + 1 + token.index;
+      if (token[1]) {
+        builder.add(abs(tokenFrom), abs(tokenFrom + token[0].length), Decoration.mark({ class: 'cm-mdl-block-id' }));
+      } else {
+        builder.add(abs(tokenFrom), abs(tokenFrom + 1), Decoration.mark({ class: 'cm-mdl-punct' }));
+      }
+    }
+
+    builder.add(abs(closeIdx), abs(closeIdx + 1), Decoration.mark({ class: 'cm-mdl-punct' }));
+  }
+
+  // Pipe separators in union types (e.g. "a | b | c").
   let pipeIdx = valuePart.indexOf('|');
   while (pipeIdx >= 0) {
     const absIdx = valueStart + pipeIdx;
@@ -204,7 +230,7 @@ const buildDecorations = (view: EditorView): DecorationSet => {
 };
 
 /**
- * Decorates Deus mdl fenced blocks:
+ * Decorates Spec mdl fenced blocks:
  *   - Mutes the ``` ticks and `mdl` keyword (slate-500)
  *   - Colors the block type keyword on the first body line (per-type hue)
  *   - Colors field names in block body lines (blue-400)

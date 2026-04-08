@@ -1,5 +1,5 @@
 ---
-id: dxos.plugin.chess
+id: org.dxos.plugin.chess
 name: ChessPlugin
 version: 0.2.0
 extends: [dxos.plugin.chess@0.1.0]
@@ -11,10 +11,10 @@ Extends chess-1 to introduce UI components: the game Lobby and the Gameboard.
 
 | Term        | URI                            |
 |-------------|--------------------------------|
-| `type`      | dxos.org/ext/type@1.0          |
-| `feat`      | dxos.org/ext/feat@1.0          |
-| `test`      | dxos.org/ext/test@1.0          |
-| `component` | dxos.org/ext/component@1.0     |
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
 
 ## Types
 
@@ -190,7 +190,7 @@ Extensions inherited from chess-1 (type, feat, test) are not repeated.
 
 ```mdl
 ext component
-  uri: dxos.org/ext/component@1.0
+  uri: org.dxos.mdl.component@1.0
   desc: A UI component with props, internal state, slots, actions, and events.
   fields:
     desc?: Prose

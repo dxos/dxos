@@ -1,5 +1,5 @@
 ---
-id: dxos.spec.core
+id: org.dxos.spec.core
 name: DSL.Core
 version: 1.0
 ---

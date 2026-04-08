@@ -6,9 +6,11 @@ export const
   Optional = 4,
   TypeExpr = 7,
   TypeAtom = 8,
-  ArrayExpr = 9,
-  TypeName = 10,
-  NumberRange = 13,
-  Number = 14,
-  Pipe = 16,
-  Comment = 18
+  ListExpr = 9,
+  TypeName = 11,
+  Comma = 12,
+  ArrayExpr = 15,
+  NumberRange = 16,
+  Number = 17,
+  Pipe = 19,
+  Comment = 21

@@ -21,7 +21,7 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { deus, mdlBlockDescription } from '../../extension';
+import { mdl, mdlBlockDescription } from '../../extension';
 
 import { Spec } from '#types';
 
@@ -50,7 +50,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(({ role,
             messenger: space,
             identity,
           }),
-        deus(),
+        mdl(),
       ].filter(isTruthy),
     [identity, space, spec.id, target, themeMode],
   );
