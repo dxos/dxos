@@ -5,8 +5,6 @@
 import { type Obj } from '@dxos/echo';
 import { Space } from '@dxos/client/echo';
 
-// TODO(burdon): AUDIT classes of all surface providers.
-
 export type SurfaceRole =
   | 'article'
   | 'card--content'
