@@ -18,6 +18,7 @@ export const useContextBinder = (space: Space | undefined, feed: Feed.Feed | und
   const [binder, setBinder] = useState<AiContextBinder>();
 
   useAsyncEffect(async () => {
+    setBinder(undefined);
     if (!space || !feed) {
       return;
     }
