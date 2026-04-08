@@ -12,6 +12,7 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
@@ -71,11 +72,15 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               subject: companion,
               state: 'expanded',
             });
-          } else if (message && db) {
+          } else if (layout.mode === 'multi' && message && db) {
             void invokePromise(LayoutOperation.Open, {
               subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
               pivotId: id,
               navigation: 'immediate',
+            });
+          } else if (message) {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
             });
           }
           break;

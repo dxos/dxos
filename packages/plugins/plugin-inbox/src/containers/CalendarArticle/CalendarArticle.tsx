@@ -11,6 +11,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -77,7 +78,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               subject: companion,
               state: 'expanded',
             });
-          } else {
+          } else if (layout.mode === 'multi') {
             const event = events.find((entry) => entry.id === action.eventId);
             if (event) {
               void invokePromise(LayoutOperation.Open, {
@@ -86,6 +87,10 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
                 navigation: 'immediate',
               });
             }
+          } else {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
           }
           break;
         }

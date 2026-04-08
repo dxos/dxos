@@ -12,6 +12,7 @@ import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -144,12 +145,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
               subject: companion,
               state: 'expanded',
             });
-          } else if (message && db) {
-            // Deck layout: open the message plank beside this mailbox (pivot), not as a companion swap.
+          } else if (layout.mode === 'multi' && message && db) {
+            // Multi deck: open the message plank beside this mailbox (pivot).
             void invokePromise(LayoutOperation.Open, {
               subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
               pivotId: id,
               navigation: 'immediate',
+            });
+          } else if (message) {
+            // Solo deck: show message in the companion panel.
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
             });
           }
           break;

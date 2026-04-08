@@ -100,11 +100,15 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            void invokePromise(LayoutOperation.Set, { subject: [item.id] });
+            if (layout.mode === 'multi') {
+              void invokePromise(LayoutOperation.Set, { subject: [item.id] });
+            } else {
+              void invokePromise(LayoutOperation.Open, { subject: [item.id] });
+            }
           }
         }
       },
-      [invokePromise, graph],
+      [invokePromise, graph, layout.mode],
     );
 
     const blockInstruction = useCallback(
@@ -138,7 +142,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          void invokePromise(LayoutOperation.Set, { subject: [node.id] });
+          if (layout.mode === 'multi') {
+            void invokePromise(LayoutOperation.Set, { subject: [node.id] });
+          } else {
+            void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          }
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
@@ -156,7 +164,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg],
+      [graph, invokePromise, getItem, runAction, isLg, layout.mode],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
