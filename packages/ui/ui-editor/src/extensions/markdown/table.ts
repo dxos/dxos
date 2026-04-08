@@ -107,14 +107,22 @@ const update = (state: EditorState, _options: TableOptions) => {
   return builder.finish();
 };
 
-/** Renders cell text into el, treating `backtick spans` as inline code elements. */
+/** Renders cell text into el, processing inline markdown (bold, italic, code). */
 const renderCellContent = (el: HTMLElement, text: string): void => {
-  const parts = text.split(/(`[^`\n]+`)/);
+  const parts = text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|_[^_\n]+_)/);
   for (const part of parts) {
     if (part.length > 2 && part.startsWith('`') && part.endsWith('`')) {
       const code = document.createElement('code');
       code.textContent = part.slice(1, -1);
       el.appendChild(code);
+    } else if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('__') && part.endsWith('__'))) {
+      const strong = document.createElement('strong');
+      strong.textContent = part.slice(2, -2);
+      el.appendChild(strong);
+    } else if ((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) {
+      const em = document.createElement('em');
+      em.textContent = part.slice(1, -1);
+      el.appendChild(em);
     } else {
       el.appendChild(document.createTextNode(part));
     }
