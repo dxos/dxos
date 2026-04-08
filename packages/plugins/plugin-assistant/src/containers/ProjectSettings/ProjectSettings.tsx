@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { Project, syncProjectTriggers } from '@dxos/assistant-toolkit';
+import { Project, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
@@ -29,6 +29,7 @@ export type ProjectSettingsProps = ObjectSurfaceProps<Project.Project>;
 export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const { invokePromise } = useOperationInvoker();
 
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(project)!.spaceId);
@@ -51,11 +52,10 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
   useEffect(() => {
     const db = Obj.getDatabase(project);
     if (!db) return;
-    const runtime = computeRuntime.getRuntime(db.spaceId);
     return Obj.subscribe(project, () => {
-      queueMicrotask(() => runtime.runPromise(syncProjectTriggers(project)));
+      queueMicrotask(() => void invokePromise(SyncTriggers, { project: Ref.make(project) }));
     });
-  }, [project, computeRuntime]);
+  }, [project, invokePromise]);
 
   const db = Obj.getDatabase(project);
   const feedFilter = useMemo(() => {

@@ -22,7 +22,7 @@ import { AgentPrompt } from './definitions';
 
 import * as Chat from '../../types/Chat';
 
-const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
+const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
 const observer = GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' }));
 
