@@ -9,12 +9,11 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
+import { Spec } from '#types';
 
+import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
 import { translations } from '../../translations';
 import { DeusArticle } from './DeusArticle';
-
-import { Spec } from '#types';
 
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
@@ -25,7 +24,7 @@ const DefaultStory = ({ content }: { content?: string }) => {
     if (space && !spec) {
       setSpec(space.db.add(Spec.make({ content })));
     }
-  }, [space]);
+  }, [space, content, spec]);
 
   if (!spec) {
     return <Loading />;
