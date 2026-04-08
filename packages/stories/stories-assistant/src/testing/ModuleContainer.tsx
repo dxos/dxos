@@ -57,10 +57,10 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
 
     const feedTarget = await chat.feed.load();
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const feedRuntime = await Effect.runPromise(
+    const runtime = await Effect.runPromise(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const binder = new AiContextBinder({ feed: feedTarget, feedRuntime, registry: atomRegistry });
+    const binder = new AiContextBinder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 

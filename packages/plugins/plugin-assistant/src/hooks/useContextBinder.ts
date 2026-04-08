@@ -23,10 +23,10 @@ export const useContextBinder = (space: Space | undefined, feed: Feed.Feed | und
     }
 
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const feedRuntime = await runAndForwardErrors(
+    const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const binder = new AiContextBinder({ feed, feedRuntime, registry });
+    const binder = new AiContextBinder({ feed, runtime, registry });
     await binder.open();
     setBinder(binder);
 

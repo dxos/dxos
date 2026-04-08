@@ -45,7 +45,7 @@ export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> 
 
 export type AiConversationOptions = {
   feed: Feed.Feed;
-  feedRuntime: Runtime.Runtime<Feed.FeedService>;
+  runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 
@@ -65,16 +65,16 @@ export class AiConversation extends Resource {
    */
   private readonly _binder: AiContextBinder;
   private readonly _feed: Feed.Feed;
-  private readonly _feedRuntime: Runtime.Runtime<Feed.FeedService>;
+  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
   private readonly _toolkit?: Toolkit.Any;
 
   public constructor(options: AiConversationOptions) {
     super();
     this._feed = options.feed;
-    this._feedRuntime = options.feedRuntime;
+    this._runtime = options.runtime;
     invariant(this._feed);
-    invariant(this._feedRuntime);
-    this._binder = new AiContextBinder({ feed: this._feed, feedRuntime: this._feedRuntime, registry: options.registry });
+    invariant(this._runtime);
+    this._binder = new AiContextBinder({ feed: this._feed, runtime: this._runtime, registry: options.registry });
   }
 
   protected override async _open(): Promise<void> {
@@ -94,7 +94,7 @@ export class AiConversation extends Resource {
   }
 
   public async getHistory(): Promise<Message.Message[]> {
-    const queryResult = await Runtime.runPromise(this._feedRuntime)(
+    const queryResult = await Runtime.runPromise(this._runtime)(
       Feed.query(this._feed, Filter.type(Message.Message)),
     );
     const items = await queryResult.run();
@@ -130,7 +130,7 @@ export class AiConversation extends Resource {
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         onOutput: (message) =>
-          Effect.promise(() => Runtime.runPromise(this._feedRuntime)(Feed.append(this._feed, [message]))),
+          Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
       });
 
       yield* session.begin({
@@ -216,17 +216,17 @@ export class AiConversationService extends Context.Tag('@dxos/assistant/AiConver
    * Create a new conversation with a new feed.
    */
   static layerNewFeed = (
-    options?: Omit<AiConversationOptions, 'feed' | 'feedRuntime'>,
+    options?: Omit<AiConversationOptions, 'feed' | 'runtime'>,
   ): Layer.Layer<AiConversationService | AiContextService, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
         const feed = Feed.make();
         yield* Database.add(feed);
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
         return AiConversationService.layer({
           ...options,
           feed,
-          feedRuntime,
+          runtime,
         });
       }),
     );

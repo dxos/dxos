@@ -61,7 +61,7 @@ export class Bindings {
 
 export type AiContextBinderOptions = {
   feed: Feed.Feed;
-  feedRuntime: Runtime.Runtime<Feed.FeedService>;
+  runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 
@@ -74,14 +74,14 @@ export class AiContextBinder extends Resource {
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: Registry.Registry;
   private readonly _feed: Feed.Feed;
-  private readonly _feedRuntime: Runtime.Runtime<Feed.FeedService>;
+  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
 
   constructor(options: AiContextBinderOptions) {
     super();
     assertArgument(options.feed, 'options.feed', 'Feed is required');
-    assertArgument(options.feedRuntime, 'options.feedRuntime', 'Feed runtime is required');
+    assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
     this._feed = options.feed;
-    this._feedRuntime = options.feedRuntime;
+    this._runtime = options.runtime;
     this._registry = options.registry ?? Registry.make();
   }
 
@@ -128,7 +128,7 @@ export class AiContextBinder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    const query = await Runtime.runPromise(this._feedRuntime)(Feed.query(this._feed, Query.type(ContextBinding)));
+    const query = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(ContextBinding)));
 
     // Process initial state before returning.
     const initialResults = await query.run();
@@ -187,7 +187,7 @@ export class AiContextBinder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
-    await Runtime.runPromise(this._feedRuntime)(
+    await Runtime.runPromise(this._runtime)(
       Feed.append(this._feed, [
         Obj.make(ContextBinding, {
           blueprints: {
@@ -209,7 +209,7 @@ export class AiContextBinder extends Resource {
     }
 
     log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
-    await Runtime.runPromise(this._feedRuntime)(
+    await Runtime.runPromise(this._runtime)(
       Feed.append(this._feed, [
         Obj.make(ContextBinding, {
           blueprints: {

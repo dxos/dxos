@@ -36,8 +36,8 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
       function* ({ expect }) {
         const feed = Feed.make();
         yield* Database.add(feed);
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, feedRuntime }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
 
         yield* Database.add(blueprint);
         yield* Effect.promise(() =>

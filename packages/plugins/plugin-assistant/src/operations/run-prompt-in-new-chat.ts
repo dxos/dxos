@@ -36,8 +36,8 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found.');
           const feedServiceLayer = createFeedServiceLayer(space.queues);
-          const feedRuntime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-          const binder = new AiContextBinder({ feed: feedTarget, feedRuntime, registry });
+          const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+          const binder = new AiContextBinder({ feed: feedTarget, runtime, registry });
           yield* Effect.promise(() =>
             binder.use(async (b: AiContextBinder) => {
               const bindingProps: Parameters<AiContextBinder['bind']>[0] = {};

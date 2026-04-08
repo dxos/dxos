@@ -86,8 +86,8 @@ export const createSession: (
   );
 
   const feed = yield* Database.add(Feed.make());
-  const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-  const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, feedRuntime }));
+  const runtime = yield* Effect.runtime<Feed.FeedService>();
+  const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
 
   yield* Effect.promise(() =>
     binder.bind({
@@ -145,8 +145,8 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
-      const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, feedRuntime }));
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({
           blueprints: [],
@@ -156,8 +156,8 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
     }).pipe(Effect.scoped),
   getContext: () =>
     Effect.gen(function* () {
-      const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, feedRuntime }));
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),
 });

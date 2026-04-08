@@ -21,8 +21,8 @@ describe('Chat processor', () => {
       function* ({ expect }) {
         const feed = Feed.make();
         yield* Database.add(feed);
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, feedRuntime }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(
           Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
         );

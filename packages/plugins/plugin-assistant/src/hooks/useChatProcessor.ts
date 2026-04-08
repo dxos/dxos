@@ -53,12 +53,12 @@ export const useChatProcessor = ({
       return;
     }
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const feedRuntime = await runAndForwardErrors(
+    const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const conversation = new AiConversation({
       feed: feedTarget,
-      feedRuntime,
+      runtime,
       registry: observableRegistry as Registry.Registry,
     });
     await conversation.open();

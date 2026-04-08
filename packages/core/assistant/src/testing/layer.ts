@@ -146,12 +146,12 @@ export const AssistantTestLayer = ({
                   return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-                const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+                const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const binder = yield* acquireReleaseResource(
                   () =>
                     new AiContextBinder({
                       feed,
-                      feedRuntime,
+                      runtime,
                     }),
                 );
                 return { binder };
@@ -164,12 +164,12 @@ export const AssistantTestLayer = ({
                   return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-                const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+                const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const conversation = yield* acquireReleaseResource(
                   () =>
                     new AiConversation({
                       feed,
-                      feedRuntime,
+                      runtime,
                     }),
                 );
                 return conversation;

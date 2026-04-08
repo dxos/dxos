@@ -120,10 +120,10 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const feedRuntime = await Effect.runPromise(
+    const runtime = await Effect.runPromise(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const conversation = new AiConversation({ feed, feedRuntime, registry: this._registry });
+    const conversation = new AiConversation({ feed, runtime, registry: this._registry });
     await conversation.open();
 
     // Bind blueprints.

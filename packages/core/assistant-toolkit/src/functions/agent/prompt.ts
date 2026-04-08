@@ -83,10 +83,10 @@ export default AgentPrompt.pipe(
           invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
           const chatFeed = yield* Database.load(chat.feed);
           invariant(chatFeed, 'Chat feed not found.');
-          const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+          const runtime = yield* Effect.runtime<Feed.FeedService>();
 
           const conversation = yield* acquireReleaseResource(
-            () => new AiConversation({ feed: chatFeed, feedRuntime }),
+            () => new AiConversation({ feed: chatFeed, runtime }),
           );
 
           yield* Effect.promise(() =>

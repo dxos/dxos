@@ -31,10 +31,10 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
       invariant(space, 'Space not found.');
 
       const feedServiceLayer = createFeedServiceLayer(space.queues);
-      const feedRuntime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+      const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
 
       const runtimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-      const runtime = yield* Effect.promise(() =>
+      const chatRuntime = yield* Effect.promise(() =>
         runtimeResolver
           .getRuntime(db.spaceId)
           .runPromise(
@@ -46,8 +46,8 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
       );
 
       yield* Effect.promise(() =>
-        new AiConversation({ feed: feedTarget, feedRuntime, registry }).use(async (conversation) =>
-          updateName(runtime, conversation, chat),
+        new AiConversation({ feed: feedTarget, runtime, registry }).use(async (conversation) =>
+          updateName(chatRuntime, conversation, chat),
         ),
       );
     }),

@@ -31,8 +31,8 @@ const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
 describe('AiContextBinder', () => {
   it('should handle bind with Ref', async () => {
     const feed = Feed.make();
-    const feedRuntime = createMockFeedRuntime();
-    const binder = new AiContextBinder({ feed, feedRuntime });
+    const runtime = createMockFeedRuntime();
+    const binder = new AiContextBinder({ feed, runtime });
 
     const TestSchema = Schema.Struct({}).pipe(
       Type.object({

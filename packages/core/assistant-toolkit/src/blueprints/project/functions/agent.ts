@@ -28,8 +28,8 @@ export default Agent.pipe(
           Effect.flatMap((chat) => Database.load(chat.feed)),
         );
         invariant(chatFeed, 'Project chat feed not found.');
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, feedRuntime }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
 
         const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
         if (iniativesInContext.length !== 1) {

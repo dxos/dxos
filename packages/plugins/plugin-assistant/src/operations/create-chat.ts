@@ -55,8 +55,8 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       }
 
       const feedServiceLayer = createFeedServiceLayer(space.queues);
-      const feedRuntime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-      const binder = new AiContextBinder({ feed, feedRuntime, registry });
+      const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+      const binder = new AiContextBinder({ feed, runtime, registry });
       yield* Effect.promise(() =>
         binder.use((b: AiContextBinder) =>
           b.bind({

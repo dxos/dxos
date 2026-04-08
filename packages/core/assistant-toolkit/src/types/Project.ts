@@ -102,8 +102,8 @@ export const makeInitialized = (
     });
     yield* Database.add(project);
     const feed = yield* Database.add(Feed.make());
-    const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-    const contextBinder = new AiContextBinder({ feed, feedRuntime });
+    const runtime = yield* Effect.runtime<Feed.FeedService>();
+    const contextBinder = new AiContextBinder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
     const projectBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
@@ -152,19 +152,19 @@ export const resetChatHistory = (
       Effect.map((_) => _.feed),
       Effect.flatMap(Database.load),
     );
-    const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+    const runtime = yield* Effect.runtime<Feed.FeedService>();
     const existingContextBinder = yield* acquireReleaseResource(
       () =>
         new AiContextBinder({
           feed: existingFeed,
-          feedRuntime,
+          runtime,
         }),
     );
     const blueprints = existingContextBinder.getBlueprints().map((blueprint) => Ref.make(blueprint));
     const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = new AiContextBinder({ feed, feedRuntime });
+    const contextBinder = new AiContextBinder({ feed, runtime });
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints,

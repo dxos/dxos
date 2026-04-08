@@ -67,8 +67,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, feedRuntime }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);

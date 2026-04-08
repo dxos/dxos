@@ -80,8 +80,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
         yield* Database.flush();
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, feedRuntime }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
         yield* conversation.createRequest({
@@ -196,8 +196,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
         yield* Database.flush();
-        const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, feedRuntime }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
         yield* conversation.createRequest({
