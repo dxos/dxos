@@ -25,10 +25,9 @@ import { deus, mdlBlockDescription } from '../../extension';
 
 import { Spec } from '#types';
 
-export type DeusArticleProps = ObjectSurfaceProps<Spec.Spec>;
+export type SpecArticleProps = ObjectSurfaceProps<Spec.Spec>;
 
-/** Article surface that renders a Spec document in a collaborative MDL text editor. */
-export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role, subject: spec }, forwardedRef) => {
+export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(({ role, subject: spec }, forwardedRef) => {
   const { themeMode } = useThemeContext();
   const identity = useIdentity();
   const space = getSpace(spec);
