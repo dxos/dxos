@@ -16,7 +16,7 @@ import { SketchContainer } from './SketchContainer';
 const DefaultStory = () => {
   const [sketch] = useState(createObject(Sketch.make({ canvas: { schema: EXCALIDRAW_SCHEMA } })));
 
-  return <SketchContainer role='article' subject={sketch} settings={{}} />;
+  return <SketchContainer role='article' subject={sketch} attendableId='story' settings={{}} />;
 };
 
 const meta = {

@@ -8,17 +8,16 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
 import { Calendar, Mailbox } from '#types';
 
-export const RelatedToContact = ({ subject: contact }: ObjectSurfaceProps<Person.Person>) => {
+export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleProps<Person.Person>) => {
   const { invokePromise } = useOperationInvoker();
   const space = useActiveSpace();
   const mailboxes = useQuery(space?.db, Filter.type(Mailbox.Mailbox));

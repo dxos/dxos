@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, useMediaQuery } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
@@ -12,9 +12,14 @@ import { mx } from '@dxos/ui-theme';
 import { Journal as JournalComponent, type JournalProps } from '#components';
 import { type Journal } from '#types';
 
-export type JournalContainerProps = ObjectSurfaceProps<Journal.Journal> & { showCalendar?: boolean };
+export type JournalContainerProps = AppSurface.ObjectArticleProps<Journal.Journal> & { showCalendar?: boolean };
 
-export const JournalContainer = ({ role, subject: journal, showCalendar }: JournalContainerProps) => {
+export const JournalContainer = ({
+  role,
+  attendableId: _attendableId,
+  subject: journal,
+  showCalendar,
+}: JournalContainerProps) => {
   const controllerRef = useRef<CalendarController>(null);
 
   // TODO(burdon): Instead of media query should check physical geometry of plank.

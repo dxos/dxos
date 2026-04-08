@@ -8,8 +8,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj, type Ref } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
 
@@ -24,8 +23,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.channel`,
         role: 'article',
-        filter: (data): data is { attendableId: string; subject: Channel.Channel } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Channel.Channel, data.subject),
+        filter: AppSurface.objectArticle(Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
           <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
         ),
@@ -33,8 +31,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.chat-companion`,
         role: 'article',
-        filter: (data): data is { companionTo: Channel.Channel; subject: 'chat' } =>
-          Obj.instanceOf(Channel.Channel, data.companionTo) && data.subject === 'chat',
+        filter: AppSurface.and(AppSurface.literalArticle('chat'), AppSurface.companionArticle(Channel.Channel)),
         component: ({ data: { companionTo: channel } }) => {
           const space = getSpace(channel);
           const thread = channel.defaultThread.target;
@@ -48,7 +45,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.thread`,
         role: 'article',
-        filter: (data): data is { subject: Thread.Thread } => Obj.instanceOf(Thread.Thread, data.subject),
+        filter: AppSurface.objectArticle(Thread.Thread),
         component: ({ data: { subject } }) => {
           const space = getSpace(subject);
           if (!space || !subject) {
@@ -61,16 +58,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.comments`,
         role: 'article',
-        filter: (data): data is { attendableId?: string; companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
-          data.subject === 'comments' && Obj.isObject(data.companionTo),
+        filter: AppSurface.and(AppSurface.literalArticle('comments'), AppSurface.companionArticle()),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;

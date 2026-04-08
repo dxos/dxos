@@ -8,8 +8,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
@@ -21,7 +20,7 @@ import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRoo
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
-export type MarkdownContainerProps = ObjectSurfaceProps<
+export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
   {
     id: string;

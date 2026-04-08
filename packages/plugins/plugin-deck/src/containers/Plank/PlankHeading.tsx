@@ -5,6 +5,7 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -183,7 +184,10 @@ export const PlankHeading = memo(
                   actions={sigilActions}
                   onAction={handleAction}
                 >
-                  <Surface.Surface role='menu-footer' data={{ subject: node.data }} />
+                  <Surface.Surface
+                    role='menu-footer'
+                    data={{ subject: node.data } satisfies AppSurface.MenuFooterData}
+                  />
                 </StackItem.Sigil>
               ) : (
                 <StackItem.SigilButton>
@@ -204,7 +208,9 @@ export const PlankHeading = memo(
             </TextTooltip>
           </>
         )}
-        {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
+        {node && part !== 'complementary' && (
+          <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+        )}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />
         ) : (

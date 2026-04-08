@@ -4,12 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card, Icon } from '@dxos/react-ui';
 
 import * as Video from '../../types/Video';
 
-export type VideoCardProps = ObjectSurfaceProps<Video.YouTubeVideo>;
+export type VideoCardProps = AppSurface.ObjectCardProps<Video.YouTubeVideo>;
 
 /**
  * YouTube video card with embedded player.

@@ -6,7 +6,7 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Sketch } from '@dxos/plugin-sketch/types';
 import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -14,7 +14,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { useStoreAdapter } from '#hooks';
 import { type Settings } from '#types';
 
-export type SketchContainerProps = ObjectSurfaceProps<
+export type SketchContainerProps = AppSurface.ObjectArticleProps<
   Sketch.Sketch,
   {
     settings: Settings.Settings;

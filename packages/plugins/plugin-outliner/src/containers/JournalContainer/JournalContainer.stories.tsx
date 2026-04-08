@@ -32,7 +32,7 @@ const DefaultStory = ({ showCalendar }: DefaultStoryProps) => {
     return null;
   }
 
-  return <JournalContainer role='article' subject={journal} showCalendar={showCalendar} />;
+  return <JournalContainer role='article' subject={journal} attendableId='story' showCalendar={showCalendar} />;
 };
 
 const meta = {

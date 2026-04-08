@@ -31,7 +31,7 @@ import {
 import { meta } from '#meta';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 import { getParentId, useNode } from '@dxos/plugin-graph';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -62,13 +62,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.mailbox`,
         role: ['article'],
-        filter: (
-          data,
-        ): data is {
-          attendableId?: string;
-          subject: Mailbox.Mailbox;
-          properties: { filter?: string };
-        } => Mailbox.instanceOf(data.subject),
+        filter: AppSurface.objectArticle(Mailbox.Mailbox),
         component: ({ data }) => {
           return (
             <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
@@ -85,6 +79,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${meta.id}.message`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (
           data,
@@ -114,9 +109,9 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${meta.id}.event`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
-          Obj.instanceOf(Event.Event, data.subject) && Calendar.instanceOf(data.companionTo),
+        filter: AppSurface.and(AppSurface.objectArticle(Event.Event), AppSurface.companionArticle(Calendar.Calendar)),
         component: ({ data, role }) => {
           if (!data?.subject || !data?.companionTo) return null;
           return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
@@ -125,8 +120,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.calendar`,
         role: ['article'],
-        filter: (data): data is { subject: Calendar.Calendar; attendableId?: string } =>
-          Calendar.instanceOf(data.subject),
+        filter: AppSurface.objectArticle(Calendar.Calendar),
         component: ({ data, role }) => (
           <CalendarArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -134,13 +128,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.message-card`,
         role: 'card--content',
-        filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
+        filter: AppSurface.objectCard(Message.Message),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
         id: `${meta.id}.event-card`,
         role: 'card--content',
-        filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
+        filter: AppSurface.objectCard(Event.Event),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
       Surface.create({
@@ -159,13 +153,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.mailbox.companion.settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Mailbox.Mailbox } => Mailbox.instanceOf(data.subject),
+        filter: AppSurface.objectSettings(Mailbox.Mailbox),
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.calendar.companion.settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Calendar.Calendar } => Calendar.instanceOf(data.subject),
+        filter: AppSurface.objectSettings(Calendar.Calendar),
         component: ({ data }) => <CalendarSettings subject={data.subject} />,
       }),
 
@@ -174,14 +168,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.contact-related`,
         role: 'related',
-        filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
+        filter: AppSurface.objectSection(Person.Person),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
         id: `${meta.id}.organization-related`,
         role: 'related',
-        filter: (data): data is { subject: Organization.Organization } =>
-          Obj.instanceOf(Organization.Organization, data.subject),
+        filter: AppSurface.objectSection(Organization.Organization),
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
       }),
     ]),

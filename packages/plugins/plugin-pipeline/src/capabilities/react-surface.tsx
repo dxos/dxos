@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
@@ -21,8 +22,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: 'article',
-        filter: (data): data is { attendableId: string; subject: Pipeline.Pipeline } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Pipeline.Pipeline, data.subject),
+        filter: AppSurface.objectArticle(Pipeline.Pipeline),
         component: ({ data, role }) => (
           <PipelineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -30,8 +30,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion.invocations`,
         role: 'article',
-        filter: (data): data is { companionTo: Pipeline.Pipeline } =>
-          Obj.instanceOf(Pipeline.Pipeline, data.companionTo) && data.subject === 'invocations',
+        filter: AppSurface.and(
+          AppSurface.literalArticle('invocations'),
+          AppSurface.companionArticle(Pipeline.Pipeline),
+        ),
         component: ({ data, role }) => {
           const db = Obj.getDatabase(data.companionTo);
           // TODO(wittjosiah): Filter the invocations to those relevant to the project.
@@ -47,7 +49,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.object-settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
+        filter: AppSurface.objectSettings(Pipeline.Pipeline),
         component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,
       }),
     ]),

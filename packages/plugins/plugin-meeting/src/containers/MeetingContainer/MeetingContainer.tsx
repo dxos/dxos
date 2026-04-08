@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { type Meeting } from '#types';
 import { MeetingOperation } from '#operations';
 
-export type MeetingContainerProps = ObjectSurfaceProps<Meeting.Meeting>;
+export type MeetingContainerProps = AppSurface.ObjectArticleProps<Meeting.Meeting>;
 
 export const MeetingContainer = ({ attendableId, role, subject: meeting }: MeetingContainerProps) => {
   const { t } = useTranslation(meta.id);
@@ -22,12 +22,7 @@ export const MeetingContainer = ({ attendableId, role, subject: meeting }: Meeti
   const summary = meeting.summary?.target;
   const notesData = useMemo(() => ({ attendableId, subject: notes }), [attendableId, notes]);
   const summaryData = useMemo(
-    () =>
-      summary &&
-      summary.content.length > 0 && {
-        attendableId,
-        subject: summary,
-      },
+    () => summary && summary.content.length > 0 && { attendableId, subject: summary },
     [attendableId, summary, summary?.content],
   );
 

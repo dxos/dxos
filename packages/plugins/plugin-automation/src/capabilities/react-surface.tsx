@@ -7,8 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { AutomationSettings, FunctionsContainer } from '#containers';
@@ -20,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.space-settings-functions`,
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-functions`,
+        filter: AppSurface.literalSection(`${meta.id}.space-settings-functions`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -33,7 +32,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.space-settings-automation`,
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-automation`,
+        filter: AppSurface.literalSection(`${meta.id}.space-settings-automation`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -46,10 +45,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion.automation`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: 'automation' } =>
-          Obj.isObject(data.companionTo) && data.subject === 'automation',
+        filter: AppSurface.and(AppSurface.literalArticle('automation'), AppSurface.companionArticle()),
         component: ({ data }) => {
-          return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;
+          const space = getSpace(data.companionTo);
+          if (!space) {
+            return null;
+          }
+          return <AutomationSettings space={space} object={data.companionTo} />;
         },
       }),
     ]),

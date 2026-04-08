@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
@@ -16,7 +16,7 @@ import { type Message } from '@dxos/types';
 import { ComposeEmailPanel } from '#components';
 import { GmailFunctions } from '../../operations/google/gmail';
 
-export type DraftMessageArticleProps = ObjectSurfaceProps<Message.Message>;
+export type DraftMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 
 export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps) => {
   const db = Obj.getDatabase(subject);

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Transcript } from '@dxos/types';
 
 import { TranscriptionContainer } from '#containers';
@@ -18,9 +18,9 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: `${meta.id}.article.transcript`,
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { attendableId: string; subject: Transcript.Transcript } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Transcript.Transcript, data.subject),
+        filter: AppSurface.objectArticle(Transcript.Transcript),
         component: ({ data, role }) => (
           <TranscriptionContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

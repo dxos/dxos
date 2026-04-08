@@ -88,7 +88,7 @@ export const EphemeralDeckState = Schema.Struct({
   dialogOverlayClasses: Schema.optional(Schema.String),
   dialogOverlayStyle: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   /** Data to be passed to the dialog Surface. */
-  dialogContent: Schema.optional(Schema.Any),
+  dialogContent: Schema.NullOr(Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) })),
   popoverOpen: Schema.Boolean,
   popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
   popoverAnchor: Schema.optional(Schema.Any),
@@ -98,7 +98,12 @@ export const EphemeralDeckState = Schema.Struct({
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
-  popoverContent: Schema.optional(Schema.Any),
+  popoverContent: Schema.NullOr(
+    Schema.Union(
+      Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) }),
+      Schema.Struct({ subject: Schema.Any }),
+    ),
+  ),
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
   /** The identifier of a component to scroll into view when it is mounted. */

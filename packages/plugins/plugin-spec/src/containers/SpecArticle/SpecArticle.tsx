@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -25,7 +25,7 @@ import { mdl, mdlBlockDescription } from '../../extension';
 
 import { Spec } from '#types';
 
-export type SpecArticleProps = ObjectSurfaceProps<Spec.Spec>;
+export type SpecArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
 
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(({ role, subject: spec }, forwardedRef) => {
   const { themeMode } = useThemeContext();

@@ -90,7 +90,7 @@ const DefaultComponent = () => {
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
-  const data = useMemo(() => (kanban ? { subject: kanban } : {}), [kanban]);
+  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : {}), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
@@ -188,9 +188,9 @@ export const Default: Story = {
 
     // Wait for the kanban columns to render by finding the status tags.
     // Organization.StatusOptions: prospect, qualified, active, commit, reject.
-    const activeTag = await canvas.findByText('Active', undefined, { timeout: 30_000 });
-    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 10_000 });
-    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 10_000 });
+    const activeTag = await canvas.findByText('Active', undefined, { timeout: 12_000 });
+    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 12_000 });
+    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 12_000 });
 
     // Verify all expected columns are rendered.
     await expect(activeTag).toBeTruthy();

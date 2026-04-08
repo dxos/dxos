@@ -6,6 +6,7 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
@@ -86,7 +87,7 @@ export const PlankComponent = memo(
       (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
     const sizeAttrs = useMainSize();
 
-    const data = useMemo(
+    const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
         node && {
           attendableId: id,

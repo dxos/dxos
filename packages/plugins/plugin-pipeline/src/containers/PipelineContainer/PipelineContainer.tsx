@@ -11,9 +11,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import {
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-  type ObjectSurfaceProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
@@ -26,7 +26,7 @@ import { usePipelineBoardModel } from '#hooks';
 
 const PIPELINE_ITEM = 'PipelineItem';
 
-export type PipelineContainerProps = ObjectSurfaceProps<Pipeline.Pipeline>;
+export type PipelineContainerProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
 
 export const PipelineContainer = ({ role, subject: pipeline, attendableId }: PipelineContainerProps) => {
   const registry = useCapability(Capabilities.AtomRegistry);

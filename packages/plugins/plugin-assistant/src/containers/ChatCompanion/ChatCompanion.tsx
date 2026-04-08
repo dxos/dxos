@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -24,7 +24,7 @@ import { AssistantOperation } from '#operations';
 
 import ChatContainer from '../ChatContainer';
 
-export type ChatCompanionProps = CompanionSurfaceProps<Chat.Chat>;
+export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role, subject: chat, companionTo, attendableId }, forwardedRef) => {
@@ -129,7 +129,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 
     return (
       <ChatContainer
-        role={role}
+        role={role ?? 'article'}
         space={space}
         subject={chat}
         attendableId={attendableId}

@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Project, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -24,7 +24,7 @@ import { FeedAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 
-export type ProjectSettingsProps = ObjectSurfaceProps<Project.Project>;
+export type ProjectSettingsProps = AppSurface.ObjectSettingsProps<Project.Project>;
 
 export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
