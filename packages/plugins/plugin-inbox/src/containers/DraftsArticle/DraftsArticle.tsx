@@ -6,8 +6,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type SpaceSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
@@ -21,7 +22,7 @@ import { DraftMessage, type Mailbox } from '#types';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
-export type DraftsArticleProps = SpaceSurfaceProps<{ mailbox: Mailbox.Mailbox }>;
+export type DraftsArticleProps = AppSurface.ArticleProps<unknown, { space?: Space; mailbox: Mailbox.Mailbox }>;
 
 /**
  * Drafts list for a mailbox. Query matches the same mailbox-scoped draft messages as the former per-draft nav nodes.

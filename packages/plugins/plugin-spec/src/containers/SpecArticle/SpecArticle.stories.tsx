@@ -30,7 +30,7 @@ const DefaultStory = ({ content }: { content?: string }) => {
     return <Loading />;
   }
 
-  return <SpecArticle role='article' subject={spec} />;
+  return <SpecArticle role='article' subject={spec} attendableId='story' />;
 };
 
 const meta = {

@@ -8,9 +8,11 @@ import { Plugin } from '@dxos/app-framework';
 import { Node } from '@dxos/app-graph';
 import { Obj, Type } from '@dxos/echo';
 
-import { AppCapabilities } from '../capabilities';
+import { AppCapabilities } from '../../capabilities';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//
+// Combinators
+//
 
 /** Combines two filters with intersection types. Both must match. */
 export const and = <Left extends Record<string, any>, Right extends Record<string, any>>(
@@ -20,7 +22,9 @@ export const and = <Left extends Record<string, any>, Right extends Record<strin
   return (data: Record<string, unknown>): data is Left & Right => left(data) && right(data);
 };
 
-// ─── Article ─────────────────────────────────────────────────────────────────
+//
+// Article
+//
 
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
@@ -116,7 +120,9 @@ export const settingsArticle = (
     AppCapabilities.isSettings(data.subject) && data.subject.prefix === prefix;
 };
 
-// ─── Section ─────────────────────────────────────────────────────────────────
+//
+// Section
+//
 
 /** Surface data for section role (from StackSection). */
 export type SectionData<Subject = unknown, Props extends {} = {}> = {
@@ -180,16 +186,10 @@ export const objectSettings: {
 };
 
 /** Surface data for section-role literal. */
-export type TSectionData<T extends string | null = string, Props extends {} = {}> = SectionData<
-  T,
-  Props
->;
+export type TSectionData<T extends string | null = string, Props extends {} = {}> = SectionData<T, Props>;
 
 /** Component props for section-role literal. */
-export type TSectionProps<T extends string | null = string, Props extends {} = {}> = SectionProps<
-  T,
-  Props
->;
+export type TSectionProps<T extends string | null = string, Props extends {} = {}> = SectionProps<T, Props>;
 
 /** Filter: section-role literal string/null subject. */
 export const literalSection = <T extends string | null>(
@@ -269,7 +269,9 @@ export const snapshotSection = <S extends Type.AnyEntity>(
     Obj.snapshotOf(schema, data.subject);
 };
 
-// ─── Card ────────────────────────────────────────────────────────────────────
+//
+// Card
+//
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
@@ -308,7 +310,9 @@ export const objectCard: {
   };
 };
 
-// ─── Dialog / Popover ────────────────────────────────────────────────────────
+//
+// Dialog / Popover
+//
 
 /** Surface data for dialog/popover role. */
 export type DialogData<Component extends string = string, ComponentProps extends {} = {}> = {
@@ -341,7 +345,9 @@ export const componentDialog = <Component extends string>(
   return (data: Record<string, unknown>): data is DialogData<Component> => data.component === id;
 };
 
-// ─── Chrome ──────────────────────────────────────────────────────────────────
+//
+// Chrome
+//
 
 /** Surface data for navigation role. */
 export type NavigationData<Props extends {} = {}> = {
