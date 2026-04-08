@@ -145,6 +145,11 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
 /**
  * @deprecated Use `FeedService` instead.
  */
+export type Service = FeedService;
+
+/**
+ * @deprecated Use `FeedService` instead.
+ */
 export const Service = FeedService;
 
 /**

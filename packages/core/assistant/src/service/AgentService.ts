@@ -4,21 +4,19 @@
 
 // @import-as-namespace
 
-import { Database, Feed, Obj } from '@dxos/echo';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { Blueprint } from '@dxos/blueprints';
-import { ProcessManager } from '@dxos/functions-runtime';
-import { AgentProcess } from './agent-process';
-
-import { Ref } from '@dxos/echo';
-import { type Trace } from '@dxos/functions';
-
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
+import { type Trace } from '@dxos/functions';
+import { ProcessManager } from '@dxos/functions-runtime';
+
 import { AiContextBinder } from '../conversation';
+import { AgentProcess } from './agent-process';
 
 export interface Service {
   /**

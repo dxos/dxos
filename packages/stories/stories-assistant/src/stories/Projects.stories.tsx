@@ -13,6 +13,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -65,7 +66,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
 
     const feedTarget = await chat.feed.load();
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await Effect.runPromise(
+    const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const binder = new AiContextBinder({ feed: feedTarget, runtime, registry: atomRegistry });
