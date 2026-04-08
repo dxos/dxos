@@ -60,7 +60,7 @@ Modules:
 
 ## File Structure
 
-```
+```text
 packages/plugins/plugin-deus/
   src/
     capabilities/

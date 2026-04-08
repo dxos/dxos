@@ -27,6 +27,7 @@ import { Spec } from '#types';
 
 export type DeusArticleProps = ObjectSurfaceProps<Spec.Spec>;
 
+/** Article surface that renders a Spec document in a collaborative MDL text editor. */
 export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role, subject: spec }, forwardedRef) => {
   const { themeMode } = useThemeContext();
   const identity = useIdentity();
