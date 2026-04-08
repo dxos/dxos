@@ -375,11 +375,11 @@ const PlankContainer = memo(
             order={order}
             {...(part === 'solo'
               ? {
-                part: 'solo-primary',
-              }
+                  part: 'solo-primary',
+                }
               : {
-                part,
-              })}
+                  part,
+                })}
           />
           {hasCompanion && (
             <Plank.Component
@@ -392,13 +392,13 @@ const PlankContainer = memo(
               primary={node}
               {...(part === 'solo'
                 ? {
-                  part: 'solo-companion',
-                  order,
-                }
+                    part: 'solo-companion',
+                    order,
+                  }
                 : {
-                  part,
-                  order: (order ?? 0) + 1,
-                })}
+                    part,
+                    order: (order ?? 0) + 1,
+                  })}
             />
           )}
         </Plank.Content>

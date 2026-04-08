@@ -271,39 +271,37 @@ type NavContainerProps = {
   current?: string;
 };
 
-const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>(
-  (_props, forwardedRef) => {
-    const { graph } = useAppGraph();
-    const layout = useLayout();
-    const { invokePromise } = useOperationInvoker();
+const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forwardedRef) => {
+  const { graph } = useAppGraph();
+  const layout = useLayout();
+  const { invokePromise } = useOperationInvoker();
 
-    const items = useConnections(graph, Node.RootId, 'child');
-    const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
+  const items = useConnections(graph, Node.RootId, 'child');
+  const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
-    return (
-      <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
-        <List>
-          {items.map((node) => (
-            <ListItem.Root
-              key={node.id}
-              classNames={activeSet.has(node.id) ? 'bg-active-surface' : undefined}
-              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-            >
-              {node.properties.icon && (
-                <ListItem.Endcap>
-                  <Icon icon={node.properties.icon} />
-                </ListItem.Endcap>
-              )}
-              <ListItem.Heading classNames='cursor-pointer'>
-                {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-              </ListItem.Heading>
-            </ListItem.Root>
-          ))}
-        </List>
-      </div>
-    );
-  },
-);
+  return (
+    <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
+      <List>
+        {items.map((node) => (
+          <ListItem.Root
+            key={node.id}
+            classNames={activeSet.has(node.id) ? 'bg-active-surface' : undefined}
+            onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+          >
+            {node.properties.icon && (
+              <ListItem.Endcap>
+                <Icon icon={node.properties.icon} />
+              </ListItem.Endcap>
+            )}
+            <ListItem.Heading classNames='cursor-pointer'>
+              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
+            </ListItem.Heading>
+          </ListItem.Root>
+        ))}
+      </List>
+    </div>
+  );
+});
 
 type ItemComponentProps = {
   id: string;
@@ -315,10 +313,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
 
   const plankConnections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () =>
-      plankConnections.filter(
-        (node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE,
-      ),
+    () => plankConnections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
     [plankConnections],
   );
 
@@ -388,10 +383,11 @@ const MultiStory = () => {
   const { invokePromise } = useOperationInvoker();
   useAsyncEffect(async () => {
     await invokePromise(LayoutOperation.Open, {
-      subject: [STORY_ITEMS[0].id], navigation: 'immediate'
+      subject: [STORY_ITEMS[0].id],
+      navigation: 'immediate',
     });
     await invokePromise(LayoutOperation.SetLayoutMode, {
-      mode: 'multi'
+      mode: 'multi',
     });
   });
 
