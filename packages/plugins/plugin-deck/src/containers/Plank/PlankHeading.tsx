@@ -5,7 +5,7 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { getCompanionVariant } from '@dxos/app-toolkit';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -89,7 +89,7 @@ export const PlankHeading = memo(
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
 
-    const variant = isCompanionNode ? getCompanionVariant(id) : undefined;
+    const variant = isCompanionNode ? getLinkedVariant(id) : undefined;
     const sigilActions = useMemo(() => {
       if (!node) {
         return undefined;

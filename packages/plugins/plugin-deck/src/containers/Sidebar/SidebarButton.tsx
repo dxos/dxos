@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
@@ -73,7 +74,7 @@ export const ToggleComplementarySidebarButton = ({
     const nextState = state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
     updateState((state) => ({ ...state, complementarySidebarState: nextState }));
 
-    const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionVariant(companions[0].id));
+    const subject = state.complementarySidebarPanel ?? (companions[0] && getLinkedVariant(companions[0].id));
     if (nextState === 'expanded' && !current && subject) {
       void invokePromise(LayoutOperation.UpdateComplementary, { subject });
     }

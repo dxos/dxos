@@ -13,6 +13,9 @@ tasks:
         optional: true
       - target: bundle
         optional: true
+        env:
+          DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+          DX_EDGE_CLIENT_TAG: e2e
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'

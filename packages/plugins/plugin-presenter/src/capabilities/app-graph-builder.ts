@@ -6,19 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  companionId,
-  companionSegment,
-  getObjectPathFromObject,
-  getSpacePath,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -52,16 +45,12 @@ export default Capability.makeModule(
         }
 
         return Effect.succeed([
-          {
-            id: companionSegment('presenter'),
+          AppNode.makeCompanion({
+            id: linkedSegment('presenter'),
+            label: 'Presenter',
+            icon: 'ph--presentation--regular',
             data: { type: meta.id, object },
-            type: PLANK_COMPANION_TYPE,
-            properties: {
-              label: 'Presenter',
-              icon: 'ph--presentation--regular',
-              disposition: 'hidden',
-            },
-          },
+          }),
         ]);
       },
       actions: (object, get) => {
@@ -84,7 +73,7 @@ export default Capability.makeModule(
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const presenterId = companionId(objectPath, 'presenter');
+              const presenterId = `${objectPath}/${linkedSegment('presenter')}`;
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,

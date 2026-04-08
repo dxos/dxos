@@ -7,14 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
@@ -54,11 +53,12 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            {
+            // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
+            Node.make({
               id: 'feeds',
               type: 'feeds', // TODO(burdon): Const.
               data: 'feeds-root', // TODO(burdon): Const.
-              properties: { label: 'Feeds', icon: 'ph--rss--regular', disposition: 'branch', position: 'hoist' },
+              properties: { label: 'Feeds', icon: 'ph--rss--regular', role: 'branch', position: 'hoist' },
               nodes: feeds
                 .map((feed: Subscription.Feed) =>
                   createObjectNode({
@@ -68,7 +68,7 @@ export default Capability.makeModule(
                   }),
                 )
                 .filter((node): node is NonNullable<typeof node> => node !== null),
-            },
+            }),
           ]);
         },
       }),
@@ -91,16 +91,12 @@ export default Capability.makeModule(
             : undefined;
 
           return Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: 'feed',
-              type: PLANK_COMPANION_TYPE,
+              label: ['feed-companion.label', { ns: meta.id }],
+              icon: 'ph--article--regular',
               data: selectedFeed,
-              properties: {
-                label: ['feed-companion.label', { ns: meta.id }],
-                icon: 'ph--article--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]);
         },
       }),

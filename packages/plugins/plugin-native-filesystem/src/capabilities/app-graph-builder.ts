@@ -189,7 +189,7 @@ export default Capability.makeModule(
                 workspaceRearrangeCache.set(workspace.id, onRearrange);
               }
 
-              return {
+              return Node.make({
                 id: workspace.id,
                 type: FILESYSTEM_TYPE,
                 data: workspace,
@@ -203,7 +203,7 @@ export default Capability.makeModule(
                   onRearrange,
                 },
                 nodes: [
-                  {
+                  Node.make({
                     id: 'settings',
                     type: SETTINGS_TYPE,
                     data: null,
@@ -212,9 +212,9 @@ export default Capability.makeModule(
                       icon: 'ph--faders--regular',
                       disposition: 'alternate-tree',
                     },
-                  },
+                  }),
                 ],
-              };
+              });
             }),
           );
         },
@@ -225,7 +225,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenNodeType(SETTINGS_TYPE),
         connector: () =>
           Effect.succeed([
-            {
+            Node.make({
               id: GENERAL_TYPE,
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
@@ -234,7 +234,7 @@ export default Capability.makeModule(
                 icon: 'ph--sliders--regular',
                 position: 'hoist',
               },
-            },
+            }),
           ]),
       }),
     ]);
@@ -256,7 +256,7 @@ const constructEntryNode = (
   get: Atom.Context,
 ): Node.NodeArg<any> | null => {
   if (isFilesystemDirectory(entry)) {
-    return {
+    return Node.make({
       id: entry.id,
       type: DIRECTORY_TYPE,
       data: entry,
@@ -265,7 +265,7 @@ const constructEntryNode = (
         icon: 'ph--folder--regular',
         role: 'branch',
       },
-    };
+    });
   }
 
   const file = entry as FilesystemFile;
@@ -273,7 +273,7 @@ const constructEntryNode = (
     void get(filesystemManager.markdownBindingAtom(file.id));
     const text = filesystemManager.getByFileId(file.id);
     if (text) {
-      return {
+      return Node.make({
         id: file.id,
         type: Text.Text.typename,
         data: text,
@@ -284,10 +284,10 @@ const constructEntryNode = (
           nativeFilesystemFileId: file.id,
           nativeFilesystemPath: file.path,
         },
-      };
+      });
     }
 
-    return {
+    return Node.make({
       id: file.id,
       type: MARKDOWN_PENDING_TYPE,
       data: null,
@@ -298,7 +298,7 @@ const constructEntryNode = (
         nativeFilesystemFileId: file.id,
         nativeFilesystemPath: file.path,
       },
-    };
+    });
   }
 
   // Unsupported file type — skip.

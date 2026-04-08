@@ -259,8 +259,9 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
+      const clientTag = config?.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
       this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint);
+      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
     const {

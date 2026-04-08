@@ -20,6 +20,7 @@ import {
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
+  EDGE_CLIENT_TAG_HEADER,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeFailure,
@@ -96,8 +97,17 @@ export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
+export type EdgeHttpClientOptions = {
+  /**
+   * Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header on every request.
+   * Used on Edge to classify traffic for metering (e.g. `ci-e2e`).
+   */
+  clientTag?: string;
+};
+
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
+  private readonly _clientTag: string | undefined;
 
   private _edgeIdentity: EdgeIdentity | undefined;
 
@@ -106,8 +116,9 @@ export class EdgeHttpClient {
    */
   private _authHeader: string | undefined;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
+    this._clientTag = options?.clientTag;
     log('created', { url: this._baseUrl });
   }
 
@@ -464,7 +475,7 @@ export class EdgeHttpClient {
           }
         }
 
-        const request = createRequest(args, this._authHeader, traceHeaders);
+        const request = createRequest(args, this._authHeader, traceHeaders, this._clientTag);
         log('call edge', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
@@ -523,6 +534,7 @@ const createRequest = (
   { method, body, json = true }: EdgeHttpRequestArgs,
   authHeader: string | undefined,
   traceHeaders?: Record<string, string>,
+  clientTag?: string,
 ): RequestInit => {
   let requestBody: BodyInit | undefined;
   const headers: HeadersInit = {};
@@ -544,6 +556,10 @@ const createRequest = (
 
   if (traceHeaders) {
     Object.assign(headers, traceHeaders);
+  }
+
+  if (clientTag) {
+    headers[EDGE_CLIENT_TAG_HEADER] = clientTag;
   }
 
   return {

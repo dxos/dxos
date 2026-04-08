@@ -7,15 +7,15 @@ import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { DXN, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ComplexSet, isTruthy } from '@dxos/util';
+import { ComplexSet, isNonNullable } from '@dxos/util';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
@@ -60,7 +60,8 @@ export class Bindings {
 }
 
 export type AiContextBinderOptions = {
-  queue: Queue;
+  feed: Feed.Feed;
+  runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 
@@ -72,12 +73,15 @@ export class AiContextBinder extends Resource {
   private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: Registry.Registry;
-  private readonly _queue: Queue;
+  private readonly _feed: Feed.Feed;
+  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
 
   constructor(options: AiContextBinderOptions) {
     super();
-    assertArgument(options.queue, 'options.queue', 'Queue is required');
-    this._queue = options.queue;
+    assertArgument(options.feed, 'options.feed', 'Feed is required');
+    assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
+    this._feed = options.feed;
+    this._runtime = options.runtime;
     this._registry = options.registry ?? Registry.make();
   }
 
@@ -124,7 +128,7 @@ export class AiContextBinder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    const query = this._queue.query(Query.type(ContextBinding));
+    const query = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(ContextBinding)));
 
     // Process initial state before returning.
     const initialResults = await query.run();
@@ -149,16 +153,30 @@ export class AiContextBinder extends Resource {
     // Resolve references (loading them first if needed).
     const currentBlueprints = this._registry.get(this._blueprints);
     const currentObjects = this._registry.get(this._objects);
-    const newBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
-    const newObjects = await this._resolve(bindings.objects, currentObjects);
+    const resolvedBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
+    const resolvedObjects = await this._resolve(bindings.objects, currentObjects);
 
-    // Atomic updates - subscribers notified automatically.
-    this._registry.set(this._blueprints, newBlueprints);
-    this._registry.set(this._objects, newObjects);
+    // Filter current state to only items still in the reduced binding set,
+    // then merge in newly resolved items. This ensures unbind events are respected.
+    const reducedBlueprintDxns = new ComplexSet<DXN>(
+      DXN.hash,
+      [...bindings.blueprints].map((ref) => ref.dxn),
+    );
+    const reducedObjectDxns = new ComplexSet<DXN>(
+      DXN.hash,
+      [...bindings.objects].map((ref) => ref.dxn),
+    );
+    const filteredBlueprints = currentBlueprints.filter((obj) => reducedBlueprintDxns.has(Obj.getDXN(obj)));
+    const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
+    const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
+    const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
+
+    this._registry.set(this._blueprints, mergedBlueprints);
+    this._registry.set(this._objects, mergedObjects);
 
     log('updated bindings', {
-      blueprints: newBlueprints.length,
-      objects: newObjects.length,
+      blueprints: mergedBlueprints.length,
+      objects: mergedObjects.length,
     });
   }
 
@@ -183,18 +201,20 @@ export class AiContextBinder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
-    await this._queue.append([
-      Obj.make(ContextBinding, {
-        blueprints: {
-          added: addedBlueprints,
-          removed: [],
-        },
-        objects: {
-          added: addedObjects,
-          removed: [],
-        },
-      }),
-    ]);
+    await Runtime.runPromise(this._runtime)(
+      Feed.append(this._feed, [
+        Obj.make(ContextBinding, {
+          blueprints: {
+            added: addedBlueprints,
+            removed: [],
+          },
+          objects: {
+            added: addedObjects,
+            removed: [],
+          },
+        }),
+      ]),
+    );
   }
 
   async unbind({ blueprints, objects }: BindingProps): Promise<void> {
@@ -202,19 +222,39 @@ export class AiContextBinder extends Resource {
       return;
     }
 
+    // Immediately update atom state so removals are reflected before the queue round-trips.
+    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.dxn);
+    const removedObjectDxns = (objects ?? []).map((ref) => ref.dxn);
+    if (removedBlueprintDxns.length > 0) {
+      const current = this._registry.get(this._blueprints);
+      this._registry.set(
+        this._blueprints,
+        current.filter((obj) => !removedBlueprintDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
+      );
+    }
+    if (removedObjectDxns.length > 0) {
+      const current = this._registry.get(this._objects);
+      this._registry.set(
+        this._objects,
+        current.filter((obj) => !removedObjectDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
+      );
+    }
+
     log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
-    await this._queue.append([
-      Obj.make(ContextBinding, {
-        blueprints: {
-          added: [],
-          removed: blueprints ?? [],
-        },
-        objects: {
-          added: [],
-          removed: objects ?? [],
-        },
-      }),
-    ]);
+    await Runtime.runPromise(this._runtime)(
+      Feed.append(this._feed, [
+        Obj.make(ContextBinding, {
+          blueprints: {
+            added: [],
+            removed: blueprints ?? [],
+          },
+          objects: {
+            added: [],
+            removed: objects ?? [],
+          },
+        }),
+      ]),
+    );
   }
 
   /**
@@ -275,9 +315,25 @@ export class AiContextBinder extends Resource {
   }
 
   /**
+   * Merge resolved items into the current set, adding only items not already present (by DXN).
+   */
+  private _mergeInto<T extends Obj.Unknown>(current: T[], resolved: T[]): T[] {
+    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    const merged = [...current];
+    for (const obj of resolved) {
+      const dxn = Obj.getDXN(obj).toString();
+      if (!seen.has(dxn)) {
+        seen.add(dxn);
+        merged.push(obj);
+      }
+    }
+    return merged;
+  }
+
+  /**
    * Resolve references to objects, loading them first if needed and falling back to existing objects.
    */
-  private async _resolve<T>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
+  private async _resolve<T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
     const refArray = [...refs];
 
     // Load all refs that need loading.
@@ -294,7 +350,7 @@ export class AiContextBinder extends Resource {
         // Fallback to existing object.
         return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
       })
-      .filter(isTruthy);
+      .filter(isNonNullable);
   }
 }
 

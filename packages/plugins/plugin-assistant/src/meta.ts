@@ -19,3 +19,6 @@ export const meta: Plugin.Meta = {
 };
 
 export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;
+
+/** Companion variant identifier for the assistant chat panel. */
+export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';

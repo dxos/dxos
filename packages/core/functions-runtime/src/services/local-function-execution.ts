@@ -42,25 +42,28 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const credentials = yield* CredentialsService;
       const database = yield* Database.Service;
       const queues = yield* QueueService;
-      const feedService = yield* Feed.Service;
+      const feedService = yield* Feed.FeedService;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
         invokeFunction: <I, O>(
           functionDef: Operation.Definition<I, O>,
           input: I,
         ): Effect.Effect<O, never, InvocationServices> =>
-          Effect.gen(function* () {
-            const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
-            const output = yield* invokeOperation(resolved, input);
-            return output as O;
-          }).pipe(
-            Effect.provideService(AiService.AiService, ai),
-            Effect.provideService(CredentialsService, credentials),
-            Effect.provideService(Database.Service, database),
-            Effect.provideService(QueueService, queues),
-            Effect.provideService(Feed.Service, feedService),
-            Effect.provideService(FunctionInvocationService, functionInvocationService),
-            Effect.provide(Trace.writerLayerNoop),
+          Effect.flatMap(Effect.context<never>(), (callerContext) =>
+            Effect.gen(function* () {
+              const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
+              const output = yield* invokeOperation(resolved, input);
+              return output as O;
+            }).pipe(
+              Effect.provideService(AiService.AiService, ai),
+              Effect.provideService(CredentialsService, credentials),
+              Effect.provideService(Database.Service, database),
+              Effect.provideService(QueueService, queues),
+              Effect.provideService(Feed.FeedService, feedService),
+              Effect.provideService(FunctionInvocationService, functionInvocationService),
+              Effect.provide(Trace.writerLayerNoop),
+              Effect.provide(Layer.succeedContext(callerContext)),
+            ),
           ),
         resolveFunction: (key: string) =>
           Effect.gen(function* () {

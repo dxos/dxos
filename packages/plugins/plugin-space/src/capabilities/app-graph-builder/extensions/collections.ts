@@ -69,7 +69,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           : undefined;
 
         return Effect.succeed([
-          {
+          Node.make({
             id: Segments.collections,
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
@@ -85,7 +85,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               space,
               ...collectionPartials,
             },
-          },
+          }),
         ]);
       },
     }),
@@ -243,9 +243,8 @@ const constructObjectActions = ({
   const actions: Node.NodeArg<Node.ActionData<Operation.Service | Capability.Service>>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
-          {
+          Node.makeAction({
             id: SpaceOperation.OpenCreateObject.meta.key,
-            type: Node.ActionType,
             data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: object, targetNodeId: nodeId }),
             properties: {
               label: CREATE_OBJECT_IN_COLLECTION_LABEL,
@@ -253,12 +252,11 @@ const constructObjectActions = ({
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
             },
-          },
+          }),
         ]
       : []),
-    {
+    Node.makeAction({
       id: SpaceOperation.RenameObject.meta.key,
-      type: Node.ActionType,
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
@@ -267,12 +265,11 @@ const constructObjectActions = ({
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
       },
-    },
+    }),
     ...(parentCollection && !Obj.instanceOf(Collection.Collection, object)
       ? [
-          {
+          Node.makeAction({
             id: 'remove-from-collection',
-            type: Node.ActionType,
             data: () =>
               Effect.gen(function* () {
                 const index = parentCollection.objects.findIndex((ref: any) => ref.target === object);
@@ -297,12 +294,11 @@ const constructObjectActions = ({
               disposition: 'list-item',
               testId: 'spacePlugin.removeFromCollection',
             },
-          },
+          }),
         ]
       : []),
-    {
+    Node.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
-      type: Node.ActionType,
       data: () =>
         Operation.invoke(SpaceOperation.RemoveObjects, {
           objects: [object],
@@ -315,12 +311,11 @@ const constructObjectActions = ({
         disabled: !deletable,
         testId: 'spacePlugin.deleteObject',
       },
-    },
+    }),
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
-          {
+          Node.makeAction({
             id: 'copy-link',
-            type: Node.ActionType,
             data: () =>
               Effect.promise(async () => {
                 const url = new URL(toUrlPath(nodeId), shareableLinkOrigin);
@@ -332,12 +327,11 @@ const constructObjectActions = ({
               disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
             },
-          },
+          }),
         ]
       : []),
-    {
+    Node.makeAction({
       id: LayoutOperation.Expose.meta.key,
-      type: Node.ActionType,
       data: () => Operation.invoke(LayoutOperation.Expose, { subject: getObjectPathFromObject(object) }),
       properties: {
         label: EXPOSE_OBJECT_LABEL,
@@ -345,7 +339,7 @@ const constructObjectActions = ({
         disposition: 'heading-list-item',
         testId: 'spacePlugin.exposeObject',
       },
-    },
+    }),
   ];
 
   return actions;
