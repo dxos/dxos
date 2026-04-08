@@ -310,9 +310,6 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-deus/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {
@@ -407,6 +404,9 @@
     },
     {
       "path": "packages/plugins/plugin-spacetime/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spec/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
