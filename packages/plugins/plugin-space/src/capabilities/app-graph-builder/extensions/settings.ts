@@ -16,13 +16,13 @@ import { meta } from '#meta';
 /** Creates the settings-sections extension for space settings panel. */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const extension = yield* GraphBuilder.createExtension({
-    id: `${meta.id}.settings-sections`,
+    id: 'settings-sections',
     match: NodeMatcher.whenNodeType(`${meta.id}.settings`),
     connector: (node) => {
       const personal = node.properties.space && isPersonalSpace(node.properties.space);
       return Effect.succeed([
         Node.make({
-          id: `${meta.id}.general`,
+          id: 'general',
           type: `${meta.id}.general`,
           data: `${meta.id}.general`,
           properties: {
@@ -35,7 +35,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
         ...(!personal
           ? [
               Node.make({
-                id: `${meta.id}.members`,
+                id: 'members',
                 type: `${meta.id}.members`,
                 data: `${meta.id}.members`,
                 properties: {
@@ -48,7 +48,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
             ]
           : []),
         Node.make({
-          id: `${meta.id}.schema`,
+          id: 'schema',
           type: `${meta.id}.schema`,
           data: `${meta.id}.schema`,
           properties: {

@@ -15,7 +15,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.execute`,
+        id: 'execute',
         type: Script.Script,
         connector: () =>
           Effect.succeed([
@@ -28,7 +28,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.logs`,
+        id: 'logs',
         type: Script.Script,
         connector: () =>
           Effect.succeed([

@@ -45,7 +45,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.share-call-link`,
+        id: 'share-call-link',
         type: Channel.Channel,
         actions: (channel, get) => {
           const space = getSpace(channel);
@@ -74,7 +74,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.call-thread`,
+        id: 'call-thread',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
@@ -104,7 +104,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.call-companion`,
+        id: 'call-companion',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
@@ -131,7 +131,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.call-transcript`,
+        id: 'call-transcript',
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
@@ -203,7 +203,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.meeting-transcript-companion`,
+        id: 'meeting-transcript-companion',
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.succeed([

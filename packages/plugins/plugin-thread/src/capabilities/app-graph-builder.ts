@@ -65,7 +65,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.active-call`,
+        id: 'active-call',
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
@@ -91,7 +91,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.channel-chat-companion`,
+        id: 'channel-chat-companion',
         type: Channel.Channel,
         connector: (channel, get) => {
           const callManager = capabilities.get(ThreadCapabilities.CallManager);
@@ -115,7 +115,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.comments-companion`,
+        id: 'comments-companion',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
@@ -135,7 +135,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.comment-toolbar`,
+        id: 'comment-toolbar',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();

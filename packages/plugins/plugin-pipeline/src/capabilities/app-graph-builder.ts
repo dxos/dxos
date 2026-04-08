@@ -15,7 +15,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.triggers`,
+        id: 'triggers',
         type: Pipeline.Pipeline,
         connector: () =>
           Effect.succeed([

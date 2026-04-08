@@ -14,7 +14,7 @@ import { COMMANDS_DIALOG, meta } from '#meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: meta.id,
+      id: 'root',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([

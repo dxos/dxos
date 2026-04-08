@@ -17,7 +17,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const extensionsAtom = yield* Capability.atom(AppCapabilities.AppGraphBuilder);
+    const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
     // const interval = setInterval(() => {
@@ -25,9 +25,14 @@ export default Capability.makeModule(
     // }, 5_000);
 
     const unsubscribe = registry.subscribe(
-      extensionsAtom,
-      (extensions) => {
-        const next = GraphBuilder.flattenExtensions(extensions);
+      extensionsByModuleAtom,
+      (extensionsByModule) => {
+        const next: GraphBuilder.BuilderExtension[] = [];
+        for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
+          for (const ext of GraphBuilder.flattenExtensions(extensions)) {
+            next.push({ ...ext, id: `${moduleId}.${ext.id}` });
+          }
+        }
         const current = Record.values(registry.get(builder.extensions));
         const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
         removed.forEach((extension) => GraphBuilder.removeExtension(builder, extension.id));

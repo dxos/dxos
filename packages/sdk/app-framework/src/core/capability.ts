@@ -62,6 +62,16 @@ export const waitFor = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Erro
 export const atom = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Atom.Atom<T[]>, never, Service> =>
   Effect.map(Service, (manager) => manager.atom(interfaceDef));
 
+/**
+ * Get capabilities grouped by the module that contributed them.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns An Atom containing a record from module ID to capability implementations.
+ */
+export const atomByModule = <T>(
+  interfaceDef: InterfaceDef<T>,
+): Effect.Effect<Atom.Atom<Record<string, T[]>>, never, Service> =>
+  Effect.map(Service, (manager) => manager.atomByModule(interfaceDef));
+
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
 /**

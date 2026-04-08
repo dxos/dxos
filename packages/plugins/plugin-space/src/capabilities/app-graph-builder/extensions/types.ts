@@ -52,7 +52,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Types section virtual node under each space.
     GraphBuilder.createExtension({
-      id: `${meta.id}.types-section`,
+      id: 'types-section',
       match: whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -75,7 +75,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: `${meta.id}.types`,
+      id: 'types',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -120,7 +120,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
-      id: `${meta.id}.schema-children`,
+      id: 'schema-children',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return space && (Obj.instanceOf(Type.PersistentType, node.data) || Schema.isSchema(node.data))
@@ -174,7 +174,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Objects of the schema type under the {All} node.
     GraphBuilder.createExtension({
-      id: `${meta.id}.type-collection-objects`,
+      id: 'type-collection-objects',
       match: (node) => {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typename) {
           return Option.none();
@@ -207,7 +207,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Actions for schema nodes.
     GraphBuilder.createExtension({
-      id: `${meta.id}.schema-actions`,
+      id: 'schema-actions',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();

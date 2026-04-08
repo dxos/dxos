@@ -38,7 +38,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.channel-video`,
+        id: 'channel-video',
         match: (node) =>
           Channel.instanceOf(node.data) ? Option.some({ channel: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -68,7 +68,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.sync-channel`,
+        id: 'sync-channel',
         match: whenYouTubeChannel,
         actions: (channel) =>
           Effect.succeed([
@@ -89,7 +89,7 @@ export default Capability.makeModule(
                   Effect.catchAll((error) => {
                     log.catch(error);
                     return Operation.invoke(LayoutOperation.AddToast, {
-                      id: `${meta.id}.sync-channel-error`,
+                      id: 'sync-channel-error',
                       icon: 'ph--warning--regular',
                       duration: 5_000,
                       title: ['sync-channel-error.title', { ns: meta.id }],
@@ -121,7 +121,7 @@ export default Capability.makeModule(
                   Effect.catchAll((error) => {
                     log.catch(error);
                     return Operation.invoke(LayoutOperation.AddToast, {
-                      id: `${meta.id}.clear-synced-videos-error`,
+                      id: 'clear-synced-videos-error',
                       icon: 'ph--warning--regular',
                       duration: 5_000,
                       title: ['clear-synced-videos-error.title', { ns: meta.id }],
