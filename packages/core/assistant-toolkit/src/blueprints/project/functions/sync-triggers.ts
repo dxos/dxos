@@ -10,8 +10,17 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
-import { Agent, Qualifier } from './functions/definitions';
-import { Project } from '../../types';
+import { Agent, Qualifier, SyncTriggers } from './definitions';
+import { Project } from '../../../types';
+
+export default SyncTriggers.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ project: projectRef }) {
+      const project = yield* Database.load(projectRef);
+      yield* syncProjectTriggers(project);
+    }),
+  ),
+);
 
 /**
  * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <project id : ObjectId>.
@@ -35,11 +44,8 @@ const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
 
 /**
  * Syncs triggers in the database with the project subscriptions.
- *
- * @param project - The project whose triggers should be synced.
- * @returns An Effect that syncs triggers.
  */
-export const syncProjectTriggers = (project: Project.Project): Effect.Effect<void, never, Database.Service> =>
+const syncProjectTriggers = (project: Project.Project): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
     const triggers = yield* Database.runQuery(
       Filter.foreignKeys(Trigger.Trigger, [{ source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id }]),

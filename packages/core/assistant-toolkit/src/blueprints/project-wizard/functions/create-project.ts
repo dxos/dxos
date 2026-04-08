@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { CreateProject } from './definitions';
 import { Project } from '../../../types';
-import { ProjectBlueprint, syncProjectTriggers } from '../../project';
+import { ProjectBlueprint, SyncTriggers } from '../../project';
 
 export default CreateProject.pipe(
   Operation.withHandler(
@@ -26,7 +26,7 @@ export default CreateProject.pipe(
         },
         Obj.clone(ProjectBlueprint.make()),
       );
-      yield* syncProjectTriggers(project);
+      yield* Operation.invoke(SyncTriggers, { project: Ref.make(project) });
       return project;
     }),
   ),
