@@ -39,7 +39,7 @@ export type TestDatabaseOptions = {
 };
 
 export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}): Layer.Layer<
-  Database.Service | QueueService | Feed.Service,
+  Database.Service | QueueService | Feed.FeedService,
   never,
   never
 > =>

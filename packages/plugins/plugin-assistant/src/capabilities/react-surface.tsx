@@ -30,7 +30,7 @@ import {
   TracePanel,
   TriggerStatus,
 } from '#containers';
-import { ASSISTANT_DIALOG, meta } from '#meta';
+import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant } from '#types';
 
 export default Capability.makeModule(() =>
@@ -51,10 +51,10 @@ export default Capability.makeModule(() =>
         filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Chat.Chat, data.subject) &&
-          data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => (
-          <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
-        ),
+          data.variant !== ASSISTANT_COMPANION_VARIANT,
+        component: ({ data, role, ref }) => {
+          return <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
+        },
       }),
       Surface.create({
         id: `${meta.id}.project`,
@@ -70,24 +70,19 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(Project.Project),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
-      // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({
         id: `${meta.id}.companion-chat`,
         role: 'article',
-        filter: (
-          data,
-        ): data is { subject: Chat.Chat | 'assistant-chat'; attendableId: string; companionTo: Obj.Unknown } =>
+        filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
-          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
-        component: ({ data, role, ref }) => (
+          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+        component: ({ data: { subject, attendableId, companionTo }, role, ref }) => (
           <ChatCompanion
             role={role}
-            data={data}
-            // TODO(burdon): See comment in ChatCompanion.tsx
-            // data={data.subject}
-            // companionTo={data.companionTo}
-            // attendableId={data.attendableId}
+            subject={subject}
+            attendableId={attendableId}
+            companionTo={companionTo}
             ref={ref}
           />
         ),

@@ -6,6 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { type Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -26,4 +27,9 @@ export namespace AssistantCapabilities {
   export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
   export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.id}.capability.state`);
+
+  /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
+  export const CompanionChatCache = Capability.make<Atom.Writable<Record<string, Obj.Unknown | undefined>>>(
+    `${meta.id}.capability.companion-chat-cache`,
+  );
 }

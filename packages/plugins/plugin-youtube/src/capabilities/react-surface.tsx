@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: AppSurface.and(AppSurface.object(Video.YouTubeVideo, { attendable: true }), AppSurface.companion(Channel.YouTubeChannel)),
         component: ({ data: { attendableId, companionTo, subject }, role }) => {
-          return <VideoArticle role={role} subject={subject} channel={companionTo} attendableId={attendableId} />;
+          return <VideoArticle role={role} subject={subject} companionTo={companionTo} attendableId={attendableId} />;
         },
       }),
       Surface.create({

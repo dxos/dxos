@@ -88,7 +88,7 @@ type ComputeOutputEvent = {
 export type ComputeServices =
   | AiService.AiService
   | Database.Service
-  | Feed.Service
+  | Feed.FeedService
   | QueueService
   | CredentialsService
   | FunctionInvocationService;

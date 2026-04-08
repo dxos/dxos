@@ -40,7 +40,7 @@ export const Sync = Operation.make({
     channelTitle: Schema.String.pipe(Schema.optional),
   }),
   types: [Channel.YouTubeChannel, Video.YouTubeVideo],
-  services: [Database.Service, Feed.Service, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService],
 });
 
 export const ClearSyncedVideos = Operation.make({
@@ -58,5 +58,5 @@ export const ClearSyncedVideos = Operation.make({
     removedVideos: Schema.Number,
   }),
   types: [Channel.YouTubeChannel, Video.YouTubeVideo],
-  services: [Database.Service, Feed.Service],
+  services: [Database.Service, Feed.FeedService],
 });

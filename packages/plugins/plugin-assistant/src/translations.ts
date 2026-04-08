@@ -150,6 +150,11 @@ export const translations = [
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
+
+        // ProjectSettings
+        'instructions.label': 'Instructions',
+        'reset-history.button': 'Reset',
+        'subscriptions.label': 'Subscriptions',
       },
     },
   },

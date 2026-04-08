@@ -7,10 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
-import { QueueService, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
-import { Message } from '@dxos/types';
 
 import { trim } from '@dxos/util';
 import * as Tool from '@effect/ai/Tool';
@@ -19,7 +18,7 @@ import * as Duration from 'effect/Duration';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import { AiConversation, type ContextBinding } from '../conversation';
+import { AiConversation } from '../conversation';
 import {
   functionInvocationServiceFromOperations,
   getOperationFromTool,
@@ -54,7 +53,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Operation.Service,
         OperationRegistry.Service,
         StorageService.StorageService,
-        QueueService,
+        Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
         // @deprecated Required by AiSessionRunRequirements for backward compat with tool handlers.
@@ -68,8 +67,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(Feed.getQueueDxn(feed)!);
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);

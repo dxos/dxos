@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
-import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
@@ -46,7 +46,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            {
+            Node.make({
               id: SETTINGS_ID,
               type: meta.id,
               properties: {
@@ -56,7 +56,7 @@ export default Capability.makeModule(
                 position: 'hoist',
                 testId: 'treeView.appSettings',
               },
-            },
+            }),
           ]),
       }),
       GraphBuilder.createExtension({
@@ -77,15 +77,17 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
-              .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) => ({
-                id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
-                type: 'category',
-                data: settings,
-                properties: {
-                  label: meta.name ?? meta.id,
-                  icon: meta.icon ?? 'ph--circle--regular',
-                },
-              })),
+              .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
+                Node.make({
+                  id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+                  type: 'category',
+                  data: settings,
+                  properties: {
+                    label: meta.name ?? meta.id,
+                    icon: meta.icon ?? 'ph--circle--regular',
+                  },
+                }),
+              ),
           );
         },
       }),

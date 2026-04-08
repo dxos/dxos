@@ -8,8 +8,9 @@ import { type AppSurface } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Panel as DxPanel, Flex } from '@dxos/react-ui';
+import { Panel, Flex } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isTauri } from '@dxos/util';
 
 import { SketchComponent } from '#components';
@@ -37,29 +38,33 @@ export const SketchContainer = ({ role, attendableId, subject: sketch, settings 
   const actions = useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
-  const sketchElement = (
-    <SketchComponent
-      // Force instance per sketch object. Otherwise, sketch shares the same instance.
-      key={id}
-      classNames='dx-attention-surface'
-      sketch={sketch}
-      // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
-      hideUi={!hasAttention && !isTauri()}
-      settings={settings}
-      onThreadCreate={handleThreadCreate}
-      {...props}
-    />
-  );
-
-  if (role === 'section') {
-    return <Container>{sketchElement}</Container>;
-  }
+  const Comp = role === 'section' ? Container : Article;
 
   return (
-    <DxPanel.Root>
-      <DxPanel.Content asChild>{sketchElement}</DxPanel.Content>
-    </DxPanel.Root>
+    <Comp>
+      <SketchComponent
+        // Force instance per sketch object. Otherwise, sketch shares the same instance.
+        key={id}
+        classNames='dx-attention-surface'
+        sketch={sketch}
+        settings={settings}
+        // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
+        hideUi={!hasAttention && !isTauri()}
+        onThreadCreate={handleThreadCreate}
+        {...props}
+      />
+    </Comp>
   );
 };
 
-const Container = (props: PropsWithChildren) => <Flex {...props} classNames='aspect-square' />;
+const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
+  <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+    <Panel.Content>{props.children}</Panel.Content>
+  </Panel.Root>
+));
+
+const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
+  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+    {props.children}
+  </Flex>
+));

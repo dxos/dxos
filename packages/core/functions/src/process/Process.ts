@@ -4,11 +4,6 @@
 
 // @import-as-namespace
 
-/*
- - Termination notification.
- - Backpressure.
-*/
-
 import * as Scope from 'effect/Scope';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';

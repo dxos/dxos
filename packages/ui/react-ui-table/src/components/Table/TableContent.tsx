@@ -384,7 +384,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
     }
 
     return (
-      <div {...composableProps(props, { role: 'none', classNames: 'dx-container relative' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-container relative' })} ref={forwardedRef}>
         <Grid.Root id={model.id ?? 'table-grid'}>
           <TableValueEditor
             model={model}

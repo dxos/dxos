@@ -8,7 +8,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
 import { Sketch } from '@dxos/plugin-sketch/types';
 
 import { SketchSettings } from '#components';
@@ -22,18 +21,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.sketch`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Sketch.Sketch } => Sketch.isSketch(data.subject, EXCALIDRAW_SCHEMA),
-        component: ({ data, role }) => {
+        filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
+          typeof data.attendableId === 'string' && Sketch.isSketch(data.subject, EXCALIDRAW_SCHEMA),
+        component: ({ data: { subject, attendableId }, role }) => {
           const settings = useAtomCapability(ExcalidrawCapabilities.Settings);
-
-          return (
-            <SketchContainer
-              key={Obj.getDXN(data.subject).toString()} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-              role={role}
-              subject={data.subject}
-              settings={settings}
-            />
-          );
+          return <SketchContainer role={role} subject={subject} attendableId={attendableId} settings={settings} />;
         },
       }),
       Surface.create({

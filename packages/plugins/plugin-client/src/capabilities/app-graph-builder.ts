@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '#meta';
@@ -43,7 +43,7 @@ export default Capability.makeModule(
         const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
         return [
-          {
+          Node.make({
             id: Account.id,
             type: meta.id,
             properties: {
@@ -58,7 +58,7 @@ export default Capability.makeModule(
               status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
             },
             nodes: [
-              {
+              Node.make({
                 id: Account.Profile,
                 data: Account.Profile,
                 type: meta.id,
@@ -66,8 +66,8 @@ export default Capability.makeModule(
                   label: ['profile.label', { ns: meta.id }],
                   icon: 'ph--user--regular',
                 },
-              },
-              {
+              }),
+              Node.make({
                 id: Account.Devices,
                 data: Account.Devices,
                 type: meta.id,
@@ -76,8 +76,8 @@ export default Capability.makeModule(
                   icon: 'ph--devices--regular',
                   testId: 'clientPlugin.devices',
                 },
-              },
-              {
+              }),
+              Node.make({
                 id: Account.Security,
                 data: Account.Security,
                 type: meta.id,
@@ -85,9 +85,9 @@ export default Capability.makeModule(
                   label: ['security.label', { ns: meta.id }],
                   icon: 'ph--key--regular',
                 },
-              },
+              }),
             ],
-          },
+          }),
         ];
       }),
     });

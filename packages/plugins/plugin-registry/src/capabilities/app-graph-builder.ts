@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { LOAD_PLUGIN_DIALOG } from '../containers';
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
@@ -39,7 +39,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            {
+            Node.make({
               id: REGISTRY_ID,
               type: meta.id,
               properties: {
@@ -49,9 +49,9 @@ export default Capability.makeModule(
                 testId: 'treeView.pluginRegistry',
               },
               nodes: [
-                {
+                Node.make({
                   id: registryCategoryId('all'),
-                  type: 'category' as const,
+                  type: 'category',
                   data: registryCategoryId('all'),
                   properties: {
                     label: ['all-plugins.label', { ns: meta.id }],
@@ -59,10 +59,10 @@ export default Capability.makeModule(
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.all',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: registryCategoryId('installed'),
-                  type: 'category' as const,
+                  type: 'category',
                   data: registryCategoryId('installed'),
                   properties: {
                     label: ['installed-plugins.label', { ns: meta.id }],
@@ -70,10 +70,10 @@ export default Capability.makeModule(
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.installed',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: registryCategoryId('recommended'),
-                  type: 'category' as const,
+                  type: 'category',
                   data: registryCategoryId('recommended'),
                   properties: {
                     label: ['recommended-plugins.label', { ns: meta.id }],
@@ -81,10 +81,10 @@ export default Capability.makeModule(
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.recommended',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: registryCategoryId('labs'),
-                  type: 'category' as const,
+                  type: 'category',
                   data: registryCategoryId('labs'),
                   properties: {
                     label: ['labs-plugins.label', { ns: meta.id }],
@@ -92,9 +92,9 @@ export default Capability.makeModule(
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.labs',
                   },
-                },
+                }),
               ],
-            },
+            }),
           ]),
       }),
       GraphBuilder.createExtension({
@@ -126,16 +126,18 @@ export default Capability.makeModule(
         connector: () => {
           const manager = capabilities.get(Capabilities.PluginManager);
           return Effect.succeed(
-            manager.getPlugins().map((plugin) => ({
-              id: plugin.meta.id,
-              type: 'org.dxos.plugin',
-              data: plugin,
-              properties: {
-                label: plugin.meta.name ?? plugin.meta.id,
-                icon: plugin.meta.icon ?? 'ph--circle--regular',
-                disposition: 'hidden',
-              },
-            })),
+            manager.getPlugins().map((plugin) =>
+              Node.make({
+                id: plugin.meta.id,
+                type: 'org.dxos.plugin',
+                data: plugin,
+                properties: {
+                  label: plugin.meta.name ?? plugin.meta.id,
+                  icon: plugin.meta.icon ?? 'ph--circle--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
           );
         },
       }),

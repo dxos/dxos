@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface, LayoutOperation } from '@dxos/app-toolkit';
+import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
@@ -13,22 +14,27 @@ import { type Message as MessageType } from '@dxos/types';
 import { Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
 import { InboxOperation } from '#operations';
-import { type Mailbox } from '#types';
+import { Mailbox } from '#types';
 
-export type MessageArticleProps = AppSurface.AttendableObjectProps<
-  MessageType.Message,
-  {
-    mailbox: Mailbox.Mailbox; // TODO(burdon): companionTo?
-  }
->;
+import { getMailboxMessagePath } from '../../paths';
 
-export const MessageArticle = ({ role, subject: message, mailbox, attendableId }: MessageArticleProps) => {
+export type MessageArticleProps = AppSurface.ObjectProps<MessageType.Message, { mailbox?: Mailbox.Mailbox }>;
+export const MessageArticle = ({
+  role,
+  subject: message,
+  attendableId,
+  companionTo,
+  mailbox: mailboxProp,
+}: MessageArticleProps) => {
+  const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
+
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const db = Obj.getDatabase(mailbox);
+  const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
 
   const { invokePromise } = useOperationInvoker();
@@ -64,15 +70,23 @@ export const MessageArticle = ({ role, subject: message, mailbox, attendableId }
     }
   }, [db, invokePromise, message, mailbox]);
 
+  const handleOpen = useCallback(() => {
+    if (!mailbox || !db) {
+      return;
+    }
+    void invokePromise(LayoutOperation.Open, { subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)] });
+  }, [mailbox, db, message.id, invokePromise]);
+
   return (
     <Message.Root
-      attendableId={attendableId}
+      attendableId={toolbarAttendableId}
       viewMode={viewMode}
       message={message}
       sender={sender}
       onReply={handleReply}
       onReplyAll={handleReplyAll}
       onForward={handleForward}
+      onOpen={companionTo ? handleOpen : undefined}
     >
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>

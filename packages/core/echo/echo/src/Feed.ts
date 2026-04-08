@@ -118,9 +118,8 @@ export const getQueueDxn = (feed: Feed): DXN | undefined => {
  * Provides the bridge to the underlying storage implementation.
  * Must be provided by the application layer (e.g., echo-db).
  */
-// TODO(dmaretskyi): Rename to FeedService so it shows up as "FeedService" in the TypeScript hovers instead of just "Service".
-export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
-  Service,
+export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
+  FeedService,
   {
     /**
      * Appends items to a feed.
@@ -144,20 +143,30 @@ export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
 >() {}
 
 /**
+ * @deprecated Use `FeedService` instead.
+ */
+export type Service = FeedService;
+
+/**
+ * @deprecated Use `FeedService` instead.
+ */
+export const Service = FeedService;
+
+/**
  * Layer that provides a Feed service that throws when accessed.
  * Useful as a default layer when no feed service is available.
  */
-export const notAvailable: Layer.Layer<Service> = Layer.succeed(Service, {
+export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService, {
   append: () => {
-    throw new Error('Feed.Service not available');
+    throw new Error('Feed.FeedService not available');
   },
   remove: () => {
-    throw new Error('Feed.Service not available');
+    throw new Error('Feed.FeedService not available');
   },
   query: () => {
-    throw new Error('Feed.Service not available');
+    throw new Error('Feed.FeedService not available');
   },
-} as Context.Tag.Service<Service>);
+} as Context.Tag.Service<FeedService>);
 
 //
 // Operations
@@ -171,9 +180,9 @@ export const notAvailable: Layer.Layer<Service> = Layer.succeed(Service, {
  * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Hello' })]);
  * ```
  */
-export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
+export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
   Effect.gen(function* () {
-    const service = yield* Service;
+    const service = yield* FeedService;
     yield* Effect.promise(() => service.append(feed, items));
   });
 
@@ -186,9 +195,9 @@ export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void,
  * ```
  */
 // TODO(dmaretskyi): Should we allow snapshots here? - what does it mean to remove a snapshot?
-export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, Service> =>
+export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, FeedService> =>
   Effect.gen(function* () {
-    const service = yield* Service;
+    const service = yield* FeedService;
     const ids = items.map((item) => item.id);
     yield* Effect.promise(() => service.remove(feed, ids));
   });
@@ -207,10 +216,16 @@ export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Ef
 //                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
 // ... unify for Database and schema queries.
 export const query: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
+  <Q extends Query.Any>(
+    feed: Feed,
+    query: Q,
+  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
+  <F extends Filter.Any>(
+    feed: Feed,
+    filter: F,
+  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Service.pipe(Effect.map((service) => service.query(feed, queryOrFilter as any) as QueryResult.QueryResult<any>));
+  FeedService.pipe(Effect.map((service) => service.query(feed, queryOrFilter as any) as QueryResult.QueryResult<any>));
 
 /**
  * Executes a feed query once and returns the results.
@@ -221,8 +236,8 @@ export const query: {
  * ```
  */
 export const runQuery: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
+  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
+  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
   query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
 
@@ -237,21 +252,21 @@ export const runQuery: {
  * ```
  */
 // TODO(wittjosiah): Implement cursor operations. Use Effect streams?
-export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, Service> =>
+export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, FeedService> =>
   Effect.succeed({ _tag: 'Cursor' } as Cursor<T>);
 
 /**
  * Returns the next item from a feed cursor.
  * Currently stubbed — cursor operations are not yet implemented.
  */
-export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, Service> =>
+export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, FeedService> =>
   Effect.die('Feed.next is not yet implemented');
 
 /**
  * Returns the next item from a feed cursor as an Option.
  * Currently stubbed — cursor operations are not yet implemented.
  */
-export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, Service> =>
+export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, FeedService> =>
   Effect.die('Feed.nextOption is not yet implemented');
 
 /**
@@ -264,5 +279,5 @@ export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<
  * ```
  */
 // TODO(feed): Implement when queue retention is supported.
-export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, Service> =>
+export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, FeedService> =>
   Effect.void;

@@ -83,7 +83,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     );
 
     return (
-      <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+      <div {...composableProps(props)} ref={forwardedRef}>
         <Form.Root
           testId='compose-email-form'
           autoFocus

@@ -30,7 +30,7 @@ export namespace AutomationCapabilities {
     | TriggerStateStore
     | AiService.AiService
     | Database.Service
-    | Feed.Service
+    | Feed.FeedService
     | QueueService
     | CredentialsService
     | Blueprint.RegistryService

@@ -15,16 +15,10 @@ import { Event as EventType } from '@dxos/types';
 import { Event, type EventHeaderProps } from '#components';
 import { useShadowObject } from '#hooks';
 import { InboxOperation } from '#operations';
-import { type Calendar } from '#types';
 
-export type EventArticleProps = AppSurface.ObjectProps<
-  EventType.Event,
-  {
-    calendar: Calendar.Calendar;
-  }
->;
+export type EventArticleProps = AppSurface.CompanionProps<Obj.Unknown, { subject: EventType.Event }>;
 
-export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => {
+export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(subject).toString();
   const db = Obj.getDatabase(calendar);

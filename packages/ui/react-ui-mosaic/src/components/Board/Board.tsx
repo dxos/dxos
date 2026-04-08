@@ -106,7 +106,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div {...composableProps(props, { role: 'none', classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild

@@ -19,7 +19,7 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
 
   return (
     <ThemeProvider tx={defaultTx}>
-      <div className='relative flex flex-col h-dvh'>
+      <div className='relative dx-container h-dvh flex flex-col'>
         <div className='flex flex-col grow justify-center items-center'>
           <Composer
             className={mx(
@@ -38,7 +38,8 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
         <Status
           variant='main-bottom'
           aria-label='Initializing'
-          {...(hasProgress ? { progress: progress.progress } : { indeterminate: true })}
+          indeterminate
+          // {...(hasProgress ? { progress: progress.progress } : { indeterminate: true })}
         />
       </div>
     </ThemeProvider>

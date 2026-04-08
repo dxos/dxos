@@ -38,12 +38,14 @@ type ToolbarRootProps = ToolbarPrimitive.ToolbarProps & ToolbarStyleProps;
 
 const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
   ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
+    const { className, role, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (
       <ToolbarPrimitive.Root
         {...rest}
+        // Only pass role when explicitly set; radix provides role="toolbar" by default.
+        {...(role !== 'none' && { role })}
         orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
         className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}

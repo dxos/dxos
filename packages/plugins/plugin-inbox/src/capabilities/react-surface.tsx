@@ -8,14 +8,17 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
-import { POPOVER_SAVE_FILTER } from '../constants';
+import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
+import { getDraftsId } from '../paths';
 import {
   CalendarArticle,
   CalendarSettings,
   DraftMessageArticle,
+  DraftsArticle,
   EventArticle,
   EventCard,
   MailboxArticle,
@@ -27,11 +30,36 @@ import {
   SaveFilterPopover,
 } from '#containers';
 import { meta } from '#meta';
-import { Calendar, Mailbox } from '#types';
+import { Calendar, DraftMessage, Mailbox } from '#types';
+import { getParentId, useNode } from '@dxos/plugin-graph';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: `${meta.id}.drafts`,
+        role: ['article'],
+        filter: (
+          data,
+        ): data is {
+          attendableId?: string;
+          subject: typeof MAILBOX_DRAFTS_NODE_DATA;
+          properties: { mailbox: Mailbox.Mailbox };
+        } => {
+          const mailbox = (data.properties as { mailbox?: Mailbox.Mailbox } | undefined)?.mailbox;
+          const attendableId = data.attendableId as string | undefined;
+          const lastSegment = typeof attendableId === 'string' ? attendableId.split('/').pop() : undefined;
+          return (
+            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
+          );
+        },
+        component: ({ data, role }) => {
+          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
+          const space = useActiveSpace();
+          return <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
+        },
+      }),
       Surface.create({
         id: `${meta.id}.mailbox`,
         role: ['article'],
@@ -43,20 +71,40 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.message`,
-        role: ['article', 'section'],
-        filter: AppSurface.and(AppSurface.object(Message.Message, { attendable: true }), AppSurface.companion(Mailbox.Mailbox)),
-        component: ({ data: { attendableId, companionTo, subject }, role }) => {
-          return <MessageArticle role={role} subject={subject} mailbox={companionTo} attendableId={attendableId} />;
+        id: `${meta.id}.draft-message`,
+        role: ['article'],
+        filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
+        component: ({ data: { subject }, role }) => {
+          return <DraftMessageArticle role={role} subject={subject} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}.draft-message`,
-        role: ['article'],
-        filter: (data): data is { subject: Message.Message } =>
-          Obj.instanceOf(Message.Message, data.subject) && !Mailbox.instanceOf(data.companionTo),
-        component: ({ data: { subject }, role }) => {
-          return <DraftMessageArticle role={role} subject={subject} />;
+        id: `${meta.id}.message`,
+        role: ['article', 'section'],
+        filter: (
+          data,
+        ): data is {
+          attendableId: string;
+          subject: Message.Message;
+          companionTo?: Mailbox.Mailbox;
+        } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Message.Message, data.subject) &&
+          !DraftMessage.instanceOf(data.subject),
+        component: ({ data: { attendableId, subject, companionTo }, role }) => {
+          const { graph } = useAppGraph();
+          const parentId = getParentId(attendableId);
+          const parent = useNode(graph, parentId);
+          const mailbox = parent?.properties.mailbox;
+          return (
+            <MessageArticle
+              role={role}
+              subject={subject}
+              attendableId={attendableId}
+              companionTo={companionTo}
+              mailbox={companionTo ? undefined : mailbox}
+            />
+          );
         },
       }),
       Surface.create({
@@ -65,7 +113,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.and(AppSurface.object(Event.Event), AppSurface.companion(Calendar.Calendar)),
         component: ({ data, role }) => {
           if (!data?.subject || !data?.companionTo) return null;
-          return <EventArticle role={role} subject={data.subject} calendar={data.companionTo} />;
+          return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
         },
       }),
       Surface.create({

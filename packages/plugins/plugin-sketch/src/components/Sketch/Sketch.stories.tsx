@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
@@ -35,28 +35,29 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <Toolbar.Root>
-        <Button variant='primary' onClick={handleClear}>
-          Clear
-        </Button>
-        <Button variant='ghost' onClick={handleCreate}>
-          Create
-        </Button>
-        <Button variant='ghost' onClick={handleMigrate}>
-          Load V1 Sample
-        </Button>
-      </Toolbar.Root>
-      <div className='flex grow overflow-hidden'>
-        <SketchComponent sketch={sketch} assetsBaseUrl={null} autoZoom />
-      </div>
-    </div>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Button variant='primary' onClick={handleClear}>
+            Clear
+          </Button>
+          <Button variant='ghost' onClick={handleCreate}>
+            Create
+          </Button>
+          <Button variant='ghost' onClick={handleMigrate}>
+            Load V1 Sample
+          </Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-sketch/components/Sketch',
-  component: SketchComponent as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

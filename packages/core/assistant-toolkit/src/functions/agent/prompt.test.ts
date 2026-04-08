@@ -86,7 +86,6 @@ const TestLayer = Layer.mergeAll(
       StubAiServiceLayer,
       TestDatabaseLayer({ spaceKey: 'fixed', types: testTypes }),
       CredentialsService.configuredLayer([]),
-      Feed.notAvailable,
       TracingService.layerNoop,
     ),
   ),

@@ -5,10 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { isPersonalSpace } from '@dxos/app-toolkit';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-// TODO(wittjosiah): This is currently necessary for type portability.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 
@@ -24,7 +21,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     connector: (node) => {
       const personal = node.properties.space && isPersonalSpace(node.properties.space);
       return Effect.succeed([
-        {
+        Node.make({
           id: `${meta.id}.general`,
           type: `${meta.id}.general`,
           data: `${meta.id}.general`,
@@ -34,10 +31,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
             position: 'hoist',
             testId: 'spacePlugin.general',
           },
-        },
+        }),
         ...(!personal
           ? [
-              {
+              Node.make({
                 id: `${meta.id}.members`,
                 type: `${meta.id}.members`,
                 data: `${meta.id}.members`,
@@ -47,10 +44,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                   position: 'hoist',
                   testId: 'spacePlugin.members',
                 },
-              },
+              }),
             ]
           : []),
-        {
+        Node.make({
           id: `${meta.id}.schema`,
           type: `${meta.id}.schema`,
           data: `${meta.id}.schema`,
@@ -59,7 +56,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
             icon: 'ph--shapes--regular',
             testId: 'spacePlugin.schema',
           },
-        },
+        }),
       ]);
     },
   });

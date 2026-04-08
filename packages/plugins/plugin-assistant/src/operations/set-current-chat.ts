@@ -20,6 +20,14 @@ const handler: Operation.WithHandler<typeof SetCurrentChat> = SetCurrentChat.pip
         ...current,
         currentChat: { ...current.currentChat, [companionToId]: chatId },
       }));
+
+      // When clearing the selection (new thread), evict the cached transient chat so a fresh one is created.
+      if (!chat) {
+        yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => {
+          const { [companionToId]: _, ...rest } = current;
+          return rest;
+        });
+      }
     }),
   ),
 );

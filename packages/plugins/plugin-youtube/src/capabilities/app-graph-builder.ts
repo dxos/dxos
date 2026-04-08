@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -16,8 +17,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { ClearSyncedVideos, Sync } from '#operations';
 import { meta } from '#meta';
@@ -57,16 +57,12 @@ export default Capability.makeModule(
             ),
           )[0];
           return Effect.succeed([
-            {
-              id: companionSegment('video'),
-              type: PLANK_COMPANION_TYPE,
+            AppNode.makeCompanion({
+              id: linkedSegment('video'),
+              label: ['video.label', { ns: meta.id }],
+              icon: 'ph--play--regular',
               data: video ?? 'video',
-              properties: {
-                label: ['video.label', { ns: meta.id }],
-                icon: 'ph--play--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]);
         },
       }),
@@ -76,7 +72,7 @@ export default Capability.makeModule(
         match: whenYouTubeChannel,
         actions: (channel) =>
           Effect.succeed([
-            {
+            Node.makeAction({
               id: 'sync',
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
@@ -107,8 +103,8 @@ export default Capability.makeModule(
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
-            },
-            {
+            }),
+            Node.makeAction({
               id: 'clear-synced-videos',
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
@@ -139,7 +135,7 @@ export default Capability.makeModule(
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },
-            },
+            }),
           ]),
       }),
     ]);

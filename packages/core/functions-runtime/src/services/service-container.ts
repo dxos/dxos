@@ -32,7 +32,7 @@ const SERVICES = {
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   queues: QueueService,
-  feeds: Feed.Service,
+  feeds: Feed.FeedService,
   tracing: TracingService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
@@ -110,7 +110,8 @@ export class ServiceContainer {
         : Database.notAvailable;
     const queues =
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
-    const feeds = this._services.feeds != null ? Layer.succeed(Feed.Service, this._services.feeds) : Feed.notAvailable;
+    const feeds =
+      this._services.feeds != null ? Layer.succeed(Feed.FeedService, this._services.feeds) : Feed.notAvailable;
     const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);
     const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
     const functionCallService = Layer.succeed(
