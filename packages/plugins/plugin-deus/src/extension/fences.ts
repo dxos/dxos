@@ -46,6 +46,11 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
   // e.g. "req F-1.1: prose", "kind: PieceKind", "piece?: Piece"
   const lineMatch = trimmed.match(/^([\w][\w-]*)(?:\s+([\w][\w.\-]*))?(\??)(\s*:)(.*)/s);
   if (!lineMatch) {
+    // No field pattern — still color any trailing " #" comment.
+    const commentIdx = lineText.indexOf(' #', indent);
+    if (commentIdx >= 0) {
+      builder.add(abs(commentIdx + 1), abs(lineText.length), Decoration.mark({ class: 'cm-mdl-comment' }));
+    }
     return;
   }
 
