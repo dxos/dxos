@@ -116,6 +116,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-deus"
+    },
+    {
       "path": "../../plugins/plugin-excalidraw"
     },
     {

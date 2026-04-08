@@ -19,8 +19,8 @@ export const Spec = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
-    icon: 'ph--file-text--regular',
-    hue: 'violet',
+    icon: 'ph--flower-lotus--regular',
+    hue: 'lime',
   }),
 );
 

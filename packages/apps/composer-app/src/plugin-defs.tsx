@@ -17,6 +17,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
+import { DeusPlugin } from '@dxos/plugin-deus';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
@@ -133,6 +134,8 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
+    DeusPlugin.meta.id,
+
     // Dev
     isDev && DebugPlugin.meta.id,
 
@@ -191,6 +194,7 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
+    DeusPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),

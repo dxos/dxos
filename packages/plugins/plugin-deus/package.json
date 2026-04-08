@@ -44,6 +44,12 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/lang-markdown": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/lint": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -54,6 +60,8 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
