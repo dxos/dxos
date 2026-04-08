@@ -26,12 +26,12 @@ export class FeedTraceSink extends Context.Tag('@dxos/functions-runtime/FeedTrac
   }
 >() {}
 
-export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Database.Service | Feed.Service> =
+export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Database.Service | Feed.FeedService> =
   Layer.scopedContext(
     Effect.gen(function* () {
       const feed = yield* getOrCreateTraceFeed();
 
-      const runtime = yield* Effect.runtime<Feed.Service>();
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
       let buffer: Trace.Message[] = [];
       let flushMore = false;
       let flushFiber: Fiber.RuntimeFiber<void> | undefined;

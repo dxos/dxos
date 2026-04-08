@@ -11,15 +11,14 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Runtime from 'effect/Runtime';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { type GenericToolkit } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -35,7 +34,7 @@ import {
   formatSystemPrompt,
 } from '../session';
 
-import { AiContextBinder, AiContextService, type ContextBinding } from './context';
+import { AiContextBinder, AiContextService } from './context';
 
 export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {
   prompt: string;
@@ -45,7 +44,8 @@ export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> 
 }
 
 export type AiConversationOptions = {
-  queue: Queue<Message.Message | ContextBinding>;
+  feed: Feed.Feed;
+  runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 
@@ -56,7 +56,7 @@ export type AiConversationOptions = {
 const SUMMARY_THRESHOLD = 80_000;
 
 /**
- * Durable conversation state (initiated by users and agents) backed by a Queue.
+ * Durable conversation state (initiated by users and agents) backed by a Feed.
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class AiConversation extends Resource {
@@ -64,22 +64,25 @@ export class AiConversation extends Resource {
    * Blueprints and objects bound to the conversation.
    */
   private readonly _binder: AiContextBinder;
-  private readonly _queue: Queue<Message.Message | ContextBinding>;
+  private readonly _feed: Feed.Feed;
+  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
   private readonly _toolkit?: Toolkit.Any;
 
   public constructor(options: AiConversationOptions) {
     super();
-    this._queue = options.queue;
-    invariant(this._queue);
-    this._binder = new AiContextBinder({ queue: this._queue, registry: options.registry });
+    this._feed = options.feed;
+    this._runtime = options.runtime;
+    invariant(this._feed);
+    invariant(this._runtime);
+    this._binder = new AiContextBinder({ feed: this._feed, runtime: this._runtime, registry: options.registry });
   }
 
   protected override async _open(): Promise<void> {
     await this._binder.open(this._ctx);
   }
 
-  public get queue() {
-    return this._queue;
+  public get feed() {
+    return this._feed;
   }
 
   public get context() {
@@ -91,8 +94,9 @@ export class AiConversation extends Resource {
   }
 
   public async getHistory(): Promise<Message.Message[]> {
-    const queueItems = await this._queue.queryObjects(); // TODO(burdon): Update.
-    return queueItems.filter(Obj.instanceOf(Message.Message));
+    const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
+    const items = await queryResult.run();
+    return items.filter(Obj.instanceOf(Message.Message));
   }
 
   getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
@@ -123,7 +127,8 @@ export class AiConversation extends Resource {
       const session = new AiSession({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
-        onOutput: (message) => Effect.promise(() => this._queue.append([message])),
+        onOutput: (message) =>
+          Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
       });
 
       yield* session.begin({
@@ -206,16 +211,20 @@ export class AiConversationService extends Context.Tag('@dxos/assistant/AiConver
     );
 
   /**
-   * Create a new conversation with a new queue.
+   * Create a new conversation with a new feed.
    */
-  static layerNewQueue = (
-    options?: Omit<AiConversationOptions, 'queue'>,
-  ): Layer.Layer<AiConversationService | AiContextService, never, QueueService> =>
+  static layerNewFeed = (
+    options?: Omit<AiConversationOptions, 'feed' | 'runtime'>,
+  ): Layer.Layer<AiConversationService | AiContextService, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
+        const feed = Feed.make();
+        yield* Database.add(feed);
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
         return AiConversationService.layer({
           ...options,
-          queue: yield* QueueService.createQueue<Message.Message | ContextBinding>(),
+          feed,
+          runtime,
         });
       }),
     );

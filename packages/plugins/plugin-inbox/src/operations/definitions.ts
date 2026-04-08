@@ -139,7 +139,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.Service, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -175,7 +175,7 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  services: [Database.Service, Feed.Service, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -218,7 +218,7 @@ export const ReadEmail = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-  services: [Database.Service, Feed.Service],
+  services: [Database.Service, Feed.FeedService],
 });
 
 export const SummarizeMailbox = Operation.make({
@@ -249,7 +249,7 @@ export const SummarizeMailbox = Operation.make({
       description: 'The summary of the mailbox.',
     }),
   }),
-  services: [Database.Service, Feed.Service, AiService.AiService, QueueService],
+  services: [Database.Service, Feed.FeedService, AiService.AiService, QueueService],
 });
 
 export const ClassifyEmail = Operation.make({

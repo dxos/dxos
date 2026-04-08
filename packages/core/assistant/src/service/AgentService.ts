@@ -4,23 +4,19 @@
 
 // @import-as-namespace
 
-import { Database, Feed, Obj } from '@dxos/echo';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { Blueprint } from '@dxos/blueprints';
-import { ProcessManager } from '@dxos/functions-runtime';
-import { failedInvariant } from '@dxos/invariant';
-import { AgentProcess } from './agent-process';
-
-import { Ref } from '@dxos/echo';
-import { QueueService, type Trace } from '@dxos/functions';
-import { type Message } from '@dxos/types';
-
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { AiContextBinder, ContextBinding } from '../conversation';
+import { type Trace } from '@dxos/functions';
+import { ProcessManager } from '@dxos/functions-runtime';
+
+import { AiContextBinder } from '../conversation';
+import { AgentProcess } from './agent-process';
 
 export interface Service {
   /**
@@ -58,12 +54,12 @@ export interface Session {
   /**
    * Adds context objects to the agent.
    */
-  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, QueueService>;
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
 
   /**
    * Gets the context objects from the agent.
    */
-  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, QueueService>;
+  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
 }
 
 /**
@@ -81,16 +77,15 @@ export const createSession: (
 ) => Effect.Effect<
   Session,
   Blueprint.NotFoundError,
-  Database.Service | QueueService | Blueprint.RegistryService | AgentService
+  Database.Service | Feed.FeedService | Blueprint.RegistryService | AgentService
 > = Effect.fn('createSession')(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
     Blueprint.upsert(blueprint.key).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());
-  const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
-  const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
-  const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
+  const runtime = yield* Effect.runtime<Feed.FeedService>();
+  const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
 
   yield* Effect.promise(() =>
     binder.bind({
@@ -151,9 +146,8 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
-      const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
-      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
-      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({
           blueprints: [],
@@ -163,9 +157,8 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
     }).pipe(Effect.scoped),
   getContext: () =>
     Effect.gen(function* () {
-      const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
-      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
-      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),
 });

@@ -2,31 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import { describe, it } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 
 import { AiContextBinder } from './context';
 
-// TODO(burdon): Create mock queue?
-const createMockQueue = (): Queue =>
-  ({
+const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
+  const mockFeedService: Context.Tag.Service<Feed.FeedService> = {
+    append: async () => {},
+    remove: async () => {},
     query: () =>
       ({
-        subscribe: () => ({ unsubscribe: () => {} }),
+        subscribe: () => () => {},
         results: [],
+        run: async () => [],
       }) as any,
-    append: async () => {
-      return [] as any;
-    },
-  }) as any;
+  };
+  const layer = Layer.succeed(Feed.FeedService, mockFeedService);
+  return Effect.runSync(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(layer)));
+};
 
 describe('AiContextBinder', () => {
   it('should handle bind with Ref', async () => {
-    const queue = createMockQueue();
-    const binder = new AiContextBinder({ queue });
+    const feed = Feed.make();
+    const runtime = createMockFeedRuntime();
+    const binder = new AiContextBinder({ feed, runtime });
 
     const TestSchema = Schema.Struct({}).pipe(
       Type.object({
