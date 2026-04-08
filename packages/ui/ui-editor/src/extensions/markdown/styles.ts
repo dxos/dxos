@@ -67,7 +67,7 @@ export const formattingStyles = EditorView.theme({
   '& .cm-code-inline': {
     fontFamily: fontMono,
     height: '24px',
-    display: 'inline-flex',
+    // display: 'inline-flex',
     alignItems: 'center',
     overflow: 'hidden',
     whiteSpace: 'nowrap',

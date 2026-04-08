@@ -28,17 +28,23 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
 
       update(update: ViewUpdate) {
         update.view.requestMeasure({
-          // key dedupliactes concurrent requests within the same animation frame.
+          // key deduplicates concurrent requests within the same animation frame.
           key: this,
           read: (view) => {
             const containerHeight = view.dom.clientHeight;
             if (containerHeight === 0) {
               return 0;
             }
+            // With CSS zoom, clientHeight can be in visual pixels while line positions use
+            // layout pixels (same space as internalHeight / theme maxHeight).
+            const clipLimit =
+              scale === 1
+                ? containerHeight
+                : Math.min(internalHeight, containerHeight / scale);
             // Find the block (line) at the very bottom of the visible area.
-            const block = view.lineBlockAtHeight(containerHeight - 1);
+            const block = view.lineBlockAtHeight(clipLimit - 1);
             // If the block overflows the container, clip at the block's top edge.
-            return block.top + block.height > containerHeight ? block.top : containerHeight;
+            return block.top + block.height > clipLimit ? block.top : clipLimit;
           },
           write: (clipHeight, view) => {
             if (clipHeight > 0 && clipHeight !== this.clipHeight) {
