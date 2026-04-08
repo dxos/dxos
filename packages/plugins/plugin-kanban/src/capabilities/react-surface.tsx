@@ -14,7 +14,6 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { KanbanContainer, KanbanViewEditor } from '#containers';
-import { meta } from '#meta';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>

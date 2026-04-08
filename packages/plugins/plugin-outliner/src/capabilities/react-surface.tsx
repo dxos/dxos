@@ -11,7 +11,7 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
 import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '#containers';
-import { QUICK_ENTRY_DIALOG, meta } from '#meta';
+import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal, Outline } from '#types';
 
 export default Capability.makeModule(() =>

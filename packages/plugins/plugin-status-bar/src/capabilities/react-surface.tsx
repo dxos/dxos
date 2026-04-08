@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
 import { StatusBarActions, StatusBarPanel, VersionNumber } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

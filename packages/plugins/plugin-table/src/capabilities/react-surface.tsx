@@ -11,7 +11,6 @@ import { Obj } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { TableCard, TableContainer } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

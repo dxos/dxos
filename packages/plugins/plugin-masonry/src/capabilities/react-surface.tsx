@@ -11,7 +11,6 @@ import { Obj } from '@dxos/echo';
 import { View } from '@dxos/echo';
 
 import { MasonryContainer } from '#containers';
-import { meta } from '#meta';
 import { Masonry } from '#types';
 
 export default Capability.makeModule(() =>

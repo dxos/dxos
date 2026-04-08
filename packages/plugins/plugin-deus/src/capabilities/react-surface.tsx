@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
 import { SpecArticle } from '#containers';
-import { meta } from '#meta';
 import { Spec } from '#types';
 
 export default Capability.makeModule(() =>

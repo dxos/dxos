@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Node } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
-import { COMMANDS_DIALOG, meta } from '#meta';
+import { COMMANDS_DIALOG } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

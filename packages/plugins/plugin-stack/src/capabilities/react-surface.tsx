@@ -11,7 +11,6 @@ import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 
 import { StackContainer } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

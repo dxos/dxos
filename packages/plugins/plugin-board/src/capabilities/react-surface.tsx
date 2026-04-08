@@ -10,7 +10,6 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 
 import { BoardContainer } from '#containers';
-import { meta } from '#meta';
 import { Board } from '#types';
 
 export default Capability.makeModule(() =>

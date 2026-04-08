@@ -13,7 +13,6 @@ import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
 import { PipelineContainer, PipelineObjectSettings } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

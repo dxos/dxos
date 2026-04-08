@@ -13,7 +13,6 @@ import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

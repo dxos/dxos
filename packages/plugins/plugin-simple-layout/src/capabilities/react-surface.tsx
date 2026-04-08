@@ -12,7 +12,6 @@ import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
 
 import { Home, NavBranch } from '#components';
-import { meta } from '#meta';
 
 type SurfaceData = {
   attendableId: string;
