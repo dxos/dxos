@@ -53,9 +53,9 @@ export default Capability.makeModule(() =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Chat.Chat, data.subject) &&
           data.variant !== ASSISTANT_COMPANION_VARIANT,
-        component: ({ data, role, ref }) => (
-          <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
-        ),
+        component: ({ data, role, ref }) => {
+          return <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
+        },
       }),
       Surface.create({
         id: `${meta.id}.project`,
@@ -76,7 +76,15 @@ export default Capability.makeModule(() =>
           typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
-        component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
+        component: ({ data: { subject, attendableId, companionTo }, role, ref }) => (
+          <ChatCompanion
+            role={role}
+            subject={subject}
+            attendableId={attendableId}
+            companionTo={companionTo}
+            ref={ref}
+          />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.companion-invocations`,

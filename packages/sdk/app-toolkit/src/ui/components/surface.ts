@@ -47,6 +47,20 @@ export type ObjectSurfaceProps<Subject extends Obj.Unknown | undefined = Obj.Unk
 } & Props;
 
 /**
+ * Generic type for surface companion.
+ */
+export type CompanionSurfaceProps<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = ObjectSurfaceProps<
+  Subject,
+  {
+    /** The object this surface is a companion to. */
+    companionTo: Obj.Unknown;
+  } & Props
+>;
+
+/**
  * Generic type for surface components that are anchored to settings.
  */
 export type SettingsSurfaceProps<T extends {}, Props extends {} = {}> = {
