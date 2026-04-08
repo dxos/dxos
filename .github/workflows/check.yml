@@ -194,7 +194,7 @@ jobs:
     env:
       DX_ENVIRONMENT: ci
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-      DX_EDGE_CLIENT_TAG: ci-e2e
+      DX_EDGE_CLIENT_TAG: e2e
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=12288
     steps:
