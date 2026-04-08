@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
-import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -37,56 +37,6 @@ export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) 
             checked={settings.encapsulatedPlanks ?? false}
             onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, encapsulatedPlanks: checked }))}
           />
-        </SettingsForm.Item>
-        <SettingsForm.Item
-          title={t('select-new-plank-positioning.label')}
-          description={t('select-new-plank-positioning.description')}
-        >
-          <Select.Root
-            disabled={!settings.enableDeck || !onSettingsChange}
-            value={settings.newPlankPositioning ?? 'start'}
-            onValueChange={(value) =>
-              onSettingsChange?.((s) => ({ ...s, newPlankPositioning: value as Settings.NewPlankPositioning }))
-            }
-          >
-            <Select.TriggerButton
-              disabled={!onSettingsChange}
-              placeholder={t('select-new-plank-positioning.placeholder')}
-            />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {Settings.NewPlankPositions.map((position) => (
-                    <Select.Option key={position} value={position}>
-                      {t(`settings.new-plank-position.${position}.label`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-                <Select.Arrow />
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </SettingsForm.Item>
-        <SettingsForm.Item title={t('settings.overscroll.label')} description={t('settings.overscroll.description')}>
-          <Select.Root
-            disabled={!settings.enableDeck || !onSettingsChange}
-            value={settings.overscroll ?? 'none'}
-            onValueChange={(value) => onSettingsChange?.((s) => ({ ...s, overscroll: value as Settings.Overscroll }))}
-          >
-            <Select.TriggerButton placeholder={t('select-overscroll.placeholder')} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {Settings.OverScrollToProps.map((option) => (
-                    <Select.Option key={option} value={option}>
-                      {t(`settings.overscroll.${option}.label`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-                <Select.Arrow />
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
         </SettingsForm.Item>
         <SettingsForm.Item
           title={t('settings.enable-statusbar.label')}
