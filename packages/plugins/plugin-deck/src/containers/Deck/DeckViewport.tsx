@@ -325,6 +325,11 @@ const PlankContainer = memo(
         if (type === 'close') {
           if (part === 'complementary') {
             return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+          } else if (active) {
+            // Close the plank and everything to the right (stack pop).
+            const index = active.indexOf(plankId);
+            const toClose = index !== -1 ? active.slice(index) : [plankId];
+            return invokePromise(LayoutOperation.Close, { subject: toClose });
           } else {
             return invokePromise(LayoutOperation.Close, { subject: [plankId] });
           }
@@ -332,7 +337,7 @@ const PlankContainer = memo(
           return invokePromise(DeckOperation.Adjust, { type, id: plankId });
         }
       },
-      [invokePromise, part],
+      [invokePromise, part, active],
     );
 
     const handleResize = useCallback(

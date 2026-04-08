@@ -9,6 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -46,6 +47,7 @@ export const CreateObjectDialog = ({
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
   const spaces = useSpaces();
+  const layout = useLayout();
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
@@ -106,10 +108,19 @@ export const CreateObjectDialog = ({
         });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
-          yield* operationInvoker.invoke(LayoutOperation.Open, {
-            subject: [...result.subject],
-            navigation: 'immediate',
-          });
+          if (layout.mode === 'multi') {
+            yield* operationInvoker.invoke(LayoutOperation.Set, {
+              subject: [...result.subject],
+            });
+            yield* operationInvoker.invoke(LayoutOperation.Expose, {
+              subject: result.subject[0],
+            });
+          } else {
+            yield* operationInvoker.invoke(LayoutOperation.Open, {
+              subject: [...result.subject],
+              navigation: 'immediate',
+            });
+          }
         }
 
         onCreateObject?.(result.object);
@@ -118,7 +129,7 @@ export const CreateObjectDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         runAndForwardErrors,
       ),
-    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker],
+    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker, layout.mode],
   );
 
   return (

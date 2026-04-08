@@ -85,9 +85,9 @@ export const PlankHeading = memo(
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         fullscreen: !isCompanionNode,
-        companion: !isCompanionNode && companions && companions.length > 0,
+        companion: layoutMode !== 'multi' && !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled, layoutMode],
     );
 
     const variant = isCompanionNode ? getLinkedVariant(id) : undefined;

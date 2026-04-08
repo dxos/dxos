@@ -96,10 +96,12 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
+            // TODO(wittjosiah): This should probably pre-validate.
+            navigation: 'immediate',
           });
         }
       },
-      [onSelectObject, invokePromise, object, id],
+      [onSelectObject, invokePromise, attendableId],
     );
 
     return (

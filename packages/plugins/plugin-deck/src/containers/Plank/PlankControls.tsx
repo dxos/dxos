@@ -119,7 +119,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
               </>
             )}
 
-            {!layoutIsAnySolo && (
+            {!layoutIsAnySolo && layoutMode !== 'multi' && (
               <>
                 <PlankControl
                   label={t('increment-start.label')}
