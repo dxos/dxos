@@ -37,10 +37,7 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
             }
             // With CSS zoom, clientHeight can be in visual pixels while line positions use
             // layout pixels (same space as internalHeight / theme maxHeight).
-            const clipLimit =
-              scale === 1
-                ? containerHeight
-                : Math.min(internalHeight, containerHeight / scale);
+            const clipLimit = scale === 1 ? containerHeight : Math.min(internalHeight, containerHeight / scale);
             // Find the block (line) at the very bottom of the visible area.
             const block = view.lineBlockAtHeight(clipLimit - 1);
             // If the block overflows the container, clip at the block's top edge.
