@@ -4,32 +4,26 @@
 
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import { afterEach, beforeEach, describe, expect } from 'vitest';
+import { describe, expect } from 'vitest';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { ContextBinding } from './context';
 import { AiConversation } from './conversation';
 
 describe('AiConversation', () => {
-  let builder: EchoTestBuilder;
-
-  beforeEach(async () => {
-    builder = await new EchoTestBuilder().open();
-  });
-
-  afterEach(async () => {
-    await builder.close();
+  const TestLayer = TestDatabaseLayer({
+    types: [Blueprint.Blueprint, ContextBinding],
   });
 
   it.effect('loads blueprints on open', () =>
     Effect.gen(function* () {
-      const peer = yield* Effect.promise(() => builder.createPeer({ types: [Blueprint.Blueprint, ContextBinding] }));
-      const db = yield* Effect.promise(() => peer.createDatabase());
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create<ContextBinding>();
+      const { db } = yield* Database.Service;
+
+      // Create feed.
+      const feed = db.add(Feed.make());
 
       // Create blueprint.
       const blueprint = db.add(
@@ -39,27 +33,26 @@ describe('AiConversation', () => {
         }),
       );
 
-      // Add blueprint to queue via binding.
-      yield* Effect.promise(() =>
-        queue.append([
-          Obj.make(ContextBinding, {
-            blueprints: {
-              added: [Ref.make(blueprint)],
-              removed: [],
-            },
-            objects: {
-              added: [],
-              removed: [],
-            },
-          }),
-        ]),
-      );
+      // Add blueprint to feed via binding.
+      yield* Feed.append(feed, [
+        Obj.make(ContextBinding, {
+          blueprints: {
+            added: [Ref.make(blueprint)],
+            removed: [],
+          },
+          objects: {
+            added: [],
+            removed: [],
+          },
+        }),
+      ]);
 
-      const conversation = new AiConversation({ queue });
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const conversation = new AiConversation({ feed, runtime });
       yield* Effect.promise(() => conversation.open());
 
       expect(conversation.context.getBlueprints()).toHaveLength(1);
       expect(conversation.context.getObjects()).toHaveLength(0);
-    }),
+    }).pipe(Effect.provide(TestLayer)),
   );
 });

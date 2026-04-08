@@ -13,7 +13,7 @@ import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -32,8 +32,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     const blueprintRegistry = useBlueprintRegistry();
     const space = getSpace(companionTo);
     const feedTarget = chat?.feed.target;
-    const chatQueue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
-    const binder = useContextBinder(chatQueue);
+    const binder = useContextBinder(space, feedTarget);
 
     // Persist chat on first submit.
     const handleEvent = useCallback(

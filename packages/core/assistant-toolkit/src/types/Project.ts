@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
+import { AiContextBinder, AiContextService } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Annotation, Database, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
@@ -18,7 +18,6 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueAnnotation, Text } from '@dxos/schema';
-import type { Message } from '@dxos/types';
 
 import * as Chat from './Chat';
 import * as Plan from './Plan';
@@ -91,7 +90,7 @@ export const makeInitialized = (
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Project, never, QueueService | Database.Service> =>
+): Effect.Effect<Project, never, QueueService | Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
     const project = Obj.make(Project, {
       ...props,
@@ -103,10 +102,8 @@ export const makeInitialized = (
     });
     yield* Database.add(project);
     const feed = yield* Database.add(Feed.make());
-    const feedQueueDxn = Feed.getQueueDxn(feed);
-    invariant(feedQueueDxn, 'Feed queue DXN not found.');
-    const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(feedQueueDxn);
-    const contextBinder = new AiContextBinder({ queue });
+    const runtime = yield* Effect.runtime<Feed.FeedService>();
+    const contextBinder = new AiContextBinder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
     const projectBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
@@ -148,7 +145,7 @@ export const makeInitialized = (
  */
 export const resetChatHistory = (
   project: Project,
-): Effect.Effect<void, ObjectNotFoundError, QueueService | Database.Service> =>
+): Effect.Effect<void, ObjectNotFoundError, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
     invariant(project.chat, 'Project must have an existing chat to reset.');
 
@@ -156,23 +153,19 @@ export const resetChatHistory = (
       Effect.map((_) => _.feed),
       Effect.flatMap(Database.load),
     );
-    const existingQueueDxn = Feed.getQueueDxn(existingFeed);
-    invariant(existingQueueDxn, 'Existing feed queue DXN not found.');
-    const existingQueue = yield* QueueService.getQueue(existingQueueDxn);
+    const runtime = yield* Effect.runtime<Feed.FeedService>();
     const existingContextBinder = yield* acquireReleaseResource(
       () =>
         new AiContextBinder({
-          queue: existingQueue,
+          feed: existingFeed,
+          runtime,
         }),
     );
     const blueprints = existingContextBinder.getBlueprints().map((blueprint) => Ref.make(blueprint));
     const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const feedQueueDxn = Feed.getQueueDxn(feed);
-    invariant(feedQueueDxn, 'Feed queue DXN not found.');
-    const queue = yield* QueueService.getQueue(feedQueueDxn);
-    const contextBinder = new AiContextBinder({ queue });
+    const contextBinder = new AiContextBinder({ feed, runtime });
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints,

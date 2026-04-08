@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding } from '@dxos/assistant';
+import { AiConversation } from '@dxos/assistant';
 import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -110,10 +110,8 @@ describe('Project AddArtifact', () => {
 
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
-        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
-        invariant(chatQueueDxn, 'Feed queue DXN not found.');
-        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
         const documentDxn = Obj.getDXN(document);
@@ -152,11 +150,9 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
         );
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
-        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
-        invariant(chatQueueDxn, 'Feed queue DXN not found.');
-        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
         yield* Database.flush();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
         yield* conversation.createRequest({
@@ -270,11 +266,9 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
 
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
-        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
-        invariant(chatQueueDxn, 'Feed queue DXN not found.');
-        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
         yield* Database.flush();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
         yield* conversation.createRequest({
