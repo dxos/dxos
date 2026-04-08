@@ -4,23 +4,26 @@
 
 // @import-as-namespace
 
+import * as Equal from 'effect/Equal';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { assumeType } from '@dxos/util';
+import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
-import * as objInternal from './internal/Obj';
 import * as internal from './internal';
-import type * as Ref from './Ref';
+import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
+import * as objInternal from './internal/Obj';
+import * as Ref from './Ref';
 import type * as Type from './Type';
 
 /**
@@ -80,8 +83,6 @@ export const Unknown: Type.Obj<Unknown> = Schema.Struct({
       [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
     }) as unknown as Type.Obj<Unknown>,
 );
-
-/**
 
 /**
  * Object with arbitrary properties.
@@ -660,6 +661,122 @@ export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
   entity[internal.ParentId] = parent;
+};
+
+interface UpdateFromOptions<T> {
+  exclude?: (keyof T)[];
+  include?: (keyof T)[];
+}
+
+const valuesEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (left === null || right === null) {
+    return left === right;
+  }
+  if (typeof left !== 'object' || typeof right !== 'object') {
+    return Utils.structuralRegion(() => Equal.equals(left, right));
+  }
+  if (Ref.isRef(left) && Ref.isRef(right)) {
+    return left.dxn.toString() === right.dxn.toString();
+  }
+  if (Ref.isRef(left) || Ref.isRef(right)) {
+    return false;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    for (let index = 0; index < left.length; index++) {
+      if (!valuesEqual(left[index], right[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false;
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const keys = new Set([
+    ...Object.keys(leftRecord).filter((key) => key !== 'id'),
+    ...Object.keys(rightRecord).filter((key) => key !== 'id'),
+  ]);
+  for (const key of keys) {
+    const leftHas = Object.hasOwn(leftRecord, key);
+    const rightHas = Object.hasOwn(rightRecord, key);
+    const leftValue = leftHas ? leftRecord[key] : undefined;
+    const rightValue = rightHas ? rightRecord[key] : undefined;
+    if (!valuesEqual(leftValue, rightValue)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Breaks reactive proxies on assigned values so echo-db assignment accepts nested structs (same idea as link assignment).
+ */
+const prepareAssignValue = (value: unknown): unknown =>
+  deepMapValues(value, (nested, recurse) => {
+    if (nested === null || typeof nested !== 'object') {
+      return nested;
+    }
+    if (Ref.isRef(nested)) {
+      return nested;
+    }
+    if (Array.isArray(nested)) {
+      return recurse(nested);
+    }
+    if (isProxy(nested)) {
+      return recurse({ ...getProxyTarget(nested) });
+    }
+    return recurse(nested);
+  });
+
+/**
+ * For each key present on `source` (except `id`), assigns `target[key]` when the current value differs.
+ * References are compared by target DXN; other values use Effect `Equal.equals` inside a structural region,
+ * with recursive comparison for arrays and plain object-shaped property bags (excluding `id`).
+ *
+ * Must be called within an `Obj.change` callback.
+ *
+ * @returns Whether any property was updated.
+ */
+export const updateFrom = <T extends Unknown>(
+  target: Mutable<T>,
+  source: T,
+  options?: UpdateFromOptions<T>,
+): boolean => {
+  assertArgument(isObject(target), 'Expected an echo object target.');
+  assertArgument(isObject(source), 'Expected an echo object source.');
+  let keys = Object.keys(source as Record<string, unknown>).filter((key) => key !== 'id');
+  if (options?.include !== undefined) {
+    const include = new Set(options.include.map((key) => String(key)));
+    keys = keys.filter((key) => include.has(key));
+  }
+  if (options?.exclude !== undefined) {
+    const exclude = new Set(options.exclude.map((key) => String(key)));
+    keys = keys.filter((key) => !exclude.has(key));
+  }
+  let updated = false;
+  const sourceRecord = source as Record<string, unknown>;
+  const targetRecord = target as Record<string, unknown>;
+  for (const key of keys) {
+    if (!Object.hasOwn(sourceRecord, key)) {
+      continue;
+    }
+    const nextValue = sourceRecord[key];
+    const prevValue = Object.hasOwn(targetRecord, key) ? targetRecord[key] : undefined;
+    if (valuesEqual(prevValue, nextValue)) {
+      continue;
+    }
+    targetRecord[key] = prepareAssignValue(nextValue) as never;
+    updated = true;
+  }
+  return updated;
 };
 
 //

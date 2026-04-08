@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -49,14 +49,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'slide',
         role: 'slide',
-        filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
+        filter: AppSurface.objectSection(Markdown.Document),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
         id: 'plugin-settings',
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;

@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SHORTCUTS_DIALOG } from '../constants';
 import { ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '#containers';
@@ -27,7 +28,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: SHORTCUTS_DIALOG,
         role: 'dialog',
-        filter: (data): data is { component: string } => data.component === SHORTCUTS_DIALOG,
+        filter: AppSurface.componentDialog(SHORTCUTS_DIALOG),
         component: () => <ShortcutsDialogContent />,
       }),
     ]),

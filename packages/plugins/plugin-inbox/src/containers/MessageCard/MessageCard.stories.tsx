@@ -43,7 +43,7 @@ const MessageCardStory = () => {
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
         </Card.Toolbar>
-        <MessageCard subject={subject} />
+        <MessageCard role='card--content' subject={subject} />
       </Card.Root>
     </IntrinsicCardContainer>
   );

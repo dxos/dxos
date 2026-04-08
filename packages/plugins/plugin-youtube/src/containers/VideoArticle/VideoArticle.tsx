@@ -4,12 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Icon, Panel } from '@dxos/react-ui';
 
 import * as Video from '../../types/Video';
 
-export type VideoArticleProps = CompanionSurfaceProps<Video.YouTubeVideo>;
+export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.YouTubeVideo>;
 
 export const VideoArticle = ({ subject: video, role }: VideoArticleProps) => {
   const [showPlayer, setShowPlayer] = useState(false);

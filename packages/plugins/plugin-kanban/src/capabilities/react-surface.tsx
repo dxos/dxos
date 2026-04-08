@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
@@ -20,16 +21,17 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'root',
+id: 'root',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
+        filter: AppSurface.objectArticle(Kanban.Kanban),
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'object-settings',
         role: 'object-settings',
         position: 'hoist',
-        filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
+        filter: AppSurface.objectSettings(Kanban.Kanban),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({

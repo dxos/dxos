@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
@@ -20,9 +20,10 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'article',
+id: 'article',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
+        filter: AppSurface.objectArticle(WnfsFile.File),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
       Surface.create({

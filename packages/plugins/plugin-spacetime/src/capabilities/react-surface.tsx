@@ -7,8 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SpacetimeSettings } from '#components';
 import { SpacetimeArticle } from '#containers';
@@ -21,16 +20,15 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'scene',
         role: 'article',
-        filter: (data): data is { subject: Scene.Scene } => Obj.instanceOf(Scene.Scene, data.subject),
-        component: ({ data, role, attendableId }) => {
-          return <SpacetimeArticle role={role} subject={data.subject} attendableId={attendableId} />;
+        filter: AppSurface.objectArticle(Scene.Scene),
+        component: ({ data, role }) => {
+          return <SpacetimeArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
       }),
       Surface.create({
         id: 'plugin-settings',
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SpacetimeSettings settings={settings} onSettingsChange={updateSettings} />;

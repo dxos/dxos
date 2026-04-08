@@ -32,7 +32,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <SpacetimeArticle role='article' subject={scene} />;
+  return <SpacetimeArticle role='article' subject={scene} attendableId='story' />;
 };
 
 const meta = {

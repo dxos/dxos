@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
@@ -35,16 +35,17 @@ export const Drawer = () => {
   const parentNode = useNode(graph, activeId);
 
   // Build Surface data for the companion content.
-  const data = useMemo(() => {
-    return (
-      node && {
-        attendableId: companionId,
-        subject: node.data,
-        companionTo: parentNode?.data,
-        properties: node.properties,
-        variant,
-      }
-    );
+  const data = useMemo<AppSurface.ArticleData | undefined>(() => {
+    if (!node || !companionId) {
+      return undefined;
+    }
+    return {
+      attendableId: companionId,
+      subject: node.data,
+      companionTo: parentNode?.data,
+      properties: node.properties,
+      variant,
+    };
   }, [companionId, node, parentNode, variant]);
 
   // Get drawer actions (tabs + toolbar buttons).

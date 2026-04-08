@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
@@ -21,7 +21,7 @@ const LLM_PROVIDER_LABELS = {
   lmstudio: 'LM Studio',
 } as const;
 
-export type AssistantSettingsProps = SettingsSurfaceProps<Assistant.Settings>;
+export type AssistantSettingsProps = AppSurface.SettingsArticleProps<Assistant.Settings>;
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.id);

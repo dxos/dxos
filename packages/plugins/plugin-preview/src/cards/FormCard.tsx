@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
@@ -14,7 +14,7 @@ import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const FormCard = ({ subject, projection }: ObjectSurfaceProps & { projection?: ProjectionModel }) => {
+export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);
   const echoSchema = Obj.getSchema(subject);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);

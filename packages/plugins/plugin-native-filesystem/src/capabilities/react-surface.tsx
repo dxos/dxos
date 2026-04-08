@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { WorkspaceSettingsContainer } from '#containers';
 import { useActiveFilesystemWorkspace } from '#hooks';
@@ -20,7 +21,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'workspace-settings',
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === GENERAL_TYPE,
+        filter: AppSurface.literalSection(GENERAL_TYPE),
         component: () => {
           const workspace = useActiveFilesystemWorkspace();
           if (!workspace) {

@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
@@ -12,7 +12,7 @@ import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/te
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
-  Component: FC<ObjectSurfaceProps<T>>;
+  Component: FC<AppSurface.ObjectCardProps<T>>;
   createObject: () => T;
   image?: boolean;
 };
@@ -34,7 +34,7 @@ export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>
                   <Card.Menu />
                 </Card.Toolbar>
-                <Component role={role} subject={image ? object : omitImage(object)} />
+                <Component role={role ?? 'card--content'} subject={image ? object : omitImage(object)} />
               </Card.Root>
             </CardContainer>
           </div>

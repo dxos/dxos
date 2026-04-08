@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -17,7 +18,8 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'sheet',
+id: 'sheet',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
           typeof data.attendableId === 'string' &&
@@ -40,7 +42,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'object-settings',
         role: 'object-settings',
-        filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
+        filter: AppSurface.objectSettings(Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),
     ]),

@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
@@ -28,13 +28,14 @@ import { InboxOperation } from '#operations';
 import { type Mailbox } from '#types';
 import { sortByCreated } from '../../util';
 
+import { getMailboxMessagePath } from '../../paths';
+
 import { NewMailbox } from './NewMailbox';
 
-export type MailboxArticleProps = ObjectSurfaceProps<
+export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
-    attendableId?: string;
   }
 >;
 
@@ -143,8 +144,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
               subject: companion,
               state: 'expanded',
             });
-          } else {
-            // Deck layout: open as companion panel.
+          } else if (layout.mode === 'multi' && message && db) {
+            // Multi deck: open the message plank beside this mailbox (pivot).
+            void invokePromise(LayoutOperation.Open, {
+              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+              pivotId: id,
+              navigation: 'immediate',
+            });
+          } else if (message) {
+            // Solo deck: show message in the companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
             });
@@ -178,7 +186,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleClear = useCallback(() => {

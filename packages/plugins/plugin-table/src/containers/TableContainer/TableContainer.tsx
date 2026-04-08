@@ -8,8 +8,7 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 
 import { invariant } from '@dxos/invariant';
@@ -34,7 +33,7 @@ import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { meta } from '#meta';
 import { type Table } from '#operations';
 
-export type TableContainerProps = ObjectSurfaceProps<Table.Table>;
+export type TableContainerProps = AppSurface.ObjectArticleProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(

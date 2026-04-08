@@ -54,12 +54,11 @@ export const formattingStyles = EditorView.theme({
    */
   '& code': {
     fontFamily: fontMono,
-    whiteSpace: 'nowrap',
     color: 'var(--color-cm-code)',
+    whiteSpace: 'nowrap',
   },
   '& .cm-code': {
     fontFamily: fontMono,
-    whiteSpace: 'nowrap',
     color: 'var(--color-cm-code)',
   },
   // Inline code spans (triggered by backticks) use `cm-code-inline` + `font-mono`.
@@ -68,10 +67,11 @@ export const formattingStyles = EditorView.theme({
   '& .cm-code-inline': {
     fontFamily: fontMono,
     height: '24px',
-    display: 'inline-flex',
+    // display: 'inline-flex',
     alignItems: 'center',
     overflow: 'hidden',
-    color: 'var(--color-cm-code)',
+    whiteSpace: 'nowrap',
+    color: 'var(--color-cm-code-inline)',
   },
   '& .cm-code-mark': {
     fontFamily: fontMono,
@@ -117,12 +117,18 @@ export const formattingStyles = EditorView.theme({
   },
   '.cm-table-head': {
     padding: '2px 16px 2px 0px',
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'keep-all',
     textAlign: 'left',
-    borderBottom: '1px solid var(--color-cm-separator)',
     color: 'var(--color-subdued)',
+    borderBottom: '1px solid var(--color-cm-separator)',
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'keep-all',
     verticalAlign: 'top',
   },
 

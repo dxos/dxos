@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
-export type MessageArticleProps = ObjectSurfaceProps<MessageType.Message, { mailbox?: Mailbox.Mailbox }>;
+export type MessageArticleProps = AppSurface.ObjectArticleProps<MessageType.Message, { mailbox?: Mailbox.Mailbox }>;
 export const MessageArticle = ({
   role,
   subject: message,

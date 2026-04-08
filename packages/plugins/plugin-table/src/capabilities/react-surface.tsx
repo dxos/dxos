@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { TableCard, TableContainer } from '#containers';
@@ -16,10 +16,10 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'table',
+id: 'table',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { attendableId: string; subject: Table.Table } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Table.Table, data.subject),
+        filter: AppSurface.objectArticle(Table.Table),
         component: ({ data, role }) => (
           <TableContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'table-card',
         role: ['card--content'],
-        filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
+        filter: AppSurface.objectCard(Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),

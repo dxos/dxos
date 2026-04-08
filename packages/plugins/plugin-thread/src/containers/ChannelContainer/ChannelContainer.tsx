@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
@@ -25,7 +25,7 @@ import { ThreadCapabilities } from '#types';
 import { type Channel } from '#types';
 import { ChatContainer } from '../ChatContainer';
 
-export type ChannelContainerProps = ObjectSurfaceProps<
+export type ChannelContainerProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
   {
     roomId?: string;

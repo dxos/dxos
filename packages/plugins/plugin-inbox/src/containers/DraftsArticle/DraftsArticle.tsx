@@ -6,8 +6,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type SpaceSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
@@ -18,9 +19,10 @@ import { Message } from '@dxos/types';
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { DraftMessage, type Mailbox } from '#types';
+import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
-export type DraftsArticleProps = SpaceSurfaceProps<{ mailbox: Mailbox.Mailbox }>;
+export type DraftsArticleProps = AppSurface.ArticleProps<unknown, { space?: Space; mailbox: Mailbox.Mailbox }>;
 
 /**
  * Drafts list for a mailbox. Query matches the same mailbox-scoped draft messages as the former per-draft nav nodes.
@@ -71,7 +73,13 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               subject: companion,
               state: 'expanded',
             });
-          } else {
+          } else if (layout.mode === 'multi' && message && db) {
+            void invokePromise(LayoutOperation.Open, {
+              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+              pivotId: id,
+              navigation: 'immediate',
+            });
+          } else if (message) {
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
             });
@@ -84,7 +92,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
         }
       }
     },
-    [drafts, id, invokePromise, layout.mode],
+    [db, drafts, id, invokePromise, layout.mode, mailbox.id],
   );
 
   return (
