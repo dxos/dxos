@@ -4,14 +4,11 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Option from 'effect/Option';
-import React from 'react';
 
 import { Process } from '@dxos/functions-runtime';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ProcessTree } from './ProcessTree';
-
-import '@dxos-theme';
 
 const makeProcess = (
   overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'state'> & { name: string },
@@ -74,17 +71,9 @@ const seedProcesses: Process.Info[] = [
 ];
 
 const meta: Meta<typeof ProcessTree> = {
-  title: 'plugins/plugin-assistant/containers/ProcessTree',
+  title: 'plugins/plugin-assistant/components/ProcessTree',
   component: ProcessTree,
-  decorators: [
-    (Story) => (
-      <div className='w-(--dx-complementary-sidebar-size)'>
-        <Story />
-      </div>
-    ),
-    withLayout({ layout: 'column' }),
-    withTheme(),
-  ],
+  decorators: [withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }), withTheme()],
 } satisfies Meta<typeof ProcessTree>;
 
 export default meta;

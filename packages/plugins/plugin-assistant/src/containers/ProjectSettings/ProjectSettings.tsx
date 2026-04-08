@@ -19,17 +19,20 @@ import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
-import { ButtonGroup, Input } from '@dxos/react-ui';
+import { useTranslation, Input } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
 
-export const ProjectSettings = ({ subject: project }: ObjectSurfaceProps<Project.Project>) => {
+import { meta } from '#meta';
+
+export type ProjectSettingsProps = ObjectSurfaceProps<Project.Project>;
+
+export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
+  const { t } = useTranslation(meta.id);
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(project)!.spaceId);
-
     await runtime.runPromise(Project.resetChatHistory(project));
-
     if (!project.queue) {
       await runtime.runPromise(
         Effect.gen(function* () {
@@ -59,14 +62,17 @@ export const ProjectSettings = ({ subject: project }: ObjectSurfaceProps<Project
     if (!db) {
       return Filter.nothing();
     }
+
     const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
     const feedSchemas = schemas.filter((schema) => {
       const annotation = FeedAnnotation.get(schema);
       return Option.isSome(annotation) && annotation.value === true;
     });
+
     if (feedSchemas.length === 0) {
       return Filter.nothing();
     }
+
     return Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
   }, [db]);
   const subscribableObjects = useQuery(db, feedFilter);
@@ -89,47 +95,45 @@ export const ProjectSettings = ({ subject: project }: ObjectSurfaceProps<Project
   );
 
   return (
-    <div className='flex flex-col gap-4'>
-      <Input.Root>
-        <Input.Label>Spec (what is the goal of the project?)</Input.Label>
-        <MarkdownEditor.Root id={spec?.id ?? ''} object={spec}>
-          <MarkdownEditor.Content initialValue={specInitialValue} />
-        </MarkdownEditor.Root>
-      </Input.Root>
-      <ButtonGroup classNames='h-10'>
-        <Button onClick={handleResetHistory}>Reset Chat History</Button>
-      </ButtonGroup>
-      <div>
-        <h2 className='text-lg font-bold'>Subscriptions</h2>
-        {subscribableObjects.length > 0 && (
-          <div>
-            {subscribableObjects.map((object) => (
-              <Input.Root key={object.id}>
-                <Input.Checkbox
-                  checked={existingSubscripts.includes(object)}
-                  onCheckedChange={(checked) => {
-                    Obj.change(project, (project) => {
-                      if (checked) {
-                        project.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
-                      } else {
-                        project.subscriptions = project.subscriptions.filter(
-                          (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
-                        );
-                      }
-                    });
-                  }}
-                />
-                <Input.Label>{Obj.getLabel(object)}</Input.Label>
-              </Input.Root>
-            ))}
-          </div>
-        )}
-        {subscribableObjects.length === 0 && (
-          <div className='text-sm text-description'>Space has no feeds to subscribe to.</div>
-        )}
+    <div role='none' className='dx-container grid grid-rows-[min-content_1fr_min-content] gap-2 pb-trim-md'>
+      <div role='none' className='flex flex-col'>
+        <Input.Root>
+          <Input.Label>{t('subscriptions.label')}</Input.Label>
+        </Input.Root>
+        {subscribableObjects.map((object) => (
+          <Input.Root key={object.id}>
+            <div className='flex items-center gap-2'>
+              <Input.Checkbox
+                checked={existingSubscripts.includes(object)}
+                onCheckedChange={(checked) => {
+                  Obj.change(project, (project) => {
+                    if (checked) {
+                      project.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
+                    } else {
+                      project.subscriptions = project.subscriptions.filter(
+                        (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
+                      );
+                    }
+                  });
+                }}
+              />
+              <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
+            </div>
+          </Input.Root>
+        ))}
       </div>
+      <div className='dx-expander flex flex-col'>
+        <Input.Root>
+          <Input.Label>{t('instructions.label')}</Input.Label>
+          {spec && (
+            <MarkdownEditor.Root id={spec.id} object={spec}>
+              <MarkdownEditor.Content initialValue={specInitialValue} />
+            </MarkdownEditor.Root>
+          )}
+        </Input.Root>
+      </div>
+      {/* TODO(burdon): Move into toolbar in parent. */}
+      <Button onClick={handleResetHistory}>{t('reset-history.button')}</Button>
     </div>
   );
 };
-
-export default ProjectSettings;

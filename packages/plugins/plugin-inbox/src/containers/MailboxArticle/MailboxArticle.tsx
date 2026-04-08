@@ -188,10 +188,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
-        {!isEmpty && (
-          <ElevationProvider elevation='positioned'>
-            <Menu.Root {...menuActions} attendableId={id}>
+      {!isEmpty && (
+        <ElevationProvider elevation='positioned'>
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Panel.Toolbar asChild>
               <Menu.Toolbar>
                 <QueryEditor
                   ref={filterEditorRef}
@@ -216,10 +216,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                   onClick={() => handleClear()}
                 />
               </Menu.Toolbar>
-            </Menu.Root>
-          </ElevationProvider>
-        )}
-      </Panel.Toolbar>
+            </Panel.Toolbar>
+          </Menu.Root>
+        </ElevationProvider>
+      )}
       <Panel.Content asChild>
         {isEmpty ? (
           <NewMailbox mailbox={mailbox} />

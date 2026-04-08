@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
-import { Treegrid } from './Treegrid';
+import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR, TREEGRID_PATH_SEPARATOR } from './Treegrid';
 
 faker.seed(1234);
 
@@ -129,8 +129,8 @@ const DefaultStory = () => {
         return (
           <Treegrid.Row
             key={node.id}
-            id={path.join(Treegrid.PATH_SEPARATOR)}
-            {...(parentOf && { parentOf: parentOf.join(Treegrid.PARENT_OF_SEPARATOR) })}
+            id={path.join(TREEGRID_PATH_SEPARATOR)}
+            {...(parentOf && { parentOf: parentOf.join(TREEGRID_PARENT_OF_SEPARATOR) })}
           >
             <Treegrid.Cell indent classNames='flex items-center'>
               {node.icon && <Icon icon={node.icon} classNames='w-[1em] h-[1em] my-1' />}

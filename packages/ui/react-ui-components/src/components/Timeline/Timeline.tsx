@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
@@ -61,6 +61,7 @@ export type TimelineProps = ThemedClassName<{
   showIcon?: boolean;
   compact?: boolean;
   options?: TimelineOptions;
+  fade?: boolean;
   debug?: boolean;
   onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
   /**
@@ -83,6 +84,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       showIcon = true,
       compact = false,
       options = compact ? compactOptions : defaultOptions,
+      fade = false,
       debug = false,
       onCurrentChange,
       onCommitClick,
@@ -90,7 +92,6 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const scrollerRef = useForwardedRef(forwardedRef);
 
     // Auto-discover branches if not provided.
     const branches = useMemo(() => {
@@ -216,88 +217,94 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, containerRef.current]);
 
     return (
-      <ScrollContainer.Root classNames={classNames} pin ref={scrollerRef}>
-        <ScrollContainer.Viewport>
-          <div
-            role='none'
-            tabIndex={0}
-            className='grid outline-none'
-            style={{
-              gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
-                .filter(Boolean)
-                .join(' '),
-            }}
-            ref={containerRef}
-          >
-            {commits.length < 1 ? (
-              <p className='col-span-full text-description p-trim-md'>{t('no-commits.message')}</p>
-            ) : (
-              commits.map((commit, index) => {
-                // Skip branches that are not whitelisted.
-                const idx = getBranchIndex(commit.branch);
-                if (idx === -1) {
-                  return null;
-                }
-
-                const hasLink = !!commit.link && !!onCommitClick;
-                const handleClick = () => {
-                  setCurrent(index);
-                  if (hasLink) {
-                    onCommitClick(commit);
+      <ScrollContainer.Root pin ref={forwardedRef}>
+        <ScrollContainer.Content classNames={classNames} thin padding centered>
+          <ScrollContainer.Viewport>
+            <div
+              role='none'
+              tabIndex={0}
+              className='grid outline-none'
+              style={{
+                gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
+                  .filter(Boolean)
+                  .join(' '),
+              }}
+              ref={containerRef}
+            >
+              {commits.length < 1 ? (
+                <p className='col-span-full text-description p-trim-md'>{t('no-commits.message')}</p>
+              ) : (
+                commits.map((commit, index) => {
+                  // Skip branches that are not whitelisted.
+                  const idx = getBranchIndex(commit.branch);
+                  if (idx === -1) {
+                    return null;
                   }
-                };
 
-                return (
-                  <div
-                    key={commit.id}
-                    data-index={index}
-                    aria-current={current === index}
-                    className={mx(
-                      'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center',
-                      'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
-                      hasLink && 'cursor-pointer',
-                    )}
-                    style={{ height: `${options.lineHeight}px` }}
-                    onClick={handleClick}
-                  >
-                    <div role='none' className='px-1'>
-                      <LineVector
-                        branches={branches}
-                        spans={spans}
-                        index={index}
-                        commit={commit}
-                        currentCommit={currentCommit}
-                        options={options}
-                      />
-                    </div>
-                    {showTimestamp && (
-                      <div className='text-xs font-mono truncate items-center text-subdued'>
-                        {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
-                      </div>
-                    )}
-                    {showIcon &&
-                      (commit.icon ? (
-                        <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
-                      ) : (
-                        <div />
-                      ))}
+                  const hasLink = !!commit.link && !!onCommitClick;
+                  const handleClick = () => {
+                    setCurrent(index);
+                    if (hasLink) {
+                      onCommitClick(commit);
+                    }
+                  };
+
+                  return (
                     <div
-                      role='none'
+                      key={commit.id}
+                      data-index={index}
+                      aria-current={current === index}
                       className={mx(
-                        'text-sm truncate cursor-pointer text-subdued group-hover:text-base-surface-text',
-                        hasLink && 'underline decoration-dotted underline-offset-2',
+                        'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center',
+                        'aria-[current=true]:bg-active-surface __hover:bg-hover-surface',
+                        hasLink && 'cursor-pointer',
                       )}
+                      style={{ height: `${options.lineHeight}px` }}
+                      onClick={handleClick}
                     >
-                      {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
+                      <div role='none' className='px-1'>
+                        <LineVector
+                          branches={branches}
+                          spans={spans}
+                          index={index}
+                          commit={commit}
+                          currentCommit={currentCommit}
+                          options={options}
+                        />
+                      </div>
+                      {showTimestamp && (
+                        <div className='text-xs font-mono truncate items-center text-subdued'>
+                          {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
+                        </div>
+                      )}
+                      {showIcon &&
+                        (commit.icon ? (
+                          <Icon
+                            icon={commit.icon}
+                            classNames={mx(commit.level && levelColors[commit.level])}
+                            size={4}
+                          />
+                        ) : (
+                          <div />
+                        ))}
+                      <div
+                        role='none'
+                        className={mx(
+                          'text-sm truncate cursor-pointer text-subdued __group-hover:text-base-surface-text',
+                          hasLink && 'underline decoration-dotted underline-offset-2',
+                        )}
+                      >
+                        {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </ScrollContainer.Viewport>
-        <ScrollContainer.ScrollDownButton />
-        <ScrollContainer.Fade />
+                  );
+                })
+              )}
+            </div>
+          </ScrollContainer.Viewport>
+          <ScrollContainer.ScrollDownButton />
+          {fade && <ScrollContainer.Fade />}
+        </ScrollContainer.Content>
       </ScrollContainer.Root>
     );
   },

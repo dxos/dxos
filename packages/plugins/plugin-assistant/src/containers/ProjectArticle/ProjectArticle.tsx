@@ -123,6 +123,5 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
     );
   },
 );
-StackTile.displayName = 'StackTile';
 
-export default ProjectArticle;
+StackTile.displayName = 'StackTile';
