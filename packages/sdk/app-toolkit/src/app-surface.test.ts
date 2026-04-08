@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 
-import { AppSurface } from './surface-filter';
+import * as AppSurface from './app-surface';
 
 const TypeA = Schema.Struct({ name: Schema.String }).pipe(
   Type.object({ typename: 'com.example.test.TypeA', version: '0.1.0' }),
