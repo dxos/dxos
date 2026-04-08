@@ -5,7 +5,7 @@
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';

@@ -5,7 +5,7 @@
 import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';

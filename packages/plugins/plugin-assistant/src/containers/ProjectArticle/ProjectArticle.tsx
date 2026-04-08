@@ -8,8 +8,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
-import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';

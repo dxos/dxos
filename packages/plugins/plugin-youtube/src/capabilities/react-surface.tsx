@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ChannelArticle, ChannelSettings, VideoArticle, VideoCard } from '#containers';
 import { meta } from '#meta';
@@ -27,7 +27,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.video`,
         role: ['article', 'section'],
-        filter: AppSurface.and(AppSurface.object(Video.YouTubeVideo, { attendable: true }), AppSurface.companion(Channel.YouTubeChannel)),
+        filter: AppSurface.and(
+          AppSurface.object(Video.YouTubeVideo, { attendable: true }),
+          AppSurface.companion(Channel.YouTubeChannel),
+        ),
         component: ({ data: { attendableId, companionTo, subject }, role }) => {
           return <VideoArticle role={role} subject={subject} companionTo={companionTo} attendableId={attendableId} />;
         },

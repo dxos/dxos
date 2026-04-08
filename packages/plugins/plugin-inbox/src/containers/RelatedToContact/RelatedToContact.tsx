@@ -8,10 +8,9 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit';
 import { type Feed, Filter, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 

@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppSurface, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 
 import {
   AutomergePanel,
@@ -44,7 +44,7 @@ import { log } from '@dxos/log';
 import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 

@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';

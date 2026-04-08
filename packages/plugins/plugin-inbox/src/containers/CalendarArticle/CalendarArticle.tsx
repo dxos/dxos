@@ -6,8 +6,8 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';

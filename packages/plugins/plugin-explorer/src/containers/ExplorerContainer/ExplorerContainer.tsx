@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';

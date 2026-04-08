@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useAsyncEffect } from '@dxos/react-ui';

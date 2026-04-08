@@ -8,8 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';

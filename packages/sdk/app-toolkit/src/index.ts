@@ -18,5 +18,4 @@ export * from './plugin';
 export * from './native-passkey';
 export * from './personal-space';
 export * from './type-options';
-export * as AppSurface from './app-surface';
 export * from './translations';

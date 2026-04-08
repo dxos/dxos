@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, useMediaQuery } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';

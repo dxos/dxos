@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';

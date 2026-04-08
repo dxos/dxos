@@ -13,7 +13,7 @@ import {
   useCapability,
   useSettingsState,
 } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Text } from '@dxos/schema';
@@ -83,35 +83,36 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-const Container = forwardRef<HTMLDivElement, AppSurface.AttendableObjectProps<Markdown.Document | Text.Text, { id: string }>>(
-  ({ id, attendableId, subject, role }, forwardedRef) => {
-    const selectionManager = useCapability(AttentionCapabilities.Selection);
-    const settings = useAtomCapability(MarkdownCapabilities.Settings);
-    const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
-    const editorState = useCapability(MarkdownCapabilities.EditorState);
-    const extensions = useCapability(MarkdownCapabilities.Extensions);
-    const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
+const Container = forwardRef<
+  HTMLDivElement,
+  AppSurface.AttendableObjectProps<Markdown.Document | Text.Text, { id: string }>
+>(({ id, attendableId, subject, role }, forwardedRef) => {
+  const selectionManager = useCapability(AttentionCapabilities.Selection);
+  const settings = useAtomCapability(MarkdownCapabilities.Settings);
+  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
+  const extensions = useCapability(MarkdownCapabilities.Extensions);
+  const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
-    const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
-    const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
-      (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
-      [id, setState],
-    );
+  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+  const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
+    (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+    [id, setState],
+  );
 
-    return (
-      <MarkdownContainer
-        role={role}
-        subject={subject}
-        id={id}
-        attendableId={attendableId}
-        settings={settings}
-        selectionManager={selectionManager}
-        extensionProviders={extensionProviders}
-        editorStateStore={editorState}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
+  return (
+    <MarkdownContainer
+      role={role}
+      subject={subject}
+      id={id}
+      attendableId={attendableId}
+      settings={settings}
+      selectionManager={selectionManager}
+      extensionProviders={extensionProviders}
+      editorStateStore={editorState}
+      viewMode={viewMode}
+      onViewModeChange={handleViewModeChange}
+      ref={forwardedRef}
+    />
+  );
+});

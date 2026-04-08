@@ -5,7 +5,7 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 

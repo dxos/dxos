@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SketchSettings } from '#components';
 import { SketchContainer } from '#containers';

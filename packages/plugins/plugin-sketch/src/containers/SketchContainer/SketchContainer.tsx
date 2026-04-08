@@ -4,8 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { Panel, Flex } from '@dxos/react-ui';

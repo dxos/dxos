@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Blueprint } from '@dxos/blueprints';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 
 import { Chessboard } from '#components';
 import { type Chess } from '#types';

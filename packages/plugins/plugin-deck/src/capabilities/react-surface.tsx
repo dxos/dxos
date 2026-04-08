@@ -7,8 +7,8 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface, NOT_FOUND_PATH } from '@dxos/app-toolkit';
-import { NotFoundArticle } from '@dxos/app-toolkit/ui';
+import { NOT_FOUND_PATH } from '@dxos/app-toolkit';
+import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { DeckSettings } from '#components';
 import { meta } from '#meta';

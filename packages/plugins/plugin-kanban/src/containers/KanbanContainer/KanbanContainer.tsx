@@ -6,7 +6,8 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, type AppSurface } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { useObject, useSchema } from '@dxos/react-client/echo';

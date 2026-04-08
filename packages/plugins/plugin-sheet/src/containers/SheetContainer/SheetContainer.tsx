@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';

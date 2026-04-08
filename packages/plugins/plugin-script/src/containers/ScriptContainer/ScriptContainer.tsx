@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';

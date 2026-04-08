@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';

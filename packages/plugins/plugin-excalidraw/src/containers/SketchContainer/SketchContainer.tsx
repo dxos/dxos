@@ -6,7 +6,7 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Sketch } from '@dxos/plugin-sketch/types';
 import { Flex, Panel, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';

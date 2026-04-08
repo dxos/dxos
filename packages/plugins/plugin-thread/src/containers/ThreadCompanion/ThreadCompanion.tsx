@@ -7,7 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { type AppSurface, AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

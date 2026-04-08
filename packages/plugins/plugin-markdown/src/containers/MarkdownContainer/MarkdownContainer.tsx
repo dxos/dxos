@@ -7,8 +7,8 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppSurface, LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';

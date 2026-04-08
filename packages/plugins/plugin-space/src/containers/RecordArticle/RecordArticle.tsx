@@ -7,8 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
-import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Entity, Obj } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';

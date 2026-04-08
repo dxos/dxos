@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';

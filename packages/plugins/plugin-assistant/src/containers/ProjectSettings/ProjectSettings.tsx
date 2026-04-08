@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Project, syncProjectTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';

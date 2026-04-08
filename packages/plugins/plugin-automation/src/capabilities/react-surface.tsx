@@ -7,8 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { AutomationSettings, FunctionsContainer } from '#containers';

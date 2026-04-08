@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 

@@ -8,8 +8,7 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 
 import { invariant } from '@dxos/invariant';

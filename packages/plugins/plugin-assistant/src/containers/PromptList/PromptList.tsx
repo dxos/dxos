@@ -10,7 +10,7 @@ import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { IconButton } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 
 import { AssistantOperation } from '#operations';
 

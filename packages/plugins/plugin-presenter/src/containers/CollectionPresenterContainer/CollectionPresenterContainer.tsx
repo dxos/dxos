@@ -5,7 +5,7 @@
 import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 

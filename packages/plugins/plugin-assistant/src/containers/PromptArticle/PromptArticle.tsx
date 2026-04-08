@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';

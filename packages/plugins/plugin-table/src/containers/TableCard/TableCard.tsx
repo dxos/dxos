@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useMemo, useRef } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useSchema } from '@dxos/react-client/echo';

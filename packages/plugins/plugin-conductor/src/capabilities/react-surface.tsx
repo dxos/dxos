@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
 import { CanvasContainer } from '#containers';
@@ -21,7 +21,9 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: ['article', 'section'],
         filter: AppSurface.object(CanvasBoard.CanvasBoard, { attendable: true }),
-        component: ({ data, role }) => <CanvasContainer role={role} subject={data.subject} attendableId={data.attendableId} />,
+        component: ({ data, role }) => (
+          <CanvasContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
     ),
   ),

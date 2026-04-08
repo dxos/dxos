@@ -9,8 +9,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { Collection, type View } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';

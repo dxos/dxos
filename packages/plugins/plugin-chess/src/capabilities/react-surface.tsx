@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ChessArticle, ChessCard } from '#containers';
 import { meta } from '#meta';
@@ -20,7 +20,9 @@ export default Capability.makeModule(() =>
         id: meta.id,
         role: ['article', 'section'],
         filter: AppSurface.object(Chess.Game, { attendable: true }),
-        component: ({ data, role }) => <ChessArticle role={role} subject={data.subject} attendableId={data.attendableId} />,
+        component: ({ data, role }) => (
+          <ChessArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: meta.id,

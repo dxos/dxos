@@ -6,7 +6,7 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { Feed, type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';

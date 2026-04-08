@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';

@@ -9,7 +9,7 @@ import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 
-import { AppCapabilities } from './capabilities';
+import { AppCapabilities } from '../capabilities';
 
 //
 // Prop Types
@@ -31,8 +31,10 @@ export type ObjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, P
 } & Props;
 
 /** Props for attendable subject surfaces (article role). Pairs with `object(schema, { attendable: true })`. */
-export type AttendableObjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> =
-  ObjectProps<Subject, Props & { attendableId: string }>;
+export type AttendableObjectProps<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = ObjectProps<Subject, Props & { attendableId: string }>;
 
 /** Props for settings surfaces. Pairs with `settings()`. */
 export type SettingsProps<T extends {}, Props extends {} = {}> = {
@@ -198,9 +200,7 @@ export const settings = (
  * filter: AppSurface.component(ASSISTANT_DIALOG)
  * ```
  */
-export const component = <C extends string>(
-  id: C,
-): ((data: Record<string, unknown>) => data is { component: C }) => {
+export const component = <C extends string>(id: C): ((data: Record<string, unknown>) => data is { component: C }) => {
   return (data: Record<string, unknown>): data is { component: C } => data.component === id;
 };
 

@@ -13,7 +13,7 @@ import {
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';

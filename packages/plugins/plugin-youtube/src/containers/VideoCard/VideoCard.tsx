@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card, Icon } from '@dxos/react-ui';
 
 import * as Video from '../../types/Video';
