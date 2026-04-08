@@ -11,7 +11,6 @@ import * as Ref from './Ref';
 import * as Relation from './Relation';
 import { TestSchema } from './testing';
 
-
 describe('Obj', () => {
   describe('getSnapshot', () => {
     test('getSnapshot returns an immutable snapshot with SnapshotKindId', ({ expect }) => {
@@ -445,7 +444,6 @@ describe('Obj', () => {
       expectTypeOf<Obj.Any>().toMatchTypeOf<Obj.Unknown>();
     });
   });
-
 
   describe('Obj.updateFrom', () => {
     test('returns false when values already match', () => {

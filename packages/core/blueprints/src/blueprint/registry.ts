@@ -60,7 +60,7 @@ export class Registry {
   }
 }
 
-export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() { }
+export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {}
 
 /**
  * Resolves a blueprint from the registry.
@@ -90,4 +90,4 @@ export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Reg
     return yield* Database.add(Obj.clone(yield* resolve(key), { deep: true }));
   });
 
-export class NotFoundError extends BaseError.extend('BlueprintNotFound', 'Blueprint not found') { }
+export class NotFoundError extends BaseError.extend('BlueprintNotFound', 'Blueprint not found') {}
