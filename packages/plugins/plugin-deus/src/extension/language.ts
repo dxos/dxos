@@ -1,18 +1,21 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { type Extension } from '@codemirror/state';
 import { LanguageDescription, LanguageSupport } from '@codemirror/language';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 
 import { mdlBlockLanguage } from './syntax';
 import { mdlHighlight } from './highlight';
+import { BLOCK_TYPES } from './constants';
 
-// Known Deus block types. The CM Markdown language uses the info string
-// (the word after the opening fence) to look up a language for the block body.
+// The CM Markdown language uses the info string (the word after the opening fence)
+// to look up a language for the block body.
 // We register each block type name as an alias pointing to the same inner grammar.
-const BLOCK_TYPES = ['ext', 'type', 'op', 'feat', 'test', 'component', 'service', 'db'];
-
 const mdlBlockDescription = LanguageDescription.of({
   name: 'deus-block',
-  alias: BLOCK_TYPES,
+  alias: [...BLOCK_TYPES],
   support: new LanguageSupport(mdlBlockLanguage),
 });
 

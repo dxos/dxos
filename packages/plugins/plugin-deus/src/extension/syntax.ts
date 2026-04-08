@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { Language, defineLanguageFacet } from '@codemirror/language';
 import { parser } from './parser';
 

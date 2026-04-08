@@ -17,13 +17,15 @@ import { translations } from './translations';
 import { Spec } from '#types';
 import { ReactSurface } from '#capabilities';
 
+const iconAnnotation = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
+
 export const DeusPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Spec.Spec.typename,
       metadata: {
-        icon: Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow).hue ?? 'white',
+        icon: iconAnnotation.icon,
+        iconHue: iconAnnotation.hue ?? 'white',
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Spec.make(props);

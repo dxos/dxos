@@ -32,6 +32,7 @@ const parseNodes = (text: string): { name: string; text: string }[] => {
 };
 
 // Parse and return only the non-Block node names (skip the root).
+// Nodes are in depth-first order: a parent appears before its children.
 const nodeNames = (text: string): string[] =>
   parseNodes(text)
     .filter(({ name }) => name !== 'Block')
@@ -40,37 +41,38 @@ const nodeNames = (text: string): string[] =>
 describe('mdl parser', () => {
   describe('KeyValue', () => {
     test('simple field', ({ expect }) => {
-      expect(nodeNames('kind: PieceKind')).toEqual(['FieldName', 'TypeExpr', 'KeyValue']);
+      // KeyValue is the parent; FieldName and TypeExpr are children (depth-first: parent first).
+      expect(nodeNames('kind: PieceKind')).toEqual(['KeyValue', 'FieldName', 'TypeExpr']);
     });
 
     test('optional field', ({ expect }) => {
-      expect(nodeNames('piece?: Piece')).toEqual(['FieldName', 'Optional', 'TypeExpr', 'KeyValue']);
+      expect(nodeNames('piece?: Piece')).toEqual(['KeyValue', 'FieldName', 'Optional', 'TypeExpr']);
     });
 
     test('field with inline comment', ({ expect }) => {
       expect(nodeNames('promotion?: PieceKind   # only valid for pawn')).toEqual([
+        'KeyValue',
         'FieldName',
         'Optional',
         'TypeExpr',
         'Comment',
-        'KeyValue',
       ]);
     });
 
     test('field with union type', ({ expect }) => {
       expect(nodeNames('status: playing | check | checkmate | stalemate')).toEqual([
+        'KeyValue',
         'FieldName',
         'TypeExpr',
-        'KeyValue',
       ]);
     });
 
     test('field with array type', ({ expect }) => {
-      expect(nodeNames('moves: Move[]')).toEqual(['FieldName', 'TypeExpr', 'KeyValue']);
+      expect(nodeNames('moves: Move[]')).toEqual(['KeyValue', 'FieldName', 'TypeExpr']);
     });
 
     test('field with range', ({ expect }) => {
-      expect(nodeNames('rank: 1..8')).toEqual(['FieldName', 'TypeExpr', 'KeyValue']);
+      expect(nodeNames('rank: 1..8')).toEqual(['KeyValue', 'FieldName', 'TypeExpr']);
     });
   });
 
@@ -96,16 +98,17 @@ describe('mdl parser', () => {
 
   describe('multi-line blocks', () => {
     test('type block body', ({ expect }) => {
-      const input = [
-        'fields:',
-        '  kind: PieceKind',
-        '  color: Color',
-      ].join('\n');
+      const input = ['fields:', '  kind: PieceKind', '  color: Color'].join('\n');
 
       expect(nodeNames(input)).toEqual([
-        'FieldName', 'KeyValue',          // fields:
-        'FieldName', 'TypeExpr', 'KeyValue', // kind: PieceKind
-        'FieldName', 'TypeExpr', 'KeyValue', // color: Color
+        'KeyValue',
+        'FieldName', // fields: (no value)
+        'KeyValue',
+        'FieldName',
+        'TypeExpr', // kind: PieceKind
+        'KeyValue',
+        'FieldName',
+        'TypeExpr', // color: Color
       ]);
     });
 
@@ -117,9 +120,13 @@ describe('mdl parser', () => {
       ].join('\n');
 
       expect(nodeNames(input)).toEqual([
-        'FieldName', 'TypeExpr', 'KeyValue', // desc: Start Game
-        'Comment',                            // # requirements follow
-        'FieldName', 'TypeExpr', 'KeyValue', // req F-1.1: ...
+        'KeyValue',
+        'FieldName',
+        'TypeExpr', // desc: Start Game
+        'Comment', // # requirements follow
+        'KeyValue',
+        'FieldName',
+        'TypeExpr', // req F-1.1: ...
       ]);
     });
 
@@ -176,14 +183,18 @@ describe('mdl parser', () => {
 
     test('blank lines are ignored', ({ expect }) => {
       expect(nodeNames('kind: PieceKind\n\ncolor: Color')).toEqual([
-        'FieldName', 'TypeExpr', 'KeyValue',
-        'FieldName', 'TypeExpr', 'KeyValue',
+        'KeyValue',
+        'FieldName',
+        'TypeExpr',
+        'KeyValue',
+        'FieldName',
+        'TypeExpr',
       ]);
     });
 
     test('field with no value is still a KeyValue', ({ expect }) => {
-      // e.g. "fields:" with no inline value — value section follows on next lines
-      expect(nodeNames('fields:')).toEqual(['FieldName', 'KeyValue']);
+      // e.g. "fields:" with no inline value — value section follows on next lines.
+      expect(nodeNames('fields:')).toEqual(['KeyValue', 'FieldName']);
     });
   });
 });

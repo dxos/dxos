@@ -13,8 +13,8 @@
  *   - Union:        `a | b | c`
  *   - Range:        `1..8`
  *
- * This file documents the intended grammar. The compiled parser is in parser.ts.
- * To regenerate: `npx lezer-generator grammar.ts -o parser.ts`
+ * This file documents the intended grammar. The runtime parser in parser.ts is currently hand-written.
+ * To generate once grammar is finalised: `npx lezer-generator grammar.ts -o parser.ts`
  *
  * @top Block
  *
@@ -51,4 +51,8 @@
 
 // This file is documentation only.
 // The actual parser is hand-written in parser.ts until lezer-generator is wired in.
+//
+// Copyright 2026 DXOS.org
+//
+
 export {};
