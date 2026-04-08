@@ -88,11 +88,7 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
   const commentOffset = lineText.indexOf(' #', pos);
   const valueEnd = commentOffset >= 0 ? commentOffset : lineText.length;
 
-  if (commentOffset >= 0) {
-    builder.add(abs(commentOffset + 1), abs(lineText.length), Decoration.mark({ class: 'cm-mdl-comment' }));
-  }
-
-  // Value expression highlighting.
+  // Value expression highlighting (must come before comment to maintain ascending order).
   const valueStart = pos;
   const valuePart = lineText.slice(valueStart, valueEnd);
 
@@ -126,6 +122,11 @@ const decorateLine = (builder: RangeSetBuilder<Decoration>, lineText: string, li
     const absIdx = valueStart + pipeIdx;
     builder.add(abs(absIdx), abs(absIdx + 1), Decoration.mark({ class: 'cm-mdl-punct' }));
     pipeIdx = valuePart.indexOf('|', pipeIdx + 1);
+  }
+
+  // Inline comment added last to keep RangeSetBuilder insertion monotonic.
+  if (commentOffset >= 0) {
+    builder.add(abs(commentOffset + 1), abs(lineText.length), Decoration.mark({ class: 'cm-mdl-comment' }));
   }
 };
 
