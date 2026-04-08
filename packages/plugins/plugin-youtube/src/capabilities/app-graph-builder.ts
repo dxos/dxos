@@ -17,7 +17,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { ClearSyncedVideos, Sync } from '#operations';
 import { meta } from '#meta';
@@ -72,7 +72,7 @@ export default Capability.makeModule(
         match: whenYouTubeChannel,
         actions: (channel) =>
           Effect.succeed([
-            {
+            Node.makeAction({
               id: 'sync',
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
@@ -103,8 +103,8 @@ export default Capability.makeModule(
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
-            },
-            {
+            }),
+            Node.makeAction({
               id: 'clear-synced-videos',
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
@@ -135,7 +135,7 @@ export default Capability.makeModule(
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },
-            },
+            }),
           ]),
       }),
     ]);

@@ -16,7 +16,7 @@ import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -41,7 +41,7 @@ export default Capability.makeModule(
         type: Chat.Chat,
         actions: (chat) => {
           return Effect.succeed([
-            {
+            Node.makeAction({
               id: AssistantOperation.UpdateChatName.meta.key,
               data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
               properties: {
@@ -49,7 +49,7 @@ export default Capability.makeModule(
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
-            },
+            }),
           ]);
         },
       }),
@@ -59,7 +59,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            {
+            Node.makeAction({
               id: `${LayoutOperation.UpdateDialog.meta.key}.assistant.open`,
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
@@ -91,8 +91,8 @@ export default Capability.makeModule(
                   windows: 'shift+ctrl+k',
                 },
               },
-            },
-            {
+            }),
+            Node.makeAction({
               id: `${meta.id}.reset-blueprints`,
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
@@ -113,7 +113,7 @@ export default Capability.makeModule(
                 label: ['reset-blueprints.label', { ns: meta.id }],
                 icon: 'ph--arrow-clockwise--regular',
               },
-            },
+            }),
           ]),
       }),
 

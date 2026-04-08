@@ -11,7 +11,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
@@ -41,7 +41,7 @@ export default Capability.makeModule(
         actions: (object) => {
           const db = Obj.getDatabase(object);
           return Effect.succeed([
-            {
+            Node.makeAction({
               id: OutlineOperation.CreateOutline.meta.key,
               properties: {
                 label: ['create-outline.label', { ns: meta.id }],
@@ -62,7 +62,7 @@ export default Capability.makeModule(
                   );
                 }
               }),
-            },
+            }),
           ]);
         },
       }),
@@ -71,7 +71,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            {
+            Node.makeAction({
               id: OutlineOperation.QuickJournalEntry.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -83,7 +83,7 @@ export default Capability.makeModule(
                 label: ['quick-entry.label', { ns: meta.id }],
                 icon: 'ph--calendar-plus--regular',
               },
-            },
+            }),
           ]),
       }),
     ]);
