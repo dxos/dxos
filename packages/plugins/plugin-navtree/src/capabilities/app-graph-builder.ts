@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { COMMANDS_DIALOG, meta } from '#meta';
 
@@ -18,7 +18,7 @@ export default Capability.makeModule(
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
+          Node.makeAction({
             id: COMMANDS_DIALOG,
             data: () =>
               Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -33,7 +33,7 @@ export default Capability.makeModule(
                 windows: 'ctrl+k',
               },
             },
-          },
+          }),
         ]),
     });
 

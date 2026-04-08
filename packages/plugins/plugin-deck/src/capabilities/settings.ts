@@ -21,8 +21,6 @@ export default Capability.makeModule(() =>
         enableDeck: false,
         enableStatusbar: false,
         enableNativeRedirect: !import.meta.env.DEV,
-        newPlankPositioning: 'start' as const,
-        overscroll: 'none' as const,
         encapsulatedPlanks: false,
       }),
     });

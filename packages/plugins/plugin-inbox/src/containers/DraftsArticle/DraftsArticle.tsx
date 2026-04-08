@@ -18,6 +18,7 @@ import { Message } from '@dxos/types';
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { DraftMessage, type Mailbox } from '#types';
+import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
 export type DraftsArticleProps = SpaceSurfaceProps<{ mailbox: Mailbox.Mailbox }>;
@@ -71,7 +72,13 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               subject: companion,
               state: 'expanded',
             });
-          } else {
+          } else if (layout.mode === 'multi' && message && db) {
+            void invokePromise(LayoutOperation.Open, {
+              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+              pivotId: id,
+              navigation: 'immediate',
+            });
+          } else if (message) {
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
             });
@@ -84,7 +91,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
         }
       }
     },
-    [drafts, id, invokePromise, layout.mode],
+    [db, drafts, id, invokePromise, layout.mode, mailbox.id],
   );
 
   return (

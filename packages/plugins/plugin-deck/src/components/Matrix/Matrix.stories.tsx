@@ -59,7 +59,9 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
           </Panel.Toolbar>
           <Json.Root data={props.data}>
             <Panel.Content asChild>
-              <Json.Content />
+              <Json.Content>
+                <Json.Data />
+              </Json.Content>
             </Panel.Content>
           </Json.Root>
         </Panel.Root>

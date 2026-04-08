@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
@@ -21,7 +21,7 @@ export default Capability.makeModule(
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
+          Node.makeAction({
             id: HelpOperation.Start.meta.key,
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -37,8 +37,8 @@ export default Capability.makeModule(
               },
               testId: 'helpPlugin.openHelp',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: `${meta.id}.open-shortcuts`,
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -53,7 +53,7 @@ export default Capability.makeModule(
                 macos: 'meta+ctrl+/',
               },
             },
-          },
+          }),
         ]),
     });
 
