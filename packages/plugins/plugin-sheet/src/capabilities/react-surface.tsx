@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.sheet`,
+        id: 'sheet',
         role: ['article', 'section'],
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
           typeof data.attendableId === 'string' &&
@@ -39,7 +39,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.object-settings`,
+        id: 'object-settings',
         role: 'object-settings',
         filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
         component: ({ data }) => <RangeList sheet={data.subject} />,

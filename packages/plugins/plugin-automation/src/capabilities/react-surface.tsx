@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.space-settings-functions`,
+        id: 'space-settings-functions',
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-functions`,
         component: () => {
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.space-settings-automation`,
+        id: 'space-settings-automation',
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-automation`,
         component: () => {
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.companion.automation`,
+        id: 'companion.automation',
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown; subject: 'automation' } =>
           Obj.isObject(data.companionTo) && data.subject === 'automation',

@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.welcome`,
+        id: 'welcome',
         role: 'dialog',
         filter: (data): data is any => data.component === WELCOME_SCREEN,
         component: () => {
@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.native-redirect`,
+        id: 'native-redirect',
         role: 'dialog',
         filter: (data): data is any => data.component === NATIVE_REDIRECT_DIALOG,
         component: ({ data }) => <NativeRedirectDialog {...data.props} />,

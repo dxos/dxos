@@ -18,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.workspace-settings`,
+        id: 'workspace-settings',
         role: 'article',
         filter: (data): data is { subject: string } => data.subject === GENERAL_TYPE,
         component: () => {

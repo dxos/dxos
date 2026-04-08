@@ -17,13 +17,13 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: ['article', 'section'],
         filter: (data): data is { subject: Voxel.World } => Obj.instanceOf(Voxel.World, data.subject),
         component: ({ data, role }) => <VoxelArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: ['card--content'],
         filter: (data): data is { subject: Voxel.World } => Obj.instanceOf(Voxel.World, data.subject),
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,

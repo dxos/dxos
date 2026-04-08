@@ -9,14 +9,13 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
 import { ChannelArticle, ChannelSettings, VideoArticle, VideoCard } from '#containers';
-import { meta } from '#meta';
 import { Channel, Video } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.channel`,
+        id: 'channel',
         role: ['article'],
         filter: (data): data is { attendableId?: string; subject: Channel.YouTubeChannel } =>
           Channel.instanceOf(data.subject),
@@ -25,7 +24,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.video`,
+        id: 'video',
         role: ['article', 'section'],
         filter: (
           data,
@@ -38,13 +37,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.video-card`,
+        id: 'video-card',
         role: 'card--content',
         filter: (data): data is { subject: Video.YouTubeVideo } => Video.instanceOf(data?.subject),
         component: ({ data: { subject }, role }) => <VideoCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}.channel.companion.settings`,
+        id: 'channel.companion.settings',
         role: 'object-settings',
         filter: (data): data is { subject: Channel.YouTubeChannel } => Channel.instanceOf(data.subject),
         component: ({ data }) => <ChannelSettings subject={data.subject} />,

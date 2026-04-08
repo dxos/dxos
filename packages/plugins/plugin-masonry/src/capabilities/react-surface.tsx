@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: ['article', 'section'],
         filter: (data): data is { subject: Masonry.Masonry | View.View } =>
           Obj.instanceOf(Masonry.Masonry, data.subject) || Obj.instanceOf(View.View, data.subject),

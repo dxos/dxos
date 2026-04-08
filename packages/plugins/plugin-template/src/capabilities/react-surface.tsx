@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: 'article',
         filter: (data): data is { subject: Obj.Unknown } => Obj.instanceOf(Template.Data, data.subject),
         component: ({ data, role }: { data: { subject: Obj.Unknown }; role: string }) => (

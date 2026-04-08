@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.article.transcript`,
+        id: 'article.transcript',
         role: ['article', 'section'],
         filter: (data): data is { attendableId: string; subject: Transcript.Transcript } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Transcript.Transcript, data.subject),

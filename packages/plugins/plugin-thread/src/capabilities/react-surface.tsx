@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.channel`,
+        id: 'channel',
         role: 'article',
         filter: (data): data is { attendableId: string; subject: Channel.Channel } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Channel.Channel, data.subject),
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.chat-companion`,
+        id: 'chat-companion',
         role: 'article',
         filter: (data): data is { companionTo: Channel.Channel; subject: 'chat' } =>
           Obj.instanceOf(Channel.Channel, data.companionTo) && data.subject === 'chat',
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.thread`,
+        id: 'thread',
         role: 'article',
         filter: (data): data is { subject: Thread.Thread } => Obj.instanceOf(Thread.Thread, data.subject),
         component: ({ data: { subject } }) => {
@@ -59,7 +59,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.comments`,
+        id: 'comments',
         role: 'article',
         filter: (data): data is { attendableId?: string; companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
           data.subject === 'comments' && Obj.isObject(data.companionTo),
@@ -67,7 +67,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -77,12 +77,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.assistant`,
+        id: 'assistant',
         role: 'deck-companion--active-call',
         component: () => <CallSidebar />,
       }),
       Surface.create({
-        id: `${meta.id}.devtools-overview`,
+        id: 'devtools-overview',
         role: 'devtools-overview',
         component: () => {
           const call = useCapability(ThreadCapabilities.CallManager);

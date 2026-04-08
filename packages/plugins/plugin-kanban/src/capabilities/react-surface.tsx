@@ -21,20 +21,20 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: ['article', 'section'],
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.object-settings`,
+        id: 'object-settings',
         role: 'object-settings',
         position: 'hoist',
         filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.create-initial-schema-form-[pivot-column]`,
+        id: 'create-initial-schema-form-[pivot-column]',
         role: 'form-input',
         filter: (
           data,

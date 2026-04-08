@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}.article`,
+        id: 'article',
         role: 'article',
         filter: (data): data is { attendableId: string; subject: Collection.Collection } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Collection.Collection, data.subject),

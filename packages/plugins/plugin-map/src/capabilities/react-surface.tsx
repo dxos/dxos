@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.surface.map`,
+        id: 'surface.map',
         role: ['article', 'section'],
         filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
         component: ({ data, role }) => {
@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.object-settings`,
+        id: 'surface.object-settings',
         role: 'object-settings',
         position: 'hoist',
         filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
@@ -57,7 +57,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: `${meta.id}.surface.create-initial-schema-form-[property-of-interest]`,
+        id: 'surface.create-initial-schema-form-[property-of-interest]',
         role: 'form-input',
         filter: (
           data,

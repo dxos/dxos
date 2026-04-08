@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: 'article',
         filter: (data): data is { attendableId: string; subject: Pipeline.Pipeline } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Pipeline.Pipeline, data.subject),
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.companion.invocations`,
+        id: 'companion.invocations',
         role: 'article',
         filter: (data): data is { companionTo: Pipeline.Pipeline } =>
           Obj.instanceOf(Pipeline.Pipeline, data.companionTo) && data.subject === 'invocations',
@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.object-settings`,
+        id: 'object-settings',
         role: 'object-settings',
         filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
         component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,

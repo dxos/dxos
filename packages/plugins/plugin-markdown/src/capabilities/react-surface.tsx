@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.surface.document`,
+        id: 'surface.document',
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.text`,
+        id: 'surface.text',
         role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
         filter: (data): data is { attendableId: string; subject: Text.Text } =>
@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.plugin-settings`,
+        id: 'surface.plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -74,7 +74,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.preview`,
+        id: 'surface.preview',
         role: 'card--content',
         filter: (data): data is { subject: Markdown.Document | Text.Text } =>
           Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),

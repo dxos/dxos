@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}.spec`,
+        id: 'spec',
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Spec.Spec; attendableId?: string } =>
           Spec.isSpec(data.subject) && (data.attendableId === undefined || typeof data.attendableId === 'string'),

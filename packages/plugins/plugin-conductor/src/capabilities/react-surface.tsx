@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: ['article', 'section'],
         filter: (data): data is { subject: CanvasBoard.CanvasBoard } =>
           Obj.instanceOf(CanvasBoard.CanvasBoard, data.subject),

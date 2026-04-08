@@ -25,19 +25,19 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.home`,
+        id: 'home',
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
         component: () => <Home />,
       }),
       Surface.create({
-        id: `${meta.id}.not-found`,
+        id: 'not-found',
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === NOT_FOUND_PATH,
         component: () => <NotFoundArticle />,
       }),
       Surface.create({
-        id: `${meta.id}.nav-branch`,
+        id: 'nav-branch',
         role: 'article',
         position: 'fallback',
         filter: (data): data is SurfaceData => {

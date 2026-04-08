@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.sketch`,
+        id: 'sketch',
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
           typeof data.attendableId === 'string' && Sketch.isSketch(data.subject, EXCALIDRAW_SCHEMA),
@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,

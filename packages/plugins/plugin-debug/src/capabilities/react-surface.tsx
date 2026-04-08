@@ -94,7 +94,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -111,7 +111,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.space`,
+        id: 'space',
         role: 'article',
         filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
         component: ({ role, data }) => {
@@ -150,13 +150,13 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.app-graph`,
+        id: 'app-graph',
         role: 'article',
         filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
-        id: `${meta.id}.wireframe`,
+        id: 'wireframe',
         role: ['article', 'section'],
         position: 'hoist',
         filter: (data): data is { subject: Obj.Unknown } => {
@@ -168,27 +168,27 @@ export default Capability.makeModule(
         ),
       }),
       Surface.create({
-        id: `${meta.id}.object-debug`,
+        id: 'object-debug',
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown } =>
           data.subject === 'debug' && Obj.isObject(data.companionTo),
         component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
       }),
       Surface.create({
-        id: `${meta.id}.devtools-overview`,
+        id: 'devtools-overview',
         role: 'deck-companion--devtools',
         filter: (data): data is { subject: 'devtools' } => data.subject === 'devtools',
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
-        id: `${meta.id}.space-objects`,
+        id: 'space-objects',
         role: 'deck-companion--space-objects',
         filter: (data): data is { subject: 'space-objects' } => data.subject === 'space-objects',
         component: () => <DebugSpaceObjectsPanel />,
       }),
 
       Surface.create({
-        id: `${meta.id}.status`,
+        id: 'status',
         role: 'status-indicator',
         position: 'hoist',
         component: () => <DebugStatus />,
@@ -198,55 +198,55 @@ export default Capability.makeModule(
       //
 
       Surface.create({
-        id: `${meta.id}.client.config`,
+        id: 'client.config',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Config,
         component: () => <ConfigPanel vaultSelector={false} />,
       }),
       Surface.create({
-        id: `${meta.id}.client.storage`,
+        id: 'client.storage',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Storage,
         component: () => <StoragePanel />,
       }),
       Surface.create({
-        id: `${meta.id}.client.logs`,
+        id: 'client.logs',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Logs,
         component: () => <LoggingPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.client.diagnostics`,
+        id: 'client.diagnostics',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Diagnostics,
         component: () => <DiagnosticsPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.client.tracing`,
+        id: 'client.tracing',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Tracing,
         component: () => <TracingPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.halo.identity`,
+        id: 'halo.identity',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Identity,
         component: () => <IdentityPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.halo.devices`,
+        id: 'halo.devices',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Devices,
         component: () => <DeviceListPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.halo.keyring`,
+        id: 'halo.keyring',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Keyring,
         component: () => <KeyringPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.halo.credentials`,
+        id: 'halo.credentials',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
         component: () => {
@@ -255,7 +255,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.spaces`,
+        id: 'echo.spaces',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
         component: () => {
@@ -268,7 +268,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.space`,
+        id: 'echo.space',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Space,
         component: () => {
@@ -282,7 +282,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.feeds`,
+        id: 'echo.feeds',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
         component: () => {
@@ -291,7 +291,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.objects`,
+        id: 'echo.objects',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Objects,
         component: () => {
@@ -300,7 +300,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.schema`,
+        id: 'echo.schema',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Schema,
         component: () => {
@@ -309,7 +309,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.automerge`,
+        id: 'echo.automerge',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
         component: () => {
@@ -318,13 +318,13 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.queues`,
+        id: 'echo.queues',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Queues,
         component: () => <QueuesPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.echo.members`,
+        id: 'echo.members',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Members,
         component: () => {
@@ -333,25 +333,25 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.echo.metadata`,
+        id: 'echo.metadata',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Metadata,
         component: () => <MetadataPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.mesh.signal`,
+        id: 'mesh.signal',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Mesh.Signal,
         component: () => <SignalPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.mesh.swarm`,
+        id: 'mesh.swarm',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Mesh.Swarm,
         component: () => <SwarmPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.mesh.network`,
+        id: 'mesh.network',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Mesh.Network,
         component: () => {
@@ -360,13 +360,13 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.edge.dashboard`,
+        id: 'edge.dashboard',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Dashboard,
         component: () => <EdgeDashboardPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.edge.workflows`,
+        id: 'edge.workflows',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
         component: () => {
@@ -375,7 +375,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.edge.traces`,
+        id: 'edge.traces',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Traces,
         component: () => {
@@ -385,7 +385,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.edge.testing`,
+        id: 'edge.testing',
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Testing,
         component: () => {

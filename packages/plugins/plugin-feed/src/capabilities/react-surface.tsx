@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       // Main subscription feed list view.
       Surface.create({
-        id: `${meta.id}.subscription-feed`,
+        id: 'subscription-feed',
         role: ['article'],
         filter: (
           data,
@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
       }),
       // Companion view: FeedArticle shown alongside a parent Subscription.Feed.
       Surface.create({
-        id: `${meta.id}.feed-article`,
+        id: 'feed-article',
         role: ['article', 'section'],
         filter: (
           data,

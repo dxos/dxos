@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -57,7 +57,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.script.article`,
+        id: 'script.article',
         role: ['article', 'section'],
         filter: (data): data is { subject: Script.Script; attendableId: string } =>
           Obj.instanceOf(Script.Script, data.subject),
@@ -81,7 +81,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.notebook.article`,
+        id: 'notebook.article',
         role: 'article',
         filter: (data): data is { subject: Notebook.Notebook; attendableId: string } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Notebook.Notebook, data.subject),
@@ -100,26 +100,26 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
       // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
       Surface.create({
-        id: `${meta.id}.companion.base-settings`,
+        id: 'companion.base-settings',
         role: 'base-object-settings',
         filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
         component: ({ data }) => <ScriptProperties object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.settings`,
+        id: 'companion.settings',
         role: 'object-settings',
         filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
         component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.execute`,
+        id: 'companion.execute',
         role: 'article',
         filter: (data): data is { companionTo: Script.Script } =>
           Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'execute',
         component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.logs`,
+        id: 'companion.logs',
         role: 'article',
         filter: (data): data is { companionTo: Script.Script } =>
           Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',

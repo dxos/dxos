@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: ['article', 'section'],
         filter: (data): data is { subject: Dream.Dream } => Obj.instanceOf(Dream.Dream, data.subject),
         component: ({ data, role }) => <ZenArticle role={role} subject={data.subject} />,
