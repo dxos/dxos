@@ -13,7 +13,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
 import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -37,6 +37,7 @@ import {
   type StoredDeckState,
   defaultDeck,
   getMode,
+  PLANK_COMPANION_TYPE,
 } from '#types';
 
 faker.seed(1234);
@@ -115,14 +116,36 @@ const storyDeckState = Capability.makeModule(() =>
 );
 
 type Item = { id: string; title: string; children?: Item[] };
-const createItem = (): Item => ({
+
+/**
+ * @param depth - Current depth; children are only added when `depth < maxDepth`.
+ * @param maxDepth - Defaults to {@link STORY_ITEM_MAX_DEPTH}.
+ */
+const createItem = (depth = 0, maxDepth = 3): Item => ({
   id: faker.string.uuid(),
   title: faker.lorem.words({ min: 2, max: 4 }),
   children:
-    Math.random() > 0.5 ? Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => createItem()) : undefined,
+    depth < maxDepth
+      ? Array.from({ length: faker.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
+      : undefined,
 });
 
 const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
+
+/**
+ * Maps a nested {@link Item} tree to graph nodes so `Graph.getConnections` / `useConnections` see children.
+ */
+const toStoryItemNode = (item: Item, index: number, depth: number): Node.NodeArg<Item> =>
+  Node.make({
+    id: item.id,
+    type: 'story-item',
+    data: item,
+    properties: {
+      label: depth === 0 ? `Item ${index + 1}` : item.title,
+      icon: depth === 0 ? 'ph--file--regular' : 'ph--file-text--regular',
+    },
+    nodes: (item.children ?? []).map((child, childIndex) => toStoryItemNode(child, childIndex, depth + 1)),
+  });
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
@@ -215,18 +238,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         GraphBuilder.createExtension({
           id: 'story-items',
           match: NodeMatcher.whenRoot,
-          connector: () =>
-            Effect.succeed(
-              STORY_ITEMS.map((item, index) => ({
-                id: item.id,
-                type: 'story-item',
-                data: item,
-                properties: {
-                  label: `Item ${index + 1}`,
-                  icon: 'ph--file--regular',
-                },
-              })),
-            ),
+          connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
         }),
         GraphBuilder.createExtension({
           id: 'story-item-companions',
@@ -266,11 +278,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>(
     const layout = useLayout();
     const { invokePromise } = useOperationInvoker();
 
-    const items = useMemo(
-      () => Graph.getConnections(graph, Node.RootId, 'child').filter((node) => !Node.isActionLike(node)),
-      [graph],
-    );
-
+    const items = useConnections(graph, Node.RootId, 'child');
     const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
     return (
@@ -306,9 +314,13 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
 
+  const plankConnections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () => Graph.getConnections(graph, id, 'child').filter((node) => !Node.isActionLike(node)),
-    [graph],
+    () =>
+      plankConnections.filter(
+        (node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE,
+      ),
+    [plankConnections],
   );
 
   return (
