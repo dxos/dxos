@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 
 import { SpecArticle } from '#containers';
 import { meta } from '#meta';
-import { isSpec, type Spec } from '#types';
+import { Spec } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -19,8 +19,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.spec`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Spec; attendableId: string } =>
-          typeof data.attendableId === 'string' && isSpec(data.subject),
+        filter: (data): data is { subject: Spec.Spec; attendableId: string } =>
+          typeof data.attendableId === 'string' && Spec.isSpec(data.subject),
         component: ({ data: { subject, attendableId }, role }) => (
           <SpecArticle role={role} subject={subject} attendableId={attendableId} />
         ),

@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-deus",
   "version": "0.1.0",
+  "private": true,
   "description": "Deus plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +11,6 @@
   },
   "license": "MIT",
   "author": "DXOS.org",
-  "private": true,
   "sideEffects": true,
   "type": "module",
   "imports": {

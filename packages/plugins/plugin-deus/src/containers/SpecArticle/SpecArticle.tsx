@@ -9,9 +9,9 @@ import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 
-import { type Spec } from '#types';
+import { Spec } from '#types';
 
-export type SpecArticleProps = ObjectSurfaceProps<Spec>;
+export type SpecArticleProps = ObjectSurfaceProps<Spec.Spec>;
 
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
   ({ role, subject: spec, attendableId }, forwardedRef) => {

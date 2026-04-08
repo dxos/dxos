@@ -14,19 +14,19 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { meta } from '#meta';
 import { translations } from './translations';
-import { Spec, make } from '#types';
+import { Spec } from '#types';
 import { ReactSurface } from '#capabilities';
 
 export const DeusPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
-      id: Spec.typename,
+      id: Spec.Spec.typename,
       metadata: {
-        icon: Annotation.IconAnnotation.get(Spec).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Spec).pipe(Option.getOrThrow).hue ?? 'white',
+        icon: Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props, options) =>
           Effect.gen(function* () {
-            const object = make(props);
+            const object = Spec.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
@@ -37,7 +37,7 @@ export const DeusPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addSchemaModule({ schema: [Spec] }),
+  AppPlugin.addSchemaModule({ schema: [Spec.Spec] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

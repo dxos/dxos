@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Spec';
+export * as Spec from './Spec';
