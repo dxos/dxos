@@ -129,7 +129,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 
     return (
       <ChatContainer
-        role={role}
+        role={role ?? 'article'}
         space={space}
         subject={chat}
         attendableId={attendableId}

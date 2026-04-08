@@ -10,7 +10,7 @@ import { Card } from '@dxos/react-ui';
 import { VoxelEditor } from '#components';
 import { Voxel } from '#types';
 
-export type VoxelCardProps = AppSurface.ObjectProps<Voxel.World>;
+export type VoxelCardProps = AppSurface.ObjectCardProps<Voxel.World>;
 
 /** Read-only card view of a voxel world. */
 export const VoxelCard = ({ subject: world }: VoxelCardProps) => {

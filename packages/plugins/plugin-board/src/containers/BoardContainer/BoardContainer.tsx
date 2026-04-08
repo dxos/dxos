@@ -24,7 +24,7 @@ type PickerState = {
   position: Position;
 };
 
-export type BoardContainerProps = AppSurface.AttendableObjectProps<BoardType.Board>;
+export type BoardContainerProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
 export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);

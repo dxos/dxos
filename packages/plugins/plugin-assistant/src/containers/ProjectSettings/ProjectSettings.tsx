@@ -24,7 +24,7 @@ import { FeedAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 
-export type ProjectSettingsProps = AppSurface.ObjectProps<Project.Project>;
+export type ProjectSettingsProps = AppSurface.ObjectSettingsProps<Project.Project>;
 
 export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
   const { t } = useTranslation(meta.id);

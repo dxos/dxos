@@ -11,7 +11,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
-export type ThreadSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type ThreadSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 // TODO(burdon): Settings.
 export const ThreadSettings = ({ settings: _settings }: ThreadSettingsProps) => {

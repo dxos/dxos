@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.table`,
         role: ['article', 'section', 'slide'],
-        filter: AppSurface.object(Table.Table, { attendable: true }),
+        filter: AppSurface.objectArticle(Table.Table),
         component: ({ data, role }) => (
           <TableContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.table-card`,
         role: ['card--content'],
-        filter: AppSurface.object(Table.Table),
+        filter: AppSurface.objectCard(Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),

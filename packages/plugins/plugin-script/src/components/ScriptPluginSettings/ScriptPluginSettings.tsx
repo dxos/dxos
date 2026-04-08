@@ -12,7 +12,7 @@ import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
-export type ScriptPluginSettingsProps = AppSurface.SettingsProps<
+export type ScriptPluginSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
     onAuthenticate?: () => void;

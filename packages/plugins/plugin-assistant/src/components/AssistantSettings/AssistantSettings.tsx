@@ -21,7 +21,7 @@ const LLM_PROVIDER_LABELS = {
   lmstudio: 'LM Studio',
 } as const;
 
-export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
+export type AssistantSettingsProps = AppSurface.SettingsArticleProps<Assistant.Settings>;
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.id);

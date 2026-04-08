@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: AppSurface.object([Masonry.Masonry, View.View], { attendable: true }),
+        filter: AppSurface.objectArticle([Masonry.Masonry, View.View]),
         component: ({ data, role }) => {
           const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view;
           return <MasonryContainer view={view} role={role} />;

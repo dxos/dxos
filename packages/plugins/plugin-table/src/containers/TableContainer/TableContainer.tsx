@@ -33,7 +33,7 @@ import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { meta } from '#meta';
 import { type Table } from '#operations';
 
-export type TableContainerProps = AppSurface.AttendableObjectProps<Table.Table>;
+export type TableContainerProps = AppSurface.ObjectArticleProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(

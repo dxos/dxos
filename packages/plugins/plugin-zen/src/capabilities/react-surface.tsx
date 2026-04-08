@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: AppSurface.object(Dream.Dream, { attendable: true }),
+        filter: AppSurface.objectArticle(Dream.Dream),
         component: ({ data, role }) => (
           <ZenArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

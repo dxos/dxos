@@ -13,7 +13,7 @@ import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '#componen
 import { Life, generateRandomModel } from '../../models';
 import { Voxel } from '#types';
 
-export type VoxelArticleProps = AppSurface.AttendableObjectProps<Voxel.World>;
+export type VoxelArticleProps = AppSurface.ObjectArticleProps<Voxel.World>;
 
 const LIFE_TICK_MS = 500;
 

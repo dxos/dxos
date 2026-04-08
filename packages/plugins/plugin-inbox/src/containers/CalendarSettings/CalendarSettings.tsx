@@ -14,7 +14,7 @@ import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
 import { Calendar } from '#types';
 
-export type CalendarSettingsProps = AppSurface.ObjectProps<Calendar.Calendar>;
+export type CalendarSettingsProps = AppSurface.ObjectSettingsProps<Calendar.Calendar>;
 
 export const CalendarSettings = ({ subject }: CalendarSettingsProps) => {
   const { t } = useTranslation(meta.id);

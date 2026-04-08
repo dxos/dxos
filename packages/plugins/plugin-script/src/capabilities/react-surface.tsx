@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const client = useClient();
@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.script.article`,
         role: ['article', 'section'],
-        filter: AppSurface.object(Script.Script, { attendable: true }),
+        filter: AppSurface.objectArticle(Script.Script),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           const settings = useAtomCapability(ScriptCapabilities.Settings);
@@ -79,7 +79,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.notebook.article`,
         role: 'article',
-        filter: AppSurface.object(Notebook.Notebook, { attendable: true }),
+        filter: AppSurface.objectArticle(Notebook.Notebook),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           return (
@@ -97,25 +97,25 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion.base-settings`,
         role: 'base-object-settings',
-        filter: AppSurface.object(Script.Script),
+        filter: AppSurface.objectSection(Script.Script),
         component: ({ data }) => <ScriptProperties object={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.companion.settings`,
         role: 'object-settings',
-        filter: AppSurface.object(Script.Script),
+        filter: AppSurface.objectSettings(Script.Script),
         component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.companion.execute`,
         role: 'article',
-        filter: AppSurface.companion(Script.Script, 'execute'),
+        filter: AppSurface.and(AppSurface.literalArticle('execute'), AppSurface.companionArticle(Script.Script)),
         component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
       }),
       Surface.create({
         id: `${meta.id}.companion.logs`,
         role: 'article',
-        filter: AppSurface.companion(Script.Script, 'logs'),
+        filter: AppSurface.and(AppSurface.literalArticle('logs'), AppSurface.companionArticle(Script.Script)),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
@@ -136,7 +136,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: DEPLOYMENT_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(DEPLOYMENT_DIALOG),
+        filter: AppSurface.componentDialog(DEPLOYMENT_DIALOG),
         component: ({ data }) => <DeploymentDialog {...data.props} />,
       }),
     ]),

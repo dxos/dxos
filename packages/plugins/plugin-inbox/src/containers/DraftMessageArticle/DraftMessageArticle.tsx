@@ -16,7 +16,7 @@ import { type Message } from '@dxos/types';
 import { ComposeEmailPanel } from '#components';
 import { GmailFunctions } from '../../operations/google/gmail';
 
-export type DraftMessageArticleProps = AppSurface.ObjectProps<Message.Message>;
+export type DraftMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 
 export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps) => {
   const db = Obj.getDatabase(subject);

@@ -96,7 +96,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return (
@@ -169,19 +169,19 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.object-debug`,
         role: 'article',
-        filter: AppSurface.and(AppSurface.literal('debug'), AppSurface.companion()),
+        filter: AppSurface.and(AppSurface.literalArticle('debug'), AppSurface.companionArticle()),
         component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
       }),
       Surface.create({
         id: `${meta.id}.devtools-overview`,
         role: 'deck-companion--devtools',
-        filter: AppSurface.literal('devtools'),
+        filter: AppSurface.literalSection('devtools'),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
         id: `${meta.id}.space-objects`,
         role: 'deck-companion--space-objects',
-        filter: AppSurface.literal('space-objects'),
+        filter: AppSurface.literalSection('space-objects'),
         component: () => <DebugSpaceObjectsPanel />,
       }),
 
@@ -198,55 +198,55 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.client.config`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Client.Config),
+        filter: AppSurface.literalSection(Devtools.Client.Config),
         component: () => <ConfigPanel vaultSelector={false} />,
       }),
       Surface.create({
         id: `${meta.id}.client.storage`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Client.Storage),
+        filter: AppSurface.literalSection(Devtools.Client.Storage),
         component: () => <StoragePanel />,
       }),
       Surface.create({
         id: `${meta.id}.client.logs`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Client.Logs),
+        filter: AppSurface.literalSection(Devtools.Client.Logs),
         component: () => <LoggingPanel />,
       }),
       Surface.create({
         id: `${meta.id}.client.diagnostics`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Client.Diagnostics),
+        filter: AppSurface.literalSection(Devtools.Client.Diagnostics),
         component: () => <DiagnosticsPanel />,
       }),
       Surface.create({
         id: `${meta.id}.client.tracing`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Client.Tracing),
+        filter: AppSurface.literalSection(Devtools.Client.Tracing),
         component: () => <TracingPanel />,
       }),
       Surface.create({
         id: `${meta.id}.halo.identity`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Halo.Identity),
+        filter: AppSurface.literalSection(Devtools.Halo.Identity),
         component: () => <IdentityPanel />,
       }),
       Surface.create({
         id: `${meta.id}.halo.devices`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Halo.Devices),
+        filter: AppSurface.literalSection(Devtools.Halo.Devices),
         component: () => <DeviceListPanel />,
       }),
       Surface.create({
         id: `${meta.id}.halo.keyring`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Halo.Keyring),
+        filter: AppSurface.literalSection(Devtools.Halo.Keyring),
         component: () => <KeyringPanel />,
       }),
       Surface.create({
         id: `${meta.id}.halo.credentials`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Halo.Credentials),
+        filter: AppSurface.literalSection(Devtools.Halo.Credentials),
         component: () => {
           const space = useCurrentSpace();
           return <CredentialsPanel space={space} />;
@@ -255,7 +255,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.spaces`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Spaces),
+        filter: AppSurface.literalSection(Devtools.Echo.Spaces),
         component: () => {
           const { invokePromise } = useOperationInvoker();
           const handleSelect = useCallback(
@@ -268,7 +268,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.space`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Space),
+        filter: AppSurface.literalSection(Devtools.Echo.Space),
         component: () => {
           const space = useCurrentSpace();
           const { invokePromise } = useOperationInvoker();
@@ -282,7 +282,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.feeds`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Feeds),
+        filter: AppSurface.literalSection(Devtools.Echo.Feeds),
         component: () => {
           const space = useCurrentSpace();
           return <FeedsPanel space={space} />;
@@ -291,7 +291,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.objects`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Objects),
+        filter: AppSurface.literalSection(Devtools.Echo.Objects),
         component: () => {
           const space = useCurrentSpace();
           return <ObjectsPanel space={space} />;
@@ -300,7 +300,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.schema`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Schema),
+        filter: AppSurface.literalSection(Devtools.Echo.Schema),
         component: () => {
           const space = useCurrentSpace();
           return <SchemaPanel space={space} />;
@@ -309,7 +309,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.automerge`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Automerge),
+        filter: AppSurface.literalSection(Devtools.Echo.Automerge),
         component: () => {
           const space = useCurrentSpace();
           return <AutomergePanel space={space} />;
@@ -318,13 +318,13 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.queues`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Queues),
+        filter: AppSurface.literalSection(Devtools.Echo.Queues),
         component: () => <QueuesPanel />,
       }),
       Surface.create({
         id: `${meta.id}.echo.members`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Members),
+        filter: AppSurface.literalSection(Devtools.Echo.Members),
         component: () => {
           const space = useCurrentSpace();
           return <MembersPanel space={space} />;
@@ -333,25 +333,25 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.echo.metadata`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Echo.Metadata),
+        filter: AppSurface.literalSection(Devtools.Echo.Metadata),
         component: () => <MetadataPanel />,
       }),
       Surface.create({
         id: `${meta.id}.mesh.signal`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Mesh.Signal),
+        filter: AppSurface.literalSection(Devtools.Mesh.Signal),
         component: () => <SignalPanel />,
       }),
       Surface.create({
         id: `${meta.id}.mesh.swarm`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Mesh.Swarm),
+        filter: AppSurface.literalSection(Devtools.Mesh.Swarm),
         component: () => <SwarmPanel />,
       }),
       Surface.create({
         id: `${meta.id}.mesh.network`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Mesh.Network),
+        filter: AppSurface.literalSection(Devtools.Mesh.Network),
         component: () => {
           const space = useCurrentSpace();
           return <NetworkPanel space={space} />;
@@ -360,13 +360,13 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.edge.dashboard`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Edge.Dashboard),
+        filter: AppSurface.literalSection(Devtools.Edge.Dashboard),
         component: () => <EdgeDashboardPanel />,
       }),
       Surface.create({
         id: `${meta.id}.edge.workflows`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Edge.Workflows),
+        filter: AppSurface.literalSection(Devtools.Edge.Workflows),
         component: () => {
           const space = useCurrentSpace();
           return <WorkflowPanel space={space} />;
@@ -375,7 +375,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.edge.traces`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Edge.Traces),
+        filter: AppSurface.literalSection(Devtools.Edge.Traces),
         component: () => {
           const space = useCurrentSpace();
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
@@ -385,7 +385,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.edge.testing`,
         role: 'article',
-        filter: AppSurface.literal(Devtools.Edge.Testing),
+        filter: AppSurface.literalSection(Devtools.Edge.Testing),
         component: () => {
           const { invokePromise } = useOperationInvoker();
           const onSpaceCreate = useCallback(

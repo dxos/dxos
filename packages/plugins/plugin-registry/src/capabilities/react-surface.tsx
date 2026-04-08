@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.all`,
         role: 'article',
-        filter: AppSurface.literal(registryCategoryId('all')),
+        filter: AppSurface.literalSection(registryCategoryId('all')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -32,7 +32,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.installed`,
         role: 'article',
-        filter: AppSurface.literal(registryCategoryId('installed')),
+        filter: AppSurface.literalSection(registryCategoryId('installed')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -50,7 +50,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.recommended`,
         role: 'article',
-        filter: AppSurface.literal(registryCategoryId('recommended')),
+        filter: AppSurface.literalSection(registryCategoryId('recommended')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.labs`,
         role: 'article',
-        filter: AppSurface.literal(registryCategoryId('labs')),
+        filter: AppSurface.literalSection(registryCategoryId('labs')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(() => manager.getPlugins().filter(({ meta }) => meta.tags?.includes('labs')), []);
@@ -79,7 +79,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-details`,
         role: 'article',
-        filter: AppSurface.plugin(),
+        filter: AppSurface.pluginSection(),
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
         },
@@ -87,7 +87,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: LOAD_PLUGIN_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(LOAD_PLUGIN_DIALOG),
+        filter: AppSurface.componentDialog(LOAD_PLUGIN_DIALOG),
         component: () => <LoadPluginDialog />,
       }),
     ]),

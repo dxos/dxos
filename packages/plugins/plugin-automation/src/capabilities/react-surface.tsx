@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.space-settings-functions`,
         role: 'article',
-        filter: AppSurface.literal(`${meta.id}.space-settings-functions`),
+        filter: AppSurface.literalSection(`${meta.id}.space-settings-functions`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -32,7 +32,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.space-settings-automation`,
         role: 'article',
-        filter: AppSurface.literal(`${meta.id}.space-settings-automation`),
+        filter: AppSurface.literalSection(`${meta.id}.space-settings-automation`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion.automation`,
         role: 'article',
-        filter: AppSurface.and(AppSurface.literal('automation'), AppSurface.companion()),
+        filter: AppSurface.and(AppSurface.literalArticle('automation'), AppSurface.companionArticle()),
         component: ({ data }) => {
           const space = getSpace(data.companionTo);
           if (!space) {

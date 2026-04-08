@@ -9,7 +9,7 @@ import { Card, Icon } from '@dxos/react-ui';
 
 import * as Video from '../../types/Video';
 
-export type VideoCardProps = AppSurface.ObjectProps<Video.YouTubeVideo>;
+export type VideoCardProps = AppSurface.ObjectCardProps<Video.YouTubeVideo>;
 
 /**
  * YouTube video card with embedded player.

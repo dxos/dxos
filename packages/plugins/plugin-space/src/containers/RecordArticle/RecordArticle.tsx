@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { useRelatedObjects } from '#hooks';
 
-export const RecordArticle = ({ role, subject }: AppSurface.ObjectProps) => {
+export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
   const related = useRelatedObjects(db, subject, { references: true, relations: true });

@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.object-settings`,
         role: 'object-settings',
-        filter: AppSurface.object(Sheet.Sheet),
+        filter: AppSurface.objectSettings(Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),
     ]),

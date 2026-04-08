@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: AppSurface.object(Voxel.World, { attendable: true }),
+        filter: AppSurface.objectArticle(Voxel.World),
         component: ({ data, role }) => (
           <VoxelArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['card--content'],
-        filter: AppSurface.object(Voxel.World),
+        filter: AppSurface.objectCard(Voxel.World),
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,
       }),
     ]),

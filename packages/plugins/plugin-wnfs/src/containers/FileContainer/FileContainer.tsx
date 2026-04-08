@@ -14,7 +14,7 @@ import { FilePreview } from '#components';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
 import { WnfsCapabilities, type WnfsFile } from '#types';
 
-export type FileContainerProps = AppSurface.ObjectProps<WnfsFile.File>;
+export type FileContainerProps = AppSurface.ObjectArticleProps<WnfsFile.File>;
 
 export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);

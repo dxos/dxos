@@ -21,7 +21,7 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}.workspace-settings`,
         role: 'article',
-        filter: AppSurface.literal(GENERAL_TYPE),
+        filter: AppSurface.literalSection(GENERAL_TYPE),
         component: () => {
           const workspace = useActiveFilesystemWorkspace();
           if (!workspace) {

@@ -16,13 +16,13 @@ import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { AssistantCapabilities, type ChatType } from '#types';
 
-export type ChatContainerProps = AppSurface.ObjectProps<
-  ChatType.Chat | undefined,
-  {
-    space?: Space;
-    companionTo?: Obj.Unknown;
-  } & Pick<ChatRootProps, 'onEvent'>
->;
+export type ChatContainerProps = (
+  | AppSurface.ObjectArticleProps<ChatType.Chat | undefined>
+  | AppSurface.ObjectSectionProps<ChatType.Chat | undefined>
+) & {
+  space?: Space;
+  companionTo?: Obj.Unknown;
+} & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
   const { role, attendableId, subject: chat, space: spaceProp, companionTo, onEvent } = props;

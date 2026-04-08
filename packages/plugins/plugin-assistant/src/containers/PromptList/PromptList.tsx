@@ -14,7 +14,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 
 import { AssistantOperation } from '#operations';
 
-export type PromptListProps = AppSurface.ObjectProps<Obj.Unknown>;
+export type PromptListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 
 export const PromptList = ({ subject }: PromptListProps) => {
   const { invokePromise } = useOperationInvoker();

@@ -40,7 +40,7 @@ const collectionObjectsFamily = Atom.family((collection: Collection.Collection) 
   }),
 );
 
-type StackContainerProps = AppSurface.AttendableObjectProps<Collection.Collection>;
+type StackContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const StackContainer = ({ attendableId, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();

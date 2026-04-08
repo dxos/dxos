@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <DeckSettings settings={settings} onSettingsChange={updateSettings} />;

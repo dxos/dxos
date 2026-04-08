@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.space-settings-daily-summary`,
         role: 'article',
-        filter: AppSurface.literal(`${meta.id}.space-settings-daily-summary`),
+        filter: AppSurface.literalSection(`${meta.id}.space-settings-daily-summary`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

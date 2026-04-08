@@ -12,7 +12,7 @@ import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorView
 import { meta } from '#meta';
 import { type Markdown } from '#types';
 
-export type MarkdownSettingsProps = AppSurface.SettingsProps<Markdown.Settings>;
+export type MarkdownSettingsProps = AppSurface.SettingsArticleProps<Markdown.Settings>;
 
 export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsProps) => {
   const { t } = useTranslation(meta.id);

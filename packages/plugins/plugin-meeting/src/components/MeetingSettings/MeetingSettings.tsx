@@ -11,7 +11,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type MeetingSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type MeetingSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const MeetingSettings = ({ settings, onSettingsChange }: MeetingSettingsProps) => {
   const { t } = useTranslation(meta.id);

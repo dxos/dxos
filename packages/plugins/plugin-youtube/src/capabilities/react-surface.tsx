@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.channel`,
         role: ['article'],
-        filter: AppSurface.object(Channel.YouTubeChannel, { attendable: true }),
+        filter: AppSurface.objectArticle(Channel.YouTubeChannel),
         component: ({ data }) => {
           return <ChannelArticle subject={data.subject} attendableId={data.attendableId} />;
         },
@@ -28,8 +28,8 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.video`,
         role: ['article', 'section'],
         filter: AppSurface.and(
-          AppSurface.object(Video.YouTubeVideo, { attendable: true }),
-          AppSurface.companion(Channel.YouTubeChannel),
+          AppSurface.objectArticle(Video.YouTubeVideo),
+          AppSurface.companionArticle(Channel.YouTubeChannel),
         ),
         component: ({ data: { attendableId, companionTo, subject }, role }) => {
           return <VideoArticle role={role} subject={subject} companionTo={companionTo} attendableId={attendableId} />;
@@ -38,13 +38,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.video-card`,
         role: 'card--content',
-        filter: AppSurface.object(Video.YouTubeVideo),
+        filter: AppSurface.objectCard(Video.YouTubeVideo),
         component: ({ data: { subject }, role }) => <VideoCard subject={subject} role={role} />,
       }),
       Surface.create({
         id: `${meta.id}.channel.companion.settings`,
         role: 'object-settings',
-        filter: AppSurface.object(Channel.YouTubeChannel),
+        filter: AppSurface.objectSettings(Channel.YouTubeChannel),
         component: ({ data }) => <ChannelSettings subject={data.subject} />,
       }),
     ]),

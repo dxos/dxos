@@ -13,7 +13,7 @@ import { PageNumber, Pager, Layout as PresenterLayout } from '#components';
 import { PresenterContext } from '#types';
 import { useExitPresenter } from '../../useExitPresenter';
 
-export type CollectionPresenterContainerProps = AppSurface.ObjectProps<Collection.Collection>;
+export type CollectionPresenterContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const CollectionPresenterContainer = ({ role, subject: collection }: CollectionPresenterContainerProps) => {
   const [slide, setSlide] = useState(0);

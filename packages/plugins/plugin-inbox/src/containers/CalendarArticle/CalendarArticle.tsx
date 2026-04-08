@@ -29,7 +29,7 @@ const byDate =
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type CalendarArticleProps = AppSurface.AttendableObjectProps<Calendar.Calendar>;
+export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);

@@ -17,7 +17,9 @@ import { type Organization, Person } from '@dxos/types';
 
 import { RelatedContacts } from '#components';
 
-export const RelatedToOrganization = ({ subject: organization }: AppSurface.ObjectProps<Organization.Organization>) => {
+export const RelatedToOrganization = ({
+  subject: organization,
+}: AppSurface.ObjectArticleProps<Organization.Organization>) => {
   const { invoke } = useOperationInvoker();
   const db = Obj.getDatabase(organization);
   const defaultDb = useDatabase();

@@ -6,298 +6,234 @@ import type * as Schema from 'effect/Schema';
 
 import { Plugin } from '@dxos/app-framework';
 import { Node } from '@dxos/app-graph';
-import { type Space } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 
 import { AppCapabilities } from '../capabilities';
 
-//
-// Prop Types
-//
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Props for components rendering a specific ECHO object subject. Pairs with `object()`. */
-export type ObjectProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
-  attendableId?: string;
-
-  /** The object this surface is a companion to. */
-  companionTo?: Obj.Unknown;
-
-  /** The primary object being displayed. */
-  subject: Subject;
-} & Props;
-
-/** Props for attendable subject surfaces (article role). Pairs with `object(schema, { attendable: true })`. */
-export type AttendableObjectProps<
-  Subject extends Obj.Unknown | undefined = Obj.Unknown,
-  Props extends {} = {},
-> = ObjectProps<Subject, Props & { attendableId: string }>;
-
-/** Props for settings surfaces. Pairs with `settings()`. */
-export type SettingsProps<T extends {}, Props extends {} = {}> = {
-  /** Reactive settings. */
-  settings: T;
-
-  /** Callback to update settings. */
-  onSettingsChange?: (cb: (current: T) => T) => void;
-} & Props;
-
-/** Props for companion surfaces. Pairs with `companion()`. */
-export type CompanionProps<T extends Obj.Unknown = Obj.Unknown, Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
-  attendableId?: string;
-
-  /** The object this surface is a companion to. */
-  companionTo: T;
-} & Props;
-
-/** Props for component/dialog-routed surfaces. Pairs with `component()`. */
-export type ComponentProps<C extends string = string, P extends {} = {}> = {
-  component: C;
-  props?: P;
+/** Combines two filters with intersection types. Both must match. */
+export const and = <A extends Record<string, any>, B extends Record<string, any>>(
+  a: (data: Record<string, unknown>) => data is A,
+  b: (data: Record<string, unknown>) => data is B,
+): ((data: Record<string, unknown>) => data is A & B) => {
+  return (data: Record<string, unknown>): data is A & B => a(data) && b(data);
 };
 
-/** Props for space-anchored surfaces (no filter pair). */
-export type SpaceProps<Props extends {} = {}> = {
-  space?: Space;
+// ─── Article ─────────────────────────────────────────────────────────────────
 
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
+/** Surface data for article role (from PlankComponent). */
+export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
+  attendableId: string;
+  subject: Subject;
+  properties?: Record<string, any>;
+  variant?: string;
+  path?: string[];
+  popoverAnchorId?: string;
+} & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
+  Props;
 
-  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
-  attendableId?: string;
-} & Props;
+/** Component props for article role. */
+export type ArticleProps<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = ArticleData<
+  Subject,
+  Props,
+  CompanionTo
+> & {
+  role: 'article' | (string & {});
+};
 
-/** Props for literal/string constant surfaces. Pairs with `literal()`. */
-export type LiteralProps<L extends string | null = string, Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
+/** Surface data for article-role ECHO object. */
+export type ObjectArticleData<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+  CompanionTo = unknown,
+> = ArticleData<Subject, Props, CompanionTo>;
 
-  /** The string or null literal identifying this surface. */
-  subject: L;
-} & Props;
+/** Component props for article-role ECHO object. */
+export type ObjectArticleProps<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+  CompanionTo = unknown,
+> = ArticleProps<Subject, Props, CompanionTo>;
 
-/** Props for graph node surfaces. Pairs with `graphNode()`. */
-export type NodeProps<Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** The graph node being displayed. */
-  subject: Node.Node;
-} & Props;
-
-/** Props for plugin descriptor surfaces. Pairs with `plugin()`. */
-export type PluginProps<Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** The plugin descriptor. */
-  subject: Plugin.Plugin;
-} & Props;
-
-/** Props for ECHO schema surfaces. Pairs with `schema()`. */
-export type SchemaProps<Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** The ECHO schema object. */
-  subject: Type.AnyEntity;
-} & Props;
-
-/** Props for ECHO snapshot surfaces. Pairs with `snapshot()`. */
-export type SnapshotProps<T extends Obj.Unknown = Obj.Unknown, Props extends {} = {}> = {
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** The snapshot of the ECHO object. */
-  subject: Obj.Snapshot<T>;
-} & Props;
-
-//
-// Filter Factories
-//
-
-/**
- * Matches when `data.subject` is an instance of the given ECHO schema(s).
- *
- * @example
- * ```ts
- * // Single type.
- * filter: AppSurface.object(Chess.Game)
- *
- * // Union of types.
- * filter: AppSurface.object([Masonry.Masonry, View.View])
- *
- * // Require attendableId.
- * filter: AppSurface.object(Table.Table, { attendable: true })
- * ```
- */
-export const object: {
+/** Filter: article-role ECHO object. */
+export const objectArticle: {
   <S extends Type.AnyEntity>(
     schema: S,
-    options?: { attendable?: false },
-  ): (data: Record<string, unknown>) => data is { subject: Schema.Schema.Type<S> };
-  <S extends Type.AnyEntity>(
-    schema: S,
-    options: { attendable: true },
-  ): (data: Record<string, unknown>) => data is { attendableId: string; subject: Schema.Schema.Type<S> };
+  ): (data: Record<string, unknown>) => data is ObjectArticleData<Schema.Schema.Type<S>>;
   <S extends Type.AnyEntity[]>(
     schemas: [...S],
-    options?: { attendable?: false },
-  ): (data: Record<string, unknown>) => data is { subject: Schema.Schema.Type<S[number]> };
-  <S extends Type.AnyEntity[]>(
-    schemas: [...S],
-    options: { attendable: true },
-  ): (data: Record<string, unknown>) => data is { attendableId: string; subject: Schema.Schema.Type<S[number]> };
-} = (schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[], options?: { attendable?: boolean }) => {
+  ): (data: Record<string, unknown>) => data is ObjectArticleData<Schema.Schema.Type<S[number]>>;
+} = (schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[]) => {
   const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
   return (data: Record<string, unknown>): data is any => {
-    if (options?.attendable && typeof data.attendableId !== 'string') {
+    if (typeof data.attendableId !== 'string') {
       return false;
     }
     return schemas.some((schema) => Obj.instanceOf(schema, data.subject));
   };
 };
 
-/**
- * Matches when `data.subject` is any ECHO object. Use for fallback surfaces.
- *
- * @example
- * ```ts
- * filter: AppSurface.anyObject()
- * ```
- */
-export const anyObject = (): ((data: Record<string, unknown>) => data is { subject: Obj.Unknown }) => {
-  return (data: Record<string, unknown>): data is { subject: Obj.Unknown } => Obj.isObject(data.subject);
+/** Filter: article-role literal subject. */
+export const literalArticle = <L extends string | null>(
+  value: L,
+): ((data: Record<string, unknown>) => data is ArticleData<L>) => {
+  return (data: Record<string, unknown>): data is ArticleData<L> => {
+    return typeof data.attendableId === 'string' && data.subject === value;
+  };
 };
 
-/**
- * Matches when `data.subject` is a plugin settings object with the given prefix.
- *
- * @example
- * ```ts
- * filter: AppSurface.settings(meta.id)
- * ```
- */
-export const settings = (
+/** Filter: article-role companionTo check. Composable via `and()`. */
+export const companionArticle: {
+  (): (data: Record<string, unknown>) => data is { companionTo: Obj.Unknown };
+  <S extends Type.AnyEntity>(
+    schema: S,
+  ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S> };
+  <L extends string>(value: L): (data: Record<string, unknown>) => data is { companionTo: L };
+} = (schemaOrValue?: Type.AnyEntity | string) => {
+  return (data: Record<string, unknown>): data is any => {
+    if (schemaOrValue === undefined) {
+      return Obj.isObject(data.companionTo);
+    }
+    if (typeof schemaOrValue === 'string') {
+      return data.companionTo === schemaOrValue;
+    }
+    return Obj.instanceOf(schemaOrValue, data.companionTo);
+  };
+};
+
+/** Component props for article-role plugin settings. */
+export type SettingsArticleProps<T extends {}, Props extends {} = {}> = {
+  settings: T;
+  onSettingsChange?: (cb: (current: T) => T) => void;
+} & Props;
+
+/** Filter: article-role plugin settings with prefix. */
+export const settingsArticle = (
   prefix: string,
 ): ((data: Record<string, unknown>) => data is { subject: AppCapabilities.Settings }) => {
   return (data: Record<string, unknown>): data is { subject: AppCapabilities.Settings } =>
     AppCapabilities.isSettings(data.subject) && data.subject.prefix === prefix;
 };
 
-/**
- * Matches when `data.component` equals the given identifier. Used for dialogs and popovers.
- *
- * @example
- * ```ts
- * filter: AppSurface.component(ASSISTANT_DIALOG)
- * ```
- */
-export const component = <C extends string>(id: C): ((data: Record<string, unknown>) => data is { component: C }) => {
-  return (data: Record<string, unknown>): data is { component: C } => data.component === id;
+// ─── Section ─────────────────────────────────────────────────────────────────
+
+/** Surface data for section role (from StackSection). */
+export type SectionData<Subject = unknown, Props extends {} = {}> = {
+  attendableId?: string;
+  subject: Subject;
+} & Props;
+
+/** Component props for section role. */
+export type SectionProps<Subject = unknown, Props extends {} = {}> = SectionData<Subject, Props> & {
+  role: 'section' | (string & {});
 };
 
-/**
- * Matches when `data.companionTo` is an instance of the given schema.
- * With no args, matches any ECHO object as companionTo.
- * Optionally checks `data.subject` against a string literal.
- *
- * @example
- * ```ts
- * // Any ECHO object as companion.
- * filter: AppSurface.companion()
- *
- * // Companion to any Channel.
- * filter: AppSurface.companion(Channel.Channel)
- *
- * // Companion to Channel with subject 'chat'.
- * filter: AppSurface.companion(Channel.Channel, 'chat')
- * ```
- */
-export const companion: {
-  (): (data: Record<string, unknown>) => data is { companionTo: Obj.Unknown };
+/** Surface data for section-role ECHO object. */
+export type ObjectSectionData<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = SectionData<Subject, Props>;
+
+/** Component props for section-role ECHO object. */
+export type ObjectSectionProps<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = SectionProps<Subject, Props>;
+
+/** Filter: section-role ECHO object. */
+export const objectSection: {
   <S extends Type.AnyEntity>(
     schema: S,
-  ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S> };
-  <S extends Type.AnyEntity, Subj extends string>(
-    schema: S,
-    subject: Subj,
-  ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S>; subject: Subj };
-} = (schema?: Type.AnyEntity, subject?: string) => {
+  ): (data: Record<string, unknown>) => data is ObjectSectionData<Schema.Schema.Type<S>>;
+  <S extends Type.AnyEntity[]>(
+    schemas: [...S],
+  ): (data: Record<string, unknown>) => data is ObjectSectionData<Schema.Schema.Type<S[number]>>;
+} = (schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[]) => {
+  const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
   return (data: Record<string, unknown>): data is any => {
-    if (schema) {
-      if (!Obj.instanceOf(schema, data.companionTo)) {
-        return false;
-      }
-    } else {
-      if (!Obj.isObject(data.companionTo)) {
-        return false;
-      }
-    }
-    if (subject !== undefined && data.subject !== subject) {
-      return false;
-    }
-    return true;
+    return schemas.some((schema) => Obj.instanceOf(schema, data.subject));
   };
 };
 
-/**
- * Matches when `data.subject` is a string or null literal.
- * Used for companion panes, settings pages, and branch/group nodes.
- *
- * @example
- * ```ts
- * filter: AppSurface.literal('chat')
- * filter: AppSurface.literal(null)
- * ```
- */
-export const literal = <L extends string | null>(
+/** Surface data for object-settings surfaces. */
+export type ObjectSettingsData<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = SectionData<Subject, Props>;
+
+/** Component props for object-settings surfaces. */
+export type ObjectSettingsProps<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = SectionProps<Subject, Props>;
+
+/** Filter: object-settings-role ECHO object. */
+export const objectSettings: {
+  <S extends Type.AnyEntity>(
+    schema: S,
+  ): (data: Record<string, unknown>) => data is ObjectSettingsData<Schema.Schema.Type<S>>;
+} = (schema: Type.AnyEntity) => {
+  return (data: Record<string, unknown>): data is any => {
+    return Obj.instanceOf(schema, data.subject);
+  };
+};
+
+/** Surface data for section-role literal. */
+export type LiteralSectionData<L extends string | null = string, Props extends {} = {}> = SectionData<L, Props>;
+
+/** Component props for section-role literal. */
+export type LiteralSectionProps<L extends string | null = string, Props extends {} = {}> = SectionProps<L, Props>;
+
+/** Filter: section-role literal string/null subject. */
+export const literalSection = <L extends string | null>(
   value: L,
-): ((data: Record<string, unknown>) => data is { subject: L }) => {
-  return (data: Record<string, unknown>): data is { subject: L } => data.subject === value;
+): ((data: Record<string, unknown>) => data is LiteralSectionData<L>) => {
+  return (data: Record<string, unknown>): data is LiteralSectionData<L> => data.subject === value;
 };
 
-/**
- * Matches when `data.subject` is a graph node (`Node.Node`).
- *
- * @example
- * ```ts
- * filter: AppSurface.graphNode()
- * ```
- */
-export const graphNode = (): ((data: Record<string, unknown>) => data is { subject: Node.Node }) => {
-  return (data: Record<string, unknown>): data is { subject: Node.Node } => Node.isGraphNode(data.subject);
+/** Surface data for section-role any ECHO object (fallback). */
+export type AnyObjectSectionData<Props extends {} = {}> = SectionData<Obj.Unknown, Props>;
+
+/** Component props for section-role any ECHO object (fallback). */
+export type AnyObjectSectionProps<Props extends {} = {}> = SectionProps<Obj.Unknown, Props>;
+
+/** Filter: section-role any ECHO object (fallback). */
+export const anyObjectSection = (): ((data: Record<string, unknown>) => data is AnyObjectSectionData) => {
+  return (data: Record<string, unknown>): data is AnyObjectSectionData => Obj.isObject(data.subject);
 };
 
-/**
- * Matches when `data.subject` is a plugin descriptor.
- *
- * @example
- * ```ts
- * filter: AppSurface.plugin()
- * ```
- */
-export const plugin = (): ((data: Record<string, unknown>) => data is { subject: Plugin.Plugin }) => {
-  return (data: Record<string, unknown>): data is { subject: Plugin.Plugin } => Plugin.isPlugin(data.subject);
+/** Surface data for section-role graph node. */
+export type NodeSectionData<Props extends {} = {}> = SectionData<Node.Node, Props>;
+
+/** Component props for section-role graph node. */
+export type NodeSectionProps<Props extends {} = {}> = SectionProps<Node.Node, Props>;
+
+/** Filter: section-role graph node subject. */
+export const graphNodeSection = (): ((data: Record<string, unknown>) => data is NodeSectionData) => {
+  return (data: Record<string, unknown>): data is NodeSectionData => Node.isGraphNode(data.subject);
 };
 
-/**
- * Matches when `data.subject` is an ECHO schema object (e.g., a type created with `Type.object()`).
- *
- * @example
- * ```ts
- * filter: AppSurface.schema()
- * ```
- */
-export const schema = (): ((data: Record<string, unknown>) => data is { subject: Type.AnyEntity }) => {
-  return (data: Record<string, unknown>): data is { subject: Type.AnyEntity } => {
+/** Surface data for section-role plugin descriptor. */
+export type PluginSectionData<Props extends {} = {}> = SectionData<Plugin.Plugin, Props>;
+
+/** Component props for section-role plugin descriptor. */
+export type PluginSectionProps<Props extends {} = {}> = SectionProps<Plugin.Plugin, Props>;
+
+/** Filter: section-role plugin descriptor subject. */
+export const pluginSection = (): ((data: Record<string, unknown>) => data is PluginSectionData) => {
+  return (data: Record<string, unknown>): data is PluginSectionData => Plugin.isPlugin(data.subject);
+};
+
+/** Surface data for section-role ECHO schema. */
+export type SchemaSectionData<Props extends {} = {}> = SectionData<Type.AnyEntity, Props>;
+
+/** Component props for section-role ECHO schema. */
+export type SchemaSectionProps<Props extends {} = {}> = SectionProps<Type.AnyEntity, Props>;
+
+/** Filter: section-role ECHO schema subject. */
+export const schemaSection = (): ((data: Record<string, unknown>) => data is SchemaSectionData) => {
+  return (data: Record<string, unknown>): data is SchemaSectionData => {
     const value = data.subject;
     if (value == null) {
       return false;
@@ -307,42 +243,128 @@ export const schema = (): ((data: Record<string, unknown>) => data is { subject:
   };
 };
 
-/**
- * Matches when `data.subject` is a snapshot of the given ECHO schema.
- *
- * @example
- * ```ts
- * filter: AppSurface.snapshot(Thread.Thread)
- * ```
- */
-export const snapshot = <S extends Type.AnyEntity>(
+/** Surface data for section-role ECHO snapshot. */
+export type SnapshotSectionData<T extends Obj.Unknown = Obj.Unknown, Props extends {} = {}> = SectionData<
+  Obj.Snapshot<T>,
+  Props
+>;
+
+/** Component props for section-role ECHO snapshot. */
+export type SnapshotSectionProps<T extends Obj.Unknown = Obj.Unknown, Props extends {} = {}> = SectionProps<
+  Obj.Snapshot<T>,
+  Props
+>;
+
+/** Filter: section-role ECHO snapshot subject. */
+export const snapshotSection = <S extends Type.AnyEntity>(
   schema: S,
-): ((data: Record<string, unknown>) => data is { subject: Obj.Snapshot<Schema.Schema.Type<S>> }) => {
-  return (data: Record<string, unknown>): data is { subject: Obj.Snapshot<Schema.Schema.Type<S>> } =>
+): ((data: Record<string, unknown>) => data is SnapshotSectionData<Schema.Schema.Type<S>>) => {
+  return (data: Record<string, unknown>): data is SnapshotSectionData<Schema.Schema.Type<S>> =>
     Obj.snapshotOf(schema, data.subject);
 };
 
-/**
- * Combines two filters with intersection types. Both must match.
- *
- * @example
- * ```ts
- * // Object subject + typed companion.
- * filter: AppSurface.and(
- *   AppSurface.object(Message.Message, { attendable: true }),
- *   AppSurface.companion(Mailbox.Mailbox),
- * )
- *
- * // Literal subject + any companion.
- * filter: AppSurface.and(
- *   AppSurface.literal('comments'),
- *   AppSurface.companion(),
- * )
- * ```
- */
-export const and = <A extends Record<string, any>, B extends Record<string, any>>(
-  a: (data: Record<string, unknown>) => data is A,
-  b: (data: Record<string, unknown>) => data is B,
-): ((data: Record<string, unknown>) => data is A & B) => {
-  return (data: Record<string, unknown>): data is A & B => a(data) && b(data);
+// ─── Card ────────────────────────────────────────────────────────────────────
+
+/** Surface data for card role. */
+export type CardData<Subject = unknown, Props extends {} = {}> = {
+  subject: Subject;
+} & Props;
+
+/** Component props for card role. */
+export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subject, Props> & {
+  role: 'card--content' | (string & {});
+};
+
+/** Surface data for card-role ECHO object. */
+export type ObjectCardData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = CardData<
+  Subject,
+  Props
+>;
+
+/** Component props for card-role ECHO object. */
+export type ObjectCardProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = CardProps<
+  Subject,
+  Props
+>;
+
+/** Filter: card-role ECHO object. */
+export const objectCard: {
+  <S extends Type.AnyEntity>(
+    schema: S,
+  ): (data: Record<string, unknown>) => data is ObjectCardData<Schema.Schema.Type<S>>;
+  <S extends Type.AnyEntity[]>(
+    schemas: [...S],
+  ): (data: Record<string, unknown>) => data is ObjectCardData<Schema.Schema.Type<S[number]>>;
+} = (schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[]) => {
+  const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
+  return (data: Record<string, unknown>): data is any => {
+    return schemas.some((schema) => Obj.instanceOf(schema, data.subject));
+  };
+};
+
+// ─── Dialog / Popover ────────────────────────────────────────────────────────
+
+/** Surface data for dialog/popover role. */
+export type DialogData<C extends string = string, P extends {} = {}> = {
+  component: C;
+  props?: P;
+};
+
+/** Component props for dialog role. */
+export type DialogProps<C extends string = string, P extends {} = {}> = DialogData<C, P>;
+
+/** Component props for popover role. */
+export type PopoverProps<C extends string = string, P extends {} = {}> = DialogData<C, P>;
+
+/** Alias for dialog/popover component props. */
+export type ComponentProps<C extends string = string, P extends {} = {}> = DialogData<C, P>;
+
+/** Filter: dialog/popover component routing. */
+export const componentDialog = <C extends string>(
+  id: C,
+): ((data: Record<string, unknown>) => data is DialogData<C>) => {
+  return (data: Record<string, unknown>): data is DialogData<C> => data.component === id;
+};
+
+// ─── Chrome ──────────────────────────────────────────────────────────────────
+
+/** Surface data for navigation role. */
+export type NavigationData<Props extends {} = {}> = {
+  popoverAnchorId?: string;
+  current?: string;
+} & Props;
+
+/** Component props for navigation role. */
+export type NavigationProps<Props extends {} = {}> = NavigationData<Props> & {
+  role: 'navigation' | (string & {});
+};
+
+/** Surface data for menu-footer role. */
+export type MenuFooterData<Subject = unknown, Props extends {} = {}> = {
+  subject: Subject;
+} & Props;
+
+/** Component props for menu-footer role. */
+export type MenuFooterProps<Subject = unknown, Props extends {} = {}> = MenuFooterData<Subject, Props> & {
+  role: 'menu-footer' | (string & {});
+};
+
+/** Surface data for navbar-end role. */
+export type NavbarEndData<Subject = unknown, Props extends {} = {}> = {
+  subject: Subject;
+} & Props;
+
+/** Component props for navbar-end role. */
+export type NavbarEndProps<Subject = unknown, Props extends {} = {}> = NavbarEndData<Subject, Props> & {
+  role: 'navbar-end' | (string & {});
+};
+
+/** Surface data for document-title role. */
+export type DocumentTitleData<Subject = unknown, Props extends {} = {}> = {
+  subject: Subject;
+} & Props;
+
+/** Component props for document-title role. */
+export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = DocumentTitleData<Subject, Props> & {
+  role: 'document-title' | (string & {});
 };

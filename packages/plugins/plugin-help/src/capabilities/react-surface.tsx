@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: SHORTCUTS_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(SHORTCUTS_DIALOG),
+        filter: AppSurface.componentDialog(SHORTCUTS_DIALOG),
         component: () => <ShortcutsDialogContent />,
       }),
     ]),

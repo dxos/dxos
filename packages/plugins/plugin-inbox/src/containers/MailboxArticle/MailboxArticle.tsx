@@ -30,7 +30,7 @@ import { sortByCreated } from '../../util';
 
 import { NewMailbox } from './NewMailbox';
 
-export type MailboxArticleProps = AppSurface.AttendableObjectProps<
+export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;

@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--contact`,
         role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.object(Person.Person),
+        filter: AppSurface.objectCard(Person.Person),
         component: ({ data, role }) => {
           return (
             <>
@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--organization`,
         role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.object(Organization.Organization),
+        filter: AppSurface.objectCard(Organization.Organization),
         component: ({ data, role }) => {
           return (
             <>
@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--project`,
         role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.object(Pipeline.Pipeline),
+        filter: AppSurface.objectCard(Pipeline.Pipeline),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
         },
@@ -65,7 +65,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--task`,
         role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.object(Task.Task),
+        filter: AppSurface.objectCard(Task.Task),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;
         },
@@ -99,7 +99,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.section`,
         role: ['section'],
         position: 'fallback',
-        filter: AppSurface.anyObject(),
+        filter: AppSurface.anyObjectSection(),
         component: ({ data }) => {
           return (
             <div role='none' className='flex w-full justify-center'>

@@ -26,7 +26,7 @@ const DefaultStory = ({ roomId }: ChannelContainerProps) => {
     return <Loading data={{ db: !!db, channel: !!channel }} />;
   }
 
-  return <ChannelContainer subject={channel} attendableId='story' roomId={roomId} />;
+  return <ChannelContainer subject={channel} attendableId='story' roomId={roomId} role='article' />;
 };
 
 const meta = {
@@ -55,6 +55,7 @@ export const Default: Story = {
     // Fixed room for testing.
     subject: undefined,
     attendableId: 'story',
+    role: 'article',
     roomId: '04a1d1911703b8e929d0649021a965',
   },
 };

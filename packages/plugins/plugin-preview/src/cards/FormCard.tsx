@@ -14,7 +14,7 @@ import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const FormCard = ({ subject, projection }: AppSurface.ObjectProps & { projection?: ProjectionModel }) => {
+export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);
   const echoSchema = Obj.getSchema(subject);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);

@@ -28,10 +28,7 @@ const useMetadataResolver = () => {
 /**
  * Article view for collections.
  */
-export const CollectionArticle = ({
-  subject,
-  attendableId,
-}: AppSurface.AttendableObjectProps<Collection.Collection>) => {
+export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
   const resolveMetadata = useMetadataResolver();
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata, attendableId);

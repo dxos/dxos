@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: 'article',
-        filter: AppSurface.object(Template.Data, { attendable: true }),
+        filter: AppSurface.objectArticle(Template.Data),
         component: ({ data, role }) => (
           <TemplatePanel role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

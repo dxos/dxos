@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';

@@ -11,7 +11,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { type Settings, type FilesState } from '#types';
 
-export type FilesSettingsProps = AppSurface.SettingsProps<
+export type FilesSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
     state: FilesState;

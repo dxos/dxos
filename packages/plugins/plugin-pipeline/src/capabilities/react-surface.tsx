@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: 'article',
-        filter: AppSurface.object(Pipeline.Pipeline, { attendable: true }),
+        filter: AppSurface.objectArticle(Pipeline.Pipeline),
         component: ({ data, role }) => (
           <PipelineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -30,7 +30,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion.invocations`,
         role: 'article',
-        filter: AppSurface.companion(Pipeline.Pipeline, 'invocations'),
+        filter: AppSurface.and(
+          AppSurface.literalArticle('invocations'),
+          AppSurface.companionArticle(Pipeline.Pipeline),
+        ),
         component: ({ data, role }) => {
           const db = Obj.getDatabase(data.companionTo);
           // TODO(wittjosiah): Filter the invocations to those relevant to the project.
@@ -46,7 +49,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.object-settings`,
         role: 'object-settings',
-        filter: AppSurface.object(Pipeline.Pipeline),
+        filter: AppSurface.objectSettings(Pipeline.Pipeline),
         component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,
       }),
     ]),

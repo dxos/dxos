@@ -16,7 +16,7 @@ import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { D3ForceGraph } from '#components';
 import { useGraphModel } from '#hooks';
 
-export type ExplorerContainerProps = AppSurface.AttendableObjectProps<View.View>;
+export type ExplorerContainerProps = AppSurface.ObjectArticleProps<View.View>;
 
 export const ExplorerContainer = ({ role, subject: view, attendableId: _attendableId }: ExplorerContainerProps) => {
   useObject(view);

@@ -15,7 +15,7 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { useProjectionModel } from '#hooks';
 import { type Kanban, SettingsSchema } from '#types';
 
-export type KanbanViewEditorProps = AppSurface.ObjectProps<Kanban.Kanban>;
+export type KanbanViewEditorProps = AppSurface.ObjectSettingsProps<Kanban.Kanban>;
 
 export const KanbanViewEditor = ({ subject: object }: KanbanViewEditorProps) => {
   const registry = useContext(RegistryContext);

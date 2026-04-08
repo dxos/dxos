@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article`,
         role: ['article', 'section'],
-        filter: AppSurface.object(Graph.Graph, { attendable: true }),
+        filter: AppSurface.objectArticle(Graph.Graph),
         component: ({ data, role }) => {
           return <ExplorerContainer role={role} subject={data.subject} attendableId={data.attendableId} />;
         },

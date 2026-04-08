@@ -21,7 +21,7 @@ import {
 import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-export type TableCardProps = AppSurface.ObjectProps<Table.Table>;
+export type TableCardProps = AppSurface.ObjectCardProps<Table.Table>;
 
 export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const registry = useContext(RegistryContext);

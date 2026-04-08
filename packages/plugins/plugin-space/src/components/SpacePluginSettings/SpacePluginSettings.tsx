@@ -14,7 +14,7 @@ import { meta } from '#meta';
 import { type Settings } from '#types';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsProps = AppSurface.SettingsProps<
+export type SpacePluginSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
     spaces?: Space[];

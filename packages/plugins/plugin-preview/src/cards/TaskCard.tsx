@@ -10,7 +10,7 @@ import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/ech
 import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
-export const TaskCard = ({ subject }: AppSurface.ObjectProps<Task.Task>) => {
+export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
 

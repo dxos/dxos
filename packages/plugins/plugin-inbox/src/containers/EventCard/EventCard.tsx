@@ -10,7 +10,7 @@ import { type Event } from '@dxos/types';
 
 import { DateComponent } from '#components';
 
-export type EventCardProps = AppSurface.ObjectProps<Event.Event>;
+export type EventCardProps = AppSurface.ObjectCardProps<Event.Event>;
 
 export const EventCard = ({ subject: event }: EventCardProps) => {
   return (

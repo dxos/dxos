@@ -48,7 +48,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.surface.text`,
         role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
-        filter: AppSurface.object(Text.Text, { attendable: true }),
+        filter: AppSurface.objectArticle(Text.Text),
         component: ({ data, role, ref }) => {
           return (
             <Container
@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -73,7 +73,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.preview`,
         role: 'card--content',
-        filter: AppSurface.object([Markdown.Document, Text.Text]),
+        filter: AppSurface.objectCard([Markdown.Document, Text.Text]),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),
@@ -85,7 +85,7 @@ export default Capability.makeModule(() =>
  */
 const Container = forwardRef<
   HTMLDivElement,
-  AppSurface.AttendableObjectProps<Markdown.Document | Text.Text, { id: string }>
+  AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
 >(({ id, attendableId, subject, role }, forwardedRef) => {
   const selectionManager = useCapability(AttentionCapabilities.Selection);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);

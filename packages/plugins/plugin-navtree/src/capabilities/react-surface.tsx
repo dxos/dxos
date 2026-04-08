@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: COMMANDS_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(COMMANDS_DIALOG),
+        filter: AppSurface.componentDialog(COMMANDS_DIALOG),
         component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
       }),
       Surface.create({

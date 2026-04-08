@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { type Pipeline } from '@dxos/types';
 
-export const ProjectCard = ({ subject }: AppSurface.ObjectProps<Pipeline.Pipeline>) => {
+export const ProjectCard = ({ subject }: AppSurface.ObjectCardProps<Pipeline.Pipeline>) => {
   const { image, description } = subject;
 
   return (

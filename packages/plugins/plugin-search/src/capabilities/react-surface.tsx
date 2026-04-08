@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: SEARCH_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(SEARCH_DIALOG),
+        filter: AppSurface.componentDialog(SEARCH_DIALOG),
         component: ({ data }) => (
           <SearchContextProvider>
             <SearchDialog {...data.props} />

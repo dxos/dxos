@@ -17,7 +17,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { TemplateEditor } from '#components';
 import { meta } from '#meta';
 
-export type PromptArticleProps = AppSurface.AttendableObjectProps<Prompt.Prompt>;
+export type PromptArticleProps = AppSurface.ObjectArticleProps<Prompt.Prompt>;
 
 export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);

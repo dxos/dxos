@@ -12,7 +12,7 @@ import { useMixerEngine } from '#hooks';
 import { type Dream } from '#types';
 import { Mixer } from '#components';
 
-export type ZenArticleProps = AppSurface.AttendableObjectProps<Dream.Dream>;
+export type ZenArticleProps = AppSurface.ObjectArticleProps<Dream.Dream>;
 
 export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }: ZenArticleProps) => {
   const { engine, playing, outputNode } = useMixerEngine();

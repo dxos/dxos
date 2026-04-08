@@ -19,7 +19,7 @@ import { useEchoChangeCallback, useProjectionModel } from '#hooks';
 import { type Kanban } from '#types';
 import { KanbanOperation } from '#operations';
 
-export type KanbanContainerProps = AppSurface.ObjectProps<Kanban.Kanban>;
+export type KanbanContainerProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 
 export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps) => {
   const registry = useContext(RegistryContext);

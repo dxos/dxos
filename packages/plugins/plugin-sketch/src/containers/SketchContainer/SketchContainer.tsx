@@ -15,7 +15,7 @@ import { isTauri } from '@dxos/util';
 import { SketchComponent } from '#components';
 import { type Sketch, type Settings } from '#types';
 
-export type SketchContainerProps = AppSurface.ObjectProps<
+export type SketchContainerProps = AppSurface.ObjectArticleProps<
   Sketch.Sketch,
   {
     settings: Settings.Settings;

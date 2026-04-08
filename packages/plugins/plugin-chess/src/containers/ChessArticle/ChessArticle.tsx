@@ -13,7 +13,7 @@ import { Chessboard, type ChessboardController, type ChessboardInfoProps } from 
 import { meta } from '#meta';
 import { type Chess } from '#types';
 
-export type ChessArticleProps = AppSurface.AttendableObjectProps<Chess.Game>;
+export type ChessArticleProps = AppSurface.ObjectArticleProps<Chess.Game>;
 
 export const ChessArticle = ({ role, attendableId: _attendableId, subject: game }: ChessArticleProps) => {
   const { t } = useTranslation(meta.id);

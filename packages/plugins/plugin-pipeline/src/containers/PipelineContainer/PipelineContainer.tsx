@@ -26,7 +26,7 @@ import { usePipelineBoardModel } from '#hooks';
 
 const PIPELINE_ITEM = 'PipelineItem';
 
-export type PipelineContainerProps = AppSurface.AttendableObjectProps<Pipeline.Pipeline>;
+export type PipelineContainerProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
 
 export const PipelineContainer = ({ role, subject: pipeline, attendableId }: PipelineContainerProps) => {
   const registry = useCapability(Capabilities.AtomRegistry);

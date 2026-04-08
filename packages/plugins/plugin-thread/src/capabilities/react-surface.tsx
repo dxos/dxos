@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.channel`,
         role: 'article',
-        filter: AppSurface.object(Channel.Channel, { attendable: true }),
+        filter: AppSurface.objectArticle(Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
           <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
         ),
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.chat-companion`,
         role: 'article',
-        filter: AppSurface.companion(Channel.Channel, 'chat'),
+        filter: AppSurface.and(AppSurface.literalArticle('chat'), AppSurface.companionArticle(Channel.Channel)),
         component: ({ data: { companionTo: channel } }) => {
           const space = getSpace(channel);
           const thread = channel.defaultThread.target;
@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.thread`,
         role: 'article',
-        filter: AppSurface.object(Thread.Thread, { attendable: true }),
+        filter: AppSurface.objectArticle(Thread.Thread),
         component: ({ data: { subject } }) => {
           const space = getSpace(subject);
           if (!space || !subject) {
@@ -58,14 +58,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.comments`,
         role: 'article',
-        filter: AppSurface.and(AppSurface.literal('comments'), AppSurface.companion()),
+        filter: AppSurface.and(AppSurface.literalArticle('comments'), AppSurface.companionArticle()),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;

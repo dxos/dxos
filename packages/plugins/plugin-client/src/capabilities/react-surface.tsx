@@ -32,37 +32,37 @@ export default Capability.makeModule(
       Surface.create({
         id: Account.Profile,
         role: 'article',
-        filter: AppSurface.literal(Account.Profile),
+        filter: AppSurface.literalSection(Account.Profile),
         component: () => <ProfileContainer />,
       }),
       Surface.create({
         id: Account.Devices,
         role: 'article',
-        filter: AppSurface.literal(Account.Devices),
+        filter: AppSurface.literalSection(Account.Devices),
         component: () => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
       }),
       Surface.create({
         id: Account.Security,
         role: 'article',
-        filter: AppSurface.literal(Account.Security),
+        filter: AppSurface.literalSection(Account.Security),
         component: () => <RecoveryCredentialsContainer />,
       }),
       Surface.create({
         id: JOIN_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(JOIN_DIALOG),
+        filter: AppSurface.componentDialog(JOIN_DIALOG),
         component: ({ data }: { data: any }) => <JoinDialog {...data.props} />,
       }),
       Surface.create({
         id: RECOVERY_CODE_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(RECOVERY_CODE_DIALOG),
+        filter: AppSurface.componentDialog(RECOVERY_CODE_DIALOG),
         component: ({ data }: { data: any }) => <RecoveryCodeDialog {...data.props} />,
       }),
       Surface.create({
         id: RESET_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(RESET_DIALOG),
+        filter: AppSurface.componentDialog(RESET_DIALOG),
         component: ({ data }: { data: any }) => (
           <ResetDialog {...data.props} onReset={onReset} capabilityManager={capabilityManager} />
         ),

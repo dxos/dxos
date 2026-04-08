@@ -14,7 +14,7 @@ import { Avatar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
-export const PersonCard = ({ subject }: AppSurface.ObjectProps<Person.Person>) => {
+export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
   const { invoke } = useOperationInvoker();
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
 

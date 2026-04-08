@@ -20,7 +20,7 @@ const CardStory = () => {
   const game = useMemo(() => Chess.make({ pgn: SAMPLE_PGN }), []);
   return (
     <CardContainer role='popover' icon={pluginMeta.icon}>
-      <ChessCard subject={game} />
+      <ChessCard subject={game} role='card--content' />
     </CardContainer>
   );
 };

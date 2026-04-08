@@ -12,7 +12,7 @@ import { Panel } from '@dxos/react-ui';
 import { ComputeGraphContextProvider, Sheet, useComputeGraph } from '#components';
 import { type Sheet as SheetType } from '#types';
 
-export type SheetContainerProps = AppSurface.ObjectProps<
+export type SheetContainerProps = AppSurface.ObjectArticleProps<
   SheetType.Sheet,
   {
     space: Space;

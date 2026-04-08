@@ -14,7 +14,7 @@ import { Transcription } from '#components';
 import { useQueueModelAdapter } from '#hooks';
 import { renderByline } from '../../util';
 
-export type TranscriptionContainerProps = AppSurface.AttendableObjectProps<Transcript.Transcript>;
+export type TranscriptionContainerProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
 export const TranscriptionContainer = ({ role, subject: transcript, attendableId }: TranscriptionContainerProps) => {
   const db = Obj.getDatabase(transcript);

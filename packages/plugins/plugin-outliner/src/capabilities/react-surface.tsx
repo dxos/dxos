@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article.journal`,
         role: ['article', 'section'],
-        filter: AppSurface.object(Journal.Journal, { attendable: true }),
+        filter: AppSurface.objectArticle(Journal.Journal),
         component: ({ role, data }) => (
           <JournalContainer role={role} subject={data.subject} attendableId={data.attendableId} showCalendar />
         ),
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article.outline`,
         role: ['article', 'section'],
-        filter: AppSurface.object(Outline.Outline, { attendable: true }),
+        filter: AppSurface.objectArticle(Outline.Outline),
         component: ({ role, data }) => (
           <OutlineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -35,13 +35,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.card.outline`,
         role: 'card--content',
-        filter: AppSurface.object(Outline.Outline),
+        filter: AppSurface.objectCard(Outline.Outline),
         component: ({ data }) => <OutlineCard subject={data.subject} />,
       }),
       Surface.create({
         id: QUICK_ENTRY_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(QUICK_ENTRY_DIALOG),
+        filter: AppSurface.componentDialog(QUICK_ENTRY_DIALOG),
         component: () => <QuickEntryDialog />,
       }),
     ]),

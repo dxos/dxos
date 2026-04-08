@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article`,
         role: ['article', 'section', 'slide'],
-        filter: AppSurface.object(WnfsFile.File, { attendable: true }),
+        filter: AppSurface.objectArticle(WnfsFile.File),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
       Surface.create({

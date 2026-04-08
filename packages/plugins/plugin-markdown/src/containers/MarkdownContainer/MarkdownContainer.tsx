@@ -20,7 +20,7 @@ import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRoo
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
-export type MarkdownContainerProps = AppSurface.ObjectProps<
+export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
   {
     id: string;

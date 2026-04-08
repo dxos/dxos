@@ -47,7 +47,7 @@ const EventCardStory = () => {
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
         </Card.Toolbar>
-        <EventCard subject={subject} />
+        <EventCard role='card--content' subject={subject} />
       </Card.Root>
     </IntrinsicCardContainer>
   );

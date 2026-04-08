@@ -17,7 +17,7 @@ import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#co
 import { useDeployState, useToolbarState } from '#hooks';
 import { type Settings } from '#types';
 
-export type ScriptEditorProps = AppSurface.AttendableObjectProps<
+export type ScriptEditorProps = AppSurface.ObjectArticleProps<
   Script.Script,
   {
     settings?: Settings.Settings;

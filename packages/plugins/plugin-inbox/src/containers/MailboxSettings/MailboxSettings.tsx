@@ -14,7 +14,7 @@ import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
 import { Mailbox } from '#types';
 
-export const MailboxSettings = ({ subject }: AppSurface.ObjectProps<Mailbox.Mailbox>) => {
+export const MailboxSettings = ({ subject }: AppSurface.ObjectSettingsProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);

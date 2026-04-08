@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: AppSurface.object(CanvasBoard.CanvasBoard, { attendable: true }),
+        filter: AppSurface.objectArticle(CanvasBoard.CanvasBoard),
         component: ({ data, role }) => (
           <CanvasContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

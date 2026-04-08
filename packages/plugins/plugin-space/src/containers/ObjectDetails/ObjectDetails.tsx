@@ -11,11 +11,11 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { BaseObjectSettings } from '#components';
 
-export type ObjectDetailsProps = AppSurface.ObjectProps<Obj.Unknown>;
+export type ObjectDetailsProps = AppSurface.ObjectSettingsProps<Obj.Unknown>;
 
 export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
   ({ role, subject: object }, forwardedRef) => {
-    const data = useMemo(() => ({ subject: object }), [object]);
+    const data = useMemo<AppSurface.ObjectSettingsData>(() => ({ subject: object }), [object]);
 
     return (
       <Panel.Root role={role} className='dx-document' ref={forwardedRef}>

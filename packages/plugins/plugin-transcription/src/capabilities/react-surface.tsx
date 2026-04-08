@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article.transcript`,
         role: ['article', 'section'],
-        filter: AppSurface.object(Transcript.Transcript, { attendable: true }),
+        filter: AppSurface.objectArticle(Transcript.Transcript),
         component: ({ data, role }) => (
           <TranscriptionContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

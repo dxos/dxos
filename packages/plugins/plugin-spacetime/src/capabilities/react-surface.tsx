@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.scene`,
         role: 'article',
-        filter: AppSurface.object(Scene.Scene, { attendable: true }),
+        filter: AppSurface.objectArticle(Scene.Scene),
         component: ({ data, role }) => {
           return <SpacetimeArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SpacetimeSettings settings={settings} onSettingsChange={updateSettings} />;

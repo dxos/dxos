@@ -8,7 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
-export type TemplatePanelProps = AppSurface.AttendableObjectProps<Obj.Unknown>;
+export type TemplatePanelProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
 export const TemplatePanel = ({ role, subject: object, attendableId: _attendableId }: TemplatePanelProps) => {
   return (

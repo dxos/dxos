@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.project`,
         role: 'article',
-        filter: AppSurface.object(Project.Project, { attendable: true }),
+        filter: AppSurface.objectArticle(Project.Project),
         component: ({ data, role }) => (
           <ProjectArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.project.companion.settings`,
         role: 'object-settings',
-        filter: AppSurface.object(Project.Project),
+        filter: AppSurface.objectSettings(Project.Project),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       Surface.create({
@@ -109,7 +109,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.blueprint`,
         role: 'article',
-        filter: AppSurface.object(Blueprint.Blueprint, { attendable: true }),
+        filter: AppSurface.objectArticle(Blueprint.Blueprint),
         component: ({ data, role }) => (
           <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -117,7 +117,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.prompt`,
         role: 'article',
-        filter: AppSurface.object(Prompt.Prompt, { attendable: true }),
+        filter: AppSurface.objectArticle(Prompt.Prompt),
         component: ({ data, role }) => (
           <PromptArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -125,13 +125,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: ASSISTANT_DIALOG,
         role: 'dialog',
-        filter: AppSurface.component(ASSISTANT_DIALOG),
+        filter: AppSurface.componentDialog(ASSISTANT_DIALOG),
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
         id: `${meta.id}.trace`,
         role: 'deck-companion--trace',
-        filter: AppSurface.literal('trace'),
+        filter: AppSurface.literalSection('trace'),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -149,7 +149,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.prompts`,
         role: 'prompts',
-        filter: AppSurface.anyObject(),
+        filter: AppSurface.anyObjectSection(),
         component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),

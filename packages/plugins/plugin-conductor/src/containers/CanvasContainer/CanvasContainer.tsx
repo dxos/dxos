@@ -29,7 +29,7 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 
-export type CanvasContainerProps = AppSurface.AttendableObjectProps<CanvasBoard.CanvasBoard>;
+export type CanvasContainerProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
 export const CanvasContainer = ({ role, subject: canvas, attendableId: _attendableId }: CanvasContainerProps) => {
   const id = Obj.getDXN(canvas as any).toString();

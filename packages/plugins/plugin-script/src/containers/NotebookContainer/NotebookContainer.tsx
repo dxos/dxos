@@ -38,7 +38,7 @@ const INCLUDE_BLUEPRINTS = [
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = AppSurface.AttendableObjectProps<
+export type NotebookContainerProps = AppSurface.ObjectArticleProps<
   Notebook.Notebook,
   Pick<TypescriptEditorProps, 'env'>
 >;

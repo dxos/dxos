@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: AppSurface.settings(meta.id),
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <MeetingSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.meeting`,
         role: 'article',
-        filter: AppSurface.object(Meeting.Meeting, { attendable: true }),
+        filter: AppSurface.objectArticle(Meeting.Meeting),
         component: ({ role, data }) => (
           <MeetingContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

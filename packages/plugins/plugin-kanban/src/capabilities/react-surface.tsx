@@ -24,14 +24,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: AppSurface.object(Kanban.Kanban, { attendable: true }),
+        filter: AppSurface.objectArticle(Kanban.Kanban),
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.object-settings`,
         role: 'object-settings',
         position: 'hoist',
-        filter: AppSurface.object(Kanban.Kanban),
+        filter: AppSurface.objectSettings(Kanban.Kanban),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({

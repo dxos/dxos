@@ -19,7 +19,7 @@ import { type Map } from '#types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = AppSurface.ObjectProps<
+export type MapContainerProps = AppSurface.ObjectArticleProps<
   Map.Map,
   GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
 >;

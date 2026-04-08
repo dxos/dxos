@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.map`,
         role: ['article', 'section'],
-        filter: AppSurface.object(Map.Map, { attendable: true }),
+        filter: AppSurface.objectArticle(Map.Map),
         component: ({ data, role }) => {
           const state = useAtomCapability(MapCapabilities.State);
           const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.surface.object-settings`,
         role: 'object-settings',
         position: 'hoist',
-        filter: AppSurface.object(Map.Map),
+        filter: AppSurface.objectSettings(Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({

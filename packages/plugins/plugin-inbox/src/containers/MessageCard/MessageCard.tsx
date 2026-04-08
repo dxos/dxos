@@ -12,7 +12,7 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-export const MessageCard = ({ subject: message }: AppSurface.ObjectProps<Message.Message>) => {
+export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
   const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), true);
   return (
     <Card.Content>

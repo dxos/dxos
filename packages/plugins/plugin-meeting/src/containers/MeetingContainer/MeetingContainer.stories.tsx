@@ -31,7 +31,7 @@ const Render = () => {
     return null;
   }
 
-  return <MeetingContainer subject={meeting} attendableId='story' />;
+  return <MeetingContainer role='article' subject={meeting} attendableId='story' />;
 };
 
 const meta = {

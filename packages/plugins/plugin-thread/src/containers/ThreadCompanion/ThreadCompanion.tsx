@@ -24,7 +24,7 @@ import { ThreadOperation } from '#operations';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export type ThreadCompanionProps = AppSurface.ObjectProps<
+export type ThreadCompanionProps = AppSurface.ObjectArticleProps<
   Thread.Thread,
   {
     attendableId?: string;
