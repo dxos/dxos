@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { BoardContainer } from '#containers';
 import { meta } from '#meta';
@@ -19,8 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { attendableId: string; subject: Board.Board } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Board.Board, data.subject),
+        filter: AppSurface.object(Board.Board, { attendable: true }),
         component: ({ role, data }) => (
           <BoardContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

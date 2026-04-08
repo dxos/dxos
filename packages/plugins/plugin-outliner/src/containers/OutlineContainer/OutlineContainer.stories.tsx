@@ -28,7 +28,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <OutlineContainer role='article' subject={outline} />;
+  return <OutlineContainer role='article' subject={outline} attendableId='story' />;
 };
 
 const EmptyStory = () => {
@@ -44,7 +44,7 @@ const EmptyStory = () => {
     return null;
   }
 
-  return <OutlineContainer role='article' subject={outline} />;
+  return <OutlineContainer role='article' subject={outline} attendableId='story' />;
 };
 
 const meta = {

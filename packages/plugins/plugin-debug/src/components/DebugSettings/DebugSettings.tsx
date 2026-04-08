@@ -4,8 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface, AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -26,7 +25,7 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export type DebugSettingsProps = SettingsSurfaceProps<
+export type DebugSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     logBuffer: LogBuffer;

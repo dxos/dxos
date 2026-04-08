@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
@@ -13,7 +13,7 @@ import { Settings } from '#types';
 
 const isSocket = !!(globalThis as any).__args;
 
-export type DeckSettingsProps = SettingsSurfaceProps<Settings.Settings>;
+export type DeckSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) => {
   const { t } = useTranslation(meta.id);

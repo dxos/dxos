@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
@@ -18,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: COMMANDS_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: { selected?: string } } => data.component === COMMANDS_DIALOG,
+        filter: AppSurface.component(COMMANDS_DIALOG),
         component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
       }),
       Surface.create({

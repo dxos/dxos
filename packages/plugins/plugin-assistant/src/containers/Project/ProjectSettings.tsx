@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Project, syncProjectTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -22,7 +22,7 @@ import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
 
-export const ProjectSettings = ({ subject: project }: ObjectSurfaceProps<Project.Project>) => {
+export const ProjectSettings = ({ subject: project }: AppSurface.ObjectProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 
   const handleResetHistory = useCallback(async () => {

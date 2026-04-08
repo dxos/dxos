@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { SketchSettings } from '#components';
 import { SketchContainer } from '#containers';
@@ -29,8 +29,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settings(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SketchSettings settings={settings} onSettingsChange={updateSettings} />;

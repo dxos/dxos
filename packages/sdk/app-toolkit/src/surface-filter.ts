@@ -233,20 +233,27 @@ export namespace AppSurface {
    * filter: AppSurface.companion(Channel.Channel, 'chat')
    * ```
    */
+  export function companion(): (data: Record<string, unknown>) => data is { companionTo: Obj.Unknown };
+  export function companion<S extends Type.AnyEntity>(
+    schema: S,
+  ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S> };
   export function companion<S extends Type.AnyEntity, Subj extends string>(
     schema: S,
     subject: Subj,
   ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S>; subject: Subj };
-  export function companion<S extends Type.AnyEntity>(
-    schema: S,
-  ): (data: Record<string, unknown>) => data is { companionTo: Schema.Schema.Type<S> };
   export function companion(
-    schema: Type.AnyEntity,
+    schema?: Type.AnyEntity,
     subject?: string,
   ): (data: Record<string, unknown>) => data is any {
     return (data: Record<string, unknown>): data is any => {
-      if (!Obj.instanceOf(schema, data.companionTo)) {
-        return false;
+      if (schema) {
+        if (!Obj.instanceOf(schema, data.companionTo)) {
+          return false;
+        }
+      } else {
+        if (!Obj.isObject(data.companionTo)) {
+          return false;
+        }
       }
       if (subject !== undefined && data.subject !== subject) {
         return false;
@@ -327,5 +334,30 @@ export namespace AppSurface {
   ): ((data: Record<string, unknown>) => data is { subject: Obj.Snapshot<Schema.Schema.Type<S>> }) => {
     return (data: Record<string, unknown>): data is { subject: Obj.Snapshot<Schema.Schema.Type<S>> } =>
       Obj.snapshotOf(schema, data.subject);
+  };
+
+  /**
+   * Combines two filters with intersection types. Both must match.
+   *
+   * @example
+   * ```ts
+   * // Object subject + typed companion.
+   * filter: AppSurface.and(
+   *   AppSurface.object(Message.Message, { attendable: true }),
+   *   AppSurface.companion(Mailbox.Mailbox),
+   * )
+   *
+   * // Literal subject + any companion.
+   * filter: AppSurface.and(
+   *   AppSurface.literal('comments'),
+   *   AppSurface.companion(),
+   * )
+   * ```
+   */
+  export const and = <A extends Record<string, any>, B extends Record<string, any>>(
+    a: (data: Record<string, unknown>) => data is A,
+    b: (data: Record<string, unknown>) => data is B,
+  ): ((data: Record<string, unknown>) => data is A & B) => {
+    return (data: Record<string, unknown>): data is A & B => a(data) && b(data);
   };
 }

@@ -7,7 +7,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { companionSegment, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
@@ -28,7 +29,7 @@ const byDate =
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type CalendarArticleProps = ObjectSurfaceProps<Calendar.Calendar> & { attendableId?: string };
+export type CalendarArticleProps = AppSurface.AttendableObjectProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);

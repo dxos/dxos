@@ -6,8 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { AppCapabilities, type AppSurface } from '@dxos/app-toolkit';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { useObject, useSchema } from '@dxos/react-client/echo';
@@ -19,7 +18,7 @@ import { useEchoChangeCallback, useProjectionModel } from '#hooks';
 import { type Kanban } from '#types';
 import { KanbanOperation } from '#operations';
 
-export type KanbanContainerProps = ObjectSurfaceProps<Kanban.Kanban>;
+export type KanbanContainerProps = AppSurface.ObjectProps<Kanban.Kanban>;
 
 export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps) => {
   const registry = useContext(RegistryContext);

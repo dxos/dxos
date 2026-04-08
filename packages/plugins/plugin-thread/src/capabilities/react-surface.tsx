@@ -9,7 +9,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit';
-import { Obj, type Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
 
@@ -59,8 +58,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.comments`,
         role: 'article',
-        filter: (data): data is { attendableId?: string; companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
-          data.subject === 'comments' && Obj.isObject(data.companionTo),
+        filter: AppSurface.and(AppSurface.literal('comments'), AppSurface.companion()),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),

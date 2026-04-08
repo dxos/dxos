@@ -5,8 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SpaceSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type AppSurface, LayoutOperation, companionSegment } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
@@ -21,7 +21,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { Subscription } from '#types';
 
-export type SubscriptionsArticleProps = SpaceSurfaceProps;
+export type SubscriptionsArticleProps = AppSurface.SpaceProps;
 
 export const SubscriptionsArticle = ({ role, attendableId, space }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.id);

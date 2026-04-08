@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
@@ -26,7 +27,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.welcome`,
         role: 'dialog',
-        filter: (data): data is any => data.component === WELCOME_SCREEN,
+        filter: AppSurface.component(WELCOME_SCREEN),
         component: () => {
           const client = useClient();
           const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
@@ -37,13 +38,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.native-redirect`,
         role: 'dialog',
-        filter: (data): data is any => data.component === NATIVE_REDIRECT_DIALOG,
+        filter: AppSurface.component(NATIVE_REDIRECT_DIALOG),
         component: ({ data }) => <NativeRedirectDialog {...data.props} />,
       }),
       Surface.create({
         id: ABOUT_DIALOG,
         role: 'dialog',
-        filter: (data): data is { component: string } => data.component === ABOUT_DIALOG,
+        filter: AppSurface.component(ABOUT_DIALOG),
         component: () => <AboutDialog />,
       }),
     ]),

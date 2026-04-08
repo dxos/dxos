@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
@@ -23,14 +24,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
+        filter: AppSurface.object(Kanban.Kanban, { attendable: true }),
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.object-settings`,
         role: 'object-settings',
         position: 'hoist',
-        filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
+        filter: AppSurface.object(Kanban.Kanban),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({

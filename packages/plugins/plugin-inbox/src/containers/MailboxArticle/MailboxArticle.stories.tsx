@@ -34,7 +34,7 @@ const DefaultStory = (_: DefaultStoryProps) => {
     return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
   }
 
-  return <MailboxArticle subject={mailbox} />;
+  return <MailboxArticle subject={mailbox} attendableId='story' />;
 };
 
 const meta = {

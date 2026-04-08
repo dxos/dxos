@@ -8,6 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -25,7 +26,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.map`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+        filter: AppSurface.object(Map.Map, { attendable: true }),
         component: ({ data, role }) => {
           const state = useAtomCapability(MapCapabilities.State);
           const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
@@ -52,7 +53,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.surface.object-settings`,
         role: 'object-settings',
         position: 'hoist',
-        filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+        filter: AppSurface.object(Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({

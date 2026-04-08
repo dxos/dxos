@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -14,7 +14,7 @@ import { Transcription } from '#components';
 import { useQueueModelAdapter } from '#hooks';
 import { renderByline } from '../../util';
 
-export type TranscriptionContainerProps = ObjectSurfaceProps<Transcript.Transcript>;
+export type TranscriptionContainerProps = AppSurface.AttendableObjectProps<Transcript.Transcript>;
 
 export const TranscriptionContainer = ({ role, subject: transcript, attendableId }: TranscriptionContainerProps) => {
   const db = Obj.getDatabase(transcript);

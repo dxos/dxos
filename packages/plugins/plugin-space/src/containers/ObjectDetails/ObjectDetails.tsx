@@ -5,13 +5,13 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { BaseObjectSettings } from '#components';
 
-export type ObjectDetailsProps = ObjectSurfaceProps<Obj.Unknown>;
+export type ObjectDetailsProps = AppSurface.ObjectProps<Obj.Unknown>;
 
 export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
   ({ role, subject: object }, forwardedRef) => {

@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { TemplateEditor } from '#components';
 
-export type BlueprintArticleProps = ObjectSurfaceProps<Blueprint.Blueprint>;
+export type BlueprintArticleProps = AppSurface.AttendableObjectProps<Blueprint.Blueprint>;
 
 export const BlueprintArticle = ({ role, attendableId, subject }: BlueprintArticleProps) => {
   const { hasAttention } = useAttention(attendableId);

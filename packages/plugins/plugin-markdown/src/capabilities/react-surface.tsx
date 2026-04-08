@@ -13,8 +13,7 @@ import {
   useCapability,
   useSettingsState,
 } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Text } from '@dxos/schema';
@@ -49,8 +48,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.surface.text`,
         role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
-        filter: (data): data is { attendableId: string; subject: Text.Text } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Text.Text, data.subject),
+        filter: AppSurface.object(Text.Text, { attendable: true }),
         component: ({ data, role, ref }) => {
           return (
             <Container
@@ -66,8 +64,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settings(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -76,8 +73,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.preview`,
         role: 'card--content',
-        filter: (data): data is { subject: Markdown.Document | Text.Text } =>
-          Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
+        filter: AppSurface.object([Markdown.Document, Text.Text]),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),
@@ -87,7 +83,7 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-const Container = forwardRef<HTMLDivElement, ObjectSurfaceProps<Markdown.Document | Text.Text, { id: string }>>(
+const Container = forwardRef<HTMLDivElement, AppSurface.AttendableObjectProps<Markdown.Document | Text.Text, { id: string }>>(
   ({ id, attendableId, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
     const settings = useAtomCapability(MarkdownCapabilities.Settings);

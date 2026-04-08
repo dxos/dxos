@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Panel } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 
@@ -12,9 +12,9 @@ import { useMixerEngine } from '#hooks';
 import { type Dream } from '#types';
 import { Mixer } from '#components';
 
-export type ZenArticleProps = ObjectSurfaceProps<Dream.Dream>;
+export type ZenArticleProps = AppSurface.AttendableObjectProps<Dream.Dream>;
 
-export const ZenArticle = ({ role, subject: dream }: ZenArticleProps) => {
+export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }: ZenArticleProps) => {
   const { engine, playing, outputNode } = useMixerEngine();
 
   return (

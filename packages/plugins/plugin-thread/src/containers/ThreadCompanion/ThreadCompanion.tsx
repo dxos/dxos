@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface, AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -20,11 +20,10 @@ import { CommentsPanel, type CommentsPanelProps } from '#components';
 import { meta } from '#meta';
 import { ThreadCapabilities, type ViewState } from '#types';
 import { ThreadOperation } from '#operations';
-import { ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export type ThreadCompanionProps = ObjectSurfaceProps<
+export type ThreadCompanionProps = AppSurface.ObjectProps<
   Thread.Thread,
   {
     attendableId?: string;

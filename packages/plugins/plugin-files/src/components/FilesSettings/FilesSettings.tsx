@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { type Settings, type FilesState } from '#types';
 
-export type FilesSettingsProps = SettingsSurfaceProps<
+export type FilesSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     state: FilesState;

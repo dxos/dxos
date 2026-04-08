@@ -266,4 +266,47 @@ describe('AppSurface', () => {
       expect(filter({})).toBe(false);
     });
   });
+
+  describe('companion (no-arg)', () => {
+    test('matches any ECHO object as companionTo', ({ expect }) => {
+      const filter = AppSurface.companion();
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter({ companionTo: objectA })).toBe(true);
+    });
+
+    test('rejects non-ECHO companionTo', ({ expect }) => {
+      const filter = AppSurface.companion();
+      expect(filter({ companionTo: 'string' })).toBe(false);
+      expect(filter({})).toBe(false);
+    });
+  });
+
+  describe('and', () => {
+    test('combines object + companion filters', ({ expect }) => {
+      const filter = AppSurface.and(AppSurface.object(TypeA), AppSurface.companion(TypeB));
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      const objectB = Obj.make(TypeB, { value: 42 });
+      expect(filter({ subject: objectA, companionTo: objectB })).toBe(true);
+    });
+
+    test('rejects when first filter fails', ({ expect }) => {
+      const filter = AppSurface.and(AppSurface.object(TypeA), AppSurface.companion(TypeB));
+      const objectB = Obj.make(TypeB, { value: 42 });
+      expect(filter({ subject: objectB, companionTo: objectB })).toBe(false);
+    });
+
+    test('rejects when second filter fails', ({ expect }) => {
+      const filter = AppSurface.and(AppSurface.object(TypeA), AppSurface.companion(TypeB));
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter({ subject: objectA, companionTo: objectA })).toBe(false);
+    });
+
+    test('combines literal + no-arg companion', ({ expect }) => {
+      const filter = AppSurface.and(AppSurface.literal('comments'), AppSurface.companion());
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter({ subject: 'comments', companionTo: objectA })).toBe(true);
+      expect(filter({ subject: 'other', companionTo: objectA })).toBe(false);
+      expect(filter({ subject: 'comments' })).toBe(false);
+    });
+  });
 });

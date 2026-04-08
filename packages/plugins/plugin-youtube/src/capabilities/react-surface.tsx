@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { ChannelArticle, ChannelSettings, VideoArticle, VideoCard } from '#containers';
 import { meta } from '#meta';
@@ -18,8 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.channel`,
         role: ['article'],
-        filter: (data): data is { attendableId?: string; subject: Channel.YouTubeChannel } =>
-          Channel.instanceOf(data.subject),
+        filter: AppSurface.object(Channel.YouTubeChannel, { attendable: true }),
         component: ({ data }) => {
           return <ChannelArticle subject={data.subject} attendableId={data.attendableId} />;
         },
@@ -27,12 +27,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.video`,
         role: ['article', 'section'],
-        filter: (
-          data,
-        ): data is { attendableId: string; subject: Video.YouTubeVideo; companionTo: Channel.YouTubeChannel } =>
-          typeof data.attendableId === 'string' &&
-          Video.instanceOf(data.subject) &&
-          Channel.instanceOf(data.companionTo),
+        filter: AppSurface.and(AppSurface.object(Video.YouTubeVideo, { attendable: true }), AppSurface.companion(Channel.YouTubeChannel)),
         component: ({ data: { attendableId, companionTo, subject }, role }) => {
           return <VideoArticle role={role} subject={subject} channel={companionTo} attendableId={attendableId} />;
         },
@@ -40,13 +35,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.video-card`,
         role: 'card--content',
-        filter: (data): data is { subject: Video.YouTubeVideo } => Video.instanceOf(data?.subject),
+        filter: AppSurface.object(Video.YouTubeVideo),
         component: ({ data: { subject }, role }) => <VideoCard subject={subject} role={role} />,
       }),
       Surface.create({
         id: `${meta.id}.channel.companion.settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Channel.YouTubeChannel } => Channel.instanceOf(data.subject),
+        filter: AppSurface.object(Channel.YouTubeChannel),
         component: ({ data }) => <ChannelSettings subject={data.subject} />,
       }),
     ]),

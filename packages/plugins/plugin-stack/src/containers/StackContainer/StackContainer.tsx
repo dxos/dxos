@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
@@ -41,7 +41,7 @@ const collectionObjectsFamily = Atom.family((collection: Collection.Collection) 
   }),
 );
 
-type StackContainerProps = ObjectSurfaceProps<Collection.Collection>;
+type StackContainerProps = AppSurface.AttendableObjectProps<Collection.Collection>;
 
 export const StackContainer = ({ attendableId, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();

@@ -18,7 +18,7 @@ type DefaultStoryProps = {
 
 const DefaultStory = ({ voxels }: DefaultStoryProps) => {
   const world = useMemo(() => Voxel.make(voxels ? { voxels } : undefined), [voxels]);
-  return <VoxelArticle subject={world} />;
+  return <VoxelArticle subject={world} attendableId='story' />;
 };
 
 const meta = {

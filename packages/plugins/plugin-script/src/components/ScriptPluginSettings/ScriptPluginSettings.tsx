@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
@@ -12,7 +12,7 @@ import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
-export type ScriptPluginSettingsProps = SettingsSurfaceProps<
+export type ScriptPluginSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     onAuthenticate?: () => void;

@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import { useShadowObject } from '#hooks';
 import { InboxOperation } from '#operations';
 import { type Calendar } from '#types';
 
-export type EventArticleProps = ObjectSurfaceProps<
+export type EventArticleProps = AppSurface.ObjectProps<
   EventType.Event,
   {
     calendar: Calendar.Calendar;

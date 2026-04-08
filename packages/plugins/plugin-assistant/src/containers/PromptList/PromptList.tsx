@@ -10,11 +10,11 @@ import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { IconButton } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
-import { ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 
 import { AssistantOperation } from '#operations';
 
-export type PromptListProps = ObjectSurfaceProps<Obj.Unknown>;
+export type PromptListProps = AppSurface.ObjectProps<Obj.Unknown>;
 
 export const PromptList = ({ subject }: PromptListProps) => {
   const { invokePromise } = useOperationInvoker();

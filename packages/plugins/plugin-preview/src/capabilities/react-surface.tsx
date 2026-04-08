@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
@@ -27,7 +28,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--contact`,
         role: 'card--content',
         position: 'hoist',
-        filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
+        filter: AppSurface.object(Person.Person),
         component: ({ data, role }) => {
           return (
             <>
@@ -41,8 +42,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--organization`,
         role: 'card--content',
         position: 'hoist',
-        filter: (data): data is { subject: Organization.Organization } =>
-          Obj.instanceOf(Organization.Organization, data.subject),
+        filter: AppSurface.object(Organization.Organization),
         component: ({ data, role }) => {
           return (
             <>
@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--project`,
         role: 'card--content',
         position: 'hoist',
-        filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
+        filter: AppSurface.object(Pipeline.Pipeline),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
         },
@@ -65,7 +65,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.schema-popover--task`,
         role: 'card--content',
         position: 'hoist',
-        filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
+        filter: AppSurface.object(Task.Task),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;
         },
@@ -99,7 +99,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.section`,
         role: ['section'],
         position: 'fallback',
-        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        filter: AppSurface.anyObject(),
         component: ({ data }) => {
           return (
             <div role='none' className='flex w-full justify-center'>

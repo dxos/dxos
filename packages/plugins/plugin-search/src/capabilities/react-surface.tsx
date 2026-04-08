@@ -7,11 +7,12 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG } from '../constants';
-import { SearchArticle, SearchDialog, type SearchDialogProps } from '#containers';
+import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
 
 export default Capability.makeModule(() =>
@@ -20,7 +21,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: SEARCH_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
+        filter: AppSurface.component(SEARCH_DIALOG),
         component: ({ data }) => (
           <SearchContextProvider>
             <SearchDialog {...data.props} />

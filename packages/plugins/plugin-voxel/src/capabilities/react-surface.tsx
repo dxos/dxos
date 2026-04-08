@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { VoxelArticle, VoxelCard } from '#containers';
 import { meta } from '#meta';
@@ -19,13 +19,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Voxel.World } => Obj.instanceOf(Voxel.World, data.subject),
-        component: ({ data, role }) => <VoxelArticle role={role} subject={data.subject} />,
+        filter: AppSurface.object(Voxel.World, { attendable: true }),
+        component: ({ data, role }) => <VoxelArticle role={role} subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: meta.id,
         role: ['card--content'],
-        filter: (data): data is { subject: Voxel.World } => Obj.instanceOf(Voxel.World, data.subject),
+        filter: AppSurface.object(Voxel.World),
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,
       }),
     ]),

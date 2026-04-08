@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { isPersonalSpace } from '@dxos/app-toolkit';
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface, isPersonalSpace } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
@@ -14,7 +13,7 @@ import { meta } from '#meta';
 import { type Settings } from '#types';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsProps = SettingsSurfaceProps<
+export type SpacePluginSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     spaces?: Space[];

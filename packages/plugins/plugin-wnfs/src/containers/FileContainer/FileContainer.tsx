@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useAsyncEffect } from '@dxos/react-ui';
@@ -14,7 +14,7 @@ import { FilePreview } from '#components';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
 import { WnfsCapabilities, type WnfsFile } from '#types';
 
-export type FileContainerProps = ObjectSurfaceProps<WnfsFile.File>;
+export type FileContainerProps = AppSurface.ObjectProps<WnfsFile.File>;
 
 export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);

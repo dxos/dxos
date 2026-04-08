@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { View } from '@dxos/echo';
 
@@ -20,8 +21,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Masonry.Masonry | View.View } =>
-          Obj.instanceOf(Masonry.Masonry, data.subject) || Obj.instanceOf(View.View, data.subject),
+        filter: AppSurface.object([Masonry.Masonry, View.View], { attendable: true }),
         component: ({ data, role }) => {
           const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view;
           return <MasonryContainer view={view} role={role} />;

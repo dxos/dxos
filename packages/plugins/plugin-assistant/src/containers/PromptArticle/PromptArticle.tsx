@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -17,7 +17,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { TemplateEditor } from '#components';
 import { meta } from '#meta';
 
-export type PromptArticleProps = ObjectSurfaceProps<Prompt.Prompt>;
+export type PromptArticleProps = AppSurface.AttendableObjectProps<Prompt.Prompt>;
 
 export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);

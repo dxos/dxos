@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, NOT_FOUND_PATH } from '@dxos/app-toolkit';
+import { AppSurface, NOT_FOUND_PATH } from '@dxos/app-toolkit';
 import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { DeckSettings } from '#components';
@@ -20,8 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settings(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <DeckSettings settings={settings} onSettingsChange={updateSettings} />;

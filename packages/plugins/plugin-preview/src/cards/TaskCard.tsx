@@ -5,12 +5,12 @@
 import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
-export const TaskCard = ({ subject }: ObjectSurfaceProps<Task.Task>) => {
+export const TaskCard = ({ subject }: AppSurface.ObjectProps<Task.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
 

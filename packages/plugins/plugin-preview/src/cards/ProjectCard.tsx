@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { type Pipeline } from '@dxos/types';
 
-export const ProjectCard = ({ subject }: ObjectSurfaceProps<Pipeline.Pipeline>) => {
+export const ProjectCard = ({ subject }: AppSurface.ObjectProps<Pipeline.Pipeline>) => {
   const { image, description } = subject;
 
   return (

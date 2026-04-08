@@ -7,7 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
@@ -29,11 +30,10 @@ import { sortByCreated } from '../../util';
 
 import { NewMailbox } from './NewMailbox';
 
-export type MailboxArticleProps = ObjectSurfaceProps<
+export type MailboxArticleProps = AppSurface.AttendableObjectProps<
   Mailbox.Mailbox,
   {
     filter?: string;
-    attendableId?: string;
   }
 >;
 

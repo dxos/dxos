@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { type Filter } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -16,9 +16,9 @@ import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { D3ForceGraph } from '#components';
 import { useGraphModel } from '#hooks';
 
-export type ExplorerContainerProps = ObjectSurfaceProps<View.View>;
+export type ExplorerContainerProps = AppSurface.AttendableObjectProps<View.View>;
 
-export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
+export const ExplorerContainer = ({ role, subject: view, attendableId: _attendableId }: ExplorerContainerProps) => {
   useObject(view);
   const space = view && getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();

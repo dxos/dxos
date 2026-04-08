@@ -5,7 +5,7 @@
 import * as Predicate from 'effect/Predicate';
 import React, { Fragment, useMemo } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Obj, Query } from '@dxos/echo';
 import { Filter, useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel as DxPanel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { type Map } from '#types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = ObjectSurfaceProps<
+export type MapContainerProps = AppSurface.ObjectProps<
   Map.Map,
   GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
 >;

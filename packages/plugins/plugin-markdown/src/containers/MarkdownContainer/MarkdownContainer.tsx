@@ -7,8 +7,7 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { AppCapabilities, AppSurface, LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
@@ -21,7 +20,7 @@ import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRoo
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
-export type MarkdownContainerProps = ObjectSurfaceProps<
+export type MarkdownContainerProps = AppSurface.ObjectProps<
   Markdown.Document | Text.Text,
   {
     id: string;

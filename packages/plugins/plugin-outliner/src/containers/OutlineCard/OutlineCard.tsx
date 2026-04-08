@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Card } from '@dxos/react-ui';
 
 import { Outline } from '#components';
 import { type Outline as OutlineType } from '#types';
 
-export const OutlineCard = ({ subject }: ObjectSurfaceProps<OutlineType.Outline>) => {
+export const OutlineCard = ({ subject }: AppSurface.ObjectProps<OutlineType.Outline>) => {
   if (!subject.content.target) {
     return null;
   }

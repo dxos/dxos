@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
-export type PresenterSettingsProps = SettingsSurfaceProps<Settings.Settings>;
+export type PresenterSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSettingsProps) => {
   const { t } = useTranslation(meta.id);

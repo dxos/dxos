@@ -7,8 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { ExplorerContainer } from '#containers';
 import { meta } from '#meta';
@@ -21,9 +20,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: View.View } => Obj.instanceOf(Graph.Graph, data.subject),
+        filter: AppSurface.object(Graph.Graph, { attendable: true }),
         component: ({ data, role }) => {
-          return <ExplorerContainer role={role} subject={data.subject} />;
+          return <ExplorerContainer role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
       }),
     ),

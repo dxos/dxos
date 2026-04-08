@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.article`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
+        filter: AppSurface.object(WnfsFile.File, { attendable: true }),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
       Surface.create({

@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -17,7 +17,7 @@ import { type Organization, Person } from '@dxos/types';
 
 import { RelatedContacts } from '#components';
 
-export const RelatedToOrganization = ({ subject: organization }: ObjectSurfaceProps<Organization.Organization>) => {
+export const RelatedToOrganization = ({ subject: organization }: AppSurface.ObjectProps<Organization.Organization>) => {
   const { invoke } = useOperationInvoker();
   const db = Obj.getDatabase(organization);
   const defaultDb = useDatabase();

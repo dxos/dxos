@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -39,8 +39,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settings(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -60,13 +59,15 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.project`,
         role: 'article',
-        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
-        component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
+        filter: AppSurface.object(Project.Project, { attendable: true }),
+        component: ({ data, role }) => (
+          <ProjectArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.project.companion.settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        filter: AppSurface.object(Project.Project),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
@@ -114,25 +115,25 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.blueprint`,
         role: 'article',
-        filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
+        filter: AppSurface.object(Blueprint.Blueprint, { attendable: true }),
         component: ({ data }) => <BlueprintArticle subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.prompt`,
         role: 'article',
-        filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
+        filter: AppSurface.object(Prompt.Prompt, { attendable: true }),
         component: ({ data }) => <PromptArticle subject={data.subject} />,
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: { chat: Chat.Chat } } => data.component === ASSISTANT_DIALOG,
+        filter: AppSurface.component(ASSISTANT_DIALOG),
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
         id: `${meta.id}.trace`,
         role: 'deck-companion--trace',
-        filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
+        filter: AppSurface.literal('trace'),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -150,7 +151,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.prompts`,
         role: 'prompts',
-        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        filter: AppSurface.anyObject(),
         component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),

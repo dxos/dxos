@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry } from '#containers';
 import { registryCategoryId, meta } from '#meta';
@@ -17,7 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.all`,
         role: 'article',
-        filter: (data): data is any => data.subject === registryCategoryId('all'),
+        filter: AppSurface.literal(registryCategoryId('all')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -31,7 +32,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.installed`,
         role: 'article',
-        filter: (data): data is any => data.subject === registryCategoryId('installed'),
+        filter: AppSurface.literal(registryCategoryId('installed')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -49,7 +50,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.recommended`,
         role: 'article',
-        filter: (data): data is any => data.subject === registryCategoryId('recommended'),
+        filter: AppSurface.literal(registryCategoryId('recommended')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(
@@ -67,7 +68,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.labs`,
         role: 'article',
-        filter: (data): data is any => data.subject === registryCategoryId('labs'),
+        filter: AppSurface.literal(registryCategoryId('labs')),
         component: () => {
           const manager = usePluginManager();
           const filtered = useMemo(() => manager.getPlugins().filter(({ meta }) => meta.tags?.includes('labs')), []);
@@ -78,7 +79,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.plugin-details`,
         role: 'article',
-        filter: (data): data is { subject: Plugin.Plugin } => Plugin.isPlugin(data.subject),
+        filter: AppSurface.plugin(),
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
         },
@@ -86,7 +87,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: LOAD_PLUGIN_DIALOG,
         role: 'dialog',
-        filter: (data): data is any => data.component === LOAD_PLUGIN_DIALOG,
+        filter: AppSurface.component(LOAD_PLUGIN_DIALOG),
         component: () => <LoadPluginDialog />,
       }),
     ]),
