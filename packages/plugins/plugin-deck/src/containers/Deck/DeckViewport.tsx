@@ -196,11 +196,13 @@ export const DeckMultiMode = () => {
   }, []);
 
   // Create order map.
+  // In multi mode only the last plank hosts the companion pane, so only that plank adds the extra column.
   const { order, itemsCount } = useMemo(() => {
     return active.reduce(
-      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+      (acc: { order: Record<string, number>; itemsCount: number }, entryId, index) => {
+        const isLastPlank = index === active.length - 1;
         acc.order[entryId] = acc.itemsCount + 1;
-        acc.itemsCount += companionOpen ? 3 : 2;
+        acc.itemsCount += companionOpen && isLastPlank ? 3 : 2;
         return acc;
       },
       { order: {}, itemsCount: 0 },
@@ -294,14 +296,18 @@ type PlankContainerProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'setting
  * the pure Plank components (which receive everything via context).
  */
 const PlankContainer = memo(
-  ({ id, layoutMode, part, order, settings, companionVariant, ...props }: PlankContainerProps) => {
+  ({ id, layoutMode, part, order, settings, companionVariant, active, ...props }: PlankContainerProps) => {
     const { graph } = useAppGraph();
     const { invokePromise } = useOperationInvoker();
     const { state, deck } = useDeckState();
     const node = useNode(graph, id);
     const companions = useCompanions(id);
-    const { companionId } = useSelectedCompanion(companions, companionVariant);
-    const resolvedCompanionId = companionVariant ? companionId : undefined;
+    const isLastPlankInMulti =
+      layoutMode === 'multi' && active && active.length > 0 && active[active.length - 1] === id;
+    const variantForThisPlank =
+      layoutMode === 'multi' ? (isLastPlankInMulti ? companionVariant : undefined) : companionVariant;
+    const { companionId } = useSelectedCompanion(companions, variantForThisPlank);
+    const resolvedCompanionId = variantForThisPlank ? companionId : undefined;
     const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
     const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
@@ -352,6 +358,7 @@ const PlankContainer = memo(
         <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
           <Plank.Component
             {...props}
+            active={active}
             id={id}
             node={node}
             companioned={hasCompanion ? 'primary' : undefined}
@@ -368,6 +375,7 @@ const PlankContainer = memo(
           {hasCompanion && (
             <Plank.Component
               {...props}
+              active={active}
               id={resolvedCompanionId}
               node={currentCompanion}
               companions={companions}

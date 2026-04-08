@@ -10,8 +10,9 @@ import React from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Node, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -25,6 +26,7 @@ import { translations } from '../../translations';
 import { DeckLayout } from './DeckLayout';
 
 import { DeckState, OperationHandler } from '#capabilities';
+import { DeckOperation } from '#operations';
 import { DeckCapabilities, type Settings } from '#types';
 
 /**
@@ -38,7 +40,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableDeck: true,
       enableStatusbar: false,
       enableNativeRedirect: false,
-      encapsulatedPlanks: false,
+      encapsulatedPlanks: true,
     }).pipe(Atom.keepAlive);
 
     return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
@@ -74,20 +76,63 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             component: ({ data, ref }) => <DeckLayoutStoryNavigationRail current={data.current} ref={ref} />,
           }),
           Surface.create({
+            id: 'story-article-companion',
+            role: 'article',
+            filter: (data): data is Record<string, unknown> =>
+              typeof data === 'object' &&
+              data !== null &&
+              (data as { companionTo?: unknown }).companionTo != null,
+            component: ({ data }) => {
+              const subject = (data as any)?.subject;
+              const companionTo = (data as any)?.companionTo;
+              const properties = (data as any)?.properties;
+              const variant = (data as any)?.variant as string | undefined;
+
+              if (companionTo == null) {
+                return <Loading />;
+              }
+
+              const jsonPayload = {
+                primaryItem: companionTo,
+                companion: { data: subject, properties, variant },
+              };
+
+              return (
+                <div className='flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>
+                  <div className='min-h-0 min-w-0 flex-1 overflow-auto'>
+                    <Json.Root data={jsonPayload}>
+                      <Json.Content>
+                        <Json.Data />
+                      </Json.Content>
+                    </Json.Root>
+                  </div>
+                </div>
+              );
+            },
+          }),
+          Surface.create({
             id: 'story-article',
             role: 'article',
+            filter: (data): data is Record<string, unknown> =>
+              typeof data === 'object' &&
+              data !== null &&
+              (data as { companionTo?: unknown }).companionTo == null,
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
-              if (!subject) {
+
+              if (subject == null) {
                 return <Loading />;
               }
+
               return (
                 <div className='flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>
                   {attendableId && <DeckLayoutStoryPlankOpenList pivotId={attendableId} />}
                   <div className='min-h-0 min-w-0 flex-1 overflow-auto'>
                     <Json.Root data={subject}>
-                      <Json.Content />
+                      <Json.Content>
+                        <Json.Data />
+                      </Json.Content>
                     </Json.Root>
                   </div>
                 </div>
@@ -100,23 +145,46 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   AppPlugin.addAppGraphModule({
     id: 'story-graph',
     activate: Effect.fnUntraced(function* () {
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'story-items',
-        match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed(
-            STORY_ITEM_SEGMENTS.map((id, index) => ({
-              id,
-              type: 'story-item',
-              data: { id, title: `Story Item ${index + 1}` },
-              properties: {
-                label: `Item ${index + 1}`,
-                icon: 'ph--file--regular',
-              },
-            })),
-          ),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+      const extensions = yield* Effect.all([
+        GraphBuilder.createExtension({
+          id: 'story-items',
+          match: NodeMatcher.whenRoot,
+          connector: () =>
+            Effect.succeed(
+              STORY_ITEM_SEGMENTS.map((id, index) => ({
+                id,
+                type: 'story-item',
+                data: { id, title: `Story Item ${index + 1}` },
+                properties: {
+                  label: `Item ${index + 1}`,
+                  icon: 'ph--file--regular',
+                },
+              })),
+            ),
+        }),
+        GraphBuilder.createExtension({
+          id: 'story-item-companions',
+          match: NodeMatcher.whenNodeType('story-item'),
+          connector: (node) =>
+            Effect.succeed([
+              AppNode.makeCompanion({
+                id: linkedSegment('alpha'),
+                label: 'Companion Alpha',
+                icon: 'ph--sidebar--regular',
+                data: { variant: 'alpha', parentId: node.id },
+                position: 'hoist',
+              }),
+              AppNode.makeCompanion({
+                id: linkedSegment('beta'),
+                label: 'Companion Beta',
+                icon: 'ph--chat-circle--regular',
+                data: { variant: 'beta', parentId: node.id },
+                position: 'static',
+              }),
+            ]),
+        }),
+      ]);
+      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
     }),
   }),
   Plugin.make,
@@ -167,6 +235,10 @@ const MultiStory = () => {
     await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
     await invokePromise(LayoutOperation.Set, {
       subject: [STORY_ITEMS[0], STORY_ITEMS[1], STORY_ITEMS[2]],
+    });
+    const lastPlankId = STORY_ITEMS[2];
+    await invokePromise(DeckOperation.ChangeCompanion, {
+      companion: `${lastPlankId}/${linkedSegment('alpha')}`,
     });
   });
 

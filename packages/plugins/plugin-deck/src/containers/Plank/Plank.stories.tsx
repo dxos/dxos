@@ -54,7 +54,9 @@ const storySurfaceExtension = Capability.contributes(
 
       return (
         <Json.Root data={subject}>
-          <Json.Content />
+          <Json.Content>
+            <Json.Data />
+          </Json.Content>
         </Json.Root>
       );
     },
