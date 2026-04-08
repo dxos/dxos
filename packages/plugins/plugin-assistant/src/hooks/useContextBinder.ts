@@ -13,7 +13,10 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-export const useContextBinder = (space: Space | undefined, feed: Feed.Feed | undefined): AiContextBinder | undefined => {
+export const useContextBinder = (
+  space: Space | undefined,
+  feed: Feed.Feed | undefined,
+): AiContextBinder | undefined => {
   const registry = useContext(RegistryContext) as Registry.Registry;
   const [binder, setBinder] = useState<AiContextBinder>();
 

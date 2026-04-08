@@ -85,9 +85,7 @@ export default AgentPrompt.pipe(
           invariant(chatFeed, 'Chat feed not found.');
           const runtime = yield* Effect.runtime<Feed.FeedService>();
 
-          const conversation = yield* acquireReleaseResource(
-            () => new AiConversation({ feed: chatFeed, runtime }),
-          );
+          const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
 
           yield* Effect.promise(() =>
             conversation.context.bind({

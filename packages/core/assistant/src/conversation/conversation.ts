@@ -94,9 +94,7 @@ export class AiConversation extends Resource {
   }
 
   public async getHistory(): Promise<Message.Message[]> {
-    const queryResult = await Runtime.runPromise(this._runtime)(
-      Feed.query(this._feed, Filter.type(Message.Message)),
-    );
+    const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
     return items.filter(Obj.instanceOf(Message.Message));
   }

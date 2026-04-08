@@ -121,9 +121,7 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await Effect.runPromise(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
-    );
+    const runtime = await Effect.runPromise(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)));
     const conversation = new AiConversation({ feed, runtime, registry: this._registry });
     await conversation.open();
 

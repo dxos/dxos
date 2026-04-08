@@ -46,12 +46,7 @@ import { AgentService } from '../service';
 import type { TestContextService } from '@dxos/effect/testing';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import {
-  AiContextBinder,
-  AiContextService,
-  AiConversation,
-  AiConversationService,
-} from '../conversation';
+import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
 import * as Array from 'effect/Array';
 import { CompleteBlock } from '../tracing';
 
