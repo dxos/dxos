@@ -10,14 +10,13 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ChessArticle, ChessCard } from '#containers';
-import { meta } from '#meta';
 import { Chess } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'game',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Chess.Game),
@@ -26,7 +25,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: meta.id,
+        id: 'game-card',
         role: ['card--content'],
         filter: AppSurface.objectCard(Chess.Game),
         component: ({ data, role }) => <ChessCard role={role} subject={data.subject} />,

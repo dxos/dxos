@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.sketch`,
+        id: 'sketch',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {

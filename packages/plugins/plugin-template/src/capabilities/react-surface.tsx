@@ -10,7 +10,6 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { TemplatePanel } from '#components';
-import { meta } from '#meta';
 import { Template } from '#types';
 
 export default Capability.makeModule(() =>
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: 'article',
         filter: AppSurface.objectArticle(Template.Data),
         component: ({ data, role }) => (

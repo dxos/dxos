@@ -23,13 +23,13 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.article`,
+        id: 'article',
         role: 'article',
         filter: (data): data is { subject: LocalFile } => isLocalFile(data.subject),
         component: ({ data }) => <LocalFileContainer file={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -50,7 +50,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.status`,
+        id: 'status',
         role: 'status-indicator',
         filter: (data): data is Record<string, unknown> => {
           const settings = registry.get(settingsAtom);

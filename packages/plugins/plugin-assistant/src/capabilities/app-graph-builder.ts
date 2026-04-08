@@ -37,7 +37,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.root`,
+        id: 'root',
         type: Chat.Chat,
         actions: (chat) => {
           return Effect.succeed([
@@ -55,7 +55,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.assistant`,
+        id: 'assistant',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -93,7 +93,7 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: `${meta.id}.reset-blueprints`,
+              id: 'reset-blueprints',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -119,7 +119,7 @@ export default Capability.makeModule(
 
       // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
-        id: `${meta.id}.companion-chat`,
+        id: 'companion-chat',
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
@@ -151,7 +151,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.invocations`,
+        id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence),
           NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
@@ -168,7 +168,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.trace`,
+        id: 'trace',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

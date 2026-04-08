@@ -25,7 +25,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Object settings plank companion.
     GraphBuilder.createExtension({
-      id: `${meta.id}.settings`,
+      id: 'settings',
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([
@@ -41,7 +41,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
 
     // View selected objects companion.
     GraphBuilder.createExtension({
-      id: `${meta.id}.selected-objects`,
+      id: 'selected-objects',
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();

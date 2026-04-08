@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
@@ -54,7 +54,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.script.article`,
+        id: 'script.article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Script.Script),
@@ -78,7 +78,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.notebook.article`,
+        id: 'notebook.article',
         role: 'article',
         filter: AppSurface.objectArticle(Notebook.Notebook),
         component: ({ data, role }) => {
@@ -96,25 +96,25 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
       // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
       Surface.create({
-        id: `${meta.id}.companion.base-settings`,
+        id: 'companion.base-settings',
         role: 'base-object-settings',
         filter: AppSurface.objectSection(Script.Script),
         component: ({ data }) => <ScriptProperties object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.settings`,
+        id: 'companion.settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Script.Script),
         component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.execute`,
+        id: 'companion.execute',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('execute'), AppSurface.companionArticle(Script.Script)),
         component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.logs`,
+        id: 'companion.logs',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('logs'), AppSurface.companionArticle(Script.Script)),
         component: ({ data, role }) => {

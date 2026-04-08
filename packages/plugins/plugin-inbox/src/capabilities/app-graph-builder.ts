@@ -50,7 +50,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.mailboxes-section`,
+        id: 'mailboxes-section',
         match: whenSpace,
         connector: (space, get) => {
           const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
@@ -72,7 +72,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.mailbox-listing`,
+        id: 'mailbox-listing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -154,7 +154,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.mailbox-drafts`,
+        id: 'mailbox-drafts',
         match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
         connector: (node, get) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
@@ -200,7 +200,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.mailbox-message`,
+        id: 'mailbox-message',
         match: (node) =>
           Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -232,7 +232,7 @@ export default Capability.makeModule(
       // Feed object node extension: creates hidden, navigable nodes for mailbox messages.
       // Uses ~ prefix for attention propagation to the parent mailbox.
       GraphBuilder.createExtension({
-        id: `${meta.id}.feed-object-node`,
+        id: 'feed-object-node',
         match: (node) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
           return node.type === Mailbox.Mailbox.typename && mailbox
@@ -301,7 +301,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.calendar-event`,
+        id: 'calendar-event',
         match: (node) =>
           Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -328,7 +328,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.sync-mailbox`,
+        id: 'sync-mailbox',
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox) =>
           Effect.succeed([
@@ -345,7 +345,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.sync-calendar`,
+        id: 'sync-calendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar) =>
           Effect.succeed([

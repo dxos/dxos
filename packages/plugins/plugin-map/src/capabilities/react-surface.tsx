@@ -17,14 +17,13 @@ import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapContainer, MapViewEditor } from '#containers';
-import { meta } from '#meta';
 import { LocationAnnotationId, Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.surface.map`,
+        id: 'surface.map',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Map.Map),
@@ -51,7 +50,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.object-settings`,
+        id: 'surface.object-settings',
         role: 'object-settings',
         position: 'hoist',
         filter: AppSurface.objectSettings(Map.Map),
@@ -59,7 +58,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: `${meta.id}.surface.create-initial-schema-form-[property-of-interest]`,
+        id: 'surface.create-initial-schema-form-[property-of-interest]',
         role: 'form-input',
         filter: (
           data,

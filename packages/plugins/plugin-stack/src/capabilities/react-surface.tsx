@@ -11,14 +11,13 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection } from '@dxos/echo';
 
 import { StackContainer } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}.article`,
+        id: 'article',
         role: 'article',
         filter: AppSurface.objectArticle(Collection.Collection),
         component: ({ role, data }) => {

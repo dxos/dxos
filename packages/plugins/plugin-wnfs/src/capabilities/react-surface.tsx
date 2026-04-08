@@ -14,21 +14,20 @@ import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
 import { FileInput } from '#components';
 import { FileContainer } from '#containers';
-import { meta } from '#meta';
 import { WnfsAction, WnfsFile } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.article`,
+        id: 'article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: AppSurface.objectArticle(WnfsFile.File),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.create-form`,
+        id: 'create-form',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {
           const annotation = findAnnotation<boolean>(

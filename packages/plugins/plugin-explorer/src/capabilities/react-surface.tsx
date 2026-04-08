@@ -10,7 +10,6 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ExplorerContainer } from '#containers';
-import { meta } from '#meta';
 import { Graph } from '#types';
 
 export default Capability.makeModule(() =>
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}.article`,
+        id: 'article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Graph.Graph),

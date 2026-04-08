@@ -10,7 +10,6 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { FeedArticle, SubscriptionsArticle } from '#containers';
-import { meta } from '#meta';
 import { Subscription } from '#types';
 
 export default Capability.makeModule(() =>
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       // Main subscription feed list view.
       Surface.create({
-        id: `${meta.id}.subscription-feed`,
+        id: 'subscription-feed',
         role: ['article'],
         filter: AppSurface.literalArticle('feeds-root'),
         component: ({ data, role }) => (
@@ -27,7 +26,7 @@ export default Capability.makeModule(() =>
       }),
       // Companion view: FeedArticle shown alongside the feeds-root.
       Surface.create({
-        id: `${meta.id}.feed-article`,
+        id: 'feed-article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.and(AppSurface.objectArticle(Subscription.Feed), AppSurface.companionArticle('feeds-root')),

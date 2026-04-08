@@ -10,14 +10,13 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { VoxelArticle, VoxelCard } from '#containers';
-import { meta } from '#meta';
 import { Voxel } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'world',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Voxel.World),
@@ -26,7 +25,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: meta.id,
+        id: 'world-card',
         role: ['card--content'],
         filter: AppSurface.objectCard(Voxel.World),
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,

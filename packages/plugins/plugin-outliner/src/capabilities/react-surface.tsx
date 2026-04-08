@@ -10,14 +10,14 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '#containers';
-import { QUICK_ENTRY_DIALOG, meta } from '#meta';
+import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal, Outline } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.article.journal`,
+        id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Journal.Journal),
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.article.outline`,
+        id: 'article.outline',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Outline.Outline),
@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.card.outline`,
+        id: 'card.outline',
         role: 'card--content',
         filter: AppSurface.objectCard(Outline.Outline),
         component: ({ data }) => <OutlineCard subject={data.subject} />,

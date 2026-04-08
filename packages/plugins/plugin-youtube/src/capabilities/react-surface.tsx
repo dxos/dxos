@@ -10,14 +10,13 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ChannelArticle, ChannelSettings, VideoArticle, VideoCard } from '#containers';
-import { meta } from '#meta';
 import { Channel, Video } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.channel`,
+        id: 'channel',
         role: ['article'],
         filter: AppSurface.objectArticle(Channel.YouTubeChannel),
         component: ({ data }) => {
@@ -25,7 +24,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.video`,
+        id: 'video',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.and(
@@ -37,13 +36,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.video-card`,
+        id: 'video-card',
         role: 'card--content',
         filter: AppSurface.objectCard(Video.YouTubeVideo),
         component: ({ data: { subject }, role }) => <VideoCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}.channel.companion.settings`,
+        id: 'channel.companion.settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Channel.YouTubeChannel),
         component: ({ data }) => <ChannelSettings subject={data.subject} />,

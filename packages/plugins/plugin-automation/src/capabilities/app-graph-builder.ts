@@ -17,12 +17,12 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.space-settings-automation`,
+        id: 'space-settings-automation',
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
-              id: `${meta.id}.automations`,
+              id: 'automations',
               type: `${meta.id}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.id }],
               icon: 'ph--lightning--regular',
@@ -30,12 +30,12 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.space-settings-functions`,
+        id: 'space-settings-functions',
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
-              id: `${meta.id}.functions`,
+              id: 'functions',
               type: `${meta.id}.space-settings-functions`,
               label: ['functions-panel.label', { ns: meta.id }],
               icon: 'ph--function--regular',
@@ -43,7 +43,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.script-companion`,
+        id: 'script-companion',
         type: Script.Script,
         connector: (script) =>
           Effect.succeed([

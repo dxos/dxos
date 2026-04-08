@@ -10,13 +10,13 @@ import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry } from '#containers';
-import { registryCategoryId, meta } from '#meta';
+import { registryCategoryId } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.all`,
+        id: 'all',
         role: 'article',
         filter: AppSurface.literalSection(registryCategoryId('all')),
         component: () => {
@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.installed`,
+        id: 'installed',
         role: 'article',
         filter: AppSurface.literalSection(registryCategoryId('installed')),
         component: () => {
@@ -48,7 +48,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.recommended`,
+        id: 'recommended',
         role: 'article',
         filter: AppSurface.literalSection(registryCategoryId('recommended')),
         component: () => {
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.labs`,
+        id: 'labs',
         role: 'article',
         filter: AppSurface.literalSection(registryCategoryId('labs')),
         component: () => {
@@ -77,7 +77,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.plugin-details`,
+        id: 'plugin-details',
         role: 'article',
         filter: AppSurface.pluginSection(),
         component: ({ data: { subject } }) => {

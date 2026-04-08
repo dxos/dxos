@@ -11,13 +11,12 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { TableCard, TableContainer } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.table`,
+        id: 'table',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: AppSurface.objectArticle(Table.Table),
@@ -26,7 +25,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.table-card`,
+        id: 'table-card',
         role: ['card--content'],
         filter: AppSurface.objectCard(Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,

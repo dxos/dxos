@@ -14,7 +14,6 @@ import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,7 +24,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create<{ subject: Person.Person }>({
-        id: `${meta.id}.schema-popover--contact`,
+        id: 'schema-popover--contact',
         role: 'card--content',
         position: 'hoist',
         filter: AppSurface.objectCard(Person.Person),
@@ -39,7 +38,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.schema-popover--organization`,
+        id: 'schema-popover--organization',
         role: 'card--content',
         position: 'hoist',
         filter: AppSurface.objectCard(Organization.Organization),
@@ -53,7 +52,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.schema-popover--project`,
+        id: 'schema-popover--project',
         role: 'card--content',
         position: 'hoist',
         filter: AppSurface.objectCard(Pipeline.Pipeline),
@@ -62,7 +61,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.schema-popover--task`,
+        id: 'schema-popover--task',
         role: 'card--content',
         position: 'hoist',
         filter: AppSurface.objectCard(Task.Task),
@@ -76,7 +75,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create({
-        id: `${meta.id}.fallback-popover`,
+        id: 'fallback-popover',
         role: 'card--content',
         position: 'fallback',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
@@ -86,7 +85,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: `${meta.id}.fallback-json`,
+        id: 'fallback-json',
         role: 'card--content',
         position: 'fallback',
         filter: (data): data is Record<string, unknown> => true,
@@ -96,7 +95,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: `${meta.id}.section`,
+        id: 'section',
         role: ['section'],
         position: 'fallback',
         filter: AppSurface.anyObjectSection(),

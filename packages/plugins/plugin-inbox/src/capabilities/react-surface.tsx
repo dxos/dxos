@@ -28,7 +28,6 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
 } from '#containers';
-import { meta } from '#meta';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 import { getParentId, useNode } from '@dxos/plugin-graph';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
@@ -37,7 +36,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.drafts`,
+        id: 'drafts',
         role: ['article'],
         filter: (
           data,
@@ -60,7 +59,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.mailbox`,
+        id: 'mailbox',
         role: ['article'],
         filter: AppSurface.objectArticle(Mailbox.Mailbox),
         component: ({ data }) => {
@@ -70,7 +69,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.draft-message`,
+        id: 'draft-message',
         role: ['article'],
         filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
         component: ({ data: { subject }, role }) => {
@@ -78,7 +77,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.message`,
+        id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (
@@ -108,7 +107,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.event`,
+        id: 'event',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.and(AppSurface.objectArticle(Event.Event), AppSurface.companionArticle(Calendar.Calendar)),
@@ -118,7 +117,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.calendar`,
+        id: 'calendar',
         role: ['article'],
         filter: AppSurface.objectArticle(Calendar.Calendar),
         component: ({ data, role }) => (
@@ -126,13 +125,13 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.message-card`,
+        id: 'message-card',
         role: 'card--content',
         filter: AppSurface.objectCard(Message.Message),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}.event-card`,
+        id: 'event-card',
         role: 'card--content',
         filter: AppSurface.objectCard(Event.Event),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
@@ -151,13 +150,13 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
-        id: `${meta.id}.mailbox.companion.settings`,
+        id: 'mailbox.companion.settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Mailbox.Mailbox),
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.calendar.companion.settings`,
+        id: 'calendar.companion.settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Calendar.Calendar),
         component: ({ data }) => <CalendarSettings subject={data.subject} />,
@@ -166,13 +165,13 @@ export default Capability.makeModule(() =>
       // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
-        id: `${meta.id}.contact-related`,
+        id: 'contact-related',
         role: 'related',
         filter: AppSurface.objectSection(Person.Person),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.organization-related`,
+        id: 'organization-related',
         role: 'related',
         filter: AppSurface.objectSection(Organization.Organization),
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,

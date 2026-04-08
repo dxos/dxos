@@ -19,13 +19,12 @@ import {
   WELCOME_SCREEN,
   WelcomeScreen,
 } from '../components';
-import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.welcome`,
+        id: 'welcome',
         role: 'dialog',
         filter: AppSurface.componentDialog(WELCOME_SCREEN),
         component: () => {
@@ -36,7 +35,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.native-redirect`,
+        id: 'native-redirect',
         role: 'dialog',
         filter: AppSurface.componentDialog(NATIVE_REDIRECT_DIALOG),
         component: ({ data }) => <NativeRedirectDialog {...data.props} />,

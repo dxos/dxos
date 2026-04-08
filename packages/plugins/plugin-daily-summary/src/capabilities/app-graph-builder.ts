@@ -15,12 +15,12 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.space-settings-daily-summary`,
+        id: 'space-settings-daily-summary',
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
-              id: `${meta.id}.daily-summary`,
+              id: 'daily-summary',
               type: `${meta.id}.space-settings-daily-summary`,
               label: ['plugin.name', { ns: meta.id }],
               icon: 'ph--calendar-check--regular',

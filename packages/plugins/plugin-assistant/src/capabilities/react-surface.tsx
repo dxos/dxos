@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.chat`,
+        id: 'chat',
         role: 'article',
         filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
           typeof data.attendableId === 'string' &&
@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.project`,
+        id: 'project',
         role: 'article',
         filter: AppSurface.objectArticle(Project.Project),
         component: ({ data, role }) => (
@@ -64,13 +64,13 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.project.companion.settings`,
+        id: 'project.companion.settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Project.Project),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion-chat`,
+        id: 'companion-chat',
         role: 'article',
         filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
@@ -87,7 +87,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.companion-invocations`,
+        id: 'companion-invocations',
         role: 'article',
         filter: (data): data is { companionTo: Sequence } =>
           (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
@@ -107,7 +107,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.blueprint`,
+        id: 'blueprint',
         role: 'article',
         filter: AppSurface.objectArticle(Blueprint.Blueprint),
         component: ({ data, role }) => (
@@ -115,7 +115,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.prompt`,
+        id: 'prompt',
         role: 'article',
         filter: AppSurface.objectArticle(Prompt.Prompt),
         component: ({ data, role }) => (
@@ -129,7 +129,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
-        id: `${meta.id}.trace`,
+        id: 'trace',
         role: 'deck-companion--trace',
         filter: AppSurface.literalSection('trace'),
         component: () => {
@@ -142,12 +142,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.status`,
+        id: 'status',
         role: 'status-indicator',
         component: () => <TriggerStatus />,
       }),
       Surface.create({
-        id: `${meta.id}.prompts`,
+        id: 'prompts',
         role: 'prompts',
         filter: AppSurface.anyObjectSection(),
         component: ({ data }) => <PromptList subject={data.subject} />,

@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.space-settings-functions`,
+        id: 'space-settings-functions',
         role: 'article',
         filter: AppSurface.literalSection(`${meta.id}.space-settings-functions`),
         component: () => {
@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.space-settings-automation`,
+        id: 'space-settings-automation',
         role: 'article',
         filter: AppSurface.literalSection(`${meta.id}.space-settings-automation`),
         component: () => {
@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.companion.automation`,
+        id: 'companion.automation',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('automation'), AppSurface.companionArticle()),
         component: ({ data }) => {

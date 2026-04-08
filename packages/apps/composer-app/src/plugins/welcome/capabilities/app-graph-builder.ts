@@ -15,12 +15,12 @@ import { meta } from '../meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extension = yield* GraphBuilder.createExtension({
-      id: `${meta.id}.about`,
+      id: 'about',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
           Node.makeAction({
-            id: `${meta.id}.open-about`,
+            id: 'open-about',
             data: Effect.fnUntraced(function* () {
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                 subject: ABOUT_DIALOG,

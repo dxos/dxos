@@ -44,7 +44,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Show Subscription.Feed objects as nodes under each space.
       GraphBuilder.createExtension({
-        id: `${meta.id}.subscription-feeds`,
+        id: 'subscription-feeds',
         match: whenSpace,
         connector: (space, get) => {
           const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Feed)));
@@ -75,7 +75,7 @@ export default Capability.makeModule(
 
       // Companion panel: resolve the selected feed from the SubscriptionsArticle.
       GraphBuilder.createExtension({
-        id: `${meta.id}.subscription-feeds-companion`,
+        id: 'subscription-feeds-companion',
         match: NodeMatcher.whenNodeType('feeds'),
         connector: (matched, get) => {
           const space = getActiveSpace(capabilities.get(ClientCapabilities.Client), capabilities);
@@ -103,7 +103,7 @@ export default Capability.makeModule(
 
       // Actions on each Subscription.Feed node.
       GraphBuilder.createExtension({
-        id: `${meta.id}.feed-actions`,
+        id: 'feed-actions',
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Feed) : Option.none(),
         actions: (feed) =>

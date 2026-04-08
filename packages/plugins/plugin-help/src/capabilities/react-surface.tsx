@@ -11,18 +11,17 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SHORTCUTS_DIALOG } from '../constants';
 import { ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.hints`,
+        id: 'hints',
         role: 'hints',
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
-        id: `${meta.id}.keyshortcuts`,
+        id: 'keyshortcuts',
         role: 'keyshortcuts',
         component: () => <ShortcutsList />,
       }),

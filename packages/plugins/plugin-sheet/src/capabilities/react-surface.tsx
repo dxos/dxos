@@ -12,14 +12,13 @@ import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { RangeList, SheetContainer } from '#containers';
-import { meta } from '#meta';
 import { Sheet, SheetCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.sheet`,
+        id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
@@ -41,7 +40,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.object-settings`,
+        id: 'object-settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,

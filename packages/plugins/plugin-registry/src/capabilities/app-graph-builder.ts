@@ -19,12 +19,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: meta.id,
+        id: 'open-registry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: meta.id,
+              id: 'open-registry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
               properties: {
                 label: ['open-plugin-registry.label', { ns: meta.id }],
@@ -35,7 +35,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: meta.id,
+        id: 'registry',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -98,14 +98,14 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.actions`,
+        id: 'actions',
         match: NodeMatcher.whenAny(NodeMatcher.whenId(`root/${REGISTRY_ID}`), (node) =>
           node.properties.key === REGISTRY_KEY ? Option.some(node) : Option.none(),
         ),
         actions: () =>
           Effect.succeed([
             {
-              id: `${meta.id}.load-by-url`,
+              id: 'load-by-url',
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                   subject: LOAD_PLUGIN_DIALOG,
@@ -121,7 +121,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.plugins`,
+        id: 'plugins',
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: () => {
           const manager = capabilities.get(Capabilities.PluginManager);

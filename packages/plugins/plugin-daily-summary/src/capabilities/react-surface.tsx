@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.space-settings-daily-summary`,
+        id: 'space-settings-daily-summary',
         role: 'article',
         filter: AppSurface.literalSection(`${meta.id}.space-settings-daily-summary`),
         component: () => {

@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.scene`,
+        id: 'scene',
         role: 'article',
         filter: AppSurface.objectArticle(Scene.Scene),
         component: ({ data, role }) => {
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {

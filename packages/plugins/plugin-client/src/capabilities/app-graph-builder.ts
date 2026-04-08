@@ -17,12 +17,12 @@ import { ClientOperation } from '#operations';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: meta.id,
+      id: 'root',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
           {
-            id: `${meta.id}.open-user-account`,
+            id: 'open-user-account',
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
               label: ['open-user-account.label', { ns: meta.id }],

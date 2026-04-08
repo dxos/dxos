@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.channel`,
+        id: 'channel',
         role: 'article',
         filter: AppSurface.objectArticle(Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.chat-companion`,
+        id: 'chat-companion',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('chat'), AppSurface.companionArticle(Channel.Channel)),
         component: ({ data: { companionTo: channel } }) => {
@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.thread`,
+        id: 'thread',
         role: 'article',
         filter: AppSurface.objectArticle(Thread.Thread),
         component: ({ data: { subject } }) => {
@@ -56,14 +56,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.comments`,
+        id: 'comments',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('comments'), AppSurface.companionArticle()),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
@@ -72,12 +72,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.assistant`,
+        id: 'assistant',
         role: 'deck-companion--active-call',
         component: () => <CallSidebar />,
       }),
       Surface.create({
-        id: `${meta.id}.devtools-overview`,
+        id: 'devtools-overview',
         role: 'devtools-overview',
         component: () => {
           const call = useCapability(ThreadCapabilities.CallManager);

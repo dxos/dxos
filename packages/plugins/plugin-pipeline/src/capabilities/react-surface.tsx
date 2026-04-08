@@ -14,13 +14,12 @@ import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
 import { PipelineContainer, PipelineObjectSettings } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: 'article',
         filter: AppSurface.objectArticle(Pipeline.Pipeline),
         component: ({ data, role }) => (
@@ -28,7 +27,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${meta.id}.companion.invocations`,
+        id: 'companion.invocations',
         role: 'article',
         filter: AppSurface.and(
           AppSurface.literalArticle('invocations'),
@@ -47,7 +46,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.object-settings`,
+        id: 'object-settings',
         role: 'object-settings',
         filter: AppSurface.objectSettings(Pipeline.Pipeline),
         component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,

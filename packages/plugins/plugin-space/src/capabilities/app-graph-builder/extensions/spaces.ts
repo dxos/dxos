@@ -43,7 +43,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: `${meta.id}.primary-actions`,
+      id: 'primary-actions',
       position: 'hoist',
       match: NodeMatcher.whenRoot,
       actions: () =>
@@ -109,7 +109,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}.spaces`,
+      id: 'spaces',
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         const client = capabilities.get(ClientCapabilities.Client);
@@ -174,7 +174,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}.actions`,
+      id: 'actions',
       match: whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));

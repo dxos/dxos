@@ -17,7 +17,7 @@ import { HelpOperation } from '#operations';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: meta.id,
+      id: 'root',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
@@ -39,7 +39,7 @@ export default Capability.makeModule(
             },
           }),
           Node.makeAction({
-            id: `${meta.id}.open-shortcuts`,
+            id: 'open-shortcuts',
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {

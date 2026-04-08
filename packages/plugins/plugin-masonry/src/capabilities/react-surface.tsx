@@ -12,14 +12,13 @@ import { Obj } from '@dxos/echo';
 import { View } from '@dxos/echo';
 
 import { MasonryContainer } from '#containers';
-import { meta } from '#meta';
 import { Masonry } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle([Masonry.Masonry, View.View]),

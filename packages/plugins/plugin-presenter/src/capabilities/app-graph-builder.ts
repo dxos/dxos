@@ -31,7 +31,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* GraphBuilder.createExtension({
-      id: `${meta.id}.root`,
+      id: 'root',
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {

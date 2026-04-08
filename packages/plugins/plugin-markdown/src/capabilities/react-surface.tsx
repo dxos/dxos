@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.surface.document`,
+        id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.text`,
+        id: 'surface.text',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.plugin-settings`,
+        id: 'surface.plugin-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
@@ -73,7 +73,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.preview`,
+        id: 'surface.preview',
         role: 'card--content',
         filter: AppSurface.objectCard([Markdown.Document, Text.Text]),
         component: ({ data }) => <MarkdownCard {...data} />,

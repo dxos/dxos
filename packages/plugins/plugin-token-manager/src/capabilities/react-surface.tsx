@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: 'article',
         filter: AppSurface.literalSection(`${meta.id}.space-settings`),
         component: () => {
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.integration-auth`,
+        id: 'integration-auth',
         role: 'integration--auth',
         filter: (data): data is { source: string } => typeof data.source === 'string' && oauthSources.has(data.source),
         component: ({ data }) => {

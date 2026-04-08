@@ -22,7 +22,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Create export/import actions.
       GraphBuilder.createExtension({
-        id: `${meta.id}.export`,
+        id: 'export',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -47,7 +47,7 @@ export default Capability.makeModule(
 
       // Create files group node.
       GraphBuilder.createExtension({
-        id: `${meta.id}.root`,
+        id: 'root',
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const settingsAtom = capabilities.get(FileCapabilities.Settings);
@@ -74,7 +74,7 @@ export default Capability.makeModule(
 
       // Create files nodes.
       GraphBuilder.createExtension({
-        id: `${meta.id}.files`,
+        id: 'files',
         match: NodeMatcher.whenId(getSpacePath('dxos:plugin-files')),
         actions: () =>
           Effect.succeed([
@@ -131,7 +131,7 @@ export default Capability.makeModule(
 
       // Create sub-files nodes.
       GraphBuilder.createExtension({
-        id: `${meta.id}.sub-files`,
+        id: 'sub-files',
         match: (node) => (isLocalDirectory(node.data) ? Option.some(node.data) : Option.none()),
         connector: (directory) =>
           Effect.succeed(
@@ -151,7 +151,7 @@ export default Capability.makeModule(
 
       // Create file actions.
       GraphBuilder.createExtension({
-        id: `${meta.id}.actions`,
+        id: 'actions',
         match: (node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none()),
         actions: (entity) =>
           Effect.succeed([
