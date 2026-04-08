@@ -16,14 +16,17 @@ import { DXN } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, Panel, Separator, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 
 import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
+
 import { meta } from '#meta';
-import { ProcessTree } from './ProcessTree';
+
+import { ProcessTree } from '../../components';
 
 export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
@@ -55,20 +58,12 @@ export const TracePanel = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Input.Root>
-            <div className='flex items-center gap-2'>
-              <Input.Switch checked={isRunning} onCheckedChange={isRunning ? stop : start} />
-              <Input.Label>{t('trigger-runtime.label')}</Input.Label>
-            </div>
-          </Input.Root>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
-        <ProcessTree processes={activeProcesses} />
-        {activeProcesses.length > 0 && <Separator />}
-        <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
+      <Panel.Content className='grid grid-rows-[min-content_1fr]'>
+        <ProcessTree
+          classNames={mx('max-h-[8lh] px-2', activeProcesses.length > 0 && 'border-b border-separator')}
+          processes={activeProcesses}
+        />
+        <Timeline classNames='py-1' branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
   );

@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Pipeline } from '@dxos/types';
 
@@ -20,26 +19,18 @@ export default Capability.makeModule(
         type: Pipeline.Pipeline,
         connector: () =>
           Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: 'invocations',
-              type: PLANK_COMPANION_TYPE,
+              label: ['pipeline-invocations.label', { ns: meta.id }],
+              icon: 'ph--clock-countdown--regular',
               data: 'invocations',
-              properties: {
-                label: ['pipeline-invocations.label', { ns: meta.id }],
-                icon: 'ph--clock-countdown--regular',
-                disposition: 'hidden',
-              },
-            },
-            {
+            }),
+            AppNode.makeCompanion({
               id: 'automation',
-              type: PLANK_COMPANION_TYPE,
+              label: ['pipeline-automation.label', { ns: meta.id }],
+              icon: 'ph--lightning--regular',
               data: 'automation',
-              properties: {
-                label: ['pipeline-automation.label', { ns: meta.id }],
-                icon: 'ph--lightning--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]),
       }),
     ]);

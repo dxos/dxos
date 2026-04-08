@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation } from '@dxos/assistant';
-import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
+import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -60,6 +60,79 @@ const SYSTEM = trim`
   If you do not have tools to complete the task, inform the user.
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
+
+const AddArtifactTestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
+  operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownHandlers),
+  types: [
+    Project.Project,
+    Plan.Plan,
+    Chat.CompanionTo,
+    Chat.Chat,
+    SpaceProperties,
+    Blueprint.Blueprint,
+    Trigger.Trigger,
+    Text.Text,
+    Markdown.Document,
+    Collection.Collection,
+  ],
+  tracing: 'pretty',
+});
+
+describe('Project AddArtifact', () => {
+  const blueprint = ProjectBlueprintDef.make();
+
+  it.scoped(
+    'agent adds artifact to project',
+    Effect.fnUntraced(
+      function* (_) {
+        const project = yield* Database.add(
+          yield* Project.makeInitialized(
+            {
+              name: 'Test Project',
+              spec: 'A test project for adding artifacts.',
+              blueprints: [Ref.make(MarkdownBlueprint.make())],
+            },
+            blueprint,
+          ),
+        );
+        yield* Database.flush();
+
+        const document = yield* Database.add(
+          Obj.make(Markdown.Document, {
+            name: 'Test Document',
+            content: Ref.make(Text.make('This is a test document with some content.')),
+          }),
+        );
+        yield* Database.flush();
+
+        expect(project.artifacts).toHaveLength(0);
+
+        const chatFeed = project.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Project chat feed not found.');
+        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
+        invariant(chatQueueDxn, 'Feed queue DXN not found.');
+        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        yield* Effect.promise(() => conversation.context.open());
+
+        const documentDxn = Obj.getDXN(document);
+        yield* conversation.createRequest({
+          system: SYSTEM,
+          prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this project.`,
+        });
+
+        expect(project.artifacts).toHaveLength(1);
+        expect(project.artifacts[0].name).toBe('My Test Document');
+        const artifactData = yield* project.artifacts[0].data.pipe(Database.load);
+        expect(Obj.instanceOf(Markdown.Document, artifactData)).toBe(true);
+      },
+      Effect.provide(AddArtifactTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+});
 
 describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
   const blueprint = ProjectBlueprintDef.make();

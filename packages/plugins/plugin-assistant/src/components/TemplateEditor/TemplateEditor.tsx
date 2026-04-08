@@ -43,7 +43,10 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
       return {
         initialValue: text.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+          createDataExtensions({
+            id,
+            text: createDocAccessor(text, ['content']),
+          }),
           createBasicExtensions({
             bracketMatching: false,
             lineNumbers,

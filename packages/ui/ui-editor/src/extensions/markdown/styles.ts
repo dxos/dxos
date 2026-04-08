@@ -52,20 +52,28 @@ export const formattingStyles = EditorView.theme({
   /**
    * Code and codeblocks.
    */
+  '& code': {
+    fontFamily: fontMono,
+    whiteSpace: 'nowrap',
+    color: 'var(--color-cm-code)',
+  },
   '& .cm-code': {
     fontFamily: fontMono,
+    whiteSpace: 'nowrap',
+    color: 'var(--color-cm-code)',
   },
-  // Inline code spans (triggered by backticks) use `text-cm-code` + `font-mono`.
+  // Inline code spans (triggered by backticks) use `cm-code-inline` + `font-mono`.
   // Different monospace font metrics can slightly overflow the fixed CodeMirror line box,
   // so constrain them to the target 24px height.
-  '& .text-cm-code': {
+  '& .cm-code-inline': {
     fontFamily: fontMono,
     height: '24px',
     display: 'inline-flex',
     alignItems: 'center',
     overflow: 'hidden',
+    color: 'var(--color-cm-code)',
   },
-  '& .text-cm-code-mark': {
+  '& .cm-code-mark': {
     fontFamily: fontMono,
     height: '24px',
     display: 'inline-flex',
@@ -115,6 +123,7 @@ export const formattingStyles = EditorView.theme({
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',
+    verticalAlign: 'top',
   },
 
   /**

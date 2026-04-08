@@ -1,0 +1,57 @@
+//
+// Copyright 2026 DXOS.org
+//
+// Lezer grammar for the body of Deus fenced blocks (MDL).
+// Generate: lezer-generator --typeScript src/extension/mdl.grammar -o src/extension/gen/mdl.ts
+//
+// Each entry is terminated by a newline so the parser can unambiguously
+// distinguish "name after :" (TypeName in TypeExpr) from "name at line start"
+// (FieldName of the next KeyValue).
+//
+
+@top Block { entry* }
+
+@skip { space }
+
+entry {
+  KeyValue newline |
+  Comment  newline |
+  newline
+}
+
+// key[?]: value  # inline comment
+KeyValue { FieldName Optional? ":" TypeExpr? Comment? }
+
+FieldName { name }
+Optional  { "?" }
+
+// TypeExpr: one or more atoms separated by "|"
+TypeExpr { TypeAtom (Pipe TypeAtom)* }
+
+TypeAtom {
+  ArrayExpr   |
+  NumberRange |
+  TypeName
+}
+
+Pipe        { "|" }
+ArrayExpr   { TypeName "[" "]" }
+NumberRange { Number ".." Number }
+TypeName    { name }
+Number      { integer }
+
+// Comment: "#" to end of line (no newline included)
+Comment { lineComment }
+
+@tokens {
+  name        { $[a-zA-Z_] $[a-zA-Z0-9_\-]* }
+  integer     { @digit+ }
+  lineComment { "#" ![\n]* }
+  space       { $[ \t]+ }
+  newline     { "\n" | "\r\n" }
+
+  ".."
+  "?" ":" "|" "[" "]"
+
+  @precedence { lineComment, name }
+}

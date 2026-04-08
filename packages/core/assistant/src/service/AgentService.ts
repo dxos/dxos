@@ -127,6 +127,9 @@ export const layer = (opts?: {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',
                 target,
+                traceMeta: {
+                  conversationId: feed.id,
+                },
               });
             }
 

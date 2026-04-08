@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, NOT_FOUND_NODE_ID, NOT_FOUND_NODE_TYPE } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -19,19 +19,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}.not-found`,
         match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
-            {
-              id: NOT_FOUND_NODE_ID,
-              type: NOT_FOUND_NODE_TYPE,
-              data: null,
-              properties: {
-                label: ['not-found.heading', { ns: 'org.dxos.i18n.os' }],
-                icon: 'ph--warning--regular',
-                disposition: 'hidden',
-              },
-            },
-          ]),
+        connector: () => Effect.succeed([AppNode.makeNotFound()]),
       }),
 
       GraphBuilder.createExtension({

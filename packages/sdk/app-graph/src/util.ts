@@ -77,3 +77,19 @@ export const qualifyId = (parentId: string, ...segmentIds: string[]): string => 
 export const validateSegmentId = (id: string): void => {
   invariant(!id.includes(PATH), `Node segment ID must not contain '${PATH}': ${id}`);
 };
+
+/**
+ * Extract the parent qualified ID (everything before the last path separator).
+ * Returns undefined for IDs with no parent (single segment).
+ */
+export const getParentId = (qualifiedId: string): string | undefined => {
+  const lastSlash = qualifiedId.lastIndexOf(PATH);
+  return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
+};
+
+/**
+ * Extract the last segment of a qualified ID.
+ */
+export const getSegmentId = (qualifiedId: string): string => {
+  return qualifiedId.split(PATH).pop() ?? qualifiedId;
+};

@@ -46,6 +46,7 @@
     "@dxos/plugin-daily-summary": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-deus": "workspace:*",
     "@dxos/plugin-excalidraw": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-feed": "workspace:*",

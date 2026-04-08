@@ -5,131 +5,42 @@
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
-import { Assistant, AssistantCapabilities } from '#types';
 import { AssistantOperation } from '#operations';
+
 import ChatContainer from '../ChatContainer';
 
-// TODO(burdon): Use definition.
-// export type ChatCompanionProps = ObjectSurfaceProps<Chat.Chat>;
-
-export type ChatCompanionProps = {
-  role?: string;
-  data: {
-    subject: Chat.Chat | 'assistant-chat';
-    attendableId: string;
-    companionTo: Obj.Unknown;
-  };
-};
+export type ChatCompanionProps = CompanionSurfaceProps<Chat.Chat>;
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
-  ({ role, data }: ChatCompanionProps, forwardedRef) => {
+  ({ role, subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const blueprintRegistry = useBlueprintRegistry();
-
-    const companionTo = data.companionTo;
     const space = getSpace(companionTo);
-    const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
-
-    // Watch the state atom directly to detect when plus button clears the chat selection.
-    const state = useAtomCapability(AssistantCapabilities.State);
-    const companionToId = Obj.getDXN(companionTo).toString();
-    const currentChatState = state?.currentChat[companionToId];
-
-    // Track if initial setup has been done (to distinguish initial mount from plus button click).
-    // Reset when companionTo changes.
-    const initialSetupDoneRef = useRef(false);
-    const prevCompanionToIdRef = useRef(companionToId);
-    if (prevCompanionToIdRef.current !== companionToId) {
-      initialSetupDoneRef.current = false;
-      prevCompanionToIdRef.current = companionToId;
-    }
-
-    // Sync local chat state with the state atom.
-    // When currentChatState is undefined (plus button clicked), reset local chat.
-    // When data.subject is a Chat object, use it directly.
-    // When currentChatState is a different chat, fetch and set it.
-    useEffect(() => {
-      // If state says no chat selected AND current chat is persisted, reset local state (handles plus button click).
-      // Don't reset in-memory chats - they're expected to have currentChatState === undefined.
-      if (!currentChatState && chat && getSpace(chat)) {
-        setChat(undefined);
-      } else if (data.subject !== 'assistant-chat') {
-        // If data.subject is a Chat object (resolved from graph), use it.
-        setChat(data.subject);
-      } else if (currentChatState && space) {
-        // currentChatState is set but graph couldn't resolve it - fetch manually.
-        const currentChatDxnStr = chat ? Obj.getDXN(chat).toString() : undefined;
-        if (currentChatState !== currentChatDxnStr) {
-          // Parse DXN and fetch the chat object from the database.
-          const parsedDxn = DXN.tryParse(currentChatState);
-          if (parsedDxn) {
-            const chatRef = space.db.makeRef(parsedDxn);
-            const resolvedChat = chatRef?.target;
-            if (Obj.instanceOf(Assistant.Chat, resolvedChat)) {
-              setChat(resolvedChat);
-            }
-          }
-        }
-      }
-    }, [currentChatState, data.subject, space, chat]);
-
     const feedTarget = chat?.feed.target;
     const binder = useContextBinder(space, feedTarget);
 
-    // Initialize companion chat if it doesn't exist, but don't add it to the space immediately.
-    useAsyncEffect(async () => {
-      if (!space || chat) {
-        return;
-      }
-
-      // Only query for existing chats on initial mount, not when plus button is clicked.
-      if (!initialSetupDoneRef.current) {
-        // Query for existing companion chats linked to this object.
-        const existingChats = await space.db
-          .query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source())
-          .run();
-
-        initialSetupDoneRef.current = true;
-
-        // Use existing chat if found on initial mount.
-        if (existingChats.length > 0) {
-          const existingChat = existingChats.at(-1) as Assistant.Chat;
-          setChat(existingChat);
-          await invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: existingChat });
-          return;
-        }
-      }
-
-      // Create chat in-memory only - it will be added to space on first message.
-      const { data: createResult } = await invokePromise(AssistantOperation.CreateChat, {
-        db: space.db,
-        addToSpace: false,
-      });
-      setChat(createResult?.object);
-    }, [chat, space, companionTo, invokePromise]);
-
-    // Add chat to space and create relation when user submits the first message.
+    // Persist chat on first submit.
     const handleEvent = useCallback(
       async (event: ChatEvent) => {
-        if (!chat || !space) {
+        if (!space || !chat) {
           return;
         }
 
-        // If chat is not in space yet, persist it on first submit.
         if (event.type === 'submit' && !getSpace(chat)) {
           await invokePromise(SpaceOperation.AddObject, {
             object: chat,
@@ -219,9 +130,9 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     return (
       <ChatContainer
         role={role}
-        attendableId={data.attendableId}
         space={space}
         subject={chat}
+        attendableId={attendableId}
         companionTo={companionTo}
         onEvent={handleEvent}
         ref={forwardedRef}
