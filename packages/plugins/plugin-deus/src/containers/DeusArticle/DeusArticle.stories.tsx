@@ -3,45 +3,67 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
+import CHESS_2_MDL from '../../../docs/examples/chess-2.mdl?raw';
+import CHESS_3_MDL from '../../../docs/examples/chess-3.mdl?raw';
 
 import { translations } from '../../translations';
 import { Spec } from '#types';
 
 import { DeusArticle } from './DeusArticle';
 
-type DefaultStoryProps = { content?: string };
+const DefaultStory = ({ content }: { content?: string }) => {
+  const spaces = useSpaces();
+  const space = spaces[0];
+  const [spec, setSpec] = useState<Spec.Spec | undefined>();
 
-const DefaultStory = ({ content }: DefaultStoryProps) => {
-  const spec = useMemo(() => Spec.make({ content }), [content]);
+  useEffect(() => {
+    if (space && !spec) {
+      setSpec(space.db.add(Spec.make({ content })));
+    }
+  }, [space]);
+
+  if (!spec) {
+    return <Loading />;
+  }
+
   return <DeusArticle role='article' subject={spec} />;
 };
 
 const meta = {
   title: 'plugins/plugin-deus/containers/DeusArticle',
-  component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  render: (args: { content?: string }) => <DefaultStory {...args} />,
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec] }),
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
-export const Default: Story = {
-  args: {},
-};
+export const Default: Story = {};
 
 export const Chess1: Story = {
-  args: {
-    content: CHESS_1_MDL,
-  },
+  args: { content: CHESS_1_MDL },
+};
+
+export const Chess2: Story = {
+  args: { content: CHESS_2_MDL },
+};
+
+export const Chess3: Story = {
+  args: { content: CHESS_3_MDL },
 };
