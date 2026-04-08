@@ -119,7 +119,7 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Event.Event, data.subject) && Calendar.instanceOf(data.companionTo),
         component: ({ data, role }) => {
           if (!data?.subject || !data?.companionTo) return null;
-          return <EventArticle role={role} subject={data.subject} calendar={data.companionTo} />;
+          return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
         },
       }),
       Surface.create({

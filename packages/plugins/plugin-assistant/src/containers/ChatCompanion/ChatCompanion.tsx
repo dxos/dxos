@@ -9,6 +9,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -23,24 +24,13 @@ import { AssistantOperation } from '#operations';
 
 import ChatContainer from '../ChatContainer';
 
-export type ChatCompanionProps = {
-  role?: string;
-  data: {
-    subject: Chat.Chat | null;
-    attendableId: string;
-    companionTo: Obj.Unknown;
-  };
-};
+export type ChatCompanionProps = CompanionSurfaceProps<Chat.Chat>;
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
-  ({ role, data }: ChatCompanionProps, forwardedRef) => {
+  ({ role, subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const blueprintRegistry = useBlueprintRegistry();
-
-    const companionTo = data.companionTo;
     const space = getSpace(companionTo);
-    const chat = data.subject;
-
     const feedTarget = chat?.feed.target;
     const chatQueue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
     const binder = useContextBinder(chatQueue);
@@ -48,7 +38,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     // Persist chat on first submit.
     const handleEvent = useCallback(
       async (event: ChatEvent) => {
-        if (!chat || !space) {
+        if (!space || !chat) {
           return;
         }
 
@@ -141,9 +131,9 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     return (
       <ChatContainer
         role={role}
-        attendableId={data.attendableId}
         space={space}
-        subject={chat ?? undefined}
+        subject={chat}
+        attendableId={attendableId}
         companionTo={companionTo}
         onEvent={handleEvent}
         ref={forwardedRef}

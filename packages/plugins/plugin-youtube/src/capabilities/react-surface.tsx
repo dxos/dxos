@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
           Video.instanceOf(data.subject) &&
           Channel.instanceOf(data.companionTo),
         component: ({ data: { attendableId, companionTo, subject }, role }) => {
-          return <VideoArticle role={role} subject={subject} channel={companionTo} attendableId={attendableId} />;
+          return <VideoArticle role={role} subject={subject} companionTo={companionTo} attendableId={attendableId} />;
         },
       }),
       Surface.create({

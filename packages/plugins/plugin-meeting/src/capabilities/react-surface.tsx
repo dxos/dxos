@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Channel.Channel, data.companionTo),
         component: ({ role, data }) => {
           return data.subject === 'meeting' ? (
-            <MeetingsList channel={data.companionTo} />
+            <MeetingsList companionTo={data.companionTo} />
           ) : (
             <MeetingContainer role={role} subject={data.subject} />
           );

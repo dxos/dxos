@@ -7,10 +7,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type Channel } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -53,11 +54,9 @@ const MeetingItem = ({
   );
 };
 
-export type MeetingsListProps = {
-  channel: Channel.Channel;
-};
+export type MeetingsListProps = CompanionSurfaceProps<undefined>;
 
-export const MeetingsList = ({ channel }: MeetingsListProps) => {
+export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(channel);
@@ -86,7 +85,7 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
     invariant(db);
-    const createResult = await invokePromise(MeetingOperation.Create, { channel });
+    const createResult = await invokePromise(MeetingOperation.Create, { channel: channel as Channel.Channel });
     invariant(Obj.instanceOf(Meeting.Meeting, createResult.data?.object));
     const addResult = await invokePromise(SpaceOperation.AddObject, {
       target: db,

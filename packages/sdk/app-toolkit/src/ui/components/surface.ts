@@ -5,8 +5,6 @@
 import { type Obj } from '@dxos/echo';
 import { Space } from '@dxos/client/echo';
 
-// TODO(burdon): AUDIT classes of all surface providers.
-
 export type SurfaceRole =
   | 'article'
   | 'card--content'
@@ -45,6 +43,20 @@ export type ObjectSurfaceProps<Subject extends Obj.Unknown | undefined = Obj.Unk
   /** The primary object being displayed. */
   subject: Subject;
 } & Props;
+
+/**
+ * Generic type for surface companion.
+ */
+export type CompanionSurfaceProps<
+  Subject extends Obj.Unknown | undefined = Obj.Unknown,
+  Props extends {} = {},
+> = ObjectSurfaceProps<
+  Subject,
+  {
+    /** The object this surface is a companion to. */
+    companionTo: Obj.Unknown;
+  } & Props
+>;
 
 /**
  * Generic type for surface components that are anchored to settings.
