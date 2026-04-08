@@ -29,7 +29,6 @@ import { translations } from '../../translations';
 import { DeckLayout } from './DeckLayout';
 
 import { OperationHandler } from '#capabilities';
-import { DeckOperation } from '#operations';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
@@ -193,7 +192,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 
               return (
                 <Panel.Root>
-                  <Panel.Content className='grid grid-rows-2'>
+                  <Panel.Content className='grid grid-rows-[min-content_1fr]'>
                     {attendableId && <ItemComponent id={attendableId} />}
                     <Json.Root data={subject}>
                       <Json.Content>
@@ -318,7 +317,6 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
           <Button
             key={node.id}
             variant='ghost'
-            classNames='w-full justify-start gap-2'
             onClick={() =>
               void invokePromise(LayoutOperation.Open, {
                 subject: [node.id],
@@ -362,7 +360,6 @@ export const Default: Story = {};
 
 const SoloStory = () => {
   const { invokePromise } = useOperationInvoker();
-
   useAsyncEffect(async () => {
     await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
     await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
@@ -377,7 +374,6 @@ export const Solo: Story = {
 
 const MultiStory = () => {
   const { invokePromise } = useOperationInvoker();
-
   useAsyncEffect(async () => {
     await invokePromise(LayoutOperation.Open, {
       subject: [STORY_ITEMS[0].id], navigation: 'immediate'
@@ -385,13 +381,6 @@ const MultiStory = () => {
     await invokePromise(LayoutOperation.SetLayoutMode, {
       mode: 'multi'
     });
-    // await invokePromise(LayoutOperation.Set, {
-    //   subject: [STORY_ITEMS[0].id, STORY_ITEMS[1].id, STORY_ITEMS[2].id],
-    // });
-    // const lastPlankId = STORY_ITEMS[2].id;
-    // await invokePromise(DeckOperation.ChangeCompanion, {
-    //   companion: `${lastPlankId}/${linkedSegment('alpha')}`,
-    // });
   });
 
   return <DeckLayout />;
