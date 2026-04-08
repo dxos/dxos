@@ -110,10 +110,8 @@ describe('Project AddArtifact', () => {
 
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
-        const chatQueueDxn = Feed.getQueueDxn(chatFeed);
-        invariant(chatQueueDxn, 'Feed queue DXN not found.');
-        const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(chatQueueDxn);
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
         const documentDxn = Obj.getDXN(document);
