@@ -34,6 +34,7 @@ export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): v
   for (const prefix of prefixes) {
     Graph.expand(graph, prefix, 'child');
     if (Option.isNone(Graph.getNode(graph, prefix))) {
+      console.log('initialize', prefix);
       void Graph.initialize(graph, prefix);
     }
   }

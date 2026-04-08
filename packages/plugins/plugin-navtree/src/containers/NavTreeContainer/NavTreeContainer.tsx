@@ -100,7 +100,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            void invokePromise(LayoutOperation.Open, { subject: [item.id] });
+            void invokePromise(LayoutOperation.Set, { subject: [item.id] });
           }
         }
       },
@@ -138,7 +138,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          void invokePromise(LayoutOperation.Set, { subject: [node.id] });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {

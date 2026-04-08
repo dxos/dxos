@@ -12,12 +12,12 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { DraftMessage, type Mailbox } from '#types';
+import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
 export type DraftsArticleProps = SpaceSurfaceProps<{ mailbox: Mailbox.Mailbox }>;
@@ -71,9 +71,11 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               subject: companion,
               state: 'expanded',
             });
-          } else {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
+          } else if (message && db) {
+            void invokePromise(LayoutOperation.Open, {
+              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+              pivotId: id,
+              navigation: 'immediate',
             });
           }
           break;
@@ -84,7 +86,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
         }
       }
     },
-    [drafts, id, invokePromise, layout.mode],
+    [db, drafts, id, invokePromise, layout.mode, mailbox.id],
   );
 
   return (

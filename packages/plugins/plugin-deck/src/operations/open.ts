@@ -10,6 +10,7 @@ import {
   AppCapabilities,
   LayoutOperation,
   createEdgeExistenceChecker,
+  expandPath,
   validateNavigationTarget,
 } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
@@ -40,6 +41,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         ),
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
+
+      // Immediate: skip 404 / resolver checks but still expand the path (same as validate’s first step).
+      if (input.navigation === 'immediate') {
+        for (const subjectId of input.subject) {
+          expandPath(graph, subjectId);
+        }
+      }
 
       const validatedSubjects = yield* Effect.all(
         input.subject.map((subjectId) =>

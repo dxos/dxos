@@ -161,11 +161,14 @@ export const DeckSoloMode = () => {
  */
 export const DeckMultiMode = () => {
   const {
-    deck: { active, companionOpen, companionVariant, fullscreen },
+    deck: { active, companionVariant, fullscreen },
     settings,
     layoutMode,
   } = useDeckContext('DeckMultiMode');
-  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
+  /** In multi mode the companion column is always shown when the last plank has companions (not gated by `companionOpen`). */
+  const effectiveCompanionVariant = companionVariant;
+  const lastPlankId = active[active.length - 1];
+  const lastPlankCompanions = useCompanions(lastPlankId);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const deckRef = useRef<HTMLDivElement>(null);
@@ -198,16 +201,17 @@ export const DeckMultiMode = () => {
   // Create order map.
   // In multi mode only the last plank hosts the companion pane, so only that plank adds the extra column.
   const { order, itemsCount } = useMemo(() => {
+    const lastHasCompanions = lastPlankCompanions.length > 0;
     return active.reduce(
       (acc: { order: Record<string, number>; itemsCount: number }, entryId, index) => {
         const isLastPlank = index === active.length - 1;
         acc.order[entryId] = acc.itemsCount + 1;
-        acc.itemsCount += companionOpen && isLastPlank ? 3 : 2;
+        acc.itemsCount += lastHasCompanions && isLastPlank ? 3 : 2;
         return acc;
       },
       { order: {}, itemsCount: 0 },
     );
-  }, [active, companionOpen]);
+  }, [active, lastPlankCompanions.length]);
 
   return (
     <div role='none' className='relative bg-deck-surface overflow-hidden'>
@@ -307,7 +311,12 @@ const PlankContainer = memo(
     const variantForThisPlank =
       layoutMode === 'multi' ? (isLastPlankInMulti ? companionVariant : undefined) : companionVariant;
     const { companionId } = useSelectedCompanion(companions, variantForThisPlank);
-    const resolvedCompanionId = variantForThisPlank ? companionId : undefined;
+    const resolvedCompanionId =
+      layoutMode === 'multi' && isLastPlankInMulti && companions.length > 0
+        ? companionId
+        : variantForThisPlank
+          ? companionId
+          : undefined;
     const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
     const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 

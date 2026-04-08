@@ -6,12 +6,11 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -79,15 +78,20 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               state: 'expanded',
             });
           } else {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
+            const event = events.find((entry) => entry.id === action.eventId);
+            if (event) {
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getObjectPathFromObject(event)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+            }
           }
           break;
         }
       }
     },
-    [id, invokePromise, layout.mode],
+    [events, id, invokePromise, layout.mode],
   );
 
   return (
