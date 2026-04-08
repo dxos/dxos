@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { FilesOperation } from '#operations';
@@ -55,7 +55,7 @@ export default Capability.makeModule(
           return Effect.succeed(
             settings && settings.openLocalFiles
               ? [
-                  {
+                  Node.make({
                     // TODO(wittjosiah): Deck does not currently support `/` in ids.
                     id: 'dxos:plugin-files',
                     type: meta.id,
@@ -65,7 +65,7 @@ export default Capability.makeModule(
                       role: 'branch',
                       disposition: 'workspace',
                     },
-                  },
+                  }),
                 ]
               : [],
           );
@@ -113,16 +113,18 @@ export default Capability.makeModule(
           const stateAtom = capabilities.get(FileCapabilities.State);
           const state = get(stateAtom);
           return Effect.succeed(
-            state.files.map((entity) => ({
-              id: entity.id,
-              type: isLocalDirectory(entity) ? 'directory' : 'file',
-              data: entity,
-              properties: {
-                label: entity.name,
-                icon: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
-                modified: 'children' in entity ? undefined : entity.modified,
-              },
-            })),
+            state.files.map((entity) =>
+              Node.make({
+                id: entity.id,
+                type: isLocalDirectory(entity) ? 'directory' : 'file',
+                data: entity,
+                properties: {
+                  label: entity.name,
+                  icon: 'children' in entity ? 'ph--folder--regular' : 'ph--file--regular',
+                  modified: 'children' in entity ? undefined : entity.modified,
+                },
+              }),
+            ),
           );
         },
       }),
@@ -133,15 +135,17 @@ export default Capability.makeModule(
         match: (node) => (isLocalDirectory(node.data) ? Option.some(node.data) : Option.none()),
         connector: (directory) =>
           Effect.succeed(
-            directory.children.map((child) => ({
-              id: child.id,
-              type: 'file',
-              data: child,
-              properties: {
-                label: child.name,
-                icon: 'ph--file--regular',
-              },
-            })),
+            directory.children.map((child) =>
+              Node.make({
+                id: child.id,
+                type: 'file',
+                data: child,
+                properties: {
+                  label: child.name,
+                  icon: 'ph--file--regular',
+                },
+              }),
+            ),
           ),
       }),
 

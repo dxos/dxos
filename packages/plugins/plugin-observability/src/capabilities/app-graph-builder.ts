@@ -5,13 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-
-const DECK_COMPANION_TYPE = 'org.dxos.plugin.deck.deck-companion';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,17 +19,13 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         connector: (node) =>
           Effect.succeed([
-            {
+            AppNode.makeDeckCompanion({
               id: linkedSegment('help'),
-              type: DECK_COMPANION_TYPE,
+              label: ['help.label', { ns: meta.id }],
+              icon: 'ph--question--regular',
               data: null,
-              properties: {
-                label: ['help.label', { ns: meta.id }],
-                icon: 'ph--question--regular',
-                disposition: 'hidden',
-                position: 'hoist',
-              },
-            },
+              position: 'hoist',
+            }),
           ]),
       }),
     ]);

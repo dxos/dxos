@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, Segments } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
@@ -61,21 +61,14 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         }
 
         return Effect.succeed([
-          {
+          AppNode.makeSection({
             id: Segments.types,
             type: TYPES_SECTION_TYPE,
-            data: null,
-            properties: {
-              label: ['types-section.label', { ns: meta.id }],
-              icon: 'ph--shapes--regular',
-              iconHue: 'neutral',
-              role: 'branch',
-              testId: 'spacePlugin.typesSection',
-              draggable: false,
-              droppable: false,
-              space,
-            },
-          },
+            label: ['types-section.label', { ns: meta.id }],
+            icon: 'ph--shapes--regular',
+            space,
+            testId: 'spacePlugin.typesSection',
+          }),
         ]);
       },
     }),
@@ -143,7 +136,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
 
         // {All} virtual node.
-        const allNode = {
+        const allNode = Node.make({
           id: 'all',
           type: TYPE_COLLECTION_TYPE,
           data: { space, typename },
@@ -159,7 +152,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             childrenDroppable: false,
             blockInstruction: BLOCK_REORDER_ABOVE,
           },
-        };
+        });
 
         // View objects for this schema.
         const viewIndex = buildViewIndex(get, space, schemas);
@@ -268,7 +261,7 @@ const createSchemaNode = ({
   space: Space;
   resolve: MetadataResolver;
   get: Atom.Context;
-}): Node.Node => {
+}): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   const metadata = resolve(typename);
   const { label, nodeId } = Match.value(schema).pipe(
@@ -287,7 +280,7 @@ const createSchemaNode = ({
   );
   const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (metadata.icon ?? 'ph--placeholder--regular');
   const iconHue = Type.isMutable(schema) ? 'neutral' : metadata.iconHue;
-  return {
+  return Node.make({
     id: nodeId,
     type: STATIC_SCHEMA_TYPE,
     data: schema,
@@ -303,7 +296,7 @@ const createSchemaNode = ({
       childrenDroppable: false,
       space,
     },
-  };
+  });
 };
 
 /** Builds schema actions (add view, rename, delete, snapshot). */
@@ -326,9 +319,8 @@ const createSchemaActions = ({
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(createObjectFn
       ? [
-          {
+          Node.makeAction({
             id: SpaceOperation.OpenCreateObject.meta.key,
-            type: Node.ActionType,
             data: Effect.fnUntraced(function* () {
               if (inputSchema) {
                 yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
@@ -355,12 +347,11 @@ const createSchemaActions = ({
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
             },
-          },
+          }),
         ]
       : []),
-    {
+    Node.makeAction({
       id: `${SpaceOperation.AddObject.meta.key}-view`,
-      type: Node.ActionType,
       data: () =>
         Operation.invoke(SpaceOperation.OpenCreateObject, {
           target: space.db,
@@ -373,10 +364,9 @@ const createSchemaActions = ({
         disposition: 'list-item',
         testId: 'spacePlugin.addViewToSchema',
       },
-    },
-    {
+    }),
+    Node.makeAction({
       id: SpaceOperation.RenameObject.meta.key,
-      type: Node.ActionType,
       data: (params?: Node.InvokeProps) =>
         Type.isMutable(schema)
           ? Operation.invoke(SpaceOperation.RenameObject, {
@@ -391,10 +381,9 @@ const createSchemaActions = ({
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
       },
-    },
-    {
+    }),
+    Node.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
-      type: Node.ActionType,
       data: () =>
         Type.isMutable(schema)
           ? Operation.invoke(SpaceOperation.RemoveObjects, {
@@ -408,10 +397,9 @@ const createSchemaActions = ({
         disabled: !deletable,
         testId: 'spacePlugin.deleteObject',
       },
-    },
-    {
+    }),
+    Node.makeAction({
       id: SpaceOperation.Snapshot.meta.key,
-      type: Node.ActionType,
       data: Effect.fnUntraced(function* () {
         const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
           db: space.db,
@@ -428,7 +416,7 @@ const createSchemaActions = ({
         icon: 'ph--camera--regular',
         disposition: 'list-item',
       },
-    },
+    }),
   ];
 
   return actions;

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space/meta';
 
@@ -19,15 +19,12 @@ export default Capability.makeModule(
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
-            {
+            AppNode.makeSettingsPanel({
               id: `${meta.id}.daily-summary`,
               type: `${meta.id}.space-settings-daily-summary`,
-              data: `${meta.id}.space-settings-daily-summary`,
-              properties: {
-                label: ['plugin.name', { ns: meta.id }],
-                icon: 'ph--calendar-check--regular',
-              },
-            },
+              label: ['plugin.name', { ns: meta.id }],
+              icon: 'ph--calendar-check--regular',
+            }),
           ]),
       }),
     ]);

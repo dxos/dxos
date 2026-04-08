@@ -5,11 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -29,16 +28,12 @@ export default Capability.makeModule(
           const space = spaceId ? client.spaces.get(spaceId) : null;
 
           return [
-            {
+            AppNode.makeDeckCompanion({
               id: linkedSegment('search'),
-              type: DECK_COMPANION_TYPE,
+              label: ['search.label', { ns: meta.id }],
+              icon: 'ph--magnifying-glass--regular',
               data: space,
-              properties: {
-                label: ['search.label', { ns: meta.id }],
-                icon: 'ph--magnifying-glass--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ];
         }),
       }),

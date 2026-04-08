@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import { pipe } from 'effect/Function';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, getActiveSpace, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -16,7 +16,6 @@ import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
@@ -140,17 +139,13 @@ export default Capability.makeModule(
             );
 
             return [
-              {
+              AppNode.makeCompanion({
                 id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
-                type: PLANK_COMPANION_TYPE,
+                label: ['assistant-chat.label', { ns: meta.id }],
+                icon: 'ph--sparkle--regular',
                 data: chat,
-                properties: {
-                  label: ['assistant-chat.label', { ns: meta.id }],
-                  icon: 'ph--sparkle--regular',
-                  position: 'hoist',
-                  disposition: 'hidden',
-                },
-              },
+                position: 'hoist',
+              }),
             ];
           }),
       }),
@@ -163,16 +158,12 @@ export default Capability.makeModule(
         ),
         connector: () =>
           Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: 'invocations',
-              type: PLANK_COMPANION_TYPE,
+              label: ['invocations.label', { ns: meta.id }],
+              icon: 'ph--clock-countdown--regular',
               data: 'invocations',
-              properties: {
-                label: ['invocations.label', { ns: meta.id }],
-                icon: 'ph--clock-countdown--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]),
       }),
 
@@ -181,17 +172,13 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            {
+            AppNode.makeDeckCompanion({
               id: linkedSegment('trace'),
-              type: DECK_COMPANION_TYPE,
+              label: ['trace.label', { ns: meta.id }],
+              icon: 'ph--line-segments--regular',
               data: 'trace' as const,
-              properties: {
-                label: ['trace.label', { ns: meta.id }],
-                icon: 'ph--line-segments--regular',
-                disposition: 'hidden',
-                position: 'fallback',
-              },
-            },
+              position: 'fallback',
+            }),
           ]),
       }),
     ]);

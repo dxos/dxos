@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { AppNode } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // TODO(wittjosiah): This is currently necessary for type portability.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -29,17 +29,13 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([
-          {
+          AppNode.makeCompanion({
             id: linkedSegment('settings'),
-            type: PLANK_COMPANION_TYPE,
+            label: ['object-settings.label', { ns: meta.id }],
+            icon: 'ph--sliders--regular',
             data: 'settings',
-            properties: {
-              label: ['object-settings.label', { ns: meta.id }],
-              icon: 'ph--sliders--regular',
-              disposition: 'hidden',
-              position: 'fallback',
-            },
-          },
+            position: 'fallback',
+          }),
         ]),
     }),
 
@@ -64,16 +60,12 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       },
       connector: (node) =>
         Effect.succeed([
-          {
+          AppNode.makeCompanion({
             id: linkedSegment('selected-objects'),
-            type: PLANK_COMPANION_TYPE,
+            label: ['companion-selected-objects.label', { ns: meta.id }],
+            icon: 'ph--tree-view--regular',
             data: 'selected-objects',
-            properties: {
-              label: ['companion-selected-objects.label', { ns: meta.id }],
-              icon: 'ph--tree-view--regular',
-              disposition: 'hidden',
-            },
-          },
+          }),
         ]),
     }),
   ]);

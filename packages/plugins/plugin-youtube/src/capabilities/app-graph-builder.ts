@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
@@ -17,7 +17,6 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { ClearSyncedVideos, Sync } from '#operations';
@@ -58,16 +57,12 @@ export default Capability.makeModule(
             ),
           )[0];
           return Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: linkedSegment('video'),
-              type: PLANK_COMPANION_TYPE,
+              label: ['video.label', { ns: meta.id }],
+              icon: 'ph--play--regular',
               data: video ?? 'video',
-              properties: {
-                label: ['video.label', { ns: meta.id }],
-                icon: 'ph--play--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]);
         },
       }),

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { type Feed, Filter, Key, Obj, Query } from '@dxos/echo';
@@ -15,7 +15,6 @@ import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { type Event, Message } from '@dxos/types';
@@ -60,21 +59,14 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            {
+            AppNode.makeSection({
               id: getMailboxesSectionId(),
               type: MAILBOXES_SECTION_TYPE,
-              data: null,
-              properties: {
-                label: ['mailboxes-section.label', { ns: meta.id }],
-                icon: 'ph--tray--regular',
-                iconHue: 'neutral',
-                role: 'branch',
-                position: 'hoist',
-                draggable: false,
-                droppable: false,
-                space,
-              },
-            },
+              label: ['mailboxes-section.label', { ns: meta.id }],
+              icon: 'ph--tray--regular',
+              space,
+              position: 'hoist',
+            }),
           ]);
         },
       }),
@@ -90,7 +82,7 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
-              return {
+              return Node.make({
                 id: mailbox.id,
                 type: Mailbox.Mailbox.typename,
                 data: null,
@@ -102,7 +94,7 @@ export default Capability.makeModule(
                   mailbox,
                 },
                 nodes: [
-                  {
+                  Node.make({
                     id: getAllMailId(),
                     type: MAILBOX_ALL_MAIL_TYPE,
                     data: mailbox,
@@ -112,8 +104,8 @@ export default Capability.makeModule(
                       iconHue: 'rose',
                       filter: null,
                     },
-                  },
-                  {
+                  }),
+                  Node.make({
                     id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
                     data: MAILBOX_DRAFTS_NODE_DATA,
@@ -123,38 +115,39 @@ export default Capability.makeModule(
                       iconHue: 'rose',
                       mailbox,
                     },
-                  },
-                  ...(mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-                    id: `filter-${kebabize(name)}`,
-                    type: FILTER_TYPE,
-                    data: mailbox,
-                    properties: {
-                      label: name,
-                      icon: 'ph--funnel--regular',
-                      iconHue: 'neutral',
-                      filter,
-                    },
-                    nodes: [
-                      {
-                        id: `filter-${kebabize(name)}-delete`,
-                        type: Node.ActionType,
-                        data: () =>
-                          Effect.sync(() => {
-                            const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                            Obj.change(mailbox, (mutable: any) => {
-                              mutable.filters.splice(index, 1);
-                            });
-                          }),
-                        properties: {
-                          label: ['delete-filter.label', { ns: meta.id }],
-                          icon: 'ph--trash--regular',
-                          disposition: 'list-item',
-                        },
+                  }),
+                  ...(mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) =>
+                    Node.make({
+                      id: `filter-${kebabize(name)}`,
+                      type: FILTER_TYPE,
+                      data: mailbox,
+                      properties: {
+                        label: name,
+                        icon: 'ph--funnel--regular',
+                        iconHue: 'neutral',
+                        filter,
                       },
-                    ],
-                  })) ?? []),
+                      nodes: [
+                        Node.makeAction({
+                          id: `filter-${kebabize(name)}-delete`,
+                          data: () =>
+                            Effect.sync(() => {
+                              const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                              Obj.change(mailbox, (mutable: any) => {
+                                mutable.filters.splice(index, 1);
+                              });
+                            }),
+                          properties: {
+                            label: ['delete-filter.label', { ns: meta.id }],
+                            icon: 'ph--trash--regular',
+                            disposition: 'list-item',
+                          },
+                        }),
+                      ],
+                    }),
+                  ) ?? []),
                 ],
-              };
+              });
             }),
           );
         },
@@ -177,16 +170,12 @@ export default Capability.makeModule(
             : undefined;
           const draft = message && DraftMessage.belongsTo(message, mailboxDxn) ? message : undefined;
           return Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: linkedSegment('message'),
-              type: PLANK_COMPANION_TYPE,
+              label: ['message.label', { ns: meta.id }],
+              icon: 'ph--envelope-open--regular',
               data: draft ?? 'message',
-              properties: {
-                label: ['message.label', { ns: meta.id }],
-                icon: 'ph--envelope-open--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]);
         },
         actions: (node) => {
@@ -197,16 +186,15 @@ export default Capability.makeModule(
           }
 
           return Effect.succeed([
-            {
+            Node.makeAction({
               id: 'create-draft',
-              type: Node.ActionType,
               data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
               properties: {
                 label: ['create-draft.label', { ns: meta.id }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
-            },
+            }),
           ]);
         },
       }),
@@ -231,16 +219,12 @@ export default Capability.makeModule(
             ),
           )[0];
           return Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: linkedSegment('message'),
-              type: PLANK_COMPANION_TYPE,
+              label: ['message.label', { ns: meta.id }],
+              icon: 'ph--envelope-open--regular',
               data: message ?? 'message',
-              properties: {
-                label: ['message.label', { ns: meta.id }],
-                icon: 'ph--envelope-open--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]);
         },
       }),
@@ -333,16 +317,12 @@ export default Capability.makeModule(
             AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
           )[0];
           return Effect.succeed([
-            {
+            AppNode.makeCompanion({
               id: linkedSegment('event'),
-              type: PLANK_COMPANION_TYPE,
+              label: ['event.label', { ns: meta.id }],
+              icon: 'ph--calendar-dot--regular',
               data: event ?? 'event',
-              properties: {
-                label: ['event.label', { ns: meta.id }],
-                icon: 'ph--calendar-dot--regular',
-                disposition: 'hidden',
-              },
-            },
+            }),
           ]);
         },
       }),
