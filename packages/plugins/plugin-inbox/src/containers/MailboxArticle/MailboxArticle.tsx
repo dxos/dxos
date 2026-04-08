@@ -28,6 +28,8 @@ import { InboxOperation } from '#operations';
 import { type Mailbox } from '#types';
 import { sortByCreated } from '../../util';
 
+import { getMailboxMessagePath } from '../../paths';
+
 import { NewMailbox } from './NewMailbox';
 
 export type MailboxArticleProps = ObjectSurfaceProps<
@@ -143,8 +145,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
               subject: companion,
               state: 'expanded',
             });
-          } else {
-            // Deck layout: open as companion panel.
+          } else if (layout.mode === 'multi' && message && db) {
+            // Multi deck: open the message plank beside this mailbox (pivot).
+            void invokePromise(LayoutOperation.Open, {
+              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+              pivotId: id,
+              navigation: 'immediate',
+            });
+          } else if (message) {
+            // Solo deck: show message in the companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
             });
@@ -178,7 +187,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleClear = useCallback(() => {

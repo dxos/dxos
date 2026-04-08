@@ -6,14 +6,18 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContextService, AiConversationService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
-import { BlueprintManagerHandlers, QueryBlueprints, EnableBlueprints } from './functions';
+import BlueprintManagerDefinition from './blueprint';
+import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 import DatabaseBlueprint from '../database/blueprint';
 import MarkdownBlueprint from '../markdown/blueprint';
 import ResearchBlueprint from '../research/blueprint';
@@ -126,5 +130,47 @@ describe('Blueprint Manager', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },
+  );
+
+  it.scoped(
+    'refresh-blueprints: agent syncs a mutated database blueprint from the registry',
+    Effect.fnUntraced(
+      function* (_) {
+        const registry = yield* Blueprint.RegistryService;
+        const canonical = registry.getByKey('org.dxos.blueprint.database');
+        expect(canonical).toBeDefined();
+
+        const stored = yield* Blueprint.upsert('org.dxos.blueprint.database');
+        const originalName = stored.name;
+        Obj.change(stored, (mutable) => {
+          mutable.name = '___TEST_MUTATED_BLUEPRINT_NAME___';
+        });
+        yield* Database.flush();
+        expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
+
+        const conversation = yield* AiConversationService;
+        yield* Effect.promise(() => conversation.context.open());
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(BlueprintManagerDefinition.make())],
+          }),
+        );
+
+        yield* conversation.createRequest({
+          system: trim`
+            You can call blueprint manager tools. When asked to refresh or sync blueprints from the registry,
+            call the refresh blueprints tool once and then stop.
+          `,
+          prompt: trim`
+            Refresh blueprints from the registry so database copies match the built-in definitions.
+          `,
+        });
+
+        expect(stored.name).toBe(originalName);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 60_000,
   );
 });

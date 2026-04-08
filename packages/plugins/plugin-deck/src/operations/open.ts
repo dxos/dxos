@@ -10,6 +10,7 @@ import {
   AppCapabilities,
   LayoutOperation,
   createEdgeExistenceChecker,
+  expandPath,
   validateNavigationTarget,
 } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
@@ -21,7 +22,7 @@ import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { updateActiveDeck } from './helpers';
-import { openEntry } from '../layout';
+import { openSubjectsOnActiveDeck } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 
@@ -30,7 +31,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
     Effect.fnUntraced(function* (input) {
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
-      const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
       // Validate navigation targets, redirecting to 404 if not found.
       const capabilities = yield* Capability.Service;
@@ -41,6 +41,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         ),
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
+
+      // Immediate: skip 404 / resolver checks but still expand the path (same as validate’s first step).
+      if (input.navigation === 'immediate') {
+        for (const subjectId of input.subject) {
+          expandPath(graph, subjectId);
+        }
+      }
 
       const validatedSubjects = yield* Effect.all(
         input.subject.map((subjectId) =>
@@ -65,15 +72,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const next =
           deck.solo || !deck.initialized
             ? [...input.subject]
-            : input.subject.reduce(
-                (acc, entryId) =>
-                  openEntry(acc, entryId, {
-                    key: input.key,
-                    positioning: input.positioning ?? settings?.newPlankPositioning,
-                    pivotId: input.pivotId,
-                  }),
-                deck.active,
-              );
+            : openSubjectsOnActiveDeck(deck.active, input.subject, {
+                pivotId: input.pivotId,
+                key: input.key,
+              });
 
         const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));

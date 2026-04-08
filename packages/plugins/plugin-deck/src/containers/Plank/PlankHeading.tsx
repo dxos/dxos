@@ -148,8 +148,10 @@ export const PlankHeading = memo(
             ? [
                 hoverableControls,
                 hoverableFocusedWithinControls,
-                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent border-transparent transition-[background-color,border-color]',
-                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
+                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent',
+                'border-transparent transition-[background-color,border-color]',
+                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface',
+                'hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
               ]
             : []),
         ]}
@@ -203,16 +205,17 @@ export const PlankHeading = memo(
           </>
         )}
         {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
-        {companioned === 'companion' ? (
-          <PlankCompanionControls primary={primaryId} />
-        ) : (
-          <PlankControls
-            capabilities={capabilities}
-            layoutMode={layoutMode}
-            close={part === 'complementary' ? 'minify-end' : true}
-            onClick={handlePlankAction}
-          />
-        )}
+        {layoutMode !== 'multi' &&
+          (companioned === 'companion' ? (
+            <PlankCompanionControls primary={primaryId} />
+          ) : (
+            <PlankControls
+              capabilities={capabilities}
+              layoutMode={layoutMode}
+              close={part === 'complementary' ? 'minify-end' : true}
+              onClick={handlePlankAction}
+            />
+          ))}
       </StackItem.Heading>
     );
   },
