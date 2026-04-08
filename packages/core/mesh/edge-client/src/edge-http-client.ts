@@ -20,6 +20,7 @@ import {
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
+  EDGE_CLIENT_TAG_HEADER,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeFailure,
@@ -98,7 +99,7 @@ export type GetCronTriggersResponse = {
 
 export type EdgeHttpClientOptions = {
   /**
-   * Tag included in the `X-DXOS-Client-Tag` header on every request.
+   * Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header on every request.
    * Used on Edge to classify traffic for metering (e.g. `ci-e2e`).
    */
   clientTag?: string;
@@ -558,7 +559,7 @@ const createRequest = (
   }
 
   if (clientTag) {
-    headers['X-DXOS-Client-Tag'] = clientTag;
+    headers[EDGE_CLIENT_TAG_HEADER] = clientTag;
   }
 
   return {
