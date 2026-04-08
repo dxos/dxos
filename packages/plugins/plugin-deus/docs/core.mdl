@@ -1,0 +1,157 @@
+---
+id: dxos.spec.core
+name: DSL.Core
+version: 1.0
+---
+
+The minimal base language. Defines document format and the `ext` primitive only.
+All domain constructs — type, op, feat, test, ui, db, service, etc. — are extensions.
+
+## Document Format
+
+A `.spec` file has three parts:
+
+1. **Frontmatter** — YAML block delimited by `---`. Contains document metadata.
+2. **Body** — Standard Markdown prose, headings, and lists.
+3. **Blocks** — Typed fenced sections carrying structured declarations.
+
+### Frontmatter
+
+```
+id:        URI           # globally unique document identifier
+name:      Identifier    # human-readable name
+version:   SemVer        # document version
+extends?:  URI[]         # specs this document extends (transitive)
+```
+
+### Blocks
+
+A block is a fenced section with a declared type, optional identifier, and optional title:
+
+```
+```<type> [<id>][: <title>]
+...body...
+```
+```
+
+- `<type>` must be declared in the Extensions section of this document or an ancestor.
+- `<id>` is an optional locally-scoped identifier (e.g. `FR-1.1`, `Board`).
+- `<title>` is optional human-readable prose after the colon.
+- Block identifiers must be unique within the document.
+
+### Block Body Syntax
+
+Within a block, the body is a sequence of key-value pairs:
+
+```
+key: value                # scalar
+key: a | b | c            # union list (variants)
+key?: TypeExpr            # optional field declaration
+key:                      # multi-line value
+  - item one
+  - item two
+# comment
+```
+
+When an extension declares `inline-prose: true`, the first line may be
+bare prose with no key:
+
+```
+```feat F-1: Start Game
+  A new Board is created with pieces in starting positions.  ← inline prose
+  req F-1.1: White moves first.
+```
+```
+
+### Cross-References
+
+Any declared block identifier may be referenced elsewhere in the document as `[<id>]`.
+The linter verifies that all references resolve to a declared block.
+
+---
+
+## Extensions Section
+
+Every document that uses non-core block types MUST declare them:
+
+```
+## Extensions
+
+| Term     | URI                        |
+|----------|----------------------------|
+| `type`   | dxos.spec/ext/type@1.0     |
+| `feat`   | dxos.spec/ext/feat@1.0     |
+```
+
+An extension definition is either:
+- **External** — resolved by URI (registry lookup, future tooling).
+- **Inline** — defined in the document's Appendix using `ext` blocks.
+
+A document may use both: external URIs for standard extensions,
+inline `ext` blocks for custom or experimental ones.
+
+---
+
+## The `ext` Primitive
+
+`ext` is the only block type the core language natively provides.
+It is self-describing — defined here using itself:
+
+```ext ext
+  uri: dxos.spec.core/ext
+  desc: Declares a new block type or extends an existing one.
+  fields:
+    uri:            URI           # canonical identifier for this extension (required)
+    desc:           Prose         # human description (required)
+    extends?:       ExtRef        # parent extension — inherits all parent fields
+    fields?:        FieldMap      # fields valid on instances of this block type
+    adds-fields?:   FieldMap      # additional fields merged into parent (use with extends)
+    nesting?:       self | none   # whether instances may contain same-type blocks
+    inline-prose?:  Boolean       # first non-key line treated as prose value
+    syntax?:        CodeBlock     # reference syntax (non-normative)
+    example?:       CodeBlock     # usage example (non-normative)
+```
+
+---
+
+## Primitive Types
+
+The following types are available in `ext` field declarations.
+They are the vocabulary of the meta-language.
+
+| Type         | Description                                                  |
+|--------------|--------------------------------------------------------------|
+| `Prose`      | Free-form text, single or multi-line                         |
+| `Identifier` | Alphanumeric name, hyphens allowed — e.g. `Board`, `FR-1`   |
+| `URI`        | Dot-path or URL identifier — e.g. `dxos.spec/ext/type@1.0`  |
+| `SemVer`     | Semantic version string — e.g. `1.0.0`                      |
+| `Boolean`    | `true` or `false`                                            |
+| `TypeExpr`   | Type reference or inline type — e.g. `Color`, `Piece?`       |
+| `FieldMap`   | Named fields: `name[?]: TypeExpr  # comment`                 |
+| `UnionList`  | Pipe-separated variants: `a \| b \| c`                       |
+| `ProseList`  | Bulleted list of prose items                                 |
+| `CodeBlock`  | Literal indented or fenced text                              |
+| `ExtRef`     | Reference to a declared extension name                       |
+| `TagList`    | Space or comma-separated tag identifiers                     |
+
+---
+
+## Resolution Rules
+
+1. When a block type appears in a document body, the linter looks it up
+   in the nearest enclosing Extensions table (this document or any ancestor).
+2. If the URI resolves to an inline `ext` block in an Appendix, that definition is used.
+3. If the URI is external, the linter fetches the definition from a registry.
+4. An unresolvable block type is a lint error.
+5. Field names not declared in the `ext` definition are lint warnings.
+
+---
+
+## Non-Goals
+
+The core language deliberately omits:
+
+- Execution semantics — `.spec` is a specification, not a program.
+- Type checking — field values are not verified against TypeExpr at the core level.
+- Ordering constraints — sections may appear in any order.
+- Verification — requirements are semi-formal; the language is not a proof system.
