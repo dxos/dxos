@@ -52,8 +52,13 @@ export const formattingStyles = EditorView.theme({
   /**
    * Code and codeblocks.
    */
+  '& code': {
+    fontFamily: fontMono,
+    whiteSpace: 'nowrap',
+  },
   '& .cm-code': {
     fontFamily: fontMono,
+    whiteSpace: 'nowrap',
   },
   // Inline code spans (triggered by backticks) use `text-cm-code` + `font-mono`.
   // Different monospace font metrics can slightly overflow the fixed CodeMirror line box,
@@ -115,6 +120,7 @@ export const formattingStyles = EditorView.theme({
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',
+    verticalAlign: 'top',
   },
 
   /**
