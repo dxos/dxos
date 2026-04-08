@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiConversation, type ContextBinding } from '@dxos/assistant';
+import { AiConversation, type ContextBinding } from '@dxos/assistant';
 import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -15,7 +15,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService, QueueService, Trigger } from '@dxos/functions';
+import { QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -32,7 +32,7 @@ import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import { MarkdownHandlers } from '../markdown';
 
 import ProjectBlueprintDef from './blueprint';
-import { AddArtifact, Agent, ProjectHandlers } from './functions';
+import { Agent, ProjectHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -83,7 +83,7 @@ describe('Project AddArtifact', () => {
   const blueprint = ProjectBlueprintDef.make();
 
   it.scoped(
-    'adds artifact to project via direct invocation',
+    'agent adds artifact to project',
     Effect.fnUntraced(
       function* (_) {
         const project = yield* Database.add(
@@ -101,7 +101,7 @@ describe('Project AddArtifact', () => {
         const document = yield* Database.add(
           Obj.make(Markdown.Document, {
             name: 'Test Document',
-            content: Ref.make(Text.make('Test content')),
+            content: Ref.make(Text.make('This is a test document with some content.')),
           }),
         );
         yield* Database.flush();
@@ -116,10 +116,11 @@ describe('Project AddArtifact', () => {
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
 
-        yield* FunctionInvocationService.invokeFunction(AddArtifact, {
-          name: 'My Test Document',
-          artifact: Ref.make(document),
-        }).pipe(Effect.provideService(AiContextService, { binder: conversation.context }));
+        const documentDxn = Obj.getDXN(document);
+        yield* conversation.createRequest({
+          system: SYSTEM,
+          prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this project.`,
+        });
 
         expect(project.artifacts).toHaveLength(1);
         expect(project.artifacts[0].name).toBe('My Test Document');
@@ -129,7 +130,7 @@ describe('Project AddArtifact', () => {
       Effect.provide(AddArtifactTestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 30_000 },
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 });
 
