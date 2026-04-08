@@ -10,10 +10,16 @@ import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions, editorClassNames } from '@dxos/ui-editor';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  editorClassNames,
+} from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { deus } from '../../extension';
+import { deus, mdlBlockDescription } from '../../extension';
 
 import { Spec } from '#types';
 
@@ -32,6 +38,7 @@ export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role,
     () =>
       [
         createBasicExtensions(),
+        createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
         createThemeExtensions({ themeMode }),
         target &&
           createDataExtensions({
