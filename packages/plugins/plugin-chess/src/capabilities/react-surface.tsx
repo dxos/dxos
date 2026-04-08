@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit';
 
 import { ChessArticle, ChessCard } from '#containers';
 import { meta } from '#meta';
@@ -19,13 +19,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Chess.Game } => Obj.instanceOf(Chess.Game, data.subject),
-        component: ({ data, role }) => <ChessArticle role={role} subject={data.subject} />,
+        filter: AppSurface.subject(Chess.Game, { attendable: true }),
+        component: ({ data, role }) => <ChessArticle role={role} subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: meta.id,
         role: ['card--content'],
-        filter: (data): data is { subject: Chess.Game } => Obj.instanceOf(Chess.Game, data.subject),
+        filter: AppSurface.subject(Chess.Game),
         component: ({ data, role }) => <ChessCard role={role} subject={data.subject} />,
       }),
     ]),

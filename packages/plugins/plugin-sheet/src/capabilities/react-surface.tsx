@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -41,7 +42,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.object-settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
+        filter: AppSurface.subject(Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),
     ]),

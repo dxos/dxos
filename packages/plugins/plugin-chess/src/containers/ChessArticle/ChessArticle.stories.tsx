@@ -19,7 +19,7 @@ type DefaultStoryProps = {
 
 const DefaultStory = ({ pgn }: DefaultStoryProps) => {
   const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
-  return <ChessArticle role='article' subject={game} />;
+  return <ChessArticle role='article' subject={game} attendableId='story' />;
 };
 
 const meta = {

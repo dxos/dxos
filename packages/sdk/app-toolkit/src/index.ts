@@ -16,4 +16,5 @@ export * from './plugin';
 export * from './native-passkey';
 export * from './personal-space';
 export * from './type-options';
+export * from './surface-filter';
 export * from './translations';
