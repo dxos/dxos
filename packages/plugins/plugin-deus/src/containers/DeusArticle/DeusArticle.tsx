@@ -8,9 +8,9 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel } from '@dxos/react-ui';
+import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { createDataExtensions, editorClassNames } from '@dxos/ui-editor';
+import { createBasicExtensions, createDataExtensions, createThemeExtensions, editorClassNames } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
 import { deus } from '../../extension';
@@ -20,6 +20,7 @@ import { Spec } from '#types';
 export type DeusArticleProps = ObjectSurfaceProps<Spec.Spec>;
 
 export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role, subject: spec }, forwardedRef) => {
+  const { themeMode } = useThemeContext();
   const identity = useIdentity();
   const space = getSpace(spec);
 
@@ -30,6 +31,8 @@ export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role,
   const extensions = useMemo(
     () =>
       [
+        createBasicExtensions(),
+        createThemeExtensions({ themeMode }),
         target &&
           createDataExtensions({
             id: spec.id,
@@ -39,7 +42,7 @@ export const DeusArticle = forwardRef<HTMLDivElement, DeusArticleProps>(({ role,
           }),
         deus(),
       ].filter(isTruthy),
-    [identity, space, spec.id, target],
+    [identity, space, spec.id, target, themeMode],
   );
 
   const { parentRef } = useTextEditor(
