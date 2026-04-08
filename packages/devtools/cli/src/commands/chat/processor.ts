@@ -23,6 +23,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type OperationHandlerSet } from '@dxos/operation';
@@ -121,7 +122,9 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await Effect.runPromise(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)));
+    const runtime = await runAndForwardErrors(
+      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    );
     const conversation = new AiConversation({ feed, runtime, registry: this._registry });
     await conversation.open();
 
