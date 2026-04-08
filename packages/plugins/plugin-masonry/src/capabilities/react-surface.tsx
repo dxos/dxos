@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-id: 'root',
+        id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle([Masonry.Masonry, View.View]),

@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-id: 'surface.document',
+        id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
@@ -46,7 +46,7 @@ id: 'surface.document',
         },
       }),
       Surface.create({
-id: 'surface.text',
+        id: 'surface.text',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx

@@ -155,7 +155,7 @@ export default Capability.makeModule(
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
-id: 'wireframe',
+        id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         position: 'hoist',

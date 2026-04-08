@@ -19,7 +19,6 @@ import {
   WELCOME_SCREEN,
   WelcomeScreen,
 } from '../components';
-import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

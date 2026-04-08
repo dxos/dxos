@@ -19,12 +19,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'root',
+        id: 'open-registry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: 'root',
+              id: 'open-registry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
               properties: {
                 label: ['open-plugin-registry.label', { ns: meta.id }],
@@ -35,7 +35,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: 'root',
+        id: 'registry',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

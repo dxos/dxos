@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-id: 'table',
+        id: 'table',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: AppSurface.objectArticle(Table.Table),

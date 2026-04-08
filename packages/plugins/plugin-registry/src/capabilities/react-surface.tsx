@@ -10,7 +10,7 @@ import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry } from '#containers';
-import { registryCategoryId, meta } from '#meta';
+import { registryCategoryId } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

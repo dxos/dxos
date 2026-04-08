@@ -77,7 +77,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-id: 'message',
+        id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (
@@ -107,7 +107,7 @@ id: 'message',
         },
       }),
       Surface.create({
-id: 'event',
+        id: 'event',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.and(AppSurface.objectArticle(Event.Event), AppSurface.companionArticle(Calendar.Calendar)),

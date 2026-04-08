@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-id: 'article.journal',
+        id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Journal.Journal),
@@ -26,7 +26,7 @@ id: 'article.journal',
         ),
       }),
       Surface.create({
-id: 'article.outline',
+        id: 'article.outline',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Outline.Outline),

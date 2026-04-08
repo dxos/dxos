@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-id: 'sheet',
+        id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
