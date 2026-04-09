@@ -8,7 +8,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
+import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
@@ -26,7 +26,7 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
   const handleSend = useCallback(
     async (message: Message.Message) => {
       invariant(runtime);
-      await runtime.runPromise(invokeFunctionWithTracing(GmailFunctions.Send, { message }));
+      await runtime.runPromise(Operation.invoke(GmailFunctions.Send, { message }));
     },
     [runtime],
   );
