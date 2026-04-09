@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
-import { Actor, Message } from '@dxos/types';
-
-import { Calendar, Mailbox } from '../types';
-import { meta } from '#meta';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
+import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { CredentialsService, QueueService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { Actor, Message } from '@dxos/types';
+
+import { meta } from '#meta';
+
+import { Calendar, Mailbox } from '../types';
 
 const INBOX_OPERATION = `${meta.id}.operation`;
 

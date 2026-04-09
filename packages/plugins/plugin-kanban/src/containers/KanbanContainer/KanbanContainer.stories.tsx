@@ -21,17 +21,18 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { Kanban } from '#types';
+
 import { KanbanPlugin } from '../../KanbanPlugin';
 import { translations } from '../../translations';
-import { Kanban } from '#types';
 
 faker.seed(0);
 

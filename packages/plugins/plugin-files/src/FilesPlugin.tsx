@@ -9,11 +9,11 @@ import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolk
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { Node } from '@dxos/plugin-graph';
 
+import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from './translations';
 import { FileCapabilities } from '#types';
 
-import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
+import { translations } from './translations';
 
 // TODO(burdon): Rename package plugin-file (singular).
 

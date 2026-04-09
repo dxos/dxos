@@ -9,7 +9,6 @@ import { trim } from '@dxos/util';
 
 // @ts-ignore - Vite raw import.
 import TEXT from '../../package.json?raw';
-
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
 const meta = {

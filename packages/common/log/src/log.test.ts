@@ -3,7 +3,6 @@
 //
 
 import path from 'node:path';
-
 import { beforeEach, describe, test } from 'vitest';
 
 import { LogLevel } from './config';

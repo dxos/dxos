@@ -17,8 +17,8 @@ import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { type ComponentProps, ContextModule } from '../components';

@@ -3,8 +3,8 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Operation } from '@dxos/operation';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 
 import { layoutStateAccess } from './state-access';
 

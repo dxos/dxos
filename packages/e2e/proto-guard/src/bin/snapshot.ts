@@ -4,7 +4,6 @@
 
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
-
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 

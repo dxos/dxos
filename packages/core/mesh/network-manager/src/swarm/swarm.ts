@@ -18,7 +18,6 @@ import { type SwarmController, type Topology } from '../topology';
 import { type TransportFactory } from '../transport';
 import { type Topic } from '../types';
 import { type WireProtocolProvider } from '../wire-protocol';
-
 import { type Connection, ConnectionState } from './connection';
 import { type ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';

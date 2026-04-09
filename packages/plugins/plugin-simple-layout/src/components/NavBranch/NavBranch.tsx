@@ -15,6 +15,7 @@ import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/reac
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
 import { useExpandPath } from '../hooks';
 
 export type NavBranchProps = {

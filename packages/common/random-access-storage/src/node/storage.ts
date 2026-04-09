@@ -3,7 +3,6 @@
 //
 
 import { MemoryStorage, type Storage, type StorageConstructor, StorageType } from '../common';
-
 import { NodeStorage } from './node-storage';
 
 export const createStorage: StorageConstructor = ({ type, root = '/tmp/dxos/testing' } = {}): Storage => {

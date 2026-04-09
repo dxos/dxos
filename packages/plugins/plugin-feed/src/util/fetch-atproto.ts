@@ -3,6 +3,7 @@
 //
 
 import { Subscription } from '#types';
+
 import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 
 const BSKY_PUBLIC_API = 'https://public.api.bsky.app/xrpc';

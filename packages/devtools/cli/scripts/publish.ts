@@ -4,9 +4,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { spawnSync } from 'child_process';
 import { readdirSync, existsSync } from 'fs';
 import { join } from 'path';
-import { spawnSync } from 'child_process';
 
 // Parse command line arguments.
 const args = process.argv.slice(2);

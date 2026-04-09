@@ -5,6 +5,7 @@
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+
 import { type EditorState } from '../../tools';
 
 /** Creates the view options toggle group. */

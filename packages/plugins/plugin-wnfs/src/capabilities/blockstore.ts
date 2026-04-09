@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import * as Blockstore from '../blockstore';
 import { WnfsCapabilities } from '#types';
+
+import * as Blockstore from '../blockstore';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

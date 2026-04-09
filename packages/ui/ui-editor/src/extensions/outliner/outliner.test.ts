@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 
 import { join } from '../../util';
 import { createMarkdownExtensions } from '../markdown';
-
 import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';
 import { listItemToString, outlinerTree, treeFacet } from './tree';
 

@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-
 import { Writable } from 'streamx';
 
 import { Event, Trigger, latch } from '@dxos/async';

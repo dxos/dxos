@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -22,11 +22,10 @@ import { Operation } from '@dxos/operation';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Research } from './definitions';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../../crud';
 import { ResearchGraph } from '../types';
 import { ResearchDataTypes } from '../types';
-
+import { Research } from './definitions';
 import PROMPT from './research-instructions.tpl?raw';
 
 /**

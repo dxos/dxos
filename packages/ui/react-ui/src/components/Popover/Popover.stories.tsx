@@ -9,7 +9,6 @@ import { faker } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { Popover } from './Popover';
 
 faker.seed(1234);

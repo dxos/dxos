@@ -9,7 +9,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMapZoomHandler } from '../../hooks';
 import { type GeoMarker } from '../../types';
-
 import { Map, type MapController } from './Map';
 
 const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {

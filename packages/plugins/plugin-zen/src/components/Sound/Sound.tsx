@@ -4,10 +4,11 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Sequence } from '#types';
+
 import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
 
 export type SoundProps = {

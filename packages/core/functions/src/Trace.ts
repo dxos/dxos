@@ -4,11 +4,12 @@
 
 // @import-as-namespace
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import * as Layer from 'effect/Layer';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 /**
  * Writes ephemeral or persistent events to the trace.

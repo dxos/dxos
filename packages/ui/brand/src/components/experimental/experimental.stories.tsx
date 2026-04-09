@@ -12,7 +12,6 @@ import { mx } from '@dxos/ui-theme';
 
 import ident from '../../../assets/sounds/ident-2.mp3';
 import { DXOS } from '../icons';
-
 import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
 import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
 

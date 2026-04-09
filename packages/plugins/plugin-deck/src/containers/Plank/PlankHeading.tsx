@@ -6,20 +6,20 @@ import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
-import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 import { DeckOperation } from '#operations';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
-import { usePlankContext } from './PlankRoot';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { usePlankContext } from './PlankRoot';
 
 const MAX_COMPANIONS = 5;
 

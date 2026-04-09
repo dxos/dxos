@@ -11,7 +11,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem } from '../StackItem';
 import { type StackItemData } from '../types';
-
 import { Stack } from './Stack';
 
 type StoryStackItem = {

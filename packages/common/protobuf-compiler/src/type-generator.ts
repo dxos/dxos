@@ -4,7 +4,6 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-
 import pb from 'protobufjs';
 import * as ts from 'typescript';
 

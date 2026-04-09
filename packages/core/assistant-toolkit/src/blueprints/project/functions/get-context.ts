@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { GetContext } from './definitions';
 import { Plan, Project } from '../../../types';
+import { GetContext } from './definitions';
 
 export default GetContext.pipe(
   Operation.withHandler(

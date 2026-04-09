@@ -11,7 +11,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { ComposeEmailPanel, type ComposeEmailPanelProps } from './ComposeEmailPanel';
 
 type DefaultStoryProps = Pick<ComposeEmailPanelProps, 'onSend'>;

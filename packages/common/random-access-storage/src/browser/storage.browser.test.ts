@@ -6,7 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { StorageType } from '../common';
 import { storageTests } from '../testing';
-
 import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = 'testing';

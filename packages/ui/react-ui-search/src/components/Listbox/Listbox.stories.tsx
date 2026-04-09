@@ -9,7 +9,6 @@ import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { Listbox } from './Listbox';
 
 faker.seed(1234);

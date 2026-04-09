@@ -3,10 +3,9 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
 //
 
+import { type StorybookConfig } from '@storybook/web-components-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { type StorybookConfig } from '@storybook/web-components-vite';
 import { type InlineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';

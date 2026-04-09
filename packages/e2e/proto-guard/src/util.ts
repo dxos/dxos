@@ -4,7 +4,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-
 import pkgUp from 'pkg-up';
 
 import { asyncTimeout } from '@dxos/async';

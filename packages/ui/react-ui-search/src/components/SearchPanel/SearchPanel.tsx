@@ -7,8 +7,8 @@ import React, { PropsWithChildren } from 'react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
-import { SearchList, SearchListRootProps } from '../SearchList';
 import { translationKey } from '../../translations';
+import { SearchList, SearchListRootProps } from '../SearchList';
 
 export type SearchPanelProps = PropsWithChildren<SearchListRootProps>;
 

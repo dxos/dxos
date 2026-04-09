@@ -7,14 +7,14 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space, LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { Serializer, defineObjectMigration, getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
+import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';

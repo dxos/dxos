@@ -9,7 +9,6 @@ import { type SchemaProperty } from '@dxos/effect';
 
 import { type FormHandlerProps } from '../../hooks';
 import { getFormProperties } from '../../util';
-
 import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
 import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';

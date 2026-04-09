@@ -9,7 +9,6 @@ import { faker } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { withLayoutVariants } from '../../testing';
-
 import { Select } from './Select';
 
 faker.seed(1234);

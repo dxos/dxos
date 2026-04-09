@@ -57,7 +57,6 @@ import { type Provider } from '@dxos/util';
 
 import { type IdentityManager } from '../identity';
 import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
-
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 

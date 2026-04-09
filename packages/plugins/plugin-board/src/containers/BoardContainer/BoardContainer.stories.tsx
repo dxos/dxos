@@ -14,13 +14,13 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { translations } from '../../translations';
 import { Board } from '#types';
 
+import { translations } from '../../translations';
 import { BoardContainer } from './BoardContainer';
 
 faker.seed(0);

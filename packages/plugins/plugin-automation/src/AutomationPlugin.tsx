@@ -8,11 +8,11 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
+import { AppGraphBuilder, ComputeRuntime, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from './translations';
 import { AutomationEvents } from '#types';
 
-import { AppGraphBuilder, ComputeRuntime, OperationHandler, ReactSurface } from '#capabilities';
+import { translations } from './translations';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

@@ -12,7 +12,6 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { ClientProvider } from '../client';
 import { type SpaceId } from '../echo';
-
 import { type WithClientProviderProps } from './withClientProvider';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceId?: SpaceId };

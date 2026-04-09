@@ -9,7 +9,6 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { cloneObject } from '../util';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.DuplicateObject> = SpaceOperation.DuplicateObject.pipe(

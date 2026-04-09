@@ -10,8 +10,9 @@ import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-t
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import { LOAD_PLUGIN_DIALOG } from '../containers';
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
+
+import { LOAD_PLUGIN_DIALOG } from '../containers';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

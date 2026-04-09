@@ -3,7 +3,6 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-
 // TODO(burdon): Rename translationKey.
 import { osTranslations } from '@dxos/ui-theme';
 

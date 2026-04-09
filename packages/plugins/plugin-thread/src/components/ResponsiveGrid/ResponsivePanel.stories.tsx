@@ -9,7 +9,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { VideoObject as VideoObjectComponent } from '../Media';
-
 import { ResponsivePanel } from './ResponsivePanel';
 
 const meta = {

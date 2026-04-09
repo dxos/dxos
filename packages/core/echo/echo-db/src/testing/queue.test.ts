@@ -11,7 +11,6 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { type Queue } from '../queue';
-
 import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', () => {

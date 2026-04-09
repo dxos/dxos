@@ -18,7 +18,6 @@ import {
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
-
 import { consoleLogger, noopLogger } from './logger';
 
 // TODO(burdon): Factor out.

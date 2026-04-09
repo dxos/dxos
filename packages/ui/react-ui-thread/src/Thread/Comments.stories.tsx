@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type Comment,
   type CommentsOptions,
@@ -31,7 +31,6 @@ import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-them
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import { translations } from '../translations';
-
 import { Thread } from './Thread';
 
 faker.seed(101);

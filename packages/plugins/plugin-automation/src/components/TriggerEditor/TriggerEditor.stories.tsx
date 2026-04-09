@@ -8,19 +8,19 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { functions } from '#testing';
-import { translations } from '../../translations';
 
+import { translations } from '../../translations';
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [

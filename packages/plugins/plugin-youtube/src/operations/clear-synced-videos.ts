@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { Channel, Video } from '../types';
-
 import { ClearSyncedVideos } from './definitions';
 
 const handler: Operation.WithHandler<typeof ClearSyncedVideos> = ClearSyncedVideos.pipe(

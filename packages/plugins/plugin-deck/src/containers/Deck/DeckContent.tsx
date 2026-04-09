@@ -8,11 +8,12 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Main, useMediaQuery } from '@dxos/react-ui';
 
 import { useBreakpoints, useHoistStatusbar } from '#hooks';
+
 import { layoutAppliesTopbar } from '../../util';
-import { useDeckContext } from './DeckRoot';
 import { ComplementarySidebar, Sidebar } from '../Sidebar';
-import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
+import { useDeckContext } from './DeckRoot';
+import { StatusBar } from './StatusBar';
 
 const DECK_CONTENT_NAME = 'DeckContent';
 

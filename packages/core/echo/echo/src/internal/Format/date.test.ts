@@ -8,7 +8,6 @@ import { describe, expect, test } from 'vitest';
 import { log } from '@dxos/log';
 
 import { toJsonSchema } from '../JsonSchema';
-
 import {
   DateOnly,
   DateTime,

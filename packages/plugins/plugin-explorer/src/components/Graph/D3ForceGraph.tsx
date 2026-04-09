@@ -17,7 +17,6 @@ import {
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
-
 import '@dxos/react-ui-graph/styles/graph.css';
 
 export type D3ForceGraphProps = {

@@ -3,8 +3,8 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
-import * as Schema from 'effect/Schema';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
@@ -17,7 +17,6 @@ import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { DailySummaryHandlers } from '../daily-summary-blueprint';
-
 import { GenerateSummary } from './definitions';
 
 ObjectId.dangerouslyDisableRandomness();

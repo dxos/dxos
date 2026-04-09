@@ -17,7 +17,6 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueryResultImpl } from '../query';
-
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 

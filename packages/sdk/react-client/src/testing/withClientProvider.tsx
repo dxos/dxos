@@ -14,7 +14,6 @@ import { ErrorBoundary } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
-
 import { ClientStory } from './context';
 
 type InitializeProps = {

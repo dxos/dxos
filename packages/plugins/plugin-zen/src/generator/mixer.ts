@@ -3,7 +3,6 @@
 //
 
 import type { Sequence } from '../types/Sequence';
-
 import { BinauralGenerator } from './generator';
 import { SamplePlayer } from './player';
 

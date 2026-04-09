@@ -7,17 +7,17 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Annotation } from '@dxos/echo';
 import { ComputeGraph } from '@dxos/conductor';
+import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { meta } from '#meta';
-import { translations } from './translations';
-
 import { ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
+import { translations } from './translations';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

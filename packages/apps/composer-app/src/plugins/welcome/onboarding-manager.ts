@@ -8,8 +8,8 @@ import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account } from '@dxos/plugin-client/types';
 import { ClientOperation } from '@dxos/plugin-client/operations';
+import { Account } from '@dxos/plugin-client/types';
 import { HelpOperation } from '@dxos/plugin-help/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Client } from '@dxos/react-client';
@@ -17,7 +17,6 @@ import { type Credential, DeviceType, type Identity } from '@dxos/react-client/h
 import { osTranslations } from '@dxos/ui-theme';
 
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
-
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';

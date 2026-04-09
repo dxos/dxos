@@ -8,9 +8,9 @@ import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { CreateProject, SyncTriggers } from './definitions';
 import { Project } from '../../../types';
 import { ProjectBlueprint } from '../../project';
+import { CreateProject, SyncTriggers } from './definitions';
 
 export default CreateProject.pipe(
   Operation.withHandler(

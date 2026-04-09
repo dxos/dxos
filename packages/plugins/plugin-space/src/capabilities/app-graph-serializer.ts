@@ -11,9 +11,10 @@ import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 
 import { meta } from '#meta';
-import { translations } from '../translations';
-import { SPACE_TYPE } from '#types';
 import { SpaceOperation } from '#operations';
+import { SPACE_TYPE } from '#types';
+
+import { translations } from '../translations';
 import { SPACES } from '../util';
 
 const COLLECTION_TYPE = Collection.Collection.typename;

@@ -10,7 +10,6 @@ import { type ShapeComponentProps, type ShapeDef, TextBox } from '@dxos/react-ui
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-
 import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 

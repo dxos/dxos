@@ -8,7 +8,6 @@ import React from 'react';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 
 import { withLayout, withTheme } from '../../testing';
-
 import { ErrorFallback } from './ErrorFallback';
 import { ThrowError } from './ThrowError';
 

@@ -6,14 +6,15 @@ import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, type Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '#types';
+
+import { type AiChatProcessor } from '../../processor';
 
 export type ToolboxProps = {
   services?: { service: ServiceType }[];

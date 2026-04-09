@@ -5,6 +5,7 @@
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+
 import { type SelectionMode } from '../../tools';
 
 export type { SelectionMode };

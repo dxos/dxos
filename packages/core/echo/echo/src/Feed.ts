@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
+import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
@@ -19,7 +20,6 @@ import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
-import * as Annotation from './Annotation';
 
 /**
  * Runtime schema for a Feed object.

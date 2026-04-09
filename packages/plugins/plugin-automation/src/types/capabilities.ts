@@ -6,6 +6,8 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
+import { AgentService } from '@dxos/assistant';
+import type { Blueprint } from '@dxos/blueprints';
 import { type Database, type Feed } from '@dxos/echo';
 import type {
   CredentialsService,
@@ -16,9 +18,7 @@ import type {
 } from '@dxos/functions';
 import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
-import type { Blueprint } from '@dxos/blueprints';
 import type { Operation } from '@dxos/operation';
-import { AgentService } from '@dxos/assistant';
 
 import { meta } from '#meta';
 

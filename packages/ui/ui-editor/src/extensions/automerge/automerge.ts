@@ -12,7 +12,6 @@ import { DocAccessor } from '@dxos/echo-db';
 
 import { Cursor } from '../../util';
 import { initialSync } from '../state';
-
 import { cursorConverter } from './cursor';
 import { type State, isReconcile, updateHeadsEffect } from './defs';
 import { Syncer } from './sync';

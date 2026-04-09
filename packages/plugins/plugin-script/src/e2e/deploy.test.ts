@@ -3,7 +3,6 @@
 //
 
 import { readFile } from 'node:fs/promises';
-
 import { describe, expect, test } from 'vitest';
 
 import { Client, type Config } from '@dxos/client';

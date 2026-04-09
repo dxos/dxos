@@ -9,8 +9,8 @@ import React, { type CSSProperties } from 'react';
 import { type ColumnStyleProps, composableProps, slottable } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
 import { ScrollArea, type ScrollAreaRootProps } from '../../components';
+import { useThemeContext } from '../../hooks';
 
 //
 // Root

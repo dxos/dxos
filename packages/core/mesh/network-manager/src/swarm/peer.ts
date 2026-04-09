@@ -14,7 +14,6 @@ import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
 import { type TransportFactory } from '../transport';
 import { type WireProtocolProvider } from '../wire-protocol';
-
 import { Connection, ConnectionState } from './connection';
 import { type ConnectionLimiter } from './connection-limiter';
 

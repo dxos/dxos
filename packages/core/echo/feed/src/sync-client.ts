@@ -7,12 +7,12 @@ import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
+import { Context } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
-import { Context } from '@dxos/context';
 
 type AppendResponse = FeedProtocol.AppendResponse;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;

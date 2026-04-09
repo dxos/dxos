@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/operation';
 
-import { CreateChannel } from './definitions';
-
 import { Channel } from '../types';
+import { CreateChannel } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateChannel> = CreateChannel.pipe(
   Operation.withHandler((input) =>

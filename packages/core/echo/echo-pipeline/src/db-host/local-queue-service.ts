@@ -6,8 +6,9 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { type ObjectJSON } from '@dxos/echo/internal';
+import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
+import { type ObjectJSON } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -22,7 +23,6 @@ import {
   type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
-import { Context } from '@dxos/context';
 
 /**
  * Writes queue data to a local FeedStore.

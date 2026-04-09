@@ -14,7 +14,6 @@ import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { StorybookDialog } from '../../story-components';
 import { inviteWithState } from '../../testing/fixtures';
-
 import { SpaceManagerImpl } from './SpaceManager';
 import { SpacePanelImpl } from './SpacePanel';
 import { type SpacePanelImplProps } from './SpacePanelProps';

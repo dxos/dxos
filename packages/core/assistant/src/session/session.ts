@@ -6,11 +6,13 @@ import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
+import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
-import * as Stream from 'effect/Stream';
-import * as Array from 'effect/Array';
+import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Stream from 'effect/Stream';
+
 import {
   AiParser,
   AiPreprocessor,
@@ -29,11 +31,9 @@ import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
-
+import { CompleteBlock, PartialBlock } from '../tracing';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
-import { pipe } from 'effect/Function';
-import { CompleteBlock, PartialBlock } from '../tracing';
 
 export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 

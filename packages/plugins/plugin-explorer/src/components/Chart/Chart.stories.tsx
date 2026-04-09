@@ -9,7 +9,6 @@ import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
-
 import { Chart } from './Chart';
 
 // TODO(burdon): Generate data with geo lat/lng.

@@ -10,7 +10,6 @@ import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
 import { UndoOperation } from '../../common';
-
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
 import { resolveMessage } from './undo-mapping';

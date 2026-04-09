@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { Database, Feed, Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 import { Channel, Video } from '../types';
 

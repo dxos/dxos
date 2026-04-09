@@ -21,13 +21,6 @@ import { ViewAnnotation } from '@dxos/schema';
 
 import { SpacePluginSettings } from '#components';
 import {
-  CREATE_OBJECT_DIALOG,
-  CREATE_SPACE_DIALOG,
-  JOIN_DIALOG,
-  OBJECT_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
-} from '../constants';
-import {
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
@@ -58,6 +51,14 @@ import {
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
+
+import {
+  CREATE_OBJECT_DIALOG,
+  CREATE_SPACE_DIALOG,
+  JOIN_DIALOG,
+  OBJECT_RENAME_POPOVER,
+  SPACE_RENAME_POPOVER,
+} from '../constants';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;

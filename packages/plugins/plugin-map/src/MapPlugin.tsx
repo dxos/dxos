@@ -9,15 +9,15 @@ import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
+import { AppGraphBuilder, BlueprintDefinition, MapState, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from './translations';
 import { Map, MapAction } from '#types';
 
-import { AppGraphBuilder, BlueprintDefinition, MapState, OperationHandler, ReactSurface } from '#capabilities';
+import { translations } from './translations';
 
 export const MapPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

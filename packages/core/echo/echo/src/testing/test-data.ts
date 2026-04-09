@@ -6,7 +6,6 @@ import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, ObjectId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
-
 import { TestSchema } from './test-schema';
 
 const spaceKey = PublicKey.random();

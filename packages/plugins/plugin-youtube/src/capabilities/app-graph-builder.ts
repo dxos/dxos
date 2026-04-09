@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -17,9 +16,10 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { ClearSyncedVideos, Sync } from '#operations';
 import { meta } from '#meta';
+import { ClearSyncedVideos, Sync } from '#operations';
 import { Channel, Video } from '#types';
 
 export default Capability.makeModule(

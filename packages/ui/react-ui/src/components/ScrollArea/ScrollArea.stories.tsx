@@ -6,13 +6,12 @@ import React, { PropsWithChildren, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
-
-import { withLayout, withTheme } from '../../testing';
-
-import { ScrollArea } from './ScrollArea';
-import { Column } from '../../primitives';
-import { Input } from '../Input';
 import { ThemedClassName } from '@dxos/ui-types';
+
+import { Column } from '../../primitives';
+import { withLayout, withTheme } from '../../testing';
+import { Input } from '../Input';
+import { ScrollArea } from './ScrollArea';
 
 faker.seed(123);
 

@@ -16,7 +16,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
 import { DevtoolsContextProvider } from '../hooks';
-
 import { ObjectsTree } from './ObjectsTree';
 import { ObjectViewer } from './ObjectViewer';
 

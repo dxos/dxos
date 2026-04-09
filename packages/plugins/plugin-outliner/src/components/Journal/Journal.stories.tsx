@@ -11,9 +11,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
-import { translations } from '../../translations';
 import { Journal, Outline, getDateString } from '#types';
 
+import { translations } from '../../translations';
 import { Journal as JournalComponent } from './Journal';
 
 const DefaultJournalStory = () => {

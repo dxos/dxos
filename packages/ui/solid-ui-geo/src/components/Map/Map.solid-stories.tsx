@@ -7,7 +7,6 @@ import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
 import { useMapZoomHandler } from '../../hooks';
 import { type GeoMarker } from '../../types';
-
 import { Map, type MapController } from './Map';
 
 const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {

@@ -8,6 +8,7 @@ import { type DependencyList, useCallback } from 'react';
 import { type Key } from '@dxos/echo';
 
 import { AutomationCapabilities } from '#types';
+
 import { useComputeRuntime } from './useComputeRuntime';
 
 /**

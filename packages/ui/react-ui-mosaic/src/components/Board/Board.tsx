@@ -28,7 +28,6 @@ import {
   mosaicStyles,
   useMosaic,
 } from '../Mosaic';
-
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
 

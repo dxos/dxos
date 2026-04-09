@@ -8,7 +8,6 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { DraftMessage } from '../types';
-
 import { DraftEmail } from './definitions';
 
 const handler: Operation.WithHandler<typeof DraftEmail> = DraftEmail.pipe(

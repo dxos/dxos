@@ -16,8 +16,8 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 

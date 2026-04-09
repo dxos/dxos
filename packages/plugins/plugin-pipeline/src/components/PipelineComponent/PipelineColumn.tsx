@@ -13,6 +13,7 @@ import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui-menu';
 import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
@@ -20,7 +21,6 @@ import { type Pipeline } from '@dxos/types';
 import { meta } from '#meta';
 
 import { type ItemProps, usePipeline } from './PipelineComponent';
-import { Menu } from '@dxos/react-ui-menu';
 
 //
 // PipelineColumn

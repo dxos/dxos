@@ -8,7 +8,6 @@ import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTransl
 import { osTranslations } from '@dxos/ui-theme';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
-
 import { iconValues } from './icons';
 
 export type IconPickerProps = {

@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { Close } from './definitions';
-
 import { FileCapabilities } from '../types';
+import { Close } from './definitions';
 
 const handler: Operation.WithHandler<typeof Close> = Close.pipe(
   Operation.withHandler(

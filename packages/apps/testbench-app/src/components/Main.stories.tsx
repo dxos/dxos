@@ -8,7 +8,6 @@ import { withMultiClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Item } from '../data';
-
 import { Main } from './Main';
 
 const meta = {

@@ -21,8 +21,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/ui-theme';
 
-import { type SheetModel } from '../../model';
 import { cellClassNameForRange, rangeFromIndex } from '#types';
+
+import { type SheetModel } from '../../model';
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(

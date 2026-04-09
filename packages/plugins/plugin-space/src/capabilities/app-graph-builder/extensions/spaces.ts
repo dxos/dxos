@@ -16,10 +16,10 @@ import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { SPACE_TYPE, SpaceCapabilities } from '#types';
 import { SpaceOperation } from '#operations';
-import { SHARED, getSpaceDisplayName } from '../../../util';
+import { SPACE_TYPE, SpaceCapabilities } from '#types';
 
+import { SHARED, getSpaceDisplayName } from '../../../util';
 import {
   CACHEABLE_PROPS,
   CAN_DROP_SPACE,

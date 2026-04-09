@@ -57,7 +57,6 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
-
 import { FeedSyncer } from './feed-syncer';
 
 export type ServiceContextRuntimeProps = Pick<

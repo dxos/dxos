@@ -13,7 +13,6 @@ import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 import { Capabilities } from '../../../common';
 import { withPluginManager } from '../../../testing';
 import { usePluginManager } from '../PluginManager';
-
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { create } from './types';
 

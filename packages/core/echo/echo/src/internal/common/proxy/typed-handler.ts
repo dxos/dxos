@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type InspectOptionsStylized } from 'node:util';
-
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
@@ -13,7 +12,6 @@ import { invariant } from '@dxos/invariant';
 
 import { getSchemaDXN } from '../../Annotation';
 import { ObjectDeletedId, ParentId, SchemaId, TypeId } from '../types';
-
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createPropertyDeleteError } from './errors';

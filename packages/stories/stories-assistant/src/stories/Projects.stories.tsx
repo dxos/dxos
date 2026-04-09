@@ -20,8 +20,8 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { ChatModule, type ComponentProps } from '../components';

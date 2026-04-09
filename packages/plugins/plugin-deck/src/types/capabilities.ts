@@ -9,8 +9,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
-import * as Settings from './Settings';
+
 import { type EphemeralDeckState, type DeckState, type StoredDeckState } from './schema';
+import * as Settings from './Settings';
 
 export namespace DeckCapabilities {
   export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);

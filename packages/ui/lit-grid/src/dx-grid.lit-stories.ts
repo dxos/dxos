@@ -3,10 +3,8 @@
 //
 
 import '@dxos-theme';
-
 import './dx-grid.ts';
 import './dx-grid.pcss';
-
 import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';

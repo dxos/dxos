@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { SetViewMode } from './definitions';
-
 import { MarkdownCapabilities } from '../types';
+import { SetViewMode } from './definitions';
 
 const handler: Operation.WithHandler<typeof SetViewMode> = SetViewMode.pipe(
   Operation.withHandler(
