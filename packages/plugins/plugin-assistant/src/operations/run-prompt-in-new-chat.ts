@@ -14,7 +14,6 @@ import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Text } from '@dxos/schema';
@@ -75,7 +74,7 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
           yield* Database.flush();
           const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
           const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
-          yield* invokeFunctionWithTracing(AgentPrompt, {
+          yield* Operation.invoke(AgentPrompt, {
             prompt: promptRef,
             input: {},
             chat: Ref.make(chat),
