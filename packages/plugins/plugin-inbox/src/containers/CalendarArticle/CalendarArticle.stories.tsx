@@ -34,7 +34,7 @@ const DefaultStory = (_: DefaultStoryProps) => {
     return <Loading data={{ db: !!db, calendar: !!calendar }} />;
   }
 
-  return <CalendarArticle subject={calendar} />;
+  return <CalendarArticle role='article' subject={calendar} attendableId='story' />;
 };
 
 const meta = {

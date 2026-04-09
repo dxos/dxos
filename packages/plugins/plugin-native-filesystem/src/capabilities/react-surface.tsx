@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { WorkspaceSettingsContainer } from '#containers';
 import { useActiveFilesystemWorkspace } from '#hooks';
@@ -18,9 +19,9 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.workspace-settings`,
+        id: 'workspace-settings',
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === GENERAL_TYPE,
+        filter: AppSurface.literalSection(GENERAL_TYPE),
         component: () => {
           const workspace = useActiveFilesystemWorkspace();
           if (!workspace) {

@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
-export type SpacetimeSettingsProps = SettingsSurfaceProps<Settings.Settings>;
+export type SpacetimeSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const SpacetimeSettings = ({ settings, onSettingsChange }: SpacetimeSettingsProps) => {
   const { t } = useTranslation(meta.id);

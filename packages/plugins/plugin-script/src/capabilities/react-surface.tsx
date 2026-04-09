@@ -7,14 +7,12 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type AccessToken } from '@dxos/types';
 
 import { ScriptPluginSettings } from '#components';
 import { DEPLOYMENT_DIALOG } from '../constants';
@@ -35,10 +33,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const client = useClient();
@@ -57,10 +54,10 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.script.article`,
+        id: 'script.article',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { subject: Script.Script; attendableId: string } =>
-          Obj.instanceOf(Script.Script, data.subject),
+        filter: AppSurface.objectArticle(Script.Script),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           const settings = useAtomCapability(ScriptCapabilities.Settings);
@@ -81,10 +78,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.notebook.article`,
+        id: 'notebook.article',
         role: 'article',
-        filter: (data): data is { subject: Notebook.Notebook; attendableId: string } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Notebook.Notebook, data.subject),
+        filter: AppSurface.objectArticle(Notebook.Notebook),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           return (
@@ -100,29 +96,27 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
       // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
       Surface.create({
-        id: `${meta.id}.companion.base-settings`,
+        id: 'companion.base-settings',
         role: 'base-object-settings',
-        filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
+        filter: AppSurface.objectSection(Script.Script),
         component: ({ data }) => <ScriptProperties object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.settings`,
+        id: 'companion.settings',
         role: 'object-settings',
-        filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
+        filter: AppSurface.objectSettings(Script.Script),
         component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.execute`,
+        id: 'companion.execute',
         role: 'article',
-        filter: (data): data is { companionTo: Script.Script } =>
-          Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'execute',
+        filter: AppSurface.and(AppSurface.literalArticle('execute'), AppSurface.companionArticle(Script.Script)),
         component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}.companion.logs`,
+        id: 'companion.logs',
         role: 'article',
-        filter: (data): data is { companionTo: Script.Script } =>
-          Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',
+        filter: AppSurface.and(AppSurface.literalArticle('logs'), AppSurface.companionArticle(Script.Script)),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
@@ -143,8 +137,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: DEPLOYMENT_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: { accessToken: AccessToken.AccessToken; scriptTemplates: any } } =>
-          data.component === DEPLOYMENT_DIALOG,
+        filter: AppSurface.componentDialog(DEPLOYMENT_DIALOG),
         component: ({ data }) => <DeploymentDialog {...data.props} />,
       }),
     ]),

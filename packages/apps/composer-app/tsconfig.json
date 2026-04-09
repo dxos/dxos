@@ -116,10 +116,10 @@
       "path": "../../plugins/plugin-deck"
     },
     {
-      "path": "../../plugins/plugin-deus"
+      "path": "../../plugins/plugin-excalidraw"
     },
     {
-      "path": "../../plugins/plugin-excalidraw"
+      "path": "../../plugins/plugin-exemplar"
     },
     {
       "path": "../../plugins/plugin-explorer"
@@ -213,6 +213,9 @@
     },
     {
       "path": "../../plugins/plugin-spacetime"
+    },
+    {
+      "path": "../../plugins/plugin-spec"
     },
     {
       "path": "../../plugins/plugin-spotlight"

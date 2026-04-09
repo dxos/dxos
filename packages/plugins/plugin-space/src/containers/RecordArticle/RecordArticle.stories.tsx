@@ -35,7 +35,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <RecordArticle role='article' subject={org} />;
+  return <RecordArticle role='article' subject={org} attendableId='story' />;
 };
 
 const meta = {

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.document`,
+        id: 'document',
         role: 'article',
         position: 'hoist',
         filter: (data): data is { subject: { type: typeof meta.id; object: Markdown.Document } } =>
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
       }),
       Surface.create({
-        id: `${meta.id}.collection`,
+        id: 'collection',
         role: 'article',
         position: 'hoist',
         filter: (data): data is { subject: { type: typeof meta.id; object: Collection.Collection } } =>
@@ -47,16 +47,15 @@ export default Capability.makeModule(() =>
         component: ({ role, data }) => <CollectionPresenterContainer role={role} subject={data.subject.object} />,
       }),
       Surface.create({
-        id: `${meta.id}.slide`,
+        id: 'slide',
         role: 'slide',
-        filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
+        filter: AppSurface.objectSection(Markdown.Document),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;

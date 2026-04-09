@@ -15,12 +15,12 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.space-settings`,
+        id: 'space-settings',
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
-              id: `${meta.id}.integrations`,
+              id: 'integrations',
               type: `${meta.id}.space-settings`,
               label: ['space-panel.name', { ns: meta.id }],
               icon: 'ph--plugs--regular',

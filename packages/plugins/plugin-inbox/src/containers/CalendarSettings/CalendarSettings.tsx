@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 
@@ -14,7 +14,9 @@ import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
 import { Calendar } from '#types';
 
-export const CalendarSettings = ({ subject }: ObjectSurfaceProps<Calendar.Calendar>) => {
+export type CalendarSettingsProps = AppSurface.ObjectSettingsProps<Calendar.Calendar>;
+
+export const CalendarSettings = ({ subject }: CalendarSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);

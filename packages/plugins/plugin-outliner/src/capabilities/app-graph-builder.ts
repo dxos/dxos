@@ -11,7 +11,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
@@ -21,7 +21,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.root`,
+        id: 'root',
         match: (node) => {
           if (!Obj.isObject(node.data)) {
             return Option.none();
@@ -41,7 +41,7 @@ export default Capability.makeModule(
         actions: (object) => {
           const db = Obj.getDatabase(object);
           return Effect.succeed([
-            {
+            Node.makeAction({
               id: OutlineOperation.CreateOutline.meta.key,
               properties: {
                 label: ['create-outline.label', { ns: meta.id }],
@@ -62,16 +62,16 @@ export default Capability.makeModule(
                   );
                 }
               }),
-            },
+            }),
           ]);
         },
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.quick-entry`,
+        id: 'quick-entry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            {
+            Node.makeAction({
               id: OutlineOperation.QuickJournalEntry.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -83,7 +83,7 @@ export default Capability.makeModule(
                 label: ['quick-entry.label', { ns: meta.id }],
                 icon: 'ph--calendar-plus--regular',
               },
-            },
+            }),
           ]),
       }),
     ]);

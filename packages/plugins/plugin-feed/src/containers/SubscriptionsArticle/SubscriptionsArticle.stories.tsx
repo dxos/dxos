@@ -31,7 +31,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <SubscriptionsArticle role='article' space={space} />;
+  return <SubscriptionsArticle role='article' subject='feeds-root' attendableId='story' />;
 };
 
 const meta: Meta<typeof DefaultStory> = {

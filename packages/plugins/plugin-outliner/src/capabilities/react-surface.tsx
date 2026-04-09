@@ -7,42 +7,43 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '#containers';
-import { QUICK_ENTRY_DIALOG, meta } from '#meta';
+import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal, Outline } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.article.journal`,
+        id: 'article.journal',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { subject: Journal.Journal } => Obj.instanceOf(Journal.Journal, data.subject),
+        filter: AppSurface.objectArticle(Journal.Journal),
         component: ({ role, data }) => (
-          <JournalContainer role={role as ObjectSurfaceProps['role']} subject={data.subject} showCalendar />
+          <JournalContainer role={role} subject={data.subject} attendableId={data.attendableId} showCalendar />
         ),
       }),
       Surface.create({
-        id: `${meta.id}.article.outline`,
+        id: 'article.outline',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
+        filter: AppSurface.objectArticle(Outline.Outline),
         component: ({ role, data }) => (
-          <OutlineContainer role={role as ObjectSurfaceProps['role']} subject={data.subject} />
+          <OutlineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: `${meta.id}.card.outline`,
+        id: 'card.outline',
         role: 'card--content',
-        filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
+        filter: AppSurface.objectCard(Outline.Outline),
         component: ({ data }) => <OutlineCard subject={data.subject} />,
       }),
       Surface.create({
         id: QUICK_ENTRY_DIALOG,
         role: 'dialog',
-        filter: (data): data is { component: string } => data.component === QUICK_ENTRY_DIALOG,
+        filter: AppSurface.componentDialog(QUICK_ENTRY_DIALOG),
         component: () => <QuickEntryDialog />,
       }),
     ]),

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/plugin-thread/types';
 
@@ -20,23 +20,24 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <MeetingSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}.meeting`,
+        id: 'meeting',
         role: 'article',
-        filter: (data): data is { subject: Meeting.Meeting } => Obj.instanceOf(Meeting.Meeting, data.subject),
-        component: ({ role, data }) => <MeetingContainer role={role} subject={data.subject} />,
+        filter: AppSurface.objectArticle(Meeting.Meeting),
+        component: ({ role, data }) => (
+          <MeetingContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}.meeting-companion`,
+        id: 'meeting-companion',
         role: 'article',
         filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
           (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

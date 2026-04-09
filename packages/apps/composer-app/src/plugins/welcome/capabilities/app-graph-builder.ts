@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
@@ -15,12 +15,12 @@ import { meta } from '../meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extension = yield* GraphBuilder.createExtension({
-      id: `${meta.id}.about`,
+      id: 'about',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
-            id: `${meta.id}.open-about`,
+          Node.makeAction({
+            id: 'open-about',
             data: Effect.fnUntraced(function* () {
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                 subject: ABOUT_DIALOG,
@@ -31,7 +31,7 @@ export default Capability.makeModule(
               icon: 'ph--info--regular',
               disposition: 'menu',
             },
-          },
+          }),
         ]),
     });
 

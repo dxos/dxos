@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { DailySummarySettings } from '#containers';
 import { meta } from '#meta';
@@ -16,9 +16,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.space-settings-daily-summary`,
+        id: 'space-settings-daily-summary',
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-daily-summary`,
+        filter: AppSurface.literalSection(`${meta.id}.space-settings-daily-summary`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

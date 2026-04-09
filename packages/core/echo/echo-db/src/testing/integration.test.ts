@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
-import { asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
@@ -141,6 +141,46 @@ describe('Integration tests', () => {
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
+  });
+
+  test('2 clients receive reactive notifications for new objects', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person],
+    });
+
+    // Client 1 creates the database.
+    await using db1 = await peer.createDatabase(spaceKey);
+
+    // Client 2 opens the same database.
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, {
+      client: client2,
+    });
+
+    // Set up a listener for update events on db2 BEFORE client 1 creates the object.
+    const updateReceived = new Trigger();
+    const unsubscribe = db2.coreDatabase._updateEvent.on(({ itemsUpdated }) => {
+      if (itemsUpdated.length > 0) {
+        updateReceived.wake();
+      }
+    });
+
+    // Client 1 creates an object.
+    const person = db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    await db1.flush();
+
+    // Client 2 should receive an update event (reactive notification) within a reasonable time.
+    // The notification should arrive within ~1000ms (accounting for throttling and document loading).
+    await asyncTimeout(updateReceived.wait(), 1000);
+    unsubscribe();
+
+    // Verify the object is visible on client 2.
+    const objects = await db2.query(Filter.type(TestSchema.Person)).run();
+    expect(objects.length).toBe(1);
+    expect(objects[0].name).toBe('Alice');
+    expect(objects[0].id).toBe(person.id);
   });
 
   // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.

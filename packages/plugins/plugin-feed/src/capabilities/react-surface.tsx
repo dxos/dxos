@@ -7,10 +7,9 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { FeedArticle, SubscriptionsArticle } from '#containers';
-import { meta } from '#meta';
 import { Subscription } from '#types';
 
 export default Capability.makeModule(() =>
@@ -18,30 +17,19 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       // Main subscription feed list view.
       Surface.create({
-        id: `${meta.id}.subscription-feed`,
+        id: 'subscription-feed',
         role: ['article'],
-        filter: (
-          data,
-        ): data is {
-          attendableId?: string;
-          subject: 'feeds-root';
-        } => data.subject === 'feeds-root' && !data.companionTo,
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          return <SubscriptionsArticle role={role} space={space} attendableId={data.attendableId} />;
-        },
+        filter: AppSurface.literalArticle('feeds-root'),
+        component: ({ data, role }) => (
+          <SubscriptionsArticle role={role} attendableId={data.attendableId} subject={data.subject} />
+        ),
       }),
-      // Companion view: FeedArticle shown alongside a parent Subscription.Feed.
+      // Companion view: FeedArticle shown alongside the feeds-root.
       Surface.create({
-        id: `${meta.id}.feed-article`,
+        id: 'feed-article',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (
-          data,
-        ): data is {
-          attendableId?: string;
-          subject: Subscription.Feed;
-          companionTo: Subscription.Feed;
-        } => Subscription.instanceOf(data.subject) && data.companionTo === 'feeds-root',
+        filter: AppSurface.and(AppSurface.objectArticle(Subscription.Feed), AppSurface.companionArticle('feeds-root')),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

@@ -7,20 +7,19 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { BoardContainer } from '#containers';
-import { meta } from '#meta';
 import { Board } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { attendableId: string; subject: Board.Board } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Board.Board, data.subject),
+        filter: AppSurface.objectArticle(Board.Board),
         component: ({ role, data }) => (
           <BoardContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

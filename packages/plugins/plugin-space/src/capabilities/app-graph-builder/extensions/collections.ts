@@ -50,7 +50,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   return yield* Effect.all([
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
-      id: `${meta.id}.collections-section`,
+      id: 'collections-section',
       match: whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -92,7 +92,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Root collection objects under the Collections virtual node.
     GraphBuilder.createExtension({
-      id: `${meta.id}.collections`,
+      id: 'collections',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -135,7 +135,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
-      id: `${meta.id}.objects`,
+      id: 'objects',
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -174,7 +174,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Object actions.
     GraphBuilder.createExtension({
-      id: `${meta.id}.object-actions`,
+      id: 'object-actions',
       match: (node) => {
         const space = getSpace(node.data);
         return space && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type

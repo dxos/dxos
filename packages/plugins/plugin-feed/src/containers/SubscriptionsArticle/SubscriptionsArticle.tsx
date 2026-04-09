@@ -6,8 +6,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface, useActiveSpace, useLayout } from '@dxos/app-toolkit/ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { type SpaceSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
@@ -22,12 +22,13 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { Subscription } from '#types';
 
-export type SubscriptionsArticleProps = SpaceSurfaceProps;
+export type SubscriptionsArticleProps = AppSurface.ArticleProps<'feeds-root'>;
 
-export const SubscriptionsArticle = ({ role, attendableId, space }: SubscriptionsArticleProps) => {
+export const SubscriptionsArticle = ({ role, attendableId }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
+  const space = useActiveSpace();
 
   const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
   const currentId = useSelected(attendableId, 'single');

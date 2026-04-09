@@ -7,21 +7,19 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection } from '@dxos/echo';
 
 import { StackContainer } from '#containers';
-import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}.article`,
+        id: 'article',
         role: 'article',
-        filter: (data): data is { attendableId: string; subject: Collection.Collection } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Collection.Collection, data.subject),
+        filter: AppSurface.objectArticle(Collection.Collection),
         component: ({ role, data }) => {
           return <StackContainer attendableId={data.attendableId} role={role} subject={data.subject} />;
         },

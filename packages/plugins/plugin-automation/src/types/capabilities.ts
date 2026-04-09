@@ -17,6 +17,7 @@ import type {
 import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 import type { Blueprint } from '@dxos/blueprints';
+import type { Operation } from '@dxos/operation';
 import { AgentService } from '@dxos/assistant';
 
 import { meta } from '#meta';
@@ -38,6 +39,7 @@ export namespace AutomationCapabilities {
     | Process.ProcessMonitorService
     | TracingService // TODO(dmaretskyi): Probably should not be provided here.
     | FunctionInvocationService // TODO(dmaretskyi): Deprecated
+    | Operation.Service
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService;

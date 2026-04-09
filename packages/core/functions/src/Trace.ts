@@ -160,3 +160,42 @@ export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceS
       };
     }),
   );
+
+//
+// Operation Trace Events
+//
+
+/**
+ * Outcome of an operation invocation.
+ */
+export type OperationOutcome = 'success' | 'failure';
+
+/**
+ * Operation invocation started.
+ */
+export const OperationStart = EventType('operation.start', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * Operation invocation ended.
+ */
+export const OperationEnd = EventType('operation.end', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Outcome of the operation. */
+    outcome: Schema.Literal('success', 'failure'),
+    /** Error message if the operation failed. */
+    error: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
+});

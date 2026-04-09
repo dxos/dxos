@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { MapOperation } from '#operations';
@@ -29,14 +29,14 @@ export default Capability.makeModule(
           return Effect.succeed([]);
         }
         return Effect.succeed([
-          {
+          Node.makeAction({
             id: `${view.id}.toggle-map`,
             data: () => Operation.invoke(MapOperation.Toggle, undefined),
             properties: {
               label: ['toggle-type.label', { ns: meta.id }],
               icon: 'ph--compass--regular',
             },
-          },
+          }),
         ]);
       },
     });

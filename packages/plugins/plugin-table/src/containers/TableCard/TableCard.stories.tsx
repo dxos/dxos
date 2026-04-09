@@ -33,7 +33,7 @@ const DefaultStory = () => {
 
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <TableCard subject={table} />
+      <TableCard role='card--content' subject={table} />
     </CardContainer>
   );
 };

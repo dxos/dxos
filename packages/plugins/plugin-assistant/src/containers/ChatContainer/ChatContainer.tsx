@@ -6,7 +6,7 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { Feed, type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
@@ -16,13 +16,13 @@ import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { AssistantCapabilities, type ChatType } from '#types';
 
-export type ChatContainerProps = ObjectSurfaceProps<
-  ChatType.Chat | undefined,
-  {
-    space?: Space;
-    companionTo?: Obj.Unknown;
-  } & Pick<ChatRootProps, 'onEvent'>
->;
+export type ChatContainerProps = (
+  | AppSurface.ObjectArticleProps<ChatType.Chat | undefined>
+  | AppSurface.ObjectSectionProps<ChatType.Chat | undefined>
+) & {
+  space?: Space;
+  companionTo?: Obj.Unknown;
+} & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
   const { role, attendableId, subject: chat, space: spaceProp, companionTo, onEvent } = props;

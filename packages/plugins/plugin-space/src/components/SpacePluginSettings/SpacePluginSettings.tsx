@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { isPersonalSpace } from '@dxos/app-toolkit';
-import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
@@ -14,7 +14,7 @@ import { meta } from '#meta';
 import { type Settings } from '#types';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsProps = SettingsSurfaceProps<
+export type SpacePluginSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
     spaces?: Space[];
@@ -60,7 +60,7 @@ export const SpacePluginSettings = ({
                 <IconButton
                   icon='ph--faders--regular'
                   label={t('settings.open-settings.label')}
-                  disabled={!!onOpenSpaceSettings}
+                  disabled={!onOpenSpaceSettings}
                   onClick={() => onOpenSpaceSettings?.(space)}
                 />
               </ListItem.Root>

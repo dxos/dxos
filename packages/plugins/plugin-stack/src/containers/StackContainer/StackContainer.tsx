@@ -8,8 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -41,7 +40,7 @@ const collectionObjectsFamily = Atom.family((collection: Collection.Collection) 
   }),
 );
 
-type StackContainerProps = ObjectSurfaceProps<Collection.Collection>;
+type StackContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const StackContainer = ({ attendableId, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -147,7 +146,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
       </Toolbar.Root>
       <StackContext.Provider
         value={{
-          attendableId: attendableId!,
+          attendableId,
           onCollapse: handleCollapse,
           onNavigate: handleNavigate,
           onDelete: handleDelete,

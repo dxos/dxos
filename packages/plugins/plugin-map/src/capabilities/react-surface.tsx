@@ -8,6 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -16,16 +17,16 @@ import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapContainer, MapViewEditor } from '#containers';
-import { meta } from '#meta';
 import { LocationAnnotationId, Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.surface.map`,
+        id: 'surface.map',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+        filter: AppSurface.objectArticle(Map.Map),
         component: ({ data, role }) => {
           const state = useAtomCapability(MapCapabilities.State);
           const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
@@ -49,15 +50,15 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.surface.object-settings`,
+        id: 'surface.object-settings',
         role: 'object-settings',
         position: 'hoist',
-        filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+        filter: AppSurface.objectSettings(Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: `${meta.id}.surface.create-initial-schema-form-[property-of-interest]`,
+        id: 'surface.create-initial-schema-form-[property-of-interest]',
         role: 'form-input',
         filter: (
           data,

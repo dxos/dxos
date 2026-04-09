@@ -9,8 +9,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { Collection, type View } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
@@ -19,7 +18,6 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
-import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpacePluginSettings } from '#components';
 import {
@@ -33,7 +31,6 @@ import {
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
-  type CreateObjectDialogProps,
   CreateSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
@@ -70,25 +67,23 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.collection-fallback`,
+        id: 'collection-fallback',
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { attendableId?: string; subject: Collection.Collection } =>
-          Obj.instanceOf(Collection.Collection, data.subject),
+        filter: AppSurface.objectArticle(Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.record-article`,
+        id: 'record-article',
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        filter: AppSurface.anyObjectSection(),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.plugin-settings`,
+        id: 'plugin-settings',
         role: 'article',
-        filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        filter: AppSurface.settingsArticle(meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const spaces = useSpaces({ all: settings.showHidden });
@@ -104,16 +99,15 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.companion.object-settings`,
+        id: 'companion.object-settings',
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown } =>
-          Obj.isObject(data.companionTo) && data.subject === 'settings',
+        filter: AppSurface.and(AppSurface.literalArticle('settings'), AppSurface.companionArticle()),
         component: ({ ref, data, role }) => <ObjectDetails subject={data.companionTo} role={role} ref={ref} />,
       }),
       Surface.create({
-        id: `${meta.id}.space-settings-properties`,
+        id: 'space-settings-properties',
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.general`,
+        filter: AppSurface.literalSection(`${meta.id}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -124,10 +118,10 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.space-settings-members`,
+        id: 'space-settings-members',
         role: 'article',
         position: 'hoist',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.members`,
+        filter: AppSurface.literalSection(`${meta.id}.members`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -138,9 +132,9 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.space-settings-schema`,
+        id: 'space-settings-schema',
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.schema`,
+        filter: AppSurface.literalSection(`${meta.id}.schema`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -151,7 +145,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.selected-objects`,
+        id: 'selected-objects',
         role: 'article',
         filter: (
           data,
@@ -180,23 +174,23 @@ export default Capability.makeModule(
       Surface.create({
         id: JOIN_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: JoinPanelProps } => data.component === JOIN_DIALOG,
+        filter: AppSurface.componentDialog(JOIN_DIALOG),
         component: ({ data }) => <JoinDialog {...data.props} />,
       }),
       Surface.create({
         id: CREATE_SPACE_DIALOG,
         role: 'dialog',
-        filter: (data): data is any => data.component === CREATE_SPACE_DIALOG,
+        filter: AppSurface.componentDialog(CREATE_SPACE_DIALOG),
         component: () => <CreateSpaceDialog />,
       }),
       Surface.create({
         id: CREATE_OBJECT_DIALOG,
         role: 'dialog',
-        filter: (data): data is { props: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
+        filter: AppSurface.componentDialog(CREATE_OBJECT_DIALOG),
         component: ({ data }) => <CreateObjectDialog {...data.props} />,
       }),
       Surface.create({
-        id: `${meta.id}.create-initial-space-form-[hue]`,
+        id: 'create-initial-space-form-[hue]',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
@@ -215,7 +209,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.create-initial-space-form-[icon]`,
+        id: 'create-initial-space-form-[icon]',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
@@ -239,7 +233,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.typename-form-input`,
+        id: 'typename-form-input',
         role: 'form-input',
         filter: (
           data,
@@ -266,7 +260,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.object-settings`,
+        id: 'object-settings',
         role: 'object-settings',
         filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
           if (!Obj.isObject(data.subject)) {
@@ -302,13 +296,13 @@ export default Capability.makeModule(
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,
       }),
       Surface.create({
-        id: `${meta.id}.menu-footer`,
+        id: 'menu-footer',
         role: 'menu-footer',
-        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        filter: AppSurface.anyObjectSection(),
         component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.navtree-presence`,
+        id: 'navtree-presence',
         role: 'navtree-item-end',
         filter: (data): data is { id: string; subject: Obj.Unknown; open?: boolean } =>
           typeof data.id === 'string' && Obj.isObject(data.subject),
@@ -319,7 +313,7 @@ export default Capability.makeModule(
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
-        id: `${meta.id}.navtree-presence-fallback`,
+        id: 'navtree-presence-fallback',
         role: 'navtree-item-end',
         position: 'fallback',
         filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
@@ -327,13 +321,13 @@ export default Capability.makeModule(
       }),
       // TODO(wittjosiah): Broken?
       Surface.create({
-        id: `${meta.id}.navtree-sync-status`,
+        id: 'navtree-sync-status',
         role: 'navtree-item-end',
         filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
       Surface.create({
-        id: `${meta.id}.navbar-presence`,
+        id: 'navbar-presence',
         role: 'navbar-end',
         position: 'hoist',
         filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
@@ -349,14 +343,13 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: `${meta.id}.collection-section`,
+        id: 'collection-section',
         role: 'section',
-        filter: (data): data is { subject: Collection.Collection } =>
-          Obj.instanceOf(Collection.Collection, data.subject),
+        filter: AppSurface.objectSection(Collection.Collection),
         component: ({ data }) => <CollectionSection subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}.status`,
+        id: 'status',
         role: 'status-indicator',
         component: () => <SyncStatus />,
       }),

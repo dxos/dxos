@@ -22,12 +22,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.action`,
+        id: 'action',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: meta.id,
+              id: 'root',
               data: () => Operation.invoke(SettingsOperation.Open, {}),
               properties: {
                 label: ['open-settings.label', { ns: meta.id }],
@@ -42,7 +42,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.core`,
+        id: 'core',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -60,7 +60,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}.plugins`,
+        id: 'plugins',
         match: NodeMatcher.whenId(getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);

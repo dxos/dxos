@@ -164,7 +164,7 @@ const setupNativeFilesystemGraphBuilder = ({
 
 const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystemState>) =>
   GraphBuilder.createExtension({
-    id: `${meta.id}.test-workspaces`,
+    id: 'test-workspaces',
     match: NodeMatcher.whenRoot,
     connector: (_node, get) =>
       Effect.succeed(

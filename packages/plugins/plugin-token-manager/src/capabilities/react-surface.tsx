@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { TokensContainer } from '#containers';
 
@@ -21,9 +21,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: meta.id,
+        id: 'root',
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings`,
+        filter: AppSurface.literalSection(`${meta.id}.space-settings`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}.integration-auth`,
+        id: 'integration-auth',
         role: 'integration--auth',
         filter: (data): data is { source: string } => typeof data.source === 'string' && oauthSources.has(data.source),
         component: ({ data }) => {

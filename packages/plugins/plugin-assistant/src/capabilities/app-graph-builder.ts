@@ -16,7 +16,7 @@ import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -37,11 +37,11 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}.root`,
+        id: 'root',
         type: Chat.Chat,
         actions: (chat) => {
           return Effect.succeed([
-            {
+            Node.makeAction({
               id: AssistantOperation.UpdateChatName.meta.key,
               data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
               properties: {
@@ -49,17 +49,17 @@ export default Capability.makeModule(
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
-            },
+            }),
           ]);
         },
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.assistant`,
+        id: 'assistant',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            {
+            Node.makeAction({
               id: `${LayoutOperation.UpdateDialog.meta.key}.assistant.open`,
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
@@ -91,9 +91,9 @@ export default Capability.makeModule(
                   windows: 'shift+ctrl+k',
                 },
               },
-            },
-            {
-              id: `${meta.id}.reset-blueprints`,
+            }),
+            Node.makeAction({
+              id: 'reset-blueprints',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -113,13 +113,13 @@ export default Capability.makeModule(
                 label: ['reset-blueprints.label', { ns: meta.id }],
                 icon: 'ph--arrow-clockwise--regular',
               },
-            },
+            }),
           ]),
       }),
 
       // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
-        id: `${meta.id}.companion-chat`,
+        id: 'companion-chat',
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
@@ -151,7 +151,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.invocations`,
+        id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence),
           NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
@@ -168,7 +168,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.trace`,
+        id: 'trace',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

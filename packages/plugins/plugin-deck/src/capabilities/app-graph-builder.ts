@@ -17,13 +17,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.not-found`,
+        id: 'not-found',
         match: NodeMatcher.whenRoot,
         connector: () => Effect.succeed([AppNode.makeNotFound()]),
       }),
 
       GraphBuilder.createExtension({
-        id: meta.id,
+        id: 'root',
         match: NodeMatcher.whenRoot,
         actions: (_node, get) =>
           Effect.gen(function* () {

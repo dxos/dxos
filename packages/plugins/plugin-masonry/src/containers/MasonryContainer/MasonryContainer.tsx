@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Annotation, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -117,7 +117,7 @@ const Item = ({ data }: { data: any }) => {
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
         </Card.Toolbar>
-        <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
+        <Surface.Surface role='card--content' limit={1} data={{ subject: data } satisfies AppSurface.ObjectCardData} />
       </Card.Root>
     </Menu.Root>
   );

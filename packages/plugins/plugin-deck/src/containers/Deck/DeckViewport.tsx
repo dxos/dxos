@@ -19,13 +19,14 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
-import { Main, type MainContentProps, useOnTransition } from '@dxos/react-ui';
+import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
+import { meta } from '#meta';
 import { DeckOperation } from '#operations';
-import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
+import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NativeToggleComplementarySidebarButton,
@@ -123,16 +124,34 @@ export const DeckContentEmpty = () => {
  * Single-plank layout with optional companion.
  */
 export const DeckSoloMode = () => {
-  const { deck, settings, layoutMode } = useDeckContext('DeckSoloMode');
+  const { deck, settings, layoutMode, onLayoutChange } = useDeckContext('DeckSoloMode');
   const { companionOpen, companionVariant, fullscreen, solo } = deck;
-  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
+  const effectiveCompanionVariant = fullscreen ? undefined : companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   invariant(solo);
 
+  useEffect(() => {
+    if (!fullscreen) {
+      return;
+    }
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onLayoutChange({ mode: 'solo--fullscreen' });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [fullscreen, onLayoutChange]);
+
   return (
     <div role='none' className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
+      {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
       <StackContext.Provider
         value={{
           orientation: 'horizontal',
@@ -161,11 +180,14 @@ export const DeckSoloMode = () => {
  */
 export const DeckMultiMode = () => {
   const {
-    deck: { active, companionOpen, companionVariant, fullscreen },
+    deck: { active, companionVariant, fullscreen },
     settings,
     layoutMode,
   } = useDeckContext('DeckMultiMode');
-  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
+  /** In multi mode the companion column is always shown when the last plank has companions (not gated by `companionOpen`). */
+  const effectiveCompanionVariant = companionVariant;
+  const lastPlankId = active[active.length - 1];
+  const lastPlankCompanions = useCompanions(lastPlankId);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const deckRef = useRef<HTMLDivElement>(null);
@@ -196,21 +218,19 @@ export const DeckMultiMode = () => {
   }, []);
 
   // Create order map.
+  // In multi mode only the last plank hosts the companion pane, so only that plank adds the extra column.
   const { order, itemsCount } = useMemo(() => {
+    const lastHasCompanions = lastPlankCompanions.length > 0;
     return active.reduce(
-      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+      (acc: { order: Record<string, number>; itemsCount: number }, entryId, index) => {
+        const isLastPlank = index === active.length - 1;
         acc.order[entryId] = acc.itemsCount + 1;
-        acc.itemsCount += companionOpen ? 3 : 2;
+        acc.itemsCount += lastHasCompanions && isLastPlank ? 3 : 2;
         return acc;
       },
       { order: {}, itemsCount: 0 },
     );
-  }, [active, companionOpen]);
-
-  const padding = useMemo(
-    () => (settings?.overscroll === 'centering' ? calculateOverscroll(active.length) : {}),
-    [settings?.overscroll, active.length],
-  );
+  }, [active, lastPlankCompanions.length]);
 
   return (
     <div role='none' className='relative bg-deck-surface overflow-hidden'>
@@ -220,7 +240,6 @@ export const DeckMultiMode = () => {
           'absolute h-[calc(100%-2*var(--main-spacing))] w-full inset-y-(--main-spacing) -inset-w-px',
           mainPaddingTransitions,
         ]}
-        style={padding}
         orientation='horizontal'
         size='contain'
         itemsCount={itemsCount - 1}
@@ -257,6 +276,30 @@ const ToggleSidebarButton = () => <NativeToggleSidebarButton classNames={mx(side
 const ToggleComplementarySidebarButton = () => (
   <NativeToggleComplementarySidebarButton classNames={mx(sidebarToggleStyles, 'right-2')} />
 );
+
+const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <div
+      role='none'
+      className={mx(
+        'fixed top-2 right-2 z-[1]',
+        hoverableControls,
+        hoverableFocusedWithinControls,
+        'transition-opacity opacity-(--controls-opacity)',
+      )}
+    >
+      <IconButton
+        label={t('exit-fullscreen.label')}
+        icon='ph--corners-in--regular'
+        iconOnly
+        variant='ghost'
+        tooltipSide='bottom'
+        onClick={onExit}
+      />
+    </div>
+  );
+};
 
 const DeckSidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: boolean }) => {
   if (topbar || fullscreen) {
@@ -300,14 +343,23 @@ type PlankContainerProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'setting
  * the pure Plank components (which receive everything via context).
  */
 const PlankContainer = memo(
-  ({ id, layoutMode, part, order, settings, companionVariant, ...props }: PlankContainerProps) => {
+  ({ id, layoutMode, part, order, settings, companionVariant, active, ...props }: PlankContainerProps) => {
     const { graph } = useAppGraph();
     const { invokePromise } = useOperationInvoker();
     const { state, deck } = useDeckState();
     const node = useNode(graph, id);
     const companions = useCompanions(id);
-    const { companionId } = useSelectedCompanion(companions, companionVariant);
-    const resolvedCompanionId = companionVariant ? companionId : undefined;
+    const isLastPlankInMulti =
+      layoutMode === 'multi' && active && active.length > 0 && active[active.length - 1] === id;
+    const variantForThisPlank =
+      layoutMode === 'multi' ? (isLastPlankInMulti ? companionVariant : undefined) : companionVariant;
+    const { companionId } = useSelectedCompanion(companions, variantForThisPlank);
+    const resolvedCompanionId =
+      layoutMode === 'multi' && isLastPlankInMulti && companions.length > 0
+        ? companionId
+        : variantForThisPlank
+          ? companionId
+          : undefined;
     const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
     const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
@@ -316,6 +368,11 @@ const PlankContainer = memo(
         if (type === 'close') {
           if (part === 'complementary') {
             return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+          } else if (active) {
+            // Close the plank and everything to the right (stack pop).
+            const index = active.indexOf(plankId);
+            const toClose = index !== -1 ? active.slice(index) : [plankId];
+            return invokePromise(LayoutOperation.Close, { subject: toClose });
           } else {
             return invokePromise(LayoutOperation.Close, { subject: [plankId] });
           }
@@ -323,7 +380,7 @@ const PlankContainer = memo(
           return invokePromise(DeckOperation.Adjust, { type, id: plankId });
         }
       },
-      [invokePromise, part],
+      [invokePromise, part, active],
     );
 
     const handleResize = useCallback(
@@ -358,6 +415,7 @@ const PlankContainer = memo(
         <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
           <Plank.Component
             {...props}
+            active={active}
             id={id}
             node={node}
             companioned={hasCompanion ? 'primary' : undefined}
@@ -374,6 +432,7 @@ const PlankContainer = memo(
           {hasCompanion && (
             <Plank.Component
               {...props}
+              active={active}
               id={resolvedCompanionId}
               node={currentCompanion}
               companions={companions}

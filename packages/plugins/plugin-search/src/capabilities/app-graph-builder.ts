@@ -18,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.space-search`,
+        id: 'space-search',
         match: NodeMatcher.whenRoot,
         connector: Effect.fnUntraced(function* (node, get) {
           const client = yield* Capability.get(ClientCapabilities.Client);
@@ -38,7 +38,7 @@ export default Capability.makeModule(
         }),
       }),
       GraphBuilder.createExtension({
-        id: meta.id,
+        id: 'root',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([

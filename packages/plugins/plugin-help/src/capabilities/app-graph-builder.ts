@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
@@ -17,11 +17,11 @@ import { HelpOperation } from '#operations';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: meta.id,
+      id: 'root',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
+          Node.makeAction({
             id: HelpOperation.Start.meta.key,
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
@@ -37,9 +37,9 @@ export default Capability.makeModule(
               },
               testId: 'helpPlugin.openHelp',
             },
-          },
-          {
-            id: `${meta.id}.open-shortcuts`,
+          }),
+          Node.makeAction({
+            id: 'open-shortcuts',
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -53,7 +53,7 @@ export default Capability.makeModule(
                 macos: 'meta+ctrl+/',
               },
             },
-          },
+          }),
         ]),
     });
 

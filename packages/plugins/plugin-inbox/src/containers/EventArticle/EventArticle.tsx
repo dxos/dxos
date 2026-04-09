@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type CompanionSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';
@@ -16,7 +16,7 @@ import { Event, type EventHeaderProps } from '#components';
 import { useShadowObject } from '#hooks';
 import { InboxOperation } from '#operations';
 
-export type EventArticleProps = CompanionSurfaceProps<EventType.Event>;
+export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
 export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -56,7 +56,18 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
             <Event.Header db={db} onContactCreate={handleContactCreate} />
             <Event.Content />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
-            {notes && <Surface.Surface role='section' data={{ id, subject: notes, attendableId: id }} limit={1} />}
+            {notes && (
+              <Surface.Surface
+                role='section'
+                data={
+                  { id, subject: notes, attendableId: id } satisfies AppSurface.ObjectArticleData<
+                    Obj.Unknown,
+                    { id: string }
+                  >
+                }
+                limit={1}
+              />
+            )}
           </Event.Viewport>
         </Panel.Content>
       </Panel.Root>

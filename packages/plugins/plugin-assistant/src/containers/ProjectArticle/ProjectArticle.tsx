@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -18,7 +18,7 @@ import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
-export type ProjectArticleProps = ObjectSurfaceProps<Project.Project>;
+export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const inputQueue = useAtomValue(
@@ -114,7 +114,11 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
                 </Card.IconBlock>
               </Card.Toolbar>
               <Card.Content>
-                <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
+                <Surface.Surface
+                  role='card--content'
+                  limit={1}
+                  data={{ subject: data } satisfies AppSurface.ObjectCardData}
+                />
               </Card.Content>
             </Card.Root>
           </Focus.Item>

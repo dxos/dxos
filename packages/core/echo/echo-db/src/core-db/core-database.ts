@@ -816,6 +816,13 @@ export class CoreDatabase {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
+
+    // Skip objects that were already materialized locally.
+    if (this._objects.has(objectId)) {
+      log.verbose('object already exists, skipping creation', { objectId });
+      return;
+    }
+
     const core = this._createObjectInDocument(handle, objectId);
     if (this._areDepsSatisfied(core)) {
       this._scheduleThrottledUpdate([objectId]);

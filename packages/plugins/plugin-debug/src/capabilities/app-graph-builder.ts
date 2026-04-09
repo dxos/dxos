@@ -21,7 +21,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Devtools node.
       GraphBuilder.createExtension({
-        id: `${meta.id}.devtools`,
+        id: 'devtools',
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`)),
         connector: (node, get) =>
           Effect.gen(function* () {
@@ -354,7 +354,7 @@ export default Capability.makeModule(
 
       // Debug object companion.
       GraphBuilder.createExtension({
-        id: `${meta.id}.debug-object`,
+        id: 'debug-object',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -370,7 +370,7 @@ export default Capability.makeModule(
 
       // Devtools deck companion.
       GraphBuilder.createExtension({
-        id: `${meta.id}.devtools-overview`,
+        id: 'devtools-overview',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -386,7 +386,7 @@ export default Capability.makeModule(
 
       // Object explorer.
       GraphBuilder.createExtension({
-        id: `${meta.id}.space-objects`,
+        id: 'space-objects',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

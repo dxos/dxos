@@ -43,12 +43,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: `${meta.id}.primary-actions`,
+      id: 'primary-actions',
       position: 'hoist',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
+          Node.makeAction({
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
@@ -57,8 +57,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
@@ -67,8 +67,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -86,8 +86,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 windows: 'alt+.',
               },
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -104,12 +104,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 windows: 'ctrl+shift+,',
               },
             },
-          },
+          }),
         ]),
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}.spaces`,
+      id: 'spaces',
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         const client = capabilities.get(ClientCapabilities.Client);
@@ -174,7 +174,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}.actions`,
+      id: 'actions',
       match: whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));
