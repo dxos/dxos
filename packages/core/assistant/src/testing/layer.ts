@@ -226,7 +226,7 @@ export const AssistantTestLayer = ({
   );
 };
 
-interface TestLayerWithTriggersOptions extends TestLayerOptions { }
+interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 
 export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerDispatcher | TriggerStateStore;
 
