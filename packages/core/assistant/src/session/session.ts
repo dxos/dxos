@@ -210,7 +210,7 @@ export class AiSession {
         history: this._history.length,
       });
 
-      dbg(system);
+      dbg('system prompt', { snippet: createSnippet(system), length: system.length });
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',

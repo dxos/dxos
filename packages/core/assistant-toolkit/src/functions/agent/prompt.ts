@@ -85,8 +85,8 @@ export default AgentPrompt.pipe(
         const promptText = Template.process(promptInstructions.content, input);
 
         let systemText = trim`
-          You are an agent runnning in the non-interactive mode.
-          The user is unable to see what your are doing, and cannot answer any questions.
+          You are an agent running in the non-interactive mode.
+          The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
           Complete the task before you, and at the end call [complete_job] with the output.
           If you are unable to complete the task, call [complete_job] with the failure reason.
@@ -152,8 +152,7 @@ export default AgentPrompt.pipe(
             Effect.mapError(
               (err) =>
                 new PromptError(err.message ?? 'Agent failed with an unknown error.', {
-                  chat: data.chat?.dxn.toString(),
-                  descripion: err.context.descripion as string | undefined,
+                  description: err.context.description as string | undefined,
                   prompt: data.prompt.dxn.toString(),
                 }),
             ),
@@ -200,7 +199,7 @@ const makePromptAgentToolkit = (options: {
         yield* Deferred.fail(
           options.resultSink,
           new PromptError(result.failure.message, {
-            descripion: result.failure.description,
+            description: result.failure.description,
           }),
         );
       } else {

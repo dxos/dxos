@@ -54,7 +54,7 @@ const INSTRUCTIONS = trim`
   Perform the instructions precisely and do not deviate.
   Do not fake any work if the provided tools don't work.
   The goal is to test the system, so be honest about the results.
-  If avilable tools prevented you from completing the task fully, report the failure.
+  If available tools prevented you from completing the task fully, report the failure.
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 

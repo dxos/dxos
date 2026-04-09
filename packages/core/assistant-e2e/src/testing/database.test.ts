@@ -17,7 +17,7 @@ describe('Database', () => {
       Prompt.make({
         instructions: trim`
           Create a new organization called "Cyberdyne Systems".
-          Query the database to confirm that the organization is create and query tool is working.
+          Query the database to confirm that the organization is created and the query tool is working.
         `,
         blueprints: getDefaultBlueprints(),
       }),

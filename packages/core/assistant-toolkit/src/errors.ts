@@ -12,7 +12,7 @@ export class PromptError extends BaseError.extend('PromptError') {
   constructor(
     message: string,
     context: {
-      descripion?: string;
+      description?: string;
       prompt?: DXN.String;
       chat?: DXN.String;
     },
