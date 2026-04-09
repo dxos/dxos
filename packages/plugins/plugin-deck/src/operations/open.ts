@@ -65,6 +65,62 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
+      // Dedup subjects against the active deck using DXN identity.
+      // The same object can appear under different graph paths (e.g., via collections vs types).
+      // Resolve each subject's DXN and, if it matches an already-open deck item, remap the
+      // subject to the existing deck entry so that openEntry's exact-match check succeeds.
+      {
+        const deck = yield* DeckCapabilities.getDeck();
+        const active = deck.solo ? [deck.solo].filter(Boolean) : deck.active;
+        if (active.length > 0 && input.subject.length > 0) {
+          const resolveDxn = (qualifiedPath: string) =>
+            Effect.reduce(pathResolvers, Option.none<string>(), (acc, resolver) =>
+              Option.isSome(acc)
+                ? Effect.succeed(acc)
+                : resolver(qualifiedPath).pipe(
+                    Effect.map((opt) => Option.map(opt, (dxn) => dxn.toString())),
+                    Effect.catchAll(() => Effect.succeed(Option.none<string>())),
+                  ),
+            );
+
+          // Build DXN → deck item ID map for active items.
+          const deckDxnMap = new Map<string, string>();
+          yield* Effect.all(
+            active.map((deckId) =>
+              resolveDxn(deckId).pipe(
+                Effect.map((opt) => {
+                  if (Option.isSome(opt)) {
+                    deckDxnMap.set(opt.value, deckId);
+                  }
+                }),
+              ),
+            ),
+            { concurrency: 'unbounded' },
+          );
+
+          // Remap subjects whose DXN matches an existing deck item.
+          if (deckDxnMap.size > 0) {
+            const remapped = yield* Effect.all(
+              input.subject.map((subjectId) =>
+                resolveDxn(subjectId).pipe(
+                  Effect.map((opt) => {
+                    if (Option.isSome(opt)) {
+                      const existing = deckDxnMap.get(opt.value);
+                      if (existing && existing !== subjectId) {
+                        return existing;
+                      }
+                    }
+                    return subjectId;
+                  }),
+                ),
+              ),
+              { concurrency: 'unbounded' },
+            );
+            input = { ...input, subject: remapped };
+          }
+        }
+      }
+
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
