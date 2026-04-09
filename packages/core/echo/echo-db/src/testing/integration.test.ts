@@ -143,7 +143,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('2 clients receive reactive notifications for new objects (DX-907)', async () => {
+  test('2 clients receive reactive notifications for new objects', async () => {
     const [spaceKey] = PublicKey.randomSequence();
 
     await using peer = await builder.createPeer({

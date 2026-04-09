@@ -5,7 +5,7 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -16,20 +16,26 @@ import { AutomergeHost } from '../automerge';
 import { DocumentsSynchronizer } from './documents-synchronizer';
 
 describe('DocumentsSynchronizer', () => {
-  test('two synchronizers receive updates for shared document (DX-907)', async () => {
+  test('two synchronizers receive updates for shared document', async () => {
     const kv = createTestLevel();
     const host = new AutomergeHost({
       db: kv,
     });
     await openAndClose(host);
+    const handle = await host.createDoc<{ text: string }>({ text: 'initial' });
 
     // Create two synchronizers (simulates two clients connected to the same host).
-    const updates1: string[] = [];
+    const initialSync1 = new Trigger();
+    const initialSync2 = new Trigger();
+    const propagatedUpdate2 = new Trigger();
+    let initialSyncSettled = false;
     const synchronizer1 = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: (batch) => {
         for (const update of batch.updates ?? []) {
-          updates1.push(update.documentId);
+          if (update.documentId === handle.documentId) {
+            initialSync1.wake();
+          }
         }
       },
     });
@@ -41,21 +47,24 @@ describe('DocumentsSynchronizer', () => {
       sendUpdates: (batch) => {
         for (const update of batch.updates ?? []) {
           updates2.push(update.documentId);
+          if (update.documentId === handle.documentId) {
+            if (initialSyncSettled) {
+              propagatedUpdate2.wake();
+            } else {
+              initialSync2.wake();
+            }
+          }
         }
       },
     });
     await openAndClose(synchronizer2);
 
-    // Create a document on the host (simulates space root document).
-    const handle = await host.createDoc<{ text: string }>({ text: 'initial' });
-
     // Both synchronizers subscribe to the same document.
     await synchronizer1.addDocuments([handle.documentId]);
     await synchronizer2.addDocuments([handle.documentId]);
 
-    // Wait for initial sync.
-    await sleep(200);
-    const initialUpdates1 = updates1.length;
+    await asyncTimeout(Promise.all([initialSync1.wait(), initialSync2.wait()]), 1_000);
+    initialSyncSettled = true;
     const initialUpdates2 = updates2.length;
 
     // Synchronizer 1 makes a change (simulates client 1 creating an object).
@@ -71,11 +80,9 @@ describe('DocumentsSynchronizer', () => {
       doc.text = 'modified by client 1';
     });
 
-    // Wait for updates to propagate.
-    await sleep(200);
+    await asyncTimeout(propagatedUpdate2.wait(), 1_000);
 
     // Synchronizer 2 should receive the update even though synchronizer 1 made the change.
-    // This is the key assertion for DX-907.
     expect(updates2.length).to.be.greaterThan(initialUpdates2);
   });
 

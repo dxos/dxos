@@ -312,7 +312,7 @@ describe('Spaces', () => {
     await space2.db.flush();
   });
 
-  test('two clients sharing services receive reactive notifications for new objects (DX-907)', async () => {
+  test('two clients sharing services receive reactive notifications for new objects', async () => {
     const testBuilder = new TestBuilder();
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
