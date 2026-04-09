@@ -432,8 +432,7 @@ describe('Database Blueprint', () => {
         expect(
           withQueues.some(
             (row: { typename?: string; label?: string }) =>
-              row.typename === 'org.dxos.type.organization' &&
-              String(row.label ?? '').includes('Invoke Op Lot'),
+              row.typename === 'org.dxos.type.organization' && String(row.label ?? '').includes('Invoke Op Lot'),
           ),
         ).toBe(true);
 
@@ -446,8 +445,7 @@ describe('Database Blueprint', () => {
         expect(
           byTypename.some(
             (row: { typename?: string; label?: string }) =>
-              row.typename === 'org.dxos.type.organization' &&
-              String(row.label ?? '').includes('Invoke Op Lot'),
+              row.typename === 'org.dxos.type.organization' && String(row.label ?? '').includes('Invoke Op Lot'),
           ),
         ).toBe(true);
       },

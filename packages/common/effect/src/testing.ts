@@ -16,7 +16,7 @@ export namespace TestHelpers {
   /**
    * Skip the test if the condition is false.
    *
-   * Exmaple:
+   * Example:
    * ```ts
    * it.effect(
    *   'should process an agentic loop using Claude',
@@ -29,19 +29,19 @@ export namespace TestHelpers {
    */
   export const runIf =
     (condition: unknown) =>
-      <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
-        Effect.gen(function* () {
-          if (!condition) {
-            ctx.skip();
-          } else {
-            return yield* effect;
-          }
-        });
+    <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
+      Effect.gen(function* () {
+        if (!condition) {
+          ctx.skip();
+        } else {
+          return yield* effect;
+        }
+      });
 
   /**
    * Skip the test if the condition is true.
    *
-   * Exmaple:
+   * Example:
    * ```ts
    * it.effect(
    *   'should process an agentic loop using Claude',
@@ -54,14 +54,14 @@ export namespace TestHelpers {
    */
   export const skipIf =
     (condition: unknown) =>
-      <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
-        Effect.gen(function* () {
-          if (condition) {
-            ctx.skip();
-          } else {
-            return yield* effect;
-          }
-        });
+    <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
+      Effect.gen(function* () {
+        if (condition) {
+          ctx.skip();
+        } else {
+          return yield* effect;
+        }
+      });
 
   export const tagEnabled = (tag: TestTag) => process.env.DX_TEST_TAGS?.includes(tag);
 
@@ -74,19 +74,19 @@ export namespace TestHelpers {
    */
   export const taggedTest =
     (tag: TestTag) =>
-      <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
-        Effect.gen(function* () {
-          if (!tagEnabled(tag)) {
-            ctx.skip();
-          } else {
-            return yield* effect;
-          }
-        });
+    <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
+      Effect.gen(function* () {
+        if (!tagEnabled(tag)) {
+          ctx.skip();
+        } else {
+          return yield* effect;
+        }
+      });
 
   /**
    * Provide TestContext from test parameters.
    *
-   * Exmaple:
+   * Example:
    * ```ts
    * it.effect(
    *   'with context',
@@ -109,4 +109,4 @@ export namespace TestHelpers {
 export class TestContextService extends Context.Tag('@dxos/effect/TestContextService')<
   TestContextService,
   TestContext
->() { }
+>() {}
