@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@xyflow/react/dist/style.css'; // TODO(burdon): Replace with tailwind; or override vars (e.g., --xy-background-color-default)
+
 import {
   Background,
   BackgroundVariant,
@@ -18,7 +20,6 @@ import {
   useEdgesState,
   useNodesState,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css'; // TODO(burdon): Replace with tailwind; or override vars (e.g., --xy-background-color-default)
 import React, { type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 
 import { log } from '@dxos/log';

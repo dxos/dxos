@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos/lit-grid/dx-grid.pcss';
 import { type EventName, createComponent } from '@lit/react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -15,6 +14,7 @@ import React, {
   useState,
 } from 'react';
 
+import '@dxos/lit-grid/dx-grid.pcss';
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
 type DxGridElement = NaturalDxGrid;

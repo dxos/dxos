@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import '../../../styles/graph.css';
+
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
@@ -33,7 +35,6 @@ import { type SVGContext } from '../../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
-import '../../../styles/graph.css';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 

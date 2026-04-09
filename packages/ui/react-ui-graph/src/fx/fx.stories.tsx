@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import '../../styles/graph.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
@@ -12,7 +14,6 @@ import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
 import { type D3Callable } from '../util';
 import { Pulsar } from './pulsar';
-import '../../styles/graph.css';
 
 type Datum = {
   x: number;

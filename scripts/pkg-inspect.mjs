@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import 'zx/globals';
+
 import { highlight } from 'cli-highlight';
 import semver from 'semver';
 import yargs from 'yargs';

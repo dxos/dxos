@@ -3,6 +3,7 @@
 //
 
 import '@fontsource/poiret-one';
+
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { supportsNativePasskeys } from '@dxos/app-toolkit';

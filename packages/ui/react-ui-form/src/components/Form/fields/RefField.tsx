@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-tag-picker.pcss';
 import React, { useCallback, useMemo } from 'react';
 
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';

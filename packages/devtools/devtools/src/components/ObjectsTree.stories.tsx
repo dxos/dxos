@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 import '@dxos-theme';
+
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';

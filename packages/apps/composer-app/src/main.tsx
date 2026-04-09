@@ -7,6 +7,7 @@
 (globalThis as any).litIssuedWarnings.add('dev-mode');
 
 import '@dxos-theme';
+
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import React, { StrictMode, useCallback } from 'react';

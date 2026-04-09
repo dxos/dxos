@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { sendMessage } from 'webext-bridge/popup';

@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import { runShell } from '@dxos/shell/react';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 

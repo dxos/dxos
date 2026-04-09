@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// Register GLTF/GLB loader plugin.
+import '@babylonjs/loaders/glTF';
+
 import { SceneLoader } from '@babylonjs/core';
 import { type Mesh as BabylonMesh, VertexBuffer } from '@babylonjs/core';
 import type { ManifoldToplevel, Manifold } from 'manifold-3d';
 
 import { log } from '@dxos/log';
-// Register GLTF/GLB loader plugin.
-import '@babylonjs/loaders/glTF';
 
 /**
  * Imports a GLB file and converts it to a Manifold solid.

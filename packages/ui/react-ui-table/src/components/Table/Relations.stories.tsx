@@ -21,6 +21,7 @@ import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing'
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
+
 import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';

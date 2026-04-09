@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import React, { type Dispatch, type FC, type RefObject, type SetStateAction } from 'react';
 
 import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';

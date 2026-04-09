@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import '../../styles/graph.css';
+
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
@@ -26,7 +28,6 @@ import {
 } from '../graph';
 import { useGrid, useSvgContext, useZoom } from '../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
-import '../../styles/graph.css';
 
 type ComponentProps = PropsWithChildren<{
   graph: () => Graph.Graph<TestNode, Graph.Edge.Any>;

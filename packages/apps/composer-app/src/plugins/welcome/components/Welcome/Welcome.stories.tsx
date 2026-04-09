@@ -3,6 +3,7 @@
 //
 
 import '@fontsource/poiret-one';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 

@@ -5,7 +5,8 @@
   "singleQuote": true,
   "trailingComma": "all",
   "sortImports": {
-    "groups": [["builtin", "external"], "dxos", "subpath", ["parent", "sibling", "index"], "unknown"],
+    "groups": ["side_effect", ["builtin", "external"], "dxos", "subpath", ["parent", "sibling", "index"], "unknown"],
+    "sortSideEffects": false,
     "customGroups": [
       {
         "groupName": "dxos",

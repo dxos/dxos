@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 import './dx-avatar.pcss';
+
 import { html } from 'lit';
 
 import { type DxAvatarProps } from './dx-avatar';
