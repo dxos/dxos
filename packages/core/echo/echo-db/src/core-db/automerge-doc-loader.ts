@@ -169,11 +169,21 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (!links) {
       return;
     }
+    // Load links that were previously requested and are waiting.
     const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
       this._objectsPendingDocumentLoad.has(objectId),
     );
     this._loadLinkedObjects(Object.fromEntries(linksAwaitingLoad));
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    // Also load newly discovered links that we don't already have handles for.
+    // This ensures that objects created by other clients are loaded automatically (DX-907).
+    const newLinks = Object.entries(links).filter(
+      ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
+    );
+    if (newLinks.length > 0) {
+      this._loadLinkedObjects(Object.fromEntries(newLinks));
+    }
   }
 
   public getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {

@@ -312,6 +312,46 @@ describe('Spaces', () => {
     await space2.db.flush();
   });
 
+  test('two clients sharing services receive reactive notifications for new objects (DX-907)', async () => {
+    const testBuilder = new TestBuilder();
+    const host = testBuilder.createClientServicesHost();
+    await host.open(new Context());
+    onTestFinished(() => host.close(Context.default()));
+
+    const [client1, server1] = testBuilder.createClientServer(host);
+    void server1.open();
+    await client1.initialize();
+    await registerTypes(client1);
+    onTestFinished(() => client1.destroy());
+
+    const [client2, server2] = testBuilder.createClientServer(host);
+    void server2.open();
+    await client2.initialize();
+    await registerTypes(client2);
+    onTestFinished(() => client2.destroy());
+
+    await client1.halo.createIdentity({ displayName: 'test-user' });
+
+    // Client 1 creates a space.
+    const space1 = await client1.spaces.create();
+    await space1.waitUntilReady();
+
+    // Client 2 opens the same space and waits for it to be ready.
+    const space2 = await waitForSpace(client2, space1.key, { ready: true });
+
+    // Now both clients have the space open.
+    // Client 1 creates an object.
+    const obj = space1.db.add(createObject({ data: 'test-reactive' }));
+    await space1.db.flush();
+
+    // Client 2 should see the object via reactive notification.
+    // This tests the bug where sibling proxies don't receive change notifications.
+    await waitForObject(space2, obj);
+
+    expect(space2.db.getObjectById(obj.id)).to.exist;
+    expect((space2.db.getObjectById(obj.id) as any).data).to.equal('test-reactive');
+  });
+
   test('text replicates between clients', async () => {
     const [host, guest] = await createInitializedClients(2);
     [host, guest].forEach(registerTypes);

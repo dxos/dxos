@@ -816,6 +816,15 @@ export class CoreDatabase {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
+
+    // Check if the object already exists (e.g., created locally).
+    // This can happen when the document loader loads a linked document for an object
+    // that was created by this client (DX-907 fix triggers loading of newly discovered links).
+    if (this._objects.has(objectId)) {
+      log.verbose('object already exists, skipping creation', { objectId });
+      return;
+    }
+
     const core = this._createObjectInDocument(handle, objectId);
     if (this._areDepsSatisfied(core)) {
       this._scheduleThrottledUpdate([objectId]);

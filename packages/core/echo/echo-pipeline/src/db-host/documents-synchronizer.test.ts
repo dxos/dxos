@@ -16,6 +16,69 @@ import { AutomergeHost } from '../automerge';
 import { DocumentsSynchronizer } from './documents-synchronizer';
 
 describe('DocumentsSynchronizer', () => {
+  test('two synchronizers receive updates for shared document (DX-907)', async () => {
+    const kv = createTestLevel();
+    const host = new AutomergeHost({
+      db: kv,
+    });
+    await openAndClose(host);
+
+    // Create two synchronizers (simulates two clients connected to the same host).
+    const updates1: string[] = [];
+    const synchronizer1 = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => {
+        for (const update of batch.updates ?? []) {
+          updates1.push(update.documentId);
+        }
+      },
+    });
+    await openAndClose(synchronizer1);
+
+    const updates2: string[] = [];
+    const synchronizer2 = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => {
+        for (const update of batch.updates ?? []) {
+          updates2.push(update.documentId);
+        }
+      },
+    });
+    await openAndClose(synchronizer2);
+
+    // Create a document on the host (simulates space root document).
+    const handle = await host.createDoc<{ text: string }>({ text: 'initial' });
+
+    // Both synchronizers subscribe to the same document.
+    await synchronizer1.addDocuments([handle.documentId]);
+    await synchronizer2.addDocuments([handle.documentId]);
+
+    // Wait for initial sync.
+    await sleep(200);
+    const initialUpdates1 = updates1.length;
+    const initialUpdates2 = updates2.length;
+
+    // Synchronizer 1 makes a change (simulates client 1 creating an object).
+    await synchronizer1.update(Context.default(), [
+      {
+        documentId: handle.documentId,
+        mutation: new Uint8Array([]), // Empty mutation for test - the actual mutation is applied via handle.change
+      },
+    ]);
+
+    // Apply the actual change to the handle (simulates what happens when client sends mutation).
+    handle.change((doc: any) => {
+      doc.text = 'modified by client 1';
+    });
+
+    // Wait for updates to propagate.
+    await sleep(200);
+
+    // Synchronizer 2 should receive the update even though synchronizer 1 made the change.
+    // This is the key assertion for DX-907.
+    expect(updates2.length).to.be.greaterThan(initialUpdates2);
+  });
+
   test('do not get init changes for client created docs', async () => {
     let counter = 0;
     const kv = createTestLevel();
