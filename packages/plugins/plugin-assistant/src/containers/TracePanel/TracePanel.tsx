@@ -24,16 +24,11 @@ import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
 
-import { meta } from '#meta';
-
 import { ProcessTree } from '../../components';
 
 export const TracePanel = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const { state, start, stop } = useTriggerRuntimeControls(space.db);
   const activeProcesses = useActiveProcesses(space.id);
-  const isRunning = state?.enabled ?? false;
   const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
 
   const { branches, commits } = useAtomValue(

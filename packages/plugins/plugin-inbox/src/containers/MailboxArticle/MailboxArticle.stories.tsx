@@ -12,7 +12,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -27,9 +27,9 @@ type DefaultStoryProps = {
 };
 
 const DefaultStory = (_: DefaultStoryProps) => {
-  const db = useDatabase();
-  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
-  const mailbox = mailboxes[0];
+  const spaces = useSpaces();
+  const db = useDatabase(spaces[0].id);
+  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
   if (!db || !mailbox) {
     return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
   }

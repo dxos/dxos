@@ -19,14 +19,14 @@ import { Main } from './Main';
 export const SimpleLayout = () => {
   const { state } = useSimpleLayoutState();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('top');
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Restore Splitter mode when keyboard closes.
   useLayoutEffect(() => {
     if (!keyboardOpen) {
-      setSplitterMode(state.drawerState === 'closed' ? 'upper' : state.drawerState === 'open' ? 'both' : 'lower');
+      setSplitterMode(state.drawerState === 'closed' ? 'top' : state.drawerState === 'open' ? 'split' : 'bottom');
     }
   }, [state.drawerState, keyboardOpen]);
 
@@ -38,12 +38,12 @@ export const SimpleLayout = () => {
             classNames='bg-toolbar-surface'
             onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
           >
-            <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
+            <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'top' }}>
               <Splitter.Root mode={splitterMode} ratio={0.55}>
-                <Splitter.Panel position='upper'>
+                <Splitter.Panel position='top'>
                   <Main />
                 </Splitter.Panel>
-                <Splitter.Panel position='lower' ref={drawerRef}>
+                <Splitter.Panel position='bottom' ref={drawerRef}>
                   <Drawer />
                 </Splitter.Panel>
               </Splitter.Root>
