@@ -46,6 +46,7 @@
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-exemplar": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",

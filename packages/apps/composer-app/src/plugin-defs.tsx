@@ -19,6 +19,7 @@ import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { SpecPlugin } from '@dxos/plugin-spec';
+import { ExemplarPlugin } from '@dxos/plugin-exemplar';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
@@ -138,6 +139,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Dev
     isDev && DebugPlugin.meta.id,
+    isDev && ExemplarPlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
@@ -195,6 +197,7 @@ export const getPlugins = ({
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
     SpecPlugin(),
+    ExemplarPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
