@@ -176,8 +176,8 @@ export const Default: Story = {
     registry: registry,
     content: MIXED,
     options: {
-      fader: true,
-      cursor: false,
+      wire: true,
+      cursor: true,
     },
   },
 };
@@ -187,6 +187,7 @@ export const Text: Story = {
     registry: registry,
     content: TEXT,
     options: {
+      wire: true,
       fader: true,
       cursor: true,
     },
