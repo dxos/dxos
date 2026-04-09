@@ -22,6 +22,7 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type TextStreamOptions, textStream } from './testing';
 import MIXED from './testing/mixed.md?raw';
 import TEXT from './testing/text.md?raw';
+import { PromptWidget } from './widgets/PromptWidget';
 
 random.seed(1234);
 
@@ -43,11 +44,15 @@ export class TestWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('span').classNames(mx('flex m-2 p-8 border border-separator rounded')).text(this.text).root;
+    return Domino.of('span').classNames(mx('flex m-2 p-2 border border-separator rounded')).text(this.text).root;
   }
 }
 
 const registry: XmlWidgetRegistry = {
+  prompt: {
+    block: true,
+    factory: (props) => new PromptWidget(props.children?.[0]),
+  },
   test: {
     block: true,
     factory: (props) => new TestWidget(props.children?.[0]),
@@ -176,6 +181,17 @@ export const Default: Story = {
     registry: registry,
     content: MIXED,
     options: {
+      autoScroll: true,
+    },
+  },
+};
+
+export const Wire: Story = {
+  args: {
+    registry: registry,
+    content: MIXED,
+    options: {
+      autoScroll: true,
       wire: true,
       cursor: true,
     },
@@ -187,6 +203,7 @@ export const Text: Story = {
     registry: registry,
     content: TEXT,
     options: {
+      autoScroll: true,
       wire: true,
       fader: true,
       cursor: true,
@@ -199,6 +216,7 @@ export const Short: Story = {
     registry: registry,
     content: random.lorem.paragraph(),
     options: {
+      autoScroll: true,
       wire: true,
       fader: true,
       cursor: true,
@@ -206,11 +224,14 @@ export const Short: Story = {
   },
 };
 
-export const InitialContent: Story = {
+export const AutoScroll: Story = {
   args: {
     initialContent: MIXED,
     registry: registry,
     content: MIXED,
+    options: {
+      autoScroll: true,
+    },
   },
 };
 

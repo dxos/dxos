@@ -89,8 +89,11 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
         <MarkdownStream
           ref={refCallback}
           registry={componentRegistry}
-          cursor={cursor}
-          fadeIn={fadeIn}
+          options={{
+            autoScroll: true,
+            wire: true,
+            cursor: true,
+          }}
           debug={debug}
           onEvent={handleEvent}
         />

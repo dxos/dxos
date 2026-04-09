@@ -16,12 +16,10 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
-  type AutoScrollToProps,
-  type FaderOptions,
+  type AutoScrollProps,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
-  autoScroll,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -38,6 +36,7 @@ import {
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
+  autoScroll,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -62,14 +61,14 @@ export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
     content?: string;
-    autoScroll?: boolean;
     options?: {
+      autoScroll?: boolean;
       wire?: boolean;
       cursor?: boolean;
       fader?: boolean;
     };
     onEvent?: (event: MarkdownStreamEvent) => void;
-  } & (XmlTagsOptions & AutoScrollToProps)
+  } & (XmlTagsOptions & AutoScrollProps)
 >;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
@@ -92,8 +91,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
             }),
             preview(),
-            autoScroll(),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            ...(options?.autoScroll ? [autoScroll()] : []),
             ...(options?.wire ? [wire({ rate: 200, cursor: options?.cursor })] : []),
             ...(options?.fader ? [fader()] : []),
           ];
