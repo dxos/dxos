@@ -14,6 +14,7 @@ import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
+import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -209,7 +210,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(
       ActivationEvents.OperationInvokerReady,
       AppActivationEvents.AppGraphReady,
-      AppActivationEvents.LayoutReady,
+      DeckEvents.StateReady,
     ),
     activate: CompanionChatProvisioner,
   }),
