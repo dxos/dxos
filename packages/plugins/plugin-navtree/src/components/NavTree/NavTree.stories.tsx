@@ -14,7 +14,7 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
@@ -27,7 +27,7 @@ import { storybookGraphBuilders } from '#testing';
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { translations } from '../../translations';
 
-faker.seed(1234);
+random.seed(1234);
 
 const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
 

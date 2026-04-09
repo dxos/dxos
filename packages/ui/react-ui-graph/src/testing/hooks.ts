@@ -5,7 +5,7 @@
 import update from 'immutability-helper';
 
 import { type Graph } from '@dxos/graph';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { useStateRef } from '../hooks';
 import { createEdge, createNode } from './data';
@@ -52,7 +52,7 @@ export const useGraphGenerator = (options: { data?: Graph.Any } = {}) => {
   let interval;
 
   const mutator = () => {
-    const parent = data.nodes.length ? faker.helpers.arrayElement(data.nodes) : undefined;
+    const parent = data.nodes.length ? random.helpers.arrayElement(data.nodes) : undefined;
     const node = createNode();
 
     updateData({

@@ -29,7 +29,7 @@ import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
 /**
- * Decouples from faker.
+ * Decouples from random.
  */
 export type ValueGenerator<T = any> = Record<string, () => T>;
 

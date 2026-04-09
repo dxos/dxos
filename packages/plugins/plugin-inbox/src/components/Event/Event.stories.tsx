@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Event as EventType } from '@dxos/types';
 
@@ -16,8 +16,8 @@ const DefaultStory = () => {
   const event = useMemo(
     () =>
       EventType.make({
-        title: faker.lorem.sentence(5),
-        description: faker.lorem.paragraph(2),
+        title: random.lorem.sentence(5),
+        description: random.lorem.paragraph(2),
         owner: {},
         startDate: new Date('2025-11-19T12:00:00').toISOString(),
         endDate: new Date('2025-11-19T13:00:00').toISOString(),

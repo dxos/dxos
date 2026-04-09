@@ -28,8 +28,7 @@ import { idEmoji, idHue } from '@dxos/util';
 import { airports, icons } from './data';
 import { type Range, getCount, multiple, toRange, uniqueArray } from './util';
 
-// Fake faker.
-export const faker = {
+export const random = {
   //
   // Util
   //

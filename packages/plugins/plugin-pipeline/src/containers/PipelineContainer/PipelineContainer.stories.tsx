@@ -17,7 +17,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -29,7 +29,7 @@ import { translations } from '../../translations';
 import PipelineObjectSettings from '../PipelineObjectSettings';
 import { PipelineContainer } from './PipelineContainer';
 
-faker.seed(0);
+random.seed(0);
 
 const DefaultStory = () => {
   const db = useDatabase();
@@ -104,9 +104,9 @@ const meta = {
               const messageFeed = yield* Database.add(Feed.make({ name: 'Messages' }));
               const messages = Array.from({ length: 20 }).map(() =>
                 Obj.make(Message.Message, {
-                  created: faker.date.recent().toISOString(),
+                  created: random.date.recent().toISOString(),
                   sender: { role: 'user' },
-                  blocks: [{ _tag: 'text' as const, text: faker.lorem.sentences(2) }],
+                  blocks: [{ _tag: 'text' as const, text: random.lorem.sentences(2) }],
                 }),
               );
               yield* Feed.append(messageFeed, messages);
@@ -123,9 +123,9 @@ const meta = {
               const taskFeed = yield* Database.add(Feed.make({ name: 'Tasks' }));
               const feedTasks = Array.from({ length: 10 }).map(() =>
                 Obj.make(Task.Task, {
-                  title: faker.lorem.sentence(),
-                  status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                  priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                  title: random.lorem.sentence(),
+                  status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                  priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                 }),
               );
               yield* Feed.append(taskFeed, feedTasks);
@@ -167,12 +167,12 @@ const meta = {
                 yield* Database.add(
                   Obj.make(Organization.Organization, {
                     [Obj.Meta]: {
-                      tags: faker.datatype.boolean() ? [tagDxn] : [],
+                      tags: random.datatype.boolean() ? [tagDxn] : [],
                     },
-                    name: faker.company.name(),
-                    website: faker.internet.url(),
-                    description: faker.lorem.paragraph(),
-                    image: faker.image.url(),
+                    name: random.company.name(),
+                    website: random.internet.url(),
+                    description: random.lorem.paragraph(),
+                    image: random.image.url(),
                   }),
                 );
               }
@@ -182,25 +182,25 @@ const meta = {
                 yield* Database.add(
                   Obj.make(Task.Task, {
                     [Obj.Meta]: {
-                      tags: faker.datatype.boolean() ? [tagDxn] : [],
+                      tags: random.datatype.boolean() ? [tagDxn] : [],
                     },
-                    title: faker.lorem.sentence(),
-                    status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                    priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                    title: random.lorem.sentence(),
+                    status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                    priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                   }),
                 );
               }
 
               // Generate sample Contacts.
-              const factory = createObjectFactory(personalSpace.db, faker as any);
+              const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects.
               for (const _ of Array.from({ length: 20 })) {
                 yield* Database.add(
                   Pipeline.make({
-                    name: faker.commerce.productName(),
-                    description: faker.lorem.sentence(),
+                    name: random.commerce.productName(),
+                    description: random.lorem.sentence(),
                   }),
                 );
               }

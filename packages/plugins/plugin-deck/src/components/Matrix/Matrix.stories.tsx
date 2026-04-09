@@ -12,7 +12,7 @@ import { Graph } from '@dxos/app-graph';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -30,7 +30,7 @@ import { Plank } from '../../containers/Plank';
 import { translations } from '../../translations';
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
-faker.seed(123);
+random.seed(123);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
@@ -121,9 +121,9 @@ type DefaultStoryProps = Pick<MatrixRootProps, 'Tile'>;
 const DefaultStory = ({ Tile }: DefaultStoryProps) => {
   const items = useMemo(
     () => [
-      Organization.make({ name: faker.company.name() }),
-      Person.make({ fullName: faker.person.fullName() }),
-      Text.make({ name: 'Bio', content: faker.lorem.paragraphs(10) }),
+      Organization.make({ name: random.company.name() }),
+      Person.make({ fullName: random.person.fullName() }),
+      Text.make({ name: 'Bio', content: random.lorem.paragraphs(10) }),
       Text.make({ name: 'Companion', content: 'Companion panel for Bio' }),
     ],
     [],

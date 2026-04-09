@@ -13,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -34,7 +34,7 @@ import { translations } from '../../translations';
 import { renderByline } from '../../util';
 import { Transcription, type TranscriptionProps } from './Transcription';
 
-faker.seed(1);
+random.seed(1);
 
 /**
  * Story wrapper with test controls.

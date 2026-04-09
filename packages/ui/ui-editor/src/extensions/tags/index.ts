@@ -3,5 +3,6 @@
 //
 
 export * from './extended-markdown';
-export * from './streamer';
+export * from './fader';
+export * from './wire';
 export * from './xml-tags';

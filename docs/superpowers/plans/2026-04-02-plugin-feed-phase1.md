@@ -862,7 +862,7 @@ A chainable builder (modeled on plugin-inbox's `Builder`) that generates fake `S
 
 import { subDays } from 'date-fns';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { Subscription } from '../types';
 
@@ -902,8 +902,8 @@ export class Builder {
       start: posts?.start ?? subDays(now, 30),
       end: posts?.end ?? now,
     };
-    this._feedName = faker.company.name() + ' Blog';
-    this._feedUrl = faker.internet.url();
+    this._feedName = random.company.name() + ' Blog';
+    this._feedUrl = random.internet.url();
   }
 
   private _randomTimeInRange(range: Required<DateRange>): Date {

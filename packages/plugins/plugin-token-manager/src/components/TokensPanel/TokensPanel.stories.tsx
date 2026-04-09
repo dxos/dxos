@@ -6,22 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { TokensPanel, type TokensPanelProps } from './TokensPanel';
 
-faker.seed(1);
+random.seed(1);
 
 const generator = new TestObjectGenerator(
   { [AccessToken.AccessToken.typename]: AccessToken.AccessToken },
   {
     [AccessToken.AccessToken.typename]: async () => ({
-      token: faker.string.hexadecimal({ length: 32 }),
-      source: faker.internet.url(),
-      note: faker.lorem.sentence(faker.number.int({ min: 1, max: 9 })),
+      token: random.string.hexadecimal({ length: 32 }),
+      source: random.internet.url(),
+      note: random.lorem.sentence(random.number.int({ min: 1, max: 9 })),
     }),
   },
 );

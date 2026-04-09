@@ -12,7 +12,7 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
@@ -23,9 +23,9 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person, Pipeline } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-const generator = faker as any as ValueGenerator;
+const generator = random as any as ValueGenerator;
 
-faker.seed(999);
+random.seed(999);
 
 type DefaultStoryProps = {
   columns?: number;
@@ -36,11 +36,11 @@ const createColumns = (count: number, db: Database.Database) =>
   Array.from({ length: count }).map((_, i) => {
     const col = Obj.make(TestColumn, {
       name: `Column ${i}`,
-      items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
+      items: Array.from({ length: random.number.int({ min: 8, max: 20 }) }).map((_, j) => {
         const item = db.add(
           Obj.make(TestItem, {
-            name: faker.lorem.sentence(3),
-            description: faker.lorem.paragraph(1),
+            name: random.lorem.sentence(3),
+            description: random.lorem.paragraph(1),
             label: `${String.fromCharCode(65 + i)}-${j}`,
           }),
         );
