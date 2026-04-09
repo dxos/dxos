@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';

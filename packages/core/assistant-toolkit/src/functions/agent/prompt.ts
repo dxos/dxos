@@ -19,7 +19,7 @@ import {
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -27,12 +27,14 @@ import { type Message } from '@dxos/types';
 
 import { AgentPrompt } from './definitions';
 
-import * as Chat from '../../types/Chat';
-import { Cause, Deferred, Layer, Schema } from 'effect';
-import { Tool, Toolkit } from '@effect/ai';
-import type { Exit } from 'effect';
-import { PromptError } from '../../errors';
 import { trim } from '@dxos/util';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Deferred from 'effect/Deferred';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import { PromptError } from '../../errors';
+import * as Chat from '../../types/Chat';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 

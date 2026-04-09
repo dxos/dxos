@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 

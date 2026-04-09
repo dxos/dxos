@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, GenericToolkit, ModelName, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, GenericToolkit, ModelName } from '@dxos/ai';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
 import * as Chat from '../../types/Chat';

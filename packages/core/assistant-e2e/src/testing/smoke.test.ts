@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { describe, it } from '@effect/vitest';
 import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
 import { Prompt } from '@dxos/blueprints';

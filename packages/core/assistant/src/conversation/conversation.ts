@@ -12,7 +12,6 @@ import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
-import { dbg } from '@dxos/log';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { type GenericToolkit } from '@dxos/ai';

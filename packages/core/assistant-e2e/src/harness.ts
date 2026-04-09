@@ -1,27 +1,29 @@
-import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Effect, Exit } from 'effect';
-import { TestContext } from '@effect/vitest';
-import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Operation } from '@dxos/operation';
+//
+// Copyright 2026 DXOS.org
+//
+
 import {
   AgentHandlers,
   AgentPrompt,
+  AutomationBlueprint,
   BlueprintManagerBlueprint,
+  BlueprintManagerHandlers,
   DatabaseBlueprint,
   DatabaseHandlers,
-  WebSearchBlueprint,
-  BlueprintManagerHandlers,
   MemoryBlueprint,
-  AutomationBlueprint,
+  WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
-import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect/testing';
+import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
-import { Database, Ref, Obj, Tag, Feed } from '@dxos/echo';
-import { Organization } from '@dxos/types';
-import { Person } from '@dxos/types';
-import { Employer } from '@dxos/types';
+import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+import { TestContext } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
