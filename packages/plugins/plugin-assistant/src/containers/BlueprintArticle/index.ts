@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { BlueprintArticle } from './BlueprintArticle';
-
-export default BlueprintArticle;
+export { BlueprintArticle as default } from './BlueprintArticle';

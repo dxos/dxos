@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OutlineContainer } from './OutlineContainer';
-
-export default OutlineContainer;
+export { OutlineContainer as default } from './OutlineContainer';

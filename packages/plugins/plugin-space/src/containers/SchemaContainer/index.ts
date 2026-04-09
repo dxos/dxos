@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaContainer } from './SchemaContainer';
-
-export default SchemaContainer;
+export { SchemaContainer as default } from './SchemaContainer';

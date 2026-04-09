@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChannelSettings } from './ChannelSettings';
-
-export default ChannelSettings;
+export { ChannelSettings as default } from './ChannelSettings';

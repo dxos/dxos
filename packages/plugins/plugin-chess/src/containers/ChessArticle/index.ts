@@ -2,6 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ChessArticle } from './ChessArticle';
-
-export default ChessArticle;
+export { ChessArticle as default } from './ChessArticle';

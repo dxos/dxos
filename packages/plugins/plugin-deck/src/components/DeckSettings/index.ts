@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeckSettings } from './DeckSettings';
-
-export default DeckSettings;
+export { DeckSettings as default } from './DeckSettings';
