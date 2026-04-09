@@ -1292,10 +1292,12 @@ export namespace ProcessOperationInvoker {
 
     const writeTrace = <T>(eventType: Trace.EventType<T>, payload: T): Effect.Effect<void> =>
       Effect.serviceOption(Trace.TraceService).pipe(
-        Effect.tap(Option.match({
-          onSome: (service) => Effect.sync(() => service.write(eventType, payload)),
-          onNone: () => Effect.void,
-        })),
+        Effect.tap(
+          Option.match({
+            onSome: (service) => Effect.sync(() => service.write(eventType, payload)),
+            onNone: () => Effect.void,
+          }),
+        ),
         Effect.asVoid,
       );
 
