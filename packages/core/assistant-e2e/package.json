@@ -29,6 +29,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {},

@@ -21,9 +21,6 @@ export const AgentPrompt = Operation.make({
   input: Schema.Struct({
     prompt: Ref.Ref(Prompt.Prompt),
 
-    // TODO(dmaretskyi): Remove.
-    systemPrompt: Schema.optional(Ref.Ref(Prompt.Prompt)),
-
     /**
      * When set, runs in this chat (history, queue, and bound context). Prompt blueprints and context objects are merged into the conversation for this request.
      */
