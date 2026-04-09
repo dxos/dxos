@@ -10,7 +10,7 @@ import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
-import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
+import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
@@ -39,7 +39,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
     db?.spaceId,
     () => {
       invariant(inputData);
-      return invokeFunctionWithTracing(AgentPrompt, inputData);
+      return Operation.invoke(AgentPrompt, inputData);
     },
     [inputData],
   );
