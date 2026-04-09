@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { WidgetType } from '@codemirror/view';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useCallback, useEffect, useState, type CSSProperties } from 'react';
+
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';

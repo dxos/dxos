@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { Randomize } from './definitions';
 
@@ -19,9 +19,9 @@ const handler: Operation.WithHandler<typeof Randomize> = Randomize.pipe(
   Operation.withHandler(({ item }) =>
     Effect.sync(() => {
       Obj.change(item, (draft) => {
-        draft.name = faker.lorem.words({ min: 2, max: 5 });
-        draft.description = faker.lorem.sentence();
-        draft.status = faker.helpers.arrayElement(STATUSES);
+        draft.name = random.lorem.words({ min: 2, max: 5 });
+        draft.description = random.lorem.sentence();
+        draft.status = random.helpers.arrayElement(STATUSES);
       });
     }),
   ),

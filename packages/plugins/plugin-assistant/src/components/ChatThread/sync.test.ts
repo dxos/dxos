@@ -20,8 +20,8 @@ import { MessageSyncer, type TextModel } from './sync';
 class TestDocument implements TextModel {
   private readonly _view = new EditorView({ extensions: [] });
 
-  get view() {
-    return this._view;
+  get length() {
+    return this._view.state.doc.length;
   }
 
   get content() {
