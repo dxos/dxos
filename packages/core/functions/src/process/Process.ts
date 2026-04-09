@@ -267,15 +267,15 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 never
               >;
 
-              // Emit operation end event with success.
+              ctx.submitOutput(output);
+              ctx.succeed();
+
+              // Emit operation end event with success after side-effects complete.
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
                 outcome: 'success',
               });
-
-              ctx.submitOutput(output);
-              ctx.succeed();
             }).pipe(
               Effect.catchAllDefect((defect) =>
                 Effect.gen(function* () {
