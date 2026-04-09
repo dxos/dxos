@@ -67,8 +67,7 @@ export default Capability.makeModule(
       const object = node.data;
       const companionDxn = Obj.getDXN(object).toString();
       const cache = registry.get(cacheAtom);
-      const state = registry.get(stateAtom);
-      if (cache[companionDxn] || state.currentChat[companionDxn]) {
+      if (cache[companionDxn]) {
         return true;
       }
 

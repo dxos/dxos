@@ -24,10 +24,12 @@ const handler: Operation.WithHandler<typeof EnsureCompanionChat> = EnsureCompani
       );
       if (existingChats.length > 0) {
         const chat = existingChats.at(-1) as Chat.Chat;
-        yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => {
-          const { [companionDxn]: _, ...rest } = current;
-          return rest;
-        });
+        // Cache the persisted chat so the graph connector can resolve it immediately
+        // via the cache fallback, without waiting for AtomObj.make(ref) to hydrate.
+        yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
+          ...current,
+          [companionDxn]: chat,
+        }));
         yield* Effect.promise(() => operationInvoker.invokePromise(SetCurrentChat, { companionTo, chat }));
         return { chat, persisted: true };
       }
