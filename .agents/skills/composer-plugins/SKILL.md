@@ -1,7 +1,6 @@
 ---
 name: composer-plugins
-description:
-  Use when working on files in packages/plugins/, adding new plugins,
+description: Use when working on files in packages/plugins/, adding new plugins,
   refactoring plugin components/containers, writing storybooks for plugins,
   or wiring capabilities like react-surface or operation-resolver.
 ---
@@ -15,6 +14,7 @@ Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand e
 Each plugin should have a `PLUGIN.mdl` specification written in the MDL language defined by `plugin-spec` (see `packages/plugins/plugin-spec/docs/` and `src/extension/mdl.grammar` for syntax).
 
 The specification is the source of truth for what the plugin does. It must be:
+
 - **Created early** — draft the spec before or alongside initial implementation.
 - **Kept up-to-date** — when features are discussed, added, or changed, update the spec first.
 - **Used for testing** — derive user feature tests and acceptance criteria from the spec's `feat`, `req`, and `test` blocks.
@@ -127,20 +127,20 @@ See: `plugin-chess/src/operations/`
 
 The main plugin file wires everything together using `Plugin.define(meta).pipe()` with `AppPlugin` helper methods:
 
-| Method                          | Purpose                         | Activation Event |
-| ------------------------------- | ------------------------------- | --- |
-| `addSurfaceModule`              | React surface components        | `SetupReactSurface` |
-| `addMetadataModule`             | Type metadata (icon, creation)  | `SetupMetadata` |
-| `addSchemaModule`               | ECHO type registration          | `SetupSchema` |
-| `addOperationHandlerModule`     | Operation handlers              | `SetupOperationHandler` |
-| `addTranslationsModule`         | i18n resources                  | `SetupTranslations` |
-| `addBlueprintDefinitionModule`  | AI blueprints                   | `SetupArtifactDefinition` |
-| `addSettingsModule`             | Plugin settings                 | `SetupSettings` |
-| `addAppGraphModule`             | Graph builder extensions        | `SetupAppGraph` |
-| `addCommandModule`              | CLI commands                    | `Startup` |
-| `addReactContextModule`         | React context provider          | `Startup` |
-| `addNavigationResolverModule`   | Navigation resolvers            | `OperationInvokerReady` |
-| `addNavigationHandlerModule`    | Navigation handlers             | `OperationInvokerReady` |
+| Method                         | Purpose                        | Activation Event          |
+| ------------------------------ | ------------------------------ | ------------------------- |
+| `addSurfaceModule`             | React surface components       | `SetupReactSurface`       |
+| `addMetadataModule`            | Type metadata (icon, creation) | `SetupMetadata`           |
+| `addSchemaModule`              | ECHO type registration         | `SetupSchema`             |
+| `addOperationHandlerModule`    | Operation handlers             | `SetupOperationHandler`   |
+| `addTranslationsModule`        | i18n resources                 | `SetupTranslations`       |
+| `addBlueprintDefinitionModule` | AI blueprints                  | `SetupArtifactDefinition` |
+| `addSettingsModule`            | Plugin settings                | `SetupSettings`           |
+| `addAppGraphModule`            | Graph builder extensions       | `SetupAppGraph`           |
+| `addCommandModule`             | CLI commands                   | `Startup`                 |
+| `addReactContextModule`        | React context provider         | `Startup`                 |
+| `addNavigationResolverModule`  | Navigation resolvers           | `OperationInvokerReady`   |
+| `addNavigationHandlerModule`   | Navigation handlers            | `OperationInvokerReady`   |
 
 See: `plugin-chess/src/ChessPlugin.tsx`
 
