@@ -40,4 +40,20 @@ describe('openSubjectsOnActiveDeck', () => {
   test('passes key through to openEntry', () => {
     expect(openSubjectsOnActiveDeck(['foo+1'], ['foo+2'], { key: 'foo' })).toEqual(['foo+2']);
   });
+
+  test('returns deck unchanged when subject is already open (no pivot)', () => {
+    expect(openSubjectsOnActiveDeck(['a', 'b', 'c'], ['b'])).toEqual(['a', 'b', 'c']);
+  });
+
+  test('returns deck unchanged when subject is already open (with pivot)', () => {
+    expect(openSubjectsOnActiveDeck(['a', 'b', 'c'], ['c'], { pivotId: 'a' })).toEqual(['a', 'b', 'c']);
+  });
+
+  test('returns deck unchanged when all subjects are already open', () => {
+    expect(openSubjectsOnActiveDeck(['a', 'b', 'c'], ['b', 'c'], { pivotId: 'a' })).toEqual(['a', 'b', 'c']);
+  });
+
+  test('truncates after pivot when subject is new even if some are already open', () => {
+    expect(openSubjectsOnActiveDeck(['a', 'b', 'c'], ['b', 'd'], { pivotId: 'a' })).toEqual(['a', 'b', 'd']);
+  });
 });
