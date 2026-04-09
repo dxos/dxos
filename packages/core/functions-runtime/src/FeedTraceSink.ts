@@ -74,7 +74,7 @@ export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Data
       return Context.mergeAll(
         Trace.TraceSink.context({
           write: (message) => {
-            log.info('write trace message', { message });
+            log('write trace message', { message });
             buffer.push(message);
             scheduleFlush();
           },

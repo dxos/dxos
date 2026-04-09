@@ -128,8 +128,11 @@ export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),
     delay: 1_000,
-    fadeIn: true,
-    cursor: false,
+    options: {
+      autoScroll: true,
+      wire: true,
+      cursor: true,
+    },
   },
 };
 

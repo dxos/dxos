@@ -28,7 +28,7 @@ class TestDocument implements TextModel {
     return this._view.state.doc.toString();
   }
 
-  async reset(text: string) {
+  async setContent(text: string) {
     this._view.dispatch({
       changes: { from: 0, to: this._view.state.doc.length, insert: text },
     });

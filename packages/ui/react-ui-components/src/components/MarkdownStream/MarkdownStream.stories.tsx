@@ -106,7 +106,7 @@ const DefaultStory = ({
 
   const handleReset = useCallback(() => {
     setStreaming(false);
-    void controller?.reset('');
+    void controller?.setContent('');
   }, [controller]);
 
   const handleAppend = useCallback(() => {
