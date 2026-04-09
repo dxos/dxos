@@ -220,7 +220,7 @@ const useMarkdownStreamTextEditor = (
           slots: {
             scroll: {
               // NOTE: Child widgets must have `max-w-[100cqi]`.
-              className: 'dx-size-container p-form-padding',
+              className: 'dx-size-container',
             },
           },
         }),
