@@ -6,6 +6,7 @@ import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework
 import { type Config } from '@dxos/client';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { ChessPlugin } from '@dxos/plugin-chess/cli';
+import { ExemplarPlugin } from '@dxos/plugin-exemplar/cli';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { InboxPlugin } from '@dxos/plugin-inbox/cli';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/cli';
@@ -32,12 +33,18 @@ export const getCore = (): string[] => [
   TokenManagerPlugin.meta.id,
 ];
 
-export const getDefaults = (): string[] => [ChessPlugin.meta.id, InboxPlugin.meta.id, MarkdownPlugin.meta.id];
+export const getDefaults = (): string[] => [
+  ChessPlugin.meta.id,
+  ExemplarPlugin.meta.id,
+  InboxPlugin.meta.id,
+  MarkdownPlugin.meta.id,
+];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [
     AutomationPlugin(),
     ChessPlugin(),
+    ExemplarPlugin(),
     ClientPlugin({ config }),
     InboxPlugin(),
     MarkdownPlugin(),
