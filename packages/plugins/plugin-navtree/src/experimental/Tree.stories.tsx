@@ -5,14 +5,14 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Icon, IconButton, Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
-faker.seed(1234);
+random.seed(1234);
 
 // TODO(burdon): Generate.
 const data: TreeNodeData[] = [
@@ -21,34 +21,34 @@ const data: TreeNodeData[] = [
     title: 'plugins/Root',
     children: [
       {
-        id: faker.string.uuid(),
+        id: random.string.uuid(),
         title: 'plugins/Personal Space',
         color: 'text-green-400',
         iconName: 'ph--house--regular',
         children: [
           {
-            id: faker.string.uuid(),
-            title: faker.commerce.productName(),
+            id: random.string.uuid(),
+            title: random.commerce.productName(),
           },
           {
-            id: faker.string.uuid(),
-            title: faker.commerce.productName(),
+            id: random.string.uuid(),
+            title: random.commerce.productName(),
           },
           {
-            id: faker.string.uuid(),
-            title: faker.commerce.productName(),
+            id: random.string.uuid(),
+            title: random.commerce.productName(),
             children: [
               {
-                id: faker.string.uuid(),
-                title: faker.commerce.productName(),
+                id: random.string.uuid(),
+                title: random.commerce.productName(),
                 children: [
                   {
-                    id: faker.string.uuid(),
-                    title: faker.commerce.productName(),
+                    id: random.string.uuid(),
+                    title: random.commerce.productName(),
                   },
                   {
-                    id: faker.string.uuid(),
-                    title: faker.commerce.productName(),
+                    id: random.string.uuid(),
+                    title: random.commerce.productName(),
                   },
                 ],
               },
@@ -57,24 +57,24 @@ const data: TreeNodeData[] = [
         ],
       },
       {
-        id: faker.string.uuid(),
-        title: faker.commerce.productName(),
+        id: random.string.uuid(),
+        title: random.commerce.productName(),
         iconName: 'ph--planet--regular',
         children: [
           {
-            id: faker.string.uuid(),
-            title: faker.commerce.productName(),
+            id: random.string.uuid(),
+            title: random.commerce.productName(),
           },
         ],
       },
       {
-        id: faker.string.uuid(),
-        title: faker.commerce.productName(),
+        id: random.string.uuid(),
+        title: random.commerce.productName(),
         iconName: 'ph--sailboat--regular',
       },
       {
-        id: faker.string.uuid(),
-        title: faker.commerce.productName(),
+        id: random.string.uuid(),
+        title: random.commerce.productName(),
         iconName: 'ph--planet--regular',
       },
     ],
@@ -122,8 +122,8 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       });
 
       (parent!.children ??= []).push({
-        id: faker.string.uuid(),
-        title: faker.commerce.productName(),
+        id: random.string.uuid(),
+        title: random.commerce.productName(),
       });
 
       setOpenItems((open) => ({ ...open, [parent!.id]: true }));
@@ -135,9 +135,9 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   const handleCreateSpace = () => {
     setItems((items) => {
       items[0].children?.push({
-        id: faker.string.uuid(),
+        id: random.string.uuid(),
         iconName: 'ph--planet--regular',
-        title: faker.commerce.productName(),
+        title: random.commerce.productName(),
       });
 
       return { ...items };

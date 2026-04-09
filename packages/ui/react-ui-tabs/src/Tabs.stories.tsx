@@ -5,13 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { Tabs, TabsRootProps } from './Tabs';
 
-faker.seed(1234);
+random.seed(1234);
 
 const DefaultStory = ({ orientation }: TabsRootProps) => {
   return (
@@ -43,8 +43,8 @@ const DefaultStory = ({ orientation }: TabsRootProps) => {
 
 const content = [...Array(24)].reduce((acc: { [key: string]: { title: string; panel: string } }, _, index) => {
   acc[`t${index}`] = {
-    title: faker.commerce.productName(),
-    panel: faker.lorem.paragraphs(5),
+    title: random.commerce.productName(),
+    panel: random.lorem.paragraphs(5),
   };
   return acc;
 }, {});

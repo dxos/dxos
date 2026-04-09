@@ -7,7 +7,7 @@ import React, { type FC, useRef, useState } from 'react';
 import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type Type } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { ClientProvider } from '../client';
@@ -66,7 +66,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
 
     if (createSpace) {
       const client = clients[0];
-      const space = await client.spaces.create({ name: faker.commerce.productName() });
+      const space = await client.spaces.create({ name: random.commerce.productName() });
       setSpaceId(space.id);
       await onCreateSpace?.({ client, space }, {});
       await Promise.all(clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })));

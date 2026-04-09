@@ -8,7 +8,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -19,7 +19,7 @@ import { Tree } from './Tree';
 import { type TreeModel } from './TreeContext';
 import { type TreeData } from './TreeItem';
 
-faker.seed(1234);
+random.seed(1234);
 
 const tree = createTree() as TestItem;
 

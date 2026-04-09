@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import { Filter, JsonSchema, Obj, Query } from '@dxos/echo';
 import { type View } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
@@ -22,14 +22,14 @@ import { Kanban } from '#types';
 import { translations } from '../../translations';
 import { KanbanBoard } from './KanbanBoard';
 
-faker.seed(1);
+random.seed(1);
 
 const createOrg = () => ({
-  name: faker.commerce.productName(),
-  description: faker.lorem.sentence(),
-  image: faker.image.url(),
-  website: faker.internet.url(),
-  status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
+  name: random.commerce.productName(),
+  description: random.lorem.sentence(),
+  image: random.image.url(),
+  website: random.internet.url(),
+  status: random.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
 });
 
 /**
@@ -66,7 +66,7 @@ const DefaultStory = () => {
     const initialItems = Array.from({ length: 12 }, () =>
       Obj.make(Organization.Organization, {
         ...createOrg(),
-        status: faker.helpers.arrayElement(statuses) as Organization.Organization['status'],
+        status: random.helpers.arrayElement(statuses) as Organization.Organization['status'],
       }),
     );
 

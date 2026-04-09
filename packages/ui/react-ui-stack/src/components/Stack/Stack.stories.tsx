@@ -6,7 +6,7 @@ import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem } from '../StackItem';
@@ -29,16 +29,16 @@ const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
 
 const DefaultStory = () => {
   const [columns, setColumns] = useState<StoryStackItem[]>(
-    faker.helpers.multiple(
+    random.helpers.multiple(
       () =>
         ({
-          id: faker.string.uuid(),
-          title: faker.lorem.paragraph(),
-          items: faker.helpers.multiple(
+          id: random.string.uuid(),
+          title: random.lorem.paragraph(),
+          items: random.helpers.multiple(
             () =>
               ({
-                id: faker.string.uuid(),
-                title: faker.lorem.paragraph(),
+                id: random.string.uuid(),
+                title: random.lorem.paragraph(),
               }) satisfies StoryStackItem,
             { count: { min: 32, max: 64 } },
           ),

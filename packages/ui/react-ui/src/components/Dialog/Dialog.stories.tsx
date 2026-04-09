@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
@@ -113,7 +113,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'start',
@@ -123,7 +123,7 @@ export const Default: Story = {
 export const Small: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -134,7 +134,7 @@ export const Small: Story = {
 export const Medium: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -145,7 +145,7 @@ export const Medium: Story = {
 export const Large: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: random.lorem.paragraph(2),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -156,7 +156,7 @@ export const Large: Story = {
 export const ExtraLarge: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: random.lorem.paragraph(2),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -168,7 +168,7 @@ export const Scrolling: Story = {
   render: ScrollingStory,
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(20),
+    description: random.lorem.paragraph(20),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',

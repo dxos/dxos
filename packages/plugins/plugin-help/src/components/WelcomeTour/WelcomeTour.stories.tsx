@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { StorybookPlugin } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -17,9 +17,9 @@ import { WelcomeTour, type WelcomeTourProps } from './WelcomeTour';
 
 const App = () => {
   const { running, start } = useHelp();
-  const [items, setItems] = useState(() => Array.from({ length: 5 }).map(() => faker.lorem.sentence()));
+  const [items, setItems] = useState(() => Array.from({ length: 5 }).map(() => random.lorem.sentence()));
   const handleAdd = () => {
-    setItems((items) => [...items, faker.lorem.sentence()]);
+    setItems((items) => [...items, random.lorem.sentence()]);
   };
 
   return (
@@ -76,25 +76,25 @@ export const Default: StoryObj<typeof WelcomeTour> = {
       {
         target: '[data-joyride="basic/1"]',
         title: 'plugins/Step 1',
-        content: faker.lorem.paragraph(),
+        content: random.lorem.paragraph(),
         disableBeacon: true,
         placement: 'right',
       },
       {
         target: '[data-joyride="basic/2"]',
         title: 'plugins/Step 2',
-        content: faker.lorem.paragraph(),
+        content: random.lorem.paragraph(),
       },
       {
         target: '[data-joyride="basic/3"]',
         title: 'plugins/Step 3',
-        content: faker.lorem.paragraph(),
+        content: random.lorem.paragraph(),
         placement: 'right',
       },
       {
         target: '[data-joyride="basic/4"]',
         title: 'plugins/Step 4',
-        content: faker.lorem.paragraph(),
+        content: random.lorem.paragraph(),
         placement: 'top-end',
       },
     ],

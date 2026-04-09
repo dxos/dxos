@@ -4,7 +4,7 @@
 
 import React, { PropsWithChildren, useMemo } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
 import { ThemedClassName } from '@dxos/ui-types';
 
@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '../../testing';
 import { Input } from '../Input';
 import { ScrollArea } from './ScrollArea';
 
-faker.seed(123);
+random.seed(123);
 
 export default {
   title: 'ui/react-ui-core/components/ScrollArea',
@@ -188,7 +188,7 @@ export const NestedScrollAreas = {
       () =>
         Array.from({ length: 8 }).map((_, index) => ({
           id: String(index),
-          count: faker.number.int({ min: 5, max: 20 }),
+          count: random.number.int({ min: 5, max: 20 }),
         })),
       [],
     );

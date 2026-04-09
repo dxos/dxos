@@ -10,7 +10,7 @@ import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type } from
 import { View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, ScrollArea } from '@dxos/react-ui';
@@ -185,9 +185,9 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(schema, {
-              name: faker.lorem.sentence(),
-              status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
-              description: faker.lorem.paragraph(),
+              name: random.lorem.sentence(),
+              status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              description: random.lorem.paragraph(),
             }),
           );
         });
@@ -224,7 +224,7 @@ export const StaticSchema: StoryObj = {
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([
           { type: TestSchema.Person, count: 10 },
           // { type: TestSchema.Organization, count: 1 },
@@ -270,7 +270,7 @@ export const ArrayOfObjects: StoryObj = {
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([
           // { type: TestSchema.Person, count: 10 },
           // { type: TestSchema.Organization, count: 1 },
@@ -329,8 +329,8 @@ export const Tags: Meta<DefaultStoryProps> = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(storedSchema, {
-              single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
-              multiple: faker.helpers.randomSubset(selectOptionIds),
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
             }),
           );
         });

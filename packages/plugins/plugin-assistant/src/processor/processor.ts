@@ -170,8 +170,8 @@ export class AiChatProcessor {
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen(this, function* () {
+        // NOTE: Gets or creates a session for the feed.
         const session = yield* AgentService.getSession(this._feed);
-
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
           Stream.runForEach((message) =>

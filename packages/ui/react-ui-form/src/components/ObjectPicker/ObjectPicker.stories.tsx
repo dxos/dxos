@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Obj } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
@@ -19,11 +19,11 @@ import { osTranslations } from '@dxos/ui-theme';
 import { translations } from '../../translations';
 import { ObjectPicker } from './ObjectPicker';
 
-faker.seed(1);
+random.seed(1);
 
 const createPerson = () =>
   Obj.make(Person.Person, {
-    fullName: faker.person.fullName(),
+    fullName: random.person.fullName(),
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');

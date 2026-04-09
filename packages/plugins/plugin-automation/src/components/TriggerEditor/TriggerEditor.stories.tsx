@@ -10,7 +10,7 @@ import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -99,7 +99,7 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(TestSchema.ContactType, {
-              name: faker.person.fullName(),
+              name: random.person.fullName(),
               identifiers: [],
             }),
           );

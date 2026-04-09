@@ -15,7 +15,7 @@ import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -37,7 +37,7 @@ import {
 import { translations } from '../../translations';
 import { DeckLayout } from './DeckLayout';
 
-faker.seed(1234);
+random.seed(1234);
 
 // TODO(burdon): Factor out.
 const storyDeckSettings = Capability.makeModule(() =>
@@ -119,11 +119,11 @@ type Item = { id: string; title: string; children?: Item[] };
  * @param maxDepth - Defaults to {@link STORY_ITEM_MAX_DEPTH}.
  */
 const createItem = (depth = 0, maxDepth = 3): Item => ({
-  id: faker.string.uuid(),
-  title: faker.lorem.words({ min: 2, max: 4 }),
+  id: random.string.uuid(),
+  title: random.lorem.words({ min: 2, max: 4 }),
   children:
     depth < maxDepth
-      ? Array.from({ length: faker.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
+      ? Array.from({ length: random.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
       : undefined,
 });
 

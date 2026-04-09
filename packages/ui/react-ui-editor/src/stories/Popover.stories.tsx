@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -27,7 +27,7 @@ import {
 } from '../components';
 import { EditorStory } from './components';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 const customCompletions: EditorMenuGroup = createMenuGroup({
   id: 'test',

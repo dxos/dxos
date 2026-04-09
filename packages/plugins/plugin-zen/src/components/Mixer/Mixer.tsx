@@ -144,8 +144,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   }, []);
 
   return (
-    <Splitter.Root mode={selectedLayer ? 'both' : 'upper'} classNames={classNames}>
-      <Splitter.Panel asChild position='upper'>
+    <Splitter.Root mode={selectedLayer ? 'split' : 'top'} classNames={classNames}>
+      <Splitter.Panel asChild position='top'>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -184,7 +184,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
         </Panel.Root>
       </Splitter.Panel>
 
-      <Splitter.Panel asChild position='lower'>
+      <Splitter.Panel asChild position='bottom'>
         {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleUpdate} />}
       </Splitter.Panel>
     </Splitter.Root>
