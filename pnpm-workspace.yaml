@@ -16,6 +16,7 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@astrojs/starlight': ^0.32.5
+  '@assistant-ui/react': ^0.12.24
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0

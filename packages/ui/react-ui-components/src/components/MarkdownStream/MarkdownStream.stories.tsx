@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Document why this is required.
 import '@dxos/lit-ui';
 
 import { WidgetType } from '@codemirror/view';
@@ -14,15 +13,16 @@ import { faker } from '@dxos/random';
 import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
+import { Panel } from '@dxos/react-ui';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
+import MIXED from './testing/mixed.md?raw';
 import TEXT from './testing/text.md?raw';
 
-// TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
 
 const defaultStreamOptions: TextStreamOptions = {
@@ -58,11 +58,12 @@ const DefaultStory = ({
   initialContent,
   content,
   streamOptions = defaultStreamOptions,
+  debug: debugProp,
   ...props
 }: DefaultStoryProps) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [streaming, setStreaming] = useState(false);
-  const [debug, setDebug] = useState(false);
+  const [debug, setDebug] = useState(debugProp);
 
   useEffect(() => {
     if (initialContent) {
@@ -105,29 +106,46 @@ const DefaultStory = ({
   }, [controller]);
 
   return (
-    <div
-      className={mx('flex flex-col h-full w-full')}
-      style={userHue ? ({ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties) : undefined}
+    <Panel.Root
+      style={userHue ? ({ 
+        '--user-fill': `var(--color-${userHue}-fill)`
+      } as CSSProperties) : undefined}
     >
-      <Toolbar.Root classNames='border-b border-subdued-separator'>
-        <Toolbar.Button disabled={streaming} onClick={() => setStreaming(true)}>
-          Start
-        </Toolbar.Button>
-        <Toolbar.Button disabled={!streaming} onClick={() => setStreaming(false)}>
-          Stop
-        </Toolbar.Button>
-        <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
-        <Toolbar.Button disabled={streaming} onClick={handleAppend}>
-          Append
-        </Toolbar.Button>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+        <Toolbar.IconButton
+          disabled={streaming}
+          icon='ph--play--regular'
+          iconOnly
+          label='Start'
+          onClick={() => setStreaming(true)}
+        />
+        <Toolbar.IconButton
+          disabled={!streaming}
+          icon='ph--stop--regular'
+          iconOnly
+          label='Stop'
+          onClick={() => setStreaming(false)}
+        />
+        <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+        <Toolbar.IconButton
+          disabled={streaming}
+          icon='ph--plus--regular'
+          iconOnly
+          label='Append'
+          onClick={handleAppend}
+        />
         <Toolbar.Separator />
         <Input.Root>
           <Input.Label>Debug</Input.Label>
-          <Input.Switch checked={debug} onCheckedChange={setDebug} />
+          <Input.Switch checked={debug} onCheckedChange={setDebug}/>
         </Input.Root>
       </Toolbar.Root>
-      <MarkdownStream {...props} classNames='w-full overflow-hidden' debug={debug} ref={setController} />
-    </div>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <MarkdownStream {...props} debug={debug} ref={setController} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -146,18 +164,28 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    content: TEXT,
     registry: registry,
+    content: MIXED,
     fadeIn: true,
     cursor: false,
   },
 };
 
+export const Text: Story = {
+  args: {
+    registry: registry,
+    content: TEXT,
+    fadeIn: true,
+    cursor: true,
+    debug: true,
+  },
+};
+
 export const WithInitialContent: Story = {
   args: {
-    initialContent: TEXT,
-    content: TEXT,
     registry: registry,
+    initialContent: MIXED,
+    content: MIXED,
     fadeIn: true,
     cursor: false,
   },

@@ -39,9 +39,9 @@ import {
   xmlTags,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-import { isNonNullable } from '@dxos/util';
 
 import { createStreamer } from './stream';
+import { isNonNullable } from '@dxos/util';
 
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get view(): EditorView | null;
@@ -80,6 +80,18 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // Editor.
     const { parentRef, view } = useTextEditor(() => {
       const content = currentContent.current;
+      const streamingExtensions = debug
+        ? []
+        : [
+            decorateMarkdown({
+              skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+            }),
+            preview(),
+            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            streamer({ cursor, fadeIn }),
+            autoScroll(),
+          ];
+
       return {
         initialValue: content,
         selection: EditorSelection.cursor(content?.length ?? 0),
@@ -97,18 +109,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
           extendedMarkdown({ registry }),
           scroller({ overScroll: 64 }),
-          debug
-            ? []
-            : [
-                decorateMarkdown({
-                  skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-                }),
-                preview(),
-                xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-                streamer({ cursor, fadeIn }),
-                autoScroll(),
-              ],
-        ].filter(isNonNullable),
+          ...streamingExtensions,
+        ],
       };
     }, [debug, registry, themeMode]);
 
@@ -239,7 +241,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div className={mx('h-full w-full overflow-hidden', classNames)} ref={parentRef} />
+        <div role='none' className={mx('dx-container', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary name='markdown-stream'>

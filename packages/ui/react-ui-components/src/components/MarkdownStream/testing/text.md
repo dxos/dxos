@@ -1,67 +1,27 @@
-## Markdown
+# DXOS
 
-Markdown is a lightweight markup language used to format plain text in a simple and readable way. It allows you to create structured documents using conventions for headings, lists, emphasis (bold/italic), links, images, code, blockquotes, tables, and horizontal rules.
+DXOS is an open-source framework for building local-first, real-time collaborative software that runs primarily on the client and synchronizes data peer-to-peer rather than relying on centralized cloud servers. Its core thesis is that modern applications should be user-owned, offline-capable, privacy-preserving, and multiplayer by default.
 
-It’s widely used in:
+At a high level, DXOS aims to provide the infrastructure layer for applications similar to collaborative workspaces, design tools, knowledge systems, and AI-native apps—without forcing developers to build their own sync engines, identity systems, or conflict-resolution logic.
 
-- documentation
-- note-taking
-- online writing
+The platform is built around several core components:
+- **ECHO** — a distributed client-side database and reactive state layer that handles local storage, replication, and conflict resolution.
+- **HALO** — decentralized identity and access control using public/private key cryptography.
+- **MESH** — peer-to-peer networking and transport infrastructure.
+- **EDGE** — optional cloud services for backup, sync continuity, and compute.
+- **Composer** — a plugin-based application framework and reference workspace product built on the stack.
 
-There are task lists also:
+A defining architectural principle is local-first software. Data is stored locally on the user’s device first, which enables instant startup, offline operation, and fast interaction. Synchronization occurs automatically between devices and collaborators using peer-to-peer protocols and CRDT-based conflict resolution (DXOS references Automerge as a core collaboration primitive). This allows multiple users to edit shared data concurrently without overwriting each other’s changes.  ￼
 
-- [ ] Not done
-- [x] Done
+Strategically, DXOS sits at the intersection of several major software trends:
+- offline-first / local-first apps
+- collaborative multiplayer software
+- decentralized identity
+- plugin-based workspaces
+- AI-enhanced personal data environments
 
-<test>Summarize tools</test>
+Rather than being a traditional operating system, DXOS is better understood as an application runtime and data layer for next-generation collaborative web applications. In practice, it competes conceptually with architectures built on Firebase, Supabase, or custom CRDT stacks, but with stronger emphasis on peer-to-peer design and user data ownership.
 
-## Benefits
+Its likely strongest use cases include collaborative editors, internal tools, personal knowledge systems, workspace products, multiplayer productivity apps, and AI agents that need durable shared state.
 
-Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
-
-JSON fenced code:
-
-```json
-{
-  "hello": "world",
-  "items": [1, 2, 3, 4, 5]
-}
-```
-
-## Structured data
-
-Table:
-
-| Column 1 | Column 2 |
-| -------- | -------- |
-| Item 1   | Item 2   |
-| Item 3   | Item 4   |
-| Item 5   | Item 6   |
-
-There are also extended flavors of Markdown (like GitHub Flavored Markdown) that add features such as checkboxes, footnotes, and task lists, expanding its capabilities for more complex documents.
-
-Markdown’s simplicity makes it ideal for writing structured content quickly while keeping the source clean and readable.
-
-If you want, I can also break down how Markdown parsing actually works behind the scenes, which explains how these plain-text symbols get converted to formatted output. Do you want me to do that?
-
-## Summary
-
-Markdown is a quiet kind of craft,
-Hashes, dashes, lines that draft.
-Asterisks to tilt a phrase,
-Backticks cage a block of blaze.
-
-A link is just a name and route,
-No lacquered gloss to dress it out.
-It travels clean from eye to page,
-A small instruction on the stage.
-
-Lists march down in measured rows,
-Indented thoughts in steady prose.
-Blockquotes lean and speak aside,
-A softer voice, but not denied.
-
-No ornate fonts, no tricks of light,
-Just structure drawn in plainest white.
-Yet from that spare, unmoving art,
-A document can find its heart.
+In concise terms: DXOS is an operating-system-like framework for building cloud-optional collaborative applications where data belongs to the user and sync is built in from the start.

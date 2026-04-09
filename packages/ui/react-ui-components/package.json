@@ -63,6 +63,7 @@
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
+    "@assistant-ui/react": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/random": "workspace:*",

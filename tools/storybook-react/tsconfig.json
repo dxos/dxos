@@ -7,10 +7,10 @@
     "out"
   ],
   "include": [
+    ".storybook/*.d.ts",
     ".storybook/*.mjs",
     ".storybook/*.ts",
     ".storybook/*.tsx",
-    ".storybook/*.d.ts",
     "config/**/*.mts"
   ],
   "references": [
