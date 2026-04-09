@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -71,14 +71,17 @@ const testTypes = [
   Text.Text,
 ];
 
+const operationHandlerSet = OperationHandlerSet.make(defaultAgentPrompt);
+
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   ToolExecutionServices,
   Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry([])),
+  OperationRegistry.layer,
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({
-      functions: OperationHandlerSet.make(defaultAgentPrompt),
+      functions: operationHandlerSet,
     }),
   ),
   Layer.provideMerge(
@@ -87,6 +90,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({ spaceKey: 'fixed', types: testTypes }),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
+      OperationHandlerSet.provide(operationHandlerSet),
     ),
   ),
   Layer.provideMerge(GenericToolkit.providerLayer(GenericToolkit.empty)),
