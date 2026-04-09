@@ -207,7 +207,18 @@ const useMarkdownStreamTextEditor = (
           xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
           scroller({ overScroll: 64 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
-          ...(options?.wire ? [wire({ cursor: options?.cursor })] : []),
+          ...(options?.wire
+            ? [
+                wire({
+                  cursor: options?.cursor,
+                  streamingTags: new Set(
+                    Object.entries(registry ?? {})
+                      .filter(([, def]) => def.streaming)
+                      .map(([tag]) => tag),
+                  ),
+                }),
+              ]
+            : []),
           ...(options?.fader ? [fader()] : []),
         ],
       ].filter(isTruthy),

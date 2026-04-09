@@ -226,7 +226,7 @@ const createRenderLink =
     const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
     const icon = Domino.of('span')
       .classNames('dx-link ms-1 inline-block align-[-0.125em]')
-      .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+      .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
       invariant(qualifiedId, 'Invalid link format.');
@@ -258,6 +258,6 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
       .classNames('dx-link flex items-center gap-2')
       .text(safeUrl(url)?.toString() ?? url)
-      .children(Domino.svg('ph--arrow-square-out--regular')).root,
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

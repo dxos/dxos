@@ -137,7 +137,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
           const button = Domino.of('button')
             .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })
-            .children(icon)
+            .append(icon)
             .on('click', () => {
               setPinned(true);
               view.dispatch({
@@ -147,7 +147,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
 
           buttonContainer = Domino.of('div')
             .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
-            .children(button).root as HTMLDivElement;
+            .append(button).root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

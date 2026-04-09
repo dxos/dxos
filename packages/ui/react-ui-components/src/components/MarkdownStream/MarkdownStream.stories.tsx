@@ -13,7 +13,7 @@ import { Input, Toolbar } from '@dxos/react-ui';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
-import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { getXmlTextChild, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
@@ -21,7 +21,7 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type TextStreamOptions, textStream } from './testing';
 import MIXED from './testing/mixed.md?raw';
 import TEXT from './testing/text.md?raw';
-import { PromptWidget } from './widgets/PromptWidget';
+import { PromptWidget, ReasoningWidget } from './widgets';
 
 random.seed(1234);
 
@@ -50,11 +50,22 @@ export class TestWidget extends WidgetType {
 const registry: XmlWidgetRegistry = {
   prompt: {
     block: true,
-    factory: (props) => new PromptWidget(props.children?.[0]),
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
+      return text ? new PromptWidget(text) : null;
+    },
+  },
+  reasoning: {
+    block: true,
+    streaming: true,
+    factory: ({ children, range }) => {
+      const text = getXmlTextChild(children);
+      return text ? new ReasoningWidget(text, range?.from) : null;
+    },
   },
   test: {
     block: true,
-    factory: (props) => new TestWidget(props.children?.[0]),
+    factory: ({ children }) => new TestWidget(children?.[0]),
   },
 };
 
@@ -169,9 +180,6 @@ export const Default: Story = {
   args: {
     registry: registry,
     content: MIXED,
-    options: {
-      autoScroll: true,
-    },
   },
 };
 
@@ -187,7 +195,7 @@ export const Wire: Story = {
   },
 };
 
-export const Text: Story = {
+export const StreamingTags: Story = {
   args: {
     registry: registry,
     content: TEXT,

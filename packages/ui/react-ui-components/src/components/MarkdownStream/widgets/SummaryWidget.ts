@@ -18,6 +18,11 @@ export class SummaryWidget extends WidgetType {
     return this.text === other.text;
   }
 
+  override updateDOM(dom: HTMLElement) {
+    dom.textContent = this.text;
+    return true;
+  }
+
   override toDOM() {
     return Domino.of('div').classNames('mt-2 mb-4 text-sm text-placeholder').text(this.text).root;
   }

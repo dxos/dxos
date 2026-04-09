@@ -69,7 +69,7 @@ describe('domino', () => {
   });
 
   test('Domino creates nested SVG elements', () => {
-    const svg = Domino.of('svg', Domino.SVG).children(Domino.of('circle', Domino.SVG)).root;
+    const svg = Domino.of('svg', Domino.SVG).append(Domino.of('circle', Domino.SVG)).root;
     expect(svg.querySelector('circle')).toBeTruthy();
   });
 });

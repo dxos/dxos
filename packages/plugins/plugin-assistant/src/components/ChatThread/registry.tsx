@@ -58,9 +58,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   reasoning: {
     block: true,
-    factory: ({ children }) => {
+    streaming: true,
+    factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text) : null;
+      return text ? new ReasoningWidget(text, range?.from) : null;
     },
   },
   reference: {
@@ -112,6 +113,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   summary: {
     block: true,
+    streaming: true,
     Component: Summary,
   },
 
