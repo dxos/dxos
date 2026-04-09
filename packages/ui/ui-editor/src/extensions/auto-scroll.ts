@@ -24,6 +24,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
   let isPinned = true;
   let jumpPending = false;
   let enabled = true;
+  let firstUpdate = true;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
@@ -58,8 +59,10 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
         return;
       }
 
-      // Jump to bottom instantly when content is first inserted into an empty doc.
-      if (isPinned && startState.doc.length === 0 && state.doc.length > 0) {
+      // Jump to bottom instantly when content first appears (either inserted into
+      // an empty doc, or present as initialValue when the editor is created).
+      if (isPinned && (firstUpdate || startState.doc.length === 0) && state.doc.length > 0) {
+        firstUpdate = false;
         jumpPending = true;
         requestAnimationFrame(() => {
           view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
@@ -67,6 +70,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
         });
         return;
       }
+      firstUpdate = false;
 
       // Suppress crawl while the initial jump is pending.
       if (jumpPending) {

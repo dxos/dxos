@@ -40,7 +40,6 @@ type EventMap<T> = T extends Window
 /**
  * Add the event listener and return a cleanup function.
  * Can be used in effect hooks in conjunction with `combine`.
- * @deprecated use bind-event-listener
  */
 export const addEventListener = <T extends EventTarget, K extends keyof EventMap<T>>(
   target: T,

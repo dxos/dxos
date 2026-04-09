@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection, Extension, Transaction } from '@codemirror/state';
+import { EditorSelection, Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -35,7 +35,6 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
-  scrollToLine,
   scroller,
   scrollerLineEffect,
   fader,
@@ -46,8 +45,10 @@ import {
   xmlTagUpdateEffect,
   xmlTags,
   autoScroll,
+  documentSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+import { isTruthy } from '@dxos/util';
 
 import { createStreamer } from './stream';
 
@@ -88,14 +89,10 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // Store current content so that we can toggle debug mode.
     const contentRef = useRef(content);
 
-    // Editor.
-    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
-      debug,
-      registry,
-      options,
-    });
+    // Codemirror editor.
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, { debug, registry, options });
 
-    // Streaming queue.
+    // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
 
     // Reset document.
@@ -113,8 +110,6 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           annotations: wireBypass.of(true),
           selection: EditorSelection.cursor(text.length),
         });
-
-        scrollToLine(viewRef.current, { line: -1, behavior: 'instant' });
 
         // New queue.
         setQueue(Effect.runSync(Queue.unbounded<string>()));
@@ -135,7 +130,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         return;
       }
 
-      // TODO(burdon): This is a hack?
+      // TODO(burdon): Replace this hack with a custom event listener from widgets.
       return addEventListener(parentRef.current, 'click', (event) => {
         const button = (event.target as HTMLElement).closest('[data-action="submit"]');
         if (button?.getAttribute('data-action') === 'submit') {
@@ -195,45 +190,32 @@ const useMarkdownStreamTextEditor = (
   const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
 
   // Editor.
-  const editor = useTextEditor(() => {
+  const { view, parentRef } = useTextEditor(() => {
     const content = currentContent.current;
-    const streamingExtensions: Extension[] = debug
-      ? []
-      : [
+    return {
+      initialValue: content,
+      selection: EditorSelection.cursor(content?.length ?? 0),
+      extensions: [
+        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: documentSlots }),
+        createBasicExtensions({ lineWrapping: true, readOnly: true }),
+        !debug && [
+          extendedMarkdown({ registry }),
           decorateMarkdown({
             skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
           }),
           preview(),
           xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+          scroller({ overScroll: 64 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
-          ...(options?.wire ? [wire({ rate: 200, cursor: options?.cursor })] : []),
+          ...(options?.wire ? [wire({ cursor: options?.cursor })] : []),
           ...(options?.fader ? [fader()] : []),
-        ];
-
-    return {
-      initialValue: content,
-      selection: EditorSelection.cursor(content?.length ?? 0),
-      extensions: [
-        createThemeExtensions({
-          themeMode,
-          syntaxHighlighting: true,
-          slots: {
-            scroll: {
-              // NOTE: Child widgets must have `max-w-[100cqi]`.
-              className: 'dx-size-container',
-            },
-          },
-        }),
-        createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
-        extendedMarkdown({ registry }),
-        scroller({ overScroll: 64 }),
-        ...streamingExtensions,
-      ],
+        ],
+      ].filter(isTruthy),
     };
-  }, [themeMode, registry, debug]);
+  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader]);
 
-  const viewRef = useDynamicRef(editor.view);
-  return { ...editor, viewRef, widgets };
+  const viewRef = useDynamicRef(view);
+  return { view, viewRef, parentRef, widgets };
 };
 
 /**

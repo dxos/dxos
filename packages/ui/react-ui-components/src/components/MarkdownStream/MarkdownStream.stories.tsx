@@ -115,15 +115,7 @@ const DefaultStory = ({
   }, [controller]);
 
   return (
-    <Panel.Root
-      style={
-        userHue
-          ? ({
-              '--user-fill': `var(--color-${userHue}-fill)`,
-            } as CSSProperties)
-          : undefined
-      }
-    >
+    <Panel.Root style={{ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.IconButton
@@ -150,7 +142,7 @@ const DefaultStory = ({
           />
           <Toolbar.Separator />
           <Input.Root>
-            <Input.Label>Debug</Input.Label>
+            <Input.Label classNames='pr-1'>Debug</Input.Label>
             <Input.Switch checked={debug} onCheckedChange={setDebug} />
           </Input.Root>
         </Toolbar.Root>
@@ -166,9 +158,7 @@ const meta = {
   title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

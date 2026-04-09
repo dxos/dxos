@@ -18,18 +18,6 @@ export const wireBypass = Annotation.define<boolean>();
 
 import { Domino } from '@dxos/ui';
 
-export type WireOptions = {
-  /** Characters per second. */
-  rate?: number;
-  /** Show a blinking cursor at the insertion point while streaming. */
-  cursor?: boolean;
-};
-
-type BufferState = { text: string; insertAt: number };
-
-const DEFAULT_RATE = 100;
-const CURSOR_LINGER = 2_000;
-
 /**
  * Scans the buffer and returns the number of characters that can be flushed.
  * Returns 0 if the head of the buffer is inside an incomplete structure
@@ -145,6 +133,18 @@ const linkLength = (buffer: string, offset: number): number => {
   }
 
   return parenClose + 1;
+};
+
+type BufferState = { text: string; insertAt: number };
+
+const DEFAULT_RATE = 200;
+const CURSOR_LINGER = 2_000;
+
+export type WireOptions = {
+  /** Characters per second. */
+  rate?: number;
+  /** Show a blinking cursor at the insertion point while streaming. */
+  cursor?: boolean;
 };
 
 /**
