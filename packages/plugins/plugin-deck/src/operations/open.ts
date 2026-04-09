@@ -69,9 +69,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // The same object can appear under different graph paths (e.g., via collections vs types).
       // Resolve each subject's DXN and, if it matches an already-open deck item, remap the
       // subject to the existing deck entry so that openEntry's exact-match check succeeds.
+      // Only needed in multi (deck) mode; solo mode replaces the single visible item anyway.
       {
         const deck = yield* DeckCapabilities.getDeck();
-        const active = deck.solo ? [deck.solo].filter(Boolean) : deck.active;
+        const active = !deck.solo && deck.initialized ? deck.active : [];
         if (active.length > 0 && input.subject.length > 0) {
           const resolveDxn = (qualifiedPath: string) =>
             Effect.reduce(pathResolvers, Option.none<string>(), (acc, resolver) =>
@@ -121,6 +122,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
+      // Compute the next active deck state and apply it.
+      // In solo or uninitialized mode the subject list replaces the deck entirely.
+      // In multi (deck) mode, subjects are merged via openSubjectsOnActiveDeck which
+      // uses stack semantics (truncate after pivot, then push new entries).
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
@@ -137,6 +142,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
+      // Schedule side-effects for the newly opened items: scroll into view, expose in
+      // the navigation sidebar, and emit observability events.
+      // When nothing is newly opened (subject was already visible), the fallback
+      // `input.subject[0]` still triggers scroll and expose so the user is taken there.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const ids = deck.solo ? [deck.solo] : deck.active;
