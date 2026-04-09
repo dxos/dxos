@@ -82,7 +82,7 @@ export default AgentPrompt.pipe(
         const promptInstructions = yield* Database.load(prompt.instructions.source);
         const promptText = Template.process(promptInstructions.content, input);
 
-        const systemText = trim`
+        let systemText = trim`
           You are an agent runnning in the non-interactive mode.
           The user is unable to see what your are doing, and cannot answer any questions.
           Do not ask questions.
@@ -91,6 +91,9 @@ export default AgentPrompt.pipe(
           If no output is required, call [complete_job] with { "success": "undefined" }
           Do not stop until you call [complete_job].
         `;
+        if (data.systemInstructions) {
+          systemText += `\n\n${data.systemInstructions}`;
+        }
 
         const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
 
@@ -176,14 +179,16 @@ const makePromptAgentToolkit = (options: {
     Tool.make('complete_job', {
       parameters: {
         success: Schema.optional(Schema.Any), // TODO(dmaretskyi): Pipe output schema here.
-        failure: Schema.optional(Schema.Struct({
-          message: Schema.String.annotations({
-            description: 'Short message describing the error.',
+        failure: Schema.optional(
+          Schema.Struct({
+            message: Schema.String.annotations({
+              description: 'Short message describing the error.',
+            }),
+            description: Schema.optional(Schema.String).annotations({
+              description: 'Optional longer message describing in detail what went wrong',
+            }),
           }),
-          description: Schema.optional(Schema.String).annotations({
-            description: 'Optional longer message describing in detail what went wrong',
-          }),
-        })),
+        ),
       },
     }),
   ) {}

@@ -13,6 +13,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../plugins/plugin-assistant"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
+    },
+    {
       "path": "../../sdk/types"
     },
     {

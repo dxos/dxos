@@ -4261,6 +4261,12 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../operation
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-inbox
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

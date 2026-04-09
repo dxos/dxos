@@ -25,7 +25,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -210,6 +210,7 @@ export class AiSession {
         history: this._history.length,
       });
 
+      dbg(system);
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
@@ -217,6 +218,7 @@ export class AiSession {
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null; // Consistent IDs for pending blocks preceding the complete one.
+
       const messages = yield* LanguageModel.streamText({
         prompt,
         toolkit,

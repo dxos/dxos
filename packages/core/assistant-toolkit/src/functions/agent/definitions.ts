@@ -27,7 +27,7 @@ export const AgentPrompt = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default @anthropic/claude-opus-4-0
+     * @default @anthropic/claude-opus-4-6
      */
 
     model: Schema.optional(ModelName),
@@ -36,6 +36,10 @@ export const AgentPrompt = Operation.make({
      * References get auto-resolved.
      */
     input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
+
+    systemInstructions: Schema.optional(Schema.String).annotations({
+      description: 'Additional system instructions to add to the system prompt.',
+    }),
   }),
   output: Schema.Any,
   services: [

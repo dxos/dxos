@@ -29,6 +29,8 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"
   },

@@ -6,14 +6,18 @@ import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harnes
 
 Obj.ID.dangerouslyDisableRandomness();
 
-describe('Database', () => {
-  it.effect(
-    'create and query',
+describe('Web', () => {
+  it.effect.skip(
+    // TODO(dmaretskyi): Agent unable to activate blueprints.
+    'search the web',
     agentTest(
       Prompt.make({
         instructions: trim`
-          Create a new organization called "Cyberdyne Systems".
-          Query the database to confirm that the organization is create and query tool is working.
+          Search 5 richest people in the world and create Person objects in the database.
+
+          Completion criteria:
+          - 5 Person objects in the database.
+          - Web search works.
         `,
         blueprints: getDefaultBlueprints(),
       }),
