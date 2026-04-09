@@ -139,6 +139,9 @@
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
+      "path": "packages/core/assistant-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/core/assistant-toolkit/tsconfig.json"
     },
     {

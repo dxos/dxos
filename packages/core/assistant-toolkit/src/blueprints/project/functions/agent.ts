@@ -57,7 +57,7 @@ export default Agent.pipe(
       Effect.scoped,
       Effect.provide(
         Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
-          Layer.provide(functionInvocationServiceFromOperations),
+          Layer.provideMerge(functionInvocationServiceFromOperations),
         ),
       ),
     ),

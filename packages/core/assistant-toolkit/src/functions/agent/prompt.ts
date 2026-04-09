@@ -8,7 +8,14 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
-import { AiConversation, AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
+import {
+  AiConversation,
+  AiSession,
+  GenerationObserver,
+  ToolExecutionServices,
+  createToolkit,
+  functionInvocationServiceFromOperations,
+} from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -21,6 +28,7 @@ import { type Message } from '@dxos/types';
 import { AgentPrompt } from './definitions';
 
 import * as Chat from '../../types/Chat';
+import { Layer } from 'effect';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
@@ -125,7 +133,14 @@ export default AgentPrompt.pipe(
         };
       },
       Effect.scoped,
-      Effect.provide(Trace.writerLayerNoop),
+      Effect.provide(
+        Layer.empty.pipe(
+          Layer.provideMerge(ToolExecutionServices),
+          Layer.provideMerge(functionInvocationServiceFromOperations),
+          Layer.provideMerge(TracingService.layerNoop),
+        ),
+      ),
     ),
   ),
+  Operation.opaqueHandler,
 );

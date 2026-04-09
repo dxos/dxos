@@ -6,11 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService, TracingService, TriggerEvent } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { Project } from '../../../types';
+import { Trace } from '@dxos/functions';
 
 export const Agent = Operation.make({
   meta: {
@@ -28,8 +29,11 @@ export const Agent = Operation.make({
     AiService.AiService,
     Database.Service,
     QueueService,
+    Feed.FeedService,
+    OperationRegistry.Service,
     // @deprecated TracingService kept for backward compat with tool handlers.
     TracingService,
+    Trace.TraceService,
     GenericToolkit.GenericToolkitProvider,
   ],
 });

@@ -1,0 +1,31 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../assistant"
+    },
+    {
+      "path": "../assistant-toolkit"
+    },
+    {
+      "path": "../blueprints"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
+      "path": "../operation"
+    }
+  ]
+}

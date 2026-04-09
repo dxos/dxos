@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, ModelName, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, GenericToolkit, ModelName, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import * as Chat from '../../types/Chat';
 
@@ -45,9 +45,8 @@ export const AgentPrompt = Operation.make({
     AiService.AiService,
     Database.Service,
     Feed.FeedService,
-    TracingService,
-    ToolExecutionService,
-    ToolResolverService,
-    FunctionInvocationService,
+    GenericToolkit.GenericToolkitProvider,
+    OperationRegistry.Service,
+    Trace.TraceService,
   ],
 });

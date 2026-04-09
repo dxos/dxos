@@ -250,6 +250,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/assistant-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/assistant-toolkit/package.json",
           "jsonpath": "$.version"
         },

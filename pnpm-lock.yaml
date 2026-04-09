@@ -4241,6 +4241,30 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
 
+  packages/core/assistant-e2e:
+    dependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../assistant-toolkit
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../blueprints
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+
   packages/core/assistant-toolkit:
     dependencies:
       '@dxos/ai':
