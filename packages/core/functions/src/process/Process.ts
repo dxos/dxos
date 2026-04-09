@@ -254,12 +254,6 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
         return {
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
-              // Emit operation start event.
-              yield* Trace.write(Trace.OperationStart, {
-                key: op.meta.key,
-                name: op.meta.name,
-              });
-
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
               const output = yield* opHandler.handler(input).pipe(Effect.orDie) as Effect.Effect<
                 Operation.Definition.Output<Op>,
@@ -269,29 +263,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 
               ctx.submitOutput(output);
               ctx.succeed();
-
-              // Emit operation end event with success after side-effects complete.
-              yield* Trace.write(Trace.OperationEnd, {
-                key: op.meta.key,
-                name: op.meta.name,
-                outcome: 'success',
-              });
-            }).pipe(
-              Effect.catchAllDefect((defect) =>
-                Effect.gen(function* () {
-                  // Emit operation end event with failure.
-                  const errorMessage = defect instanceof Error ? defect.message : String(defect);
-                  yield* Trace.write(Trace.OperationEnd, {
-                    key: op.meta.key,
-                    name: op.meta.name,
-                    outcome: 'failure',
-                    error: errorMessage,
-                  });
-                  return yield* Effect.die(defect);
-                }),
-              ),
-              semaphore.withPermits(1),
-            ),
+            }).pipe(semaphore.withPermits(1)),
         };
       }),
   );

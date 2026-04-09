@@ -1290,6 +1290,15 @@ export namespace ProcessOperationInvoker {
         return newFiber;
       });
 
+    const writeTrace = <T>(eventType: Trace.EventType<T>, payload: T): Effect.Effect<void> =>
+      Effect.serviceOption(Trace.TraceService).pipe(
+        Effect.tap(Option.match({
+          onSome: (service) => Effect.sync(() => service.write(eventType, payload)),
+          onNone: () => Effect.void,
+        })),
+        Effect.asVoid,
+      );
+
     const invoke: Operation.OperationService['invoke'] = <I, O>(
       op: Operation.Definition<I, O>,
       ...args: any[]
@@ -1298,8 +1307,29 @@ export namespace ProcessOperationInvoker {
       const options = args[1] as Operation.InvokeOptions | undefined;
       const tracing = options?.tracing as TracingOptions | undefined;
       return Effect.gen(function* () {
+        yield* writeTrace(Trace.OperationStart, {
+          key: op.meta.key,
+          name: op.meta.name,
+        });
+
         const fiber = yield* invokeFiber(op, input, { tracing, environment: { space: options?.spaceId } });
-        const output = yield* fiber.await.pipe(Effect.flatten);
+        const output = yield* fiber.await.pipe(Effect.flatten).pipe(
+          Effect.tapBoth({
+            onSuccess: () =>
+              writeTrace(Trace.OperationEnd, {
+                key: op.meta.key,
+                name: op.meta.name,
+                outcome: 'success' as const,
+              }),
+            onFailure: (cause) =>
+              writeTrace(Trace.OperationEnd, {
+                key: op.meta.key,
+                name: op.meta.name,
+                outcome: 'failure' as const,
+                error: Cause.pretty(cause),
+              }),
+          }),
+        );
 
         yield* PubSub.publish(pubsub, {
           operation: op,
