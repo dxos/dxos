@@ -176,8 +176,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._loadLinkedObjects(Object.fromEntries(linksAwaitingLoad));
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
 
-    // Also load newly discovered links that we don't already have handles for.
-    // This ensures that objects created by other clients are loaded automatically (DX-907).
+    // Load newly discovered links that we are not already tracking.
     const newLinks = Object.entries(links).filter(
       ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
     );
