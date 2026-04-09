@@ -68,7 +68,7 @@ export const agentTest: {
 } = (...args: [AgentTestOptions, Prompt.Prompt] | [Prompt.Prompt]) => {
   return Effect.fnUntraced(
     function* (_) {
-      const [options = {}, prompt] = args.length === 1 ? [, args[0]] : args;
+      const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
 
       yield* Database.add(prompt);
       yield* Database.flush();

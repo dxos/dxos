@@ -14,7 +14,7 @@ describe('errors', () => {
     expect(error).toBeInstanceOf(SystemError);
     expect(error.name).toBe(SystemError.name);
     expect(error._tag).toBe(SystemError.name);
-    expect(error.message).toBe('Test message');
+    expect(error.message).toBe('Test message: {"a":1,"b":2}');
     expect(error.cause).toBeInstanceOf(Error);
     expect((error.cause as Error).message).toBe('Test cause');
     expect(error.context).toEqual({ a: 1, b: 2 });
@@ -43,7 +43,7 @@ describe('errors', () => {
 
     const error = new CustomError(1);
     expect(error).toBeInstanceOf(CustomError);
-    expect(error.message).toBe('Custom message');
+    expect(error.message).toBe('Custom message: {"value":1}');
     expect(error.context).toEqual({ value: 1 });
   });
 
