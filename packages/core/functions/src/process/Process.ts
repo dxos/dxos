@@ -250,13 +250,12 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     (ctx) =>
       Effect.gen(function* () {
         const semaphore = yield* Effect.makeSemaphore(1);
-        const traceService = yield* Trace.TraceService;
 
         return {
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               // Emit operation start event.
-              traceService.write(Trace.OperationStart, {
+              yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,
               });
@@ -269,7 +268,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               >;
 
               // Emit operation end event with success.
-              traceService.write(Trace.OperationEnd, {
+              yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
                 outcome: 'success',
@@ -282,7 +281,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 Effect.gen(function* () {
                   // Emit operation end event with failure.
                   const errorMessage = defect instanceof Error ? defect.message : String(defect);
-                  traceService.write(Trace.OperationEnd, {
+                  yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
                     outcome: 'failure',
