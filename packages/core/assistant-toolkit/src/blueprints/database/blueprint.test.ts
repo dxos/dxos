@@ -8,13 +8,16 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Entity, Feed, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import DatabaseBlueprint from './blueprint';
 import { DatabaseHandlers } from './functions';
+import { Query as DatabaseQueryOperation } from './functions/definitions';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -23,6 +26,7 @@ const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Blueprint.Blueprint, Feed.Feed],
   blueprints: [DatabaseBlueprint.make()],
   tracing: 'pretty',
+  aiServicePreset: 'edge-remote',
 });
 
 describe('Database Blueprint', () => {
@@ -339,5 +343,116 @@ describe('Database Blueprint', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },
+  );
+
+  it.effect(
+    'query: includeQueues finds mock email in feed (agent uses Query tool)',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed = Feed.make();
+        yield* Database.add(feed);
+        yield* Feed.append(feed, [
+          Obj.make(Organization.Organization, {
+            name: 'Lot Booking Co',
+            description: 'Mock email body: your parking reservation is confirmed.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const agent = yield* AgentService.createSession({
+          blueprints: [DatabaseBlueprint.make()],
+        });
+        yield* agent.submitPrompt(trim`
+          A mock email was stored only on a feed (queue), not as a regular space document: organization "Lot Booking Co"
+          mentioning a parking reservation.
+
+          Use the Query tool once: full-text "reservation", includeQueues true, includeContent false, limit 20.
+          Confirm the results include Lot Booking Co.
+        `);
+        yield* agent.waitForCompletion();
+
+        const { db } = yield* Database.Service;
+        const spaceOnly = yield* Database.runQuery(
+          Query.select(Filter.text('reservation', { type: 'full-text' })).limit(20),
+        );
+        expect(spaceOnly).toHaveLength(0);
+
+        const withFeeds = yield* Database.runQuery(
+          Query.select(Filter.text('reservation', { type: 'full-text' }))
+            .from(db, { includeFeeds: true })
+            .limit(20),
+        );
+        expect(withFeeds.length).toBeGreaterThanOrEqual(1);
+        expect(
+          withFeeds.some(
+            (obj) =>
+              Obj.getTypename(obj) === 'org.dxos.type.organization' &&
+              String(Obj.getLabel(obj) ?? '').includes('Lot Booking'),
+          ),
+        ).toBe(true);
+
+        const byTypename = yield* Database.runQuery(
+          Query.type(Organization.Organization).from(db, { includeFeeds: true }).limit(20),
+        );
+        expect(byTypename.length).toBeGreaterThanOrEqual(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'query operation: includeQueues via invokeFunction',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const feed = Feed.make();
+        yield* Database.add(feed);
+        yield* Feed.append(feed, [
+          Obj.make(Organization.Organization, {
+            name: 'Invoke Op Lot Co',
+            description: 'Feed-only mock email op-search-token-7f3a2c91 reservation line.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const noQueues = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+          text: 'op-search-token-7f3a2c91',
+          includeQueues: false,
+          limit: 20,
+        });
+        expect(noQueues).toHaveLength(0);
+
+        const withQueues = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+          text: 'op-search-token-7f3a2c91',
+          includeQueues: true,
+          limit: 20,
+        });
+        expect(withQueues.length).toBeGreaterThanOrEqual(1);
+        expect(
+          withQueues.some(
+            (row: { typename?: string; label?: string }) =>
+              row.typename === 'org.dxos.type.organization' &&
+              String(row.label ?? '').includes('Invoke Op Lot'),
+          ),
+        ).toBe(true);
+
+        const byTypename = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+          typename: 'org.dxos.type.organization',
+          includeQueues: true,
+          limit: 20,
+        });
+        expect(byTypename.length).toBeGreaterThanOrEqual(1);
+        expect(
+          byTypename.some(
+            (row: { typename?: string; label?: string }) =>
+              row.typename === 'org.dxos.type.organization' &&
+              String(row.label ?? '').includes('Invoke Op Lot'),
+          ),
+        ).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 });
