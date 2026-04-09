@@ -34,34 +34,3 @@ export const useComputeRuntimeCallback = <T>(
     return runtime.runPromise(fn());
   }, [runtime, ...(deps ?? [])]);
 };
-
-// TODO(wittjosiah): Function invoking should automatically be traced (DX-647).
-export const invokeFunctionWithTracing = <I, O>(functionDef: Operation.Definition<I, O, any>, inputData: I) =>
-  Effect.gen(function* () {
-    const tracer = yield* TracingService;
-    const trace = yield* tracer.traceInvocationStart({
-      target: undefined,
-      payload: {
-        data: {},
-      },
-    });
-
-    // Invoke the function.
-    const result = yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
-      Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
-      Effect.exit,
-    );
-
-    if (Exit.isFailure(result)) {
-      const error = Cause.prettyErrors(result.cause)[0];
-      log.error(error.message, error.cause ?? error.stack);
-    }
-
-    yield* tracer.traceInvocationEnd({
-      trace,
-      // TODO(dmaretskyi): Might miss errors.
-      exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
-    });
-
-    return result;
-  });
