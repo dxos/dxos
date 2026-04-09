@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Annotation, ChangeSet, EditorState, type Extension, StateEffect, StateField, type Transaction } from '@codemirror/state';
+import {
+  Annotation,
+  ChangeSet,
+  EditorState,
+  type Extension,
+  StateEffect,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 /** Annotate a transaction to bypass the wire buffer (content appears immediately). */

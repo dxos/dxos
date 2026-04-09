@@ -102,7 +102,6 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     const onReset = useCallback(
       async (text: string) => {
         contentRef.current = text;
-        console.log('[onReset] text:', viewRef.current?.state.doc.length, text.length);
         if (!viewRef.current) {
           return;
         }
@@ -211,7 +210,6 @@ const useMarkdownStreamTextEditor = (
           ...(options?.fader ? [fader()] : []),
         ];
 
-    console.log('[useTextEditor] content:', content?.length);
     return {
       initialValue: content,
       selection: EditorSelection.cursor(content?.length ?? 0),
@@ -253,8 +251,6 @@ const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<stri
       Stream.runForEach((text) =>
         Effect.sync(() => {
           const scrollTop = view.scrollDOM.scrollTop;
-
-          console.log('[useTextEditor] dispatch:', view.state.doc.length, text.length);
           view.dispatch({
             changes: [{ from: view.state.doc.length, insert: text }],
             annotations: Transaction.remote.of(true),
@@ -320,7 +316,6 @@ const createMarkdownStreamController = ({
 
     /** Set the context for widgets (XML tags). */
     setContext: (context: any) => {
-      console.log('[setContext] context:', context);
       viewRef.current?.dispatch({
         effects: xmlTagContextEffect.of(context),
       });
@@ -331,7 +326,6 @@ const createMarkdownStreamController = ({
 
     /** Append to queue (and stream). */
     append: async (text: string) => {
-      console.log('[append] text:', viewRef.current?.state.doc.length, text.length);
       contentRef.current += text;
       if (viewRef.current?.state.doc.length === 0) {
         await onReset(text);

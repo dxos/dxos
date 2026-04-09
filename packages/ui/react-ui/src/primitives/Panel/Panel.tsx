@@ -20,26 +20,28 @@ const GRID_TEMPLATE_AREAS = '"toolbar" "content" "statusbar"';
 
 type PanelRootProps = SlottableProps<{ style?: CSSProperties }>;
 
-const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(({ children, asChild, role, style, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp
-      {...rest}
-      role={role ?? 'none'}
-      style={{
-        gridTemplateRows: GRID_TEMPLATE_ROWS,
-        gridTemplateAreas: GRID_TEMPLATE_AREAS,
-        ...style,
-      }}
-      className={tx('panel.root', {}, className)}
-      ref={forwardedRef}
-    >
-      {children}
-    </Comp>
-  );
-});
+const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
+  ({ children, asChild, role, style, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp
+        {...rest}
+        role={role ?? 'none'}
+        style={{
+          gridTemplateRows: GRID_TEMPLATE_ROWS,
+          gridTemplateAreas: GRID_TEMPLATE_AREAS,
+          ...style,
+        }}
+        className={tx('panel.root', {}, className)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
 
 PanelRoot.displayName = 'Panel.Root';
 

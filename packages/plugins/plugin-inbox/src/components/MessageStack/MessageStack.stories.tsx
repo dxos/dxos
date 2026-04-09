@@ -9,6 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Feed, Obj, Query } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -25,7 +26,6 @@ import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { MessageStack as MessageStackComponent } from './MessageStack';
-import { log } from '@dxos/log';
 
 const DefaultStory = () => {
   const [messages] = useState(() => new Builder().createMessages(100).build().messages);

@@ -134,7 +134,9 @@ export const content = {
   image: str('### Image', '', img),
 
   headings: str(
-    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, random.lorem.sentences(), '']).flat(),
+    ...[1, 2, 3, 4, 5, 6]
+      .map((level) => ['#'.repeat(level) + ` Heading ${level}`, random.lorem.sentences(), ''])
+      .flat(),
   ),
 
   formatting: str(

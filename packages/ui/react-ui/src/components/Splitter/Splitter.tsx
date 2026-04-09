@@ -40,17 +40,7 @@ type RootOwnProps = Partial<SplitterContextValue>;
 type RootProps = RootOwnProps;
 
 const Root = slottable<HTMLDivElement, RootOwnProps>(
-  (
-    {
-      asChild,
-      mode = 'top',
-      ratio = 0.5,
-      transition = 250,
-      children,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ asChild, mode = 'top', ratio = 0.5, transition = 250, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
     const { className, ...restProps } = composableProps(rest);

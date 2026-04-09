@@ -5,15 +5,17 @@ DXOS is an open-source framework for building local-first, real-time collaborati
 At a high level, DXOS aims to provide the infrastructure layer for applications similar to collaborative workspaces, design tools, knowledge systems, and AI-native apps—without forcing developers to build their own sync engines, identity systems, or conflict-resolution logic.
 
 The platform is built around several core components:
+
 - **ECHO** — a distributed client-side database and reactive state layer that handles local storage, replication, and conflict resolution.
 - **HALO** — decentralized identity and access control using public/private key cryptography.
 - **MESH** — peer-to-peer networking and transport infrastructure.
 - **EDGE** — optional cloud services for backup, sync continuity, and compute.
 - **Composer** — a plugin-based application framework and reference workspace product built on the stack.
 
-A defining architectural principle is local-first software. Data is stored locally on the user’s device first, which enables instant startup, offline operation, and fast interaction. Synchronization occurs automatically between devices and collaborators using peer-to-peer protocols and CRDT-based conflict resolution (DXOS references Automerge as a core collaboration primitive). This allows multiple users to edit shared data concurrently without overwriting each other’s changes.  ￼
+A defining architectural principle is local-first software. Data is stored locally on the user’s device first, which enables instant startup, offline operation, and fast interaction. Synchronization occurs automatically between devices and collaborators using peer-to-peer protocols and CRDT-based conflict resolution (DXOS references Automerge as a core collaboration primitive). This allows multiple users to edit shared data concurrently without overwriting each other’s changes. ￼
 
 Strategically, DXOS sits at the intersection of several major software trends:
+
 - offline-first / local-first apps
 - collaborative multiplayer software
 - decentralized identity

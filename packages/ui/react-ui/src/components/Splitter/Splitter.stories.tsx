@@ -13,22 +13,22 @@ import { Splitter, type SplitterRootProps } from './Splitter';
 
 const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
   ({ label, ...props }, forwardedRef) => (
-      <Panel.Root {...props} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>{label}</Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              {Array.from({ length: 100 }).map((_, i) => (
-                <div key={i} className='p-1'>
-                  {label}-{i}
-                </div>
-              ))}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
+    <Panel.Root {...props} ref={forwardedRef}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>{label}</Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            {Array.from({ length: 100 }).map((_, i) => (
+              <div key={i} className='p-1'>
+                {label}-{i}
+              </div>
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   ),
 );
 
@@ -44,7 +44,7 @@ const DefaultStory = (props: SplitterRootProps) => {
           <Toolbar.Button onClick={() => setMode('split')}>A+B</Toolbar.Button>
           <Toolbar.Button onClick={() => setMode('bottom')}>B</Toolbar.Button>
           <Toolbar.Separator />
-          <Toolbar.Button onClick={() => setRatio(r => 1 - r)}>Toggle</Toolbar.Button>
+          <Toolbar.Button onClick={() => setRatio((r) => 1 - r)}>Toggle</Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

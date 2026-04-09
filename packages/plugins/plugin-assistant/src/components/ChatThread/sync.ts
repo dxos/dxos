@@ -61,7 +61,7 @@ export class MessageSyncer {
   }
 
   reset() {
-    log.info('reset');
+    log('reset');
     this._initialMessageId = undefined;
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
@@ -85,9 +85,7 @@ export class MessageSyncer {
       this._initialMessageId = messages[0]?.id;
     }
 
-    console.log('[sync] length:', this._document.length);
     if (this._document.length === 0 && flush) {
-      console.log('[sync] flush:', messages);
       const buffer: string[] = [];
       this.processBlocks(messages, (content) => buffer.push(content));
       const content = buffer.join('');
@@ -95,7 +93,6 @@ export class MessageSyncer {
 
       return true;
     } else {
-      console.log('[sync] append:', messages);
       this.processBlocks(messages, (content) => {
         void this._document.append(content);
       });
