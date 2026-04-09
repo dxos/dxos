@@ -25,7 +25,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -210,7 +210,6 @@ export class AiSession {
         history: this._history.length,
       });
 
-      dbg('system prompt', { snippet: createSnippet(system), length: system.length });
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',

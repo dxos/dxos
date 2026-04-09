@@ -128,11 +128,11 @@ export default AgentPrompt.pipe(
           };
         } else {
           const resultSink = yield* Deferred.make<unknown, PromptError>();
-          const promptTookit = makePromptAgentToolkit({
+          const promptToolkit = makePromptAgentToolkit({
             output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
             resultSink,
           });
-          const toolkit = yield* createToolkit({ blueprints, genericToolkits: [promptTookit] });
+          const toolkit = yield* createToolkit({ blueprints, genericToolkits: [promptToolkit] });
 
           const session = new AiSession({ observer });
           yield* session
