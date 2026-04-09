@@ -48,7 +48,6 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
-
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { EdgeFeedReplicator } from './edge-feed-replicator';

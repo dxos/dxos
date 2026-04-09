@@ -4,7 +4,6 @@
 
 // TODO(burdon): Document why this is required.
 import '@dxos/lit-ui';
-
 import { WidgetType } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';

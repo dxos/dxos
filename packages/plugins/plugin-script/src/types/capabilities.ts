@@ -6,9 +6,9 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { type Compiler } from '../compiler';
 import { meta } from '#meta';
 
+import { type Compiler } from '../compiler';
 import * as Settings from './Settings';
 
 export namespace ScriptCapabilities {

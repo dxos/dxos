@@ -8,7 +8,6 @@ import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { Voxel } from '../types';
-
 import { QueryWorld } from './definitions';
 
 const handler: Operation.WithHandler<typeof QueryWorld> = QueryWorld.pipe(

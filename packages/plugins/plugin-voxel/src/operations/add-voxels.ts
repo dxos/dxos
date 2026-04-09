@@ -8,7 +8,6 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { Voxel } from '../types';
-
 import { AddVoxels } from './definitions';
 
 const handler: Operation.WithHandler<typeof AddVoxels> = AddVoxels.pipe(

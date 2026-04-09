@@ -15,7 +15,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { TestReplicationNetwork } from '../testing';
-
 import { AutomergeHost } from './automerge-host';
 
 describe('AutomergeHost', () => {

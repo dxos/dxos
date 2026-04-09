@@ -13,7 +13,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
-
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 
 const FENCE = '```';

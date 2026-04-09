@@ -9,7 +9,6 @@ import { ComplexSet } from '@dxos/util';
 
 import type { Space, SpaceMember } from '../echo';
 import type { Device, Identity } from '../halo';
-
 import type { ShellManager } from './shell-manager';
 
 type ShellResult = {

@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
 import { type Settings } from '#types';
+
+import { translations } from '../../translations';
 import { SpacetimeSettings } from './SpacetimeSettings';
 
 const DefaultStory = () => {

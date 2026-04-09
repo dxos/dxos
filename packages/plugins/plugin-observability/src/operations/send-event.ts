@@ -8,7 +8,6 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { ObservabilityCapabilities } from '../types';
-
 import { SendEvent } from './definitions';
 
 const handler: Operation.WithHandler<typeof SendEvent> = SendEvent.pipe(

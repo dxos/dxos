@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -23,10 +23,10 @@ import {
 import { isNonNullable } from '@dxos/util';
 
 import { Sheet, useComputeGraph } from '#components';
-import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '#testing';
 import { Sheet as SheetType } from '#types';
 
+import { useSheetModel } from '../model';
 import { compute, computeGraphFacet } from './compute';
 
 const str = (...lines: string[]) => lines.join('\n');

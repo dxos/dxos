@@ -3,7 +3,6 @@
 //
 
 import './styles.css';
-
 import {
   BackgroundVariant,
   type Edge,

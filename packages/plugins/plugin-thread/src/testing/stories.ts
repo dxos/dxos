@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import { type Plugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { Config } from '@dxos/react-client';
 import { corePlugins } from '@dxos/plugin-testing';
+import { Config } from '@dxos/react-client';
+
+import { Channel } from '#types';
 
 import { ThreadPlugin } from '../ThreadPlugin';
-import { Channel } from '#types';
 
 export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ...corePlugins(),

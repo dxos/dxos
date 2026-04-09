@@ -6,23 +6,23 @@ import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { Blueprint } from '@dxos/blueprints';
+import * as Stream from 'effect/Stream';
+import { expect } from 'vitest';
 
+import { Blueprint } from '@dxos/blueprints';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { Trace } from '@dxos/functions';
 import { Process } from '@dxos/functions-runtime';
+import { ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { AssistantTestLayer } from '../testing';
-import { log } from '@dxos/log';
-import * as AgentService from './AgentService';
-import { ObjectId } from '@dxos/keys';
-import * as Stream from 'effect/Stream';
-import { Trace } from '@dxos/functions';
 import { PartialBlock } from '../tracing';
-import { expect } from 'vitest';
+import * as AgentService from './AgentService';
 
 ObjectId.dangerouslyDisableRandomness();
 

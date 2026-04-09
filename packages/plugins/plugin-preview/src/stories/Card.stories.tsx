@@ -14,7 +14,6 @@ import { type Organization, type Person, type Pipeline, type Task } from '@dxos/
 
 import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
-
 import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
 
 faker.seed(999);

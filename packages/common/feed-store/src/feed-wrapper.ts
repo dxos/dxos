@@ -4,7 +4,6 @@
 
 import { inspect } from 'node:util';
 import { promisify } from 'node:util';
-
 import { Readable, Transform } from 'streamx';
 
 import { Trigger } from '@dxos/async';

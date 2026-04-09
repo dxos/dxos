@@ -19,7 +19,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { IdentityListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { translations } from '../translations';
-
 import { SpaceListItem } from './SpaceListItem';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';

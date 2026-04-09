@@ -13,7 +13,6 @@ import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatEvent } from '../Chat';
-
 import { blockToMarkdown, componentRegistry } from './registry';
 import { MessageSyncer } from './sync';
 

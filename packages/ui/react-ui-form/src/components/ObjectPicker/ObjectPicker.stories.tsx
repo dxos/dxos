@@ -17,7 +17,6 @@ import { Person } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '../../translations';
-
 import { ObjectPicker } from './ObjectPicker';
 
 faker.seed(1);

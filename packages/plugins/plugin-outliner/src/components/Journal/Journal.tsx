@@ -12,6 +12,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { Journal as JournalType, getDateString, parseDateString } from '#types';
+
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;

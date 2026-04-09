@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
 import { Graph, type Node } from '@dxos/app-graph';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -17,8 +17,8 @@ import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { byPosition } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-import { AssistantCapabilities } from '#types';
 import { AssistantOperation } from '#operations';
+import { AssistantCapabilities } from '#types';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats

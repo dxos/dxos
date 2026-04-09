@@ -3,7 +3,6 @@
 //
 
 import '@tldraw/tldraw/tldraw.css';
-
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLEventInfo, type TLGridProps, type TLInstance } from '@tldraw/editor';
 import { DefaultToolbar, type Editor, type TLUiAssetUrlOverrides, Tldraw } from '@tldraw/tldraw';
@@ -18,9 +17,9 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useStoreAdapter } from '#hooks';
 import { type Sketch, type Settings } from '#types';
+
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
-
 import './theme.css';
 
 const threadToolId = 'thread';

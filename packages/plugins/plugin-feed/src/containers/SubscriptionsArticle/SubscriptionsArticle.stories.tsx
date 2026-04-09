@@ -17,10 +17,10 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { FeedPlugin } from '../../FeedPlugin';
 import { Subscription } from '#types';
-import { translations } from '../../translations';
 
+import { FeedPlugin } from '../../FeedPlugin';
+import { translations } from '../../translations';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {

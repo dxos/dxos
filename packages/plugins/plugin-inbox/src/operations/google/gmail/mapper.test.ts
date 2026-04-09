@@ -11,7 +11,6 @@ import { Message } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
 import { InboxResolver } from '../../../services';
-
 import { mapMessage } from './mapper';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({

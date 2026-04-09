@@ -6,8 +6,8 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Node } from '@dxos/plugin-graph';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { byPosition } from '@dxos/util';
 

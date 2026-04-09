@@ -6,12 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Dialog } from '@dxos/react-ui';
 import { corePlugins } from '@dxos/plugin-testing';
+import { Dialog } from '@dxos/react-ui';
 
 import { ClientPlugin } from '../../ClientPlugin';
 import { translations } from '../../translations';
-
 import { JoinDialog } from './JoinDialog';
 
 const DefaultStory = () => (

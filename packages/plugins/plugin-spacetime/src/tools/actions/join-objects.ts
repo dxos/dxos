@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { Manifold } from 'manifold-3d';
+
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import type { Manifold } from 'manifold-3d';
 
 import { joinSolids, serializeManifold } from '../../engine';
 import { Model } from '../../types';

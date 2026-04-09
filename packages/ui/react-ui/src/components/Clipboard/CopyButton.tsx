@@ -10,7 +10,6 @@ import { Button, type ButtonProps, IconButton } from '../Button';
 import { Icon, type IconProps } from '../Icon';
 import { useTranslation } from '../ThemeProvider';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
-
 import { useClipboard } from './ClipboardProvider';
 
 export type CopyButtonProps = ButtonProps &

@@ -17,7 +17,6 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-
 import { Box, TypeSelect, createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 

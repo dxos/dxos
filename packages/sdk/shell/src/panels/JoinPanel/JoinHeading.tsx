@@ -9,7 +9,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
 import { translationKey } from '../../translations';
-
 import { type JoinPanelMode } from './JoinPanelProps';
 
 export type JoinSpaceHeadingProps = {

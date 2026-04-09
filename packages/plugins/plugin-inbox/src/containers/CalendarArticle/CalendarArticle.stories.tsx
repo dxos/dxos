@@ -16,10 +16,10 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { InboxPlugin } from '../../InboxPlugin';
 import { Builder } from '#testing';
 import { Calendar } from '#types';
 
+import { InboxPlugin } from '../../InboxPlugin';
 import { CalendarArticle } from './CalendarArticle';
 
 type DefaultStoryProps = {

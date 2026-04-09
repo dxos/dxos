@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { Registry } from '@effect-atom/atom-react';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
-import type { Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
@@ -23,7 +24,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Message } from '@dxos/types';
-import * as Record from 'effect/Record';
 
 import {
   AiSession,
@@ -33,7 +33,6 @@ import {
   createToolkit,
   formatSystemPrompt,
 } from '../session';
-
 import { AiContextBinder, AiContextService } from './context';
 
 export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {

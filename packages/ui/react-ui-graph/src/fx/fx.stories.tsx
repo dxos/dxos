@@ -11,9 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
 import { type D3Callable } from '../util';
-
 import { Pulsar } from './pulsar';
-
 import '../../styles/graph.css';
 
 type Datum = {

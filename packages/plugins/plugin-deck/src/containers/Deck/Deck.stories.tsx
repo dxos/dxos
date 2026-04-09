@@ -6,21 +6,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
+import { DeckSettings, DeckState } from '#capabilities';
 import { useDeckState } from '#hooks';
-
 import { meta as pluginMeta } from '#meta';
-import { translations } from '../../translations';
 import { DeckCapabilities, getMode } from '#types';
 
+import { translations } from '../../translations';
 import { Deck } from './Deck';
-
-import { DeckSettings, DeckState } from '#capabilities';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({

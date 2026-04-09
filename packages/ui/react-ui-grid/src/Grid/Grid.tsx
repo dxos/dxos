@@ -3,7 +3,6 @@
 //
 
 import '@dxos/lit-grid/dx-grid.pcss';
-
 import { type EventName, createComponent } from '@lit/react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';

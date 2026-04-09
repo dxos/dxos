@@ -38,7 +38,6 @@ import {
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
 } from '../automerge';
-
 import { InflightRequestLimiter } from './inflight-request-limiter';
 
 /**

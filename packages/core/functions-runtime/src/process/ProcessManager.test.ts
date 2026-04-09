@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { Registry } from '@effect-atom/atom';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -15,14 +15,14 @@ import * as Stream from 'effect/Stream';
 
 import { Database } from '@dxos/echo';
 import { Process, ServiceResolver, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
 import { TestDatabaseLayer } from '../testing';
 import * as ProcessManager from './ProcessManager';
 import * as StorageService from './StorageService';
-import { log } from '@dxos/log';
-import { Trace } from '@dxos/functions';
 
 //
 // Test services (for unit tests without full ECHO stack).

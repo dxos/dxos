@@ -13,18 +13,16 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-search';
+import { withLayout } from '@dxos/react-ui/testing';
 
+import { ReactRoot, ReactSurface, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { SimpleLayoutEvents } from '#types';
 
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
-import { SimpleLayoutEvents } from '#types';
-
 import { SimpleLayout } from './SimpleLayout';
-
-import { ReactRoot, ReactSurface, State } from '#capabilities';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({

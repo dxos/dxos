@@ -10,7 +10,6 @@ import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/
 import { Chaos, shaderPresets, useAudioStream } from '@dxos/react-ui-sfx';
 
 import { useComputeNodeState } from '../hooks';
-
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const ScopeShape = Schema.extend(

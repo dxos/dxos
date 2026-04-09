@@ -8,8 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
-import { promptRunExtension } from '../extensions';
 import { AssistantOperation } from '#operations';
+
+import { promptRunExtension } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

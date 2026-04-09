@@ -7,12 +7,11 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
-
 import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider';
 
 const SpaceInfo = ({ space }: { space: Space }) => {

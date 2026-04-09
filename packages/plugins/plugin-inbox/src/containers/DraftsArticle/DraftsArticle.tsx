@@ -8,17 +8,18 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { AttentionOperation } from '@dxos/plugin-attention/operations';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { type Space } from '@dxos/react-client/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { DraftMessage, type Mailbox } from '#types';
+
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 

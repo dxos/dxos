@@ -11,10 +11,10 @@ import { Operation } from '@dxos/operation';
 import { type Node } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 
-import { Export } from './definitions';
-
 import { meta } from '#meta';
+
 import { FileCapabilities, type FilesState } from '../types';
+import { Export } from './definitions';
 
 const handler: Operation.WithHandler<typeof Export> = Export.pipe(
   Operation.withHandler(

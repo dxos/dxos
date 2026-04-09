@@ -18,9 +18,8 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { type Message } from '@dxos/types';
 
-import { AgentPrompt } from './definitions';
-
 import * as Chat from '../../types/Chat';
+import { AgentPrompt } from './definitions';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 

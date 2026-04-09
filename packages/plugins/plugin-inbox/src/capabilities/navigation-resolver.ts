@@ -7,16 +7,17 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
+import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
+import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
 import { DraftMessage, Mailbox } from '#types';
-import { Message } from '@dxos/types';
+
+import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

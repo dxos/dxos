@@ -12,19 +12,18 @@ import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
-import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
+import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { type FunctionServices } from '../sdk';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
 import * as Trace from '../Trace';
-import { Operation } from '@dxos/operation';
-
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**

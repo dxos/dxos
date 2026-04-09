@@ -6,8 +6,9 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { Channel } from '@dxos/plugin-thread/types';
 
-import { Meeting } from '../types';
 import { meta } from '#meta';
+
+import { Meeting } from '../types';
 
 const MEETING_OPERATION = `${meta.id}.operation`;
 

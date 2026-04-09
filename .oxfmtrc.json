@@ -4,6 +4,17 @@
   "quoteProps": "as-needed",
   "singleQuote": true,
   "trailingComma": "all",
+  "sortImports": {
+    "groups": [["builtin", "external"], "dxos", "subpath", ["parent", "sibling", "index"], "unknown"],
+    "customGroups": [
+      {
+        "groupName": "dxos",
+        "elementNamePattern": ["@dxos/**"]
+      }
+    ],
+    "newlinesBetween": true,
+    "order": "asc"
+  },
   "sortPackageJson": {},
   "ignorePatterns": [
     "*.tpl",

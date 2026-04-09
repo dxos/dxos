@@ -21,10 +21,10 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
-import { updateActiveDeck } from './helpers';
 import { openSubjectsOnActiveDeck } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(

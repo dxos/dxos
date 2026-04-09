@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { transform } from '@swc/core';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
-import { transform } from '@swc/core';
 
 export async function processFiles(dirname, wasmModule) {
   const files = await readdir(`${dirname}/inputs`);

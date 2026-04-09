@@ -27,7 +27,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { EditorContext } from '../../hooks';
 import { type CanvasGraphModel, type Polygon } from '../../types';
-
 import { GraphNode } from './GraphNode';
 
 const nodeTypes: NodeTypes = {

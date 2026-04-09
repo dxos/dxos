@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DeckRoot, DeckLayoutChangeRequest, DeckRootProps } from './DeckRoot';
 import { DeckContent, DeckContentProps } from './DeckContent';
+import { DeckRoot, DeckLayoutChangeRequest, DeckRootProps } from './DeckRoot';
 import { DeckViewport, DeckMultiMode, DeckSoloMode, DeckViewportProps, DeckContentEmpty } from './DeckViewport';
 
 /**

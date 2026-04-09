@@ -7,9 +7,9 @@ import react from '@vitejs/plugin-react-swc';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
-import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
-import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
+import WasmPlugin from 'vite-plugin-wasm';
+import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';

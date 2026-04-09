@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { toJsonSchema } from '../JsonSchema';
-
 import { Format } from './format';
 import { TypeEnum, TypeFormat, getTypeEnum } from './types';
 

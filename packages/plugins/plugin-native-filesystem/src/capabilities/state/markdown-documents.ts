@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
 import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from '#types';
-import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 
+import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
   getFileXattrDxn,
   readFileMap,
@@ -25,7 +25,6 @@ import {
   writeFileMap,
   type FileMapEntry,
 } from './disk-io';
-
 import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers';
 
 /** Yield to the event loop every N files during restore so capability init cannot wedge the UI thread. */

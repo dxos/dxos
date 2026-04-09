@@ -13,7 +13,6 @@ import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { GoogleCredentials } from '../../services/google-credentials';
-
 import {
   ChannelsResponse,
   ErrorResponse,

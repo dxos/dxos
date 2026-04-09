@@ -9,8 +9,9 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/operations';
 
-import { DEPLOYMENT_DIALOG } from '../constants';
 import { defaultScriptsForIntegration } from '#meta';
+
+import { DEPLOYMENT_DIALOG } from '../constants';
 import { templates } from '../templates';
 
 const handler: Operation.WithHandler<typeof TokenManagerOperation.AccessTokenCreated> =

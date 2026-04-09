@@ -19,7 +19,6 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { ToolBlock } from '../ToolBlock';
-
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 
 const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {

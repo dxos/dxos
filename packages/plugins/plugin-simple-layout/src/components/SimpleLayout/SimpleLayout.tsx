@@ -8,11 +8,11 @@ import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '#hooks';
+
 import { DebugOverlay } from '../DebugOverlay';
 import { Dialog } from '../Dialog';
 import { MobileLayout } from '../MobileLayout';
 import { PopoverContent, PopoverRoot } from '../Popover';
-
 import { Drawer } from './Drawer';
 import { Main } from './Main';
 

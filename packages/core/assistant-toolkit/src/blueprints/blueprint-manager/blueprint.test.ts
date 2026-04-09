@@ -16,11 +16,11 @@ import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import BlueprintManagerDefinition from './blueprint';
-import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 import DatabaseBlueprint from '../database/blueprint';
 import MarkdownBlueprint from '../markdown/blueprint';
 import ResearchBlueprint from '../research/blueprint';
+import BlueprintManagerDefinition from './blueprint';
+import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 

@@ -7,7 +7,6 @@ import { render } from '@solidjs/testing-library';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { defaultRegistry } from '../registry';
-
 import { useAtomInitialValues } from './useAtomInitialValues';
 import { useAtomValue } from './useAtomValue';
 

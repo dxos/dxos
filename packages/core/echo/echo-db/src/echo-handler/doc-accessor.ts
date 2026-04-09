@@ -7,7 +7,6 @@ import { isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from '../core-db';
-
 import { getObjectCore } from './echo-handler';
 import { type ProxyTarget, symbolPath } from './echo-proxy-target';
 

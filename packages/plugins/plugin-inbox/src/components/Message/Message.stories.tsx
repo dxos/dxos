@@ -10,7 +10,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { Message } from './Message';
 
 const DefaultStory = () => {

@@ -14,7 +14,6 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { type Comment, annotations, comments, createExternalCommentSync } from '@dxos/ui-editor';
 
 import { createRenderer, str } from '../util';
-
 import { EditorStory, content, longText } from './components';
 
 const meta = {

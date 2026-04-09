@@ -6,8 +6,8 @@ import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework
 import { type Config } from '@dxos/client';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { ChessPlugin } from '@dxos/plugin-chess/cli';
-import { ExemplarPlugin } from '@dxos/plugin-exemplar/cli';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
+import { ExemplarPlugin } from '@dxos/plugin-exemplar/cli';
 import { InboxPlugin } from '@dxos/plugin-inbox/cli';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/cli';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';

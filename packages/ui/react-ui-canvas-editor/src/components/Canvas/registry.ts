@@ -8,7 +8,6 @@ import { invariant } from '@dxos/invariant';
 
 import { type CanvasBoard, type Polygon } from '../../types';
 import { type Anchor } from '../anchors';
-
 import { type ShapeComponentProps } from './Shape';
 
 /**

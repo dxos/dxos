@@ -6,7 +6,6 @@ import ChartStreaming from '@robloche/chartjs-plugin-streaming';
 import { Chart, registerables } from 'chart.js';
 import React, { createRef, useEffect, useState } from 'react';
 import 'chartjs-adapter-luxon';
-
 import { type CustomPanelProps, Panel } from '../Panel';
 
 Chart.register(...registerables);

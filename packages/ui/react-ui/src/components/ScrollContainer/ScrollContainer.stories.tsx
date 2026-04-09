@@ -11,7 +11,6 @@ import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
-
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
 type DefaultStoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };

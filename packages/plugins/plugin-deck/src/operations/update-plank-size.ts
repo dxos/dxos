@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
+import { DeckCapabilities } from '../types';
 import { UpdatePlankSize } from './definitions';
 import { updateActiveDeck } from './helpers';
-import { DeckCapabilities } from '../types';
 
 const handler: Operation.WithHandler<typeof UpdatePlankSize> = UpdatePlankSize.pipe(
   Operation.withHandler(

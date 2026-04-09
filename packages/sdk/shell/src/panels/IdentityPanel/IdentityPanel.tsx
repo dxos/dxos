@@ -19,7 +19,6 @@ import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 import { CloseButton, Heading, Viewport } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 import { translationKey } from '../../translations';
-
 import { useIdentityMachine } from './identityMachine';
 import {
   type IdentityPanelHeadingProps,

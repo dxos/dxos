@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { discoveryKey, subtleCrypto } from '@dxos/crypto';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -23,7 +24,6 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
 import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
-import { Context } from '@dxos/context';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;

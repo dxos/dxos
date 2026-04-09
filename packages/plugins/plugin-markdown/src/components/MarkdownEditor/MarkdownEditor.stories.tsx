@@ -13,14 +13,14 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../translations';
 import { Markdown } from '#types';
 
+import { translations } from '../../translations';
 import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 type DefaultStoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;

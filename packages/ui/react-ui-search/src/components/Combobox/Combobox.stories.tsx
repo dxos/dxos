@@ -10,7 +10,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { useSearchListResults } from '../SearchList/hooks';
-
 import { Combobox } from './Combobox';
 
 faker.seed(1234);

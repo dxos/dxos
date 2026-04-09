@@ -11,7 +11,6 @@ import { type Contact, type ContactBook, type ContactsService } from '@dxos/prot
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type DataSpaceManager } from '../spaces';
-
 import { type IdentityManager } from './identity-manager';
 
 export class ContactsServiceImpl implements ContactsService {

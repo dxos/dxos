@@ -21,9 +21,9 @@ import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls
 
 import { useStatus } from '#hooks';
 import { meta } from '#meta';
-import { getMessageMetadata } from '../../util';
 
 import { command } from '../../extensions/command';
+import { getMessageMetadata } from '../../util';
 import { MessagePanel, buttonClassNames, buttonGroupClassNames } from '../MessagePanel';
 
 export type CommentsThreadProps = {

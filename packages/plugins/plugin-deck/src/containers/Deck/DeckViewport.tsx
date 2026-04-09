@@ -13,10 +13,10 @@ import React, {
   useRef,
 } from 'react';
 
-import { addEventListener } from '@dxos/async';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
@@ -26,15 +26,15 @@ import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitio
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation } from '#operations';
+import { getMode } from '#types';
+
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NativeToggleComplementarySidebarButton,
   ToggleSidebarButton as NativeToggleSidebarButton,
 } from '../Sidebar';
-
 import { useDeckContext } from './DeckRoot';
-import { getMode } from '#types';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
 

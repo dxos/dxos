@@ -21,9 +21,10 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { MessagePanel } from '#components';
-import { command } from '../../extensions';
 import { useStatus } from '#hooks';
 import { meta } from '#meta';
+
+import { command } from '../../extensions';
 import { getMessageMetadata } from '../../util';
 
 export type ChatContainerProps = ThemedClassName<

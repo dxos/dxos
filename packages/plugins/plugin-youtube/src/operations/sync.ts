@@ -16,7 +16,6 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { Channel, Video } from '../types';
-
 import { YouTube } from './apis';
 import { Sync } from './definitions';
 import { GoogleCredentials } from './services/google-credentials';

@@ -11,7 +11,6 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { upload } from '../helpers';
 import { WnfsCapabilities } from '../types';
-
 import { Upload } from './definitions';
 
 const handler: Operation.WithHandler<typeof Upload> = Upload.pipe(

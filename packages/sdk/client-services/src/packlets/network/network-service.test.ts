@@ -10,7 +10,6 @@ import { ConnectionState, type NetworkService } from '@dxos/protocols/proto/dxos
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
 import { NetworkServiceImpl } from './network-service';
 
 describe('NetworkService', () => {

@@ -12,8 +12,8 @@ import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { TokenManager } from './TokenManager';
 import { NewTokenSelector } from './NewTokenSelector';
+import { TokenManager } from './TokenManager';
 
 const initialValues = {
   note: '',

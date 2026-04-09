@@ -12,6 +12,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { type Settings } from '#types';
+
 import { getSpaceDisplayName } from '../../util';
 
 export type SpacePluginSettingsProps = AppSurface.SettingsArticleProps<

@@ -6,13 +6,14 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
-import { threads } from '../extensions';
 import { ThreadCapabilities } from '#types';
+
+import { threads } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

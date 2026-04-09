@@ -9,10 +9,10 @@ import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit'
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { getParentId } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Devtools } from '#types';
-import { getParentId } from '@dxos/react-ui-attention';
 
 const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 

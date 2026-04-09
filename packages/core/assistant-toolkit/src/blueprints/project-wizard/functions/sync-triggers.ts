@@ -10,8 +10,8 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
-import { SyncTriggers } from './definitions';
 import { Project } from '../../../types';
+import { SyncTriggers } from './definitions';
 
 export default SyncTriggers.pipe(
   Operation.withHandler(

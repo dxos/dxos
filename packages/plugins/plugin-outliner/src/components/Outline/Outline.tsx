@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {

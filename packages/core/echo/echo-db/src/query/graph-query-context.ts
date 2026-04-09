@@ -15,7 +15,6 @@ import { log } from '@dxos/log';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
-
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 

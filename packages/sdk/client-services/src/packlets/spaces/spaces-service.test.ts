@@ -12,7 +12,6 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
 import { SpacesServiceImpl } from './spaces-service';
 
 describe('SpacesService', () => {

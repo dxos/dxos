@@ -7,7 +7,6 @@
 (globalThis as any).litIssuedWarnings.add('dev-mode');
 
 import '@dxos-theme';
-
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import React, { StrictMode, useCallback } from 'react';
@@ -20,11 +19,11 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
+import { observabilityTranslations } from '@dxos/plugin-observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
-import { observabilityTranslations } from '@dxos/plugin-observability';
 
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';

@@ -22,8 +22,8 @@ import {
   View,
 } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';

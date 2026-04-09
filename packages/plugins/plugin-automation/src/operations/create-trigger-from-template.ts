@@ -13,6 +13,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter } from '@dxos/react-client/echo';
 
 import { meta } from '#meta';
+
 import { CreateTriggerFromTemplate } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateTriggerFromTemplate.pipe(

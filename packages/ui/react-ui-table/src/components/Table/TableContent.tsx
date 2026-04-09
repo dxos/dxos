@@ -26,7 +26,6 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
 import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
-
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';

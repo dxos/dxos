@@ -10,8 +10,8 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -32,9 +32,7 @@ import {
 import { type SVGContext } from '../../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
-
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
-
 import '../../../styles/graph.css';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';

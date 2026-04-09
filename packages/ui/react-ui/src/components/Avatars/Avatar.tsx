@@ -3,7 +3,6 @@
 //
 
 import '@dxos/lit-ui/dx-avatar.pcss';
-
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';

@@ -7,7 +7,6 @@ import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
 import { type AgentFormProps } from '../../components';
-
 import { useEdgeAgentHandlers } from './useEdgeAgentsHandlers';
 import { useKubeAgentHandlers } from './useKubeAgentHandlers';
 

@@ -8,7 +8,6 @@
 (globalThis as any).litIssuedWarnings.add('dev-mode');
 
 import '@dxos-theme';
-
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 

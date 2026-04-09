@@ -8,7 +8,6 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { SheetToolbar } from './SheetToolbar';
 
 const DefaultStory = () => {

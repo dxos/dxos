@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Entity, Filter, Query } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { QueryMemories } from './definitions';
 import { Memory } from '../../../types/Memory';
+import { QueryMemories } from './definitions';
 
 export default QueryMemories.pipe(
   Operation.withHandler(

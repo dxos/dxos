@@ -11,7 +11,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { ConfirmReset } from '../../steps';
 import { StorybookDialog } from '../../story-components';
 import { translations } from '../../translations';
-
 import { JoinPanelImpl } from './JoinPanel';
 import { type JoinPanelImplProps } from './JoinPanelProps';
 import { IdentityInputImpl } from './steps';

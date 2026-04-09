@@ -8,8 +8,9 @@ import { Capability } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { image } from '../extensions';
 import { WnfsCapabilities } from '#types';
+
+import { image } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

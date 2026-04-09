@@ -11,7 +11,6 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Filter } from '@dxos/react-client/echo';
 
 import { Journal } from '../types';
-
 import { QuickJournalEntry } from './definitions';
 
 const handler: Operation.WithHandler<typeof QuickJournalEntry> = QuickJournalEntry.pipe(

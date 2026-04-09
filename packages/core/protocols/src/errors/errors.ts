@@ -6,7 +6,6 @@ import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 
 import type { ObjectId } from '../types.ts';
-
 import { registerError, registerErrorMessageContext, registerErrorNoArgs } from './helpers.ts';
 
 /**

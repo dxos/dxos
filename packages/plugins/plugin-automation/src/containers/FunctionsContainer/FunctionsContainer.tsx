@@ -8,9 +8,10 @@ import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
+import { meta } from '#meta';
+
 import { FunctionsPanel } from '../../components/FunctionsPanel';
 import { FunctionsRegistry } from '../../components/FunctionsRegistry';
-import { meta } from '#meta';
 
 export const FunctionsContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);

@@ -21,7 +21,6 @@ import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { RPC_TIMEOUT } from '../common';
-
 import { type IFrameManager } from './iframe-manager';
 
 const shellStyles = Object.entries({

@@ -4,12 +4,15 @@
 
 import { type ViewUpdate } from '@codemirror/view';
 import { useMemo } from 'react';
+
+import { fromUrlPath } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useThemeContext } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
@@ -34,12 +37,11 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
-import { useThemeContext } from '@dxos/react-ui';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
+
 import { setFallbackName } from '../util';
-import { fromUrlPath } from '@dxos/app-toolkit';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 

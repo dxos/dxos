@@ -31,7 +31,6 @@ import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { Icon } from '../Icon';
-
 import { ListDropIndicator } from './ListDropIndicator';
 
 type ListProps = ThemedClassName<ListPrimitiveProps & { density?: Density }>;

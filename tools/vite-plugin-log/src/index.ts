@@ -5,7 +5,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import type { IndexHtmlTransformContext, Plugin } from 'vite';
 
 /** Virtual module id resolved to the client runtime (uses the app’s @dxos/log). */

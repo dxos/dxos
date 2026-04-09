@@ -19,10 +19,9 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { translations } from '../../translations';
-
-import { CommentsPanel } from './CommentsPanel';
 import { createCommentThread, createProposalThread } from '../../testing/data';
+import { translations } from '../../translations';
+import { CommentsPanel } from './CommentsPanel';
 
 faker.seed(1);
 

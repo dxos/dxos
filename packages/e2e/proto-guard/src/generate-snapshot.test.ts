@@ -5,7 +5,6 @@
 import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
 import { expect, test } from 'vitest';
 
 import { generateSnapshot } from './generate-snapshot';

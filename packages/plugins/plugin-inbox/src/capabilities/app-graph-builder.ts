@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { type Feed, Filter, Key, Obj, Query } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
@@ -17,6 +16,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
+import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 

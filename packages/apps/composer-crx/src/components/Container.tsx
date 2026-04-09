@@ -3,7 +3,6 @@
 //
 
 import '@dxos-theme';
-
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';

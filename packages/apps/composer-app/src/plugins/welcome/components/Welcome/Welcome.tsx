@@ -3,18 +3,15 @@
 //
 
 import '@fontsource/poiret-one';
-
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
+import { supportsNativePasskeys } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 import { mx } from '@dxos/ui-theme';
 
-import { supportsNativePasskeys } from '@dxos/app-toolkit';
-
 import { meta } from '../../meta';
-
 import { hero } from './hero-image';
 import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 

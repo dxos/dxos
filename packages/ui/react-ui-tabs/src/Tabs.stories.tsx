@@ -7,9 +7,9 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
 import { Tabs, TabsRootProps } from './Tabs';
-import { mx } from '@dxos/ui-theme';
 
 faker.seed(1234);
 

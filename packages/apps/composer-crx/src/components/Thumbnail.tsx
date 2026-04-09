@@ -3,7 +3,6 @@
 //
 
 import '@dxos-theme';
-
 import React from 'react';
 
 import { Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';

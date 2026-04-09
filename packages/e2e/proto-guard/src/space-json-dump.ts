@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import fs from 'node:fs';
-import path from 'node:path';
-
 import * as Record from 'effect/Record';
 import isEqual from 'fast-deep-equal';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { type Client } from '@dxos/client';
 import { type Obj, Type } from '@dxos/echo';

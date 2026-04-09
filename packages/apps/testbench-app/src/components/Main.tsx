@@ -16,7 +16,6 @@ import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
 import { Document, Item } from '../data';
 import { defs } from '../defs';
 import { exportData, importData } from '../util';
-
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';

@@ -6,8 +6,9 @@
 // ECHO types are exported as namespaces (e.g., `ExemplarItem.ExemplarItem`) so the
 // namespace serves as both the type and the schema value. This is the standard DXOS pattern.
 
-import { Capability } from '@dxos/app-framework';
 import type { Atom } from '@effect-atom/atom-react';
+
+import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 

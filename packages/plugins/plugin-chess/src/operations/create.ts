@@ -8,7 +8,6 @@ import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { Chess } from '../types';
-
 import { Create } from './definitions';
 
 const handler: Operation.WithHandler<typeof Create> = Create.pipe(

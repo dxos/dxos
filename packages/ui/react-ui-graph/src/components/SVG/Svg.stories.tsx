@@ -8,9 +8,7 @@ import React, { useRef } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type SVGContext, useGrid, useZoom } from '../../hooks';
-
 import { SVG } from './SVG';
-
 import '../../../styles/graph.css';
 
 type ComponentProps = {

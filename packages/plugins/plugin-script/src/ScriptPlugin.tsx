@@ -10,14 +10,8 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-
-import { meta } from '#meta';
-import { translations } from './translations';
-import { ScriptEvents } from '#types';
-import { Notebook } from '#types';
-import { ScriptOperation } from '#operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
@@ -27,6 +21,12 @@ import {
   ReactSurface,
   ScriptSettings,
 } from '#capabilities';
+import { meta } from '#meta';
+import { ScriptOperation } from '#operations';
+import { ScriptEvents } from '#types';
+import { Notebook } from '#types';
+
+import { translations } from './translations';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

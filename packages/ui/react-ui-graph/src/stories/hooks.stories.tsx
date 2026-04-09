@@ -26,7 +26,6 @@ import {
 } from '../graph';
 import { useGrid, useSvgContext, useZoom } from '../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
-
 import '../../styles/graph.css';
 
 type ComponentProps = PropsWithChildren<{
