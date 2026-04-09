@@ -15,7 +15,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { invokeFunctionWithTracing } from '@dxos/plugin-automation/hooks';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -81,7 +80,7 @@ export default Capability.makeModule(
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(Sync, {
+                    Operation.invoke(Sync, {
                       channel: Ref.make(channel),
                     }),
                   ),
@@ -113,7 +112,7 @@ export default Capability.makeModule(
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(ClearSyncedVideos, {
+                    Operation.invoke(ClearSyncedVideos, {
                       channel: Ref.make(channel),
                     }),
                   ),
