@@ -65,6 +65,67 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
+      // Dedup subjects against the active deck using DXN identity.
+      // The same object can appear under different graph paths (e.g., via collections vs types).
+      // Resolve each subject's DXN and, if it matches an already-open deck item, remap the
+      // subject to the existing deck entry so that openEntry's exact-match check succeeds.
+      // Only needed in multi (deck) mode; solo mode replaces the single visible item anyway.
+      {
+        const deck = yield* DeckCapabilities.getDeck();
+        const active = !deck.solo && deck.initialized ? deck.active : [];
+        if (active.length > 0 && input.subject.length > 0) {
+          const resolveDxn = (qualifiedPath: string) =>
+            Effect.reduce(pathResolvers, Option.none<string>(), (acc, resolver) =>
+              Option.isSome(acc)
+                ? Effect.succeed(acc)
+                : resolver(qualifiedPath).pipe(
+                    Effect.map((opt) => Option.map(opt, (dxn) => dxn.toString())),
+                    Effect.catchAll(() => Effect.succeed(Option.none<string>())),
+                  ),
+            );
+
+          // Build DXN → deck item ID map for active items.
+          const deckDxnMap = new Map<string, string>();
+          yield* Effect.all(
+            active.map((deckId) =>
+              resolveDxn(deckId).pipe(
+                Effect.map((opt) => {
+                  if (Option.isSome(opt)) {
+                    deckDxnMap.set(opt.value, deckId);
+                  }
+                }),
+              ),
+            ),
+            { concurrency: 'unbounded' },
+          );
+
+          // Remap subjects whose DXN matches an existing deck item.
+          if (deckDxnMap.size > 0) {
+            const remapped = yield* Effect.all(
+              input.subject.map((subjectId) =>
+                resolveDxn(subjectId).pipe(
+                  Effect.map((opt) => {
+                    if (Option.isSome(opt)) {
+                      const existing = deckDxnMap.get(opt.value);
+                      if (existing && existing !== subjectId) {
+                        return existing;
+                      }
+                    }
+                    return subjectId;
+                  }),
+                ),
+              ),
+              { concurrency: 'unbounded' },
+            );
+            input = { ...input, subject: remapped };
+          }
+        }
+      }
+
+      // Compute the next active deck state and apply it.
+      // In solo or uninitialized mode the subject list replaces the deck entirely.
+      // In multi (deck) mode, subjects are merged via openSubjectsOnActiveDeck which
+      // uses stack semantics (truncate after pivot, then push new entries).
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
@@ -81,6 +142,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
+      // Schedule side-effects for the newly opened items: scroll into view, expose in
+      // the navigation sidebar, and emit observability events.
+      // When nothing is newly opened (subject was already visible), the fallback
+      // `input.subject[0]` still triggers scroll and expose so the user is taken there.
       {
         const deck = yield* DeckCapabilities.getDeck();
         const ids = deck.solo ? [deck.solo] : deck.active;
