@@ -5,11 +5,10 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Context } from '@dxos/context';
-
 import { type Script } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Panel } from '@dxos/react-ui';
 import { getSpace } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 
 import { TestPanel } from '#components';
 import { useDeployDeps } from '#hooks';

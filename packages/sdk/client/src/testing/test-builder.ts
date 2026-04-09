@@ -43,7 +43,6 @@ import {
   LocalClientServices,
   MemoryWorkerCoordiantor,
 } from '../services';
-
 import { TestWorkerFactory } from './test-worker-factory';
 
 export const testConfigWithLocalSignal = new Config({

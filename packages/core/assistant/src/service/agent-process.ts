@@ -2,22 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Cause from 'effect/Cause';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
 import { TracingService } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
+import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
-
 import { trim } from '@dxos/util';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Duration from 'effect/Duration';
-import * as Exit from 'effect/Exit';
-import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
+
 import { AiConversation } from '../conversation';
 import {
   functionInvocationServiceFromOperations,
@@ -25,10 +29,6 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '../functions';
-import { acquireReleaseResource } from '@dxos/effect';
-import { log } from '@dxos/log';
-import * as Match from 'effect/Match';
-import * as Cause from 'effect/Cause';
 
 interface AgentProcessOptions {
   systemPrompt?: string;

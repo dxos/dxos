@@ -16,6 +16,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
 import { Message } from '@dxos/types';
+
 import { Process } from './process';
 
 export enum InvocationOutcome {

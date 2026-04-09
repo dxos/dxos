@@ -10,7 +10,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Event as EventType } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { Event } from './Event';
 
 const DefaultStory = () => {

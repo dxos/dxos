@@ -3,11 +3,6 @@
 //
 
 import '@dxos/lit-ui';
-
-import { WidgetType } from '@codemirror/view';
-import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
-
 import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { Input, Toolbar } from '@dxos/react-ui';

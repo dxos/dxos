@@ -6,8 +6,9 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { type CallManager, type CallState, type MediaState } from '../calls';
 import { meta } from '#meta';
+
+import { type CallManager, type CallState, type MediaState } from '../calls';
 import { type Channel, type ThreadState, type ViewStore } from '../types';
 import * as Settings from './Settings';
 

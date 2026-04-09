@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import 'highlight.js/styles/github.css';
+
 import { h } from 'hastscript';
 import React from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
@@ -9,8 +11,6 @@ import rehypeAddClasses from 'rehype-add-classes';
 import rehypeHighlight from 'rehype-highlight';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
-
-import 'highlight.js/styles/github.css';
 
 import styles from './styles.css?raw';
 import { theme } from './theme';

@@ -9,14 +9,14 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-
-import { meta } from '#meta';
-import { translations } from './translations';
-import { Model, Scene } from '#types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface, SpacetimeSettings } from '#capabilities';
+import { meta } from '#meta';
+import { Model, Scene } from '#types';
+
+import { translations } from './translations';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

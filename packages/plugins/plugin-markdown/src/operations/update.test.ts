@@ -21,8 +21,8 @@ import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { WithProperties } from '#testing';
-import MarkdownBlueprint from '../blueprints/markdown-blueprint';
 
+import MarkdownBlueprint from '../blueprints/markdown-blueprint';
 import { Update } from './definitions';
 import { MarkdownOperationHandlerSet } from './index';
 

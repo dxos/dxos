@@ -6,8 +6,8 @@ import { type Mesh, Plane, PointerEventTypes, Vector3, type PointerInfo } from '
 
 import { Obj } from '@dxos/echo';
 
-import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
+import { type ToolContext } from '../tool-context';
 
 /** Grid snap size (matches GRID_STEP in scene-manager). */
 const SNAP_SIZE = 1;

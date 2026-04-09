@@ -3,11 +3,13 @@
 //
 
 import * as Context from 'effect/Context';
-import * as Operation from './Operation';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+
 import { Database, Query } from '@dxos/echo';
+
+import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
 
 export interface OperationRegistry {

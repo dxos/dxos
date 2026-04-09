@@ -14,7 +14,6 @@ import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-them
 import { MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity, MessageStoryText } from '../testing';
 import { translations } from '../translations';
-
 import { Thread } from './Thread';
 
 random.seed(1);

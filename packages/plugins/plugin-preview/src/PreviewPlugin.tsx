@@ -6,10 +6,10 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Organization, Person } from '@dxos/types';
 
-import { meta } from '#meta';
-import { translations } from './translations';
-
 import { PreviewPopover, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
+import { translations } from './translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization], id: 'schema' }),

@@ -20,8 +20,11 @@ import { Operation } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
-import { shouldDeferNavigationHandlers } from './check-app-scheme';
 import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
+
+import { updateActiveDeck } from '../operations/helpers';
+import { deserializePlanks, serializePlanks, stripPlanks } from '../util';
+import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Dispatch all NavigationHandler contributions with a given URL. */
 const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
@@ -110,7 +113,13 @@ export default Capability.makeModule(
         // Do not switch to deck mode here — only explicit user action should change layout mode.
         const path = toUrlPath(deck.solo);
         if (window.location.pathname !== path) {
-          history.replaceState(null, '', `${path}${window.location.search}`);
+          history.replaceState(null, '', `${path}${stripPlanks(window.location.search)}`);
+        }
+      } else if (!activeId && !deck.solo) {
+        // Multi-mode: restore planks from query params.
+        const plankIds = deserializePlanks(resolvedUrl);
+        if (plankIds.length > 0) {
+          updateState((state) => updateActiveDeck(state, { active: plankIds, initialized: true }));
         }
       }
     });
@@ -150,19 +159,27 @@ export default Capability.makeModule(
     // Sync URL with layout state changes.
     let lastSolo: string | undefined;
     let lastActiveDeck: string | undefined;
+    let lastActiveKey: string | undefined;
     const unsubscribe = registry.subscribe(stateAtom, () => {
       const state = getState();
       const deck = getDeck();
       const solo = deck.solo;
       const activeDeck = state.activeDeck;
+      const activeKey = solo ? undefined : JSON.stringify(deck.active);
 
-      if (solo !== lastSolo || activeDeck !== lastActiveDeck) {
+      if (solo !== lastSolo || activeDeck !== lastActiveDeck || activeKey !== lastActiveKey) {
         lastSolo = solo;
         lastActiveDeck = activeDeck;
+        lastActiveKey = activeKey;
 
         const path = solo && solo !== NOT_FOUND_PATH ? toUrlPath(solo) : toUrlPath(activeDeck);
-        if (window.location.pathname !== path) {
-          history.pushState(null, '', `${path}${window.location.search}`);
+        const search = !solo
+          ? serializePlanks(deck.active, window.location.search)
+          : stripPlanks(window.location.search);
+        const newUrl = `${path}${search}`;
+
+        if (`${window.location.pathname}${window.location.search}` !== newUrl) {
+          history.pushState(null, '', newUrl);
         }
       }
     });

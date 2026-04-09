@@ -20,11 +20,12 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
 import { type Scene } from '#types';
-import { handleImport as doImport, handleExport as doExport } from './import-export';
+
+import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
+import { handleImport as doImport, handleExport as doExport } from './import-export';
 
 //
 // Context

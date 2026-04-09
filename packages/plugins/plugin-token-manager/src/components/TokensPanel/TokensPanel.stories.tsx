@@ -10,8 +10,8 @@ import { random } from '@dxos/random';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
-import { TokensPanel, type TokensPanelProps } from './TokensPanel';
 import { translations } from '../../translations';
+import { TokensPanel, type TokensPanelProps } from './TokensPanel';
 
 random.seed(1);
 

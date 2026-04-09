@@ -8,8 +8,8 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';

@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { AlertDialog } from './AlertDialog';
 
 type DefaultStoryProps = Partial<{

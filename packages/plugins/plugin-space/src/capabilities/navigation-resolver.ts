@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
-  Segments,
   getObjectPath,
   getSpaceIdFromPath,
   getSpacePath,
@@ -62,20 +61,16 @@ export default Capability.makeModule(
         ];
       })) as AppCaps.NavigationTargetResolver;
 
-    // Resolve canonical object paths (root/<spaceId>/types/<typename>/all/<objectId>) to DXNs.
+    // Resolve object paths to DXNs.
+    // Handles canonical type paths (root/<spaceId>/types/<typename>/all/<objectId>)
+    // and collection paths (root/<spaceId>/collections/<collectionId>/<objectId>).
     // Validates that the object actually exists in the space before returning a DXN.
     const client = yield* Capability.get(ClientCapabilities.Client);
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
       const spaceId = getSpaceIdFromPath(qualifiedPath);
       const objectId = segments[segments.length - 1];
-      if (
-        !spaceId ||
-        !objectId ||
-        !Key.ObjectId.isValid(objectId) ||
-        !segments.includes(Segments.types) ||
-        !segments.includes('all')
-      ) {
+      if (!spaceId || !objectId || !Key.ObjectId.isValid(objectId)) {
         return Effect.succeed(Option.none());
       }
 

@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { meta } from '#meta';
+
 import { translations } from './translations';
 
 describe('translations', () => {

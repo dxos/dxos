@@ -16,14 +16,15 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
-import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '#testing';
+
+import { NavTreePlugin } from '../../NavTreePlugin';
 import { translations } from '../../translations';
 
 random.seed(1234);

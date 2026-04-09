@@ -10,7 +10,6 @@ import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TogglePanel } from '../TogglePanel';
-
 import { NumericTabs } from './NumericTabs';
 
 const content = Array.from({ length: 15 }, () => ({

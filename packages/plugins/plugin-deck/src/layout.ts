@@ -43,12 +43,20 @@ export type OpenSubjectsOnActiveDeckOptions = {
  * If `pivotId` is present and found, truncates the deck after that id.
  * Applies each subject with {@link openEntry}.
  * If the pivot is missing, appends onto the full `active` list.
+ *
+ * When all subjects are already present in the active deck, the deck is returned
+ * unchanged so that pivot truncation does not discard open planks when navigating
+ * to something that is already visible.
  */
 export const openSubjectsOnActiveDeck = (
   active: readonly string[],
   subject: readonly string[],
   options?: OpenSubjectsOnActiveDeckOptions,
 ): string[] => {
+  if (subject.length > 0 && subject.every((id) => active.includes(id))) {
+    return [...active];
+  }
+
   const { pivotId, key } = options ?? {};
   const pivotIndex = pivotId ? active.findIndex((id) => id === pivotId) : -1;
   const baseDeck = pivotIndex !== -1 ? active.slice(0, pivotIndex + 1) : [...active];

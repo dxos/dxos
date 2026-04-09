@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { writeFileSync } from 'node:fs';
-
 import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import { writeFileSync } from 'node:fs';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';

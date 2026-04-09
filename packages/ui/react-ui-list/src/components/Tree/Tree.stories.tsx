@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
@@ -14,7 +14,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { Path } from '../../util';
-
 import { type TestItem, createTree, updateState } from './testing';
 import { Tree } from './Tree';
 import { type TreeModel } from './TreeContext';

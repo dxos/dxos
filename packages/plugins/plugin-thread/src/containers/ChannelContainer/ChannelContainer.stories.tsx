@@ -13,9 +13,9 @@ import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
 import { createThreadPlugins } from '#testing';
-import { translations } from '../../translations';
 import { Channel } from '#types';
 
+import { translations } from '../../translations';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.

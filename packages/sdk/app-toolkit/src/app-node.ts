@@ -6,11 +6,10 @@ import { type Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { type Position } from '@dxos/util';
 
-import { type Label } from './translations';
-
 import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from './companion-types';
 import { NOT_FOUND_NODE_ID, NOT_FOUND_NODE_TYPE } from './not-found';
 import { createObjectNode } from './object-node';
+import { type Label } from './translations';
 
 //
 // Re-export createObjectNode as makeObject.

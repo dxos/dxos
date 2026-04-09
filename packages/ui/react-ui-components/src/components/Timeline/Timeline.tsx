@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
+import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';

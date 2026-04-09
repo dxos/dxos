@@ -9,20 +9,18 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
+import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
-
-import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
-import { Trace } from '@dxos/functions';
-import { SpaceId } from '@dxos/keys';
+import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree } from '../../components';
 
@@ -141,6 +139,24 @@ const getExecutionGraph = (
               }
             }
           }
+
+          // Process operation trace events.
+          if (Trace.isOfType(Trace.OperationStart, event)) {
+            builder.addOperationStart(
+              `${event.id}:${event.data.key}:start`,
+              event.data.name ?? event.data.key,
+              event.timestamp,
+            );
+          }
+          if (Trace.isOfType(Trace.OperationEnd, event)) {
+            builder.addOperationEnd(
+              `${event.id}:${event.data.key}:end`,
+              event.data.name ?? event.data.key,
+              event.data.outcome,
+              event.data.error,
+              event.timestamp,
+            );
+          }
         }
 
         const activeProcesses = get(processTreeAtom);
@@ -250,4 +266,40 @@ class GraphBuilder {
       timestamp: new Date(ts),
     });
   }
+
+  addOperationStart(id: string, operationName: string, ts: number) {
+    this.#addCommit({
+      id,
+      branch: OPERATIONS_BRANCH,
+      parents: this.#defaultParents(OPERATIONS_BRANCH),
+      icon: 'ph--play--regular',
+      level: LogLevel.INFO,
+      message: operationName,
+      timestamp: new Date(ts),
+    });
+  }
+
+  addOperationEnd(
+    id: string,
+    operationName: string,
+    outcome: 'success' | 'failure',
+    error: string | undefined,
+    ts: number,
+  ) {
+    const isError = outcome === 'failure';
+    this.#addCommit({
+      id,
+      branch: OPERATIONS_BRANCH,
+      parents: this.#defaultParents(OPERATIONS_BRANCH),
+      icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
+      level: isError ? LogLevel.ERROR : LogLevel.INFO,
+      message: isError ? `${operationName}: ${error ?? 'Failed'}` : operationName,
+      timestamp: new Date(ts),
+    });
+  }
 }
+
+/**
+ * Branch name for top-level operation invocations.
+ */
+const OPERATIONS_BRANCH = 'operations';

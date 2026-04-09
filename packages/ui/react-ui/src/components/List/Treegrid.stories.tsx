@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
-
 import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR, TREEGRID_PATH_SEPARATOR } from './Treegrid';
 
 random.seed(1234);

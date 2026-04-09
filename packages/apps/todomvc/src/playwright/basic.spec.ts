@@ -5,7 +5,6 @@
 import { expect, test } from '@playwright/test';
 
 import { FILTER } from '../constants';
-
 import { AppManager } from './app-manager';
 
 enum Groceries {

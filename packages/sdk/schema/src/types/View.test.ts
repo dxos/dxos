@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Format, TypeEnum } from '@dxos/echo/internal';
 import { RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { Format, TypeEnum } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { ProjectionModel, createDirectChangeCallback } from '@dxos/schema';
 

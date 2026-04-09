@@ -4,10 +4,10 @@
 
 import React, { useState } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
 import { type Database, Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';

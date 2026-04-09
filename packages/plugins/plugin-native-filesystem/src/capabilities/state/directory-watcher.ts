@@ -3,14 +3,13 @@
 //
 
 import type { WatchEvent } from '@tauri-apps/plugin-fs';
-
 import * as Effect from 'effect/Effect';
 
 import { debounce } from '@dxos/async';
 
-import { watchDirectory } from './disk-io';
-
 import type { FilesystemWorkspace } from '#types';
+
+import { watchDirectory } from './disk-io';
 
 const WATCHER_DEBOUNCE_MS = 500;
 

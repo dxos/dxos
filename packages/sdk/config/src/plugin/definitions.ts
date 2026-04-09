@@ -5,7 +5,6 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-
 import pkgUp from 'pkg-up';
 import { parse } from 'yaml';
 
@@ -14,7 +13,6 @@ import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
 import { mapFromKeyValues } from '../config';
-
 import { type ConfigPluginOpts } from './types';
 
 const CWD = process.cwd();

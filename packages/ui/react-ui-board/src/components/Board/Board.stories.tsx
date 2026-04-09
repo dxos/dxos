@@ -7,11 +7,10 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
 import { defaultGrid } from './defs';
 import { type BoardLayout } from './types';

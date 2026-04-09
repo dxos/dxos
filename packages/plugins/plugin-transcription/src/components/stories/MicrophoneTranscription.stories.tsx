@@ -16,8 +16,8 @@ import {
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
 import { Filter, type Obj } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -32,10 +32,10 @@ import { seedTestData } from '@dxos/types/testing';
 
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '#hooks';
 import { TestItem } from '#testing';
+
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
-
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 

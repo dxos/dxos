@@ -3,12 +3,13 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import React, { PropsWithChildren } from 'react';
 
 import { type PluginManager } from '@dxos/app-framework';
 
-import { type DeckStateHook } from '../../hooks/useDeckState';
 import { type LayoutMode, type Settings } from '#types';
-import React, { PropsWithChildren } from 'react';
+
+import { type DeckStateHook } from '../../hooks/useDeckState';
 
 const DECK_NAME = 'Deck';
 const DECK_ROOT_NAME = 'DeckRoot';

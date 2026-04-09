@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { spawn } from 'node:child_process';
-import { platform } from 'node:os';
-
+import * as BunHttpServer from '@effect/platform-bun/BunHttpServer';
 import * as HttpRouter from '@effect/platform/HttpRouter';
 import * as HttpServer from '@effect/platform/HttpServer';
 import * as HttpServerRequest from '@effect/platform/HttpServerRequest';
 import * as HttpServerResponse from '@effect/platform/HttpServerResponse';
-import * as BunHttpServer from '@effect/platform-bun/BunHttpServer';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -17,6 +14,8 @@ import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import { getPort } from 'get-port-please';
+import { spawn } from 'node:child_process';
+import { platform } from 'node:os';
 
 import { ClientService } from '@dxos/client';
 import { Database } from '@dxos/echo';
@@ -30,7 +29,6 @@ import {
   getRelayPageHtml,
   performOAuthFlow as performOAuthFlowShared,
 } from '../../../oauth';
-
 import { type OAuthPreset } from './util';
 
 /**

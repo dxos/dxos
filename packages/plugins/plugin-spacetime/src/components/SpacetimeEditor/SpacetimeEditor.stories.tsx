@@ -10,8 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
 import { Model, Scene } from '#types';
+
+import { translations } from '../../translations';
 import { SpacetimeEditor, type SpacetimeController } from './SpacetimeEditor';
 
 const DefaultStory = () => {

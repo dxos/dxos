@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import yaml from 'js-yaml';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
-import yaml from 'js-yaml';
 import { validate as validateUuid } from 'uuid';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 

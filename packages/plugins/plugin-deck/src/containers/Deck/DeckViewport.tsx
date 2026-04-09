@@ -13,27 +13,28 @@ import React, {
   useRef,
 } from 'react';
 
-import { addEventListener } from '@dxos/async';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
-import { Main, type MainContentProps, useOnTransition } from '@dxos/react-ui';
+import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
+import { meta } from '#meta';
 import { DeckOperation } from '#operations';
+import { getMode } from '#types';
+
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NativeToggleComplementarySidebarButton,
   ToggleSidebarButton as NativeToggleSidebarButton,
 } from '../Sidebar';
-
 import { useDeckContext } from './DeckRoot';
-import { getMode } from '#types';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
 
@@ -123,16 +124,34 @@ export const DeckContentEmpty = () => {
  * Single-plank layout with optional companion.
  */
 export const DeckSoloMode = () => {
-  const { deck, settings, layoutMode } = useDeckContext('DeckSoloMode');
+  const { deck, settings, layoutMode, onLayoutChange } = useDeckContext('DeckSoloMode');
   const { companionOpen, companionVariant, fullscreen, solo } = deck;
-  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
+  const effectiveCompanionVariant = fullscreen ? undefined : companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   invariant(solo);
 
+  useEffect(() => {
+    if (!fullscreen) {
+      return;
+    }
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onLayoutChange({ mode: 'solo--fullscreen' });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [fullscreen, onLayoutChange]);
+
   return (
     <div role='none' className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
+      {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
       <StackContext.Provider
         value={{
           orientation: 'horizontal',
@@ -257,6 +276,30 @@ const ToggleSidebarButton = () => <NativeToggleSidebarButton classNames={mx(side
 const ToggleComplementarySidebarButton = () => (
   <NativeToggleComplementarySidebarButton classNames={mx(sidebarToggleStyles, 'right-2')} />
 );
+
+const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <div
+      role='none'
+      className={mx(
+        'fixed top-2 right-2 z-[1]',
+        hoverableControls,
+        hoverableFocusedWithinControls,
+        'transition-opacity opacity-(--controls-opacity)',
+      )}
+    >
+      <IconButton
+        label={t('exit-fullscreen.label')}
+        icon='ph--corners-in--regular'
+        iconOnly
+        variant='ghost'
+        tooltipSide='bottom'
+        onClick={onExit}
+      />
+    </div>
+  );
+};
 
 const DeckSidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: boolean }) => {
   if (topbar || fullscreen) {

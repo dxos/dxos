@@ -11,7 +11,6 @@ import type * as TeleportAutomergeReplicator from '@dxos/teleport-extension-auto
 import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
-
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorContext,

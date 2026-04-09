@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';

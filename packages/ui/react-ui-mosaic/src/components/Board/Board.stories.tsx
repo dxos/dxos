@@ -21,7 +21,6 @@ import { TestColumn, TestItem } from '../../testing';
 import { translations } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicEventHandler } from '../Mosaic';
-
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 

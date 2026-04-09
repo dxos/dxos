@@ -12,7 +12,6 @@ import { CredentialsService } from '@dxos/functions';
 
 import { GoogleCalendar } from '../../../apis';
 import { GoogleCredentials, InboxResolver } from '../../../services';
-
 import { mapEvent } from './mapper';
 
 const TestLayer = Layer.mergeAll(

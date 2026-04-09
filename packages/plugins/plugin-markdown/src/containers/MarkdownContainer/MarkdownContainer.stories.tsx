@@ -18,15 +18,16 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
+
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { translations } from '../../translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 random.seed(1);
 

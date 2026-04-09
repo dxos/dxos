@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { Popover } from './Popover';
 
 random.seed(1234);

@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
   automerge,
@@ -20,7 +20,6 @@ import {
 } from '@dxos/ui-editor';
 
 import { createMenuGroup } from '../EditorMenuProvider';
-
 import { Editor, type EditorContentProps } from './Editor';
 
 // TODO(burdon): PreviewPopoverProvider (MarkdownStream, Preview story).

@@ -19,7 +19,6 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { RecordArticle } from './RecordArticle';
 
 random.seed(0);

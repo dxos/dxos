@@ -10,9 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../translations';
 import { Journal, Outline } from '#types';
 
+import { translations } from '../../translations';
 import { JournalContainer } from './JournalContainer';
 
 type DefaultStoryProps = {

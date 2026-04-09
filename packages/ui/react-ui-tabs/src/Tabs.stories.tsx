@@ -7,9 +7,9 @@ import React from 'react';
 
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
 import { Tabs, TabsRootProps } from './Tabs';
-import { mx } from '@dxos/ui-theme';
 
 random.seed(1234);
 

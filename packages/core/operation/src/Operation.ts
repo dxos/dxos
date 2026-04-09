@@ -10,8 +10,8 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
-import type { Service } from './service';
 import type { Operation } from './index';
+import type { Service } from './service';
 
 // @import-as-namespace
 

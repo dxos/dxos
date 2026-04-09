@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 
 import { type ComputeGraph } from '@dxos/compute';
 
-import { SheetModel } from '../model';
 import { type Sheet } from '#types';
+
+import { SheetModel } from '../model';
 
 export type UseSheetModelOptions = {
   readonly?: boolean;

@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#operations';

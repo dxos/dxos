@@ -9,10 +9,11 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
-import { SHORTCUTS_DIALOG } from '../constants';
 import { meta } from '#meta';
-import { HelpCapabilities } from '#types';
 import { HelpOperation } from '#operations';
+import { HelpCapabilities } from '#types';
+
+import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

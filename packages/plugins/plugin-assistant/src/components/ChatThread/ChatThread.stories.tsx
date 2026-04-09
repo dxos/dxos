@@ -16,15 +16,14 @@ import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Message, Organization, Person } from '@dxos/types';
 
 import { createMessageGenerator } from '#testing';
-import { translations } from '../../translations';
 
+import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 import { componentRegistry } from './registry';
 import TEXT from './testing/thread.md?raw';

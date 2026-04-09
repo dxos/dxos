@@ -26,6 +26,7 @@ import { isTruthy } from '@dxos/util';
 
 import { useChatToolbarActions } from '#hooks';
 import { meta } from '#meta';
+
 import { type AiChatProcessor } from '../../processor';
 import {
   ChatActions,
@@ -36,7 +37,6 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
-
 import { type ChatEvent } from './events';
 
 //

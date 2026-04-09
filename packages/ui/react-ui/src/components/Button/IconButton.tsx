@@ -8,7 +8,6 @@ import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon, type IconProps } from '../Icon';
 import { Tooltip, type TooltipSide } from '../Tooltip';
-
 import { Button, type ButtonProps } from './Button';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &

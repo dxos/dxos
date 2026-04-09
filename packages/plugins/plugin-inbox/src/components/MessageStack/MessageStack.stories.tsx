@@ -14,17 +14,16 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { InboxPlugin } from '../../InboxPlugin';
 import { Builder, LABELS, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
+import { InboxPlugin } from '../../InboxPlugin';
 import { MessageStack as MessageStackComponent } from './MessageStack';
 import { log } from '@dxos/log';
 

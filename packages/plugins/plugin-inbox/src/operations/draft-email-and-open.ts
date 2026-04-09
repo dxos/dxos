@@ -10,10 +10,9 @@ import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Message } from '@dxos/types';
 
-import { DraftMessage } from '../types';
 import { getMailboxMessagePath } from '../paths';
+import { DraftMessage } from '../types';
 import { buildDraftMessageProps } from '../util';
-
 import { DraftEmailAndOpen } from './definitions';
 
 const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOpen.pipe(

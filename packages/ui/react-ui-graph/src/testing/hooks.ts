@@ -8,7 +8,6 @@ import { type Graph } from '@dxos/graph';
 import { random } from '@dxos/random';
 
 import { useStateRef } from '../hooks';
-
 import { createEdge, createNode } from './data';
 import { type TestNode } from './model';
 

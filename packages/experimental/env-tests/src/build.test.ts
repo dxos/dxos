@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { writeFile } from 'node:fs/promises';
-
 import { build } from 'esbuild';
+import { writeFile } from 'node:fs/promises';
 import { describe, test } from 'vitest';
 
 // Checks that packages can be used in different environments.

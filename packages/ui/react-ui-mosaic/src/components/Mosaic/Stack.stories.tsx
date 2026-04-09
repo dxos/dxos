@@ -13,10 +13,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
-
+import { Focus } from '../Focus';
 import { Mosaic, MosaicStackProps } from './Mosaic';
 import { MosaicStack } from './Stack';
-import { Focus } from '../Focus';
 
 random.seed(999);
 

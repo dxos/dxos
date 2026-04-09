@@ -24,7 +24,6 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { type TestStep, runSteps } from '../testing';
-
 import PlanningOldBlueprint from './blueprint';
 import { TaskHandlers } from './functions';
 

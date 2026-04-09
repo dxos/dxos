@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
-
 import { Message } from './Message';
 
 random.seed(123);

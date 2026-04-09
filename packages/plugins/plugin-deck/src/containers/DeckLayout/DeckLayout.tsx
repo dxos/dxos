@@ -10,8 +10,8 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useDeckState } from '#hooks';
 import { DeckCapabilities, getMode } from '#types';
-import { Deck, type DeckLayoutChangeRequest } from '../Deck';
 
+import { Deck, type DeckLayoutChangeRequest } from '../Deck';
 import { ActiveNode } from './ActiveNode';
 import { Dialog } from './Dialog';
 import { PopoverContent, PopoverRoot } from './Popover';

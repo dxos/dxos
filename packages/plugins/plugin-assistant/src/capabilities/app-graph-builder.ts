@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
@@ -22,8 +22,8 @@ import { Query } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { AssistantCapabilities } from '#types';
 import { AssistantOperation } from '#operations';
+import { AssistantCapabilities } from '#types';
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(

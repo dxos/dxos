@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'util';
-
 import { test } from 'vitest';
 
 import { range } from '@dxos/util';

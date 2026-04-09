@@ -5,7 +5,6 @@
 import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
-
 import { type ButtonStyleProps } from './button';
 
 export type IconButtonStyleProps = ButtonStyleProps & { iconOnly?: boolean };

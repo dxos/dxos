@@ -23,7 +23,6 @@ import { Organization } from '@dxos/types';
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { translations } from '../../translations';
 import { TracePanel } from '../TracePanel';
-
 import { PromptList } from './PromptList';
 
 // TODO(burdon): Factor out (see assistant-stories)

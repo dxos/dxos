@@ -9,8 +9,8 @@ import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '#meta';
-import { ClientCapability, ObservabilityCapabilities } from '#types';
 import { ObservabilityOperation } from '#operations';
+import { ClientCapability, ObservabilityCapabilities } from '#types';
 
 export type ClientReadyOptions = {
   namespace: string;

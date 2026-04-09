@@ -13,16 +13,16 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withLayout } from '@dxos/react-ui/testing';
 
 import { ComputeGraphContext, useComputeGraph } from '#components';
-import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
-import { translations } from '../../translations';
-import { Sheet } from '#types';
 import { SheetOperation } from '#operations';
-import RangeList from '../RangeList';
+import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { Sheet } from '#types';
 
+import { translations } from '../../translations';
+import RangeList from '../RangeList';
 import { SheetContainer } from './SheetContainer';
 
 const meta = {

@@ -9,15 +9,15 @@ import React, { useContext, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
 import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person, Pipeline } from '@dxos/types';

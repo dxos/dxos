@@ -3,7 +3,6 @@
 //
 
 import { type Model } from '../types';
-
 import { type Selection, type SelectionMode } from './tool-context';
 
 /** Unified editor state shared between tools, actions, canvas, and toolbar. */

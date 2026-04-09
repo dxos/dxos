@@ -9,7 +9,6 @@ import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { ScrollArea } from '../ScrollArea';
 import { Toolbar } from '../Toolbar';
-
 import { Splitter, type SplitterRootProps } from './Splitter';
 
 const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(

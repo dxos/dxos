@@ -21,7 +21,6 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-
 import { type ViewMode, useMessageActions } from './useToolbar';
 
 //

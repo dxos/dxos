@@ -17,7 +17,6 @@ import { TestSchema } from '@dxos/schema/testing';
 
 import { ObjectViewer } from '../../../components';
 import { DevtoolsContextProvider } from '../../../hooks';
-
 import { ObjectsPanel } from './ObjectsPanel';
 import { ObjectsTree } from './ObjectsTree';
 

@@ -8,8 +8,9 @@ import { Capability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
-import { computeGraphFacet } from '../extensions';
 import { SheetCapabilities } from '#types';
+
+import { computeGraphFacet } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

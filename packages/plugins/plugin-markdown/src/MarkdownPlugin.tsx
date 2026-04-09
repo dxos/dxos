@@ -10,18 +10,12 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
 import { MarkdownBlueprint } from '#blueprints';
-import { meta } from '#meta';
-import { translations } from './translations';
-import { Markdown, MarkdownEvents } from '#types';
-import { MarkdownOperation } from '#operations';
-import { serializer } from './util';
-
 import {
   AnchorSort,
   AppGraphSerializer,
@@ -31,6 +25,12 @@ import {
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
+import { meta } from '#meta';
+import { MarkdownOperation } from '#operations';
+import { Markdown, MarkdownEvents } from '#types';
+
+import { translations } from './translations';
+import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

@@ -28,9 +28,8 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan, Project } from '../../types';
-import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import { MarkdownHandlers } from '../markdown';
-
+import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import ProjectBlueprintDef from './blueprint';
 import { Agent, ProjectHandlers } from './functions';
 

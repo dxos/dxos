@@ -15,7 +15,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { StorybookDialog } from '../../story-components';
 import { translations } from '../../translations';
-
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';

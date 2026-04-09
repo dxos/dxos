@@ -25,11 +25,10 @@ import {
 } from '@dxos/types';
 
 import { IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
-
 import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
 import { SpaceEvents } from '#types';
 import { type CreateObject, type SpacePluginOptions } from '#types';
-import { SpaceOperation } from '#operations';
 
 import { database, queue, space } from './commands';
 

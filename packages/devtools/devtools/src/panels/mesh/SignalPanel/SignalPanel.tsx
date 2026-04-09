@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { PanelContainer } from '../../../components';
-
 import { SignalMessageTable } from './SignalMessageTable';
 import { SignalStatusTable } from './SignalStatusTable';
 

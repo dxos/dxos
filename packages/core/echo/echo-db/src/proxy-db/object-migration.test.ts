@@ -12,7 +12,6 @@ import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
-
 import { defineObjectMigration } from './object-migration';
 
 let builder: EchoTestBuilder;

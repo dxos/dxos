@@ -5,7 +5,6 @@
 import { type Obj } from '@dxos/echo';
 
 import { type GetId, type MosaicEventHandler } from '../components';
-
 import { useEventHandlerAdapter } from './useEventHandlerAdapter';
 
 /**

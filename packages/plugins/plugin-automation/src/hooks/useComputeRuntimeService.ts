@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SpaceId } from '@dxos/keys';
-import { AutomationCapabilities } from '../types';
 import * as Context from 'effect/Context';
-import { useComputeRuntime } from './useComputeRuntime';
 import { use } from 'react';
-import { unwrapExit } from '@dxos/effect';
 import { useMemo } from 'react';
+
+import { unwrapExit } from '@dxos/effect';
+import { SpaceId } from '@dxos/keys';
+
+import { AutomationCapabilities } from '../types';
+import { useComputeRuntime } from './useComputeRuntime';
 
 export const useComputeRuntimeService = <T extends Context.Tag<any, any>>(
   tag: T,

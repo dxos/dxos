@@ -10,11 +10,10 @@ import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel, useTr
 import { List } from '@dxos/react-ui-list';
 
 import { useCountdown } from '#hooks';
+import { meta } from '#meta';
+import { Dream, Sequence } from '#types';
 
 import { MixerEngine } from '../../generator';
-import { Dream, Sequence } from '#types';
-import { meta } from '#meta';
-
 import { Sound } from '../Sound';
 
 //

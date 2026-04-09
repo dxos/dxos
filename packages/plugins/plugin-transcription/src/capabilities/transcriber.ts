@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
 import { TranscriptionCapabilities } from '#types';
+
+import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
 
 // TODO(burdon): Move to config?
 

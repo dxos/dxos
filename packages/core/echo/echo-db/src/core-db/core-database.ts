@@ -20,8 +20,8 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import { batchEvents } from '@dxos/echo/internal';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
+import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -34,7 +34,6 @@ import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
-
 import {
   type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,
@@ -816,6 +815,13 @@ export class CoreDatabase {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
+
+    // Skip objects that were already materialized locally.
+    if (this._objects.has(objectId)) {
+      log.verbose('object already exists, skipping creation', { objectId });
+      return;
+    }
+
     const core = this._createObjectInDocument(handle, objectId);
     if (this._areDepsSatisfied(core)) {
       this._scheduleThrottledUpdate([objectId]);

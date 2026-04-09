@@ -10,7 +10,6 @@ import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl } from '../TextCrawl';
-
 import { ProgressBar, type ProgressBarProps } from './ProgressBar';
 
 const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: random.lorem.sentences(1) });

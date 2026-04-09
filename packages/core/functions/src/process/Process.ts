@@ -4,19 +4,20 @@
 
 // @import-as-namespace
 
-import * as Scope from 'effect/Scope';
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-import type * as Exit from 'effect/Exit';
+import type { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
-import { Operation, OperationHandlerSet } from '@dxos/operation';
-import type { TracingService } from '../services/tracing';
-import * as Option from 'effect/Option';
-import type { Atom } from '@effect-atom/atom';
-import type { ObjectId } from '@dxos/protocols';
 import { assertArgument } from '@dxos/invariant';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
+import type { ObjectId } from '@dxos/protocols';
+
+import type { TracingService } from '../services/tracing';
 import * as Trace from '../Trace';
 
 //
@@ -254,6 +255,12 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
         return {
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
+              // Emit operation start event.
+              yield* Trace.write(Trace.OperationStart, {
+                key: op.meta.key,
+                name: op.meta.name,
+              });
+
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
               const output = yield* opHandler.handler(input).pipe(Effect.orDie) as Effect.Effect<
                 Operation.Definition.Output<Op>,
@@ -263,7 +270,29 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 
               ctx.submitOutput(output);
               ctx.succeed();
-            }).pipe(semaphore.withPermits(1)),
+
+              // Emit operation end event with success after side-effects complete.
+              yield* Trace.write(Trace.OperationEnd, {
+                key: op.meta.key,
+                name: op.meta.name,
+                outcome: 'success',
+              });
+            }).pipe(
+              Effect.catchAllDefect((defect) =>
+                Effect.gen(function* () {
+                  // Emit operation end event with failure.
+                  const errorMessage = defect instanceof Error ? defect.message : String(defect);
+                  yield* Trace.write(Trace.OperationEnd, {
+                    key: op.meta.key,
+                    name: op.meta.name,
+                    outcome: 'failure',
+                    error: errorMessage,
+                  });
+                  return yield* Effect.die(defect);
+                }),
+              ),
+              semaphore.withPermits(1),
+            ),
         };
       }),
   );

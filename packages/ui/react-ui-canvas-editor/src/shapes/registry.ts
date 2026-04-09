@@ -3,7 +3,6 @@
 //
 
 import { type ShapeDefSet } from '../components';
-
 import { ellipseShape } from './Ellipse';
 import { rectangleShape } from './Rectangle';
 

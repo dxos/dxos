@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -13,6 +13,7 @@ import { AiService, GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AgentService, ToolExecutionServices } from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
@@ -36,7 +37,6 @@ import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
-import { Blueprint } from '@dxos/blueprints';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -104,6 +104,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         ).pipe(
           Layer.provideMerge(AgentService.layer()),
+          Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
           Layer.provideMerge(ProcessManager.layer()),
           Layer.provideMerge(
             ServiceResolver.layerRequirements(

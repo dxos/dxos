@@ -10,8 +10,8 @@ import { random } from '@dxos/random';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
-import { TokenManager, type TokenManagerProps } from './TokenManager';
 import { translations } from '../../translations';
+import { TokenManager, type TokenManagerProps } from './TokenManager';
 
 random.seed(1);
 

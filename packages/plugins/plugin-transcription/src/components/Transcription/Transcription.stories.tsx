@@ -16,22 +16,22 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
 
 import { useQueueModelAdapter } from '#hooks';
-import { SerializationModel } from '../../model';
 import {
   MessageBuilder,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '#testing';
+
+import { SerializationModel } from '../../model';
 import { translations } from '../../translations';
 import { renderByline } from '../../util';
-
 import { Transcription, type TranscriptionProps } from './Transcription';
 
 random.seed(1);

@@ -7,9 +7,9 @@ import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { addEventListener, combine, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
+import { getSize } from '@dxos/ui-theme';
 
 import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
-import { getSize } from '@dxos/ui-theme';
 
 /** Enable or disable autoscroll. */
 export const autoScrollEffect = StateEffect.define<boolean>();

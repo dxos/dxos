@@ -8,7 +8,6 @@ import { getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
 import { type Stats, removeEmpty } from '../../hooks';
-
 import { Panel } from './Panel';
 import {
   DatabasePanel,

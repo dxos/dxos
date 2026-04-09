@@ -8,13 +8,12 @@
 (globalThis as any).litIssuedWarnings.add('dev-mode');
 
 import '@dxos-theme';
+import './cubes.css';
 
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
 import { docsTheme } from './theme';
-
-import './cubes.css';
 
 /**
  * Configure Storybook rendering.

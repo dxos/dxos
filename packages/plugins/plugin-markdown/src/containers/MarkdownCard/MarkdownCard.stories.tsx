@@ -12,11 +12,10 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
 random.seed(1234);

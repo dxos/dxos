@@ -12,6 +12,7 @@ import { type Message, type Transcript } from '@dxos/types';
 
 import { Transcription } from '#components';
 import { useQueueModelAdapter } from '#hooks';
+
 import { renderByline } from '../../util';
 
 export type TranscriptionContainerProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;

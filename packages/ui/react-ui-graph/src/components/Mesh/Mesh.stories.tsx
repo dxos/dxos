@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SVG, type SVGRootProps } from '../SVG';
-
 import { Mesh } from './Mesh';
 
 // TODO(burdon): Create waves/game of life.

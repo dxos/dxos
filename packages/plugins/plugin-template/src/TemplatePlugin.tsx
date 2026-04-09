@@ -9,14 +9,14 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-
-import { meta } from '#meta';
-import { translations } from './translations';
-import { Template } from '#types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { Template } from '#types';
+
+import { translations } from './translations';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

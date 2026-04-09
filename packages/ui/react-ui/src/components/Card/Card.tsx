@@ -4,6 +4,7 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
+import DOMPurify from 'dompurify';
 import React, {
   CSSProperties,
   MouseEventHandler,
@@ -13,7 +14,6 @@ import React, {
   useContext,
   useMemo,
 } from 'react';
-import DOMPurify from 'dompurify';
 
 import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';

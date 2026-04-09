@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { type Database } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';

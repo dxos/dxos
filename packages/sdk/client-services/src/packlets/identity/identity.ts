@@ -33,7 +33,6 @@ import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import { EdgeFeedReplicator } from '../spaces';
-
 import { TrustedKeySetAuthVerifier } from './authenticator';
 
 export type IdentityProps = {

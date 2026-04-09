@@ -7,7 +7,6 @@ import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
 import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

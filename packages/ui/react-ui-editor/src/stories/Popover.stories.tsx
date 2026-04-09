@@ -25,7 +25,6 @@ import {
   linkSlashCommands,
   useEditorMenu,
 } from '../components';
-
 import { EditorStory } from './components';
 
 const generator: ValueGenerator = random as any;

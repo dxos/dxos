@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 
 import { type Script } from '@dxos/functions';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import {
   type CreateDeployOptions,

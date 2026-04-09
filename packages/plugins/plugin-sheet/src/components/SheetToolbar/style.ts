@@ -15,10 +15,10 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type SheetModel } from '../../model';
 import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '#types';
-import { useSheetContext } from '../SheetRoot';
 
+import { type SheetModel } from '../../model';
+import { useSheetContext } from '../SheetRoot';
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
 export type StyleState = Partial<Record<StyleValue, boolean>>;

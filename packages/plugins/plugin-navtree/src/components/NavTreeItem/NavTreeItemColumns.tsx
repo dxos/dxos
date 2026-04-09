@@ -9,10 +9,10 @@ import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/reac
 
 import { useActions } from '#hooks';
 import { meta } from '#meta';
+
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { type NavTreeItemColumnsProps } from '../types';
-
 import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {

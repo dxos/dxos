@@ -5,6 +5,7 @@
 //
 
 import { log } from '@dxos/log';
+
 import { WatchDog } from '../dist/lib/node-esm/index.mjs';
 
 const params = JSON.parse(process.argv[2]);

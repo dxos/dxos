@@ -11,7 +11,6 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 
 const Story = (props: Partial<SpaceSettingsContainerProps>) => {

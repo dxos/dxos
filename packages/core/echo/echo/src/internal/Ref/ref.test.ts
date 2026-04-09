@@ -9,7 +9,6 @@ import { DXN, ObjectId } from '@dxos/keys';
 
 import { EchoObjectSchema, getObjectDXN } from '../Entity';
 import { createObject } from '../Obj';
-
 import { Ref, getReferenceAst } from './ref';
 
 const Task = Schema.Struct({

@@ -7,16 +7,16 @@ import * as Effect from 'effect/Effect';
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { meta } from '#meta';
-import { translations } from './translations';
-import { Sketch } from '#types';
-import { serializer } from './util';
-
 import { AppGraphSerializer, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
+import { meta } from '#meta';
+import { Sketch } from '#types';
+
+import { translations } from './translations';
+import { serializer } from './util';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

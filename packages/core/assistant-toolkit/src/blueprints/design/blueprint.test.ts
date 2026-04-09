@@ -23,7 +23,6 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { MarkdownHandlers } from '../markdown';
-
 import DesignBlueprint from './blueprint';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {

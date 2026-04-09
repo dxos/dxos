@@ -16,7 +16,6 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { type Identity, type JoinIdentityProps } from '../identity';
-
 import { type InvitationProtocol } from './invitation-protocol';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {

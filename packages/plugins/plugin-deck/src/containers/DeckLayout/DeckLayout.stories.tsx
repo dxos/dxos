@@ -11,24 +11,19 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { invariant } from '@dxos/invariant';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
-import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useAsyncEffect } from '@dxos/react-hooks';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { random } from '@dxos/random';
-
-import { meta as pluginMeta } from '#meta';
-
-import { translations } from '../../translations';
-
-import { DeckLayout } from './DeckLayout';
+import { useAsyncEffect } from '@dxos/react-hooks';
+import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { OperationHandler } from '#capabilities';
+import { meta as pluginMeta } from '#meta';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
@@ -38,6 +33,9 @@ import {
   getMode,
   PLANK_COMPANION_TYPE,
 } from '#types';
+
+import { translations } from '../../translations';
+import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);
 

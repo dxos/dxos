@@ -10,8 +10,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-import { ResponsivePanel } from './ResponsivePanel';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
+import { ResponsivePanel } from './ResponsivePanel';
 
 const ASPECT_RATIO = 16 / 9;
 const MIN_GALLERY_HEIGHT = 250;

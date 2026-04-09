@@ -13,7 +13,6 @@ import { hexToEmoji } from '@dxos/util';
 import { Action, ActionBar, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
 import { translationKey } from '../translations';
 import { invitationStatusValue } from '../util';
-
 import { type StepProps } from './StepProps';
 
 export type InvitationManagerProps = StepProps &

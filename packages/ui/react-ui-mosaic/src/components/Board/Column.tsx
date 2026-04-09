@@ -25,7 +25,6 @@ import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
-
 import { useBoard } from './Board';
 import { BoardItem } from './Item';
 

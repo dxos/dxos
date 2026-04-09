@@ -19,8 +19,8 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { SearchContextProvider } from '#hooks';
-import { translations } from '../../translations';
 
+import { translations } from '../../translations';
 import { SearchArticle } from './SearchArticle';
 
 random.seed(0);

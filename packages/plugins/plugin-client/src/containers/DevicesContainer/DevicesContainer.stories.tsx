@@ -10,10 +10,10 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
-import { ClientPlugin } from '../../ClientPlugin';
 import { initializeIdentity } from '#testing';
-import { translations } from '../../translations';
 
+import { ClientPlugin } from '../../ClientPlugin';
+import { translations } from '../../translations';
 import { DevicesContainer } from './DevicesContainer';
 
 const meta = {

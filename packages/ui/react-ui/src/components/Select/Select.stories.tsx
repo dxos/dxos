@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { withLayoutVariants } from '../../testing';
-
 import { Select } from './Select';
 
 random.seed(1234);

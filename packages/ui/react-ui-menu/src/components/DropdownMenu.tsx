@@ -9,7 +9,6 @@ import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu }
 
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 import { executeMenuAction } from '../util';
-
 import { ActionLabel } from './ActionLabel';
 import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
 

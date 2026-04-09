@@ -384,6 +384,9 @@
       "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json"
     }
   ],
+  "oxc.configPath": ".oxlintrc.json",
+  "oxc.disableNestedConfig": true,
+  "oxc.fmt.configPath": ".oxfmtrc.json",
   "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
   "search.followSymlinks": false,
   "search.useGlobalIgnoreFiles": false,

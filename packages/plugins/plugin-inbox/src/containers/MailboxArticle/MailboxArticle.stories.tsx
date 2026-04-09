@@ -16,10 +16,10 @@ import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/ech
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { InboxPlugin } from '../../InboxPlugin';
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
+import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
 type DefaultStoryProps = {

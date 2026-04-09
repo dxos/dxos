@@ -9,6 +9,7 @@ import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
 import { StatusBar } from '#components';
 import { meta } from '#meta';
+
 import VersionNumber from '../VersionNumber';
 
 export type StatusBarActionsProps = {};

@@ -13,8 +13,8 @@ import {
 } from '@babylonjs/core';
 
 import { getFaceNormal } from '../../engine';
-import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
+import { type ToolContext } from '../tool-context';
 
 const theme = {
   selected: new Color3(1.0, 0.2, 0.2),

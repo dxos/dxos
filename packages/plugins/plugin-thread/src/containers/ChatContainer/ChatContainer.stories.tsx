@@ -8,21 +8,21 @@ import React, { useState } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, Loading } from '@dxos/react-ui/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
+import { withLayout, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
-import { translations } from '../../translations';
 import { Channel } from '#types';
 
+import { translations } from '../../translations';
 import { ChatContainer } from './ChatContainer';
-import { corePlugins } from '@dxos/plugin-testing';
 
 random.seed(1);
 

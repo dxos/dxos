@@ -10,14 +10,14 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect, useM
 
 import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Obj, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
+import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -25,7 +25,6 @@ import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
 import * as Node from '../node';
-
 import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;

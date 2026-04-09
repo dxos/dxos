@@ -15,6 +15,7 @@ import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AssistantBlueprint } from '#blueprints';
+
 import { CreateChat } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(

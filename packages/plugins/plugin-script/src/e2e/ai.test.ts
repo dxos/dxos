@@ -9,9 +9,9 @@ import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Operation } from '@dxos/operation';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
+import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 

@@ -15,8 +15,8 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
-import * as entityInternal from './internal/Entity';
 import * as internal from './internal';
+import * as entityInternal from './internal/Entity';
 import * as Obj from './Obj';
 import type * as Type from './Type';
 
