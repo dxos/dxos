@@ -101,6 +101,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             ...(environment ? { environment } : {}),
           });
         }
+        unregisterPosthogProcessors?.();
         const removePosthogLog = log.addProcessor(logProcessor);
         const removeLogBuffer = log.addProcessor(logBuffer.logProcessor);
         unregisterPosthogProcessors = () => {
