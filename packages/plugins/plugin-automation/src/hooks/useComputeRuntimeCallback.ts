@@ -2,15 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import { type DependencyList, useCallback } from 'react';
 
 import { type Key } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { type Operation } from '@dxos/operation';
-import { log } from '@dxos/log';
 
 import { AutomationCapabilities } from '#types';
 import { useComputeRuntime } from './useComputeRuntime';
