@@ -33,6 +33,7 @@ import {
   scroller,
   scrollerLineEffect,
   streamer,
+  wire,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
@@ -88,7 +89,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             }),
             preview(),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            streamer({ cursor, fadeIn }),
+            // streamer({ cursor, fadeIn }),
+            wire({ rate: 200 }),
             autoScroll(),
           ];
 

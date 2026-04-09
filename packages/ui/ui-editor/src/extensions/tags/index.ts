@@ -4,4 +4,5 @@
 
 export * from './extended-markdown';
 export * from './streamer';
+export * from './wire';
 export * from './xml-tags';

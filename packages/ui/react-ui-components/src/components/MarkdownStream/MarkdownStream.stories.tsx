@@ -175,9 +175,9 @@ export const Text: Story = {
   args: {
     registry: registry,
     content: TEXT,
-    fadeIn: true,
+    fadeIn: false,
     cursor: true,
-    debug: true,
+    debug: false,
   },
 };
 
