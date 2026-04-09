@@ -428,11 +428,11 @@ describe('Database Blueprint', () => {
           includeQueues: true,
           limit: 20,
         });
+        type QueryRow = { typename?: string; label?: string };
         expect(withQueues.length).toBeGreaterThanOrEqual(1);
         expect(
-          withQueues.some(
-            (row: { typename?: string; label?: string }) =>
-              row.typename === 'org.dxos.type.organization' && String(row.label ?? '').includes('Invoke Op Lot'),
+          (withQueues as QueryRow[]).some(
+            (row) => row.typename === 'org.dxos.type.organization' && String(row.label ?? '').includes('Invoke Op Lot'),
           ),
         ).toBe(true);
 
@@ -443,9 +443,8 @@ describe('Database Blueprint', () => {
         });
         expect(byTypename.length).toBeGreaterThanOrEqual(1);
         expect(
-          byTypename.some(
-            (row: { typename?: string; label?: string }) =>
-              row.typename === 'org.dxos.type.organization' && String(row.label ?? '').includes('Invoke Op Lot'),
+          (byTypename as QueryRow[]).some(
+            (row) => row.typename === 'org.dxos.type.organization' && String(row.label ?? '').includes('Invoke Op Lot'),
           ),
         ).toBe(true);
       },
