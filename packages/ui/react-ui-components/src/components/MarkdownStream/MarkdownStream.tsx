@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection, Transaction } from '@codemirror/state';
+import { EditorSelection, Extension, Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -17,7 +17,7 @@ import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, us
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollToProps,
-  type StreamerOptions,
+  type FaderOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
@@ -32,7 +32,7 @@ import {
   scrollToLine,
   scroller,
   scrollerLineEffect,
-  streamer,
+  fader,
   wire,
   xmlTagContextEffect,
   xmlTagResetEffect,
@@ -42,7 +42,6 @@ import {
 import { mx } from '@dxos/ui-theme';
 
 import { createStreamer } from './stream';
-import { isNonNullable } from '@dxos/util';
 
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get view(): EditorView | null;
@@ -63,13 +62,18 @@ export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
     content?: string;
-    autoScroll?: boolean; // TODO(burdon): On/off.
+    autoScroll?: boolean;
+    options?: {
+      wire?: boolean;
+      cursor?: boolean;
+      fader?: boolean;
+    };
     onEvent?: (event: MarkdownStreamEvent) => void;
-  } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
+  } & (XmlTagsOptions & AutoScrollToProps)
 >;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
 
     // Active widgets.
@@ -81,17 +85,17 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // Editor.
     const { parentRef, view } = useTextEditor(() => {
       const content = currentContent.current;
-      const streamingExtensions = debug
+      const streamingExtensions: Extension[] = debug
         ? []
         : [
             decorateMarkdown({
               skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
             }),
             preview(),
-            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            // streamer({ cursor, fadeIn }),
-            wire({ rate: 200 }),
             autoScroll(),
+            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            ...(options?.wire ? [wire({ rate: 200, cursor: options?.cursor })] : []),
+            ...(options?.fader ? [fader()] : []),
           ];
 
       return {

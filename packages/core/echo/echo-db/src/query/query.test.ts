@@ -27,14 +27,14 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
-faker.seed(1);
+random.seed(1);
 
 const tags = ['red', 'green', 'blue'];
 
@@ -47,7 +47,7 @@ type ObjectProps = {
 
 const createTestObject = (props: ObjectProps = {}) => {
   return Obj.make(TestSchema.Expando, {
-    title: faker.commerce.productName(),
+    title: random.commerce.productName(),
     ...props,
   });
 };
@@ -1741,11 +1741,11 @@ describe('Query', () => {
       console.time('create');
       const counts = Object.fromEntries(ANIMALS.map((animal) => [animal, 0]));
       for (const _ of range(10_000)) {
-        const animal = faker.helpers.arrayElement(ANIMALS);
+        const animal = random.helpers.arrayElement(ANIMALS);
         counts[animal]++;
         db.add(
           Obj.make(TestSchema.Expando, {
-            title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10),
+            title: random.lorem.sentence(10) + ' ' + animal + ' ' + random.lorem.sentence(10),
           }),
         );
         if (_ % 1000 === 0) {
@@ -1760,7 +1760,7 @@ describe('Query', () => {
       console.timeEnd('flush');
 
       console.time('query');
-      const needle = faker.helpers.arrayElement(ANIMALS);
+      const needle = random.helpers.arrayElement(ANIMALS);
       const objects = await db.query(Query.select(Filter.text(needle, { type: 'full-text' }))).run();
       console.timeEnd('query');
       console.log('objects', {

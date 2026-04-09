@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR, TREEGRID_PATH_SEPARATOR } from './Treegrid';
 
-faker.seed(1234);
+random.seed(1234);
 
 type StorybookNode = {
   id: string;
@@ -32,33 +32,33 @@ const content = {
   title: 'Root',
   nodes: [
     {
-      id: faker.string.uuid(),
+      id: random.string.uuid(),
       title: 'Personal Space',
       icon: 'ph--house--regular',
       nodes: [
         {
-          id: faker.string.uuid(),
-          title: faker.commerce.productName(),
+          id: random.string.uuid(),
+          title: random.commerce.productName(),
         },
         {
-          id: faker.string.uuid(),
-          title: faker.commerce.productName(),
+          id: random.string.uuid(),
+          title: random.commerce.productName(),
         },
         {
-          id: faker.string.uuid(),
-          title: faker.commerce.productName(),
+          id: random.string.uuid(),
+          title: random.commerce.productName(),
           nodes: [
             {
-              id: faker.string.uuid(),
-              title: faker.commerce.productName(),
+              id: random.string.uuid(),
+              title: random.commerce.productName(),
               nodes: [
                 {
-                  id: faker.string.uuid(),
-                  title: faker.commerce.productName(),
+                  id: random.string.uuid(),
+                  title: random.commerce.productName(),
                 },
                 {
-                  id: faker.string.uuid(),
-                  title: faker.commerce.productName(),
+                  id: random.string.uuid(),
+                  title: random.commerce.productName(),
                 },
               ],
             },
@@ -67,24 +67,24 @@ const content = {
       ],
     },
     {
-      id: faker.string.uuid(),
-      title: faker.commerce.productName(),
+      id: random.string.uuid(),
+      title: random.commerce.productName(),
       icon: 'ph--planet--regular',
       nodes: [
         {
-          id: faker.string.uuid(),
-          title: faker.commerce.productName(),
+          id: random.string.uuid(),
+          title: random.commerce.productName(),
         },
       ],
     },
     {
-      id: faker.string.uuid(),
-      title: faker.commerce.productName(),
+      id: random.string.uuid(),
+      title: random.commerce.productName(),
       icon: 'ph--sailboat--regular',
     },
     {
-      id: faker.string.uuid(),
-      title: faker.commerce.productName(),
+      id: random.string.uuid(),
+      title: random.commerce.productName(),
       icon: 'ph--planet--regular',
     },
   ],

@@ -35,6 +35,7 @@ export interface Session {
    * The feed that the session is associated with.
    */
   readonly feed: Feed.Feed;
+
   /**
    * Submits a prompt to the agent.
    */
@@ -46,7 +47,7 @@ export interface Session {
   waitForCompletion: () => Effect.Effect<void>;
 
   /**
-   * Subscribe to ephemeral trace events (e.g. streaming partial messages).
+   * Subscribe to ephemeral trace events (e.g., streaming partial messages).
    * Replays buffered events, then streams new ones until the process ends.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;

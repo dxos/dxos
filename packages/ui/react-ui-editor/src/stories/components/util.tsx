@@ -5,7 +5,7 @@
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Domino } from '@dxos/ui';
 import {
   type EditorSelectionState,
@@ -21,7 +21,7 @@ import { safeUrl } from '@dxos/util';
 
 import { str } from '../../util';
 
-export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
+export const num = () => random.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 export const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
 
@@ -41,11 +41,11 @@ export const content = {
     // prettier-ignore
     '### TaskList',
     '',
-    `- [x] ${faker.lorem.sentences()}`,
-    `- [ ] ${faker.lorem.sentences()}`,
-    `  - [ ] ${faker.lorem.sentences()}`,
-    `    - [ ] ${faker.lorem.sentences()}`,
-    `    - [x] ${faker.lorem.sentences()}`,
+    `- [x] ${random.lorem.sentences()}`,
+    `- [ ] ${random.lorem.sentences()}`,
+    `  - [ ] ${random.lorem.sentences()}`,
+    `    - [ ] ${random.lorem.sentences()}`,
+    `    - [x] ${random.lorem.sentences()}`,
     '',
   ),
 
@@ -53,11 +53,11 @@ export const content = {
     // prettier-ignore
     '### BulletList',
     '',
-    `- ${faker.lorem.sentences()}`,
-    `- ${faker.lorem.sentences()}`,
-    `  - ${faker.lorem.sentences()}`,
-    `  - ${faker.lorem.sentences()}`,
-    `- ${faker.lorem.sentences()}`,
+    `- ${random.lorem.sentences()}`,
+    `- ${random.lorem.sentences()}`,
+    `  - ${random.lorem.sentences()}`,
+    `  - ${random.lorem.sentences()}`,
+    `- ${random.lorem.sentences()}`,
     '',
   ),
 
@@ -65,17 +65,17 @@ export const content = {
     // prettier-ignore
     '### OrderedList (part 1)',
     '',
-    `1. ${faker.lorem.sentences()}`,
-    `1. ${faker.lorem.sentences()}`,
-    `1. ${faker.lorem.sentences()}`,
-    `    1. ${faker.lorem.sentences()}`,
-    `    1. ${faker.lorem.sentences()}`,
-    `        1. ${faker.lorem.sentences()}`,
-    `1. ${faker.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
+    `    1. ${random.lorem.sentences()}`,
+    `    1. ${random.lorem.sentences()}`,
+    `        1. ${random.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
     '',
     '### OrderedList (part 2)',
     '',
-    `1. ${faker.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
     '',
   ),
 
@@ -123,7 +123,7 @@ export const content = {
     // prettier-ignore
     '### Tables',
     '',
-    `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
+    `| ${random.lorem.word().padStart(12)} | ${random.lorem.word().padStart(12)} | ${random.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
@@ -134,7 +134,7 @@ export const content = {
   image: str('### Image', '', img),
 
   headings: str(
-    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, random.lorem.sentences(), '']).flat(),
   ),
 
   formatting: str(
@@ -159,7 +159,7 @@ export const content = {
     '',
   ),
 
-  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+  paragraphs: str(...random.helpers.multiple(() => [random.lorem.paragraph(), ''], { count: 3 }).flat()),
 
   footer: str('', '', '', '', ''),
 };
@@ -242,18 +242,18 @@ export const allExtensions: Extension[] = [
 ];
 
 // Long text for scrolling stories.
-export const longText = faker.helpers
-  .multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 })
+export const longText = random.helpers
+  .multiple(() => random.lorem.paragraph({ min: 8, max: 16 }), { count: 20 })
   .join('\n\n');
 
-export const largeWithImages = faker.helpers
-  .multiple(() => [faker.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
+export const largeWithImages = random.helpers
+  .multiple(() => [random.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
   .flatMap((x) => x)
   .join('\n\n');
 
 export const headings = str(
   ...[1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 2, 3, 3, 2, 2, 6, 1]
-    .map((level) => ['#'.repeat(level) + ' ' + faker.lorem.sentence(3), faker.lorem.sentences(), ''])
+    .map((level) => ['#'.repeat(level) + ' ' + random.lorem.sentence(3), random.lorem.sentences(), ''])
     .flat(),
 );
 

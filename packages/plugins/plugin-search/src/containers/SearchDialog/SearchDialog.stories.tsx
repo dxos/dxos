@@ -13,7 +13,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins, StorybookPlugin } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -25,7 +25,7 @@ import { translations } from '../../translations';
 
 import { SearchDialog } from './SearchDialog';
 
-faker.seed(0);
+random.seed(0);
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -62,7 +62,7 @@ const meta = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(personalSpace.db, faker as any);
+              const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 10 },

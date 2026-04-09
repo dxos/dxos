@@ -3,14 +3,21 @@
 //
 
 import { ChangeSet, EditorState, type Extension, StateEffect, StateField, type Transaction } from '@codemirror/state';
-import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+
+import { Domino } from '@dxos/ui';
 
 export type WireOptions = {
   /** Characters per second. */
   rate?: number;
+  /** Show a blinking cursor at the insertion point while streaming. */
+  cursor?: boolean;
 };
 
-const DEFAULT_RATE = 40;
+type BufferState = { text: string; insertAt: number };
+
+const DEFAULT_RATE = 100;
+const CURSOR_LINGER = 2_000;
 
 /**
  * Scans the buffer and returns the number of characters that can be flushed.
@@ -143,7 +150,7 @@ export const wire = (options: WireOptions = {}): Extension => {
   const insertChunk = StateEffect.define<{ from: number; text: string }>();
 
   // State field that holds the pending buffer of text to drip into the document.
-  const bufferField = StateField.define<{ text: string; insertAt: number }>({
+  const bufferField = StateField.define<BufferState>({
     create: () => ({ text: '', insertAt: 0 }),
     update: (value, tr) => {
       let { text, insertAt } = value;
@@ -161,9 +168,24 @@ export const wire = (options: WireOptions = {}): Extension => {
         }
       }
 
-      // Map insertion position through document changes not caused by us.
-      if (tr.docChanged && !tr.effects.some((effect) => effect.is(insertChunk))) {
-        insertAt = tr.changes.mapPos(insertAt);
+      // Reset buffer when document is cleared or fully replaced.
+      if (tr.docChanged) {
+        let isReset = tr.state.doc.length === 0;
+        if (!isReset && tr.startState.doc.length > 0) {
+          tr.changes.iterChanges((fromA, toA) => {
+            if (fromA === 0 && toA === tr.startState.doc.length) {
+              isReset = true;
+            }
+          });
+        }
+        if (isReset) {
+          return { text: '', insertAt: 0 };
+        }
+
+        // Map insertion position through document changes not caused by us.
+        if (!tr.effects.some((effect) => effect.is(insertChunk))) {
+          insertAt = tr.changes.mapPos(Math.min(insertAt, tr.startState.doc.length));
+        }
       }
 
       return { text, insertAt };
@@ -253,5 +275,88 @@ export const wire = (options: WireOptions = {}): Extension => {
     },
   );
 
-  return [bufferField, filter, drainPlugin];
+  return [bufferField, filter, drainPlugin, options.cursor && wireCursor(bufferField)].filter(Boolean) as Extension[];
 };
+
+//
+// Cursor
+//
+
+/**
+ * Blinking cursor widget at the insertion point while the buffer is draining.
+ * Lingers for 2s after the buffer empties before being removed.
+ */
+const wireCursor = (bufferField: StateField<BufferState>): Extension => {
+  const hideCursor = StateEffect.define();
+
+  const visibilityField = StateField.define<{ visible: boolean; insertAt: number }>({
+    create: () => ({ visible: false, insertAt: 0 }),
+    update: (value, tr) => {
+      const { text, insertAt } = tr.state.field(bufferField);
+      if (text.length > 0) {
+        return { visible: true, insertAt };
+      }
+      for (const effect of tr.effects) {
+        if (effect.is(hideCursor)) {
+          return { visible: false, insertAt: value.insertAt };
+        }
+      }
+      return value;
+    },
+  });
+
+  const decorationField = StateField.define<DecorationSet>({
+    create: () => Decoration.none,
+    update: (_decorations, tr) => {
+      const { visible, insertAt } = tr.state.field(visibilityField);
+      if (!visible) {
+        return Decoration.none;
+      }
+
+      const pos = Math.min(insertAt, tr.state.doc.length);
+      return Decoration.set([
+        Decoration.widget({
+          widget: new CursorWidget(),
+          side: 1,
+        }).range(pos),
+      ]);
+    },
+    provide: (field) => EditorView.decorations.from(field),
+  });
+
+  const timerPlugin = ViewPlugin.fromClass(
+    class {
+      #timer: ReturnType<typeof setTimeout> | undefined;
+
+      constructor(private view: EditorView) {}
+
+      update(update: ViewUpdate) {
+        const { text } = update.state.field(bufferField);
+        const { visible } = update.state.field(visibilityField);
+
+        if (text.length > 0) {
+          clearTimeout(this.#timer);
+          this.#timer = undefined;
+        } else if (visible && this.#timer === undefined) {
+          this.#timer = setTimeout(() => {
+            this.view.dispatch({ effects: hideCursor.of(null) });
+            this.#timer = undefined;
+          }, CURSOR_LINGER);
+        }
+      }
+
+      destroy() {
+        clearTimeout(this.#timer);
+      }
+    },
+  );
+
+  return [visibilityField, decorationField, timerPlugin];
+};
+
+class CursorWidget extends WidgetType {
+  toDOM() {
+    const inner = Domino.of('span').text('\u25CF').style({ animation: 'blink 1s infinite', animationDelay: '500ms' });
+    return Domino.of('span').style({ opacity: '0.8' }).children(inner).root;
+  }
+}

@@ -14,9 +14,9 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
-import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
+import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 

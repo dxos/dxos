@@ -7,7 +7,7 @@ import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, use
 
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
@@ -15,7 +15,7 @@ import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/re
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 
-const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
+const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 
 type GridStoryProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 

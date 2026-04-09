@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
 
 import { Popover } from './Popover';
 
-faker.seed(1234);
+random.seed(1234);
 
 const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
   return (
@@ -42,7 +42,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     openTrigger: <Button>Open popover</Button>,
-    children: faker.lorem.paragraphs(3),
+    children: random.lorem.paragraphs(3),
   },
 };
 
@@ -59,7 +59,7 @@ export const VirtualTrigger = {
           <Popover.VirtualTrigger virtualRef={buttonRef} />
           <Popover.Content>
             <Popover.Viewport>
-              <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{faker.lorem.paragraphs(3)}</p>
+              <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{random.lorem.paragraphs(3)}</p>
             </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>

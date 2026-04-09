@@ -11,7 +11,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Main } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
@@ -39,7 +39,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
-faker.seed(101);
+random.seed(101);
 
 const storySurfaceExtension = Capability.contributes(
   Capabilities.ReactSurface,
@@ -65,7 +65,7 @@ const storySurfaceExtension = Capability.contributes(
 
 const DefaultStory = () => {
   const { graph } = useAppGraph();
-  const item = useMemo(() => Organization.make({ name: faker.company.name() }), []);
+  const item = useMemo(() => Organization.make({ name: random.company.name() }), []);
   const node = useMemo(() => ({ id: item.id, data: item, type: 'test', properties: { label: item.name } }), [item]);
 
   return (

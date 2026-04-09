@@ -12,7 +12,7 @@ import { Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ import { translations } from '../../translations';
 import { CommentsPanel } from './CommentsPanel';
 import { createCommentThread, createProposalThread } from '../../testing/data';
 
-faker.seed(1);
+random.seed(1);
 
 const DefaultStory = () => {
   const identity = useIdentity();

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { List, ListItem, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
@@ -39,7 +39,7 @@ const DefaultStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
 
   const handleAdd = useCallback(() => {
-    const id = `test-${faker.number.int({ min: 0, max: 1_000 })}`;
+    const id = `test-${random.number.int({ min: 0, max: 1_000 })}`;
     const styles = getHashStyles(id);
 
     manager.capabilities.contribute({
@@ -57,7 +57,7 @@ const DefaultStory = () => {
   }, [manager]);
 
   const handleSelect = useCallback(() => {
-    setSelected(faker.helpers.arrayElement(surfaces)?.id);
+    setSelected(random.helpers.arrayElement(surfaces)?.id);
   }, [surfaces]);
 
   const handleError = useCallback(() => {

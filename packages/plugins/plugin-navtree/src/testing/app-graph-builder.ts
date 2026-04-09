@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { type BuilderExtensions } from '@dxos/app-graph';
 import { log } from '@dxos/log';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 export const storybookGraphBuilders = (): BuilderExtensions => {
   const propertiesCache = new Map<string, Record<string, unknown>>();
@@ -37,7 +37,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               }),
               properties: {
                 label: `Action ${i}`,
-                icon: faker.properties.icon(),
+                icon: random.properties.icon(),
                 disposition: 'menu',
               },
             })),
@@ -57,8 +57,8 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 icon: 'ph--user--regular',
                 disposition: 'user-account',
                 userId: '1234567890ABCDEF',
-                hue: faker.properties.hue(),
-                emoji: faker.properties.emoji(),
+                hue: random.properties.hue(),
+                emoji: random.properties.emoji(),
                 status: 'active',
               },
               nodes: [
@@ -117,8 +117,8 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 type: 'space',
                 properties: getProperties(`space-${i}`, {
                   label: `Space ${i}`,
-                  icon: faker.properties.icon(),
-                  hue: faker.properties.hue(),
+                  icon: random.properties.icon(),
+                  hue: random.properties.hue(),
                   disposition: 'workspace',
                 }),
               }),
@@ -138,7 +138,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               }),
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
-                icon: faker.properties.icon(),
+                icon: random.properties.icon(),
               }),
             })),
           ),
@@ -170,7 +170,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 type: 'object',
                 properties: getProperties(`object-${i}`, {
                   label: `Object ${i}`,
-                  icon: faker.properties.icon(),
+                  icon: random.properties.icon(),
                 }),
               }),
             );
@@ -189,7 +189,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               }),
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
-                icon: faker.properties.icon(),
+                icon: random.properties.icon(),
               }),
             })),
           ),

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -20,7 +20,7 @@ import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';
 
-faker.seed(1234);
+random.seed(1234);
 
 const noOpProps: IdentityPanelImplProps = {
   titleId: 'storybookIdentityPanel',
@@ -31,7 +31,7 @@ const noOpProps: IdentityPanelImplProps = {
     did: IdentityDid.random(),
     identityKey: PublicKey.random(),
     profile: {
-      displayName: faker.person.firstName(),
+      displayName: random.person.firstName(),
     },
   },
   devices: [],

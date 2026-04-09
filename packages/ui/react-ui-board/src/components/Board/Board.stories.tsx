@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
@@ -111,13 +111,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     items: [
-      { id: '0', title: 'Item 0', description: faker.lorem.paragraph(3) },
-      { id: '1', title: 'Item 1', description: faker.lorem.paragraph(3) },
-      { id: '2', title: 'Item 2', description: faker.lorem.paragraph(3) },
-      { id: '3', title: 'Item 3', description: faker.lorem.paragraph(3) },
-      { id: '4', title: 'Item 4', description: faker.lorem.paragraph(3) },
-      { id: '5', title: 'Item 5', description: faker.lorem.paragraph(3) },
-      { id: '6', title: 'Item 6', description: faker.lorem.paragraph(3) },
+      { id: '0', title: 'Item 0', description: random.lorem.paragraph(3) },
+      { id: '1', title: 'Item 1', description: random.lorem.paragraph(3) },
+      { id: '2', title: 'Item 2', description: random.lorem.paragraph(3) },
+      { id: '3', title: 'Item 3', description: random.lorem.paragraph(3) },
+      { id: '4', title: 'Item 4', description: random.lorem.paragraph(3) },
+      { id: '5', title: 'Item 5', description: random.lorem.paragraph(3) },
+      { id: '6', title: 'Item 6', description: random.lorem.paragraph(3) },
     ],
     grid: defaultGrid,
     layout: {

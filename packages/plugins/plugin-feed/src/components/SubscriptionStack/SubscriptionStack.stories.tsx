@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -17,9 +17,9 @@ import { SubscriptionStack, type SubscriptionStackAction } from './SubscriptionS
 const generateFeeds = (count: number): Subscription.Feed[] =>
   Array.from({ length: count }, () =>
     Subscription.makeFeed({
-      name: faker.company.name() + ' Blog',
-      url: faker.internet.url(),
-      description: faker.lorem.sentence(),
+      name: random.company.name() + ' Blog',
+      url: random.internet.url(),
+      description: random.lorem.sentence(),
     }),
   );
 

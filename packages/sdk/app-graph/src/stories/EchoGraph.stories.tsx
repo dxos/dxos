@@ -12,7 +12,7 @@ import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
@@ -147,7 +147,7 @@ const runAction = async (client: Client, action: Action) => {
       const space = getRandomSpace(client);
       if (space) {
         Obj.change(space.properties, (obj) => {
-          obj.name = faker.commerce.productName();
+          obj.name = random.commerce.productName();
         });
       }
       break;
@@ -157,7 +157,7 @@ const runAction = async (client: Client, action: Action) => {
       getRandomSpace(client)?.db.add(
         Obj.make(TestSchema.Expando, {
           type: 'test',
-          name: faker.commerce.productName(),
+          name: random.commerce.productName(),
         }),
       );
       break;
@@ -177,7 +177,7 @@ const runAction = async (client: Client, action: Action) => {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
         Obj.change(object, (obj) => {
-          obj.name = faker.commerce.productName();
+          obj.name = random.commerce.productName();
         });
       }
       break;

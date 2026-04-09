@@ -20,7 +20,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { meta as pluginMeta } from '#meta';
 
@@ -39,7 +39,7 @@ import {
   PLANK_COMPANION_TYPE,
 } from '#types';
 
-faker.seed(1234);
+random.seed(1234);
 
 // TODO(burdon): Factor out.
 const storyDeckSettings = Capability.makeModule(() =>
@@ -121,11 +121,11 @@ type Item = { id: string; title: string; children?: Item[] };
  * @param maxDepth - Defaults to {@link STORY_ITEM_MAX_DEPTH}.
  */
 const createItem = (depth = 0, maxDepth = 3): Item => ({
-  id: faker.string.uuid(),
-  title: faker.lorem.words({ min: 2, max: 4 }),
+  id: random.string.uuid(),
+  title: random.lorem.words({ min: 2, max: 4 }),
   children:
     depth < maxDepth
-      ? Array.from({ length: faker.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
+      ? Array.from({ length: random.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
       : undefined,
 });
 

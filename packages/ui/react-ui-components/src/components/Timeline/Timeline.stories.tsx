@@ -8,7 +8,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { LogLevel, log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Panel, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
@@ -20,7 +20,7 @@ import { Message } from '@dxos/types';
 import { research } from './testing';
 import { type Commit, Timeline, TimelineProps } from './Timeline';
 
-faker.seed(1);
+random.seed(1);
 
 enum IconType {
   // General status.
@@ -57,7 +57,7 @@ const generateCommit = (
   if (commits.length > 3) {
     if (p < 0.2 && branches.length < 6) {
       // New branch.
-      branch = faker.lorem.word();
+      branch = random.lorem.word();
       lastBranch = branch;
     } else if (p < 0.4) {
       // Switch branch.
@@ -72,7 +72,7 @@ const generateCommit = (
       lastBranch = branches[0];
       if (lastBranchCommit) {
         commit = {
-          id: faker.string.uuid(),
+          id: random.string.uuid(),
           branch: lastBranch,
           icon: IconType.TIMER,
           level: LogLevel.INFO,
@@ -85,10 +85,10 @@ const generateCommit = (
 
   if (!commit) {
     commit = {
-      id: faker.string.uuid(),
+      id: random.string.uuid(),
       timestamp: new Date(),
       branch: lastBranch,
-      icon: faker.helpers.arrayElement([
+      icon: random.helpers.arrayElement([
         IconType.WARN,
         IconType.CHECK,
         IconType.ROCKET,
@@ -99,7 +99,7 @@ const generateCommit = (
         IconType.USER_INTERACTION,
         IconType.AGENT,
       ]),
-      level: faker.helpers.arrayElement([
+      level: random.helpers.arrayElement([
         LogLevel.TRACE,
         LogLevel.DEBUG,
         LogLevel.VERBOSE,
@@ -107,7 +107,7 @@ const generateCommit = (
         LogLevel.WARN,
         LogLevel.ERROR,
       ]),
-      message: faker.lorem.paragraph(),
+      message: random.lorem.paragraph(),
       parents: lastCommit ? [lastCommit] : [],
     };
   }
@@ -152,15 +152,15 @@ export const Default: Story = {
     debug: true,
     showIcon: false,
     commits: [
-      { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
-      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parents: ['c2'] },
-      { id: 'c5', message: faker.lorem.paragraph(), branch: 'feature-b', parents: ['c2'] },
-      { id: 'c6', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c3'] },
-      { id: 'c7', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c6'] },
-      { id: 'c8', message: faker.lorem.paragraph(), branch: 'feature-c', parents: ['c6'] },
-      { id: 'c9', message: faker.lorem.paragraph(), branch: 'main', parents: ['c4'] },
+      { id: 'c1', message: random.lorem.paragraph(), branch: 'main' },
+      { id: 'c2', message: random.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: random.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+      { id: 'c4', message: random.lorem.paragraph(), branch: 'main', parents: ['c2'] },
+      { id: 'c5', message: random.lorem.paragraph(), branch: 'feature-b', parents: ['c2'] },
+      { id: 'c6', message: random.lorem.paragraph(), branch: 'feature-a', parents: ['c3'] },
+      { id: 'c7', message: random.lorem.paragraph(), branch: 'feature-a', parents: ['c6'] },
+      { id: 'c8', message: random.lorem.paragraph(), branch: 'feature-c', parents: ['c6'] },
+      { id: 'c9', message: random.lorem.paragraph(), branch: 'main', parents: ['c4'] },
     ],
   },
 };
@@ -170,9 +170,9 @@ export const Branch: Story = {
     debug: true,
     showIcon: false,
     commits: [
-      { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+      { id: 'c1', message: random.lorem.paragraph(), branch: 'main' },
+      { id: 'c2', message: random.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: random.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
     ],
   },
 };
@@ -186,20 +186,20 @@ export const Timestamp: Story = {
       {
         id: 'c1',
         timestamp: new Date(Date.now()),
-        message: faker.lorem.paragraph(),
+        message: random.lorem.paragraph(),
         branch: 'main',
       },
       {
         id: 'c2',
         timestamp: new Date(Date.now() + 100),
-        message: faker.lorem.paragraph(),
+        message: random.lorem.paragraph(),
         branch: 'main',
         parents: ['c1'],
       },
       {
         id: 'c3',
         timestamp: new Date(Date.now() + 120),
-        message: faker.lorem.paragraph(),
+        message: random.lorem.paragraph(),
         branch: 'feature-a',
         parents: ['c2'],
       },
@@ -213,13 +213,13 @@ export const Merge: Story = {
     showIcon: false,
     branches: ['main', 'feature-a', 'feature-b'],
     commits: [
-      { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
-      { id: 'c4', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c3'] },
-      { id: 'c5', message: faker.lorem.paragraph(), branch: 'feature-b', parents: ['c3'] },
-      { id: 'c6', message: faker.lorem.paragraph(), branch: 'main', parents: ['c2'] },
-      { id: 'c7', message: faker.lorem.paragraph(), branch: 'main', parents: ['c6', 'c4', 'c5'] },
+      { id: 'c1', message: random.lorem.paragraph(), branch: 'main' },
+      { id: 'c2', message: random.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: random.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+      { id: 'c4', message: random.lorem.paragraph(), branch: 'feature-a', parents: ['c3'] },
+      { id: 'c5', message: random.lorem.paragraph(), branch: 'feature-b', parents: ['c3'] },
+      { id: 'c6', message: random.lorem.paragraph(), branch: 'main', parents: ['c2'] },
+      { id: 'c7', message: random.lorem.paragraph(), branch: 'main', parents: ['c6', 'c4', 'c5'] },
     ],
   },
 };
@@ -228,10 +228,10 @@ export const Linear: Story = {
   args: {
     branches: ['main'],
     commits: [
-      { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'main', parents: ['c2'] },
-      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parents: ['c3'] },
+      { id: 'c1', message: random.lorem.paragraph(), branch: 'main' },
+      { id: 'c2', message: random.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: random.lorem.paragraph(), branch: 'main', parents: ['c2'] },
+      { id: 'c4', message: random.lorem.paragraph(), branch: 'main', parents: ['c3'] },
     ],
   },
 };
@@ -281,9 +281,9 @@ export const Streaming: Story = {
     const [branches, setBranches] = useState<string[]>(['main']);
     const [commits, setCommits] = useState<Commit[]>([
       {
-        id: faker.string.uuid(),
+        id: random.string.uuid(),
         branch: branches[0],
-        message: faker.lorem.paragraph(),
+        message: random.lorem.paragraph(),
       },
     ]);
     const lastCommit = useRef<string | undefined>(commits[0].id);

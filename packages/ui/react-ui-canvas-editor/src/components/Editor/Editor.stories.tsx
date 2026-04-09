@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -24,7 +24,7 @@ import { type CanvasGraphModel, RectangleShape } from '../../types';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
 

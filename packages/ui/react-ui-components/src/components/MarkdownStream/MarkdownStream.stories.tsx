@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
@@ -22,6 +22,8 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type TextStreamOptions, textStream } from './testing';
 import MIXED from './testing/mixed.md?raw';
 import TEXT from './testing/text.md?raw';
+
+random.seed(1234);
 
 const userHue = keyToFallback(PublicKey.random()).hue;
 
@@ -52,7 +54,10 @@ const registry: XmlWidgetRegistry = {
   },
 };
 
-type DefaultStoryProps = MarkdownStreamProps & { initialContent?: string; streamOptions?: TextStreamOptions };
+type DefaultStoryProps = MarkdownStreamProps & {
+  initialContent?: string;
+  streamOptions?: TextStreamOptions;
+};
 
 const DefaultStory = ({
   initialContent,
@@ -101,46 +106,50 @@ const DefaultStory = ({
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      [faker.lorem.paragraph(), `<test>${faker.lorem.word()}</test>`, faker.lorem.paragraph()].join('\n'),
+      [random.lorem.paragraph(), `<test>${random.lorem.word()}</test>`, random.lorem.paragraph()].join('\n'),
     );
   }, [controller]);
 
   return (
     <Panel.Root
-      style={userHue ? ({ 
-        '--user-fill': `var(--color-${userHue}-fill)`
-      } as CSSProperties) : undefined}
+      style={
+        userHue
+          ? ({
+              '--user-fill': `var(--color-${userHue}-fill)`,
+            } as CSSProperties)
+          : undefined
+      }
     >
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-        <Toolbar.IconButton
-          disabled={streaming}
-          icon='ph--play--regular'
-          iconOnly
-          label='Start'
-          onClick={() => setStreaming(true)}
-        />
-        <Toolbar.IconButton
-          disabled={!streaming}
-          icon='ph--stop--regular'
-          iconOnly
-          label='Stop'
-          onClick={() => setStreaming(false)}
-        />
-        <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-        <Toolbar.IconButton
-          disabled={streaming}
-          icon='ph--plus--regular'
-          iconOnly
-          label='Append'
-          onClick={handleAppend}
-        />
-        <Toolbar.Separator />
-        <Input.Root>
-          <Input.Label>Debug</Input.Label>
-          <Input.Switch checked={debug} onCheckedChange={setDebug}/>
-        </Input.Root>
-      </Toolbar.Root>
+          <Toolbar.IconButton
+            disabled={streaming}
+            icon='ph--play--regular'
+            iconOnly
+            label='Start'
+            onClick={() => setStreaming(true)}
+          />
+          <Toolbar.IconButton
+            disabled={!streaming}
+            icon='ph--stop--regular'
+            iconOnly
+            label='Stop'
+            onClick={() => setStreaming(false)}
+          />
+          <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+          <Toolbar.IconButton
+            disabled={streaming}
+            icon='ph--plus--regular'
+            iconOnly
+            label='Append'
+            onClick={handleAppend}
+          />
+          <Toolbar.Separator />
+          <Input.Root>
+            <Input.Label>Debug</Input.Label>
+            <Input.Switch checked={debug} onCheckedChange={setDebug} />
+          </Input.Root>
+        </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
         <MarkdownStream {...props} debug={debug} ref={setController} />
@@ -166,8 +175,10 @@ export const Default: Story = {
   args: {
     registry: registry,
     content: MIXED,
-    fadeIn: true,
-    cursor: false,
+    options: {
+      fader: true,
+      cursor: false,
+    },
   },
 };
 
@@ -175,18 +186,38 @@ export const Text: Story = {
   args: {
     registry: registry,
     content: TEXT,
-    fadeIn: false,
-    cursor: true,
-    debug: false,
+    options: {
+      fader: true,
+      cursor: true,
+    },
   },
 };
 
-export const WithInitialContent: Story = {
+export const Short: Story = {
   args: {
     registry: registry,
+    content: random.lorem.paragraph(),
+    options: {
+      wire: true,
+      fader: true,
+      cursor: true,
+    },
+  },
+};
+
+export const InitialContent: Story = {
+  args: {
     initialContent: MIXED,
+    registry: registry,
     content: MIXED,
-    fadeIn: true,
-    cursor: false,
+  },
+};
+
+export const Debug: Story = {
+  args: {
+    initialContent: MIXED,
+    registry: registry,
+    content: MIXED,
+    debug: true,
   },
 };

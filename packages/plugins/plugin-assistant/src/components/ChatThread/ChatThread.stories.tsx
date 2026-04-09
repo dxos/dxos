@@ -11,7 +11,7 @@ import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ import { ChatThread, type ChatThreadProps } from './ChatThread';
 import { componentRegistry } from './registry';
 import TEXT from './testing/thread.md?raw';
 
-faker.seed(1);
+random.seed(1);
 
 type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 

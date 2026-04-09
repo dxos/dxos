@@ -7,7 +7,7 @@ import { Obj, type Type } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 
 import { type TestSchemaType } from './data';
@@ -44,7 +44,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   async createObject({ types }: { types?: T[] } = {}): Promise<any> {
-    const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
+    const type = random.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
     if (isProxy(data)) {
       return data;

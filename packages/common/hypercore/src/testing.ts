@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 export const noop = () => {};
 
@@ -11,7 +11,7 @@ export type TestDataItem = { id: number; text: string };
 
 export const createDataItem = (n: number): TestDataItem => ({
   id: n,
-  text: faker.lorem.sentence(),
+  text: random.lorem.sentence(),
 });
 
 type BatchCallback = (next: (num: number) => void, index: number, remaining: number) => void;

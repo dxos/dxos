@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -21,7 +21,7 @@ import { DevtoolsContextProvider } from '../../../hooks';
 import { ObjectsPanel } from './ObjectsPanel';
 import { ObjectsTree } from './ObjectsTree';
 
-faker.seed(1);
+random.seed(1);
 
 const withDevtoolsContext: Decorator = (Story) => (
   <DevtoolsContextProvider>
@@ -69,8 +69,8 @@ const meta = {
         const organizations = Array.from({ length: 5 }, () =>
           space.db.add(
             Obj.make(TestSchema.Organization, {
-              name: faker.company.name(),
-              website: faker.internet.url(),
+              name: random.company.name(),
+              website: random.internet.url(),
             }),
           ),
         );
@@ -78,8 +78,8 @@ const meta = {
         const persons = Array.from({ length: 10 }, () =>
           space.db.add(
             Obj.make(TestSchema.Person, {
-              name: faker.person.fullName(),
-              email: faker.internet.email(),
+              name: random.person.fullName(),
+              email: random.internet.email(),
             }),
           ),
         );
@@ -87,7 +87,7 @@ const meta = {
         const projects = Array.from({ length: 3 }, () =>
           space.db.add(
             Obj.make(TestSchema.Project, {
-              name: faker.commerce.productName(),
+              name: random.commerce.productName(),
             }),
           ),
         );
@@ -98,7 +98,7 @@ const meta = {
             Obj.make(Operation.PersistentOperation, {
               name: `function-${index}`,
               version: '0.1.0',
-              description: faker.lorem.sentence(),
+              description: random.lorem.sentence(),
             }),
           ),
         );
@@ -108,7 +108,7 @@ const meta = {
           space.db.add(
             Obj.make(Trigger.Trigger, {
               [Obj.Parent]: fn,
-              enabled: faker.datatype.boolean(),
+              enabled: random.datatype.boolean(),
               spec: { kind: 'timer', cron: '0 0 * * *' },
             }),
           );
@@ -120,8 +120,8 @@ const meta = {
             space.db.add(
               Obj.make(TestSchema.Person, {
                 [Obj.Parent]: project,
-                name: faker.person.fullName(),
-                email: faker.internet.email(),
+                name: random.person.fullName(),
+                email: random.internet.email(),
               }),
             ),
           );
@@ -129,12 +129,12 @@ const meta = {
 
         // Relations: persons employed at organizations.
         persons.forEach((person) => {
-          const org = faker.helpers.arrayElement(organizations);
+          const org = random.helpers.arrayElement(organizations);
           space.db.add(
             Relation.make(WorksAt, {
               [Relation.Source]: person,
               [Relation.Target]: org,
-              role: faker.helpers.arrayElement(roles),
+              role: random.helpers.arrayElement(roles),
             }),
           );
         });

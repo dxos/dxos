@@ -9,7 +9,7 @@ import { Config } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -20,10 +20,10 @@ import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { TestSchema } from '../testing';
 import { DataTypes } from '../types';
 
-faker.seed(1);
+random.seed(1);
 
 // TODO(burdon): Evolve dxos/random to support this directly.
-const generator = faker as any as ValueGenerator;
+const generator = random as any as ValueGenerator;
 
 const DefaultStory = () => {
   const [events, setEvents] = useState<{ type: string; duration: number }[]>([]);

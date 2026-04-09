@@ -15,7 +15,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -28,9 +28,9 @@ import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { translations } from '../../translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
-faker.seed(1);
+random.seed(1);
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions', name: 'Story Extensions' }).pipe(

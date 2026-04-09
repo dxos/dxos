@@ -11,7 +11,7 @@ import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { defaultRowSize } from './defs.js';
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
@@ -53,7 +53,7 @@ Basic.args = {
     grid: {
       '1,1': {
         // end: '8,1',
-        value: faker.lorem.paragraphs(5),
+        value: random.lorem.paragraphs(5),
       },
       '2,2': {
         value: '',
