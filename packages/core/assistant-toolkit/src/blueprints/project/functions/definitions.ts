@@ -8,10 +8,10 @@ import { AiService, GenericToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService, TracingService, TriggerEvent } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { Project } from '../../../types';
-import { Trace } from '@dxos/functions';
 
 export const Agent = Operation.make({
   meta: {

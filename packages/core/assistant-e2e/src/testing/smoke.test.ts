@@ -3,10 +3,12 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
+
 import { Prompt } from '@dxos/blueprints';
-import { trim } from '@dxos/util';
 import { Obj } from '@dxos/echo';
+import { trim } from '@dxos/util';
+
+import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 

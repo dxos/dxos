@@ -33,7 +33,6 @@ import { trim } from '@dxos/util';
 
 import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
-
 import { AgentPrompt } from './definitions';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';

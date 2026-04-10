@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { describe, it } from '@effect/vitest';
+
 import { Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
-import { describe, it } from '@effect/vitest';
+
 import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
