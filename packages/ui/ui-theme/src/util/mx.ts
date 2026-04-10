@@ -76,10 +76,14 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
   // Default props.
   ...(defaults as object),
 
-  // Spread supplied props; prefer explicit role, then defaults role, then 'none'.
-  role: role ?? defaults.role ?? 'none',
-  style: { ...(style ?? defaults.style) } as CSSProperties,
+  // Spread supplied props.
   ...props,
+
+  // Prefer explicit role, then defaults role, then 'none'.
+  role: role ?? defaults.role ?? 'none',
+
+  // Merge styles.
+  style: { ...defaults.style, ...style } as CSSProperties,
 
   // Compose classnames.
   className: mx(defaultClassNames, className, classNames),
