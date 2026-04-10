@@ -439,12 +439,7 @@ export class ServiceMesh {
       const instanceScope = yield* Scope.make();
 
       // Resolve dependencies - pass through the acquired refs for proper reference counting.
-      const dependencyContext = yield* this.#resolveDependencies(
-        spec,
-        context,
-        acquiredSpaceRefs,
-        acquiredProcessRefs,
-      );
+      const dependencyContext = yield* this.#resolveDependencies(spec, context, acquiredSpaceRefs, acquiredProcessRefs);
 
       // Build the service layer.
       const builtContext = yield* Layer.buildWithScope(spec.layer, instanceScope).pipe(
