@@ -131,11 +131,19 @@ export class ServiceMesh {
     effect: Effect.Effect<A, E, R | ServiceResolver.ServiceResolver>,
     context: ResolutionContext = {},
   ): Effect.Effect<A, E, Exclude<R, ServiceResolver.ServiceResolver | Scope.Scope>> {
-    return Effect.scoped(
-      Effect.flatMap(this.getResolver(context), (resolver) =>
-        effect.pipe(Effect.provideService(ServiceResolver.ServiceResolver, resolver)),
-      ),
-    ) as Effect.Effect<A, E, Exclude<R, ServiceResolver.ServiceResolver | Scope.Scope>>;
+    return effect.pipe(Effect.provide(this.getResolverLayer(context))) as Effect.Effect<
+      A,
+      E,
+      Exclude<R, ServiceResolver.ServiceResolver | Scope.Scope>
+    >;
+  }
+
+  /**
+   * Get a layer that provides a service resolver for the given context.
+   * The layer is scoped - when the scope closes, reference counts are decremented.
+   */
+  getResolverLayer(context: ResolutionContext = {}): Layer.Layer<ServiceResolver.ServiceResolver, never, Scope.Scope> {
+    return Layer.scoped(ServiceResolver.ServiceResolver, this.getResolver(context));
   }
 
   /**
@@ -362,7 +370,7 @@ export class ServiceMesh {
           const key = this.#getApplicationCacheKey(spec);
           let instance = this.#applicationCache.get(key);
           if (!instance) {
-            instance = yield* this.#createInstance(spec, context);
+            instance = yield* this.#createInstance(spec, context, acquiredSpaceRefs, acquiredProcessRefs);
             this.#applicationCache.set(key, instance);
             log('ServiceMesh: created application service', { key });
           }
@@ -380,7 +388,7 @@ export class ServiceMesh {
           const key = this.#getSpaceCacheKey(spec, context.space);
           let instance = this.#spaceCache.get(key);
           if (!instance) {
-            instance = yield* this.#createInstance(spec, context);
+            instance = yield* this.#createInstance(spec, context, acquiredSpaceRefs, acquiredProcessRefs);
             this.#spaceCache.set(key, instance);
             log('ServiceMesh: created space service', { key, space: context.space });
           }
@@ -403,7 +411,7 @@ export class ServiceMesh {
           const key = this.#getProcessCacheKey(spec, context.pid);
           let instance = this.#processCache.get(key);
           if (!instance) {
-            instance = yield* this.#createInstance(spec, context);
+            instance = yield* this.#createInstance(spec, context, acquiredSpaceRefs, acquiredProcessRefs);
             this.#processCache.set(key, instance);
             log('ServiceMesh: created process service', { key, pid: context.pid });
           }
@@ -424,12 +432,19 @@ export class ServiceMesh {
   #createInstance(
     spec: LayerSpec.LayerSpec,
     context: ResolutionContext,
+    acquiredSpaceRefs: Set<CacheKey>,
+    acquiredProcessRefs: Set<CacheKey>,
   ): Effect.Effect<CachedInstance, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       const instanceScope = yield* Scope.make();
 
-      // Resolve dependencies.
-      const dependencyContext = yield* this.#resolveDependencies(spec, context);
+      // Resolve dependencies - pass through the acquired refs for proper reference counting.
+      const dependencyContext = yield* this.#resolveDependencies(
+        spec,
+        context,
+        acquiredSpaceRefs,
+        acquiredProcessRefs,
+      );
 
       // Build the service layer.
       const builtContext = yield* Layer.buildWithScope(spec.layer, instanceScope).pipe(
@@ -455,6 +470,8 @@ export class ServiceMesh {
   #resolveDependencies(
     spec: LayerSpec.LayerSpec,
     context: ResolutionContext,
+    acquiredSpaceRefs: Set<CacheKey>,
+    acquiredProcessRefs: Set<CacheKey>,
   ): Effect.Effect<Context.Context<any>, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       let result: Context.Context<any> = Context.empty() as Context.Context<any>;
@@ -462,8 +479,8 @@ export class ServiceMesh {
       for (const tag of spec.requires) {
         const depSpec = this.#findLayerSpecForTag(tag);
         if (depSpec) {
-          // Recursively resolve dependency.
-          const instance = yield* this.#getOrCreateInstance(depSpec, context, new Set(), new Set());
+          // Recursively resolve dependency with proper reference counting.
+          const instance = yield* this.#getOrCreateInstance(depSpec, context, acquiredSpaceRefs, acquiredProcessRefs);
           result = Context.merge(result, instance.context);
         }
       }
