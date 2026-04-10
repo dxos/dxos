@@ -2356,9 +2356,7 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const objects = await db
-        .query(Query.select(Filter.childOf(grandparent, { transitive: false })))
-        .run();
+      const objects = await db.query(Query.select(Filter.childOf(grandparent, { transitive: false }))).run();
       expect(objects).toHaveLength(1);
       expect(objects[0]).toMatchObject({ name: 'Parent' });
     });
@@ -2374,9 +2372,7 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const objects = await db
-        .query(Query.select(Filter.childOf(parent, { transitive: false })))
-        .run();
+      const objects = await db.query(Query.select(Filter.childOf(parent, { transitive: false }))).run();
       expect(objects).toHaveLength(1);
       expect(objects[0]).toMatchObject({ name: 'Child' });
     });
@@ -2393,9 +2389,7 @@ describe('Query', () => {
       const unrelated = db.add(Obj.make(TestSchema.Expando, { name: 'Unrelated' }));
       await db.flush();
 
-      const objects = await db
-        .query(Query.select(Filter.childOf(grandparent, { transitive: false })))
-        .run();
+      const objects = await db.query(Query.select(Filter.childOf(grandparent, { transitive: false }))).run();
       expect(objects).toHaveLength(1);
       expect(objects[0]).toMatchObject({ name: 'Parent' });
     });
@@ -2412,11 +2406,7 @@ describe('Query', () => {
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
       await db.flush();
 
-      const objects = await db
-        .query(
-          Query.select(Filter.childOf(feed)).from(db, { includeFeeds: true }),
-        )
-        .run();
+      const objects = await db.query(Query.select(Filter.childOf(feed)).from(db, { includeFeeds: true })).run();
       expect(objects).toHaveLength(1);
       expect((objects[0] as TestSchema.Task).title).toEqual('Task in feed');
     });
@@ -2439,11 +2429,7 @@ describe('Query', () => {
       await queue.append([Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
       await db.flush();
 
-      const objects = await db
-        .query(
-          Query.select(Filter.childOf(parentObj)).from(db, { includeFeeds: true }),
-        )
-        .run();
+      const objects = await db.query(Query.select(Filter.childOf(parentObj)).from(db, { includeFeeds: true })).run();
       const taskResults = objects.filter((obj: any) => obj.title === 'Grandchild task');
       expect(taskResults.length).toBeGreaterThanOrEqual(1);
     });
@@ -2495,19 +2481,11 @@ describe('Query', () => {
       await queue2.append([Obj.make(TestSchema.Task, { title: 'Task in feed 2' })]);
       await db.flush();
 
-      const objects1 = await db
-        .query(
-          Query.select(Filter.childOf(feed1)).from(db, { includeFeeds: true }),
-        )
-        .run();
+      const objects1 = await db.query(Query.select(Filter.childOf(feed1)).from(db, { includeFeeds: true })).run();
       expect(objects1).toHaveLength(1);
       expect((objects1[0] as TestSchema.Task).title).toEqual('Task in feed 1');
 
-      const objects2 = await db
-        .query(
-          Query.select(Filter.childOf(feed2)).from(db, { includeFeeds: true }),
-        )
-        .run();
+      const objects2 = await db.query(Query.select(Filter.childOf(feed2)).from(db, { includeFeeds: true })).run();
       expect(objects2).toHaveLength(1);
       expect((objects2[0] as TestSchema.Task).title).toEqual('Task in feed 2');
     });

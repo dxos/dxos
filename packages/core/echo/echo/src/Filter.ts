@@ -349,10 +349,7 @@ export type ChildOfOptions = {
  * Accepts ECHO objects, DXN values, or arrays of either.
  * With transitive=true (default), also matches grandchildren and beyond.
  */
-export const childOf = (
-  parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[],
-  options?: ChildOfOptions,
-): Any => {
+export const childOf = (parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[], options?: ChildOfOptions): Any => {
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (item instanceof DXN) {

@@ -761,11 +761,7 @@ export class QueryExecutor extends Resource {
    * Checks if an item is a child of any of the given parent object IDs.
    * Walks up the parent chain (and feed ownership for queue items) until a match is found or depth is exhausted.
    */
-  private async _isChildOfAny(
-    item: QueryItem,
-    parentObjectIds: Set<string>,
-    remainingDepth: number,
-  ): Promise<boolean> {
+  private async _isChildOfAny(item: QueryItem, parentObjectIds: Set<string>, remainingDepth: number): Promise<boolean> {
     if (remainingDepth <= 0) {
       return false;
     }
