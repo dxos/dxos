@@ -115,6 +115,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               AiService.AiService,
               CredentialsService,
               Blueprint.RegistryService,
+              ClientService,
             ),
           ),
           Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
