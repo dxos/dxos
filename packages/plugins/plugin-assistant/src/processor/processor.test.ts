@@ -9,7 +9,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiConversation } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 

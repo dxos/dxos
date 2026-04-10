@@ -32,7 +32,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
   const entryRefs = useMemo(
     () =>
       Object.entries(journalSnapshot?.entries ?? {})
-        .toSorted(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
+        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
         .map(([dateKey, ref]) => ({ dateKey, ref })),
     [journalSnapshot],
   );
@@ -57,7 +57,13 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
           </div>
         )}
         {entryRefs.map(({ dateKey, ref }, i) => (
-          <JournalEntry key={dateKey} entryRef={ref} classNames='p-2' onSelect={onSelect} autoFocus={i === 0} />
+          <JournalEntry
+            key={dateKey}
+            entryRef={ref}
+            classNames='p-2'
+            onSelect={onSelect}
+            autoFocus={i === entryRefs.length - 1}
+          />
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
