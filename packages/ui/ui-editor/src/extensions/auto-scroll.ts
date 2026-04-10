@@ -89,7 +89,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
             view.dispatch({
               effects: scrollerCrawlEffect.of(true),
             });
-          } else if (delta < 0) {
+          } else if (delta < -1) {
             setPinned(false);
           }
         } else {

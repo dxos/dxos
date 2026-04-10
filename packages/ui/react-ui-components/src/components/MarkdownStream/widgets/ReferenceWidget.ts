@@ -19,10 +19,13 @@ export class ReferenceWidget extends WidgetType {
   }
 
   override toDOM() {
-    const anchor = Domino.of('dx-anchor' as any)
-      .classNames('dx-tag--anchor')
-      .attributes({ dxn: this.dxn })
-      .text(this.text);
-    return Domino.of('div').classNames('mt-2 mb-2').append(anchor).root;
+    return Domino.of('div')
+      .classNames('pt-2 pb-2')
+      .append(
+        Domino.of('dx-anchor' as any)
+          .classNames('dx-tag--anchor')
+          .attributes({ dxn: this.dxn })
+          .text(this.text),
+      ).root;
   }
 }

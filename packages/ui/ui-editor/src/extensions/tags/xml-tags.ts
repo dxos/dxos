@@ -18,6 +18,7 @@ import { type FunctionComponent } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Domino } from '@dxos/ui';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
@@ -66,15 +67,23 @@ export type XmlWidgetFactory = (props: XmlWidgetProps, onEvent?: XmlEventHandler
 
 /**
  * Widget registry definition.
+ * NOTE: Widgets should NOT use top/bottom margins (it causes unstable measurements while scrolling which leads to jumps).
+ * If required, use encapsulated divs with padding instead.
  */
 export type XmlWidgetDef = {
-  /** Block widget. */
+  /**
+   * Block widget.
+   */
   block?: boolean;
 
-  /** When true, the opening tag is flushed immediately and inner content streams character-by-character. */
+  /**
+   * When true, the opening tag is flushed immediately and inner content streams character-by-character.
+   */
   streaming?: boolean;
 
-  /** Native widget (rendered inline). */
+  /**
+   * Native widget (rendered inline).
+   */
   factory?: XmlWidgetFactory;
 
   /**
@@ -461,7 +470,13 @@ const buildDecorations = (
                   def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
                 );
                 const widgetState = widgetStateMap[widgetId];
-                const props = { range: nodeRange, context, ...args, id: widgetId, ...widgetState } satisfies XmlWidgetProps;
+                const props = {
+                  range: nodeRange,
+                  context,
+                  ...args,
+                  id: widgetId,
+                  ...widgetState,
+                } satisfies XmlWidgetProps;
 
                 // Create widget.
                 const widget: WidgetType | undefined = factory
@@ -613,7 +628,8 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    this._root = document.createElement('span');
+    // NOTE: Set min-height to avoid jumps while scrolling.
+    this._root = Domino.of('div').classNames('min-h-[24px]').root;
     const props: TProps = { ...(this.props as object), view } as TProps;
     this.notifier.mounted({ id: this.id, root: this._root, props, Component: this.Component });
     return this._root;

@@ -92,6 +92,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
     }, 1_000);
   }, [view]);
 
+  // Ignore if empty.
   if (!items.length) {
     return null;
   }
@@ -105,7 +106,7 @@ type ToolPanelProps = {
   items: { title: string; content: any }[];
 } & Pick<TogglePanelRootProps, 'onChangeOpen'>;
 
-export const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
+const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -122,7 +123,7 @@ export const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   }, []);
 
   return (
-    <TogglePanel.Root classNames='mt-2 w-full rounded-xs' open={open} onChangeOpen={setOpen}>
+    <TogglePanel.Root classNames='w-full rounded-xs border border-subdued-separator' open={open} onChangeOpen={setOpen}>
       <TogglePanel.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
