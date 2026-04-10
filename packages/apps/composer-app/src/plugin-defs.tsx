@@ -138,7 +138,6 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Dev
     isDev && DebugPlugin.meta.id,
-    isDev && ExemplarPlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
@@ -195,8 +194,6 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
-    SpecPlugin(),
-    ExemplarPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
@@ -236,6 +233,7 @@ export const getPlugins = ({
       observability: true,
       shareableLinkOrigin: origin,
     }),
+    SpecPlugin(),
     StackPlugin(),
     StatusBarPlugin(),
 
