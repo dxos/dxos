@@ -12,11 +12,24 @@ import { trim } from '@dxos/util';
 import { extendedMarkdown } from './extended-markdown';
 import { nodeToJson } from './xml-util';
 
+const testRegistry = {
+  prompt: { block: true },
+  suggestion: { block: true },
+  choice: { block: true },
+  toolkit: { block: true },
+  toolCall: { block: true },
+  summary: { block: true },
+  reasoning: { block: true },
+  stats: { block: true },
+  reference: { block: false },
+  select: { block: true },
+};
+
 describe('extended-markdown', () => {
-  const createEditorState = (doc: string) => {
+  const createEditorState = (doc: string, registry?: Record<string, any>) => {
     return EditorState.create({
       doc,
-      extensions: [extendedMarkdown()],
+      extensions: [extendedMarkdown({ registry: registry ?? testRegistry })],
     });
   };
 
@@ -119,6 +132,90 @@ describe('extended-markdown', () => {
         }
       },
     });
+  });
+
+  test('self-closing tags with attributes should not consume subsequent content', ({ expect }) => {
+    const doc = trim`
+      <toolCall id="toolu_01ABC123" />
+
+      ## Architecture
+
+      Regular paragraph.
+    `;
+
+    const state = createEditorState(doc);
+    const tree = syntaxTree(state);
+
+    const nodeNames: string[] = [];
+    tree.iterate({
+      enter: (node) => {
+        nodeNames.push(node.name);
+      },
+    });
+
+    // The heading must be parsed as ATXHeading2, not swallowed into an HTMLBlock.
+    expect(nodeNames).toContain('ATXHeading2');
+  });
+
+  test('self-closing tags without attributes should parse correctly', ({ expect }) => {
+    const doc = trim`
+      <toolkit />
+
+      ## Heading After Self-Close
+
+      Paragraph text.
+    `;
+
+    const state = createEditorState(doc);
+    const tree = syntaxTree(state);
+
+    const nodeNames: string[] = [];
+    tree.iterate({
+      enter: (node) => {
+        nodeNames.push(node.name);
+      },
+    });
+
+    expect(nodeNames).toContain('ATXHeading2');
+  });
+
+  test('mixed self-closing and block tags should not break markdown parsing', ({ expect }) => {
+    const doc = trim`
+      <prompt>What is markdown?</prompt>
+
+      <reasoning>
+      The user is asking about markdown.
+      </reasoning>
+
+      Some explanation text.
+
+      <toolCall id="toolu_01ABC123analyze" />
+
+      <summary>Analyzed 42 files.</summary>
+
+      ## Architecture
+
+      The project follows a modular pattern.
+
+      <stats>3 tool uses · 12.4k tokens</stats>
+
+      ### Sub-heading
+
+      More text.
+    `;
+
+    const state = createEditorState(doc);
+    const tree = syntaxTree(state);
+
+    const nodeNames: string[] = [];
+    tree.iterate({
+      enter: (node) => {
+        nodeNames.push(node.name);
+      },
+    });
+
+    expect(nodeNames).toContain('ATXHeading2');
+    expect(nodeNames).toContain('ATXHeading3');
   });
 
   //

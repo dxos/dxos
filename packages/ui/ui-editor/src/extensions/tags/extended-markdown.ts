@@ -58,7 +58,8 @@ const xmlBlockParsers = (registry?: XmlWidgetRegistry): BlockParser[] => {
   }
 
   const tagPattern = customTags.map(escapeRegExpSource).join('|');
-  const openPattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?>|^\\s*<(${tagPattern})\\s*/>`);
+  const selfClosePattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?\\/>`);
+  const openPattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?\\/?>`)
 
   return [
     {
@@ -70,8 +71,8 @@ const xmlBlockParsers = (registry?: XmlWidgetRegistry): BlockParser[] => {
           return false;
         }
 
-        // Self-closing tag (e.g., `<tag />`).
-        if (match[3]) {
+        // Self-closing tag (e.g., `<tag />` or `<tag id="x" />`).
+        if (selfClosePattern.test(line.text)) {
           const end = cx.lineStart + line.text.length;
           cx.addElement(cx.elt('HTMLBlock', cx.lineStart, end));
           cx.nextLine();
