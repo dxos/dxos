@@ -540,9 +540,6 @@ catalogs:
     '@svgr/cli':
       specifier: ^8.1.0
       version: 8.1.0
-    '@swc/core':
-      specifier: 1.13.5
-      version: 1.13.5
     '@swc/types':
       specifier: ^0.1.25
       version: 0.1.25
@@ -825,6 +822,9 @@ catalogs:
     '@vitejs/plugin-react':
       specifier: ^6.0.1
       version: 6.0.1
+    '@vitejs/plugin-react-swc':
+      specifier: 4.2.2
+      version: 4.2.2
     '@vitest/browser':
       specifier: ^4.1.4
       version: 4.1.4
@@ -1854,6 +1854,7 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.2.3
+  '@swc/core': 1.13.5
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': ^1.4.2
   '@modelcontextprotocol/sdk': '>=1.26.0'
@@ -2005,7 +2006,7 @@ importers:
         specifier: 'catalog:'
         version: 5.0.5(rollup@3.30.0)
       '@swc/core':
-        specifier: 'catalog:'
+        specifier: 1.13.5
         version: 1.13.5(@swc/helpers@0.5.17)
       '@swc/types':
         specifier: 'catalog:'
@@ -2067,6 +2068,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 6.0.1(vite@8.0.8)
+      '@vitejs/plugin-react-swc':
+        specifier: 'catalog:'
+        version: 4.2.2(@swc/helpers@0.5.17)(vite@8.0.8)
       '@vitest/browser':
         specifier: 'catalog:'
         version: 4.1.4(vite@8.0.8)(vitest@4.1.4)
@@ -26371,6 +26375,9 @@ packages:
   '@rolldown/debug@1.0.0-rc.15':
     resolution: {integrity: sha512-YlM1cMJEsGVCj9a5j7Nxw6mbnBCUdr5dbbhJdoqvxBp52BEODSKe+bBzSSIPxZIQCLggUEBdeM0652eN52IGRA==}
 
+  '@rolldown/pluginutils@1.0.0-beta.47':
+    resolution: {integrity: sha512-8QagwMH3kNCuzD8EWL8R2YPW5e4OrHNSAHRFDdmFqEwEaD/KcNKjVoumo+gP2vW5eKB2UPbM6vTYiGZX0ixLnw==}
+
   '@rolldown/pluginutils@1.0.0-beta.52':
     resolution: {integrity: sha512-/L0htLJZbaZFL1g9OHOblTxbCYIGefErJjtYOwgl9ZqNx27P3L0SDfjhhHIss32gu5NWgnxuT2a2Hnnv6QGHKA==}
 
@@ -27162,6 +27169,9 @@ packages:
 
   '@swc/types@0.1.25':
     resolution: {integrity: sha512-iAoY/qRhNH8a/hBvm3zKj9qQ4oc2+3w1unPJa2XvTK3XjeLXtzcCingVPw/9e5mn1+0yPqxcBGp9Jf0pkfMb1g==}
+
+  '@swc/types@0.1.26':
+    resolution: {integrity: sha512-lyMwd7WGgG79RS7EERZV3T8wMdmPq3xwyg+1nmAM64kIhx5yl+juO2PYIHb7vTiPgPCj8LYjsNV2T5wiQHUEaw==}
 
   '@swc/wasm@1.13.3':
     resolution: {integrity: sha512-ZhQfKxqFvrifksN8znSzes/oyfr8Q4mpKP0T8tYS/AaUzm/7v5OK22VlcTHR1gXHEtp16dlR8w+vYTFDCaUmnw==}
@@ -28308,6 +28318,12 @@ packages:
   '@vitejs/devtools@0.1.13':
     resolution: {integrity: sha512-0PWKOrYyDiP+UFI0Sfqn3uTxRwQMnvFyA6t4vnj+0SpCEk+XNEP2igqjCp7/F9wU0JDH3SiWhfMe41za9BtwkA==}
     hasBin: true
+    peerDependencies:
+      vite: '>=8.0.0'
+
+  '@vitejs/plugin-react-swc@4.2.2':
+    resolution: {integrity: sha512-x+rE6tsxq/gxrEJN3Nv3dIV60lFflPj94c90b+NNo6n1QV1QQUTLoL0MpaOVasUZ0zqVBn7ead1B5ecx1JAGfA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       vite: '>=8.0.0'
 
@@ -46239,6 +46255,8 @@ snapshots:
 
   '@rolldown/debug@1.0.0-rc.15': {}
 
+  '@rolldown/pluginutils@1.0.0-beta.47': {}
+
   '@rolldown/pluginutils@1.0.0-beta.52': {}
 
   '@rolldown/pluginutils@1.0.0-beta.53': {}
@@ -47216,7 +47234,7 @@ snapshots:
   '@swc/core@1.13.5(@swc/helpers@0.5.17)':
     dependencies:
       '@swc/counter': 0.1.3
-      '@swc/types': 0.1.25
+      '@swc/types': 0.1.26
     optionalDependencies:
       '@swc/core-darwin-arm64': 1.13.5
       '@swc/core-darwin-x64': 1.13.5
@@ -47237,6 +47255,10 @@ snapshots:
       tslib: 2.8.1
 
   '@swc/types@0.1.25':
+    dependencies:
+      '@swc/counter': 0.1.3
+
+  '@swc/types@0.1.26':
     dependencies:
       '@swc/counter': 0.1.3
 
@@ -48493,6 +48515,14 @@ snapshots:
       - typescript
       - uploadthing
       - utf-8-validate
+
+  '@vitejs/plugin-react-swc@4.2.2(@swc/helpers@0.5.17)(vite@8.0.8)':
+    dependencies:
+      '@rolldown/pluginutils': 1.0.0-beta.47
+      '@swc/core': 1.13.5(@swc/helpers@0.5.17)
+      vite: 8.0.8(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+    transitivePeerDependencies:
+      - '@swc/helpers'
 
   '@vitejs/plugin-react@6.0.1(vite@8.0.8)':
     dependencies:

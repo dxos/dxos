@@ -296,6 +296,7 @@ catalog:
   '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/devtools': ^0.1.13
   '@vitejs/plugin-react': ^6.0.1
+  '@vitejs/plugin-react-swc': 4.2.2
   '@vitest/browser': ^4.1.4
   '@vitest/browser-playwright': ^4.1.4
   '@vitest/coverage-v8': ^4.1.4
@@ -685,6 +686,7 @@ onlyBuiltDependencies:
 
 overrides:
   '@automerge/automerge': 'catalog:'
+  '@swc/core': 'catalog:'
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': 'catalog:'
   '@modelcontextprotocol/sdk': '>=1.26.0'
