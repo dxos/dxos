@@ -122,7 +122,7 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   }, []);
 
   return (
-    <TogglePanel.Root classNames='w-full rounded-xs border border-subdued-separator' open={open} onChangeOpen={setOpen}>
+    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
       <TogglePanel.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>

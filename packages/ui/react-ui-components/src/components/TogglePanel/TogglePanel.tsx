@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 const IconBlock = ({ children }: PropsWithChildren) => {
   return <div className='grid h-[24px] w-[24px] place-items-center'>{children}</div>;
@@ -91,7 +91,10 @@ const Root = ({
       open={open}
       setOpen={setOpen}
     >
-      <div role='none' className={mx('overflow-hidden', !shrink && 'w-full', classNames)}>
+      <div
+        role='none'
+        className={mx('border border-separator rounded-sm overflow-hidden', !shrink && 'w-full', classNames)}
+      >
         {children}
       </div>
     </TogglePanelContext>
@@ -143,17 +146,19 @@ const CONTENT_NAME = 'TogglePanel.Content';
 
 type ContentProps = ThemedClassName<PropsWithChildren>;
 
-const Content = ({ classNames, children }: ContentProps) => {
+const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => {
   const { duration, expandX, expandY } = useTogglePanelContext(CONTENT_NAME);
 
   return (
     <div
-      role='none'
+      {...composableProps(props, {
+        classNames: [
+          'grid transition-[grid-template-columns] ease-in-out',
+          expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
+        ],
+      })}
       style={{ transitionDuration: `${duration}ms` }}
-      className={mx(
-        'grid transition-[grid-template-columns] ease-in-out',
-        expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
-      )}
+      ref={forwardedRef}
     >
       <div className='overflow-hidden'>
         <div
@@ -164,12 +169,12 @@ const Content = ({ classNames, children }: ContentProps) => {
             expandY ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
           )}
         >
-          <div className={mx('min-h-0 overflow-y-auto', classNames)}>{children}</div>
+          <div className='min-h-0 overflow-y-auto'>{children}</div>
         </div>
       </div>
     </div>
   );
-};
+});
 
 Content.displayName = CONTENT_NAME;
 
