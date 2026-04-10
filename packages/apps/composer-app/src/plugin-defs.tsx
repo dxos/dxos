@@ -217,10 +217,10 @@ export const getPlugins = ({
       observability: () => observability,
     }),
     OutlinerPlugin(),
+    PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    PipelinePlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
@@ -236,7 +236,6 @@ export const getPlugins = ({
     SpecPlugin(),
     StackPlugin(),
     StatusBarPlugin(),
-
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',
