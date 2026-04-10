@@ -77,7 +77,11 @@ export type XmlWidgetDef = {
   /** Native widget (rendered inline). */
   factory?: XmlWidgetFactory;
 
-  /** React/Solid widget (rendered in portals outside of the editor). */
+  /**
+   * React/Solid widget (rendered in portals outside of the editor).
+   * Prefer an `id="..."` attribute on the tag so `updateWidget` can target the instance; if omitted,
+   * an id is derived from the tag’s document range (closed tags) or opening position (streaming).
+   */
   Component?: FunctionComponent<XmlWidgetProps>;
 };
 
@@ -87,6 +91,10 @@ export const getXmlTextChild = (children: any[]): string | null => {
   const child = children?.[0];
   return typeof child === 'string' ? child : null;
 };
+
+/** Stable id for portaled React/Solid widgets; explicit `id` on the tag wins for `updateWidget`. */
+const xmlWidgetId = (explicit: unknown, fallback: string): string =>
+  typeof explicit === 'string' && explicit.length > 0 ? explicit : fallback;
 
 /**
  * Update context.
@@ -443,15 +451,16 @@ const buildDecorations = (
 
                 // NOTE: The widget state may already have been updated before the widget is mounted.
                 const { block, factory, Component } = def;
-                const widgetState = args.id ? widgetStateMap[args.id] : undefined;
                 const nodeRange = { from: node.node.from, to: node.node.to };
-                const props = { range: nodeRange, context, ...args, ...widgetState } satisfies XmlWidgetProps;
+                const widgetId = xmlWidgetId(args.id, `cm-xml-${nodeRange.from}-${nodeRange.to}`);
+                const widgetState = widgetStateMap[widgetId];
+                const props = { range: nodeRange, context, ...args, id: widgetId, ...widgetState } satisfies XmlWidgetProps;
 
                 // Create widget.
                 const widget: WidgetType | undefined = factory
-                  ? factory(props)
+                  ? (factory(props) ?? undefined)
                   : Component
-                    ? args.id && new PlaceholderWidget(args.id, Component, props, notifier)
+                    ? new PlaceholderWidget(widgetId, Component, props, notifier)
                     : undefined;
 
                 // Add decoration.
@@ -520,13 +529,14 @@ const buildDecorations = (
           props[attrMatch[1]] = attrMatch[2];
         }
 
-        const widgetState = props.id ? widgetStateMap[props.id] : undefined;
-        const mergedProps = { ...props, ...widgetState };
+        const widgetId = xmlWidgetId(props.id, `cm-xml-${absoluteFrom}-stream`);
+        const widgetState = widgetStateMap[widgetId];
+        const mergedProps = { ...props, id: widgetId, ...widgetState };
 
         const widget: WidgetType | undefined = def.factory
-          ? def.factory(mergedProps)
+          ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? mergedProps.id && new PlaceholderWidget(mergedProps.id, def.Component, mergedProps, notifier, true)
+            ? new PlaceholderWidget(widgetId, def.Component, mergedProps, notifier, true)
             : undefined;
 
         if (widget) {

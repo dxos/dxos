@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
 import { getXmlTextChild, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-import { keyToFallback } from '@dxos/util';
+import { keyToFallback, trim } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
@@ -23,7 +23,7 @@ import MIXED from './testing/mixed.md?raw';
 import TEXT from './testing/text.md?raw';
 import { PromptWidget, ReasoningWidget } from './widgets';
 
-random.seed(1234);
+random.seed(123);
 
 const userHue = keyToFallback(PublicKey.random()).hue;
 
@@ -33,7 +33,7 @@ const defaultStreamOptions: TextStreamOptions = {
   variance: 0.5,
 };
 
-export class TestWidget extends WidgetType {
+class DOMWidget extends WidgetType {
   constructor(private text: string) {
     super();
   }
@@ -46,6 +46,10 @@ export class TestWidget extends WidgetType {
     return Domino.of('span').classNames(mx('flex m-2 p-2 border border-separator rounded')).text(this.text).root;
   }
 }
+
+const ReactWidget = ({ children }: { children: string }) => {
+  return <div className='m-2 p-2 border border-separator rounded'>{children}</div>;
+};
 
 const registry: XmlWidgetRegistry = {
   prompt: {
@@ -63,9 +67,13 @@ const registry: XmlWidgetRegistry = {
       return text ? new ReasoningWidget(text, range?.from) : null;
     },
   },
-  test: {
+  'test-dom': {
     block: true,
-    factory: ({ children }) => new TestWidget(children?.[0]),
+    factory: ({ children }) => new DOMWidget(children?.[0]),
+  },
+  'test-react': {
+    block: true,
+    Component: ReactWidget,
   },
 };
 
@@ -121,7 +129,7 @@ const DefaultStory = ({
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      [random.lorem.paragraph(), `<test>${random.lorem.word()}</test>`, random.lorem.paragraph()].join('\n'),
+      [random.lorem.paragraph(), `<test-dom>${random.lorem.word()}</test-dom>`, random.lorem.paragraph()].join('\n'),
     );
   }, [controller]);
 
@@ -192,6 +200,20 @@ export const Wire: Story = {
       wire: true,
       cursor: true,
     },
+  },
+};
+
+export const Widgets: Story = {
+  args: {
+    registry: registry,
+    initialContent: trim`
+      # DOM Widget
+      <test-dom>${random.lorem.paragraph()}</test-dom>
+
+      # React Widget
+      <test-react>${random.lorem.paragraph()}</test-react>
+    `,
+    options: {},
   },
 };
 
