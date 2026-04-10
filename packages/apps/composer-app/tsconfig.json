@@ -188,6 +188,9 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-sample"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {

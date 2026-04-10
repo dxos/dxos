@@ -42,6 +42,7 @@ import { PresenterPlugin } from '@dxos/plugin-presenter';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { PwaPlugin } from '@dxos/plugin-pwa';
 import { RegistryPlugin } from '@dxos/plugin-registry';
+import { SamplePlugin } from '@dxos/plugin-sample';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SettingsPlugin } from '@dxos/plugin-settings';
@@ -80,6 +81,7 @@ export type State = {
 
 export type PluginConfig = State & {
   isDev?: boolean;
+  isLocal?: boolean;
   isPwa?: boolean;
   isTauri?: boolean;
   isLabs?: boolean;
@@ -121,7 +123,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     .flat();
 };
 
-export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
     InboxPlugin.meta.id,
@@ -138,6 +140,9 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Dev
     isDev && DebugPlugin.meta.id,
+
+    // Local
+    isLocal && SamplePlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
@@ -161,6 +166,7 @@ export const getPlugins = ({
   observability,
   logBuffer,
   isDev,
+  isLocal,
   isLabs,
   isPwa,
   isTauri,
@@ -223,6 +229,7 @@ export const getPlugins = ({
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
+    isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
     SettingsPlugin(),

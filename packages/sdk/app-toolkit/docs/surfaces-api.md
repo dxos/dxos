@@ -135,6 +135,6 @@ export const MyArticle: ComponentType<any> = lazy(() => import('./MyArticle'));
 
 ## Examples
 
-- **plugin-exemplar**: [`src/capabilities/react-surface.tsx`](../../plugins/plugin-exemplar/src/capabilities/react-surface.tsx) — Demonstrates article, settings, companion, deck companion, and status indicator surfaces.
+- **plugin-sample**: [`src/capabilities/react-surface.tsx`](../../plugins/plugin-sample/src/capabilities/react-surface.tsx) — Demonstrates article, settings, companion, deck companion, and status indicator surfaces.
 - **plugin-kanban**: [`src/capabilities/react-surface.tsx`](../../plugins/plugin-kanban/src/capabilities/react-surface.tsx) — Article, object settings, and custom form input surfaces.
 - **plugin-debug**: [`src/capabilities/react-surface.tsx`](../../plugins/plugin-debug/src/capabilities/react-surface.tsx) — Extensive example with devtools panels, companions, and status indicators.

@@ -316,9 +316,6 @@
       "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-exemplar/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
@@ -386,6 +383,9 @@
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-sample/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-script/tsconfig.json"
