@@ -15,6 +15,7 @@ import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -43,7 +44,15 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.makeAction({
               id: AssistantOperation.UpdateChatName.meta.key,
-              data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
+              data: () =>
+                Effect.gen(function* () {
+                  // TODO(dmaretskyi): This goes away when composer will have unified operation invocations.
+                  const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+                  const db = Obj.getDatabase(chat);
+                  invariant(db);
+                  const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
+                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(runtime));
+                }),
               properties: {
                 label: ['chat-update-name.label', { ns: meta.id }],
                 icon: 'ph--magic-wand--regular',
