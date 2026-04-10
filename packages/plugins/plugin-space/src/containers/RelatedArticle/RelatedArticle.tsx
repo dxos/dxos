@@ -9,11 +9,12 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Entity, Obj } from '@dxos/echo';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
+import { Card, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
 import { useRelatedObjects } from '#hooks';
+import { meta } from '#meta';
 
 // TODO(burdon): Companion type.
 export type RelatedArticleProps = Pick<
@@ -39,7 +40,9 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
   );
 };
 
+/** Masonry tile renderer for a related entity. */
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
+  const { t } = useTranslation(meta.id);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Function.pipe(
     Obj.getSchema(subject),
@@ -59,7 +62,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
           <Card.Icon icon={icon} />
           <Card.Title>{Entity.getLabel(subject)}</Card.Title>
           <Menu.Trigger asChild disabled={!menuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('more-actions.label')} />
           </Menu.Trigger>
           <Menu.Content items={menuItems} />
         </Card.Toolbar>

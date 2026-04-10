@@ -8,6 +8,10 @@ import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
+/**
+ * Returns objects related to `subject` via direct references and/or relations.
+ * Returns an empty array when `subject` is undefined.
+ */
 // TODO(burdon): Factor out (make more generally useful -- e.g., in cards).
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
 export const useRelatedObjects = (
