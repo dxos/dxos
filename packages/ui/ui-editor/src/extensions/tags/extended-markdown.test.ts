@@ -179,6 +179,27 @@ describe('extended-markdown', () => {
     expect(nodeNames).toContain('ATXHeading2');
   });
 
+  test('self-closing tags with trailing text should not consume subsequent content', ({ expect }) => {
+    const doc = trim`
+      <toolkit /> trailing text
+
+      ## Heading After Trailing
+    `;
+
+    const state = createEditorState(doc);
+    const tree = syntaxTree(state);
+
+    const nodeNames: string[] = [];
+    tree.iterate({
+      enter: (node) => {
+        nodeNames.push(node.name);
+      },
+    });
+
+    // The trailing text line should not be swallowed as an HTMLBlock.
+    expect(nodeNames).toContain('ATXHeading2');
+  });
+
   test('mixed self-closing and block tags should not break markdown parsing', ({ expect }) => {
     const doc = trim`
       <prompt>What is markdown?</prompt>

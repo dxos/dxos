@@ -79,6 +79,12 @@ const xmlBlockParsers = (registry?: XmlWidgetRegistry): BlockParser[] => {
           return true;
         }
 
+        // Self-closing tag with trailing text (e.g., `<tag /> text`).
+        // Let markdown parse it as a normal paragraph.
+        if (match[0].trimEnd().endsWith('/>')) {
+          return false;
+        }
+
         const tagName = match[1];
         const closeTag = `</${tagName}>`;
         const start = cx.lineStart;
