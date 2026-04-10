@@ -140,6 +140,7 @@ export class AiConversation extends Resource {
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled blueprints.
       do {
+        yield* Effect.promise(() => this.context.sync());
         const currentBlueprints = this.context.getBlueprints();
         const mcps = yield* connectMcpServers(currentBlueprints);
         const toolkit = yield* createToolkit({

@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
@@ -75,6 +75,7 @@ export class AiContextBinder extends Resource {
   private readonly _registry: Registry.Registry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+  #bindingsQuery: QueryResult.QueryResult<ContextBinding> | undefined;
 
   constructor(options: AiContextBinderOptions) {
     super();
@@ -128,18 +129,33 @@ export class AiContextBinder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    const query = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(ContextBinding)));
+    this.#bindingsQuery = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(ContextBinding)));
 
     // Process initial state before returning.
-    const initialResults = await query.run();
+    const initialResults = await this.#bindingsQuery.run();
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
     this._ctx.onDispose(
-      query.subscribe(async () => {
-        await this._updateBindings(query.results);
+      this.#bindingsQuery.subscribe(async () => {
+        await this._updateBindings(this.#bindingsQuery!.results);
       }),
     );
+  }
+
+  /**
+   * Re-reads bindings from the feed to pick up changes made by other processes.
+   */
+  async sync(): Promise<void> {
+    if (this.#bindingsQuery) {
+      const results = await this.#bindingsQuery.run();
+      log('sync', { bindingItems: results.length });
+      await this._updateBindings(results);
+      log('sync complete', {
+        blueprints: this._registry.get(this._blueprints).length,
+        blueprintKeys: this._registry.get(this._blueprints).map((bp) => (bp as any).key),
+      });
+    }
   }
 
   private async _updateBindings(items: ContextBinding[]): Promise<void> {
@@ -150,11 +166,21 @@ export class AiContextBinder extends Resource {
 
     const bindings = this._reduce(items);
 
+    log('_updateBindings', {
+      items: items.length,
+      blueprintRefs: [...bindings.blueprints].map((ref) => ({ dxn: ref.dxn.toString(), available: ref.isAvailable })),
+    });
+
     // Resolve references (loading them first if needed).
     const currentBlueprints = this._registry.get(this._blueprints);
     const currentObjects = this._registry.get(this._objects);
     const resolvedBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
     const resolvedObjects = await this._resolve(bindings.objects, currentObjects);
+
+    log('_updateBindings resolved', {
+      resolvedBlueprints: resolvedBlueprints.length,
+      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => (bp as any).key),
+    });
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.

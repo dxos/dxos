@@ -157,7 +157,7 @@ export const AssistantTestLayer = ({
             ServiceResolver.succeed(AiConversationService, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();

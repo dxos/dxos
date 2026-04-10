@@ -1315,7 +1315,13 @@ export namespace ProcessOperationInvoker {
       const options = args[1] as Operation.InvokeOptions | undefined;
       const tracing = options?.tracing as TracingOptions | undefined;
       return Effect.gen(function* () {
-        const fiber = yield* invokeFiber(op, input, { tracing, environment: { space: options?.spaceId } });
+        const fiber = yield* invokeFiber(op, input, {
+          tracing,
+          environment: {
+            ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
+            ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          },
+        });
         const output = yield* fiber.await.pipe(Effect.flatten);
 
         yield* PubSub.publish(pubsub, {
