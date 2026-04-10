@@ -12,6 +12,7 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+
 import { AiChatProcessor } from './processor';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
