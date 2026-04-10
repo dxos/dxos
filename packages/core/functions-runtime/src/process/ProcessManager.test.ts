@@ -38,11 +38,24 @@ const Double = Operation.make({
   output: Schema.Number,
 });
 
+const Failing = Operation.make({
+  meta: { key: 'org.dxos.test.failing', name: 'Failing' },
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
 const handlers = OperationHandlerSet.make(
   Double.pipe(
     Operation.withHandler(
       Effect.fn(function* (input) {
         return input.value * 2;
+      }),
+    ),
+  ),
+  Failing.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        return yield* Effect.die('Failed');
       }),
     ),
   ),
@@ -138,8 +151,7 @@ describe('ProcessManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([14]);
-      const status = yield* handle.status();
-      expect(status.state).toEqual(Process.State.SUCCEEDED);
+      expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
 
@@ -150,8 +162,7 @@ describe('ProcessManagerImpl', () => {
       const handle = yield* manager.spawn(makeSumAggregator());
       const outputs = yield* handle.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([4]);
-      const status = yield* handle.status();
-      expect(status.state).toEqual(Process.State.IDLE);
+      expect(handle.status.state).toEqual(Process.State.IDLE);
     }, Effect.provide(TestLayer)),
   );
 
@@ -180,15 +191,13 @@ describe('ProcessManagerImpl', () => {
       const manager = yield* ProcessManager.ProcessManagerService;
       const handle = yield* manager.spawn(makeWaitingExecutable());
       {
-        const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.HYBERNATING);
+        expect(handle.status.state).toEqual(Process.State.HYBERNATING);
       }
       {
         // Process stays HYBERNATING until the alarm fires; `runToCompletion` would block until SUCCEEDED.
         // Alarms use real `setTimeout`; `it.effect` uses TestClock, so `Effect.sleep` would not advance wall time.
         yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 600)));
-        const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.SUCCEEDED);
+        expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
       }
     }, Effect.provide(TestLayer)),
   );
@@ -200,8 +209,7 @@ describe('ProcessManagerImpl', () => {
       const handle = yield* manager.spawn(makeWaitingExecutable());
       {
         yield* handle.terminate();
-        const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.TERMINATED);
+        expect(handle.status.state).toEqual(Process.State.TERMINATED);
       }
     }, Effect.provide(TestLayer)),
   );
@@ -224,15 +232,13 @@ describe('ProcessManagerImpl', () => {
       );
       {
         yield* handle.runToCompletion();
-        const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.IDLE);
+        expect(handle.status.state).toEqual(Process.State.IDLE);
       }
       {
         yield* handle.submitInput(1);
         yield* handle.submitInput(2);
         yield* handle.runToCompletion();
-        const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.IDLE);
+        expect(handle.status.state).toEqual(Process.State.IDLE);
         // TODO(dmaretskyi): Output streaming is async, not sure how to sync it.
         yield* Effect.promise(() => expect.poll(() => outputCount).toEqual(2));
         yield* Effect.promise(() => expect.poll(() => lastOutput).toEqual(3));
@@ -358,6 +364,16 @@ describe('ProcessOperationInvoker', () => {
       const fiber2 = yield* invoker.attachFiber(fiber1.pid);
       const output = yield* fiber2.await;
       expect(output).toEqual(Exit.succeed(10));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'fails when the operation fails',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const fiber = yield* invoker.invokeFiber(Failing, undefined);
+      const output = yield* fiber.await;
+      expect(output).toEqual(Exit.die('Failed'));
     }, Effect.provide(TestLayer)),
   );
 });

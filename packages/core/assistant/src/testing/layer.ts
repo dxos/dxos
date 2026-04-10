@@ -84,6 +84,7 @@ export type AssistantTestServices =
   | Blueprint.RegistryService
   | OperationRegistry.Service
   | GenericToolkit.GenericToolkitProvider
+  | Operation.Service
   // Core
   | ProcessManager.ProcessManagerService
   | Process.ProcessMonitorService
@@ -120,6 +121,7 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),

@@ -69,6 +69,7 @@ export interface OperationService {
  * });
  * ```
  */
+// TODO(dmaretskyi): Rename Operation.Invoker
 export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
 
 //

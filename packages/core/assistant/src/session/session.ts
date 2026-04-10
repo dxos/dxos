@@ -217,6 +217,7 @@ export class AiSession {
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null; // Consistent IDs for pending blocks preceding the complete one.
+
       const messages = yield* LanguageModel.streamText({
         prompt,
         toolkit,
