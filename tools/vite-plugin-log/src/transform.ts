@@ -133,6 +133,16 @@ function buildMetaLiteral(options: { line: number; spec: LogMetaTransformSpec; a
   return `{${parts.join(',')}}`;
 }
 
+/** True when there is a comma (ignoring whitespace) between `from` and `to` in `code`. */
+function hasCommaBeforeOffset(code: string, from: number, to: number): boolean {
+  for (let i = from; i < to; i++) {
+    if (code[i] === ',') {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Index of `)` closing the call/new, or -1 if not found (skip transform). */
 function closingParenIndex(code: string, expr: CallExpression | NewExpression): number {
   let i = expr.end - 1;
@@ -177,7 +187,12 @@ function buildCallInsertion(
   }
   slotPieces.push(meta);
   const tail = slotPieces.join(',');
-  return (args.length > 0 ? ',' : '') + tail;
+
+  const closeParen = closingParenIndex(code, expr);
+  const hasTrailingComma =
+    args.length > 0 && hasCommaBeforeOffset(code, args[args.length - 1].end, closeParen);
+
+  return (args.length > 0 && !hasTrailingComma ? ',' : '') + tail;
 }
 
 /** After hashbang and any leading `import` declarations (valid ESM). */

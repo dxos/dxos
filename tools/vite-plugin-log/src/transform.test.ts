@@ -179,6 +179,28 @@ describe('transform', () => {
     `);
   });
 
+  test('invariant with trailing comma', ({ expect }) => {
+    const code = sourceCode`
+    import { invariant } from '@dxos/invariant';
+    invariant(
+      condition,
+      'message',
+    );
+    `;
+    const result = runTransform('src/module.ts', code);
+    expect(result).not.toContain(',,');
+    expect(result).toMatchInlineSnapshot(`
+      "import { invariant } from '@dxos/invariant';
+      var __dxlog_file="src/module.ts";
+
+      invariant(
+        condition,
+        'message',
+      {F:__dxlog_file,L:2,S:this,A:["condition","'message'"]});
+      "
+    `);
+  });
+
   test('filename for __dxlog_file', ({ expect }) => {
     const code = sourceCode`
     import { log } from '@dxos/log';
