@@ -36,9 +36,11 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
+import { UpdateChatName } from '../operations/definitions';
 import { updateName } from './update-name';
 
 /**
@@ -66,10 +68,29 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
+  /**
+   * Probability of automatically updating chat name after each request.
+   * Chat name is always updated if it has no name.
+   * @default 0.1 (10%)
+   */
+  autoUpdateNameChance?: number;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
+  autoUpdateNameChance: 0.1,
+};
+
+/**
+ * Determines if chat name should be updated.
+ * @returns true if chat has no name OR random chance triggers.
+ */
+export const shouldUpdateChatName = (
+  chatName: string | undefined,
+  chance: number,
+  random: () => number = Math.random,
+): boolean => {
+  return !chatName || random() < chance;
 };
 
 export type AiRequestOptions = {};
@@ -193,6 +214,8 @@ export class AiChatProcessor {
         log.info('session complete');
 
         this.#flushStreaming();
+
+        yield* this.#maybeUpdateChatName();
       });
 
       this.#requestFiber = this._runtime.runFork(effect);
@@ -302,5 +325,24 @@ export class AiChatProcessor {
       this.#registry.set(this.#streaming, []);
     }
     this.#finalizedIds.clear();
+  }
+
+  /**
+   * Conditionally schedule chat name update in detached fork mode.
+   * Updates if chat has no name OR based on random chance (default 10%).
+   */
+  #maybeUpdateChatName(): Effect.Effect<void, never, Operation.Service> {
+    const chat = this._options.chat?.target;
+    if (!chat) {
+      return Effect.void;
+    }
+
+    const chance = this._options.autoUpdateNameChance ?? defaultOptions.autoUpdateNameChance ?? 0.1;
+    if (!shouldUpdateChatName(chat.name, chance)) {
+      return Effect.void;
+    }
+
+    log('scheduling chat name update', { hasName: !!chat.name, chance });
+    return Operation.schedule(UpdateChatName, { chat });
   }
 }
