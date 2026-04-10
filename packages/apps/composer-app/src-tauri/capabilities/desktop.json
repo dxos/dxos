@@ -36,6 +36,8 @@
         }
       ]
     },
+    "opener:allow-open-url",
+    "opener:default",
     "updater:default"
   ]
 }
