@@ -19,8 +19,9 @@ import { keyToFallback, trim } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
-import MIXED from './testing/mixed.md?raw';
-import TEXT from './testing/text.md?raw';
+import TEXT_MIXED from './testing/text-mixed.md?raw';
+import TEXT_REASONING from './testing/text-reasoning.md?raw';
+import TEXT_WIDGET from './testing/text-widget.md?raw';
 import { PromptWidget, ReasoningWidget } from './widgets';
 
 random.seed(123);
@@ -64,15 +65,23 @@ const registry: XmlWidgetRegistry = {
     streaming: true,
     factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text, range?.from) : null;
+      return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
-  'test-dom': {
+
+  // Custom widgets.
+
+  'dom-widget': {
     block: true,
-    factory: ({ children }) => new DOMWidget(children?.[0]),
+    streaming: true,
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
+      return text ? new DOMWidget(text) : null;
+    },
   },
-  'test-react': {
+  'react-widget': {
     block: true,
+    streaming: true,
     Component: ReactWidget,
   },
 };
@@ -129,7 +138,12 @@ const DefaultStory = ({
 
   const handleAppend = useCallback(() => {
     void controller?.append(
-      [random.lorem.paragraph(), `<test-dom>${random.lorem.word()}</test-dom>`, random.lorem.paragraph()].join('\n'),
+      [
+        //
+        random.lorem.paragraph(),
+        `<react-widget>${random.lorem.paragraphs(3)}</react-widget>`,
+        '',
+      ].join('\n\n'),
     );
   }, [controller]);
 
@@ -187,14 +201,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     registry: registry,
-    content: MIXED,
+    content: TEXT_MIXED,
   },
 };
 
 export const Wire: Story = {
   args: {
     registry: registry,
-    content: MIXED,
+    content: TEXT_MIXED,
     options: {
       autoScroll: true,
       wire: true,
@@ -208,19 +222,31 @@ export const Widgets: Story = {
     registry: registry,
     initialContent: trim`
       # DOM Widget
-      <test-dom>${random.lorem.paragraph()}</test-dom>
+      <dom-widget>${random.lorem.paragraph()}</dom-widget>
 
       # React Widget
-      <test-react>${random.lorem.paragraph()}</test-react>
+      <react-widget>${random.lorem.paragraph()}</react-widget>
     `,
-    options: {},
+  },
+};
+
+export const StreamingWidgets: Story = {
+  args: {
+    registry: registry,
+    content: TEXT_WIDGET,
+    options: {
+      autoScroll: true,
+      wire: true,
+      fader: true,
+      cursor: true,
+    },
   },
 };
 
 export const StreamingTags: Story = {
   args: {
     registry: registry,
-    content: TEXT,
+    content: TEXT_REASONING,
     options: {
       autoScroll: true,
       wire: true,
@@ -245,9 +271,9 @@ export const Short: Story = {
 
 export const AutoScroll: Story = {
   args: {
-    initialContent: MIXED,
+    initialContent: TEXT_MIXED,
     registry: registry,
-    content: MIXED,
+    content: TEXT_MIXED,
     options: {
       autoScroll: true,
     },
@@ -256,9 +282,9 @@ export const AutoScroll: Story = {
 
 export const Debug: Story = {
   args: {
-    initialContent: MIXED,
+    initialContent: TEXT_MIXED,
     registry: registry,
-    content: MIXED,
+    content: TEXT_MIXED,
     debug: true,
   },
 };

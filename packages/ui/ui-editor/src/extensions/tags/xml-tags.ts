@@ -80,7 +80,8 @@ export type XmlWidgetDef = {
   /**
    * React/Solid widget (rendered in portals outside of the editor).
    * Prefer an `id="..."` attribute on the tag so `updateWidget` can target the instance; if omitted,
-   * an id is derived from the tag’s document range (closed tags) or opening position (streaming).
+   * an id is derived from the tag’s document range (non-streaming) or opening position (streaming).
+   * Streaming tags use `cm-xml-<from>` so the same portal id is kept when the closing tag arrives.
    */
   Component?: FunctionComponent<XmlWidgetProps>;
 };
@@ -95,6 +96,9 @@ export const getXmlTextChild = (children: any[]): string | null => {
 /** Stable id for portaled React/Solid widgets; explicit `id` on the tag wins for `updateWidget`. */
 const xmlWidgetId = (explicit: unknown, fallback: string): string =>
   typeof explicit === 'string' && explicit.length > 0 ? explicit : fallback;
+
+/** Escapes a string for safe embedding in RegExp source (tag names from the registry). */
+const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Update context.
@@ -452,7 +456,10 @@ const buildDecorations = (
                 // NOTE: The widget state may already have been updated before the widget is mounted.
                 const { block, factory, Component } = def;
                 const nodeRange = { from: node.node.from, to: node.node.to };
-                const widgetId = xmlWidgetId(args.id, `cm-xml-${nodeRange.from}-${nodeRange.to}`);
+                const widgetId = xmlWidgetId(
+                  args.id,
+                  def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
+                );
                 const widgetState = widgetStateMap[widgetId];
                 const props = { range: nodeRange, context, ...args, id: widgetId, ...widgetState } satisfies XmlWidgetProps;
 
@@ -496,11 +503,14 @@ const buildDecorations = (
   // Scan for unclosed streaming tags at the document tail.
   const streamingTagNames = Object.entries(registry)
     .filter(([, def]) => def.streaming)
-    .map(([name]) => name);
+    .map(([name]) => name)
+    // Longest names first so `react-widget` wins over `react` in alternation.
+    .sort((a, b) => b.length - a.length);
 
   if (streamingTagNames.length > 0) {
     const tailText = state.sliceDoc(range.from, range.to);
-    const tagPattern = new RegExp(`<(${streamingTagNames.join('|')})(\\s[^>]*)?>`, 'g');
+    const streamingPattern = streamingTagNames.map(escapeRegExpSource).join('|');
+    const tagPattern = new RegExp(`<(${streamingPattern})(\\s[^>]*)?>`, 'g');
     let match: RegExpExecArray | null;
 
     while ((match = tagPattern.exec(tailText)) !== null) {
@@ -529,7 +539,7 @@ const buildDecorations = (
           props[attrMatch[1]] = attrMatch[2];
         }
 
-        const widgetId = xmlWidgetId(props.id, `cm-xml-${absoluteFrom}-stream`);
+        const widgetId = xmlWidgetId(props.id, `cm-xml-${absoluteFrom}`);
         const widgetState = widgetStateMap[widgetId];
         const mergedProps = { ...props, id: widgetId, ...widgetState };
 

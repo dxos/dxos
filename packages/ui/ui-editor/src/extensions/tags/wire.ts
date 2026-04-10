@@ -18,6 +18,15 @@ export const wireBypass = Annotation.define<boolean>();
 
 import { Domino } from '@dxos/ui';
 
+/**
+ * Matches the local name of an opening tag after `<` (not `</`).
+ * Custom elements use hyphens; `\w+` alone incorrectly stops at `-` (e.g. `dom` from `dom-widget`).
+ */
+const OPENING_TAG_NAME = /^<([a-zA-Z][\w-]*)/;
+
+/** Escapes a string for safe embedding in RegExp source (tag names from the document). */
+const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 type FlushResult = {
   count: number;
   /** Tag name to enter streaming mode for. */
@@ -59,7 +68,7 @@ const flushable = (buffer: string, streamingTags: Set<string>, activeStreamTag: 
   // XML element.
   if (ch === '<') {
     // Check if this is a streaming tag's opening tag.
-    const nameMatch = buffer.match(/^<(\w+)/);
+    const nameMatch = buffer.match(OPENING_TAG_NAME);
     if (nameMatch && streamingTags.has(nameMatch[1])) {
       const close = buffer.indexOf('>');
       if (close === -1) {
@@ -94,7 +103,7 @@ const flushable = (buffer: string, streamingTags: Set<string>, activeStreamTag: 
  * Handles self-closing tags, closing tags, and opening tags with nested content.
  * E.g., `<foo>content<bar />more</foo>` returns the full length.
  */
-const xmlElementLength = (buffer: string): number => {
+export const xmlElementLength = (buffer: string): number => {
   const close = buffer.indexOf('>');
   if (close === -1) {
     return 0; // Tag not closed yet.
@@ -111,7 +120,7 @@ const xmlElementLength = (buffer: string): number => {
   }
 
   // Opening tag: extract the tag name and find its matching closing tag.
-  const nameMatch = buffer.match(/^<(\w+)/);
+  const nameMatch = buffer.match(OPENING_TAG_NAME);
   if (!nameMatch) {
     // Not a valid tag (e.g., `< ` or `<123`); emit one character.
     return 1;
@@ -121,7 +130,7 @@ const xmlElementLength = (buffer: string): number => {
   let depth = 0;
 
   // Walk through all tags in the buffer tracking nesting depth.
-  const tagPattern = new RegExp(`<(/?)${tagName}(\\s[^>]*)?>`, 'g');
+  const tagPattern = new RegExp(`<(/?)${escapeRegExpSource(tagName)}(\\s[^>]*)?>`, 'g');
   let match: RegExpExecArray | null;
   while ((match = tagPattern.exec(buffer)) !== null) {
     const isSelfClosing = match[0].endsWith('/>');

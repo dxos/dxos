@@ -61,7 +61,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     streaming: true,
     factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text, range?.from) : null;
+      return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
   reference: {
