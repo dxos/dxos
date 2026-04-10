@@ -28,13 +28,12 @@ const panelRoot: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   );
 
 const panelToolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
-  mx('[grid-area:toolbar]', 'flex shrink-0', sizes[size], ...etc);
+  mx('[grid-area:toolbar]', 'shrink-0', sizes[size], ...etc);
 
-const panelContent: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
-  mx('[grid-area:content] overflow-hidden min-h-0', ...etc);
+const panelContent: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:content] min-h-0', ...etc);
 
 const panelStatusbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
-  mx('[grid-area:statusbar]', 'flex shrink-0', sizes[size], ...etc);
+  mx('[grid-area:statusbar]', 'shrink-0', sizes[size], ...etc);
 
 export const panelTheme = {
   root: panelRoot,

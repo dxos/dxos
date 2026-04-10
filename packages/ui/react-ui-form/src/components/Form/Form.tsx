@@ -9,7 +9,14 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ThemedClassName,
+  useMergeRefs,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import {
@@ -177,17 +184,22 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const FormContent = ({ classNames, children }: FormContentProps) => {
+const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
-  const ref = useRef<HTMLDivElement>(null);
-  useKeyHandler(ref.current, form);
+  const localRef = useRef<HTMLDivElement>(null);
+  const mergedRef = useMergeRefs([forwardedRef, localRef]);
+  useKeyHandler(localRef.current, form);
 
   return (
-    <div ref={ref} role='form' className={mx('flex flex-col w-full', classNames)} data-testid={testId}>
+    <div
+      {...composableProps(props, { role: 'form', classNames: 'flex flex-col w-full pb-form-gap' })}
+      data-testid={testId}
+      ref={mergedRef}
+    >
       {children}
     </div>
   );
-};
+});
 
 FormContent.displayName = FORM_CONTENT_NAME;
 

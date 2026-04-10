@@ -17,24 +17,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '#meta';
 
-const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
-    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
-    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-    return (
-      <>
-        {layout !== 'inline' && <Form.Label label={label} />}
-        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
-    );
-  },
-};
-
-// TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
-const BaseSchema = Schema.Struct({
-  tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-});
-
 export type BaseObjectSettingsProps = PropsWithChildren<{
   object: Obj.Unknown;
 }>;
@@ -113,8 +95,6 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
       return null;
     }
 
-    const { className } = composableProps(props);
-
     return (
       <Form.Root
         schema={formSchema}
@@ -128,8 +108,8 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
         onValuesChanged={handleChange}
         onCreate={handleCreate}
       >
-        <Form.Viewport>
-          <Form.Content classNames={className}>
+        <Form.Viewport {...composableProps(props)}>
+          <Form.Content>
             <Form.FieldSet />
             {children}
           </Form.Content>
@@ -138,3 +118,21 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
     );
   },
 );
+
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
+};
+
+// TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
+const BaseSchema = Schema.Struct({
+  tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
+});

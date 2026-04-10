@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useLayoutEffect } from 'react';
 
 import { addEventListener } from '@dxos/async';
 
@@ -11,7 +11,7 @@ import { type FormHandler } from './useFormHandler';
 /**
  * Key handler.
  */
-export const useKeyHandler = (formElement: HTMLDivElement | null, form: FormHandler<any>) => {
+export const useKeyHandler = (el: HTMLDivElement | null, form: FormHandler<any>) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
@@ -26,12 +26,11 @@ export const useKeyHandler = (formElement: HTMLDivElement | null, form: FormHand
     [form.isValid, form.canSave, form.onSave, form.autoSave],
   );
 
-  useEffect(() => {
-    if (!formElement) {
+  useLayoutEffect(() => {
+    if (!el) {
       return;
     }
 
-    // TODO(burdon): Move to @dxos/dom-util.
-    return addEventListener(formElement, 'keydown', handleKeyDown);
-  }, [formElement, handleKeyDown]);
+    return addEventListener(el, 'keydown', handleKeyDown);
+  }, [el, handleKeyDown]);
 };

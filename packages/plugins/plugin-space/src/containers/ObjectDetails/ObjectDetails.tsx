@@ -26,8 +26,6 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
           <BaseObjectSettings object={object}>
             <Surface.Surface role='base-object-settings' data={data} />
             <Surface.Surface role='object-settings' data={data} />
-            {/* TODO(wittjosiah): Remove (or add as surface)? */}
-            {/* <AdvancedObjectSettings object={object} /> */}
           </BaseObjectSettings>
         </Panel.Content>
       </Panel.Root>

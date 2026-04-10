@@ -33,9 +33,7 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
   );
 };
 
-type DefaultStoryProps = MasonryRootProps;
-
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: MasonryRootProps) => {
   const { space } = useClientStory();
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 

@@ -108,18 +108,19 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
       return <VirtuosoMasonry data={items} columnCount={1} ItemContent={TileAdapter} useWindowScroll />;
     }
 
+    // TODO(burdon): Factor out to separate Viewport component.
     return (
-      <ScrollArea.Root {...composableProps(props, { classNames: 'w-' })} thin padding ref={composedRef}>
-        <ScrollArea.Viewport asChild>
-          {width > 0 && (
+      <ScrollArea.Root {...composableProps(props)} thin padding ref={composedRef}>
+        {width > 0 && (
+          <ScrollArea.Viewport asChild>
             <ComposableVirtuosoMasonry
               style={{ gap: `${gutter}rem` }}
               data={items}
               columnCount={columnCount}
               ItemContent={TileAdapter}
             />
-          )}
-        </ScrollArea.Viewport>
+          </ScrollArea.Viewport>
+        )}
       </ScrollArea.Root>
     );
   },
