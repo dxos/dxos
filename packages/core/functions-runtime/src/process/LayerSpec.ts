@@ -8,13 +8,14 @@ import * as Types from 'effect/Types';
 
 // @import-as-namespace
 
-export const TypeId = '~@dxos/functions-runtime/Service' as const;
+export const TypeId = '~@dxos/functions-runtime/LayerSpec' as const;
 export type TypeId = typeof TypeId;
 
 /**
- * Untyped layer with introspectable tags.
+ * Untyped layer specification with introspectable tags.
+ * Used to define services with their dependencies and affinity.
  */
-export interface Service {
+export interface LayerSpec {
   readonly [TypeId]: TypeId;
 
   readonly affinity: Affinity;
@@ -40,12 +41,12 @@ interface MakeOpts {
 }
 
 /**
- * Make a service.
+ * Make a layer specification.
  */
 export const make = <const Opts extends Types.NoExcessProperties<MakeOpts, Opts>>(
   opts: Opts,
-  layer: Layer.Layer<Context.Tag.Service<Opts['provides'][number]>, never, Opts['requires'][number]>,
-): Service => {
+  layer: Layer.Layer<Context.Tag.Identifier<Opts['provides'][number]>, never, Context.Tag.Identifier<Opts['requires'][number]>>,
+): LayerSpec => {
   return {
     [TypeId]: TypeId,
     affinity: opts.affinity,

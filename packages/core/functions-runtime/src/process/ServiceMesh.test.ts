@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import { ServiceResolver } from '@dxos/functions';
 import { type SpaceId } from '@dxos/keys';
 
-import * as Service from './Service';
+import * as LayerSpec from './LayerSpec';
 import * as ServiceMesh from './ServiceMesh';
 
 // Test service tags.
@@ -38,57 +38,63 @@ const resetCreationCounters = () => {
   compositeCreations = 0;
 };
 
-// Test services.
-const makeCounterService = (affinity: Service.Affinity): Service.Service => ({
-  [Service.TypeId]: Service.TypeId,
-  affinity,
-  requires: [],
-  provides: [CounterService],
-  layer: Layer.effect(
-    CounterService,
-    Effect.sync(() => {
-      counterCreations++;
-      let count = 0;
-      return { count: () => ++count };
-    }),
-  ),
-});
+// Test layer specs using LayerSpec.make().
+const makeCounterLayerSpec = (affinity: LayerSpec.Affinity): LayerSpec.LayerSpec =>
+  LayerSpec.make(
+    {
+      affinity,
+      requires: [],
+      provides: [CounterService],
+    },
+    Layer.effect(
+      CounterService,
+      Effect.sync(() => {
+        counterCreations++;
+        let count = 0;
+        return { count: () => ++count };
+      }),
+    ),
+  );
 
-const makeLoggerService = (affinity: Service.Affinity): Service.Service => ({
-  [Service.TypeId]: Service.TypeId,
-  affinity,
-  requires: [],
-  provides: [LoggerService],
-  layer: Layer.effect(
-    LoggerService,
-    Effect.sync(() => {
-      loggerCreations++;
-      const logs: string[] = [];
-      return {
-        log: (msg: string) => logs.push(msg),
-        logs: () => [...logs],
-      };
-    }),
-  ),
-});
+const makeLoggerLayerSpec = (affinity: LayerSpec.Affinity): LayerSpec.LayerSpec =>
+  LayerSpec.make(
+    {
+      affinity,
+      requires: [],
+      provides: [LoggerService],
+    },
+    Layer.effect(
+      LoggerService,
+      Effect.sync(() => {
+        loggerCreations++;
+        const logs: string[] = [];
+        return {
+          log: (msg: string) => logs.push(msg),
+          logs: () => [...logs],
+        };
+      }),
+    ),
+  );
 
-const makeCompositeService = (affinity: Service.Affinity): Service.Service => ({
-  [Service.TypeId]: Service.TypeId,
-  affinity,
-  requires: [CounterService, LoggerService],
-  provides: [CompositeService],
-  layer: Layer.effect(
-    CompositeService,
-    Effect.gen(function* () {
-      compositeCreations++;
-      const counter = yield* CounterService;
-      const logger = yield* LoggerService;
-      return {
-        getCountAndLog: () => ({ count: counter.count(), logs: logger.logs() }),
-      };
-    }),
-  ),
-});
+const makeCompositeLayerSpec = (affinity: LayerSpec.Affinity): LayerSpec.LayerSpec =>
+  LayerSpec.make(
+    {
+      affinity,
+      requires: [CounterService, LoggerService],
+      provides: [CompositeService],
+    },
+    Layer.effect(
+      CompositeService,
+      Effect.gen(function* () {
+        compositeCreations++;
+        const counter = yield* CounterService;
+        const logger = yield* LoggerService;
+        return {
+          getCountAndLog: () => ({ count: counter.count(), logs: logger.logs() }),
+        };
+      }),
+    ),
+  );
 
 describe('ServiceMesh', () => {
   describe('basic operations', () => {
@@ -96,7 +102,7 @@ describe('ServiceMesh', () => {
       'creates and resolves application-scoped services',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('application')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('application')]);
 
         const result = yield* mesh.run(
           Effect.gen(function* () {
@@ -116,7 +122,7 @@ describe('ServiceMesh', () => {
       'caches application-scoped services across multiple runs',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('application')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('application')]);
 
         // First run.
         const result1 = yield* mesh.run(
@@ -146,7 +152,7 @@ describe('ServiceMesh', () => {
       'resolves space-scoped services with space context',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('space')]);
         const spaceId = 'space-1' as SpaceId;
 
         const result = yield* mesh.run(
@@ -168,7 +174,7 @@ describe('ServiceMesh', () => {
       'creates separate instances for different spaces',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('space')]);
         const space1 = 'space-1' as SpaceId;
         const space2 = 'space-2' as SpaceId;
 
@@ -200,7 +206,7 @@ describe('ServiceMesh', () => {
       'resolves process-scoped services with process context',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('process')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('process')]);
 
         const result = yield* mesh.run(
           Effect.gen(function* () {
@@ -221,7 +227,7 @@ describe('ServiceMesh', () => {
       'creates separate instances for different processes',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('process')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('process')]);
 
         const result1 = yield* mesh.run(
           Effect.gen(function* () {
@@ -254,9 +260,9 @@ describe('ServiceMesh', () => {
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
         const mesh = new ServiceMesh.ServiceMesh([
-          makeCounterService('application'),
-          makeLoggerService('application'),
-          makeCompositeService('application'),
+          makeCounterLayerSpec('application'),
+          makeLoggerLayerSpec('application'),
+          makeCompositeLayerSpec('application'),
         ]);
 
         const result = yield* mesh.run(
@@ -276,14 +282,14 @@ describe('ServiceMesh', () => {
     );
 
     it.effect(
-      'topologically sorts services within affinity',
+      'topologically sorts layer specs within affinity',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        // Add services in reverse dependency order.
+        // Add layer specs in reverse dependency order.
         const mesh = new ServiceMesh.ServiceMesh([
-          makeCompositeService('application'),
-          makeLoggerService('application'),
-          makeCounterService('application'),
+          makeCompositeLayerSpec('application'),
+          makeLoggerLayerSpec('application'),
+          makeCounterLayerSpec('application'),
         ]);
 
         const result = yield* mesh.run(
@@ -305,12 +311,12 @@ describe('ServiceMesh', () => {
 
   describe('add and remove', () => {
     it.effect(
-      'adds services dynamically',
+      'adds layer specs dynamically',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
         const mesh = new ServiceMesh.ServiceMesh();
 
-        mesh.add(makeCounterService('application'));
+        mesh.add(makeCounterLayerSpec('application'));
 
         const result = yield* mesh.run(
           Effect.gen(function* () {
@@ -326,13 +332,13 @@ describe('ServiceMesh', () => {
     );
 
     it.effect(
-      'removes services',
+      'removes layer specs',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const counterService = makeCounterService('application');
-        const mesh = new ServiceMesh.ServiceMesh([counterService]);
+        const counterLayerSpec = makeCounterLayerSpec('application');
+        const mesh = new ServiceMesh.ServiceMesh([counterLayerSpec]);
 
-        mesh.remove(counterService);
+        mesh.remove(counterLayerSpec);
 
         const result = yield* mesh
           .run(
@@ -355,7 +361,7 @@ describe('ServiceMesh', () => {
       'returns a resolver that can be used directly',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('application')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('application')]);
 
         // Use mesh.run which handles the scope internally.
         const count = yield* mesh.run(
@@ -374,7 +380,7 @@ describe('ServiceMesh', () => {
       'cleans up space-scoped services when resolver scope closes',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('space')]);
         const spaceId = 'space-cleanup' as SpaceId;
 
         // First run - creates the service.
@@ -408,7 +414,7 @@ describe('ServiceMesh', () => {
       'caches space-scoped services within same run',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('space')]);
         const spaceId = 'space-cache' as SpaceId;
 
         // Multiple resolves within the same run should use the same service instance.
@@ -441,9 +447,9 @@ describe('ServiceMesh', () => {
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
         const mesh = new ServiceMesh.ServiceMesh([
-          makeCounterService('application'),
-          makeCounterService('space'),
-          makeCounterService('process'),
+          makeCounterLayerSpec('application'),
+          makeCounterLayerSpec('space'),
+          makeCounterLayerSpec('process'),
         ]);
 
         // Create instances of each affinity.
@@ -487,7 +493,7 @@ describe('ServiceMesh', () => {
     it.effect(
       'fails when space-scoped service is requested without space context',
       Effect.fn(function* ({ expect }) {
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('space')]);
 
         const result = yield* mesh
           .run(
@@ -506,7 +512,7 @@ describe('ServiceMesh', () => {
     it.effect(
       'fails when process-scoped service is requested without process context',
       Effect.fn(function* ({ expect }) {
-        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('process')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterLayerSpec('process')]);
 
         const result = yield* mesh
           .run(
@@ -550,7 +556,7 @@ describe('ServiceMesh', () => {
 
         const result = yield* Effect.gen(function* () {
           const mesh = yield* ServiceMesh.ServiceMeshService;
-          mesh.add(makeCounterService('application'));
+          mesh.add(makeCounterLayerSpec('application'));
 
           return yield* mesh.run(
             Effect.gen(function* () {

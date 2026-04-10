@@ -16,7 +16,7 @@ import { ServiceNotAvailableError, ServiceResolver } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Service from './Service';
+import * as LayerSpec from './LayerSpec';
 
 /**
  * Context key for a space-scoped resolution.
@@ -64,8 +64,8 @@ interface CachedInstance {
  * Services within each affinity are topologically sorted by their dependencies.
  */
 export class ServiceMesh {
-  readonly #services: Service.Service[] = [];
-  readonly #sortedByAffinity = new Map<Service.Affinity, Service.Service[]>();
+  readonly #layerSpecs: LayerSpec.LayerSpec[] = [];
+  readonly #sortedByAffinity = new Map<LayerSpec.Affinity, LayerSpec.LayerSpec[]>();
 
   /**
    * Application-level cache (lives until destroy).
@@ -84,43 +84,43 @@ export class ServiceMesh {
 
   #destroyed = false;
 
-  constructor(services: Service.Service[] = []) {
-    this.add(services);
+  constructor(layerSpecs: LayerSpec.LayerSpec[] = []) {
+    this.add(layerSpecs);
   }
 
   /**
-   * Add services to the mesh.
+   * Add layer specs to the mesh.
    */
-  add(services: Service.Service | Service.Service[]): void {
+  add(layerSpecs: LayerSpec.LayerSpec | LayerSpec.LayerSpec[]): void {
     if (this.#destroyed) {
       throw new Error('ServiceMesh has been destroyed');
     }
 
-    const toAdd = Array.isArray(services) ? services : [services];
-    for (const service of toAdd) {
-      if (!this.#services.includes(service)) {
-        this.#services.push(service);
+    const toAdd = Array.isArray(layerSpecs) ? layerSpecs : [layerSpecs];
+    for (const spec of toAdd) {
+      if (!this.#layerSpecs.includes(spec)) {
+        this.#layerSpecs.push(spec);
       }
     }
-    this.#rebuildSortedServices();
+    this.#rebuildSortedLayerSpecs();
   }
 
   /**
-   * Remove services from the mesh.
+   * Remove layer specs from the mesh.
    */
-  remove(services: Service.Service | Service.Service[]): void {
+  remove(layerSpecs: LayerSpec.LayerSpec | LayerSpec.LayerSpec[]): void {
     if (this.#destroyed) {
       throw new Error('ServiceMesh has been destroyed');
     }
 
-    const toRemove = Array.isArray(services) ? services : [services];
-    for (const service of toRemove) {
-      const index = this.#services.indexOf(service);
+    const toRemove = Array.isArray(layerSpecs) ? layerSpecs : [layerSpecs];
+    for (const spec of toRemove) {
+      const index = this.#layerSpecs.indexOf(spec);
       if (index !== -1) {
-        this.#services.splice(index, 1);
+        this.#layerSpecs.splice(index, 1);
       }
     }
-    this.#rebuildSortedServices();
+    this.#rebuildSortedLayerSpecs();
   }
 
   /**
@@ -170,8 +170,8 @@ export class ServiceMesh {
       const resolver = ServiceResolver.make(
         <I, S>(tag: Context.Tag<I, S>, resolutionContext: ServiceResolver.ResolutionContext) =>
           Effect.gen(this, function* () {
-            const service = this.#findServiceForTag(tag);
-            if (!service) {
+            const spec = this.#findLayerSpecForTag(tag);
+            if (!spec) {
               return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
             }
 
@@ -183,7 +183,7 @@ export class ServiceMesh {
 
             // Get or create the service instance based on affinity.
             const instance = yield* this.#getOrCreateInstance(
-              service,
+              spec,
               mergedContext,
               acquiredSpaceRefs,
               acquiredProcessRefs,
@@ -235,7 +235,7 @@ export class ServiceMesh {
       }
       this.#processCache.clear();
 
-      this.#services.length = 0;
+      this.#layerSpecs.length = 0;
       this.#sortedByAffinity.clear();
 
       log('ServiceMesh: destroyed');
@@ -243,77 +243,77 @@ export class ServiceMesh {
   }
 
   /**
-   * Rebuild the topologically sorted service lists for each affinity.
+   * Rebuild the topologically sorted layer spec lists for each affinity.
    */
-  #rebuildSortedServices(): void {
+  #rebuildSortedLayerSpecs(): void {
     this.#sortedByAffinity.clear();
 
-    const byAffinity = new Map<Service.Affinity, Service.Service[]>();
-    for (const service of this.#services) {
-      const list = byAffinity.get(service.affinity) ?? [];
-      list.push(service);
-      byAffinity.set(service.affinity, list);
+    const byAffinity = new Map<LayerSpec.Affinity, LayerSpec.LayerSpec[]>();
+    for (const spec of this.#layerSpecs) {
+      const list = byAffinity.get(spec.affinity) ?? [];
+      list.push(spec);
+      byAffinity.set(spec.affinity, list);
     }
 
-    for (const [affinity, services] of byAffinity) {
-      this.#sortedByAffinity.set(affinity, this.#topologicalSort(services));
+    for (const [affinity, specs] of byAffinity) {
+      this.#sortedByAffinity.set(affinity, this.#topologicalSort(specs));
     }
   }
 
   /**
-   * Topologically sort services based on their dependencies.
-   * Services that provide dependencies come before services that require them.
+   * Topologically sort layer specs based on their dependencies.
+   * Specs that provide dependencies come before specs that require them.
    */
-  #topologicalSort(services: Service.Service[]): Service.Service[] {
-    // Build a map of tag keys to services that provide them.
-    const providersMap = new Map<string, Service.Service>();
-    for (const service of services) {
-      for (const tag of service.provides) {
-        providersMap.set(tag.key, service);
+  #topologicalSort(specs: LayerSpec.LayerSpec[]): LayerSpec.LayerSpec[] {
+    // Build a map of tag keys to specs that provide them.
+    const providersMap = new Map<string, LayerSpec.LayerSpec>();
+    for (const spec of specs) {
+      for (const tag of spec.provides) {
+        providersMap.set(tag.key, spec);
       }
     }
 
-    // Build adjacency list: service -> services it depends on.
-    const dependencies = new Map<Service.Service, Set<Service.Service>>();
-    for (const service of services) {
-      const deps = new Set<Service.Service>();
-      for (const tag of service.requires) {
+    // Build adjacency list: spec -> specs it depends on.
+    const dependencies = new Map<LayerSpec.LayerSpec, Set<LayerSpec.LayerSpec>>();
+    for (const spec of specs) {
+      const deps = new Set<LayerSpec.LayerSpec>();
+      for (const tag of spec.requires) {
         const provider = providersMap.get(tag.key);
-        if (provider && provider !== service && services.includes(provider)) {
+        if (provider && provider !== spec && specs.includes(provider)) {
           deps.add(provider);
         }
       }
-      dependencies.set(service, deps);
+      dependencies.set(spec, deps);
     }
 
     // Kahn's algorithm for topological sort.
-    const result: Service.Service[] = [];
-    const inDegree = new Map<Service.Service, number>();
-    const queue: Service.Service[] = [];
+    const result: LayerSpec.LayerSpec[] = [];
+    const inDegree = new Map<LayerSpec.LayerSpec, number>();
+    const queue: LayerSpec.LayerSpec[] = [];
 
     // Calculate in-degrees.
-    for (const service of services) {
-      inDegree.set(service, 0);
+    for (const spec of specs) {
+      inDegree.set(spec, 0);
     }
-    for (const [service, deps] of dependencies) {
+    for (const [spec, deps] of dependencies) {
       for (const dep of deps) {
         inDegree.set(dep, (inDegree.get(dep) ?? 0) + 1);
       }
     }
 
-    // Find services with no dependents (in-degree 0).
-    for (const [service, degree] of inDegree) {
+    // Find specs with no dependents (in-degree 0).
+    for (const [spec, degree] of inDegree) {
       if (degree === 0) {
-        queue.push(service);
+        queue.push(spec);
       }
     }
 
     // Process queue.
     while (queue.length > 0) {
-      const service = queue.shift()!;
-      result.push(service);
+      const spec = queue.shift()!;
+      result.push(spec);
 
-      const deps = dependencies.get(service) ?? new Set();
+      const deps = dependencies.get(spec) ?? new Set();
       for (const dep of deps) {
         const newDegree = (inDegree.get(dep) ?? 0) - 1;
         inDegree.set(dep, newDegree);
@@ -323,10 +323,10 @@ export class ServiceMesh {
       }
     }
 
-    // If we couldn't sort all services, there's a cycle - just return original order.
-    if (result.length !== services.length) {
-      log.warn('ServiceMesh: cycle detected in service dependencies, using original order');
-      return services;
+    // If we couldn't sort all specs, there's a cycle - just return original order.
+    if (result.length !== specs.length) {
+      log.warn('ServiceMesh: cycle detected in layer spec dependencies, using original order');
+      return specs;
     }
 
     // Reverse to get dependencies first.
@@ -334,13 +334,13 @@ export class ServiceMesh {
   }
 
   /**
-   * Find the service that provides the given tag.
+   * Find the layer spec that provides the given tag.
    */
-  #findServiceForTag(tag: Context.Tag<any, any>): Service.Service | undefined {
-    for (const service of this.#services) {
-      for (const providedTag of service.provides) {
+  #findLayerSpecForTag(tag: Context.Tag<any, any>): LayerSpec.LayerSpec | undefined {
+    for (const spec of this.#layerSpecs) {
+      for (const providedTag of spec.provides) {
         if (providedTag.key === tag.key) {
-          return service;
+          return spec;
         }
       }
     }
@@ -351,18 +351,18 @@ export class ServiceMesh {
    * Get or create a service instance based on its affinity.
    */
   #getOrCreateInstance(
-    service: Service.Service,
+    spec: LayerSpec.LayerSpec,
     context: ResolutionContext,
     acquiredSpaceRefs: Set<CacheKey>,
     acquiredProcessRefs: Set<CacheKey>,
   ): Effect.Effect<CachedInstance, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
-      switch (service.affinity) {
+      switch (spec.affinity) {
         case 'application': {
-          const key = this.#getApplicationCacheKey(service);
+          const key = this.#getApplicationCacheKey(spec);
           let instance = this.#applicationCache.get(key);
           if (!instance) {
-            instance = yield* this.#createInstance(service, context);
+            instance = yield* this.#createInstance(spec, context);
             this.#applicationCache.set(key, instance);
             log('ServiceMesh: created application service', { key });
           }
@@ -373,14 +373,14 @@ export class ServiceMesh {
           if (!context.space) {
             return yield* Effect.fail(
               new ServiceNotAvailableError(
-                `Space-scoped service requires space context: ${this.#getServiceName(service)}`,
+                `Space-scoped service requires space context: ${this.#getLayerSpecName(spec)}`,
               ),
             );
           }
-          const key = this.#getSpaceCacheKey(service, context.space);
+          const key = this.#getSpaceCacheKey(spec, context.space);
           let instance = this.#spaceCache.get(key);
           if (!instance) {
-            instance = yield* this.#createInstance(service, context);
+            instance = yield* this.#createInstance(spec, context);
             this.#spaceCache.set(key, instance);
             log('ServiceMesh: created space service', { key, space: context.space });
           }
@@ -396,14 +396,14 @@ export class ServiceMesh {
           if (!context.pid) {
             return yield* Effect.fail(
               new ServiceNotAvailableError(
-                `Process-scoped service requires process context: ${this.#getServiceName(service)}`,
+                `Process-scoped service requires process context: ${this.#getLayerSpecName(spec)}`,
               ),
             );
           }
-          const key = this.#getProcessCacheKey(service, context.pid);
+          const key = this.#getProcessCacheKey(spec, context.pid);
           let instance = this.#processCache.get(key);
           if (!instance) {
-            instance = yield* this.#createInstance(service, context);
+            instance = yield* this.#createInstance(spec, context);
             this.#processCache.set(key, instance);
             log('ServiceMesh: created process service', { key, pid: context.pid });
           }
@@ -422,21 +422,21 @@ export class ServiceMesh {
    * Create a new service instance.
    */
   #createInstance(
-    service: Service.Service,
+    spec: LayerSpec.LayerSpec,
     context: ResolutionContext,
   ): Effect.Effect<CachedInstance, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       const instanceScope = yield* Scope.make();
 
       // Resolve dependencies.
-      const dependencyContext = yield* this.#resolveDependencies(service, context);
+      const dependencyContext = yield* this.#resolveDependencies(spec, context);
 
       // Build the service layer.
-      const builtContext = yield* Layer.buildWithScope(service.layer, instanceScope).pipe(
+      const builtContext = yield* Layer.buildWithScope(spec.layer, instanceScope).pipe(
         Effect.provide(dependencyContext),
         Effect.catchAll((error) =>
           Effect.fail(
-            new ServiceNotAvailableError(`Failed to build service ${this.#getServiceName(service)}: ${error}`),
+            new ServiceNotAvailableError(`Failed to build service ${this.#getLayerSpecName(spec)}: ${error}`),
           ),
         ),
       );
@@ -450,20 +450,20 @@ export class ServiceMesh {
   }
 
   /**
-   * Resolve dependencies for a service.
+   * Resolve dependencies for a layer spec.
    */
   #resolveDependencies(
-    service: Service.Service,
+    spec: LayerSpec.LayerSpec,
     context: ResolutionContext,
   ): Effect.Effect<Context.Context<any>, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       let result: Context.Context<any> = Context.empty() as Context.Context<any>;
 
-      for (const tag of service.requires) {
-        const depService = this.#findServiceForTag(tag);
-        if (depService) {
+      for (const tag of spec.requires) {
+        const depSpec = this.#findLayerSpecForTag(tag);
+        if (depSpec) {
           // Recursively resolve dependency.
-          const instance = yield* this.#getOrCreateInstance(depService, context, new Set(), new Set());
+          const instance = yield* this.#getOrCreateInstance(depSpec, context, new Set(), new Set());
           result = Context.merge(result, instance.context);
         }
       }
@@ -489,20 +489,20 @@ export class ServiceMesh {
     }
   }
 
-  #getApplicationCacheKey(service: Service.Service): string {
-    return service.provides.map((tag) => tag.key).join(',');
+  #getApplicationCacheKey(spec: LayerSpec.LayerSpec): string {
+    return spec.provides.map((tag) => tag.key).join(',');
   }
 
-  #getSpaceCacheKey(service: Service.Service, space: SpaceId): string {
-    return `${space}:${service.provides.map((tag) => tag.key).join(',')}`;
+  #getSpaceCacheKey(spec: LayerSpec.LayerSpec, space: SpaceId): string {
+    return `${space}:${spec.provides.map((tag) => tag.key).join(',')}`;
   }
 
-  #getProcessCacheKey(service: Service.Service, pid: string): string {
-    return `${pid}:${service.provides.map((tag) => tag.key).join(',')}`;
+  #getProcessCacheKey(spec: LayerSpec.LayerSpec, pid: string): string {
+    return `${pid}:${spec.provides.map((tag) => tag.key).join(',')}`;
   }
 
-  #getServiceName(service: Service.Service): string {
-    return service.provides.map((tag) => String(tag.key ?? tag)).join(', ');
+  #getLayerSpecName(spec: LayerSpec.LayerSpec): string {
+    return spec.provides.map((tag) => String(tag.key ?? tag)).join(', ');
   }
 }
 
@@ -517,11 +517,11 @@ export class ServiceMeshService extends Context.Tag('@dxos/functions-runtime/Ser
 /**
  * Create a layer that provides a ServiceMesh.
  */
-export const layer = (services: Service.Service[] = []): Layer.Layer<ServiceMeshService> =>
+export const layer = (layerSpecs: LayerSpec.LayerSpec[] = []): Layer.Layer<ServiceMeshService> =>
   Layer.scoped(
     ServiceMeshService,
     Effect.gen(function* () {
-      const mesh = new ServiceMesh(services);
+      const mesh = new ServiceMesh(layerSpecs);
       yield* Effect.addFinalizer(() => mesh.destroy());
       return mesh;
     }),

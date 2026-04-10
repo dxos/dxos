@@ -3,7 +3,7 @@
 //
 
 export { Process, ServiceResolver } from '@dxos/functions';
+export * as LayerSpec from './LayerSpec';
 export * as ProcessManager from './ProcessManager';
-export * as Service from './Service';
 export * as ServiceMesh from './ServiceMesh';
 export * as StorageService from './StorageService';
