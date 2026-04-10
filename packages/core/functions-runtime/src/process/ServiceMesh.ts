@@ -130,13 +130,12 @@ export class ServiceMesh {
   run<A, E, R>(
     effect: Effect.Effect<A, E, R | ServiceResolver.ServiceResolver>,
     context: ResolutionContext = {},
-  ): Effect.Effect<A, E, Exclude<R, ServiceResolver.ServiceResolver>> {
+  ): Effect.Effect<A, E, Exclude<R, ServiceResolver.ServiceResolver | Scope.Scope>> {
     return Effect.scoped(
-      Effect.gen(this, function* () {
-        const resolver = yield* this.getResolver(context);
-        return yield* effect.pipe(Effect.provideService(ServiceResolver.ServiceResolver, resolver));
-      }),
-    ) as Effect.Effect<A, E, Exclude<R, ServiceResolver.ServiceResolver>>;
+      Effect.flatMap(this.getResolver(context), (resolver) =>
+        effect.pipe(Effect.provideService(ServiceResolver.ServiceResolver, resolver)),
+      ),
+    ) as Effect.Effect<A, E, Exclude<R, ServiceResolver.ServiceResolver | Scope.Scope>>;
   }
 
   /**
@@ -356,7 +355,7 @@ export class ServiceMesh {
     context: ResolutionContext,
     acquiredSpaceRefs: Set<CacheKey>,
     acquiredProcessRefs: Set<CacheKey>,
-  ): Effect.Effect<CachedInstance, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
+  ): Effect.Effect<CachedInstance, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       switch (service.affinity) {
         case 'application': {
@@ -425,7 +424,7 @@ export class ServiceMesh {
   #createInstance(
     service: Service.Service,
     context: ResolutionContext,
-  ): Effect.Effect<CachedInstance, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
+  ): Effect.Effect<CachedInstance, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       const instanceScope = yield* Scope.make();
 
@@ -456,7 +455,7 @@ export class ServiceMesh {
   #resolveDependencies(
     service: Service.Service,
     context: ResolutionContext,
-  ): Effect.Effect<Context.Context<any>, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
+  ): Effect.Effect<Context.Context<any>, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       let result: Context.Context<any> = Context.empty() as Context.Context<any>;
 
