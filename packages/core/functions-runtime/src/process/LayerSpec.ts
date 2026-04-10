@@ -45,7 +45,11 @@ interface MakeOpts {
  */
 export const make = <const Opts extends Types.NoExcessProperties<MakeOpts, Opts>>(
   opts: Opts,
-  layer: Layer.Layer<Context.Tag.Identifier<Opts['provides'][number]>, never, Context.Tag.Identifier<Opts['requires'][number]>>,
+  layer: Layer.Layer<
+    Context.Tag.Identifier<Opts['provides'][number]>,
+    never,
+    Context.Tag.Identifier<Opts['requires'][number]>
+  >,
 ): LayerSpec => {
   return {
     [TypeId]: TypeId,
