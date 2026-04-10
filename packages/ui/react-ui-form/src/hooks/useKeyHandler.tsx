@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useLayoutEffect } from 'react';
+import { type RefObject, useCallback, useLayoutEffect } from 'react';
 
 import { addEventListener } from '@dxos/async';
 
@@ -11,7 +11,7 @@ import { type FormHandler } from './useFormHandler';
 /**
  * Key handler.
  */
-export const useKeyHandler = (el: HTMLDivElement | null, form: FormHandler<any>) => {
+export const useKeyHandler = (elRef: RefObject<HTMLDivElement | null>, form: FormHandler<any>) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
@@ -27,10 +27,11 @@ export const useKeyHandler = (el: HTMLDivElement | null, form: FormHandler<any>)
   );
 
   useLayoutEffect(() => {
+    const el = elRef.current;
     if (!el) {
       return;
     }
 
     return addEventListener(el, 'keydown', handleKeyDown);
-  }, [el, handleKeyDown]);
+  }, [elRef, handleKeyDown]);
 };

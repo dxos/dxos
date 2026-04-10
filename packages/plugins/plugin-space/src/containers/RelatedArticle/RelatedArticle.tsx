@@ -62,7 +62,12 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
           <Card.Icon icon={icon} />
           <Card.Title>{Entity.getLabel(subject)}</Card.Title>
           <Menu.Trigger asChild disabled={!menuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('more-actions.label')} />
+            <Toolbar.IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label={t('more-actions.label')}
+            />
           </Menu.Trigger>
           <Menu.Content items={menuItems} />
         </Card.Toolbar>

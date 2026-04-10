@@ -188,7 +188,7 @@ const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ..
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMergeRefs([forwardedRef, localRef]);
-  useKeyHandler(localRef.current, form);
+  useKeyHandler(localRef, form);
 
   return (
     <div
