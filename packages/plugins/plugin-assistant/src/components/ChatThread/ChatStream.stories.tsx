@@ -22,6 +22,7 @@ import { keyToFallback } from '@dxos/util';
 import { translations } from '../../translations';
 import { componentRegistry } from './registry';
 import THREAD_1 from './testing/thread-1.md?raw';
+import THREAD_WIDGETS from './testing/thread-widgets.md?raw';
 
 random.seed(123);
 
@@ -154,6 +155,16 @@ export const Streaming: Story = {
       autoScroll: true,
       wire: true,
       cursor: true,
+    },
+  },
+};
+
+export const Widgets: Story = {
+  args: {
+    registry: componentRegistry,
+    initialContent: THREAD_WIDGETS,
+    options: {
+      autoScroll: true,
     },
   },
 };

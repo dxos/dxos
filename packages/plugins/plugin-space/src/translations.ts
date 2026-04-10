@@ -263,7 +263,7 @@ export const translations = [
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
 
-        'sync-edge-connected.label': 'Edge connected',
+        'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
         'sync-no-connection.label': 'No connection to edge service',
         'sync-latency.label': 'Latency',
