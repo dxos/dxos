@@ -60,6 +60,12 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     return this;
   }
 
+  /**
+   * Returns the value for the given key if present, otherwise inserts and returns the default value.
+   * @param key - The key to look up or insert.
+   * @param defaultValue - The value to insert if the key is not present.
+   * @returns The existing or newly inserted value.
+   */
   getOrInsert(key: K, defaultValue: V): V {
     const existing = this.get(key);
     if (existing !== undefined) {
@@ -69,6 +75,13 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     return defaultValue;
   }
 
+  /**
+   * Returns the value for the given key if present, otherwise computes, inserts, and returns a new value.
+   * The callback is only invoked when the key is missing.
+   * @param key - The key to look up or insert.
+   * @param callbackfn - Function to compute the value if the key is not present.
+   * @returns The existing or newly computed value.
+   */
   getOrInsertComputed(key: K, callbackfn: (key: K) => V): V {
     const existing = this.get(key);
     if (existing !== undefined) {
