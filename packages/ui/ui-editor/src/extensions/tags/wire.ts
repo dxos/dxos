@@ -18,171 +18,6 @@ export const wireBypass = Annotation.define<boolean>();
 
 import { Domino } from '@dxos/ui';
 
-/**
- * Matches the local name of an opening tag after `<` (not `</`).
- * Custom elements use hyphens; `\w+` alone incorrectly stops at `-` (e.g. `dom` from `dom-widget`).
- */
-const OPENING_TAG_NAME = /^<([a-zA-Z][\w-]*)/;
-
-/** Escapes a string for safe embedding in RegExp source (tag names from the document). */
-const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-type FlushResult = {
-  count: number;
-  /** Tag name to enter streaming mode for. */
-  enterTag?: string;
-  /** Whether to exit streaming mode. */
-  exitTag?: boolean;
-};
-
-/**
- * Scans the buffer and returns the number of characters that can be flushed.
- * Returns 0 if the head of the buffer is inside an incomplete structure
- * (XML element, markdown link, or image) that should be flushed atomically.
- * Returns > 1 when a complete structure is at the head and should be emitted in one batch.
- *
- * When `activeStreamTag` is set, we're inside a streaming tag: inner content drips
- * one character at a time, and the closing tag is flushed atomically.
- */
-const flushable = (buffer: string, streamingTags: Set<string>, activeStreamTag: string | null): FlushResult => {
-  if (buffer.length === 0) {
-    return { count: 0 };
-  }
-
-  // Inside a streaming tag: drip content, flush closing tag atomically.
-  if (activeStreamTag) {
-    const closeTag = `</${activeStreamTag}>`;
-    if (buffer.startsWith(closeTag)) {
-      return { count: closeTag.length, exitTag: true };
-    }
-    // Nested XML element — buffer atomically.
-    if (buffer[0] === '<') {
-      return { count: xmlElementLength(buffer) };
-    }
-    // Drip inner content one character at a time.
-    return { count: 1 };
-  }
-
-  const ch = buffer[0];
-
-  // XML element.
-  if (ch === '<') {
-    // Check if this is a streaming tag's opening tag.
-    const nameMatch = buffer.match(OPENING_TAG_NAME);
-    if (nameMatch && streamingTags.has(nameMatch[1])) {
-      const close = buffer.indexOf('>');
-      if (close === -1) {
-        return { count: 0 }; // Opening tag incomplete.
-      }
-      // Self-closing streaming tag — flush atomically, no streaming mode.
-      if (buffer[close - 1] === '/') {
-        return { count: close + 1 };
-      }
-      // Flush opening tag and enter streaming mode.
-      return { count: close + 1, enterTag: nameMatch[1] };
-    }
-    // Non-streaming XML: buffer the entire element.
-    return { count: xmlElementLength(buffer) };
-  }
-
-  // Image: ![alt](url) — starts with '!'.
-  if (ch === '!' && buffer.length > 1 && buffer[1] === '[') {
-    return { count: linkLength(buffer, 1) };
-  }
-
-  // Link: [text](url).
-  if (ch === '[') {
-    return { count: linkLength(buffer, 0) };
-  }
-
-  return { count: 1 };
-};
-
-/**
- * Returns the length of a complete XML element at the start of the buffer, or 0 if the element is incomplete.
- * Handles self-closing tags, closing tags, and opening tags with nested content.
- * E.g., `<foo>content<bar />more</foo>` returns the full length.
- */
-export const xmlElementLength = (buffer: string): number => {
-  const close = buffer.indexOf('>');
-  if (close === -1) {
-    return 0; // Tag not closed yet.
-  }
-
-  // Self-closing tag: <foo />.
-  if (buffer[close - 1] === '/') {
-    return close + 1;
-  }
-
-  // Closing tag: </foo>.
-  if (buffer[1] === '/') {
-    return close + 1;
-  }
-
-  // Opening tag: extract the tag name and find its matching closing tag.
-  const nameMatch = buffer.match(OPENING_TAG_NAME);
-  if (!nameMatch) {
-    // Not a valid tag (e.g., `< ` or `<123`); emit one character.
-    return 1;
-  }
-
-  const tagName = nameMatch[1];
-  let depth = 0;
-
-  // Walk through all tags in the buffer tracking nesting depth.
-  const tagPattern = new RegExp(`<(/?)${escapeRegExpSource(tagName)}(\\s[^>]*)?>`, 'g');
-  let match: RegExpExecArray | null;
-  while ((match = tagPattern.exec(buffer)) !== null) {
-    const isSelfClosing = match[0].endsWith('/>');
-    const isClosing = match[1] === '/';
-
-    if (isSelfClosing) {
-      // Self-closing doesn't change depth, but if depth is 0 this is the root.
-      if (depth === 0) {
-        return match.index + match[0].length;
-      }
-    } else if (isClosing) {
-      depth--;
-      if (depth === 0) {
-        return match.index + match[0].length;
-      }
-    } else {
-      depth++;
-    }
-  }
-
-  // Unbalanced — still waiting for closing tag.
-  return 0;
-};
-
-/**
- * Returns the length of a complete markdown link/image starting at `offset`,
- * or 0 if the structure is incomplete.
- * Expects buffer[offset] === '['.
- */
-const linkLength = (buffer: string, offset: number): number => {
-  const bracketClose = buffer.indexOf(']', offset + 1);
-  if (bracketClose === -1) {
-    return 0;
-  }
-
-  // Must be followed by '(' for a standard link.
-  if (bracketClose + 1 >= buffer.length) {
-    return 0;
-  }
-  if (buffer[bracketClose + 1] !== '(') {
-    // Not a link — just a bracket; emit one character.
-    return 1;
-  }
-
-  const parenClose = buffer.indexOf(')', bracketClose + 2);
-  if (parenClose === -1) {
-    return 0;
-  }
-
-  return parenClose + 1;
-};
-
 type BufferState = { text: string; insertAt: number };
 
 const DEFAULT_RATE = 200;
@@ -457,3 +292,168 @@ class CursorWidget extends WidgetType {
     return Domino.of('span').style({ opacity: '0.8' }).append(inner).root;
   }
 }
+
+/**
+ * Matches the local name of an opening tag after `<` (not `</`).
+ * Custom elements use hyphens; `\w+` alone incorrectly stops at `-` (e.g. `dom` from `dom-widget`).
+ */
+const OPENING_TAG_NAME = /^<([a-zA-Z][\w-]*)/;
+
+/** Escapes a string for safe embedding in RegExp source (tag names from the document). */
+const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+type FlushResult = {
+  count: number;
+  /** Tag name to enter streaming mode for. */
+  enterTag?: string;
+  /** Whether to exit streaming mode. */
+  exitTag?: boolean;
+};
+
+/**
+ * Scans the buffer and returns the number of characters that can be flushed.
+ * Returns 0 if the head of the buffer is inside an incomplete structure
+ * (XML element, markdown link, or image) that should be flushed atomically.
+ * Returns > 1 when a complete structure is at the head and should be emitted in one batch.
+ *
+ * When `activeStreamTag` is set, we're inside a streaming tag: inner content drips
+ * one character at a time, and the closing tag is flushed atomically.
+ */
+const flushable = (buffer: string, streamingTags: Set<string>, activeStreamTag: string | null): FlushResult => {
+  if (buffer.length === 0) {
+    return { count: 0 };
+  }
+
+  // Inside a streaming tag: drip content, flush closing tag atomically.
+  if (activeStreamTag) {
+    const closeTag = `</${activeStreamTag}>`;
+    if (buffer.startsWith(closeTag)) {
+      return { count: closeTag.length, exitTag: true };
+    }
+    // Nested XML element — buffer atomically.
+    if (buffer[0] === '<') {
+      return { count: xmlElementLength(buffer) };
+    }
+    // Drip inner content one character at a time.
+    return { count: 1 };
+  }
+
+  const ch = buffer[0];
+
+  // XML element.
+  if (ch === '<') {
+    // Check if this is a streaming tag's opening tag.
+    const nameMatch = buffer.match(OPENING_TAG_NAME);
+    if (nameMatch && streamingTags.has(nameMatch[1])) {
+      const close = buffer.indexOf('>');
+      if (close === -1) {
+        return { count: 0 }; // Opening tag incomplete.
+      }
+      // Self-closing streaming tag — flush atomically, no streaming mode.
+      if (buffer[close - 1] === '/') {
+        return { count: close + 1 };
+      }
+      // Flush opening tag and enter streaming mode.
+      return { count: close + 1, enterTag: nameMatch[1] };
+    }
+    // Non-streaming XML: buffer the entire element.
+    return { count: xmlElementLength(buffer) };
+  }
+
+  // Image: ![alt](url) — starts with '!'.
+  if (ch === '!' && buffer.length > 1 && buffer[1] === '[') {
+    return { count: linkLength(buffer, 1) };
+  }
+
+  // Link: [text](url).
+  if (ch === '[') {
+    return { count: linkLength(buffer, 0) };
+  }
+
+  return { count: 1 };
+};
+
+/**
+ * Returns the length of a complete XML element at the start of the buffer, or 0 if the element is incomplete.
+ * Handles self-closing tags, closing tags, and opening tags with nested content.
+ * E.g., `<foo>content<bar />more</foo>` returns the full length.
+ */
+export const xmlElementLength = (buffer: string): number => {
+  const close = buffer.indexOf('>');
+  if (close === -1) {
+    return 0; // Tag not closed yet.
+  }
+
+  // Self-closing tag: <foo />.
+  if (buffer[close - 1] === '/') {
+    return close + 1;
+  }
+
+  // Closing tag: </foo>.
+  if (buffer[1] === '/') {
+    return close + 1;
+  }
+
+  // Opening tag: extract the tag name and find its matching closing tag.
+  const nameMatch = buffer.match(OPENING_TAG_NAME);
+  if (!nameMatch) {
+    // Not a valid tag (e.g., `< ` or `<123`); emit one character.
+    return 1;
+  }
+
+  const tagName = nameMatch[1];
+  let depth = 0;
+
+  // Walk through all tags in the buffer tracking nesting depth.
+  const tagPattern = new RegExp(`<(/?)${escapeRegExpSource(tagName)}(\\s[^>]*)?>`, 'g');
+  let match: RegExpExecArray | null;
+  while ((match = tagPattern.exec(buffer)) !== null) {
+    const isSelfClosing = match[0].endsWith('/>');
+    const isClosing = match[1] === '/';
+
+    if (isSelfClosing) {
+      // Self-closing doesn't change depth, but if depth is 0 this is the root.
+      if (depth === 0) {
+        return match.index + match[0].length;
+      }
+    } else if (isClosing) {
+      depth--;
+      if (depth === 0) {
+        return match.index + match[0].length;
+      }
+    } else {
+      depth++;
+    }
+  }
+
+  // Unbalanced — still waiting for closing tag.
+  return 0;
+};
+
+/**
+ * Returns the length of a complete markdown link/image starting at `offset`,
+ * or 0 if the structure is incomplete.
+ * Expects buffer[offset] === '['.
+ */
+const linkLength = (buffer: string, offset: number): number => {
+  const bracketClose = buffer.indexOf(']', offset + 1);
+  if (bracketClose === -1) {
+    return 0;
+  }
+
+  // Must be followed by '(' for a standard link.
+  if (bracketClose + 1 >= buffer.length) {
+    return 0;
+  }
+  if (buffer[bracketClose + 1] !== '(') {
+    // Not a link — just a bracket; emit one character.
+    return 1;
+  }
+
+  const parenClose = buffer.indexOf(')', bracketClose + 2);
+  if (parenClose === -1) {
+    return 0;
+  }
+
+  return parenClose + 1;
+};

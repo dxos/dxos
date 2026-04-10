@@ -2,50 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
-
 import { log } from '@dxos/log';
-import { SummaryWidget, TogglePanel } from '@dxos/react-ui-components';
+import { ContentBlock, type Message } from '@dxos/types';
+import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+
+import { type BlockRenderer, type MessageThreadContext } from './sync';
 import {
+  FallbackWidget,
   PromptWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
-} from '@dxos/react-ui-components';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { ContentBlock, type Message } from '@dxos/types';
-import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
-
-import { ToolBlock } from '../ToolBlock';
-import { type BlockRenderer, type MessageThreadContext } from './sync';
-
-const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
-  return (
-    <TogglePanel.Root classNames='rounded-xs'>
-      <TogglePanel.Header classNames='bg-group-surface'>{_tag}</TogglePanel.Header>
-      <TogglePanel.Content classNames='bg-modal-surface'>
-        <Json.Data classNames='p-2! text-sm' data={props} />
-      </TogglePanel.Content>
-    </TogglePanel.Root>
-  );
-};
-
-const Summary = ({ text }: { text: string }) => {
-  return (
-    <TogglePanel.Root classNames='rounded-sm'>
-      <TogglePanel.Header classNames='bg-group-surface'>Conversation summarized</TogglePanel.Header>
-      <TogglePanel.Content classNames='bg-modal-surface'>{text}</TogglePanel.Content>
-    </TogglePanel.Root>
-  );
-};
+  StatsWidget,
+  SummaryWidget,
+  ToolWidget,
+} from './widgets';
 
 /**
  * Custom XML tags registry.
  */
 export const componentRegistry: XmlWidgetRegistry = {
   //
-  // Widgets
+  // DOM Widgets
   //
 
   prompt: {
@@ -90,30 +69,30 @@ export const componentRegistry: XmlWidgetRegistry = {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
-      return text ? new SummaryWidget(text) : null;
+      return text ? new StatsWidget(text) : null;
     },
   },
 
   //
-  // React
+  // React Widgets (portaled outside of the editor)
   //
 
+  summary: {
+    block: true,
+    Component: SummaryWidget,
+  },
   toolCall: {
     block: true,
-    Component: ToolBlock,
+    Component: ToolWidget,
   },
+
   toolResult: {
     block: true,
-    Component: Fallback,
+    Component: FallbackWidget,
   },
   toolkit: {
     block: true,
-    Component: Fallback,
-  },
-  summary: {
-    block: true,
-    streaming: true,
-    Component: Summary,
+    Component: FallbackWidget,
   },
 
   //
@@ -122,7 +101,7 @@ export const componentRegistry: XmlWidgetRegistry = {
 
   json: {
     block: true,
-    Component: Fallback,
+    Component: FallbackWidget,
   },
 };
 
@@ -156,6 +135,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }
       break;
     }
+
     case 'reference': {
       if (block.pending) {
         return;
@@ -163,24 +143,28 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       const dxn = block.reference.dxn;
       return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
     }
+
     case 'suggestion': {
       if (block.pending) {
         return;
       }
       return `<suggestion>${block.text}</suggestion>`;
     }
+
     case 'select': {
       if (block.pending || block.options.length === 0) {
         return;
       }
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
+
     case 'toolCall': {
       context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
         blocks: [block],
       });
       return `<toolCall id="${block.toolCallId}" />`;
     }
+
     case 'toolResult': {
       // TODO(dmaretskyi): the parameter could be undefined, perhaps tool blocks are not arriving in order.
       context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
@@ -188,9 +172,11 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }));
       break;
     }
+
     case 'stats': {
       return renderXMLBlock('stats', { content: ContentBlock.createStatsMessage(block) });
     }
+
     case 'reasoning': {
       let text = block.reasoningText ?? block.redactedText;
       if (!text) {
@@ -198,9 +184,11 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }
       return renderXMLBlock('reasoning', { content: text, pending: block.pending });
     }
+
     case 'summary': {
       return renderXMLBlock('summary', { content: block.content, pending: block.pending });
     }
+
     default: {
       // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;

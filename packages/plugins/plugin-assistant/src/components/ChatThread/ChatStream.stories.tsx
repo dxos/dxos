@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { WidgetType } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState, type CSSProperties } from 'react';
 
@@ -11,59 +10,33 @@ import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { Input, Toolbar } from '@dxos/react-ui';
 import { Panel } from '@dxos/react-ui';
+import {
+  MarkdownStream,
+  type MarkdownStreamController,
+  type MarkdownStreamProps,
+  textStream,
+} from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Domino } from '@dxos/ui';
-import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
-import { keyToFallback, trim } from '@dxos/util';
+import { keyToFallback } from '@dxos/util';
 
-import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
-import { type TextStreamOptions, textStream } from './testing';
-import TEXT from './testing/text.md?raw';
+import { translations } from '../../translations';
+import { componentRegistry } from './registry';
+import THREAD_1 from './testing/thread-1.md?raw';
 
 random.seed(123);
 
 const userHue = keyToFallback(PublicKey.random()).hue;
 
+type TextStreamOptions = {
+  wordsPerChunk?: number;
+  chunkDelay?: number;
+  variance?: number;
+};
+
 const defaultStreamOptions: TextStreamOptions = {
   wordsPerChunk: 5,
   chunkDelay: 200,
   variance: 0.5,
-};
-
-class DOMWidget extends WidgetType {
-  constructor(private text: string) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this.text === other.text;
-  }
-
-  override toDOM() {
-    return Domino.of('span').classNames(mx('flex m-2 p-2 border border-separator rounded')).text(this.text).root;
-  }
-}
-
-const ReactWidget = ({ children }: { children: string }) => {
-  return <div className='m-2 p-2 border border-separator rounded'>{children}</div>;
-};
-
-const registry: XmlWidgetRegistry = {
-  'dom-widget': {
-    block: true,
-    streaming: true,
-    factory: ({ children }) => {
-      const text = getXmlTextChild(children);
-      return text ? new DOMWidget(text) : null;
-    },
-  },
-
-  'react-widget': {
-    block: true,
-    streaming: true,
-    Component: ReactWidget,
-  },
 };
 
 type DefaultStoryProps = MarkdownStreamProps & {
@@ -116,18 +89,6 @@ const DefaultStory = ({
     void controller?.setContent('');
   }, [controller]);
 
-  const handleAppend = useCallback(() => {
-    void controller?.append(
-      [
-        random.lorem.paragraph(),
-        `<dom-widget>${random.lorem.paragraphs(3)}</dom-widget>`,
-        random.lorem.paragraph(),
-        `<react-widget>${random.lorem.paragraphs(3)}</react-widget>`,
-        '',
-      ].join('\n\n'),
-    );
-  }, [controller]);
-
   return (
     <Panel.Root style={{ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties}>
       <Panel.Toolbar asChild>
@@ -147,13 +108,6 @@ const DefaultStory = ({
             onClick={() => setStreaming(false)}
           />
           <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-          <Toolbar.IconButton
-            disabled={streaming}
-            icon='ph--plus--regular'
-            iconOnly
-            label='Append'
-            onClick={handleAppend}
-          />
           <Toolbar.Separator />
           <Input.Root>
             <Input.Label classNames='pr-1'>Debug</Input.Label>
@@ -169,10 +123,13 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-components/MarkdownStream',
+  title: 'plugins/plugin-assistant/components/ChatStream',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -181,7 +138,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    initialContent: TEXT,
+    registry: componentRegistry,
+    initialContent: THREAD_1,
     options: {
       autoScroll: true,
     },
@@ -190,26 +148,21 @@ export const Default: Story = {
 
 export const Streaming: Story = {
   args: {
-    registry,
-    content: TEXT,
+    registry: componentRegistry,
+    content: THREAD_1,
     options: {
       autoScroll: true,
       wire: true,
-      fader: true,
       cursor: true,
     },
   },
 };
 
-export const Widgets: Story = {
+export const Debug: Story = {
   args: {
-    registry,
-    initialContent: trim`
-      # DOM Widget
-      <dom-widget>${random.lorem.paragraph()}</dom-widget>
-
-      # React Widget
-      <react-widget>${random.lorem.paragraph()}</react-widget>
-    `,
+    initialContent: THREAD_1,
+    registry: componentRegistry,
+    content: THREAD_1,
+    debug: true,
   },
 };
