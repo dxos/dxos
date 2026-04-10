@@ -23,6 +23,8 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
         const feed = yield* Database.load(chat.feed);
         const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
 
+        log.info('history', { history: history.length });
+
         const system = trim`
           It is extremely important that you respond only with the title and nothing else.
           Do not use markdown or other formatting.
@@ -43,7 +45,7 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
           prompt: Prompt.merge(historyPrompt, prompt),
         });
 
-        const newName = response.text.replaceAll(/[^a-zA-Z0-9]/g, '').trim();
+        const newName = response.text.replaceAll(/[^a-zA-Z0-9\s]/g, '').trim();
 
         Obj.change(chat, (chat) => {
           chat.name = newName;
