@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
-
 import * as Effect from 'effect/Effect';
+import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';

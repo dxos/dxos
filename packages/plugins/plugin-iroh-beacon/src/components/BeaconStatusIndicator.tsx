@@ -9,10 +9,10 @@ import { StatusBar } from '@dxos/plugin-status-bar';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { meta } from '#meta';
+
 import { BeaconCapabilities } from '../capabilities/beacon-service';
 import { type BeaconPeer } from '../types';
-
-import { meta } from '#meta';
 
 export const BeaconStatusIndicator = () => {
   const state = useAtomCapability(BeaconCapabilities.State);
@@ -47,10 +47,7 @@ const BeaconPopover = () => {
     <div className='flex flex-col gap-2 w-[280px] p-2'>
       {/* Header. */}
       <div className='flex items-center gap-2 mb-1'>
-        <Icon
-          icon='ph--broadcast--regular'
-          classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')}
-        />
+        <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')} />
         <span className='font-medium text-sm'>{t('beacon-title.label')}</span>
       </div>
 

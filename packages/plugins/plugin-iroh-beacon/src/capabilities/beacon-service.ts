@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import { Capability, Capabilities } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
+import { meta } from '#meta';
+
 import { BeaconService } from '../beacon-service';
 import { BroadcastChannelTransport } from '../transport/broadcast-channel-transport';
 import { type BeaconState } from '../types';
-
-import { meta } from '#meta';
 
 export namespace BeaconCapabilities {
   export const State = Capability.make<Atom.Atom<BeaconState>>(`${meta.id}.capability.state`);

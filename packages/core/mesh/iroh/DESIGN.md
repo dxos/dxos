@@ -5,6 +5,7 @@
 This document proposes extending the DXOS mesh networking layer with an [iroh](https://github.com/n0-computer/iroh)-based transport that runs **in parallel** with the existing EDGE client/server stack. Iroh provides peer-to-peer connectivity via QUIC, with automatic NAT traversal, relay fallback, and a "dial by public key" model that aligns well with DXOS's identity-based architecture.
 
 The primary goals are:
+
 1. Enable **direct peer-to-peer presence** exchange without routing through EDGE.
 2. Provide a **decentralized gossip layer** (via iroh-gossip) for presence, awareness, and lightweight messaging.
 3. Lay groundwork for future peer-to-peer data sync that bypasses the centralized server.
@@ -13,17 +14,17 @@ The primary goals are:
 
 ### Iroh at a Glance
 
-| Property | Detail |
-|----------|--------|
-| Transport | QUIC over UDP (via noq) |
-| Identity | Ed25519 keypair; peers addressed by public key (EndpointId) |
-| NAT traversal | ICE-like hole-punching over QUIC; ~90% success rate |
-| Relay fallback | Stateless relay servers; traffic remains E2E encrypted |
-| Discovery | DNS (pkarr), mDNS (LAN), BitTorrent DHT (optional) |
-| Protocol mux | ALPN-based; multiple protocols over single endpoint |
-| Higher-level | iroh-gossip (pub-sub), iroh-blobs (content-addressed transfer), iroh-docs (KV store) |
-| Browser support | WASM compilation works (v0.33+); relay-only (no raw UDP in browsers) |
-| Status | v0.97 (Feb 2026), targeting 1.0 in Q1 2026 |
+| Property        | Detail                                                                               |
+| --------------- | ------------------------------------------------------------------------------------ |
+| Transport       | QUIC over UDP (via noq)                                                              |
+| Identity        | Ed25519 keypair; peers addressed by public key (EndpointId)                          |
+| NAT traversal   | ICE-like hole-punching over QUIC; ~90% success rate                                  |
+| Relay fallback  | Stateless relay servers; traffic remains E2E encrypted                               |
+| Discovery       | DNS (pkarr), mDNS (LAN), BitTorrent DHT (optional)                                   |
+| Protocol mux    | ALPN-based; multiple protocols over single endpoint                                  |
+| Higher-level    | iroh-gossip (pub-sub), iroh-blobs (content-addressed transfer), iroh-docs (KV store) |
+| Browser support | WASM compilation works (v0.33+); relay-only (no raw UDP in browsers)                 |
+| Status          | v0.97 (Feb 2026), targeting 1.0 in Q1 2026                                           |
 
 ### Current DXOS Mesh Architecture
 
@@ -40,13 +41,13 @@ The primary goals are:
 
 **Key abstractions (bottom-up):**
 
-| Layer | Abstraction | Role |
-|-------|------------|------|
-| Transport | `Transport` / `TransportFactory` | Pluggable connection (WebRTC, TCP, Memory) |
-| Wire Protocol | `WireProtocol` / `Teleport` | Multiplexed streams + extensions over transport |
-| Signal | `SignalManager` / `SignalMethods` | Peer discovery + message routing (EDGE, WebSocket) |
-| Swarm | `Swarm` / `SwarmNetworkManager` | Topic-based peer lifecycle + topology decisions |
-| Extensions | `Gossip` / `Presence` | Application-level protocols over Teleport |
+| Layer         | Abstraction                       | Role                                               |
+| ------------- | --------------------------------- | -------------------------------------------------- |
+| Transport     | `Transport` / `TransportFactory`  | Pluggable connection (WebRTC, TCP, Memory)         |
+| Wire Protocol | `WireProtocol` / `Teleport`       | Multiplexed streams + extensions over transport    |
+| Signal        | `SignalManager` / `SignalMethods` | Peer discovery + message routing (EDGE, WebSocket) |
+| Swarm         | `Swarm` / `SwarmNetworkManager`   | Topic-based peer lifecycle + topology decisions    |
+| Extensions    | `Gossip` / `Presence`             | Application-level protocols over Teleport          |
 
 **Presence today** flows through the Teleport gossip extension: each peer periodically broadcasts `PeerState` (identityKey + connections list) over `Gossip.postMessage()`. This runs over WebRTC data channels established via EDGE signaling.
 
@@ -68,6 +69,7 @@ Rather than replacing the existing stack, iroh runs as a **parallel transport la
 ```
 
 **Responsibilities split:**
+
 - **EDGE + WebRTC**: Data sync (ECHO replication, automerge), RPC services, authentication -- unchanged.
 - **Iroh**: Presence, awareness, lightweight peer-to-peer messaging, and (future) direct data sync.
 
@@ -86,6 +88,7 @@ IrohEndpointManager
 ```
 
 **Key design decision -- key mapping:**
+
 - Option A: **Derive** iroh EndpointId from the existing DXOS device key (if both are Ed25519).
 - Option B: **Generate** a separate iroh keypair and publish the mapping through EDGE or a shared ECHO object.
 - Option C: **Announce** the iroh EndpointId in the existing DXOS presence payload so peers learn each other's iroh addresses through the current stack.
@@ -119,7 +122,7 @@ const irohTransportFactory: TransportFactory = {
     // Use iroh endpoint to connect to remote peer via QUIC.
     // Wrap the QUIC bidirectional stream as a Node.js Duplex.
     // Signal channel not needed (iroh handles its own signaling).
-  }
+  },
 };
 ```
 
@@ -132,12 +135,14 @@ This is a later phase -- presence via gossip is the first milestone.
 **Goal:** Peers exchange iroh addressing info through existing EDGE presence, establishing a parallel iroh-gossip presence channel.
 
 **Components:**
+
 - `IrohEndpointManager` -- manages local iroh endpoint.
 - Extended `PeerState` proto -- adds optional `irohEndpointId` and `irohRelayUrl` fields.
 - `IrohGossipPresence` -- subscribes to iroh-gossip topic for a space, broadcasts/receives presence.
 - `PresenceAggregator` -- merges presence data from both Teleport gossip and iroh gossip channels.
 
 **Data flow:**
+
 ```
 1. Peer A starts iroh endpoint, gets EndpointId + relay URL.
 2. Peer A announces via existing Teleport gossip: PeerState { ..., irohEndpointId, irohRelayUrl }.
@@ -152,6 +157,7 @@ This is a later phase -- presence via gossip is the first milestone.
 **Goal:** Peer-to-peer RPC and ephemeral messaging over iroh QUIC streams.
 
 **Components:**
+
 - Custom ALPN protocol for DXOS messaging (`/dxos/messaging/1`).
 - `IrohMessenger` -- send/receive typed messages over bidirectional QUIC streams.
 - Use cases: cursor positions (high frequency), typing indicators, collaborative editing signals.
@@ -161,6 +167,7 @@ This is a later phase -- presence via gossip is the first milestone.
 **Goal:** Iroh as an alternative `TransportFactory` for the mesh, running Teleport over QUIC instead of WebRTC.
 
 **Components:**
+
 - `IrohTransportFactory` implementing `TransportFactory`.
 - `IrohSignalManager` implementing `SignalManager` (using iroh's built-in discovery instead of EDGE signaling).
 - Full Teleport extension stack (gossip, object-sync, replication) running over iroh.
@@ -172,6 +179,7 @@ This is a later phase -- presence via gossip is the first milestone.
 ### Browser Considerations
 
 Iroh compiles to WASM but browsers lack raw UDP access. Browser peers will:
+
 - Connect through iroh relay servers (similar to WebRTC TURN).
 - Traffic remains E2E encrypted; relay cannot read data.
 - Direct browser-to-browser connections are not possible via iroh today (WebRTC DataChannel integration is on iroh's long-term roadmap).
@@ -192,12 +200,12 @@ Option A (WASM-first) is recommended for Phase 1 since it works everywhere and k
 
 ### Key Identity Mapping
 
-| DXOS Concept | Iroh Concept | Mapping |
-|--------------|-------------|---------|
-| Device Key (Ed25519 PublicKey) | EndpointId (Ed25519 PublicKey) | Derived or announced |
-| Identity Key | No equivalent | Announced in gossip payload |
-| Space Key / Swarm Topic | Gossip TopicId (32 bytes) | `hash(spaceKey \|\| "presence")` |
-| EDGE WebSocket URL | Relay URL | Configured or discovered |
+| DXOS Concept                   | Iroh Concept                   | Mapping                          |
+| ------------------------------ | ------------------------------ | -------------------------------- |
+| Device Key (Ed25519 PublicKey) | EndpointId (Ed25519 PublicKey) | Derived or announced             |
+| Identity Key                   | No equivalent                  | Announced in gossip payload      |
+| Space Key / Swarm Topic        | Gossip TopicId (32 bytes)      | `hash(spaceKey \|\| "presence")` |
+| EDGE WebSocket URL             | Relay URL                      | Configured or discovered         |
 
 ### Proto Changes
 
@@ -235,11 +243,11 @@ packages/core/mesh/iroh/
 
 How should DXOS peers obtain their iroh EndpointId?
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **A. Derive from DXOS device key** | Single identity; no extra key management; verifiable mapping | Couples crypto implementations; DXOS key format must stay Ed25519; harder to rotate iroh key independently |
-| **B. Separate keypair, announced via EDGE** | Decoupled; can rotate independently; works regardless of DXOS key type | Extra key to manage/persist; requires trusted channel to distribute; identity not cryptographically linked |
-| **C. Separate keypair, announced via presence payload** | Same as B, but uses existing gossip channel; no EDGE API changes | Same as B; bootstrap depends on existing presence working first |
+| Option                                                  | Pros                                                                   | Cons                                                                                                       |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **A. Derive from DXOS device key**                      | Single identity; no extra key management; verifiable mapping           | Couples crypto implementations; DXOS key format must stay Ed25519; harder to rotate iroh key independently |
+| **B. Separate keypair, announced via EDGE**             | Decoupled; can rotate independently; works regardless of DXOS key type | Extra key to manage/persist; requires trusted channel to distribute; identity not cryptographically linked |
+| **C. Separate keypair, announced via presence payload** | Same as B, but uses existing gossip channel; no EDGE API changes       | Same as B; bootstrap depends on existing presence working first                                            |
 
 **Recommendation: Option C** for Phase 1. Pragmatic bootstrap -- uses the existing trusted channel, avoids coupling crypto implementations, and works today. Option A can be revisited once iroh is proven and we understand whether key unification is worth the coupling.
 
@@ -247,11 +255,11 @@ How should DXOS peers obtain their iroh EndpointId?
 
 How should iroh run in desktop (Tauri) vs browser environments?
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **A. WASM everywhere** | Single code path; simpler build/test; works in all environments | No UDP hole-punching in browser (relay-only); WASM overhead on desktop; larger bundle |
-| **B. Native sidecar for Tauri, WASM for browser** | Full UDP/hole-punching on desktop; better performance; smaller browser bundle (lazy-loaded) | Two code paths; IPC complexity; harder to test; Tauri-specific build step |
-| **C. Hybrid with unified TS API** | Best of both; platform-appropriate transport; clean abstraction | Most complex to build; API must abstract over different capabilities |
+| Option                                            | Pros                                                                                        | Cons                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **A. WASM everywhere**                            | Single code path; simpler build/test; works in all environments                             | No UDP hole-punching in browser (relay-only); WASM overhead on desktop; larger bundle |
+| **B. Native sidecar for Tauri, WASM for browser** | Full UDP/hole-punching on desktop; better performance; smaller browser bundle (lazy-loaded) | Two code paths; IPC complexity; harder to test; Tauri-specific build step             |
+| **C. Hybrid with unified TS API**                 | Best of both; platform-appropriate transport; clean abstraction                             | Most complex to build; API must abstract over different capabilities                  |
 
 **Recommendation: Option A (WASM-first)** for Phase 1. Keeps the deployment model simple and lets us validate the architecture before investing in platform-specific optimizations. Option B/C for Phase 3+ once we need direct UDP connectivity for data sync on desktop.
 
@@ -259,11 +267,11 @@ How should iroh run in desktop (Tauri) vs browser environments?
 
 Who operates the iroh relay servers?
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **A. n0's public relays only** | Zero ops burden; free; maintained by iroh team | Rate-limited; no SLA; dependency on third party; latency may vary |
-| **B. DXOS-operated relays only** | Full control; SLA guarantees; geographic placement; isolated from other traffic | Ops burden; cost; must track iroh relay releases |
-| **C. Configurable (default to provisioned)** | Flexibility; can use n0 for dev, DXOS-provisioned for production; self-hosted for enterprise | Configuration complexity; must test multiple configurations |
+| Option                                       | Pros                                                                                         | Cons                                                              |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **A. n0's public relays only**               | Zero ops burden; free; maintained by iroh team                                               | Rate-limited; no SLA; dependency on third party; latency may vary |
+| **B. DXOS-operated relays only**             | Full control; SLA guarantees; geographic placement; isolated from other traffic              | Ops burden; cost; must track iroh relay releases                  |
+| **C. Configurable (default to provisioned)** | Flexibility; can use n0 for dev, DXOS-provisioned for production; self-hosted for enterprise | Configuration complexity; must test multiple configurations       |
 
 **Recommendation: Option C (configurable).** n0/iroh will provision dedicated relay infrastructure for DXOS. Default configuration points to these provisioned relays for production use. n0's public relays serve as fallback for development. Enterprise deployments can point to self-hosted relays. Configuration via DXOS client config:
 
@@ -280,11 +288,11 @@ Who operates the iroh relay servers?
 
 Should iroh presence carry richer data than the current `PeerState`?
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **A. Same PeerState as today** | Drop-in replacement; simple aggregation; proven data model | Doesn't leverage iroh's lower latency for high-frequency data |
-| **B. Extended PeerState with app data** | Cursor positions, selections, typing indicators over p2p; lower latency than EDGE-routed gossip; enables new UX | Larger payloads; more complex serialization; must handle schema evolution |
-| **C. Channeled: base presence + app-specific channels** | Clean separation; apps subscribe to channels they care about; base presence stays lightweight | More API surface; channel management complexity |
+| Option                                                  | Pros                                                                                                            | Cons                                                                      |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **A. Same PeerState as today**                          | Drop-in replacement; simple aggregation; proven data model                                                      | Doesn't leverage iroh's lower latency for high-frequency data             |
+| **B. Extended PeerState with app data**                 | Cursor positions, selections, typing indicators over p2p; lower latency than EDGE-routed gossip; enables new UX | Larger payloads; more complex serialization; must handle schema evolution |
+| **C. Channeled: base presence + app-specific channels** | Clean separation; apps subscribe to channels they care about; base presence stays lightweight                   | More API surface; channel management complexity                           |
 
 **Recommendation: Option C (channeled).** The iroh gossip layer should support multiple channels per topic -- a base `presence` channel for online/offline status (same as today's `PeerState`), plus app-defined channels for high-frequency data like cursor positions and typing indicators. This matches the existing `Gossip.postMessage(channelId, payload)` pattern and lets applications opt into richer presence without bloating the base protocol.
 
@@ -292,11 +300,11 @@ Should iroh presence carry richer data than the current `PeerState`?
 
 How should the system behave when iroh connectivity fails?
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **A. Silent fallback to Teleport gossip** | Seamless UX; always-available presence; no user-facing errors | Harder to debug; may mask persistent iroh issues; dual data sources can cause inconsistency |
-| **B. Surface failure to application** | Transparent; app can adapt UI; easier to debug | More complex app-side handling; worse UX if errors are frequent |
-| **C. Silent fallback + diagnostic events** | Best UX (seamless); observability via diagnostic channel; no user-facing errors but devtools/logs show iroh status | Slightly more complex than A; diagnostic events need consumer |
+| Option                                     | Pros                                                                                                               | Cons                                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| **A. Silent fallback to Teleport gossip**  | Seamless UX; always-available presence; no user-facing errors                                                      | Harder to debug; may mask persistent iroh issues; dual data sources can cause inconsistency |
+| **B. Surface failure to application**      | Transparent; app can adapt UI; easier to debug                                                                     | More complex app-side handling; worse UX if errors are frequent                             |
+| **C. Silent fallback + diagnostic events** | Best UX (seamless); observability via diagnostic channel; no user-facing errors but devtools/logs show iroh status | Slightly more complex than A; diagnostic events need consumer                               |
 
 **Recommendation: Option C (silent fallback + diagnostics).** The `PresenceAggregator` merges both sources transparently -- if iroh drops, Teleport gossip continues and the application sees no gap. Iroh connection status is exposed via a diagnostic event (for devtools and logging) but not surfaced to end users. This matches the existing pattern where EDGE connection issues are logged but don't break the UI.
 
@@ -305,6 +313,7 @@ How should the system behave when iroh connectivity fails?
 **Decision: General-purpose gossip with presence as the first consumer.**
 
 Phase 1 delivers:
+
 - `IrohEndpointManager` -- manages the iroh endpoint lifecycle.
 - `IrohGossipChannel` -- generic channel abstraction over iroh-gossip topics.
 - `IrohPresence` -- presence built on `IrohGossipChannel` (who's online, PeerState).
