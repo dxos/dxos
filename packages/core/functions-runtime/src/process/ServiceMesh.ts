@@ -171,31 +171,31 @@ export class ServiceMesh {
       const resolver = ServiceResolver.make(
         <I, S>(tag: Context.Tag<I, S>, resolutionContext: ServiceResolver.ResolutionContext) =>
           Effect.gen(this, function* () {
-          const service = this.#findServiceForTag(tag);
-          if (!service) {
-            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
-          }
+            const service = this.#findServiceForTag(tag);
+            if (!service) {
+              return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
+            }
 
-          // Merge resolution contexts.
-          const mergedContext: ResolutionContext = {
-            space: resolutionContext.space ?? context.space,
-            pid: resolutionContext.process ?? context.pid,
-          };
+            // Merge resolution contexts.
+            const mergedContext: ResolutionContext = {
+              space: resolutionContext.space ?? context.space,
+              pid: resolutionContext.process ?? context.pid,
+            };
 
-          // Get or create the service instance based on affinity.
-          const instance = yield* this.#getOrCreateInstance(
-            service,
-            mergedContext,
-            acquiredSpaceRefs,
-            acquiredProcessRefs,
-          );
+            // Get or create the service instance based on affinity.
+            const instance = yield* this.#getOrCreateInstance(
+              service,
+              mergedContext,
+              acquiredSpaceRefs,
+              acquiredProcessRefs,
+            );
 
-          const serviceValue = Context.getOption(instance.context, tag);
-          if (Option.isNone(serviceValue)) {
-            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
-          }
+            const serviceValue = Context.getOption(instance.context, tag);
+            if (Option.isNone(serviceValue)) {
+              return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
+            }
 
-          return serviceValue.value as S;
+            return serviceValue.value as S;
           }),
       );
 
@@ -373,7 +373,9 @@ export class ServiceMesh {
         case 'space': {
           if (!context.space) {
             return yield* Effect.fail(
-              new ServiceNotAvailableError(`Space-scoped service requires space context: ${this.#getServiceName(service)}`),
+              new ServiceNotAvailableError(
+                `Space-scoped service requires space context: ${this.#getServiceName(service)}`,
+              ),
             );
           }
           const key = this.#getSpaceCacheKey(service, context.space);
@@ -394,7 +396,9 @@ export class ServiceMesh {
         case 'process': {
           if (!context.pid) {
             return yield* Effect.fail(
-              new ServiceNotAvailableError(`Process-scoped service requires process context: ${this.#getServiceName(service)}`),
+              new ServiceNotAvailableError(
+                `Process-scoped service requires process context: ${this.#getServiceName(service)}`,
+              ),
             );
           }
           const key = this.#getProcessCacheKey(service, context.pid);
@@ -432,7 +436,9 @@ export class ServiceMesh {
       const builtContext = yield* Layer.buildWithScope(service.layer, instanceScope).pipe(
         Effect.provide(dependencyContext),
         Effect.catchAll((error) =>
-          Effect.fail(new ServiceNotAvailableError(`Failed to build service ${this.#getServiceName(service)}: ${error}`)),
+          Effect.fail(
+            new ServiceNotAvailableError(`Failed to build service ${this.#getServiceName(service)}: ${error}`),
+          ),
         ),
       );
 
