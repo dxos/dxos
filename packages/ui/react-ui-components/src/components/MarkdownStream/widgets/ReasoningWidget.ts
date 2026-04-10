@@ -55,30 +55,35 @@ export class ReasoningWidget extends WidgetType {
     return this.text === other.text && this.#pos === other.#pos;
   }
 
+  override toDOM() {
+    return Domino.of('div')
+      .classNames('pt-2 pb-4')
+      .append(
+        Domino.of('div')
+          .classNames('relative overflow-hidden p-px rounded-sm border border-subdued-separator')
+          .append(
+            Domino.of('div')
+              .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-description p-2')
+              .attributes({ 'data-reasoning-text': '' })
+              .text(this.text),
+            Domino.of('div').attributes({ 'data-id': this.#pos }),
+          ),
+      ).root;
+  }
+
   override updateDOM(dom: HTMLElement) {
-    const content = dom.firstElementChild;
-    if (content instanceof HTMLElement) {
-      content.textContent = this.text;
-    }
+    // Update only the text leaf; `dom` may be wrapped in an outer shell, and the trail host is a
+    // sibling of the text node inside the bordered container — setting `textContent` on the wrong
+    // ancestor would remove `[data-id]`.
+    dom.querySelector<HTMLElement>('[data-reasoning-text]')?.replaceChildren(this.text);
 
     const trailHost = dom.querySelector<HTMLElement>('[data-id]');
-    if (trailHost && trailHost.childElementCount === 0) {
+    if (trailHost?.childElementCount === 0) {
       trailHost.append(...createTrailLayers());
     }
 
     this.#scheduleTrailRemoval(dom);
     return true;
-  }
-
-  override toDOM() {
-    return Domino.of('div')
-      .classNames('relative overflow-hidden p-px rounded-sm border border-subdued-separator')
-      .append(
-        Domino.of('div')
-          .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-description p-2')
-          .text(this.text),
-        Domino.of('div').attributes({ 'data-id': this.#pos }),
-      ).root;
   }
 
   override destroy(_dom: HTMLElement) {

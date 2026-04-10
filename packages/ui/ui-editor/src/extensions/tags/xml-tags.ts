@@ -54,6 +54,7 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 export type XmlWidgetProps<TProps = any, TContext = any> = TProps & {
   _tag: string;
   range: { from: number; to: number };
+  view?: EditorView;
   context?: TContext;
   onEvent?: XmlEventHandler;
 };
@@ -444,7 +445,7 @@ const buildDecorations = (
                 const { block, factory, Component } = def;
                 const widgetState = args.id ? widgetStateMap[args.id] : undefined;
                 const nodeRange = { from: node.node.from, to: node.node.to };
-                const props = { context, range: nodeRange, ...args, ...widgetState } satisfies XmlWidgetProps;
+                const props = { range: nodeRange, context, ...args, ...widgetState } satisfies XmlWidgetProps;
 
                 // Create widget.
                 const widget: WidgetType | undefined = factory
@@ -583,23 +584,25 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
     if (this.streaming) {
       return false;
     }
-    return this.id === other.id;
-  }
 
-  override updateDOM(dom: HTMLElement) {
-    this._root = dom;
-    this.notifier.mounted({ id: this.id, root: dom, props: this.props, Component: this.Component });
-    return true;
+    return this.id === other.id;
   }
 
   override ignoreEvent() {
     return true;
   }
 
-  override toDOM(_view: EditorView) {
+  override toDOM(view: EditorView) {
     this._root = document.createElement('span');
-    this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
+    const props: TProps = { ...(this.props as object), view } as TProps;
+    this.notifier.mounted({ id: this.id, root: this._root, props, Component: this.Component });
     return this._root;
+  }
+
+  override updateDOM(dom: HTMLElement) {
+    this._root = dom;
+    this.notifier.mounted({ id: this.id, root: dom, props: this.props, Component: this.Component });
+    return true;
   }
 
   override destroy(_dom: HTMLElement) {
