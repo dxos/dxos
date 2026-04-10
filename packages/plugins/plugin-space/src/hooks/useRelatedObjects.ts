@@ -12,12 +12,15 @@ import { isNonNullable } from '@dxos/util';
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
 export const useRelatedObjects = (
   db?: Database.Database,
-  record?: Obj.Unknown,
-  options: { references?: boolean; relations?: boolean } = {},
+  subject?: Obj.Unknown,
+  options: {
+    references?: boolean;
+    relations?: boolean;
+  } = {},
 ) => {
   const objects = useQuery(db, Filter.everything());
   return useMemo(() => {
-    if (!record) {
+    if (!subject) {
       return [];
     }
 
@@ -31,11 +34,11 @@ export const useRelatedObjects = (
           .filter((value) => Ref.isRef(value)) as Ref.Unknown[];
       };
 
-      const references = getReferences(record);
+      const references = getReferences(subject);
       const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
       const referenceSources = objects.filter((obj) => {
         const refs = getReferences(obj);
-        return refs.some((ref) => ref.target === record);
+        return refs.some((ref) => ref.target === subject);
       });
 
       related.push(...referenceTargets, ...referenceSources);
@@ -53,10 +56,10 @@ export const useRelatedObjects = (
 
       const relations = objects.filter(Relation.isRelation).filter((obj) => isValidRelation(obj));
       const targetObjects = relations
-        .filter((relation) => Relation.getTarget(relation) === record)
+        .filter((relation) => Relation.getTarget(relation) === subject)
         .map((relation) => Relation.getSource(relation));
       const sourceObjects = relations
-        .filter((relation) => Relation.getSource(relation) === record)
+        .filter((relation) => Relation.getSource(relation) === subject)
         .map((relation) => Relation.getTarget(relation));
 
       related.push(...targetObjects, ...sourceObjects);
@@ -64,9 +67,13 @@ export const useRelatedObjects = (
 
     return (
       Array.from(new Set(related))
-        .filter((obj) => obj !== record)
+        .filter((obj) => {
+          console.log('obj', obj.id, subject.id);
+          return true;
+        })
+        .filter((obj) => obj.id !== subject.id)
         // TODO(burdon): Hack to filter out chat objects.
-        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
+        .filter((obj) => Entity.getTypename(obj) !== 'orgsubjecttype.assistant.chat')
     );
-  }, [record, objects, options.references, options.relations]);
+  }, [subject, objects, options.references, options.relations]);
 };
