@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
 import { LanguageDescription, LanguageSupport } from '@codemirror/language';
+import { type Extension } from '@codemirror/state';
 
-import { mdlBlockLanguage } from './syntax';
 import { mdlFenceHighlight } from './fences';
+import { mdlBlockLanguage } from './syntax';
 
 /**
  * LanguageDescription for MDL fenced block bodies.

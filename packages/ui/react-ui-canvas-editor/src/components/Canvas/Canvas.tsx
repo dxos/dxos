@@ -30,7 +30,6 @@ import {
 import { rectContains } from '../../layout';
 import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
-
 import { Frame } from './Frame';
 import { getShapeBounds } from './Shape';
 import { Shapes } from './Shapes';

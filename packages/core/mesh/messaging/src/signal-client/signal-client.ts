@@ -19,7 +19,6 @@ import {
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
-
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';

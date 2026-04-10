@@ -4,13 +4,14 @@
 
 // @import-as-namespace
 
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+
 import { Database, Feed, Filter, Order, Query } from '@dxos/echo';
 import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import * as Fiber from 'effect/Fiber';
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 export const TRACE_FEED_KIND = 'dxos.org.feed.trace';
 
@@ -74,7 +75,7 @@ export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Data
       return Context.mergeAll(
         Trace.TraceSink.context({
           write: (message) => {
-            log.info('write trace message', { message });
+            log('write trace message', { message });
             buffer.push(message);
             scheduleFlush();
           },

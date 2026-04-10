@@ -13,6 +13,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { meta } from '#meta';
 import { FilesOperation } from '#operations';
 import { FileCapabilities, type FilesState } from '#types';
+
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../util';
 
 export default Capability.makeModule(

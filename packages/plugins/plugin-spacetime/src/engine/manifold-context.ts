@@ -3,7 +3,6 @@
 //
 
 import type { ManifoldToplevel } from 'manifold-3d';
-
 // Vite resolves this to the correct URL for the WASM asset at build/serve time.
 // @ts-ignore - Vite-specific ?url import suffix.
 import wasmUrl from 'manifold-3d/manifold.wasm?url';

@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -14,7 +15,6 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { AssistantSettings } from '#components';
 import {

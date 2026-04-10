@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Operation } from '@dxos/operation';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 
+import { DeckCapabilities } from '../types';
 import { ChangeCompanion } from './definitions';
 import { updateActiveDeck } from './helpers';
-import { DeckCapabilities } from '../types';
 
 const handler: Operation.WithHandler<typeof ChangeCompanion> = ChangeCompanion.pipe(
   Operation.withHandler(

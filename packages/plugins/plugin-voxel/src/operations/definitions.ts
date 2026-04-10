@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { Database, Ref } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
 import { type ModelType, MODEL_TYPES } from '../models';
 import { Voxel } from '../types';

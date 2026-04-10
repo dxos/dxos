@@ -13,8 +13,8 @@ import { type Text } from '@dxos/schema';
 
 import { meta } from '#meta';
 import type { FilesystemWorkspace, NativeFilesystemState } from '#types';
-import { refreshWorkspace } from '../../util';
 
+import { refreshWorkspace } from '../../util';
 import type { DirectoryWatcher } from './directory-watcher';
 import type { MarkdownDocuments } from './markdown-documents';
 import type { MirrorSpaceManager } from './mirror-space-manager';

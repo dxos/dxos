@@ -27,6 +27,7 @@ import {
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import {
   Trace,
   type CredentialsService,
@@ -34,12 +35,11 @@ import {
   type QueueService,
   type TracingService,
 } from '@dxos/functions';
-import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
+import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -170,8 +170,8 @@ export class AiChatProcessor {
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen(this, function* () {
+        // NOTE: Gets or creates a session for the feed.
         const session = yield* AgentService.getSession(this._feed);
-
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
           Stream.runForEach((message) =>

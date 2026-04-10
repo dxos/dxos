@@ -22,9 +22,9 @@ import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls
 
 import { useOnEditAnalytics } from '#hooks';
 import { meta } from '#meta';
-import { getMessageMetadata } from '../../util';
 
 import { command } from '../../extensions/command';
+import { getMessageMetadata } from '../../util';
 
 export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';

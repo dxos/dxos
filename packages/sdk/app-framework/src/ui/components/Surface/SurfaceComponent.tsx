@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   Fragment,
   type NamedExoticComponent,
@@ -20,12 +21,9 @@ import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
-import { useAtomValue } from '@effect-atom/atom-react';
-
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager/PluginManagerProvider';
-
 import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';

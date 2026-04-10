@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -19,10 +18,11 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { Meeting, MeetingCapabilities } from '#types';
 import { MeetingOperation } from '#operations';
+import { Meeting, MeetingCapabilities } from '#types';
 
 /**
  * Atom families to derive meeting state properties.

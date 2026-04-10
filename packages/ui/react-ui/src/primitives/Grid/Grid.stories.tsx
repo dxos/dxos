@@ -8,7 +8,6 @@ import React from 'react';
 import { type ChromaticPalette } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing';
-
 import { Grid } from './Grid';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (

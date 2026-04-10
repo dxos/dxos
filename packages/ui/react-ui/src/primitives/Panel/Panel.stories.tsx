@@ -9,7 +9,6 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Input, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-
 import { Panel } from './Panel';
 
 const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRef) => {

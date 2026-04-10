@@ -11,24 +11,19 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { invariant } from '@dxos/invariant';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
-import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
+import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { faker } from '@dxos/random';
-
-import { meta as pluginMeta } from '#meta';
-
-import { translations } from '../../translations';
-
-import { DeckLayout } from './DeckLayout';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { OperationHandler } from '#capabilities';
+import { meta as pluginMeta } from '#meta';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
@@ -39,7 +34,10 @@ import {
   PLANK_COMPANION_TYPE,
 } from '#types';
 
-faker.seed(1234);
+import { translations } from '../../translations';
+import { DeckLayout } from './DeckLayout';
+
+random.seed(1234);
 
 // TODO(burdon): Factor out.
 const storyDeckSettings = Capability.makeModule(() =>
@@ -121,11 +119,11 @@ type Item = { id: string; title: string; children?: Item[] };
  * @param maxDepth - Defaults to {@link STORY_ITEM_MAX_DEPTH}.
  */
 const createItem = (depth = 0, maxDepth = 3): Item => ({
-  id: faker.string.uuid(),
-  title: faker.lorem.words({ min: 2, max: 4 }),
+  id: random.string.uuid(),
+  title: random.lorem.words({ min: 2, max: 4 }),
   children:
     depth < maxDepth
-      ? Array.from({ length: faker.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
+      ? Array.from({ length: random.number.int({ min: 1, max: 8 }) }, () => createItem(depth + 1, maxDepth))
       : undefined,
 });
 

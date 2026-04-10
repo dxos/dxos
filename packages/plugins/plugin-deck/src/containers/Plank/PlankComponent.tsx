@@ -7,9 +7,9 @@ import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo,
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
@@ -17,10 +17,10 @@ import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
 
-import { PlankRootProps, usePlankContext } from './PlankRoot';
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
+import { PlankRootProps, usePlankContext } from './PlankRoot';
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;

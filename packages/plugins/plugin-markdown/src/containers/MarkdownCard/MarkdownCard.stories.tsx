@@ -10,23 +10,22 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
-faker.seed(1234);
+random.seed(1234);
 
 const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
   const subject = useMemo(
     () =>
       Markdown.make({
-        name: faker.lorem.words(3),
-        content: faker.lorem.paragraphs(5),
+        name: random.lorem.words(3),
+        content: random.lorem.paragraphs(5),
       }),
     [],
   );

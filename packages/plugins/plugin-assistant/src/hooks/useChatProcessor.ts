@@ -17,8 +17,9 @@ import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { AiChatProcessor, type AiServicePreset } from '../processor';
 import { type Assistant } from '#types';
+
+import { AiChatProcessor, type AiServicePreset } from '../processor';
 
 export type UseChatProcessorProps = {
   space?: Space;

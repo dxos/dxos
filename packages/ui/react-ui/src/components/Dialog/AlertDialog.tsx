@@ -12,7 +12,6 @@ import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
-
 import {
   Dialog,
   type DialogHeaderProps,

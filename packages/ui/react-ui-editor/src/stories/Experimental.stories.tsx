@@ -7,7 +7,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { blast, defaultOptions, dropFile, join, typewriter } from '@dxos/ui-editor';
 
@@ -57,8 +57,8 @@ export const Blast: Story = {
               effect: 2,
               particleGravity: 0.2,
               particleShrinkRate: 0.995,
-              color: () => [faker.number.int({ min: 100, max: 200 }), 0, 0],
-              // color: () => [faker.number.int(256), faker.number.int(256), faker.number.int(256)],
+              color: () => [random.number.int({ min: 100, max: 200 }), 0, 0],
+              // color: () => [random.number.int(256), random.number.int(256), random.number.int(256)],
             },
             defaultOptions,
           ),

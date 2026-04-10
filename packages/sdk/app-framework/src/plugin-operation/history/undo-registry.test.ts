@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { Compute, HalveCompute } from '../testing';
-
 import * as UndoMapping from './undo-mapping';
 import * as UndoRegistry from './undo-registry';
 

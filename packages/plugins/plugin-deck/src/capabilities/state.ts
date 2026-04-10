@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
+
 import { sanitizePersistedState } from '../util';
 
 /** Default persisted state. */

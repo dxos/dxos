@@ -13,7 +13,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { RepoProxy } from '../automerge';
-
 import {
   type AutomergeDocumentLoader,
   AutomergeDocumentLoaderImpl,

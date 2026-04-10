@@ -26,7 +26,6 @@ import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { renderMarkdown } from '../util';
-
 import { SummarizeMailbox } from './definitions';
 
 /**

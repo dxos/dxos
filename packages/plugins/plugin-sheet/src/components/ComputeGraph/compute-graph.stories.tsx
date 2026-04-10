@@ -12,13 +12,13 @@ import { Operation } from '@dxos/operation';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '#testing';
 import { Sheet } from '#types';
 
+import { useSheetModel } from '../../model';
 import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';

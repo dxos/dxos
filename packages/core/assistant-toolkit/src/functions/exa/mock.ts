@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/operation';
 
-import { ExaMock } from './definitions';
 import { SEARCH_RESULTS } from './data';
+import { ExaMock } from './definitions';
 
 export default ExaMock.pipe(
   Operation.withHandler(

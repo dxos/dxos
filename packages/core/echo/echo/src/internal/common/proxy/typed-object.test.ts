@@ -8,7 +8,6 @@ import { describe, expect, test } from 'vitest';
 
 import { EchoObjectSchema } from '../../Entity';
 import { getSchema } from '../types';
-
 import { makeObject } from './make-object';
 import { change } from './reactive';
 

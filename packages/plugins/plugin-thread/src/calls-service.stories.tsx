@@ -12,13 +12,14 @@ import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 
-import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
 import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from '#hooks';
+
+import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
 
 // TODO(burdon): THIS IS TOO COMPLEX FOR A TEST SETUP.
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {

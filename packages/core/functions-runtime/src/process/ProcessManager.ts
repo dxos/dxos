@@ -20,12 +20,12 @@ import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import { Performance } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
 
 import { DXN, Obj } from '@dxos/echo';
+import { Performance } from '@dxos/effect';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';

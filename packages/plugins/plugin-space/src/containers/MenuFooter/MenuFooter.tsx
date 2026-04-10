@@ -10,6 +10,7 @@ import { type Obj } from '@dxos/echo';
 import { DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+
 import { getSpaceDisplayName } from '../../util';
 
 export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {

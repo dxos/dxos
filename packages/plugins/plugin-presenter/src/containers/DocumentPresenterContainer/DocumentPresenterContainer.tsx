@@ -8,6 +8,7 @@ import { type Markdown } from '@dxos/plugin-markdown/types';
 import { Panel } from '@dxos/react-ui';
 
 import { RevealPlayer } from '#components';
+
 import { useExitPresenter } from '../../useExitPresenter';
 
 export const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ document }) => {

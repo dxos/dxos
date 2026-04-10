@@ -9,7 +9,6 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { InvitationsTestManager } from '../testing';
-
 import * as stories from './Invitations.stories';
 
 const { Default } = composeStories(stories);

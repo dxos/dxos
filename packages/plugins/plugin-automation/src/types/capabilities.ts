@@ -6,6 +6,8 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
+import { AgentService } from '@dxos/assistant';
+import type { Blueprint } from '@dxos/blueprints';
 import { type Database, type Feed } from '@dxos/echo';
 import type {
   CredentialsService,
@@ -16,8 +18,7 @@ import type {
 } from '@dxos/functions';
 import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
-import type { Blueprint } from '@dxos/blueprints';
-import { AgentService } from '@dxos/assistant';
+import type { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 
@@ -38,6 +39,7 @@ export namespace AutomationCapabilities {
     | Process.ProcessMonitorService
     | TracingService // TODO(dmaretskyi): Probably should not be provided here.
     | FunctionInvocationService // TODO(dmaretskyi): Deprecated
+    | Operation.Service
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService;

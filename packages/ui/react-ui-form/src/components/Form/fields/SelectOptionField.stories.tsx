@@ -12,7 +12,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../../../translations';
 import { TestLayout } from '../../testing';
 import { Form } from '../Form';
-
 import { SelectOptionField } from './SelectOptionField';
 
 const schema = Schema.Struct({

@@ -4,12 +4,12 @@
 
 import type { Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { TestSchema } from '@dxos/schema/testing';
 
 import { Message, Organization, Person } from '../types';
 
-faker.seed(1);
+random.seed(1);
 
 /**
  * Helper to Obj.make dates in reverse chronological order
@@ -34,8 +34,8 @@ const createOrganization = (
     Partial<Omit<Organization.Organization, 'name' | 'website'>>,
 ): Organization.Organization => {
   return Obj.make(Organization.Organization, {
-    description: faker.lorem.paragraph(),
-    image: faker.image.url(),
+    description: random.lorem.paragraph(),
+    image: random.image.url(),
     ...props,
   });
 };

@@ -12,7 +12,6 @@ import * as Redacted from 'effect/Redacted';
 import * as AiModelResolver from '../AiModelResolver';
 import type * as AiService from '../AiService';
 import { AnthropicResolver, LMStudioResolver } from '../resolvers';
-
 import { MemoizedAiService } from './memoization';
 import { tapHttpErrors } from './tap';
 

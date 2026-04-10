@@ -21,7 +21,6 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import * as Chat from '../../types/Chat';
-
 import { AgentPrompt } from './definitions';
 import defaultAgentPrompt from './prompt';
 

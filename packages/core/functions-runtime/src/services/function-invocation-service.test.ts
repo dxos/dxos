@@ -12,7 +12,6 @@ import { FunctionInvocationService } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { TestDatabaseLayer } from '../testing';
-
 import { FunctionInvocationServiceLayer } from './function-invocation-service';
 import { FunctionImplementationResolver } from './local-function-execution';
 

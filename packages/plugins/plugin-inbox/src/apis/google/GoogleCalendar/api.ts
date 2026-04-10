@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
-
 import { Event, ListEventsResponse } from './types';
 
 /**

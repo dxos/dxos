@@ -5,9 +5,9 @@
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { type Key } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { getPersonalSpace } from '@dxos/app-toolkit';
 import { useClient } from '@dxos/react-client';
 
 export type UseChatServicesProps = {

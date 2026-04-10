@@ -21,7 +21,6 @@ import {
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-
 import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
 
 export const DeviceListItem = forwardRef<

@@ -8,13 +8,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -22,14 +22,13 @@ import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
-import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
 import { type Mailbox } from '#types';
-import { sortByCreated } from '../../util';
 
+import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
-
+import { sortByCreated } from '../../util';
 import { NewMailbox } from './NewMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<

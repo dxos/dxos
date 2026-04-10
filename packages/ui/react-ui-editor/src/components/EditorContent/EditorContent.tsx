@@ -11,7 +11,6 @@ import { initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
-
 import { type EditorController, createEditorController } from './controller';
 
 export type EditorContentProps = ThemedClassName<

@@ -3,14 +3,13 @@
 //
 
 import { inspect } from 'node:util';
-
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { range } from '@dxos/util';
 
 import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing';
@@ -59,7 +58,7 @@ describe('FeedWrapper', () => {
     const feed = await feedFactory.createFeed(key, { writable: true });
 
     for (const _ of Array.from(Array(numBlocks)).keys()) {
-      await feed.append(faker.lorem.sentence());
+      await feed.append(random.lorem.sentence());
     }
 
     expect(feed.properties.length).to.eq(numBlocks);
@@ -78,7 +77,7 @@ describe('FeedWrapper', () => {
     });
 
     for (const _ of Array.from(Array(numBlocks)).keys()) {
-      await feed.append(faker.lorem.sentence());
+      await feed.append(random.lorem.sentence());
     }
     expect(emittedAppend).to.eq(numBlocks);
   });
@@ -96,7 +95,7 @@ describe('FeedWrapper', () => {
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await feed.append({
         id: String(i + 1),
-        value: faker.lorem.sentence(),
+        value: random.lorem.sentence(),
       } as any);
     }
 
@@ -118,10 +117,10 @@ describe('FeedWrapper', () => {
 
     // TODO(burdon): Use generator.
     for (const i of Array.from(Array(numBlocks)).keys()) {
-      await sleep(faker.number.int({ min: 0, max: 20 }));
+      await sleep(random.number.int({ min: 0, max: 20 }));
       await feed.append({
         id: String(i + 1),
-        value: faker.lorem.sentence(),
+        value: random.lorem.sentence(),
       });
     }
 
@@ -173,7 +172,7 @@ describe('FeedWrapper', () => {
         const block = {
           id: String(i + 1),
           index: i,
-          value: faker.lorem.sentence(),
+          value: random.lorem.sentence(),
         };
 
         const seq = await writer.write(block);
@@ -221,7 +220,7 @@ describe('FeedWrapper', () => {
         const block = {
           id: String(index + 1),
           index,
-          value: faker.lorem.sentence(),
+          value: random.lorem.sentence(),
         };
         await writer.write(block);
       };
@@ -299,7 +298,7 @@ describe('FeedWrapper', () => {
 
     // Append to source.
     for (let i = 0; i < numBlocks; i++) {
-      await source.append(faker.lorem.sentence() as any);
+      await source.append(random.lorem.sentence() as any);
     }
 
     // Integrate into target via putBuffer using proofs from source.

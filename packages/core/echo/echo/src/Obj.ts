@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import * as Equal from 'effect/Equal';
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';

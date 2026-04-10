@@ -10,6 +10,7 @@ import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from
 import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
 import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';

@@ -9,9 +9,8 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Filter, Query, parseId } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
-import { HandlePayload } from './definitions';
-
 import { Meeting, MeetingCapabilities } from '../types';
+import { HandlePayload } from './definitions';
 
 const handler: Operation.WithHandler<typeof HandlePayload> = HandlePayload.pipe(
   Operation.withHandler(

@@ -10,9 +10,8 @@ import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
-import { Person, Pipeline, Task } from '@dxos/types';
-
 import { OperationHandlerSet } from '@dxos/operation';
+import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 

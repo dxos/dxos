@@ -13,8 +13,8 @@ import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space/types';
-import { isNonNullable } from '@dxos/util';
 import { Expando, Text } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#operations';
@@ -27,8 +27,8 @@ import {
   type FilesystemWorkspace,
   type NativeFilesystemState,
 } from '#types';
-import { findDirectoryById } from '../util';
 
+import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;

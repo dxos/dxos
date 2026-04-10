@@ -11,12 +11,13 @@ import { getRegisteredFunctionNames } from '@dxos/compute/testing';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { withTheme } from '@dxos/react-ui/testing';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
+import { withTheme } from '@dxos/react-ui/testing';
 import { automerge } from '@dxos/ui-editor';
 
-import { sheetExtension } from '../../extensions';
 import { Sheet } from '#types';
+
+import { sheetExtension } from '../../extensions';
 
 const DefaultStory = ({ value, ...props }: CellEditorProps) => {
   const extensions = useMemo(() => {

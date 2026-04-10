@@ -12,14 +12,8 @@ import { Operation } from '@dxos/operation';
 import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-
-import { meta } from '#meta';
-import { serializer } from './serializer';
-import { translations } from './translations';
-import { Sheet } from '#types';
-import { SheetOperation } from '#operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AnchorSort,
@@ -30,6 +24,12 @@ import {
   ReactSurface,
   SheetState,
 } from '#capabilities';
+import { meta } from '#meta';
+import { SheetOperation } from '#operations';
+import { Sheet } from '#types';
+
+import { serializer } from './serializer';
+import { translations } from './translations';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

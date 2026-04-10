@@ -13,7 +13,6 @@ import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { type WelcomeScreenProps, WelcomeState } from './types';
 import { OVERLAY_CLASSES, OVERLAY_STYLE, Welcome } from './Welcome';
 

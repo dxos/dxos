@@ -5,17 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { useSearchListResults } from '../SearchList/hooks';
-
 import { Combobox } from './Combobox';
 
-faker.seed(1234);
+random.seed(1234);
 
-const items = faker.helpers.uniqueArray(faker.commerce.productName, 16).sort();
+const items = random.helpers.uniqueArray(random.commerce.productName, 16).sort();
 
 const DefaultStory = () => {
   const { results, handleSearch } = useSearchListResults({

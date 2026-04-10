@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { NativeFilesystemCapabilities } from '../types';
-
 import { RefreshDirectory } from './definitions';
 
 export default RefreshDirectory.pipe(

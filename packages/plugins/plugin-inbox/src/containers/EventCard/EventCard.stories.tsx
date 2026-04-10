@@ -6,35 +6,35 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Event } from '@dxos/types';
 
 import { EventCard } from './EventCard';
 
-faker.seed(1234);
+random.seed(1234);
 
 const createMockEvent = (): Event.Event =>
   Event.make({
     startDate: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
     endDate: new Date(Date.now() + 24 * 60 * 60 * 2_000).toISOString(),
-    title: faker.lorem.sentence(3),
-    description: faker.lorem.sentences(2),
+    title: random.lorem.sentence(3),
+    description: random.lorem.sentences(2),
     attendees: [
       {
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
+        name: random.person.fullName(),
+        email: random.internet.email(),
       },
       {
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
+        name: random.person.fullName(),
+        email: random.internet.email(),
       },
     ],
     owner: {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
+      name: random.person.fullName(),
+      email: random.internet.email(),
     },
   });
 

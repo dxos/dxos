@@ -5,11 +5,10 @@
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
-import { Text } from '@dxos/schema';
-import { trim } from '@dxos/util';
-
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
+import { Text } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/automation';
 

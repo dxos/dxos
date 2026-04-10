@@ -15,9 +15,9 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -27,8 +27,9 @@ import { isNonNullable } from '@dxos/util';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
 import { meta } from '#meta';
-import { ComputeGraph } from '../../notebook';
 import { type Notebook } from '#types';
+
+import { ComputeGraph } from '../../notebook';
 
 const INCLUDE_BLUEPRINTS = [
   'org.dxos.blueprint.assistant',

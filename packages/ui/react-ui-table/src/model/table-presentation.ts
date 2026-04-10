@@ -20,7 +20,6 @@ import { VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { tableButtons, tableControls } from '../util';
-
 import { type SelectionMode } from './selection-model';
 import { type TableModel, type TableRow } from './table-model';
 

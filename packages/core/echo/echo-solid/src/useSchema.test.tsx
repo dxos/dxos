@@ -7,8 +7,8 @@ import { type JSX, createMemo } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Type } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { useSchema } from './useSchema';
 

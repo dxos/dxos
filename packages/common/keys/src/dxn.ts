@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { InspectOptionsStylized, inspect } from 'node:util';
-
 import * as Schema from 'effect/Schema';
+import type { InspectOptionsStylized, inspect } from 'node:util';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';

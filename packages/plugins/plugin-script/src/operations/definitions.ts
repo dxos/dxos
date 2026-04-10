@@ -9,6 +9,7 @@ import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
+
 import { templates } from '../templates';
 
 const SCRIPT_OPERATION = `${meta.id}.operation`;

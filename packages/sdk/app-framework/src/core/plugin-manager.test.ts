@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, assert, describe, it } from '@effect/vitest';
 import { type Atom, Registry } from '@effect-atom/atom-react';
+import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
-import * as Exit from 'effect/Exit';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
@@ -18,7 +18,6 @@ import { invariant } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents } from '../common';
-
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import type * as CapabilityManager from './capability-manager';

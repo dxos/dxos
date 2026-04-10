@@ -15,7 +15,6 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { ScriptPluginSettings } from '#components';
-import { DEPLOYMENT_DIALOG } from '../constants';
 import {
   DeploymentDialog,
   NotebookContainer,
@@ -27,6 +26,8 @@ import {
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
 import { Notebook, ScriptCapabilities, type Settings } from '#types';
+
+import { DEPLOYMENT_DIALOG } from '../constants';
 import { getAccessCredential } from '../util';
 
 export default Capability.makeModule(() =>

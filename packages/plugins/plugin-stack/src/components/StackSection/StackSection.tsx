@@ -13,8 +13,8 @@ import { getSize, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type StackSectionItem } from '#types';
-import { useStack } from '../StackContext';
 
+import { useStack } from '../StackContext';
 import { CaretDownUp } from './CaretDownUp';
 
 const sectionActionDimensions = 'p-1 my-1 shrink-0 min-h-0 w-(--dx-rail-action) h-min';

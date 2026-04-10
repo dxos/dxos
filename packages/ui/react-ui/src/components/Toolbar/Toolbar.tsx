@@ -14,7 +14,6 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { translationKey } from '../../translations';
-
 import {
   Button,
   ButtonGroup,

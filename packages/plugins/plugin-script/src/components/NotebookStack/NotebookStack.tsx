@@ -10,8 +10,8 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type Notebook } from '#types';
-import { type TypescriptEditorProps } from '../TypescriptEditor';
 
+import { type TypescriptEditorProps } from '../TypescriptEditor';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';
 

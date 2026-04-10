@@ -67,6 +67,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
   const logBuffer = externalLogBuffer ?? new LogBuffer();
   let feedbackSurveyAvailable: boolean | null = null;
+  let unregisterPosthogProcessors: (() => void) | undefined;
 
   const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
     feedbackSurveyId
@@ -100,17 +101,18 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             ...(environment ? { environment } : {}),
           });
         }
-        log.runtimeConfig.processors.push(logProcessor);
-        log.runtimeConfig.processors.push(logBuffer.logProcessor);
+        unregisterPosthogProcessors?.();
+        const removePosthogLog = log.addProcessor(logProcessor);
+        const removeLogBuffer = log.addProcessor(logBuffer.logProcessor);
+        unregisterPosthogProcessors = () => {
+          removePosthogLog();
+          removeLogBuffer();
+        };
       }),
     close: () =>
       Effect.sync(() => {
-        for (const processor of [logProcessor, logBuffer.logProcessor]) {
-          const index = log.runtimeConfig.processors.indexOf(processor);
-          if (index !== -1) {
-            log.runtimeConfig.processors.splice(index, 1);
-          }
-        }
+        unregisterPosthogProcessors?.();
+        unregisterPosthogProcessors = undefined;
       }),
     enable: () => Effect.sync(() => posthog.opt_in_capturing()),
     disable: () => Effect.sync(() => posthog.opt_out_capturing()),

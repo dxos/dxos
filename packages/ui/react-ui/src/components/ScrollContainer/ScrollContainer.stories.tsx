@@ -5,13 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
-
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
 type DefaultStoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
@@ -21,7 +20,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Defa
   const [running, setRunning] = useState(runningProp);
   const scroller = useRef<ScrollController>(null);
   useEffect(() => {
-    setLines(Array.from({ length: initialLines }, () => faker.lorem.paragraph()));
+    setLines(Array.from({ length: initialLines }, () => random.lorem.paragraph()));
   }, [initialLines]);
   useEffect(() => {
     if (!running) {
@@ -29,7 +28,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Defa
     }
 
     const i = setInterval(() => {
-      setLines((lines) => [...lines, faker.lorem.paragraph()]);
+      setLines((lines) => [...lines, random.lorem.paragraph()]);
     }, 500);
 
     return () => clearInterval(i);

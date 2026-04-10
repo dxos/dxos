@@ -10,7 +10,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Capabilities } from '../common';
 import { Capability } from '../core';
 import { Surface } from '../ui';
-
 import { withPluginManager } from './withPluginManager';
 
 const DefaultStory = () => {

@@ -5,10 +5,6 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { meta } from '#meta';
-import { translations } from './translations';
-import { SimpleLayoutEvents } from '#types';
-
 import {
   AppGraphBuilder,
   OperationHandler,
@@ -18,6 +14,10 @@ import {
   State,
   UrlHandler,
 } from '#capabilities';
+import { meta } from '#meta';
+import { SimpleLayoutEvents } from '#types';
+
+import { translations } from './translations';
 
 export type SimpleLayoutPluginOptions = {
   /** Determines if running in popover window context (hides mobile-specific UI). */

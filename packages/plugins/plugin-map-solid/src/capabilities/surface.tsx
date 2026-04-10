@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import '../components/MapSurface';
+
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { Map } from '@dxos/plugin-map/types';
-
-import '../components/MapSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -10,6 +10,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { byPosition } from '@dxos/util';
 
 import { useLoadDescendents } from '#hooks';
+
 import { useNavTreeContext } from '../NavTreeContext';
 import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 

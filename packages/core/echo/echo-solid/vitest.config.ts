@@ -5,6 +5,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import SolidPlugin from 'vite-plugin-solid';
+
 import { createConfig } from '../../../../vitest.base.config';
 
 // TODO(wittjosiah): Get working with vitest.base.config.ts.

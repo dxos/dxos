@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Command$ from '@effect/cli/Command';
 import { type Atom, type Registry } from '@effect-atom/atom-react';
+import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';

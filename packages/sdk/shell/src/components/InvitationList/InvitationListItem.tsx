@@ -28,7 +28,6 @@ import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { AuthCode } from '../AuthCode/AuthCode';
-
 import { type SharedInvitationListProps } from './InvitationListProps';
 
 export type InvitationListItemProps = SharedInvitationListProps & {

@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
+import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '#components';

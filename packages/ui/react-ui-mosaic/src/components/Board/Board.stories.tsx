@@ -10,7 +10,7 @@ import { expect, within } from 'storybook/test';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -21,13 +21,12 @@ import { TestColumn, TestItem } from '../../testing';
 import { translations } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicEventHandler } from '../Mosaic';
-
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 
-faker.seed(999);
+random.seed(999);
 
-const randomItems = () => faker.number.int({ min: 0, max: 20 });
+const randomItems = () => random.number.int({ min: 0, max: 20 });
 
 const createTestData = (db: Database.Database, columns: number, items?: (column: number) => number) => {
   Array.from({ length: columns }).forEach((_, i) => {
@@ -37,8 +36,8 @@ const createTestData = (db: Database.Database, columns: number, items?: (column:
         items: Array.from({ length: items?.(i) ?? 0 }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
-              name: faker.lorem.sentence(3),
-              description: faker.lorem.paragraph(1),
+              name: random.lorem.sentence(3),
+              description: random.lorem.paragraph(1),
               label: `${String.fromCharCode(65 + i)}-${j}`,
             }),
           );
@@ -114,8 +113,8 @@ const useTestBoardModel = (): TestBoardModelResult => {
         invariant(space);
         const item = space.db.add(
           Obj.make(TestItem, {
-            name: faker.lorem.sentence(3),
-            description: faker.lorem.paragraph(1),
+            name: random.lorem.sentence(3),
+            description: random.lorem.paragraph(1),
           }),
         );
 

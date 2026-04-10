@@ -8,8 +8,8 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { objectStructureToJson } from '@dxos/echo/internal';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { objectStructureToJson } from '@dxos/echo/internal';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

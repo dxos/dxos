@@ -10,9 +10,10 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
-import { SEARCH_DIALOG } from '../constants';
 import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
+
+import { SEARCH_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

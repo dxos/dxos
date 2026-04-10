@@ -14,10 +14,10 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 
-import MemoryBlueprint from './blueprint';
-import { MemoryHandlers } from './functions';
 import { Memory } from '../../types/Memory';
 import { WebSearchBlueprint, WebSearchToolkit } from '../websearch';
+import MemoryBlueprint from './blueprint';
+import { MemoryHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 

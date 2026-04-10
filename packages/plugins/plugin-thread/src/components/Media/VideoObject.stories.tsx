@@ -12,7 +12,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { getUserMediaTrack } from '../../calls';
 import { ResponsivePanel } from '../ResponsiveGrid';
-
 import { VideoObject, type VideoObjectProps } from './VideoObject';
 
 const DefaultStory = (props: VideoObjectProps) => {
