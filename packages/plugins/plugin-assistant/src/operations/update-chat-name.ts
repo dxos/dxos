@@ -10,6 +10,7 @@ import { Feed, Obj } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -20,6 +21,7 @@ import { UpdateChatName } from './definitions';
 const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ chat }) {
+      log.info('updating chat name', { chat });
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const db = Obj.getDatabase(chat);
       const feedTarget = chat.feed.target;
@@ -50,6 +52,7 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
           updateName(chatRuntime, conversation, chat),
         ),
       );
+      log.info('chat name updated', { chat });
     }),
   ),
 );

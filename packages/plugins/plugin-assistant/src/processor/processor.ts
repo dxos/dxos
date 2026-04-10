@@ -3,6 +3,7 @@
 //
 
 import { Atom, Registry } from '@effect-atom/atom-react';
+import { Exit } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -331,7 +332,17 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    log('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(UpdateChatName, { chat });
+    // TODO(dmaretskyi): Operation.schedule didn't work.
+    log.info('scheduling chat name update', { hasName: !!chat.name, chance });
+    return Operation.invoke(UpdateChatName, { chat }).pipe(
+      Effect.exit,
+      Effect.map(
+        Exit.match({
+          onSuccess: () => Effect.sync(() => log.info('chat name update completed')),
+          onFailure: (cause) => Effect.sync(() => log.error('chat name update failed', { cause })),
+        }),
+      ),
+      Effect.forkDaemon,
+    );
   }
 }

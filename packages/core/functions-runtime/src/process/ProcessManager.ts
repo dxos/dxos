@@ -1285,14 +1285,20 @@ export namespace ProcessOperationInvoker {
           parentProcessId: opts.parentProcessId,
           name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         });
-        log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
+        log.info('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
 
         yield* handle.submitInput(input);
-        log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
+        log.info('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
         const fiber = yield* fiberFromProcess(handle);
         fiberCache.set(handle.pid, fiber);
         return fiber;
-      });
+      }).pipe(
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            log.info('operation interrupted', { opKey: op.meta.key });
+          }),
+        ),
+      );
 
     const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
       Effect.gen(function* () {
@@ -1335,6 +1341,7 @@ export namespace ProcessOperationInvoker {
     ): Effect.Effect<void> => {
       const input = args[0] as I;
       return Effect.gen(function* () {
+        log.info('scheduling operation', { opKey: op.meta.key });
         yield* Ref.update(pendingCount, (count) => count + 1);
         const fiber = yield* invokeFiber(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
@@ -1343,7 +1350,13 @@ export namespace ProcessOperationInvoker {
         );
         pendingFibers.add(fiber);
         fiber.addObserver(() => pendingFibers.delete(fiber));
-      });
+      }).pipe(
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            log.info('operation schedule interrupted', { opKey: op.meta.key });
+          }),
+        ),
+      );
     };
 
     const invokePromise: OperationInvoker.OperationInvoker['invokePromise'] = async <I, O>(
