@@ -23,13 +23,23 @@ import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
+import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: [AgentHandlers, DatabaseHandlers, BlueprintManagerHandlers],
-  types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Blueprint.Blueprint, Feed.Feed],
+  operationHandlers: [AgentHandlers, DatabaseHandlers, BlueprintManagerHandlers, InboxOperationHandlerSet],
+  types: [
+    Organization.Organization,
+    Person.Person,
+    Employer.Employer,
+    Tag.Tag,
+    Blueprint.Blueprint,
+    Feed.Feed,
+    Mailbox.Mailbox,
+  ],
   blueprints: [
     BlueprintManagerBlueprint.make(),
     DatabaseBlueprint.make(),

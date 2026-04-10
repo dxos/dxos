@@ -13,8 +13,7 @@ import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harnes
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('InboxBlueprintEnable', () => {
-  // TODO: enable-blueprints returns ServiceNotAvailable for @dxos/assistant/AiContextService when enabling org.dxos.blueprint.inbox (repro inbox → mail flow).
-  it.effect.skip(
+  it.effect(
     'enables the inbox blueprint and queries emails',
     agentTest(
       Prompt.make({
@@ -30,7 +29,7 @@ describe('InboxBlueprintEnable', () => {
           Completion criteria:
           - A Mailbox object exists in the database.
           - The inbox blueprint is successfully enabled, or you report the exact tool error if it cannot be enabled.
-          - ReadEmail (read-email) completes without error; the result reflects 0 emails (e.g. empty content).
+          - You have called [read-email] and it completes successfully.
         `,
         blueprints: getDefaultBlueprints(),
       }),
