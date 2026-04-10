@@ -81,18 +81,6 @@ const defaultOptions: Partial<AiChatProcessorOptions> = {
   autoUpdateNameChance: 0.1,
 };
 
-/**
- * Determines if chat name should be updated.
- * @returns true if chat has no name OR random chance triggers.
- */
-export const shouldUpdateChatName = (
-  chatName: string | undefined,
-  chance: number,
-  random: () => number = Math.random,
-): boolean => {
-  return !chatName || random() < chance;
-};
-
 export type AiRequestOptions = {};
 
 export type AiRequest = {
@@ -338,7 +326,8 @@ export class AiChatProcessor {
     }
 
     const chance = this._options.autoUpdateNameChance ?? defaultOptions.autoUpdateNameChance ?? 0.1;
-    if (!shouldUpdateChatName(chat.name, chance)) {
+    const shouldUpdate = !chat.name || Math.random() < chance;
+    if (!shouldUpdate) {
       return Effect.void;
     }
 

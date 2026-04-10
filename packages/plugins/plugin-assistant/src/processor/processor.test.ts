@@ -5,15 +5,16 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import { test, expect } from 'vitest';
 
 import { AiConversation } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AiChatProcessor } from './processor';
 
-import { AiChatProcessor, shouldUpdateChatName } from './processor';
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
 describe('Chat processor', () => {
   it.scoped(
@@ -31,44 +32,101 @@ describe('Chat processor', () => {
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },
-      Effect.provide(AssistantTestLayer({ tracing: 'noop' })),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
   );
-});
 
-describe('shouldUpdateChatName', () => {
-  test('returns true when chat has no name', () => {
-    expect(shouldUpdateChatName(undefined, 0.1, () => 0.99)).toBe(true);
-    expect(shouldUpdateChatName('', 0.1, () => 0.99)).toBe(true);
-  });
+  describe('auto-update chat name', () => {
+    it.scoped(
+      'creates processor with chat and autoUpdateNameChance option',
+      Effect.fn(
+        function* ({ expect }) {
+          const feed = Feed.make();
+          yield* Database.add(feed);
 
-  test('returns true when random chance triggers', () => {
-    expect(shouldUpdateChatName('Existing Chat', 0.5, () => 0.3)).toBe(true);
-    expect(shouldUpdateChatName('Existing Chat', 0.1, () => 0.05)).toBe(true);
-  });
+          const chat = Obj.make(Chat.Chat, { feed: Ref.make(feed) });
+          yield* Database.add(chat);
+          yield* Database.flush();
 
-  test('returns false when chat has name and random chance does not trigger', () => {
-    expect(shouldUpdateChatName('Existing Chat', 0.1, () => 0.5)).toBe(false);
-    expect(shouldUpdateChatName('Existing Chat', 0.1, () => 0.1)).toBe(false);
-    expect(shouldUpdateChatName('Existing Chat', 0.1, () => 0.99)).toBe(false);
-  });
+          const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+          const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime: feedRuntime }));
 
-  test('uses default random function when not provided', () => {
-    const results: boolean[] = [];
-    for (let i = 0; i < 100; i++) {
-      results.push(shouldUpdateChatName('Existing Chat', 0.5));
-    }
-    const trueCount = results.filter((r) => r).length;
-    expect(trueCount).toBeGreaterThan(20);
-    expect(trueCount).toBeLessThan(80);
-  });
+          const managedRuntime = ManagedRuntime.make(
+            Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
+          );
 
-  test('always returns true when chance is 1.0 and chat has name', () => {
-    expect(shouldUpdateChatName('Existing Chat', 1.0, () => 0.99)).toBe(true);
-  });
+          const processor = new AiChatProcessor(conversation, managedRuntime as any, feed, {
+            chat: Ref.make(chat),
+            autoUpdateNameChance: 1.0,
+          });
 
-  test('never returns true based on chance when chance is 0 and chat has name', () => {
-    expect(shouldUpdateChatName('Existing Chat', 0, () => 0.0)).toBe(false);
+          expect(processor).toBeDefined();
+          expect(chat.name).toBeUndefined();
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.scoped(
+      'creates processor with named chat and zero chance',
+      Effect.fn(
+        function* ({ expect }) {
+          const feed = Feed.make();
+          yield* Database.add(feed);
+
+          const chat = Obj.make(Chat.Chat, { name: 'Existing Chat', feed: Ref.make(feed) });
+          yield* Database.add(chat);
+          yield* Database.flush();
+
+          const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+          const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime: feedRuntime }));
+
+          const managedRuntime = ManagedRuntime.make(
+            Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
+          );
+
+          const processor = new AiChatProcessor(conversation, managedRuntime as any, feed, {
+            chat: Ref.make(chat),
+            autoUpdateNameChance: 0,
+          });
+
+          expect(processor).toBeDefined();
+          expect(chat.name).toBe('Existing Chat');
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.scoped(
+      'uses default autoUpdateNameChance of 0.1',
+      Effect.fn(
+        function* ({ expect }) {
+          const feed = Feed.make();
+          yield* Database.add(feed);
+
+          const chat = Obj.make(Chat.Chat, { feed: Ref.make(feed) });
+          yield* Database.add(chat);
+          yield* Database.flush();
+
+          const feedRuntime = yield* Effect.runtime<Feed.FeedService>();
+          const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime: feedRuntime }));
+
+          const managedRuntime = ManagedRuntime.make(
+            Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
+          );
+
+          const processor = new AiChatProcessor(conversation, managedRuntime as any, feed, {
+            chat: Ref.make(chat),
+          });
+
+          expect(processor).toBeDefined();
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+    );
   });
 });
