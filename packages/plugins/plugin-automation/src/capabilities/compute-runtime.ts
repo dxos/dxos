@@ -5,6 +5,7 @@
 import { Registry } from '@effect-atom/atom';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -12,14 +13,27 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiService, GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AgentService, ToolExecutionServices } from '@dxos/assistant';
+import {
+  AgentService,
+  AiContextBinder,
+  AiContextService,
+  AiConversation,
+  AiConversationService,
+  ToolExecutionServices,
+} from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { CredentialsService, feedServiceFromQueueServiceLayer, QueueService } from '@dxos/functions';
+import { acquireReleaseResource } from '@dxos/effect';
+import {
+  CredentialsService,
+  feedServiceFromQueueServiceLayer,
+  QueueService,
+  ServiceNotAvailableError,
+} from '@dxos/functions';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,
@@ -106,16 +120,67 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           Layer.provideMerge(AgentService.layer()),
           Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
           Layer.provideMerge(ProcessManager.layer()),
+          // TODO(dmaretskyi): Duped in assistant testing layer.
           Layer.provideMerge(
-            ServiceResolver.layerRequirements(
-              Database.Service,
-              GenericToolkit.GenericToolkitProvider,
-              QueueService,
-              Feed.FeedService,
-              OperationRegistry.Service,
-              AiService.AiService,
-              CredentialsService,
-              Blueprint.RegistryService,
+            // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
+            Layer.effect(
+              ServiceResolver.ServiceResolver,
+              Effect.gen(function* () {
+                const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
+                  Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+                  Effect.map(Layer.succeedContext),
+                );
+                // AiContextBinder.
+                return ServiceResolver.compose(
+                  ServiceResolver.succeed(AiContextService, (context) =>
+                    Effect.gen(function* () {
+                      if (!context.conversation) {
+                        return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                      }
+                      const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
+                        Effect.orDie,
+                      );
+                      const runtime = yield* Effect.runtime<Feed.FeedService>();
+                      const binder = yield* acquireReleaseResource(
+                        () =>
+                          new AiContextBinder({
+                            feed,
+                            runtime,
+                          }),
+                      );
+                      return { binder };
+                    }).pipe(Effect.provide(services)),
+                  ),
+                  // AiConversationService.
+                  ServiceResolver.succeed(AiConversationService, (context) =>
+                    Effect.gen(function* () {
+                      if (!context.conversation) {
+                        return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
+                      }
+                      const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
+                        Effect.orDie,
+                      );
+                      const runtime = yield* Effect.runtime<Feed.FeedService>();
+                      const conversation = yield* acquireReleaseResource(
+                        () =>
+                          new AiConversation({
+                            feed,
+                            runtime,
+                          }),
+                      );
+                      return conversation;
+                    }).pipe(Effect.provide(services)),
+                  ),
+                  yield* ServiceResolver.fromRequirements(
+                    Database.Service,
+                    GenericToolkit.GenericToolkitProvider,
+                    Feed.FeedService,
+                    AiService.AiService,
+                    OperationRegistry.Service,
+                    Blueprint.RegistryService,
+                  ),
+                );
+              }),
             ),
           ),
           Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),

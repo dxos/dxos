@@ -31,9 +31,25 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
         Effect.succeed([
           AppNode.makeCompanion({
             id: linkedSegment('settings'),
-            label: ['object-settings.label', { ns: meta.id }],
+            label: ['object-properties.label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
-            data: 'settings',
+            data: 'settings', // TODO(burdon): Change to 'object-properties'.
+            position: 'fallback',
+          }),
+        ]),
+    }),
+
+    // Related objects plank companion.
+    GraphBuilder.createExtension({
+      id: 'related',
+      match: NodeMatcher.whenEchoObjectMatches,
+      connector: (node) =>
+        Effect.succeed([
+          AppNode.makeCompanion({
+            id: linkedSegment('related'),
+            label: ['companion-related.label', { ns: meta.id }],
+            icon: 'ph--graph--regular',
+            data: 'related',
             position: 'fallback',
           }),
         ]),

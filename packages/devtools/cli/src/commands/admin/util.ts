@@ -6,6 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Config from 'effect/Config';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { withRetry } from '@dxos/edge-client';
@@ -39,7 +40,9 @@ export const adminRequest = <T>(
       HttpClientRequest.setHeader('X-Admin-Key', adminKey),
     );
 
-    const result = yield* withRetry(HttpClient.execute(request)).pipe(Effect.provide(FetchHttpClient.layer));
+    const result = yield* withRetry(HttpClient.execute(request), { timeout: Duration.seconds(30) }).pipe(
+      Effect.provide(FetchHttpClient.layer),
+    );
 
     const envelope = result as EdgeEnvelope<T>;
     if (!envelope.success) {
