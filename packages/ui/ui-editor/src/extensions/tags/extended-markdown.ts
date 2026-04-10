@@ -58,8 +58,8 @@ const xmlBlockParsers = (registry?: XmlWidgetRegistry): BlockParser[] => {
   }
 
   const tagPattern = customTags.map(escapeRegExpSource).join('|');
-  const selfClosePattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?\\/>`);
-  const openPattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?\\/?>`)
+  const selfClosePattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?\\/>\\s*$`);
+  const openPattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?\\/?>`);
 
   return [
     {

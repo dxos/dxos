@@ -148,7 +148,6 @@ type ContentProps = ThemedClassName<PropsWithChildren>;
 
 const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => {
   const { duration, expandX, expandY } = useTogglePanelContext(CONTENT_NAME);
-
   return (
     <div
       {...composableProps(props, {
