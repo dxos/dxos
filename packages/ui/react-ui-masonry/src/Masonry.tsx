@@ -8,7 +8,7 @@ import { VirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonr
 import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { ScrollArea, usePx } from '@dxos/react-ui';
+import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
 
 //
@@ -67,15 +67,17 @@ MasonryRoot.displayName = 'Masonry.Root';
 // Content
 //
 
-type MasonryContentProps<Item> = {
-  /** Items to render in the masonry grid. */
-  items: Item[];
-  /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
-  getId?: (data: Item) => string;
-};
+type MasonryContentProps<Item> = ThemedClassName<
+  {
+    /** Items to render in the masonry grid. */
+    items: Item[];
+    /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
+    getId?: (data: Item) => string;
+  } & Pick<ScrollAreaRootProps, 'centered' | 'thin' | 'padding'>
+>;
 
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>(
-  ({ items, getId, ...props }, forwardedRef) => {
+  ({ items, getId, centered, thin = true, padding = true, ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const composedRef = useComposedRefs(rootRef, forwardedRef);
     const { width = 0 } = useResizeDetector({ targetRef: rootRef });
@@ -105,7 +107,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
     // NOTE: Masonry currently doesn't support an external scroller.
     //  https://github.com/petyosi/react-virtuoso/issues/1305
     return (
-      <ScrollArea.Root {...composableProps(props)} thin padding ref={composedRef}>
+      <ScrollArea.Root {...composableProps(props)} centered={centered} thin={thin} padding={padding} ref={composedRef}>
         {width > 0 && (
           <ScrollArea.Viewport asChild>
             <ComposableVirtuosoMasonry

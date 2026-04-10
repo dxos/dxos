@@ -67,13 +67,9 @@ export const useRelatedObjects = (
 
     return (
       Array.from(new Set(related))
-        .filter((obj) => {
-          console.log('obj', obj.id, subject.id);
-          return true;
-        })
-        .filter((obj) => obj.id !== subject.id)
-        // TODO(burdon): Hack to filter out chat objects.
-        .filter((obj) => Entity.getTypename(obj) !== 'orgsubjecttype.assistant.chat')
+        // TODO(burdon): Configure.
+        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.text')
+        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
     );
   }, [subject, objects, options.references, options.relations]);
 };
