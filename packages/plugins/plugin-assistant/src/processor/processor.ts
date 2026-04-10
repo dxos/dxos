@@ -28,7 +28,7 @@ import {
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import {
   Trace,
   type CredentialsService,
@@ -42,7 +42,6 @@ import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
 import { UpdateChatName } from '../operations/definitions';
-import { updateName } from './update-name';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -260,8 +259,7 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    const runtime = await this._runtime.runPromise(Effect.runtime<any>());
-    await updateName(runtime, this._conversation, chat, this._options.model);
+    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
   }
 
   /**
@@ -334,15 +332,6 @@ export class AiChatProcessor {
 
     // TODO(dmaretskyi): Operation.schedule didn't work.
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.invoke(UpdateChatName, { chat }).pipe(
-      Effect.exit,
-      Effect.map(
-        Exit.match({
-          onSuccess: () => Effect.sync(() => log.info('chat name update completed')),
-          onFailure: (cause) => Effect.sync(() => log.error('chat name update failed', { cause })),
-        }),
-      ),
-      Effect.forkDaemon,
-    );
+    return Operation.schedule(UpdateChatName, { chat });
   }
 }

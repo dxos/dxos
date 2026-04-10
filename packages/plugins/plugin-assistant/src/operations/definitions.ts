@@ -4,11 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Collection, Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
@@ -41,7 +42,7 @@ export const CreateChat = Operation.make({
 
 export const UpdateChatName = Operation.make({
   meta: { key: `${ASSISTANT_OPERATION}.update-chat-name`, name: 'Update Chat Name' },
-  services: [Capability.Service],
+  services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
     chat: Chat.Chat,
   }),

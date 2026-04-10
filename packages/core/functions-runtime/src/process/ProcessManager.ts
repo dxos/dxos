@@ -1346,10 +1346,18 @@ export namespace ProcessOperationInvoker {
         const fiber = yield* invokeFiber(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
           Effect.ignore,
-          Effect.fork,
+          Effect.forkDaemon,
         );
         pendingFibers.add(fiber);
-        fiber.addObserver(() => pendingFibers.delete(fiber));
+        fiber.addObserver((exit) => {
+          pendingFibers.delete(fiber);
+
+          if (Exit.isInterrupted(exit)) {
+            log.warn('scheduled operation interrupted', { opKey: op.meta.key });
+          } else if (Exit.isFailure(exit)) {
+            log.error('operation schedule failed', { opKey: op.meta.key, cause: Cause.pretty(exit.cause) });
+          }
+        });
       }).pipe(
         Effect.onInterrupt(() =>
           Effect.sync(() => {

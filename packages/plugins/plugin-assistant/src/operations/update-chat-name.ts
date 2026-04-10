@@ -2,58 +2,56 @@
 // Copyright 2025 DXOS.org
 //
 
+import { LanguageModel, Prompt } from '@effect/ai';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AiConversation } from '@dxos/assistant';
-import { Feed, Obj } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
-import { Trace, TracingService } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+import { AiPreprocessor, AiService } from '@dxos/ai';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { Message } from '@dxos/types';
+import { trim } from '@dxos/util';
 
-import { type AiChatServices, updateName } from '../processor';
 import { UpdateChatName } from './definitions';
 
 const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ chat }) {
-      log.info('updating chat name', { chat });
-      const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const db = Obj.getDatabase(chat);
-      const feedTarget = chat.feed.target;
-      if (!db || !feedTarget) {
-        return;
-      }
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.get(db.spaceId);
-      invariant(space, 'Space not found.');
+    Effect.fnUntraced(
+      function* ({ chat }) {
+        log.info('updating chat name', { chat });
 
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
-      const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+        const feed = yield* Database.load(chat.feed);
+        const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
 
-      const runtimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-      const chatRuntime = yield* Effect.promise(() =>
-        runtimeResolver
-          .getRuntime(db.spaceId)
-          .runPromise(
-            Effect.runtime<AiChatServices>().pipe(
-              Effect.provide(TracingService.layerNoop),
-              Effect.provide(Trace.writerLayerNoop),
-            ),
-          ),
-      );
+        const system = trim`
+          It is extremely important that you respond only with the title and nothing else.
+          Do not use markdown or other formatting.
+          If you cannot do this effectively respond with "New Chat".
 
-      yield* Effect.promise(() =>
-        new AiConversation({ feed: feedTarget, runtime, registry }).use(async (conversation) =>
-          updateName(chatRuntime, conversation, chat),
-        ),
-      );
-      log.info('chat name updated', { chat });
-    }),
+          <example_reply>
+          Fishing Trip
+          </example_reply>
+        `;
+        const prompt = 'Suggest a name for this chat';
+
+        const historyPrompt = yield* AiPreprocessor.preprocessPrompt(history, {
+          system,
+          cacheControl: 'ephemeral',
+        });
+
+        const response = yield* LanguageModel.generateText({
+          prompt: Prompt.merge(historyPrompt, prompt),
+        });
+
+        const newName = response.text.replaceAll(/[^a-zA-Z0-9]/g, '').trim();
+
+        Obj.change(chat, (chat) => {
+          chat.name = newName;
+        });
+        log.info('chat name updated', { chat, newName: chat.name });
+      },
+      Effect.provide(AiService.model('@anthropic/claude-haiku-4-5')),
+    ),
   ),
 );
 
