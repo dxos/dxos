@@ -15,11 +15,11 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, GenericToolkit, ModelName } from '@dxos/ai';
 import {
   AiConversation,
-  AiSession,
   GenerationObserver,
-  ToolExecutionServices,
-  createToolkit,
   functionInvocationServiceFromOperations,
+  getOperationFromTool,
+  makeToolExecutionService,
+  makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -28,7 +28,6 @@ import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { PromptError } from '../../errors';
@@ -38,17 +37,6 @@ import { AgentPrompt } from './definitions';
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
 const observer = GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' }));
-
-const lastTextFromMessages = (messages: Message.Message[]): string | undefined => {
-  const blocks = messages.flatMap((message) => message.blocks);
-  for (let index = blocks.length - 1; index >= 0; index--) {
-    const block = blocks[index]!;
-    if (block._tag === 'text') {
-      return block.text;
-    }
-  }
-  return undefined;
-};
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
@@ -98,70 +86,65 @@ export default AgentPrompt.pipe(
 
         const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
 
+        let feed: Feed.Feed;
         if (data.chat) {
           const chat = yield* Database.load(data.chat);
           invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
-          const chatFeed = yield* Database.load(chat.feed);
-          invariant(chatFeed, 'Chat feed not found.');
-          const runtime = yield* Effect.runtime<Feed.FeedService>();
-
-          const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
-
-          yield* Effect.promise(() =>
-            conversation.context.bind({
-              blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
-              objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
-            }),
-          );
-
-          const messages = yield* conversation
-            .createRequest({
-              prompt: promptText,
-              system: systemText,
-              observer,
-            })
-            .pipe(Effect.provide(modelLayer));
-
-          return {
-            note: lastTextFromMessages(messages),
-          };
+          feed = yield* Database.load(chat.feed);
         } else {
-          const resultSink = yield* Deferred.make<unknown, PromptError>();
-          const promptToolkit = makePromptAgentToolkit({
-            output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
-            resultSink,
-          });
-          const toolkit = yield* createToolkit({ blueprints, genericToolkits: [promptToolkit] });
+          feed = yield* Database.add(Feed.make());
+        }
 
-          const session = new AiSession({ observer });
-          yield* session
-            .run({
-              prompt: promptText,
-              system: systemText,
-              blueprints,
-              objects: objects as Obj.Unknown[],
-              toolkit,
-            })
-            .pipe(Effect.provide(modelLayer));
+        const resultSink = yield* Deferred.make<unknown, PromptError>();
+        const promptToolkit = makePromptAgentToolkit({
+          output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
+          resultSink,
+        });
 
-          return yield* Deferred.poll(resultSink).pipe(
-            Effect.flatten,
-            Effect.catchTag('NoSuchElementException', () => Effect.die('Agent did not signal task completion.')),
-            Effect.flatten,
-            Effect.mapError(
-              (err) =>
-                new PromptError(err.message ?? 'Agent failed with an unknown error.', {
-                  description: err.context.description as string | undefined,
-                  prompt: data.prompt.dxn.toString(),
-                }),
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
+
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+            objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
+          }),
+        );
+
+        yield* conversation
+          .createRequest({
+            prompt: promptText,
+            system: systemText,
+            observer,
+            toolkit: promptToolkit.toolkit,
+          })
+          .pipe(
+            Effect.provide(
+              Layer.mergeAll(
+                modelLayer,
+                promptToolkit.layer,
+                ToolExecutionService({ feed }),
+                makeToolResolverFromOperations(),
+              ),
             ),
           );
-        }
+
+        return yield* Deferred.poll(resultSink).pipe(
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () => Effect.die('Agent did not signal task completion.')),
+          Effect.flatten,
+          Effect.mapError(
+            (err) =>
+              new PromptError(err.message ?? 'Agent failed with an unknown error.', {
+                description: err.context.description as string | undefined,
+                prompt: data.prompt.dxn.toString(),
+              }),
+          ),
+        );
       },
       Effect.scoped,
       Effect.provide(
         Layer.empty.pipe(
-          Layer.provideMerge(ToolExecutionServices),
           Layer.provideMerge(functionInvocationServiceFromOperations),
           Layer.provideMerge(TracingService.layerNoop),
         ),
@@ -209,3 +192,28 @@ const makePromptAgentToolkit = (options: {
 
   return GenericToolkit.make(PromptAgentToolkit, layer);
 };
+
+interface ToolExecutionServiceOptions {
+  feed: Feed.Feed;
+}
+
+const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
+  Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const operationInvoker = yield* Operation.Service;
+      return makeToolExecutionService({
+        invoke: (tool, input) =>
+          Effect.gen(function* () {
+            const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
+            log('invoking operation', { operationDef, input });
+            const result = yield* operationInvoker
+              .invoke(operationDef, input, {
+                conversation: Obj.getDXN(feed).toString(),
+              })
+              .pipe(Effect.orDie);
+            log('result', { result });
+            return result;
+          }),
+      });
+    }),
+  );
