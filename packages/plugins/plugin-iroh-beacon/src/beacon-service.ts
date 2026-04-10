@@ -60,7 +60,7 @@ export class BeaconService extends Resource {
       peers,
       localPeerId: this.#peerId,
       localCounter: this.#counter,
-      status: onlineCount > 0 ? 'connected' : this.#counter > 0 ? 'connected' : 'connecting',
+      status: onlineCount > 0 ? 'connected' : this.#counter > 0 ? 'offline' : 'connecting',
     };
   }
 

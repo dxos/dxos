@@ -14,6 +14,7 @@ import { meta } from '#meta';
 import { BeaconCapabilities } from '../capabilities/beacon-service';
 import { type BeaconPeer } from '../types';
 
+/** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
   const state = useAtomCapability(BeaconCapabilities.State);
   const { t } = useTranslation(meta.id);

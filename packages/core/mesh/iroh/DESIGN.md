@@ -28,7 +28,7 @@ The primary goals are:
 
 ### Current DXOS Mesh Architecture
 
-```
+```text
                     EDGE Server
                    /     |     \
               WebSocket  WS    WS
@@ -57,7 +57,7 @@ The primary goals are:
 
 Rather than replacing the existing stack, iroh runs as a **parallel transport layer** alongside EDGE+WebRTC:
 
-```
+```text
                     EDGE Server                    Iroh Relay
                    /     |     \                  /    |    \
               WebSocket  WS    WS            QUIC   QUIC   QUIC
@@ -79,7 +79,7 @@ Rather than replacing the existing stack, iroh runs as a **parallel transport la
 
 A new service that manages the local iroh endpoint lifecycle:
 
-```
+```text
 IrohEndpointManager
   - Creates and manages a single iroh Endpoint (bound to the peer's device key).
   - Maps DXOS PublicKey <-> iroh EndpointId (Ed25519 keys on both sides).
@@ -99,7 +99,7 @@ Option C is the most pragmatic bootstrap approach -- it avoids key management co
 
 A Teleport-independent presence system that uses iroh-gossip:
 
-```
+```text
 IrohPresenceExtension
   - Joins an iroh-gossip topic derived from the DXOS space key.
   - Broadcasts PeerState (identity, cursor position, custom awareness data).
@@ -143,7 +143,7 @@ This is a later phase -- presence via gossip is the first milestone.
 
 **Data flow:**
 
-```
+```text
 1. Peer A starts iroh endpoint, gets EndpointId + relay URL.
 2. Peer A announces via existing Teleport gossip: PeerState { ..., irohEndpointId, irohRelayUrl }.
 3. Peer B receives this, learns Peer A's iroh address.
@@ -224,7 +224,7 @@ message PeerState {
 
 ### Package Structure
 
-```
+```text
 packages/core/mesh/iroh/
   src/
     iroh-endpoint-manager.ts    -- Manages local iroh endpoint lifecycle.

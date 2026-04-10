@@ -48,6 +48,8 @@ export default Capability.makeModule(
         registry.set(stateAtom, service.getState());
       });
 
+      // BeaconService extends Resource, which manages its own lifecycle via _ctx.
+      // The service's internal context handles cleanup of timers and transport.
       void service.open();
     }
 
