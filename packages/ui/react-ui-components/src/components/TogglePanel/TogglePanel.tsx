@@ -155,8 +155,8 @@ const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }
           'grid transition-[grid-template-columns] ease-in-out',
           expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
         ],
+        style: { transitionDuration: `${duration}ms` },
       })}
-      style={{ transitionDuration: `${duration}ms` }}
       ref={forwardedRef}
     >
       <div className='overflow-hidden'>

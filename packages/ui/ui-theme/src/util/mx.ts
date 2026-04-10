@@ -12,6 +12,7 @@ import {
   isValidElement,
   type ReactNode,
   type RefAttributes,
+  CSSProperties,
 } from 'react';
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
@@ -69,14 +70,15 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
  */
 // TODO(burdon): Move to react-ui.
 export const composableProps = <P extends HTMLElement = HTMLElement>(
-  { className, classNames, role, ...props }: ComposableProps,
+  { className, classNames, role, style, ...props }: ComposableProps,
   { classNames: defaultClassNames, ...defaults }: ThemedClassName<Partial<HTMLAttributes<P>>> | undefined = {},
 ) => ({
   // Default props.
   ...(defaults as object),
 
   // Spread supplied props; prefer explicit role, then defaults role, then 'none'.
-  role: (role ?? (defaults as Record<string, string>).role ?? 'none') as string,
+  role: role ?? defaults.role ?? 'none',
+  style: { ...(style ?? defaults.style) } as CSSProperties,
   ...props,
 
   // Compose classnames.
