@@ -104,10 +104,7 @@ export const createConfig = ({
         plugins: config.plugins?.filter((plugin) =>
           Array.isArray(plugin)
             ? plugin.findIndex(
-                (p) =>
-                  p &&
-                  'name' in p &&
-                  (p.name === 'vite:react-swc' || p.name === 'vite:react-babel'),
+                (p) => p && 'name' in p && (p.name === 'vite:react-swc' || p.name === 'vite:react-babel'),
               ) === -1
             : true,
         ),

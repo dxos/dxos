@@ -3,9 +3,9 @@
 //
 
 import { easeCubicOut, line, polygonHull, select } from 'd3';
-import * as Clipper from '@dxos/vendor-js-clipper';
 
 import { log } from '@dxos/log';
+import * as Clipper from '@dxos/vendor-js-clipper';
 
 import { type D3Callable, type D3Selection, type Point, getCircumferencePoints } from '../../util';
 import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types';

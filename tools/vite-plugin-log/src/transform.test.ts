@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
-import { parseAst } from 'rolldown/parseAst';
 import { RolldownMagicString } from 'rolldown';
+import { parseAst } from 'rolldown/parseAst';
+import { describe, test } from 'vitest';
 
 import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions.ts';
 import { transform } from './transform.ts';

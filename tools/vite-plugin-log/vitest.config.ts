@@ -4,7 +4,6 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 import { defineProject, defineConfig } from 'vitest/config';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));

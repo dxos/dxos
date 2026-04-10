@@ -189,8 +189,7 @@ function buildCallInsertion(
   const tail = slotPieces.join(',');
 
   const closeParen = closingParenIndex(code, expr);
-  const hasTrailingComma =
-    args.length > 0 && hasCommaBeforeOffset(code, args[args.length - 1].end, closeParen);
+  const hasTrailingComma = args.length > 0 && hasCommaBeforeOffset(code, args[args.length - 1].end, closeParen);
 
   return (args.length > 0 && !hasTrailingComma ? ',' : '') + tail;
 }
