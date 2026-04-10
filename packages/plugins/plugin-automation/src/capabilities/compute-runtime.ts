@@ -5,7 +5,7 @@
 import { Registry } from '@effect-atom/atom';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import { Context } from 'effect';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
