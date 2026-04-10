@@ -62,7 +62,7 @@ const DefaultStory = ({
   }, [controller, initialContent]);
 
   useEffect(() => {
-    if (!controller || !streaming) {
+    if (!controller || !streaming || !content) {
       return;
     }
 

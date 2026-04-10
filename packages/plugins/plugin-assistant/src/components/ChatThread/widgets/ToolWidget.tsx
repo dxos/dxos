@@ -41,7 +41,7 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
             const tool = tools.find((tool) => tool.name === block.name);
             lastToolCall = { tool, block };
             return {
-              title: tool?.description ?? [t('tool-call.label'), tool?.name].join(' '),
+              title: tool?.description ?? [t('tool-call.label'), block.name].filter(Boolean).join(' '),
               content: {
                 ...block,
                 input: safeParseJson(block.input),
@@ -59,7 +59,8 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
             }
 
             const title =
-              lastToolCall?.tool?.description ?? [t('tool-result.label'), lastToolCall?.tool?.name].join(' ');
+              lastToolCall?.tool?.description ??
+              [t('tool-result.label'), lastToolCall?.block.name].filter(Boolean).join(' ');
             lastToolCall = undefined;
             return {
               title,
@@ -83,7 +84,7 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
         }
       })
       .filter(isNonNullable);
-  }, [blocks]);
+  }, [blocks, t]);
 
   const handleChangeOpen = useCallback(() => {
     setTimeout(() => {
@@ -99,8 +100,6 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
 
   return <ToolPanel items={items} onChangeOpen={handleChangeOpen} />;
 };
-
-ToolWidget.displayName = 'ToolBlock';
 
 type ToolPanelProps = {
   items: { title: string; content: any }[];

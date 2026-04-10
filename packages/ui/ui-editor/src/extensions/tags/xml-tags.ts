@@ -603,7 +603,8 @@ const buildDecorations = (
  * Placeholder for widgets.
  */
 class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
-  private _root: HTMLElement | null = null;
+  #root: HTMLElement | null = null;
+  #view: EditorView | undefined;
 
   constructor(
     readonly id: string,
@@ -617,7 +618,7 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   }
 
   get root(): HTMLElement | null {
-    return this._root;
+    return this.#root;
   }
 
   override eq(other: this) {
@@ -634,20 +635,24 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
+    this.#view = view;
     // NOTE: Set min-height to avoid jumps while scrolling.
-    this._root = Domino.of('div').classNames('min-h-[24px]').root;
-    this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
-    return this._root;
+    this.#root = Domino.of('div').classNames('min-h-[24px]').root;
+    const props = Object.assign({}, this.props, { view }) as TProps;
+    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
+    return this.#root;
   }
 
   override updateDOM(dom: HTMLElement) {
-    this._root = dom;
-    this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
+    this.#root = dom;
+    const props = Object.assign({}, this.props, { view: this.#view }) as TProps;
+    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
     return true;
   }
 
   override destroy(_dom: HTMLElement) {
     this.notifier.unmounted(this.id);
-    this._root = null;
+    this.#root = null;
+    this.#view = undefined;
   }
 }
