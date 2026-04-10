@@ -139,7 +139,8 @@ const DefaultStory = ({
   const handleAppend = useCallback(() => {
     void controller?.append(
       [
-        //
+        random.lorem.paragraph(),
+        `<dom-widget>${random.lorem.paragraphs(3)}</dom-widget>`,
         random.lorem.paragraph(),
         `<react-widget>${random.lorem.paragraphs(3)}</react-widget>`,
         '',
