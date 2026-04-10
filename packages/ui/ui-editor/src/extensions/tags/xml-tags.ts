@@ -55,15 +55,16 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 export type XmlWidgetProps<TProps = any, TContext = any> = TProps & {
   _tag: string;
   range: { from: number; to: number };
-  view?: EditorView;
+  children?: any[];
   context?: TContext;
+  view?: EditorView;
   onEvent?: XmlEventHandler;
 };
 
 /**
  * Factory for creating widgets.
  */
-export type XmlWidgetFactory = (props: XmlWidgetProps, onEvent?: XmlEventHandler) => WidgetType | null;
+export type XmlWidgetFactory = (props: XmlWidgetProps) => WidgetType | null;
 
 /**
  * Widget registry definition.
@@ -80,6 +81,11 @@ export type XmlWidgetDef = {
    * When true, the opening tag is flushed immediately and inner content streams character-by-character.
    */
   streaming?: boolean;
+
+  /**
+   * Debug only.
+   */
+  debug?: boolean;
 
   /**
    * Native widget (rendered inline).
@@ -471,10 +477,10 @@ const buildDecorations = (
                 );
                 const widgetState = widgetStateMap[widgetId];
                 const props = {
+                  id: widgetId,
                   range: nodeRange,
                   context,
                   ...args,
-                  id: widgetId,
                   ...widgetState,
                 } satisfies XmlWidgetProps;
 
@@ -600,11 +606,11 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   private _root: HTMLElement | null = null;
 
   constructor(
-    public readonly id: string,
-    public readonly Component: FunctionComponent<TProps>,
-    public readonly props: TProps,
-    private readonly notifier: XmlWidgetNotifier,
-    private readonly streaming?: boolean,
+    readonly id: string,
+    readonly Component: FunctionComponent<TProps>,
+    readonly props: TProps,
+    readonly notifier: XmlWidgetNotifier,
+    readonly streaming?: boolean,
   ) {
     super();
     invariant(id);
@@ -630,14 +636,13 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   override toDOM(view: EditorView) {
     // NOTE: Set min-height to avoid jumps while scrolling.
     this._root = Domino.of('div').classNames('min-h-[24px]').root;
-    const props: TProps = { ...(this.props as object), view } as TProps;
-    this.notifier.mounted({ id: this.id, root: this._root, props, Component: this.Component });
+    this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
     return this._root;
   }
 
   override updateDOM(dom: HTMLElement) {
     this._root = dom;
-    this.notifier.mounted({ id: this.id, root: dom, props: this.props, Component: this.Component });
+    this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
     return true;
   }
 

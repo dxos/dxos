@@ -5,6 +5,7 @@
 import { xmlLanguage } from '@codemirror/lang-xml';
 import { type Extension } from '@codemirror/state';
 import { type ParseWrapper, parseMixed } from '@lezer/common';
+import { type BlockParser } from '@lezer/markdown';
 
 import { createMarkdownExtensions } from '../markdown';
 import { type XmlWidgetRegistry } from './xml-tags';
@@ -12,6 +13,9 @@ import { type XmlWidgetRegistry } from './xml-tags';
 export type ExtendedMarkdownOptions = {
   registry?: XmlWidgetRegistry;
 };
+
+/** Escapes a string for safe embedding in RegExp source. */
+const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Extended markdown parser with mixed parser for custom rendering of XML tags.
@@ -28,10 +32,79 @@ export const extendedMarkdown = ({ registry }: ExtendedMarkdownOptions = {}): Ex
               name: 'SetextHeading',
               parse: () => false,
             },
+            // Custom XML block parser that keeps registered tags as a single HTMLBlock
+            // even when their content contains blank lines.
+            ...xmlBlockParsers(registry),
           ],
         },
       ],
     }),
+  ];
+};
+
+/**
+ * Creates block parsers for registered XML tags that may contain blank lines.
+ *
+ * By default, the markdown parser treats custom HTML tags as type 6 HTML blocks,
+ * which end at blank lines. This causes tags like `<reasoning>...\n\n...</reasoning>`
+ * to be split into separate blocks, preventing the XML mixed parser from seeing the
+ * full element. This custom parser consumes all lines (including blanks) until the
+ * matching closing tag, emitting a single HTMLBlock.
+ */
+const xmlBlockParsers = (registry?: XmlWidgetRegistry): BlockParser[] => {
+  const customTags = Object.keys(registry ?? {});
+  if (customTags.length === 0) {
+    return [];
+  }
+
+  const tagPattern = customTags.map(escapeRegExpSource).join('|');
+  const openPattern = new RegExp(`^\\s*<(${tagPattern})(\\s[^>]*)?>|^\\s*<(${tagPattern})\\s*/>`);
+
+  return [
+    {
+      name: 'XMLBlock',
+      before: 'HTMLBlock',
+      parse: (cx, line) => {
+        const match = openPattern.exec(line.text);
+        if (!match) {
+          return false;
+        }
+
+        // Self-closing tag (e.g., `<tag />`).
+        if (match[3]) {
+          const end = cx.lineStart + line.text.length;
+          cx.addElement(cx.elt('HTMLBlock', cx.lineStart, end));
+          cx.nextLine();
+          return true;
+        }
+
+        const tagName = match[1];
+        const closeTag = `</${tagName}>`;
+        const start = cx.lineStart;
+
+        // Check if closing tag is on the same line.
+        if (line.text.includes(closeTag)) {
+          cx.addElement(cx.elt('HTMLBlock', start, start + line.text.length));
+          cx.nextLine();
+          return true;
+        }
+
+        // Consume lines (including blank lines) until the closing tag.
+        let end = cx.lineStart + line.text.length;
+        while (cx.nextLine()) {
+          end = cx.lineStart + line.text.length;
+          if (line.text.includes(closeTag)) {
+            cx.addElement(cx.elt('HTMLBlock', start, end));
+            cx.nextLine();
+            return true;
+          }
+        }
+
+        // Unclosed tag (e.g., still streaming) — emit what we have.
+        cx.addElement(cx.elt('HTMLBlock', start, end));
+        return true;
+      },
+    },
   ];
 };
 
