@@ -2,17 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react-swc';
+import swc from '@rollup/plugin-swc';
+import { DevTools } from '@vitejs/devtools';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption, type Plugin } from 'vite';
+import { withFilter } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
-import { DevTools } from '@vitejs/devtools';
 
 import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -26,7 +28,6 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
-const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -39,7 +40,6 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // Building from dist when creating a prod bundle.
   env.command === 'serve' &&
-    !isFastBundle &&
     importSource({
       exclude: [
         '@dxos/random-access-storage',
@@ -108,76 +108,6 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    ...(isFastBundle && {
-      include: [
-        // React.
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        // Effect (with subpath imports).
-        'effect',
-        'effect/Effect',
-        'effect/Array',
-        'effect/Ref',
-        'effect/Option',
-        'effect/Cause',
-        'effect/Exit',
-        'effect/Layer',
-        'effect/Runtime',
-        'effect/Fiber',
-        'effect/Deferred',
-        'effect/Function',
-        'effect/HashSet',
-        'effect/PubSub',
-        'effect/Schema',
-        'effect/Context',
-        'effect/Stream',
-        'effect/Console',
-        '@effect/platform',
-        '@effect/platform-browser',
-        // Effect AI (with submodule exports).
-        '@effect/ai',
-        '@effect/ai/AiError',
-        '@effect/ai/Chat',
-        '@effect/ai/LanguageModel',
-        '@effect/ai/Prompt',
-        '@effect/ai/Response',
-        '@effect/ai/Tool',
-        '@effect/ai/Toolkit',
-        '@effect/ai-anthropic',
-        '@effect/ai-anthropic/AnthropicClient',
-        '@effect/ai-anthropic/AnthropicLanguageModel',
-        '@effect/ai-anthropic/AnthropicTool',
-        '@effect/ai-openai',
-        '@effect/ai-openai/OpenAiClient',
-        '@effect/ai-openai/OpenAiLanguageModel',
-        // Automerge.
-        '@automerge/automerge',
-        '@automerge/automerge-repo',
-        // CodeMirror (many files in HAR).
-        'codemirror',
-        '@codemirror/state',
-        '@codemirror/view',
-        '@codemirror/language',
-        '@codemirror/commands',
-        '@codemirror/autocomplete',
-        '@codemirror/lang-javascript',
-        '@codemirror/lang-json',
-        '@codemirror/lang-markdown',
-        '@codemirror/theme-one-dark',
-        // Radix (many requests in HAR).
-        '@radix-ui/react-dialog',
-        '@radix-ui/react-dropdown-menu',
-        '@radix-ui/react-tooltip',
-        '@radix-ui/react-scroll-area',
-        '@radix-ui/react-popover',
-        '@radix-ui/react-slot',
-        '@radix-ui/react-context-menu',
-        // Atlaskit drag-and-drop.
-        '@atlaskit/pragmatic-drag-and-drop',
-        '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-      ],
-    }),
   },
   resolve: {
     alias: {
@@ -212,46 +142,9 @@ export default defineConfig((env) => ({
   plugins: [
     ...sharedPlugins(env),
 
-    // RSS proxy middleware for CORS-free feed fetching.
-    // TODO(dmaretskyi): replace with hosted CORS proxy on CF.
-    {
-      name: 'rss-proxy',
-      configureServer(server) {
-        server.middlewares.use('/api/rss', async (req, res) => {
-          const url = new URL(req.url!, `http://${req.headers.host}`);
-          const feedUrl = url.searchParams.get('url');
-          if (!feedUrl) {
-            res.statusCode = 400;
-            res.end('Missing url parameter');
-            return;
-          }
-          try {
-            const response = await globalThis.fetch(feedUrl);
-            const contentType = response.headers.get('content-type');
-            if (contentType) {
-              res.setHeader('content-type', contentType);
-            }
-            res.statusCode = response.status;
-            res.end(await response.text());
-          } catch (error) {
-            res.statusCode = 502;
-            res.end(String(error));
-          }
-        });
-      },
-    },
+    rssProxyPlugin(),
 
-    // Handle .md?raw imports.
-    {
-      name: 'raw-md-loader',
-      load(id: string) {
-        if (id.endsWith('.md?raw')) {
-          const filePath = id.replace(/\?raw$/, '');
-          const content = readFileSync(filePath, 'utf-8');
-          return `export default ${JSON.stringify(content)}`;
-        }
-      },
-    },
+    rawMdLoader(),
 
     // env.command === 'serve' && devtoolsJson(),
 
@@ -269,6 +162,18 @@ export default defineConfig((env) => ({
         '**/node_modules/@solid-primitives/**',
       ],
     }),
+
+    withFilter(
+      swc({
+        swc: {
+          jsc: {
+            parser: { syntax: 'typescript', decorators: true, tsx: true },
+            transform: { decoratorVersion: '2021-12' },
+          },
+        },
+      }),
+      { transform: { id: /\.[mc]?[jt]sx?$/, code: '@' } },
+    ),
 
     react(),
 
@@ -329,30 +234,6 @@ export default defineConfig((env) => ({
         emitFile: true,
         filename: 'stats.html',
       }),
-
-      // https://www.bundle-buddy.com/rollup
-      {
-        name: 'bundle-buddy',
-        buildEnd() {
-          const deps: { source: string; target: string }[] = [];
-          // @ts-ignore
-          for (const id of this.getModuleIds()) {
-            // @ts-ignore
-            const m = this.getModuleInfo(id);
-            if (m != null && !m.isExternal) {
-              for (const target of m.importedIds) {
-                deps.push({ source: m.id, target });
-              }
-            }
-          }
-
-          const outDir = path.join(dirname, 'out');
-          if (!existsSync(outDir)) {
-            mkdirSync(outDir);
-          }
-          writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-        },
-      },
     ],
 
     //
@@ -408,4 +289,50 @@ function chunkFileNames(chunkInfo: any) {
   }
 
   return 'assets/[name]-[hash].js';
+}
+
+// RSS proxy middleware for CORS-free feed fetching.
+// TODO(dmaretskyi): replace with hosted CORS proxy on CF.
+function rssProxyPlugin(): Plugin {
+  return {
+    name: 'rss-proxy',
+    configureServer(server) {
+      server.middlewares.use('/api/rss', async (req, res) => {
+        const url = new URL(req.url!, `http://${req.headers.host}`);
+        const feedUrl = url.searchParams.get('url');
+        if (!feedUrl) {
+          res.statusCode = 400;
+          res.end('Missing url parameter');
+          return;
+        }
+        try {
+          const response = await globalThis.fetch(feedUrl);
+          const contentType = response.headers.get('content-type');
+          if (contentType) {
+            res.setHeader('content-type', contentType);
+          }
+          res.statusCode = response.status;
+          res.end(await response.text());
+        } catch (error) {
+          res.statusCode = 502;
+          res.end(String(error));
+        }
+      });
+    },
+  };
+}
+
+// Handle .md?raw imports.
+function rawMdLoader(): Plugin {
+  return {
+    name: 'raw-md-loader',
+    load: {
+      filter: { id: /\.md?raw$/ },
+      handler(id: string) {
+        const filePath = id.replace(/\?raw$/, '');
+        const content = readFileSync(filePath, 'utf-8');
+        return { code: `export default ${JSON.stringify(content)}`, moduleType: 'js' };
+      },
+    },
+  };
 }

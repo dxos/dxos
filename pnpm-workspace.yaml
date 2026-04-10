@@ -15,8 +15,8 @@ catalog:
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
-  '@astrojs/starlight': ^0.32.5
   '@assistant-ui/react': ^0.12.24
+  '@astrojs/starlight': ^0.32.5
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -184,6 +184,7 @@ catalog:
   '@rive-app/react-canvas': ^4.14.0
   '@robloche/chartjs-plugin-streaming': 3.1.0
   '@rollup/plugin-inject': ^5.0.5
+  '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
   '@storybook/addon-docs': ^10.3.5
@@ -686,11 +687,11 @@ onlyBuiltDependencies:
 
 overrides:
   '@automerge/automerge': 'catalog:'
-  '@swc/core': 'catalog:'
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': 'catalog:'
   '@modelcontextprotocol/sdk': '>=1.26.0'
   '@remix-run/router': '>=1.23.2'
+  '@swc/core': 'catalog:'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'

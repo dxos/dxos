@@ -142,6 +142,8 @@
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
+    "@rollup/plugin-swc": "catalog:",
+    "@swc/core": "catalog:",
     "@tauri-apps/cli": "catalog:",
     "@types/jsdom": "catalog:",
     "@types/react": "catalog:",

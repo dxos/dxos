@@ -501,6 +501,9 @@ catalogs:
     '@rollup/plugin-inject':
       specifier: ^5.0.5
       version: 5.0.5
+    '@rollup/plugin-swc':
+      specifier: ^0.4.0
+      version: 0.4.0
     '@solid-primitives/utils':
       specifier: ^6.3.2
       version: 6.3.2
@@ -2688,6 +2691,12 @@ importers:
       '@effect/platform-node':
         specifier: 'catalog:'
         version: 0.104.1(@effect/cluster@0.56.3(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(@effect/sql@0.49.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.10.1))(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(@effect/workflow@0.16.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.10.1))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0))(effect@3.20.0))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(@effect/sql@0.49.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.10.1))(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@rollup/plugin-swc':
+        specifier: 'catalog:'
+        version: 0.4.0(@swc/core@1.13.5(@swc/helpers@0.5.17))(rollup@3.30.0)
+      '@swc/core':
+        specifier: 1.13.5
+        version: 1.13.5(@swc/helpers@0.5.17)
       '@tauri-apps/cli':
         specifier: 'catalog:'
         version: 2.8.4
@@ -26427,6 +26436,16 @@ packages:
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
 
+  '@rollup/plugin-swc@0.4.0':
+    resolution: {integrity: sha512-oAtqXa8rOl7BOK1Rz3rRxI+LIL53S9SqO2KSq2UUUzWgOgXg6492Jh5mL2mv/f9cpit8zFWdwILuVeozZ0C8mg==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@swc/core': 1.13.5
+      rollup: ^3.0.0||^4.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+
   '@rollup/plugin-terser@0.4.4':
     resolution: {integrity: sha512-XHeJC5Bgvs8LfukDwWZp7yeqin6ns8RTl2B9avbejt6tZqsqvVoWI7ZTQrcNsfKEDWBTnTxM8nMDkO2IFFbd0A==}
     engines: {node: '>=14.0.0'}
@@ -46301,6 +46320,14 @@ snapshots:
       '@rollup/pluginutils': 3.1.0(rollup@2.79.2)
       magic-string: 0.25.9
       rollup: 2.79.2
+
+  '@rollup/plugin-swc@0.4.0(@swc/core@1.13.5(@swc/helpers@0.5.17))(rollup@3.30.0)':
+    dependencies:
+      '@rollup/pluginutils': 5.3.0(rollup@3.30.0)
+      '@swc/core': 1.13.5(@swc/helpers@0.5.17)
+      smob: 1.5.0
+    optionalDependencies:
+      rollup: 3.30.0
 
   '@rollup/plugin-terser@0.4.4(rollup@2.79.2)':
     dependencies:
