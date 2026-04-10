@@ -20,7 +20,6 @@ import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
-import { ExemplarPlugin } from '@dxos/plugin-exemplar';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -139,7 +138,6 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Dev
     isDev && DebugPlugin.meta.id,
-    isDev && ExemplarPlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
@@ -196,8 +194,6 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
-    SpecPlugin(),
-    ExemplarPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
@@ -221,10 +217,10 @@ export const getPlugins = ({
       observability: () => observability,
     }),
     OutlinerPlugin(),
+    PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    PipelinePlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
@@ -237,9 +233,9 @@ export const getPlugins = ({
       observability: true,
       shareableLinkOrigin: origin,
     }),
+    SpecPlugin(),
     StackPlugin(),
     StatusBarPlugin(),
-
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',

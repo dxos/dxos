@@ -24,6 +24,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
   let isPinned = true;
   let jumpPending = false;
   let enabled = true;
+  let firstUpdate = true;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
@@ -58,8 +59,10 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
         return;
       }
 
-      // Jump to bottom instantly when content is first inserted into an empty doc.
-      if (isPinned && startState.doc.length === 0 && state.doc.length > 0) {
+      // Jump to bottom instantly when content first appears (either inserted into
+      // an empty doc, or present as initialValue when the editor is created).
+      if (isPinned && (firstUpdate || startState.doc.length === 0) && state.doc.length > 0) {
+        firstUpdate = false;
         jumpPending = true;
         requestAnimationFrame(() => {
           view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
@@ -67,6 +70,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
         });
         return;
       }
+      firstUpdate = false;
 
       // Suppress crawl while the initial jump is pending.
       if (jumpPending) {
@@ -85,7 +89,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
             view.dispatch({
               effects: scrollerCrawlEffect.of(true),
             });
-          } else if (delta < 0) {
+          } else if (delta < -1) {
             setPinned(false);
           }
         } else {
@@ -133,7 +137,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
           const button = Domino.of('button')
             .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })
-            .children(icon)
+            .append(icon)
             .on('click', () => {
               setPinned(true);
               view.dispatch({
@@ -143,7 +147,7 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
 
           buttonContainer = Domino.of('div')
             .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
-            .children(button).root as HTMLDivElement;
+            .append(button).root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

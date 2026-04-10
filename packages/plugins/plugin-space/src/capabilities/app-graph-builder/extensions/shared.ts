@@ -84,17 +84,17 @@ export const spaceRearrangeCache = new Map<string, (nextOrder: Space[]) => void>
 // Static Labels
 //
 
-export const ADD_VIEW_TO_SCHEMA_LABEL: Label = ['add view to schema label', META_NS];
-export const COPY_LINK_LABEL: Label = ['copy link label', META_NS];
-export const CREATE_OBJECT_IN_COLLECTION_LABEL: Label = ['create object in collection label', META_NS];
-export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create object in space label', META_NS];
-export const EXPOSE_OBJECT_LABEL: Label = ['expose object label', META_NS];
-export const MIGRATE_SPACE_LABEL: Label = ['migrate space label', META_NS];
-export const NEW_TYPE_LABEL: Label = ['new type label', META_NS];
-export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove from collection label', META_NS];
-export const RENAME_SPACE_LABEL: Label = ['rename space label', META_NS];
-export const SETTINGS_PANEL_LABEL: Label = ['settings panel label', META_NS];
-export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot by schema label', META_NS];
+export const ADD_VIEW_TO_SCHEMA_LABEL: Label = ['add-view-to-schema.label', META_NS];
+export const COPY_LINK_LABEL: Label = ['copy-link.label', META_NS];
+export const CREATE_OBJECT_IN_COLLECTION_LABEL: Label = ['create-object-in-collection.label', META_NS];
+export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create-object-in-space.label', META_NS];
+export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];
+export const MIGRATE_SPACE_LABEL: Label = ['migrate-space.label', META_NS];
+export const NEW_TYPE_LABEL: Label = ['new-type.label', META_NS];
+export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove-from-collection.label', META_NS];
+export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
+export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
+export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];
 
 //
 // Helpers

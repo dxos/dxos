@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DebugStatus } from './DebugStatus';
-
-export default DebugStatus;
+export { DebugStatus as default } from './DebugStatus';

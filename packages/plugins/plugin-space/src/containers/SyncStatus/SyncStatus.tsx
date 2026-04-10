@@ -46,9 +46,13 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
 
     const t = setTimeout(() => {
       log.warn('sync stalled', { state });
-      // setClassNames('text-error-text');
+      setClassNames('text-error-text');
     }, SYNC_STALLED_TIMEOUT);
-    return () => clearTimeout(t);
+
+    return () => {
+      clearTimeout(t);
+      setClassNames(undefined);
+    };
   }, [offline, needsToUpload, needsToDownload]);
 
   return (

@@ -40,7 +40,7 @@ const placeholder = (trigger: string[]) => {
     Domino.of('span').classNames(mx('border border-separator rounded-xs mx-1 px-1 py-[2px] pb-[3px]')).text(trigger),
   );
   const forCommandsEl = Domino.of('span').text('for commands');
-  return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
+  return Domino.of('div').append(pressEl, ...triggerEls, forCommandsEl).root;
 };
 
 type DefaultStoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };

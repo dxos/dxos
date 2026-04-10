@@ -214,7 +214,7 @@ export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) 
       .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
       .classNames(hover, 'flex items-center gap-2')
       .text(safeUrl(url)?.toString() ?? url)
-      .children(Domino.svg('ph--arrow-square-out--regular')).root,
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
 
@@ -223,7 +223,7 @@ export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) =
     Domino.of('span')
       .attributes({ 'aria-hidden': 'true' })
       .classNames(hover, 'ms-1 inline-block align-[-0.125em]')
-      .children(Domino.svg('ph--arrow-square-out--regular')).root,
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
 

@@ -2,6 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ProjectArticle } from './ProjectArticle';
-
-export default ProjectArticle;
+export { ProjectArticle as default } from './ProjectArticle';

@@ -2395,9 +2395,6 @@ importers:
       '@dxos/plugin-excalidraw':
         specifier: workspace:*
         version: link:../../plugins/plugin-excalidraw
-      '@dxos/plugin-exemplar':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-exemplar
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer

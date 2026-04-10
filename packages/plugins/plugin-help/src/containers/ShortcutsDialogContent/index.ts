@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ShortcutsDialogContent } from './ShortcutsDialogContent';
-
-export default ShortcutsDialogContent;
+export { ShortcutsDialogContent as default } from './ShortcutsDialogContent';

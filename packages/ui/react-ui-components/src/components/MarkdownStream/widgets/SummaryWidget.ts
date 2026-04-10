@@ -19,6 +19,11 @@ export class SummaryWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div').classNames('mt-2 mb-4 text-sm text-placeholder').text(this.text).root;
+    return Domino.of('div').classNames('pt-2 pb-4 text-sm text-placeholder').text(this.text).root;
+  }
+
+  override updateDOM(dom: HTMLElement) {
+    dom.textContent = this.text;
+    return true;
   }
 }

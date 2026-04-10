@@ -18,56 +18,92 @@ export const wireBypass = Annotation.define<boolean>();
 
 import { Domino } from '@dxos/ui';
 
-export type WireOptions = {
-  /** Characters per second. */
-  rate?: number;
-  /** Show a blinking cursor at the insertion point while streaming. */
-  cursor?: boolean;
+/**
+ * Matches the local name of an opening tag after `<` (not `</`).
+ * Custom elements use hyphens; `\w+` alone incorrectly stops at `-` (e.g. `dom` from `dom-widget`).
+ */
+const OPENING_TAG_NAME = /^<([a-zA-Z][\w-]*)/;
+
+/** Escapes a string for safe embedding in RegExp source (tag names from the document). */
+const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+type FlushResult = {
+  count: number;
+  /** Tag name to enter streaming mode for. */
+  enterTag?: string;
+  /** Whether to exit streaming mode. */
+  exitTag?: boolean;
 };
-
-type BufferState = { text: string; insertAt: number };
-
-const DEFAULT_RATE = 100;
-const CURSOR_LINGER = 2_000;
 
 /**
  * Scans the buffer and returns the number of characters that can be flushed.
  * Returns 0 if the head of the buffer is inside an incomplete structure
  * (XML element, markdown link, or image) that should be flushed atomically.
  * Returns > 1 when a complete structure is at the head and should be emitted in one batch.
+ *
+ * When `activeStreamTag` is set, we're inside a streaming tag: inner content drips
+ * one character at a time, and the closing tag is flushed atomically.
  */
-const flushable = (buffer: string): number => {
+const flushable = (buffer: string, streamingTags: Set<string>, activeStreamTag: string | null): FlushResult => {
   if (buffer.length === 0) {
-    return 0;
+    return { count: 0 };
+  }
+
+  // Inside a streaming tag: drip content, flush closing tag atomically.
+  if (activeStreamTag) {
+    const closeTag = `</${activeStreamTag}>`;
+    if (buffer.startsWith(closeTag)) {
+      return { count: closeTag.length, exitTag: true };
+    }
+    // Nested XML element — buffer atomically.
+    if (buffer[0] === '<') {
+      return { count: xmlElementLength(buffer) };
+    }
+    // Drip inner content one character at a time.
+    return { count: 1 };
   }
 
   const ch = buffer[0];
 
-  // XML element: buffer the entire element including content and closing tag.
+  // XML element.
   if (ch === '<') {
-    return xmlElementLength(buffer);
+    // Check if this is a streaming tag's opening tag.
+    const nameMatch = buffer.match(OPENING_TAG_NAME);
+    if (nameMatch && streamingTags.has(nameMatch[1])) {
+      const close = buffer.indexOf('>');
+      if (close === -1) {
+        return { count: 0 }; // Opening tag incomplete.
+      }
+      // Self-closing streaming tag — flush atomically, no streaming mode.
+      if (buffer[close - 1] === '/') {
+        return { count: close + 1 };
+      }
+      // Flush opening tag and enter streaming mode.
+      return { count: close + 1, enterTag: nameMatch[1] };
+    }
+    // Non-streaming XML: buffer the entire element.
+    return { count: xmlElementLength(buffer) };
   }
 
   // Image: ![alt](url) — starts with '!'.
   if (ch === '!' && buffer.length > 1 && buffer[1] === '[') {
-    return linkLength(buffer, 1);
+    return { count: linkLength(buffer, 1) };
   }
 
   // Link: [text](url).
   if (ch === '[') {
-    return linkLength(buffer, 0);
+    return { count: linkLength(buffer, 0) };
   }
 
-  return 1;
+  return { count: 1 };
 };
 
 /**
- * Returns the length of a complete XML element at the start of the buffer,
- * or 0 if the element is incomplete.
+ * Returns the length of a complete XML element at the start of the buffer, or 0 if the element is incomplete.
  * Handles self-closing tags, closing tags, and opening tags with nested content.
  * E.g., `<foo>content<bar />more</foo>` returns the full length.
  */
-const xmlElementLength = (buffer: string): number => {
+export const xmlElementLength = (buffer: string): number => {
   const close = buffer.indexOf('>');
   if (close === -1) {
     return 0; // Tag not closed yet.
@@ -84,7 +120,7 @@ const xmlElementLength = (buffer: string): number => {
   }
 
   // Opening tag: extract the tag name and find its matching closing tag.
-  const nameMatch = buffer.match(/^<(\w+)/);
+  const nameMatch = buffer.match(OPENING_TAG_NAME);
   if (!nameMatch) {
     // Not a valid tag (e.g., `< ` or `<123`); emit one character.
     return 1;
@@ -94,7 +130,7 @@ const xmlElementLength = (buffer: string): number => {
   let depth = 0;
 
   // Walk through all tags in the buffer tracking nesting depth.
-  const tagPattern = new RegExp(`<(/?)${tagName}(\\s[^>]*)?>`, 'g');
+  const tagPattern = new RegExp(`<(/?)${escapeRegExpSource(tagName)}(\\s[^>]*)?>`, 'g');
   let match: RegExpExecArray | null;
   while ((match = tagPattern.exec(buffer)) !== null) {
     const isSelfClosing = match[0].endsWith('/>');
@@ -147,6 +183,20 @@ const linkLength = (buffer: string, offset: number): number => {
   return parenClose + 1;
 };
 
+type BufferState = { text: string; insertAt: number };
+
+const DEFAULT_RATE = 200;
+const CURSOR_LINGER = 3_000;
+
+export type WireOptions = {
+  /** Characters per second. */
+  rate?: number;
+  /** Show a blinking cursor at the insertion point while streaming. */
+  cursor?: boolean;
+  /** Tag names whose inner content should be streamed (not buffered until close). */
+  streamingTags?: Set<string>;
+};
+
 /**
  * Extension that intercepts appended text and inserts it one character at a time,
  * except for XML tags, links, and images which are flushed atomically.
@@ -154,6 +204,7 @@ const linkLength = (buffer: string, offset: number): number => {
 export const wire = (options: WireOptions = {}): Extension => {
   const rate = options.rate ?? DEFAULT_RATE;
   const interval = 1_000 / rate;
+  const streamingTags = options.streamingTags ?? new Set<string>();
 
   // Effect to suppress a transaction from being applied (replaced by buffered insert).
   const suppressAppend = StateEffect.define<{ from: number; text: string }>();
@@ -245,6 +296,7 @@ export const wire = (options: WireOptions = {}): Extension => {
   const drainPlugin = ViewPlugin.fromClass(
     class {
       #timer: ReturnType<typeof setInterval> | undefined;
+      #activeStreamTag: string | null = null;
 
       constructor(private view: EditorView) {
         this.#start();
@@ -252,6 +304,10 @@ export const wire = (options: WireOptions = {}): Extension => {
 
       update(update: ViewUpdate) {
         const buffer = update.state.field(bufferField);
+        // Reset streaming state when buffer is cleared (e.g., document reset).
+        if (buffer.text.length === 0) {
+          this.#activeStreamTag = null;
+        }
         if (buffer.text.length > 0 && this.#timer === undefined) {
           this.#start();
         }
@@ -266,13 +322,20 @@ export const wire = (options: WireOptions = {}): Extension => {
             return;
           }
 
-          const count = flushable(text);
-          if (count === 0) {
+          const result = flushable(text, streamingTags, this.#activeStreamTag);
+          if (result.count === 0) {
             // Structure incomplete — wait for more data.
             return;
           }
 
-          const chunk = text.slice(0, count);
+          if (result.enterTag) {
+            this.#activeStreamTag = result.enterTag;
+          }
+          if (result.exitTag) {
+            this.#activeStreamTag = null;
+          }
+
+          const chunk = text.slice(0, result.count);
           this.view.dispatch({
             changes: { from: insertAt, insert: chunk },
             effects: insertChunk.of({ from: insertAt, text: chunk }),
@@ -300,16 +363,31 @@ export const wire = (options: WireOptions = {}): Extension => {
 const wireCursor = (bufferField: StateField<BufferState>): Extension => {
   const hideCursor = StateEffect.define();
 
-  const visibilityField = StateField.define<{ visible: boolean; insertAt: number }>({
-    create: () => ({ visible: false, insertAt: 0 }),
+  const visibilityField = StateField.define<{
+    visible: boolean;
+    insertAt: number;
+    /** Position after the last non-whitespace character was inserted. */
+    lastNonWsAt: number;
+  }>({
+    create: () => ({ visible: false, insertAt: 0, lastNonWsAt: 0 }),
     update: (value, tr) => {
       const { text, insertAt } = tr.state.field(bufferField);
       if (text.length > 0) {
-        return { visible: true, insertAt };
+        // Track the last position where a non-whitespace character was inserted.
+        let lastNonWsAt = tr.changes.mapPos(Math.min(value.lastNonWsAt, tr.startState.doc.length));
+        if (tr.docChanged) {
+          tr.changes.iterChanges((_fromA, _toA, _fromB, _toB, inserted) => {
+            const chunk = inserted.sliceString(0);
+            if (chunk.trim().length > 0) {
+              lastNonWsAt = _fromB + chunk.length;
+            }
+          });
+        }
+        return { visible: true, insertAt, lastNonWsAt };
       }
       for (const effect of tr.effects) {
         if (effect.is(hideCursor)) {
-          return { visible: false, insertAt: value.insertAt };
+          return { ...value, visible: false };
         }
       }
       return value;
@@ -319,12 +397,16 @@ const wireCursor = (bufferField: StateField<BufferState>): Extension => {
   const decorationField = StateField.define<DecorationSet>({
     create: () => Decoration.none,
     update: (_decorations, tr) => {
-      const { visible, insertAt } = tr.state.field(visibilityField);
+      const { visible, insertAt, lastNonWsAt } = tr.state.field(visibilityField);
       if (!visible) {
         return Decoration.none;
       }
 
-      const pos = Math.min(insertAt, tr.state.doc.length);
+      const { text } = tr.state.field(bufferField);
+      // While draining, show cursor at the insertion point.
+      // When lingering (buffer empty), show at last non-whitespace position.
+      const cursorAt = text.length > 0 ? insertAt : lastNonWsAt;
+      const pos = Math.min(cursorAt, tr.state.doc.length);
       return Decoration.set([
         Decoration.widget({
           widget: new CursorWidget(),
@@ -365,9 +447,13 @@ const wireCursor = (bufferField: StateField<BufferState>): Extension => {
   return [visibilityField, decorationField, timerPlugin];
 };
 
+/**
+ * U+2217 Asterisk
+ * U+25CF Ballot Box
+ */
 class CursorWidget extends WidgetType {
   toDOM() {
-    const inner = Domino.of('span').text('\u25CF').style({ animation: 'blink 1s infinite', animationDelay: '500ms' });
-    return Domino.of('span').style({ opacity: '0.8' }).children(inner).root;
+    const inner = Domino.of('span').text('\u2217').style({ animation: 'blink 1s infinite', animationDelay: '250ms' });
+    return Domino.of('span').style({ opacity: '0.8' }).append(inner).root;
   }
 }
