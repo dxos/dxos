@@ -9,15 +9,15 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
+import { BlueprintDefinition, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from './translations';
 import { CreateKanbanSchema, Kanban } from '#types';
 
-import { BlueprintDefinition, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
+import { translations } from './translations';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

@@ -12,6 +12,7 @@ import { type AccessToken } from '@dxos/types';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
+
 import { type Template } from '../../templates';
 
 // TODO(ZaymonFC):

@@ -11,7 +11,6 @@ import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
 import { IdentityServiceImpl } from './identity-service';
 
 describe('IdentityService', () => {

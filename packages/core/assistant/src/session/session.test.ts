@@ -15,7 +15,6 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing';
-
 import { AiSession } from './session';
 
 // Define a calendar event artifact schema.

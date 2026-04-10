@@ -3,6 +3,11 @@
 //
 
 import { Registry } from '@effect-atom/atom';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
@@ -15,8 +20,10 @@ import {
   type ToolResolverService,
 } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, DXN, Feed, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
+import type { TestContextService } from '@dxos/effect/testing';
 import {
   CredentialsService,
   FunctionInvocationService,
@@ -35,19 +42,11 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-
-import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
+
+import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
 import { ToolExecutionServices } from '../functions';
 import { AgentService } from '../service';
-
-import type { TestContextService } from '@dxos/effect/testing';
-import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
-import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
-import * as Array from 'effect/Array';
 import { CompleteBlock } from '../tracing';
 
 interface TestLayerOptions {
@@ -85,6 +84,7 @@ export type AssistantTestServices =
   | Blueprint.RegistryService
   | OperationRegistry.Service
   | GenericToolkit.GenericToolkitProvider
+  | Operation.Service
   // Core
   | ProcessManager.ProcessManagerService
   | Process.ProcessMonitorService
@@ -121,6 +121,7 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),

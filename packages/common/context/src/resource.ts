@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@hazae41/symbol-dispose-polyfill';
+
 import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
-
-import '@hazae41/symbol-dispose-polyfill';
 
 export enum LifecycleState {
   CLOSED = 'CLOSED',

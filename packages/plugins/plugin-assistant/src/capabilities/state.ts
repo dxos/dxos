@@ -6,8 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { createKvsStore } from '@dxos/effect';
 import { type Obj } from '@dxos/echo';
+import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';

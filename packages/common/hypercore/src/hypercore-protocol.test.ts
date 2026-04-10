@@ -9,7 +9,7 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { HypercoreFactory } from './hypercore-factory';
 
@@ -212,7 +212,7 @@ describe('ProtocolStream', () => {
     });
 
     Array.from(Array(numBlocks)).forEach((_, i) => {
-      const [core1] = faker.helpers.arrayElement(feeds);
+      const [core1] = random.helpers.arrayElement(feeds);
       core1.append(`block-${i}`, () => {});
     });
 

@@ -3,9 +3,7 @@
 //
 
 import 'reveal.js/dist/reveal.css';
-
 import 'reveal.js/dist/theme/black.css';
-
 // https://github.com/highlightjs/highlight.js/tree/main/src/styles
 // import 'highlight.js/styles/github-dark.css';
 import 'highlight.js/styles/tokyo-night-dark.css';

@@ -137,7 +137,7 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
     return {
       dom: Domino.of('div')
         .classNames('xs:max-w-80 max-w-lg p-1 bg-base-surface rounded-sm border border-separator')
-        .children(...children).root,
+        .append(...children).root,
     };
   };
 };

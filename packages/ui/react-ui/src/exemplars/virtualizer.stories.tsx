@@ -6,11 +6,11 @@ import { type Meta } from '@storybook/react-vite';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-faker.seed(999);
+random.seed(999);
 
 type TestItem = {
   name: string;
@@ -37,7 +37,7 @@ export const Default = {
     const items = useMemo<TestItem[]>(
       () =>
         Array.from({ length: NUM_ITEMS }, () => ({
-          name: faker.lorem.paragraph(),
+          name: random.lorem.paragraph(),
         })),
       [],
     );

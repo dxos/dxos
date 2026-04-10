@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { Chess } from '#types';

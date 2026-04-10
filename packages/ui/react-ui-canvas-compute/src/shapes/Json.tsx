@@ -11,7 +11,6 @@ import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { useComputeNodeState } from '../hooks';
-
 import { Box, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 

@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

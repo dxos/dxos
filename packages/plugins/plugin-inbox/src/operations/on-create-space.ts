@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/operation';
 
 import { Calendar, Mailbox } from '../types';
-
 import { OnCreateSpace } from './definitions';
 
 const handler: Operation.WithHandler<typeof OnCreateSpace> = OnCreateSpace.pipe(

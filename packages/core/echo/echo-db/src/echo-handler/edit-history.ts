@@ -5,13 +5,12 @@
 import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
 
 import type { Obj } from '@dxos/echo';
-import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { ObjectStructure } from '@dxos/echo-protocol';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
 import { ObjectCore } from '../core-db';
-
 import { getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
 

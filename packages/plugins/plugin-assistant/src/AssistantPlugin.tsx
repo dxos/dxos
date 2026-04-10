@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
@@ -16,15 +17,9 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
-
-import { meta } from '#meta';
-import { translations } from './translations';
-import { AssistantEvents } from '#types';
-import { AssistantOperation } from '#operations';
-import * as Option from 'effect/Option';
 
 import {
   AiService,
@@ -41,6 +36,11 @@ import {
   Settings,
   Toolkit,
 } from '#capabilities';
+import { meta } from '#meta';
+import { AssistantOperation } from '#operations';
+import { AssistantEvents } from '#types';
+
+import { translations } from './translations';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

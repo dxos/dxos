@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -19,7 +19,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { IdentityListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { translations } from '../translations';
-
 import { SpaceListItem } from './SpaceListItem';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
@@ -71,7 +70,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
             icon='ph--plus-circle--regular'
             label='Create Space'
             iconOnly
-            onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
+            onClick={() => client.spaces.create({ name: random.commerce.productName() })}
             data-testid='invitations.create-space'
           />
           {/* </Tooltip>
@@ -141,7 +140,7 @@ const Invitations = () => {
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
+        onClick={() => client.halo.createIdentity({ displayName: random.person.firstName() })}
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />

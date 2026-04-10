@@ -12,18 +12,18 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { translations } from '../../translations';
 import { Board } from '#types';
 
+import { translations } from '../../translations';
 import { BoardContainer } from './BoardContainer';
 
-faker.seed(0);
+random.seed(0);
 
 const createBoard = () =>
   Obj.make(Board.Board, {
@@ -37,12 +37,12 @@ const createBoard = () =>
 
 const createOrg = () =>
   Obj.make(Organization.Organization, {
-    name: faker.commerce.productName(),
-    description: faker.lorem.paragraph(),
-    image: faker.image.url(),
-    website: faker.internet.url(),
+    name: random.commerce.productName(),
+    description: random.lorem.paragraph(),
+    image: random.image.url(),
+    website: random.internet.url(),
     // TODO(burdon): Fix.
-    // status: faker.helpers.arrayElement(Organization.StatusOptions).id,
+    // status: random.helpers.arrayElement(Organization.StatusOptions).id,
   });
 
 const DefaultStory = () => {

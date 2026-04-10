@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Database, Feed, Query } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import {
   CredentialsService,
   FunctionError,
@@ -22,7 +23,6 @@ import {
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
-import { runAndForwardErrors } from '@dxos/effect';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,

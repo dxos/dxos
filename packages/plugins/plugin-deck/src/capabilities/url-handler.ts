@@ -20,10 +20,11 @@ import { Operation } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
-import { shouldDeferNavigationHandlers } from './check-app-scheme';
-import { updateActiveDeck } from '../operations/helpers';
 import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
+
+import { updateActiveDeck } from '../operations/helpers';
 import { deserializePlanks, serializePlanks, stripPlanks } from '../util';
+import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Dispatch all NavigationHandler contributions with a given URL. */
 const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {

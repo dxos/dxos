@@ -4,8 +4,8 @@
 
 import { useMemo } from 'react';
 
-import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { type Node } from '@dxos/plugin-graph';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 
 /**
  * Resolves which companion to show based on variant preference.

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -26,7 +26,6 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
-
 import { type MosaicDraggingState, useMosaicRootContext } from './Root';
 import {
   type LocationType,

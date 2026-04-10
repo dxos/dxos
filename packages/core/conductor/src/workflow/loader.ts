@@ -21,7 +21,6 @@ import {
   type Executable,
   synchronizedComputeFunction,
 } from '../types';
-
 import { Workflow } from './workflow';
 
 export type WorkflowLoaderProps = {

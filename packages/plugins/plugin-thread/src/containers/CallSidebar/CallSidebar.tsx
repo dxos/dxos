@@ -8,6 +8,7 @@ import React from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 
 import { ThreadCapabilities } from '#types';
+
 import ChannelContainer from '../ChannelContainer';
 
 export const CallSidebar = () => {

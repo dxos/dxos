@@ -9,8 +9,8 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { QuerySandbox } from '@dxos/echo-query';
 import { createObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 

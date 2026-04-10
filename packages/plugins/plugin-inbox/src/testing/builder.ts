@@ -6,7 +6,7 @@ import { addDays, addMinutes, roundToNearestMinutes, startOfDay, subDays } from 
 
 import { Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { Actor, Event, Message, Person } from '@dxos/types';
 
@@ -113,7 +113,7 @@ export class Builder {
    */
   private _nextEventTime(): Date {
     const randomDay = this._randomTimeInRange(this._eventRange);
-    const randomMinutes = faker.number.int({ min: WORK_START_MINUTES, max: WORK_END_MINUTES });
+    const randomMinutes = random.number.int({ min: WORK_START_MINUTES, max: WORK_END_MINUTES });
     return roundToNearestMinutes(addMinutes(startOfDay(randomDay), randomMinutes), { nearestTo: 15 });
   }
 
@@ -126,15 +126,15 @@ export class Builder {
   private _makeActor(person?: Person.Person): Actor.Actor {
     return {
       identityDid: IdentityDid.random(),
-      email: faker.internet.email(),
-      name: person?.fullName ?? faker.person.fullName(),
+      email: random.internet.email(),
+      name: person?.fullName ?? random.person.fullName(),
     };
   }
 
   /** Returns a random actor from the pool (70% weight) or creates a fresh one. */
   private _randomActor(): Actor.Actor {
     return this._actors.length > 0 && Math.random() > 0.3
-      ? faker.helpers.arrayElement(this._actors)
+      ? random.helpers.arrayElement(this._actors)
       : this._makeActor();
   }
 
@@ -146,7 +146,7 @@ export class Builder {
    * Creates a single Person and adds them to the internal actor pool.
    */
   createPerson(): this {
-    const person = Person.make({ fullName: faker.person.fullName() });
+    const person = Person.make({ fullName: random.person.fullName() });
     this._persons.push(person);
     this._actors.push(this._makeActor(person));
     return this;
@@ -171,16 +171,16 @@ export class Builder {
    */
   createEvent(): this {
     const startDate = this._nextEventTime();
-    const durationMinutes = faker.number.int({ min: 1, max: 8 }) * 15;
+    const durationMinutes = random.number.int({ min: 1, max: 8 }) * 15;
     const endDate = addMinutes(startDate, durationMinutes);
 
     const owner = this._randomActor();
-    const attendeeCount = faker.number.int({ min: 1, max: 4 });
+    const attendeeCount = random.number.int({ min: 1, max: 4 });
     const attendees = [owner, ...Array.from({ length: attendeeCount }, () => this._randomActor())];
 
     this._events.push(
       Event.make({
-        title: faker.lorem.sentence(faker.number.int({ min: 3, max: 8 })),
+        title: random.lorem.sentence(random.number.int({ min: 3, max: 8 })),
         owner,
         attendees,
         startDate: startDate.toISOString(),
@@ -210,9 +210,9 @@ export class Builder {
    */
   createMessage(): this {
     const created = this._nextMessageTime();
-    const paragraphCount = faker.number.int({ min: 1, max: 4 });
-    const text = faker.helpers
-      .multiple(() => faker.lorem.paragraph(faker.number.int({ min: 1, max: 3 })), { count: paragraphCount })
+    const paragraphCount = random.number.int({ min: 1, max: 4 });
+    const text = random.helpers
+      .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphCount })
       .join('\n\n');
 
     this._messages.push(
@@ -222,9 +222,9 @@ export class Builder {
         blocks: [{ _tag: 'text', text }],
         properties: {
           subject:
-            faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
+            random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),
-          labels: faker.helpers.randomSubset(Object.keys(LABELS), {
+          labels: random.helpers.randomSubset(Object.keys(LABELS), {
             min: 0,
             max: Math.min(3, Object.keys(LABELS).length),
           }),
@@ -257,8 +257,8 @@ export class Builder {
   createLinkedMessage(space: Space, { paragraphs = 3, links = 5 }: LinkedMessageOptions = {}): this {
     const created = this._nextMessageTime();
 
-    let text = faker.helpers
-      .multiple(() => faker.lorem.paragraph(faker.number.int({ min: 1, max: 3 })), { count: paragraphs })
+    let text = random.helpers
+      .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphs })
       .join('\n\n');
 
     let enrichedText = text;
@@ -267,7 +267,7 @@ export class Builder {
     if (links > 0) {
       const linkCount = Math.floor(Math.random() * links) + 1;
       for (let index = 0; index < linkCount; index++) {
-        const fullName = faker.person.fullName();
+        const fullName = random.person.fullName();
         const obj = space.db.add(Person.make({ fullName }));
         const dxn = Ref.make(obj).dxn.toString();
         const position = Math.floor(Math.random() * words.length);
@@ -290,9 +290,9 @@ export class Builder {
         ],
         properties: {
           subject:
-            faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
+            random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),
-          labels: faker.helpers.randomSubset(Object.keys(LABELS), {
+          labels: random.helpers.randomSubset(Object.keys(LABELS), {
             min: 0,
             max: Math.min(3, Object.keys(LABELS).length),
           }),

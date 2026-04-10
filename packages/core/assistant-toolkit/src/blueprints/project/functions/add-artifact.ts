@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { AddArtifact } from './definitions';
 import { Project } from '../../../types';
+import { AddArtifact } from './definitions';
 
 export default AddArtifact.pipe(
   Operation.withHandler(

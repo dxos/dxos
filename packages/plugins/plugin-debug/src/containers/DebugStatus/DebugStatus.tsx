@@ -4,8 +4,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { TimeoutError } from '@dxos/async';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { TimeoutError } from '@dxos/async';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';

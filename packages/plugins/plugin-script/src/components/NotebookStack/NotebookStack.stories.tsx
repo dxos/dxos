@@ -14,8 +14,8 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { createNotebook } from '#testing';
-import { translations } from '../../translations';
 
+import { translations } from '../../translations';
 import { NotebookStack } from './NotebookStack';
 
 const NotebookStackStory = () => {

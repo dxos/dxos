@@ -20,8 +20,8 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
-import { ExemplarItem } from '#types';
 import { ExemplarOperation } from '#operations';
+import { ExemplarItem } from '#types';
 
 // Custom matcher for Space nodes. Extracts the Space object from the node
 // so downstream connector/actions receive it as a typed value.

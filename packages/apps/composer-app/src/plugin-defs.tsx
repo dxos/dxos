@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
@@ -18,8 +19,6 @@ import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
-import { SpecPlugin } from '@dxos/plugin-spec';
-import { ExemplarPlugin } from '@dxos/plugin-exemplar';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
@@ -49,9 +48,10 @@ import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
-import { SpacetimePlugin } from '@dxos/plugin-spacetime';
-import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { SpacetimePlugin } from '@dxos/plugin-spacetime';
+import { SpecPlugin } from '@dxos/plugin-spec';
+import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -63,7 +63,6 @@ import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
-import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
@@ -139,7 +138,6 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Dev
     isDev && DebugPlugin.meta.id,
-    isDev && ExemplarPlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
@@ -196,8 +194,6 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
-    SpecPlugin(),
-    ExemplarPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
@@ -221,10 +217,10 @@ export const getPlugins = ({
       observability: () => observability,
     }),
     OutlinerPlugin(),
+    PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    PipelinePlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
@@ -237,9 +233,9 @@ export const getPlugins = ({
       observability: true,
       shareableLinkOrigin: origin,
     }),
+    SpecPlugin(),
     StackPlugin(),
     StatusBarPlugin(),
-
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',

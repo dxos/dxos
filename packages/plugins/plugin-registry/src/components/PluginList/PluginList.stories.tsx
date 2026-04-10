@@ -6,17 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { translations } from '../../translations';
 import { RegistryTagType } from '#types';
 
+import { translations } from '../../translations';
 import { PluginList } from './PluginList';
 
-faker.seed(1);
+random.seed(1);
 
 const icons = [
   'ph--bug--regular',
@@ -29,17 +29,17 @@ const icons = [
 
 const DefaultStory = () => {
   const [plugins] = useState<Plugin.Plugin[]>(
-    faker.helpers.multiple(
+    random.helpers.multiple(
       () =>
         PluginNS.define({
-          id: `org.dxos.plugin.plugin-${faker.string.uuid()}`,
-          name: `${faker.commerce.productName()}`,
-          description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
-          tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
-          icon: faker.helpers.arrayElement(icons),
-          iconHue: getHashHue(faker.string.uuid()),
-          homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
-          source: faker.internet.url(),
+          id: `org.dxos.plugin.plugin-${random.string.uuid()}`,
+          name: `${random.commerce.productName()}`,
+          description: random.lorem.sentences(Math.ceil(Math.random() * 3)),
+          tags: random.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
+          icon: random.helpers.arrayElement(icons),
+          iconHue: getHashHue(random.string.uuid()),
+          homePage: random.datatype.boolean({ probability: 0.5 }) ? random.internet.url() : undefined,
+          source: random.internet.url(),
         }).pipe(PluginNS.make)(),
       { count: 32 },
     ),

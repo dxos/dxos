@@ -12,7 +12,6 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { defaultTx } from '@dxos/ui-theme';
 
 import { translationKey, translations } from '../../translations';
-
 import { Shell } from './Shell';
 import { ShellRuntimeImpl } from './shell-runtime';
 

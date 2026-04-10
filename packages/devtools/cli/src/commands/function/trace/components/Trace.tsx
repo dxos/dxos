@@ -8,7 +8,6 @@ import { createEffect, createSignal, onCleanup } from 'solid-js';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { type Queue, type QueueAPI } from '@dxos/echo-db';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import {
   InvocationOutcome,
   type InvocationSpan,
@@ -18,6 +17,7 @@ import {
   createInvocationSpans,
 } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';

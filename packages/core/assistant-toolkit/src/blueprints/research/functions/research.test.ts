@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { inspect } from 'node:util';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AgentService } from '@dxos/assistant';
@@ -21,11 +20,10 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, Organization } from '@dxos/types';
 
+import { MarkdownHandlers } from '../../markdown';
 import ResearchBlueprint from '../blueprint';
 import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
-import { MarkdownHandlers } from '../../markdown';
-
 import { default as research } from './research';
 
 ObjectId.dangerouslyDisableRandomness();

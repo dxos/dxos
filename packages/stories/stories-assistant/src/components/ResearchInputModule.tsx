@@ -9,7 +9,6 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
-
 import { type ComponentProps } from './types';
 
 export const ResearchInputModule = ({ space }: ComponentProps) => {

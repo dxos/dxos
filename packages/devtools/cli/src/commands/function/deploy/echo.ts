@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import path from 'node:path';
-
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { Filter, type Space } from '@dxos/client/echo';

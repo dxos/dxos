@@ -11,7 +11,7 @@ import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/ui-editor'
 /**
  * Update document.
  */
-export type TextModel = Pick<MarkdownStreamController, 'view' | 'reset' | 'append' | 'updateWidget'>;
+export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' | 'append' | 'updateWidget'>;
 
 /**
  * Thread context passed to renderer.
@@ -50,10 +50,10 @@ export class MessageSyncer {
   private readonly _context: MessageThreadContext;
 
   constructor(
-    private readonly _model: TextModel,
-    private readonly _blockRenderer: BlockRenderer,
+    private readonly _document: TextModel,
+    private readonly _renderer: BlockRenderer,
   ) {
-    this._context = new MessageThreadContext(this._model);
+    this._context = new MessageThreadContext(this._document);
   }
 
   get context() {
@@ -66,7 +66,7 @@ export class MessageSyncer {
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
-    void this._model.reset('');
+    void this._document.setContent('');
   }
 
   /**
@@ -85,35 +85,23 @@ export class MessageSyncer {
       this._initialMessageId = messages[0]?.id;
     }
 
-    if (flush && this._model.view?.state.doc.length === 0) {
+    if (this._document.length === 0 && flush) {
       const buffer: string[] = [];
-      this.process(messages, (content) => {
-        buffer.push(content);
-      });
-
+      this.processBlocks(messages, (content) => buffer.push(content));
       const content = buffer.join('');
-      this._model.view?.dispatch({
-        changes: [
-          {
-            from: 0,
-            to: this._model.view?.state.doc.length ?? 0,
-            insert: content,
-          },
-        ],
-        selection: { anchor: content.length },
-      });
+      void this._document.setContent(content);
 
       return true;
     } else {
-      this.process(messages, (content) => {
-        void this._model.append(content);
+      this.processBlocks(messages, (content) => {
+        void this._document.append(content);
       });
 
       return false;
     }
   }
 
-  private process(messages: Message.Message[], append: (content: string) => void) {
+  private processBlocks(messages: Message.Message[], append: (content: string) => void) {
     // console.log('sync', {
     //   doc: this._model.view?.state.doc.length,
     //   messages: messages.map((message) => message.blocks.length),
@@ -132,7 +120,7 @@ export class MessageSyncer {
       let j = this._currentBlockIndex;
       for (const block of message.blocks.slice(this._currentBlockIndex)) {
         this._currentBlockIndex = j;
-        const currentBlockContent = this._blockRenderer(this._context, message, block);
+        const currentBlockContent = this._renderer(this._context, message, block);
         if (currentBlockContent) {
           let content: string = '';
           if (this._currentBlockContent && currentBlockContent.startsWith(this._currentBlockContent)) {

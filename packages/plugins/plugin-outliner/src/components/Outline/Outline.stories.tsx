@@ -10,9 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../translations';
 import { Outline } from '#types';
 
+import { translations } from '../../translations';
 import { Outline as OutlineComponent } from './Outline';
 
 const OutlineStory = () => {

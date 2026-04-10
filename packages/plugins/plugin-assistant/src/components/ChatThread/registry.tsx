@@ -5,21 +5,19 @@
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { TogglePanel } from '@dxos/react-ui-components';
+import { SummaryWidget, TogglePanel } from '@dxos/react-ui-components';
 import {
   PromptWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
-  SummaryWidget,
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { ToolBlock } from '../ToolBlock';
-
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 
 const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
@@ -59,9 +57,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   reasoning: {
     block: true,
-    factory: ({ children }) => {
+    streaming: true,
+    factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text) : null;
+      return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
   reference: {
@@ -113,6 +112,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   summary: {
     block: true,
+    streaming: true,
     Component: Summary,
   },
 

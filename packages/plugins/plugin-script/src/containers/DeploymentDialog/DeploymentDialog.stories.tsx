@@ -14,7 +14,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { DeploymentDialog } from './DeploymentDialog';
 
 const DeploymentDialogStory = () => {

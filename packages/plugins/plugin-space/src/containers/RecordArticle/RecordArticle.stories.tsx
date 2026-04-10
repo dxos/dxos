@@ -12,17 +12,16 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { RecordArticle } from './RecordArticle';
 
-faker.seed(0);
+random.seed(0);
 
 const PERSON_COUNT = 100;
 
@@ -57,7 +56,7 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
 
-              const factory = createObjectFactory(space.db, faker as any);
+              const factory = createObjectFactory(space.db, random as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 1 },

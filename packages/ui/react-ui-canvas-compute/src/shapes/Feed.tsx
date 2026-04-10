@@ -11,7 +11,6 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks';
-
 import { createFunctionAnchors } from './common';
 import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';

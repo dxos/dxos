@@ -11,15 +11,15 @@ import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { YouTubeBlueprint } from '#blueprints';
+import { AppGraphBuilder, BlueprintDefinition, Migrations, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from './translations';
 import { Channel, Video } from '#types';
 
-import { AppGraphBuilder, BlueprintDefinition, Migrations, ReactSurface } from '#capabilities';
+import { translations } from './translations';
 
 export const YouTubePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

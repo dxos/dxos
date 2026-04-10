@@ -14,6 +14,7 @@ import { Panel } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { ComposeEmailPanel } from '#components';
+
 import { GmailFunctions } from '../../operations/google/gmail';
 
 export type DraftMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;

@@ -5,14 +5,13 @@
 import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Task } from '@dxos/types';
 
 import { createTree } from '../testing';
-
 import { type Tree } from './tree';
 
-faker.seed(0);
+random.seed(0);
 
 const print = (tree: Tree) => {
   let count = 0;

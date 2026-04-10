@@ -25,7 +25,6 @@ import { type ProjectionModel } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
-
 import {
   ArrayField,
   BooleanField,

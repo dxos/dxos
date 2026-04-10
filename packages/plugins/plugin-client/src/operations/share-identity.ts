@@ -8,9 +8,8 @@ import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
-import { ShareIdentity } from './definitions';
-
 import { Account } from '../types';
+import { ShareIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(
   Operation.withHandler(

@@ -8,6 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
+
 import { Subscription } from '../types';
 
 const FEED_OPERATION = `${meta.id}.operation`;

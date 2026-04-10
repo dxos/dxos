@@ -22,7 +22,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
 import { type MetadataStore } from '../metadata';
-
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';

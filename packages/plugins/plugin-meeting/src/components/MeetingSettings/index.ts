@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MeetingSettings } from './MeetingSettings';
-
-export default MeetingSettings;
+export { MeetingSettings as default } from './MeetingSettings';

@@ -5,7 +5,6 @@
 import { invariant } from '@dxos/invariant';
 
 import { KindId } from '../types';
-
 import { queueOwnerNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils';

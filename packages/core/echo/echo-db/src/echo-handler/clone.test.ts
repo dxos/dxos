@@ -9,7 +9,6 @@ import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
-
 import { clone } from './clone';
 
 describe('clone', () => {

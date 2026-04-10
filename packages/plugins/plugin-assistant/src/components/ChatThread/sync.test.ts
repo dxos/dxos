@@ -20,15 +20,15 @@ import { MessageSyncer, type TextModel } from './sync';
 class TestDocument implements TextModel {
   private readonly _view = new EditorView({ extensions: [] });
 
-  get view() {
-    return this._view;
+  get length() {
+    return this._view.state.doc.length;
   }
 
   get content() {
     return this._view.state.doc.toString();
   }
 
-  async reset(text: string) {
+  async setContent(text: string) {
     this._view.dispatch({
       changes: { from: 0, to: this._view.state.doc.length, insert: text },
     });

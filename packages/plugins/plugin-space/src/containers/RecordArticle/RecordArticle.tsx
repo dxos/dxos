@@ -14,8 +14,8 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { useRelatedObjects } from '#hooks';
+import { meta } from '#meta';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);

@@ -23,7 +23,6 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
-
 import { ExceptionPanel } from './ExceptionPanel';
 import { ExecutionGraphPanel } from './ExecutionGraphPanel';
 import { useFunctionNameResolver, useInvocationSpans } from './hooks';

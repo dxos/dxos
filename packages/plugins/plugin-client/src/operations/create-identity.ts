@@ -9,10 +9,9 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
-import { CreateIdentity } from './definitions';
-
 import { ClientEvents } from '../types';
 import { ClientCapabilities } from '../types';
+import { CreateIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(
   Operation.withHandler(

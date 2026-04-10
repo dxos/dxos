@@ -9,7 +9,6 @@ import { type PublicKey } from '@dxos/keys';
 import { AdmittedFeed, type Chain, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, verifyCredential } from '../credentials';
-
 import { SpaceStateMachine } from './space-state-machine';
 
 describe('SpaceStateMachine', () => {

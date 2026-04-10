@@ -7,7 +7,6 @@ import { type Timer } from 'd3';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
 import { type GlobeController } from '../components';
-
 import { type Vector } from './context';
 
 export type SpinnerOptions = {

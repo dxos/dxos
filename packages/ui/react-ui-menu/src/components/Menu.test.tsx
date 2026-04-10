@@ -9,7 +9,6 @@ import { afterEach, describe, test } from 'vitest';
 
 import { type MenuItem, type MenuItemsAccessor } from '../types';
 import { createMenuAction } from '../util';
-
 import { Menu, useMenu, useMenuItems } from './Menu';
 
 const TEST_CONTRIBUTOR = 'TestContributor';

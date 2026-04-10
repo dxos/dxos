@@ -5,11 +5,11 @@
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
+import { Context } from '@dxos/context';
 import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
-import { Context } from '@dxos/context';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;

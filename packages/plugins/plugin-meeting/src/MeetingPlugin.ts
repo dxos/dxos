@@ -8,10 +8,6 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 
-import { meta } from '#meta';
-import { translations } from './translations';
-import { Meeting, MeetingCapabilities } from '#types';
-
 import {
   AppGraphBuilder,
   CallExtension,
@@ -20,6 +16,10 @@ import {
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
+import { meta } from '#meta';
+import { Meeting, MeetingCapabilities } from '#types';
+
+import { translations } from './translations';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);

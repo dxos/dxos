@@ -5,19 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Accordion } from './Accordion';
 
-faker.seed(1);
+random.seed(1);
 
 type TestItem = { id: string; name: string; text: string };
 
 const items: TestItem[] = Array.from({ length: 10 }, (_, i) => ({
   id: i.toString(),
   name: `Item ${i}`,
-  text: faker.lorem.paragraphs(3),
+  text: random.lorem.paragraphs(3),
 }));
 
 const DefaultStory = () => {

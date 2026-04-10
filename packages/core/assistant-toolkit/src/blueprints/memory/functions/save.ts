@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { SaveMemory } from './definitions';
 import { Memory } from '../../../types/Memory';
+import { SaveMemory } from './definitions';
 
 export default SaveMemory.pipe(
   Operation.withHandler(

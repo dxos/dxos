@@ -22,7 +22,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { type Comment, type Range, type RenderCallback } from '../types';
 import { Cursor, singleValueFacet, wrapWithCatch } from '../util';
-
 import { documentId } from './selection';
 
 //

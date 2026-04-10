@@ -22,7 +22,6 @@ import { Person } from '@dxos/types';
 
 import { DatabaseBlueprint, DatabaseHandlers } from '../database';
 import { MarkdownHandlers } from '../markdown';
-
 import BrowserBlueprint from './blueprint';
 
 ObjectId.dangerouslyDisableRandomness();

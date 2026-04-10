@@ -23,6 +23,10 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
      */
     className: 'mx-auto! w-full pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
   },
+  scroll: {
+    // NOTE: Child widgets must have `max-w-[100cqi]`.
+    className: 'dx-size-container',
+  },
 };
 
 export const compactSlots: ThemeExtensionsOptions['slots'] = {

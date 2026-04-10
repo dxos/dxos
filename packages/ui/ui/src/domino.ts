@@ -25,7 +25,7 @@ export class Domino<T extends HTMLElement | SVGElement> {
     Domino.of('svg', Domino.SVG)
       .classNames('shrink-0 h-[1em] w-[1em]')
       .attributes({ viewBox: '0 0 256 256' })
-      .children(Domino.of('use', Domino.SVG).attributes({ href: Domino.icon(icon) }));
+      .append(Domino.of('use', Domino.SVG).attributes({ href: Domino.icon(icon) }));
 
   /**
    * Create builder from DOM node.
@@ -78,7 +78,7 @@ export class Domino<T extends HTMLElement | SVGElement> {
     return this;
   }
 
-  children<C extends HTMLElement | SVGElement>(...children: Domino<C>[]): this {
+  append<C extends HTMLElement | SVGElement>(...children: Domino<C>[]): this {
     children.forEach((child) => this._el.appendChild(child.root));
     return this;
   }

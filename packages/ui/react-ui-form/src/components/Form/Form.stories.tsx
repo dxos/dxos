@@ -16,7 +16,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
-
 import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({

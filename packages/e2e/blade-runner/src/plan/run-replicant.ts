@@ -7,7 +7,6 @@ import { isNode } from '@dxos/util';
 
 import { ReplicantEnvImpl, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS } from '../redis';
-
 import { type RunProps } from './run-process';
 import { type ReplicantProps } from './spec';
 

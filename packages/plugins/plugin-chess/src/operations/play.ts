@@ -9,7 +9,6 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { type Chess } from '../types';
-
 import { Play } from './definitions';
 
 const handler: Operation.WithHandler<typeof Play> = Play.pipe(

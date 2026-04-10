@@ -12,8 +12,8 @@ import * as Effect from 'effect/Effect';
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';

@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import * as Console from 'effect/Console';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { inspect } from 'node:util';
 
 function logToString(...args: any[]): string {
   return args

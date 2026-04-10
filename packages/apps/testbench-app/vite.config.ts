@@ -9,13 +9,13 @@ import { fileURLToPath } from 'node:url';
 import sourceMaps from 'rollup-plugin-sourcemaps';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
+import { UserConfig } from 'vitest/config';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { UserConfig } from 'vitest/config';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
-import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 

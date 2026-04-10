@@ -5,34 +5,32 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Graph } from '@dxos/app-graph';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { Graph } from '@dxos/app-graph';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
+import { StackContext } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { Plank } from '../../containers/Plank';
-
-import { meta as pluginMeta } from '#meta';
-import { translations } from '../../translations';
-
-import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
-import { StackContext } from '@dxos/react-ui-stack';
-
 import { DeckState } from '#capabilities';
+import { meta as pluginMeta } from '#meta';
 
-faker.seed(123);
+import { Plank } from '../../containers/Plank';
+import { translations } from '../../translations';
+import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+
+random.seed(123);
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
@@ -123,9 +121,9 @@ type DefaultStoryProps = Pick<MatrixRootProps, 'Tile'>;
 const DefaultStory = ({ Tile }: DefaultStoryProps) => {
   const items = useMemo(
     () => [
-      Organization.make({ name: faker.company.name() }),
-      Person.make({ fullName: faker.person.fullName() }),
-      Text.make({ name: 'Bio', content: faker.lorem.paragraphs(10) }),
+      Organization.make({ name: random.company.name() }),
+      Person.make({ fullName: random.person.fullName() }),
+      Text.make({ name: 'Bio', content: random.lorem.paragraphs(10) }),
       Text.make({ name: 'Companion', content: 'Companion panel for Bio' }),
     ],
     [],

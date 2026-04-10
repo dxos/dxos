@@ -11,10 +11,10 @@ import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
-import { Loading } from '../Loading';
-import { useExpandPath } from '../hooks';
-import { useMobileLayout } from '../MobileLayout';
 
+import { useExpandPath } from '../hooks';
+import { Loading } from '../Loading';
+import { useMobileLayout } from '../MobileLayout';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 

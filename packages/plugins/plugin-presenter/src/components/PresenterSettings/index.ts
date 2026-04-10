@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PresenterSettings } from './PresenterSettings';
-
-export default PresenterSettings;
+export { PresenterSettings as default } from './PresenterSettings';

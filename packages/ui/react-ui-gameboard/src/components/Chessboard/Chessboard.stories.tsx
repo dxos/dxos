@@ -11,7 +11,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
-
 import { ChessModel } from './chess';
 import { Chessboard, type ChessboardProps } from './Chessboard';
 

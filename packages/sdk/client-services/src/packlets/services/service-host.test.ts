@@ -3,7 +3,6 @@
 //
 
 import { rmSync } from 'node:fs';
-
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';

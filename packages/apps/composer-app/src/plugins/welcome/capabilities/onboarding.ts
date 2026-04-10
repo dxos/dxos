@@ -8,7 +8,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { OnboardingManager } from '../onboarding-manager';
-
 import { WelcomeCapabilities } from './capabilities';
 
 export default Capability.makeModule(

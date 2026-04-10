@@ -8,9 +8,10 @@ import { type Key } from '@dxos/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
-import { OAUTH_PRESETS, type OAuthPreset } from '../../defs';
 import { useOAuth } from '#hooks';
 import { meta } from '#meta';
+
+import { OAUTH_PRESETS, type OAuthPreset } from '../../defs';
 
 type NewTokenSelectorProps = {
   spaceId: Key.SpaceId;

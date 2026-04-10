@@ -8,7 +8,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { NativeFilesystemCapabilities } from '../types';
-
 import { CloseDirectory } from './definitions';
 
 export default CloseDirectory.pipe(

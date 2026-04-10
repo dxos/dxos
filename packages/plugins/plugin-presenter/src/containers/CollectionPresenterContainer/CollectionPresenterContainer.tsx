@@ -11,6 +11,7 @@ import { Panel } from '@dxos/react-ui';
 
 import { PageNumber, Pager, Layout as PresenterLayout } from '#components';
 import { PresenterContext } from '#types';
+
 import { useExitPresenter } from '../../useExitPresenter';
 
 export type CollectionPresenterContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;

@@ -7,7 +7,6 @@ import type * as Result from '@effect-atom/atom/Result';
 import { type Accessor, createSignal, onCleanup } from 'solid-js';
 
 import { useRegistry } from '../registry';
-
 import { type SetAtomFn, createSetAtom } from './useAtomSet';
 
 /**

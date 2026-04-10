@@ -8,6 +8,7 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
 import { type ChatEvent } from '../Chat';
 
 export type ChatActionsProps = ThemedClassName<
@@ -15,11 +16,20 @@ export type ChatActionsProps = ThemedClassName<
     microphone?: boolean;
     recording?: boolean;
     processing?: boolean;
+    debug?: boolean;
     onEvent?: (event: ChatEvent) => void;
   }>
 >;
 
-export const ChatActions = ({ classNames, children, microphone, recording, processing, onEvent }: ChatActionsProps) => {
+export const ChatActions = ({
+  classNames,
+  children,
+  microphone,
+  recording,
+  processing,
+  debug,
+  onEvent,
+}: ChatActionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -51,13 +61,15 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
         />
       )}
 
-      <IconButton
-        variant='ghost'
-        icon='ph--wrench--regular'
-        iconOnly
-        label={t('debug.button')}
-        onClick={() => onEvent?.({ type: 'toggle-debug' })}
-      />
+      {debug && (
+        <IconButton
+          variant='ghost'
+          icon='ph--wrench--regular'
+          iconOnly
+          label={t('debug.button')}
+          onClick={() => onEvent?.({ type: 'toggle-debug' })}
+        />
+      )}
     </div>
   );
 };

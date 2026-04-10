@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 type SlideOptions = {
   text?: string;
@@ -26,21 +26,21 @@ export const createSlide = (options: SlideOptions = {}) => {
 
   const list = (length = 3) =>
     Array.from({ length })
-      .map(() => `- ${faker.lorem.sentence(3)}`)
+      .map(() => `- ${random.lorem.sentence(3)}`)
       .join('\n');
 
   const ordered = (length = 3) =>
     Array.from({ length })
-      .map((_, i) => `${i + 1}. ${faker.lorem.sentence(3)}`)
+      .map((_, i) => `${i + 1}. ${random.lorem.sentence(3)}`)
       .join('\n');
 
   return [
-    `# ${num}${faker.lorem.sentence(3)}`,
-    options.text && faker.lorem.sentences(),
+    `# ${num}${random.lorem.sentence(3)}`,
+    options.text && random.lorem.sentences(),
     options.code && code(),
     options.list && list(options.list),
     options.ordered && ordered(options.ordered),
-    faker.lorem.sentences(),
+    random.lorem.sentences(),
   ]
     .filter(Boolean)
     .join('\n\r');

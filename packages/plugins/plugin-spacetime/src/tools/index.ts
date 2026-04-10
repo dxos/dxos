@@ -5,9 +5,9 @@
 // NOTE: tools/ must NOT import from ../components/ (dependency flows: components -> tools).
 // Run `grep -r "from '../../components\|from '../components" src/tools/` to verify.
 
+import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObjectsAction } from './actions';
 import { ToolManager } from './tool-manager';
 import { SelectTool, MoveTool, ExtrudeTool } from './tools';
-import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObjectsAction } from './actions';
 
 export { type EditorState, DEFAULT_EDITOR_STATE } from './editor-state';
 export type { Tool } from './tool';

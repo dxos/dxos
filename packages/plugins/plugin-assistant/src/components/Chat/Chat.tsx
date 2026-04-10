@@ -22,10 +22,11 @@ import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
+import { isTruthy, trim } from '@dxos/util';
 
 import { useChatToolbarActions } from '#hooks';
 import { meta } from '#meta';
+
 import { type AiChatProcessor } from '../../processor';
 import {
   ChatActions,
@@ -36,7 +37,6 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
-
 import { type ChatEvent } from './events';
 
 //
@@ -79,31 +79,44 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
     return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [storedMessages, pending]);
 
+  // Debug.
+  const dump = useCallback(async () => {
+    const objects = processor.context.getObjects();
+    const blueprints = processor.context.getBlueprints();
+    const system = await processor.getSystemPrompt();
+    const tools = await processor.getTools();
+
+    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console
+    console.group('Chat', { objects, blueprints });
+    // eslint-disable-next-line no-console
+    console.log(trim`
+      System Prompt:
+      ${system}
+    `);
+    // eslint-disable-next-line no-console
+    console.log(trim`
+      Tools:
+      ${Object.values(tools)
+        .map((tool) => JSON.stringify(tool, null, 2))
+        .join('\n')}
+    `);
+    console.groupEnd();
+  }, [processor]);
+
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
     return event.on((ev) => {
       switch (ev.type) {
         case 'toggle-debug': {
-          setDebug((debug) => !debug);
-
-          // Dump state to console.
-          queueMicrotask(async () => {
-            const objects = processor.context.getObjects();
-            const blueprints = processor.context.getBlueprints();
-            const tools = await processor.getTools();
-            const system = await processor.getSystemPrompt();
-            // eslint-disable-next-line no-console
-            console.log('Chat processor state:', { objects, blueprints });
-            // eslint-disable-next-line no-console
-            console.log(`
-              ==== System Prompt ====
-              ${system}
-              ==== Tools ====
-              ${Object.values(tools)
-                .map((tool) => JSON.stringify(tool, null, 2))
-                .join('\n')}
-            `);
+          setDebug((debug) => {
+            if (debug) {
+              return false;
+            } else {
+              void dump();
+              return true;
+            }
           });
           break;
         }
@@ -137,7 +150,7 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
 
       onEvent?.(ev);
     });
-  }, [event, processor, streaming, onEvent]);
+  }, [event, dump, processor, streaming, onEvent]);
 
   const db = props.db ?? (chat && Obj.getDatabase(chat));
 

@@ -6,7 +6,6 @@ import { init as initCjsLexer, parse as parseCjs } from 'cjs-module-lexer';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
-
 import { type Plugin } from 'vite';
 
 import { DEFAULT_PACKAGES } from './packages';

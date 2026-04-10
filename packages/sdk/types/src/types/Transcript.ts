@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, type DXN, Obj, Ref, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 /**
  * Root transcript object created when the user starts a transcription.

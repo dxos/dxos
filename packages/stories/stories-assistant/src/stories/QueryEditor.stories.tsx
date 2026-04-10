@@ -8,19 +8,19 @@ import React, { useState } from 'react';
 import { Obj, Tag } from '@dxos/echo';
 import { translations } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { ScrollArea } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
 
-faker.seed(1);
-const generator = faker as any as ValueGenerator;
+random.seed(1);
+const generator = random as any as ValueGenerator;
 
 const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const { space } = useClientStory();
@@ -80,7 +80,7 @@ const meta: Meta<typeof QueryEditor> = {
         ]);
         objects.forEach((obj) => {
           Obj.change(obj, (obj) => {
-            Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+            Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
           });
         });
       },

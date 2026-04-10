@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as Chat from '@effect/ai/Chat';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -19,7 +19,6 @@ import { TestHelpers } from '@dxos/effect/testing';
 import * as AiService from '../../AiService';
 import { AiServiceTestingPreset } from '../test-layers';
 import { TestingToolkit, testingLayer } from '../toolkit';
-
 import * as MemoizedAiService from './MemoizedAiService';
 
 const DateToolkit = Toolkit.make(

@@ -4,10 +4,9 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
+import { type Context as OtelContext, propagation } from '@opentelemetry/api';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-
-import { type Context as OtelContext, propagation } from '@opentelemetry/api';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';

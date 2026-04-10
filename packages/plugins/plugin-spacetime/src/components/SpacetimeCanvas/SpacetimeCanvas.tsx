@@ -8,6 +8,8 @@ import React, { type RefObject, useContext, useEffect, useRef, useState } from '
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
+import { type Scene, Model } from '#types';
+
 import {
   SceneManager,
   createSolidFromObject,
@@ -17,7 +19,6 @@ import {
   manifoldToBabylon,
   rawDataToBabylon,
 } from '../../engine';
-import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import {
   createToolManager,
   ToolManager,
@@ -26,7 +27,7 @@ import {
   DEFAULT_EDITOR_STATE,
   getSelectedObjectIds,
 } from '../../tools';
-import { type Scene, Model } from '#types';
+import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;

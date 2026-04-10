@@ -12,7 +12,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge';
-
 import { DocumentsSynchronizer } from './documents-synchronizer';
 
 describe('DocumentsSynchronizer', () => {

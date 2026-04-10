@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
@@ -16,7 +17,6 @@ import { Unit, type UnitFormat } from '@dxos/util';
 
 import { createClientSaveTracker, getIcon, getStatus } from '#components';
 import { meta } from '#meta';
-import { log } from '@dxos/log';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
 
@@ -46,9 +46,13 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
 
     const t = setTimeout(() => {
       log.warn('sync stalled', { state });
-      // setClassNames('text-error-text');
+      setClassNames('text-error-text');
     }, SYNC_STALLED_TIMEOUT);
-    return () => clearTimeout(t);
+
+    return () => {
+      clearTimeout(t);
+      setClassNames(undefined);
+    };
   }, [offline, needsToUpload, needsToDownload]);
 
   return (

@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CollectionSection } from './CollectionSection';
-
-export default CollectionSection;
+export { CollectionSection as default } from './CollectionSection';

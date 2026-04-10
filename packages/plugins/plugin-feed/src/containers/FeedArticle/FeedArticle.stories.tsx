@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { PostStack, type PostStackAction } from '#components';
 import { generateFeed, generatePosts } from '#testing';

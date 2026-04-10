@@ -25,7 +25,6 @@ import {
 import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
-
 import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 

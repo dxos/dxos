@@ -11,8 +11,9 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel, useAsyncEffect } from '@dxos/react-ui';
 
 import { FilePreview } from '#components';
-import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
 import { WnfsCapabilities, type WnfsFile } from '#types';
+
+import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
 
 export type FileContainerProps = AppSurface.ObjectArticleProps<WnfsFile.File>;
 

@@ -10,8 +10,8 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
-import type { Service } from './service';
 import type { Operation } from './index';
+import type { Service } from './service';
 
 // @import-as-namespace
 
@@ -253,8 +253,9 @@ export const withHandler: {
  * );
  * ```
  */
-export const opaqueHandler = (handler: Operation.WithHandler<Definition.Any>): Operation.WithHandler<Definition.Any> =>
-  handler;
+export const opaqueHandler = <T extends Operation.Definition.Any>(
+  handler: Operation.WithHandler<T>,
+): Operation.WithHandler<Operation.Definition.Any> => handler;
 
 //
 // Invocation Interfaces

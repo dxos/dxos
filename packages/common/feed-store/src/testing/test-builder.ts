@@ -8,7 +8,6 @@ import type { ValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-
 import { type TestGenerator, type TestItem, defaultTestGenerator, defaultValueEncoding } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {

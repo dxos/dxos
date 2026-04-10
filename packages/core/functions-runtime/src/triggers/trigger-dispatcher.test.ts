@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
-import { Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -30,7 +30,6 @@ import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { TestDatabaseLayer } from '../testing';
-
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 

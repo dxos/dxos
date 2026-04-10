@@ -9,6 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
+
 import { DeckCapabilities } from '../types';
 
 const handler: Operation.WithHandler<typeof UndoOperation.ShowUndo> = UndoOperation.ShowUndo.pipe(

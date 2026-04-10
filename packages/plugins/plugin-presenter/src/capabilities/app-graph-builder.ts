@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
@@ -15,10 +14,11 @@ import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { PresenterCapabilities } from '#types';
 import { PresenterOperation } from '#operations';
+import { PresenterCapabilities } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node) =>

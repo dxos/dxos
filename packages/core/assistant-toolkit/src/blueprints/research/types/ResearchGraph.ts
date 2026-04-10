@@ -7,8 +7,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Database, Obj, Query, Ref, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { ContextQueueService, QueueService } from '@dxos/functions';
 
 /** @deprecated Use ResearchGraph instead. */

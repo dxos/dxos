@@ -8,8 +8,8 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { UpdateTasks } from './definitions';
 import { Plan, Project } from '../../../types';
+import { UpdateTasks } from './definitions';
 
 export default UpdateTasks.pipe(
   Operation.withHandler(

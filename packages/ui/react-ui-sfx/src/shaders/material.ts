@@ -3,7 +3,6 @@
 //
 
 import * as THREE from 'three';
-
 //
 // Pragma error when attempting to use glslify-vite-plugin so the shader files are compiled here via the npm script.
 // The ?raw suffix prevent vite from importing these as TypeScript files.

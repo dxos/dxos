@@ -11,8 +11,8 @@ import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph'
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '#meta';
-import { Account, ClientCapabilities } from '#types';
 import { ClientOperation } from '#operations';
+import { Account, ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

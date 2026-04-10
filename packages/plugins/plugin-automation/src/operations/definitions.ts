@@ -9,6 +9,7 @@ import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
+
 import { TriggerTemplate } from '../types';
 
 const AUTOMATION_OPERATION = `${meta.id}.operation`;

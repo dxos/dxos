@@ -4,7 +4,6 @@
 
 // TODO(wittjosiah): This is preventing this suite from running in browser.
 import { randomBytes } from 'node:crypto';
-
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';

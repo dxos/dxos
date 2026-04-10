@@ -14,8 +14,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { SpaceForm } from '#types';
 import { SpaceOperation } from '#operations';
+import { SpaceForm } from '#types';
 
 export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
 

@@ -7,9 +7,8 @@ import { Obj, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 
-import { SetActive } from './definitions';
-
 import { Meeting, MeetingCapabilities } from '../types';
+import { SetActive } from './definitions';
 
 const handler: Operation.WithHandler<typeof SetActive> = SetActive.pipe(
   Operation.withHandler(

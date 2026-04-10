@@ -10,11 +10,10 @@ import { type ObjectId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../Annotation';
-import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../JsonSchema';
-import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../Obj';
 import { ChangeId } from '../common/proxy';
 import { EntityKind, SchemaKindId } from '../common/types';
-
+import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../JsonSchema';
+import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../Obj';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,

@@ -59,7 +59,7 @@ export const useEditorMenuOptions = ({
           Domino.of('span').classNames('mx-1 px-1.5 pt-[1px] pb-[2px] border border-separator rounded-xs').text(text),
         );
         const forCommandsEl = Domino.of('span').text('for commands.');
-        return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
+        return Domino.of('div').append(pressEl, ...triggerEls, forCommandsEl).root;
       },
     };
 

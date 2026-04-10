@@ -11,9 +11,8 @@ import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
-import { RedeemPasskey } from './definitions';
-
 import { ClientCapabilities } from '../types';
+import { RedeemPasskey } from './definitions';
 
 const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
   Operation.withHandler(

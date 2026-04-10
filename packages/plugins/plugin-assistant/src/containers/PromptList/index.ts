@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { PromptList } from './PromptList';
-
-export default PromptList;
+export { PromptList as default } from './PromptList';

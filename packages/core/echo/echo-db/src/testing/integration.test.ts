@@ -9,14 +9,14 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
-import { TestSchema } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
+import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';

@@ -9,20 +9,20 @@ import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import { Filter, Ref } from '@dxos/client/echo';
 import { JsonSchema, Obj, Query } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
 import { usePipelineBoardModel } from '#hooks';
-import { translations } from '../../translations';
 
+import { translations } from '../../translations';
 import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
@@ -125,19 +125,19 @@ const MutationsStory = () => {
     }
 
     const interval = setInterval(() => {
-      const factory = createObjectFactory(space.db, faker as any);
+      const factory = createObjectFactory(space.db, random as any);
       const p = Math.random();
 
       if (p < 0.4) {
         // Append to the name
-        const contactToAdjust = faker.helpers.arrayElement(contacts);
+        const contactToAdjust = random.helpers.arrayElement(contacts);
         Obj.change(contactToAdjust, (obj) => {
           obj.fullName = (obj.fullName ?? '') + ' X';
         });
         return;
       } else if (p < 0.7 && contacts.length > 1) {
         // Remove a contact (30% chance, but only if we have more than 1)
-        const contactToRemove = faker.helpers.arrayElement(contacts);
+        const contactToRemove = random.helpers.arrayElement(contacts);
         space.db.remove(contactToRemove);
       } else {
         // Add a new contact (30% chance)
@@ -195,7 +195,7 @@ const meta = {
         );
 
         // Generate random contacts.
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([{ type: Person.Person, count: 12 }]);
       },
     }),

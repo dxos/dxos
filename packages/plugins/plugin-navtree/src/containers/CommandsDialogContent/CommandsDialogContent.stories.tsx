@@ -12,7 +12,6 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { translations } from '../../translations';
-
 import { CommandsDialogContent } from './CommandsDialogContent';
 
 const DefaultStory = () => (

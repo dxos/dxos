@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { Text } from '@dxos/schema';
 
 import type { FilesystemManager } from '#capabilities';
-
 import type { FilesystemEntry, FilesystemWorkspace, NativeFilesystemState } from '#types';
 
 /** In-memory mock of FilesystemManager for tests that need graph builder integration. */

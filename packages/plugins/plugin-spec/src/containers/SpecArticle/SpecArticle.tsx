@@ -21,9 +21,9 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { mdl, mdlBlockDescription } from '../../extension';
-
 import { Spec } from '#types';
+
+import { mdl, mdlBlockDescription } from '../../extension';
 
 export type SpecArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
 

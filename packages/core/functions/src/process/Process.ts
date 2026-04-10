@@ -4,19 +4,20 @@
 
 // @import-as-namespace
 
-import * as Scope from 'effect/Scope';
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-import type * as Exit from 'effect/Exit';
+import type { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
-import { Operation, OperationHandlerSet } from '@dxos/operation';
-import type { TracingService } from '../services/tracing';
-import * as Option from 'effect/Option';
-import type { Atom } from '@effect-atom/atom';
-import type { ObjectId } from '@dxos/protocols';
 import { assertArgument } from '@dxos/invariant';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
+import type { ObjectId } from '@dxos/protocols';
+
+import type { TracingService } from '../services/tracing';
 import * as Trace from '../Trace';
 
 //

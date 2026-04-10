@@ -20,12 +20,12 @@ import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import { Performance } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
 
 import { DXN, Obj } from '@dxos/echo';
+import { Performance } from '@dxos/effect';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
@@ -71,7 +71,7 @@ export interface Handle<I, O> {
   subscribeEphemeral(): Stream.Stream<Trace.Message>;
 
   terminate(): Effect.Effect<void>;
-  status(): Effect.Effect<Status>;
+  readonly status: Status;
   statusAtom: Atom.Atom<Status>;
 
   /**
@@ -473,8 +473,8 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }).pipe(Effect.scoped);
   }
 
-  status(): Effect.Effect<Status> {
-    return Effect.sync(() => this.#currentStatus);
+  get status(): Status {
+    return this.#currentStatus;
   }
 
   requestSucceed(): void {
@@ -1228,7 +1228,24 @@ export namespace ProcessOperationInvoker {
         Stream.runCollect,
         Effect.map(Chunk.head),
         Effect.flatten,
-        Effect.catchTag('NoSuchElementException', () => Effect.dieMessage(`Operation produced no output`)),
+        Effect.catchTag('NoSuchElementException', () =>
+          Effect.gen(function* () {
+            switch (handle.status.state) {
+              case Process.State.FAILED: {
+                return yield* Effect.failCause(
+                  handle.status.exit.pipe(
+                    Option.flatMap(Exit.causeOption),
+                    Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
+                  ),
+                );
+              }
+              case Process.State.TERMINATED:
+                return yield* Effect.die('Operation was terminated');
+              default:
+                return yield* Effect.die('Process produced no output');
+            }
+          }),
+        ),
         Effect.fork,
       );
       log('lifecycle: subscribed to outputs', { handle });

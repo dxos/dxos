@@ -8,7 +8,6 @@ import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { MapCapabilities } from '../types';
-
 import { Toggle } from './definitions';
 
 const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(

@@ -10,8 +10,9 @@ import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '#components';
-import { Life, generateRandomModel } from '../../models';
 import { Voxel } from '#types';
+
+import { Life, generateRandomModel } from '../../models';
 
 export type VoxelArticleProps = AppSurface.ObjectArticleProps<Voxel.World>;
 
