@@ -2,13 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { Program } from '@oxc-project/types';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import type { Program } from '@oxc-project/types';
 import { Plugin as RolldownPlugin, RolldownMagicString } from 'rolldown';
-import type { ConfigEnv, IndexHtmlTransformContext, Plugin, UserConfig } from 'vite';
+import {
+  parseAst,
+  parseSync,
+  type ConfigEnv,
+  type IndexHtmlTransformContext,
+  type Plugin,
+  type UserConfig,
+} from 'vite';
 
 import {
   DEFAULT_LOG_META_TRANSFORM_SPEC,
@@ -174,12 +180,11 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
       },
       handler(code, id, meta) {
         const ms = meta.magicString ?? new RolldownMagicString(code);
-        if (!meta?.ast) {
-          console.warn('No program', id);
-          return null;
-        }
-        transform(ms, meta.ast, id, { specs: metaOptions.to_transform });
-        return { code: ms };
+        const program =
+          meta.ast ??
+          parseSync(id, code, { astType: 'ts', lang: meta.moduleType as 'ts' | 'tsx' | 'js' | 'jsx' | 'dts' }).program;
+        transform(ms, program, id, { specs: metaOptions.to_transform });
+        return { code: ms.toString() };
       },
     } satisfies RolldownPlugin['transform'] as any;
   }

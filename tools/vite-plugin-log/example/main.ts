@@ -4,21 +4,41 @@
 
 import { log } from '@dxos/log';
 
+class TestThing {
+  info() {
+    log.info('Info message from example app', { timestamp: Date.now() });
+  }
+
+  warn() {
+    log.warn('Warning message from example app', { level: 'warn' });
+  }
+
+  error() {
+    const error = new Error('Test error');
+    (error as any).context = { custom: 'custom context' };
+    log.error('Error message from example app', { error });
+  }
+
+  debug() {
+    log('Debug message from example app', { debug: true });
+  }
+}
+
 const setupButtons = () => {
   document.getElementById('btn-info')?.addEventListener('click', () => {
-    log.info('Info message from example app', { timestamp: Date.now() });
+    new TestThing().info();
   });
 
   document.getElementById('btn-warn')?.addEventListener('click', () => {
-    log.warn('Warning message from example app', { level: 'warn' });
+    new TestThing().warn();
   });
 
   document.getElementById('btn-error')?.addEventListener('click', () => {
-    log.error('Error message from example app', { error: new Error('Test error') });
+    new TestThing().error();
   });
 
   document.getElementById('btn-debug')?.addEventListener('click', () => {
-    log('Debug message from example app', { debug: true });
+    new TestThing().debug();
   });
 };
 
