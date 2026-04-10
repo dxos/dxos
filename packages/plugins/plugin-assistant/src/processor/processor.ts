@@ -4,7 +4,6 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
