@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, ModelName, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, GenericToolkit, ModelName } from '@dxos/ai';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Trace } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import * as Chat from '../../types/Chat';
 
@@ -21,16 +21,13 @@ export const AgentPrompt = Operation.make({
   input: Schema.Struct({
     prompt: Ref.Ref(Prompt.Prompt),
 
-    // TODO(dmaretskyi): Remove.
-    systemPrompt: Schema.optional(Ref.Ref(Prompt.Prompt)),
-
     /**
      * When set, runs in this chat (history, queue, and bound context). Prompt blueprints and context objects are merged into the conversation for this request.
      */
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default @anthropic/claude-opus-4-0
+     * @default @anthropic/claude-opus-4-6
      */
 
     model: Schema.optional(ModelName),
@@ -39,15 +36,18 @@ export const AgentPrompt = Operation.make({
      * References get auto-resolved.
      */
     input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
+
+    systemInstructions: Schema.optional(Schema.String).annotations({
+      description: 'Additional system instructions to add to the system prompt.',
+    }),
   }),
   output: Schema.Any,
   services: [
     AiService.AiService,
     Database.Service,
     Feed.FeedService,
-    TracingService,
-    ToolExecutionService,
-    ToolResolverService,
-    FunctionInvocationService,
+    GenericToolkit.GenericToolkitProvider,
+    OperationRegistry.Service,
+    Trace.TraceService,
   ],
 });
