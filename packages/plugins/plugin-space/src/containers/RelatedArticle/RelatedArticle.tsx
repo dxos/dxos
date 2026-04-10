@@ -15,31 +15,31 @@ import { Menu } from '@dxos/react-ui-menu';
 
 import { useRelatedObjects } from '#hooks';
 
-export type RelatedArticleProps = Pick<AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>, 'role' | 'companionTo'>;
+// TODO(burdon): Companion type.
+export type RelatedArticleProps = Pick<
+  AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
+  'role' | 'companionTo'
+>;
 
 export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
   const db = Obj.getDatabase(companionTo);
-  const related = useRelatedObjects(db, companionTo, { references: true, relations: true });
-  const singleColumn = related.length === 1;
+  const items = useRelatedObjects(db, companionTo, { references: true, relations: true });
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content>
-        {related.length > 0 && (
-          <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
-            <Masonry.Content items={related} />
-          </Masonry.Root>
-        )}
-      </Panel.Content>
-    </Panel.Root>
+    <Masonry.Root Tile={ObjectCard}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Masonry.Content classNames='px-4 ' items={items} />
+        </Panel.Content>
+      </Panel.Root>
+    </Masonry.Root>
   );
 };
 
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
-  const objectMenuItems = useObjectMenuItems(subject);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Function.pipe(
     Obj.getSchema(subject),
@@ -49,16 +49,19 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     Option.getOrElse(() => 'ph--placeholder--regular'),
   );
 
+  // TODO(burdon): BUG: Includes item itself.
+  const menuItems = useObjectMenuItems(subject);
+
   return (
     <Menu.Root>
       <Card.Root classNames={classNames}>
         <Card.Toolbar>
           <Card.Icon icon={icon} />
           <Card.Title>{Entity.getLabel(subject)}</Card.Title>
-          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+          <Menu.Trigger asChild disabled={!menuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
-          <Menu.Content items={objectMenuItems} />
+          <Menu.Content items={menuItems} />
         </Card.Toolbar>
         <Card.Content>
           <Surface.Surface role='card--content' data={data} limit={1} />

@@ -41,12 +41,11 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
               </Card.Content>
             </Card.Root>
 
-            {/* TODO(burdon): Prompts and related should both be surfaces. */}
+            {/* TODO(burdon): Only show label if surface exists? */}
             <div role='none' className='flex flex-col gap-form-gap'>
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
-
               <Surface.Surface role='prompts' data={{ subject }} limit={1} />
             </div>
           </ScrollArea.Viewport>
