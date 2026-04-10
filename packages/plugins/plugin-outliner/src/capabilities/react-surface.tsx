@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: AppSurface.objectArticle(Journal.Journal),
         component: ({ role, data }) => (
-          <JournalContainer role={role} subject={data.subject} attendableId={data.attendableId} showCalendar />
+          <JournalContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({

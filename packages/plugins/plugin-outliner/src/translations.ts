@@ -42,10 +42,14 @@ export const translations = [
 
         'meeting-notes.label': 'Notes',
         'today.label': 'Today',
+        'toggle-calendar.label': 'Toggle calendar',
 
         'quick-entry.label': 'Add journal entry',
         'quick-entry-dialog.title': 'Quick Journal Entry',
         'quick-entry.placeholder': 'Write something...',
+        'quick-entry-cancel.label': 'Cancel',
+        'quick-entry-save.label': 'Save',
+        'quick-entry-save-and-continue.label': 'Save & Add Another',
 
         'delete-row.menu': 'Delete row',
       },
