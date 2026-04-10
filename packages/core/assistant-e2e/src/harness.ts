@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { TestContext } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+
 import {
   AgentHandlers,
   AgentPrompt,
@@ -21,9 +25,6 @@ import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { TestContext } from '@effect/vitest';
-import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
