@@ -14,7 +14,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
-
 import { type TemplateChangeCallback, TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`

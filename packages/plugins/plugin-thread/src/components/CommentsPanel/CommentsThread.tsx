@@ -19,11 +19,11 @@ import { type AnchoredTo, type Thread } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useStatus } from '../../hooks';
-import { meta } from '../../meta';
-import { getMessageMetadata } from '../../util';
+import { useStatus } from '#hooks';
+import { meta } from '#meta';
 
 import { command } from '../../extensions/command';
+import { getMessageMetadata } from '../../util';
 import { MessagePanel, buttonClassNames, buttonGroupClassNames } from '../MessagePanel';
 
 export type CommentsThreadProps = {

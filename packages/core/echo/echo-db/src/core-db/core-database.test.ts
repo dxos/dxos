@@ -8,8 +8,8 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
 import { Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { ObjectId } from '@dxos/keys';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -20,7 +20,6 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-
 import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {

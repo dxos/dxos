@@ -35,7 +35,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-
 import { SpaceProxy } from './space-proxy';
 
 @trace.resource()

@@ -80,6 +80,132 @@ describe('GraphBuilder', () => {
       }
     });
 
+    test('connects resolved node to parent via child edge', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const childId = qualifyId('root', '~child');
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'resolver',
+          resolver: (id) =>
+            id === childId ? Atom.make({ id: childId, type: EXAMPLE_TYPE, data: 'resolved' }) : Atom.make(null),
+        }),
+      );
+
+      const graph = builder.graph;
+      await Graph.initialize(graph, childId);
+
+      {
+        const node = Graph.getNode(graph, childId).pipe(Option.getOrNull);
+        expect(node?.id).to.equal(childId);
+        expect(node?.data).to.equal('resolved');
+      }
+
+      // Verify the resolved node is a child of root.
+      {
+        const children = registry.get(graph.connections('root', 'child'));
+        expect(children.some((n) => n.id === childId)).to.be.true;
+      }
+    });
+
+    test('out-of-order: resolver fires before parent exists', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const parentId = qualifyId('root', 'parent');
+      const childId = qualifyId('root', 'parent', '~child');
+
+      GraphBuilder.addExtension(builder, [
+        GraphBuilder.createExtensionRaw({
+          id: 'resolver',
+          resolver: (id) =>
+            id === childId ? Atom.make({ id: childId, type: EXAMPLE_TYPE, data: 'resolved-child' }) : Atom.make(null),
+        }),
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.filter((n) => n.id === 'root'),
+                Option.map(() => [{ id: 'parent', type: EXAMPLE_TYPE, data: 'parent-data' }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      ]);
+
+      const graph = builder.graph;
+
+      // Resolve child BEFORE parent exists in the graph.
+      await Graph.initialize(graph, childId);
+
+      {
+        const node = Graph.getNode(graph, childId).pipe(Option.getOrNull);
+        expect(node?.id).to.equal(childId);
+        expect(node?.data).to.equal('resolved-child');
+      }
+
+      // Now expand root to create parent via connector.
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const parent = Graph.getNode(graph, parentId).pipe(Option.getOrNull);
+        expect(parent?.data).to.equal('parent-data');
+      }
+
+      // The resolved child should be connected to the parent.
+      {
+        const children = registry.get(graph.connections(parentId, 'child'));
+        expect(children.some((n) => n.id === childId)).to.be.true;
+      }
+    });
+
+    test('onNone does not remove connector-owned node', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const nodeId = qualifyId('root', 'shared');
+
+      // Connector that produces root/shared. No resolver matches root/shared.
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.filter((n) => n.id === 'root'),
+                Option.map(() => [{ id: 'shared', type: EXAMPLE_TYPE, data: 'from-connector' }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      );
+
+      const graph = builder.graph;
+
+      // Connector produces root/shared.
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, nodeId).pipe(Option.getOrNull);
+        expect(node?.data).to.equal('from-connector');
+      }
+
+      // Initialize fires for the same ID. No resolver matches, so onNone fires.
+      // The connector-owned node should NOT be removed.
+      await Graph.initialize(graph, nodeId);
+
+      {
+        const node = Graph.getNode(graph, nodeId).pipe(Option.getOrNull);
+        expect(node?.data).to.equal('from-connector');
+      }
+    });
+
     test('does not overwrite connector-produced node', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });

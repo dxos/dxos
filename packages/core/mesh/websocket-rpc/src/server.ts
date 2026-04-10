@@ -3,9 +3,8 @@
 //
 
 import { type IncomingMessage } from 'http';
-import { type Socket } from 'node:net';
-
 import WebSocket from 'isomorphic-ws';
+import { type Socket } from 'node:net';
 
 import { log } from '@dxos/log';
 import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';

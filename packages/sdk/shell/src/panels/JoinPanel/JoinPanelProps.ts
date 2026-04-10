@@ -9,7 +9,6 @@ import type { AuthenticatingInvitationObservable, Invitation, InvitationResult }
 
 import { type ConfirmResetProps, type StepProps } from '../../steps';
 import { type FailReason } from '../../types';
-
 import { type JoinSend } from './joinMachine';
 import { type IdentityInputProps } from './steps';
 

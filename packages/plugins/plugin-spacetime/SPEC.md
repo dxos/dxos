@@ -74,7 +74,7 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [x] When the move tool is selected, dragging on an object should move it relative to the ground plane.
 - [x] When a facet is selected and the extrusion tool is selected, dragging should extrude the facet and update the object model once the dragging completes.
 - [x] Show the ground plane as a transparent grid.
-- [ ] Implement pinch zoom.
+- [x] Implement pinch zoom.
 - [x] Add a menu toggle group to select either objects or faces.
   - Selection mode toggle (object/face) in toolbar via `view.ts` `createSelectionModeActions`.
   - `Selection` type is a discriminated union: `ObjectSelection | FaceSelection`.
@@ -83,7 +83,7 @@ Instead implement tool handlers that operate on the runtime properties and then 
   - View toggle group in toolbar via `view.ts` `createViewActions`.
   - `ViewState.showGrid` synced to `SceneManager.showGrid` via canvas effect.
 - [x] Menu action and operation to create a new cube.
-  - `EditorActions.onAddObject` in `actions.ts`, wired through editor context.
+  - `EditorActions.onAdd` in `actions.ts`, wired through editor context.
   - Creates `Model.Object` via `Model.make()`, adds `Ref` to scene via `Obj.change`.
   - Canvas subscribes to `objectCount` (via `useObject` on scene) and syncs new meshes reactively.
 - [x] Menu action and operation to delete the selected object.
@@ -95,17 +95,30 @@ Instead implement tool handlers that operate on the runtime properties and then 
 
 - [x] Additional solid primitives: sphere, cylinder, pyramid, torus; Add toolbar <Select> to choose solid that is added by the add object operation.
   - Primitive dropdown with applyActive showing selected icon. Pyramid via Manifold.cylinder(radiusHigh=0, 4 segments).
-- [ ] Find 3 basic open source files to import (as presets) and test with; add these to the package files; Add these as options to the <Select>
+- [x] Find 3 basic open source files to import (as presets) and test with; add these to the package files; Add these as options to the <Select>
   - Downloaded box.glb, duck.glb to src/assets/. Need GLB→Manifold import pipeline.
 - [x] Export: STL mesh export from Manifold geometry.
   - Binary STL exporter in engine/stl-export.ts. Export button in toolbar, downloads selected object.
-- [ ] Import: GLB/OBJ file import as new scene objects.
+- [x] Import: GLB/OBJ file import as new scene objects.
 
 ### Phase 4 (Boolean geometry)
 
-- [ ] Mult-select if holding shift when clicking.
-- [ ] Menu action to join selected objects.
-- [ ] Menu action to subtract selected objects.
+- [x] Key shortcuts: m => move, e => extrude, x / backspace => delete
+      Local canvas keydown listener (scoped to canvas focus, skips text inputs).
+- [x] When the moving objects, if the CMD key is held move in the Z axis (up/down) rather then X/Y (ground plane).
+      Uses metaKey (macOS) or altKey (Windows/Linux); vertical drag projects onto camera-facing plane.
+- [x] Unit test to join/merge two mesh objects into a new single mesh object.
+      `boolean-ops.test.ts`: 4 tests for joinSolids (overlapping, non-overlapping, 3 cubes, position).
+- [x] Unit test to subtract one mesh object from another and create a new single mesh object.
+      `boolean-ops.test.ts`: 4 tests for subtractSolids (overlapping, A-B-C, non-overlapping, position).
+- [x] Mult-select if holding shift when clicking (ordered list of objects)
+      MultiObjectSelection type with ordered entries; toggle in/out via shift-click in object mode.
+- [x] Support moving all selected objects
+      MoveTool tracks companions from multi-selection; applies same delta to all on drag.
+- [x] Menu action to join selected objects.
+      Toolbar button with `ph--unite-square--regular` icon. Deletes sources, creates merged object.
+- [x] Menu action to subtract selected objects.
+      Toolbar button with `ph--subtract-square--regular` icon. A - B - C ordered difference.
 
 ### Phase 5
 
@@ -138,6 +151,8 @@ The `manifold-3d` package ships a `manifold.wasm` binary (~1MB) that must be loa
 ### Tool Plugin Architecture
 
 Tools are stateful objects that handle pointer interaction on the Babylon scene. They manipulate Babylon meshes directly during interaction (visual-only), then commit the final state to the ECHO `Model.Object` when the action completes. The canvas remains a renderer — it reads ECHO state, renders meshes, and delegates all pointer events to the active tool.
+
+**Dependency rule:** `src/tools/` must NOT import from `src/components/`. The dependency direction is `components → tools`, never the reverse. Types shared between both (e.g., `SelectionMode`, `SelectionState`) are defined in `tools/` and re-exported by `components/`.
 
 **Separation of concerns:**
 
@@ -231,8 +246,8 @@ Selection = ObjectSelection | FaceSelection | EdgeSelection | VertexSelection | 
 **Current implementation:** Selection stores data + a highlight mesh parented to the object mesh (so it follows transforms). Tools write selection via `ctx.setSelection(data)` which disposes the old highlight automatically.
 
 **Future: SelectionOverlay class.**
-A `SelectionOverlay` manages the visual separately from the data:
 
+- `SelectionOverlay` manages the visual separately from the data:
 - `update(selection, ctx)` — rebuild highlight from current mesh vertex data.
 - `sync(ctx)` — called per-frame or after transforms to keep visuals aligned.
 - `dispose()` — clean up.

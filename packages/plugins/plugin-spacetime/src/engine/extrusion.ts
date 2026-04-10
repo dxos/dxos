@@ -4,7 +4,7 @@
 
 import type { Manifold, ManifoldToplevel, Vec2 } from 'manifold-3d';
 
-import { Model } from '../types';
+import { Model } from '#types';
 
 import { getFaceNormal } from './mesh-converter';
 

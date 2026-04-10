@@ -10,11 +10,11 @@ import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
+import { Operation } from '@dxos/operation';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 

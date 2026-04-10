@@ -7,12 +7,11 @@ import * as Schema from 'effect/Schema';
 import { Label, LayoutOperation } from '@dxos/app-toolkit';
 import { type DeepReadonly } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export * as Settings from './Settings';
 
-export const PLANK_COMPANION_TYPE = `${meta.id}.plank-companion`;
-export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
+export { PLANK_COMPANION_TYPE, DECK_COMPANION_TYPE } from '@dxos/app-toolkit';
 
 export type Part = 'solo' | 'multi' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -89,7 +88,7 @@ export const EphemeralDeckState = Schema.Struct({
   dialogOverlayClasses: Schema.optional(Schema.String),
   dialogOverlayStyle: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   /** Data to be passed to the dialog Surface. */
-  dialogContent: Schema.optional(Schema.Any),
+  dialogContent: Schema.NullOr(Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) })),
   popoverOpen: Schema.Boolean,
   popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
   popoverAnchor: Schema.optional(Schema.Any),
@@ -99,7 +98,12 @@ export const EphemeralDeckState = Schema.Struct({
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
-  popoverContent: Schema.optional(Schema.Any),
+  popoverContent: Schema.NullOr(
+    Schema.Union(
+      Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) }),
+      Schema.Struct({ subject: Schema.Any }),
+    ),
+  ),
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
   /** The identifier of a component to scroll into view when it is mounted. */

@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   type Instruction,
   type ItemMode,
   attachInstruction,
   extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import React, {
@@ -25,7 +25,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
+import { TreeItem as NaturalTreeItem, Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '@dxos/react-ui';
 import {
   ghostFocusWithin,
   ghostHover,
@@ -305,7 +305,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         key={id}
         id={id}
         aria-labelledby={`${id}__label`}
-        parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
+        parentOf={parentOf?.join(TREEGRID_PARENT_OF_SEPARATOR)}
         data-object-id={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS

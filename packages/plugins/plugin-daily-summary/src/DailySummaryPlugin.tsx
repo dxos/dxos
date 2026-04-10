@@ -5,8 +5,9 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, BlueprintDefinition, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, BlueprintDefinition, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export const DailySummaryPlugin = Plugin.define(meta).pipe(

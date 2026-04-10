@@ -33,7 +33,7 @@ export type AiChatServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
-  | Feed.Service
+  | Feed.FeedService
   | FunctionInvocationService
   | QueueService
   | TracingService

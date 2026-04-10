@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Trace } from '@dxos/functions';
-import { Obj } from '@dxos/echo';
-import { ContentBlock, Actor } from '@dxos/types';
 import * as Schema from 'effect/Schema';
+
+import { Obj } from '@dxos/echo';
+import { Trace } from '@dxos/functions';
+import { ContentBlock, Actor } from '@dxos/types';
 
 /**
  * Partial content block emitted.

@@ -11,10 +11,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import { Subscription } from '../types';
 import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
-
 import { SyncFeed } from './definitions';
 
 /** Resolves the appropriate fetcher for the given feed type. */

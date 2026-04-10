@@ -2,28 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { InspectOptionsStylized, inspect } from 'util';
-
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
+import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
-import { isProxy } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
   EncodedReference,
   type ObjectStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
+import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
+import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type DocHandleProxy } from '../automerge';
-
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
 import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, isValidKeyPath } from './types';

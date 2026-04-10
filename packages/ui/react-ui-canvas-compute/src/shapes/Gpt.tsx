@@ -10,7 +10,6 @@ import { ScrollArea } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 

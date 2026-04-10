@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type StoredDeckState } from '../types';
+import { type StoredDeckState } from '#types';
 
 /**
  * Sanitizes persisted deck state on startup.

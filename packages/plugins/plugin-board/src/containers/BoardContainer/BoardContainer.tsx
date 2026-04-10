@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { Board, type BoardController, type BoardRootProps, type Position } from 
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board as BoardType } from '../../types';
+import { type Board as BoardType } from '#types';
 
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
@@ -24,7 +24,7 @@ type PickerState = {
   position: Position;
 };
 
-export type BoardContainerProps = ObjectSurfaceProps<BoardType.Board>;
+export type BoardContainerProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
 export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);

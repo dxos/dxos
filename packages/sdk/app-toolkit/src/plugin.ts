@@ -229,6 +229,37 @@ export namespace AppPlugin {
     });
   }
 
+  export type NavigationHandlerModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a navigation handler.
+   * Navigation handlers are called by layout plugins on page load, popstate, and deep link events.
+   * Accepts either static options or a function that receives plugin options.
+   */
+  export function addNavigationHandlerModule<T = void>(
+    options: NavigationHandlerModuleOptions | ((pluginOptions: T) => NavigationHandlerModuleOptions),
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    if (typeof options === 'function') {
+      return Plugin$.addModule((pluginOptions: T) => {
+        const resolved = options(pluginOptions);
+        return {
+          id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
+          activatesOn: resolved.activatesOn ?? ActivationEvents.OperationInvokerReady,
+          activatesBefore: resolved.activatesBefore,
+          activatesAfter: resolved.activatesAfter,
+          activate: resolved.activate,
+        };
+      });
+    }
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-handler',
+      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
   export type SurfaceModuleOptions = PluginModuleOptions;
 
   /**

@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
 import { useAttended } from '@dxos/react-ui-attention';
 
-import { useNodeActionExpander } from '../../hooks';
+import { useNodeActionExpander } from '#hooks';
 
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {
@@ -22,7 +22,11 @@ export const ActiveNode = () => {
     <div role='none' className='sr-only'>
       {/* TODO(wittjosiah): Weird that this is a surface, feel like it's not really render logic.
             Probably this lives in React-land currently in order to access translations? */}
-      <Surface.Surface role='document-title' data={{ subject: activeNode }} limit={1} />
+      <Surface.Surface
+        role='document-title'
+        data={{ subject: activeNode } satisfies AppSurface.DocumentTitleData}
+        limit={1}
+      />
     </div>
   );
 };

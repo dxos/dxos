@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import './dx-grid-axis-resize-handle';
+
 import { LitElement, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { type Ref, createRef, ref } from 'lit/directives/ref.js';
@@ -9,7 +11,6 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
 import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs';
-import './dx-grid-axis-resize-handle';
 import {
   DxAxisResize,
   type DxAxisResizeInternal,

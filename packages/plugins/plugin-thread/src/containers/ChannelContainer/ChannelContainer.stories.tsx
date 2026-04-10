@@ -12,10 +12,10 @@ import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
-import { createThreadPlugins } from '../../testing';
-import { translations } from '../../translations';
-import { Channel } from '../../types';
+import { createThreadPlugins } from '#testing';
+import { Channel } from '#types';
 
+import { translations } from '../../translations';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
@@ -26,7 +26,7 @@ const DefaultStory = ({ roomId }: ChannelContainerProps) => {
     return <Loading data={{ db: !!db, channel: !!channel }} />;
   }
 
-  return <ChannelContainer subject={channel} roomId={roomId} />;
+  return <ChannelContainer subject={channel} attendableId='story' roomId={roomId} role='article' />;
 };
 
 const meta = {
@@ -54,6 +54,8 @@ export const Default: Story = {
   args: {
     // Fixed room for testing.
     subject: undefined,
+    attendableId: 'story',
+    role: 'article',
     roomId: '04a1d1911703b8e929d0649021a965',
   },
 };

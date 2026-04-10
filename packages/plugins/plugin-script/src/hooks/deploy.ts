@@ -6,15 +6,16 @@ import { useEffect, useMemo } from 'react';
 
 import { Obj, Query, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { messageValence } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
@@ -63,14 +64,14 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 
       if (!result.success) {
         log.catch(result.error);
-        state.set('error', t('upload failed label'));
+        state.set('error', t('upload-failed.label'));
       }
 
       state.set('deploying', false);
     },
     {
       type: 'deploy',
-      label: [value.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
+      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: meta.id }],
       icon: value.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: value.deploying,
       classNames: value.deploying ? '[&_svg]:animate-spin' : '',

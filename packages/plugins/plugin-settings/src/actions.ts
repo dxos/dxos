@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { meta } from './meta';
-import { SETTINGS_ID, SETTINGS_KEY } from './types';
+import { meta } from '#meta';
+import { SETTINGS_ID, SETTINGS_KEY } from '#types';
 
 export { SETTINGS_ID, SETTINGS_KEY };
 

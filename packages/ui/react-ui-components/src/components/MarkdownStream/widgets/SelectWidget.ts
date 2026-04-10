@@ -22,15 +22,16 @@ export class SelectWidget extends WidgetType {
    * NOTE: Container must set var based on user's identity.
    */
   override toDOM() {
-    const buttons = this.options.map((option) =>
-      Domino.of('button')
-        .classNames('dx-button inline-block max-w-[100cqi]')
-        .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'fine' })
-        .text(option),
-    );
     return Domino.of('div')
       .attributes({ role: 'group' })
-      .classNames('flex flex-wrap mt-2 mb-2 gap-1')
-      .children(...buttons).root;
+      .classNames('flex flex-wrap pt-2 pb-2 gap-1')
+      .append(
+        ...this.options.map((option) =>
+          Domino.of('button')
+            .classNames('dx-button inline-block max-w-[100cqi]')
+            .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'fine' })
+            .text(option),
+        ),
+      ).root;
   }
 }

@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const CLIENT_OPERATION = `${meta.id}.operation`;
 

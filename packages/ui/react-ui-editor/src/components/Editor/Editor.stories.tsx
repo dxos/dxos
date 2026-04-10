@@ -6,10 +6,10 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
   automerge,
@@ -20,18 +20,17 @@ import {
 } from '@dxos/ui-editor';
 
 import { createMenuGroup } from '../EditorMenuProvider';
-
 import { Editor, type EditorContentProps } from './Editor';
 
 // TODO(burdon): PreviewPopoverProvider (MarkdownStream, Preview story).
 // TODO(burdon): Adapt Markdown plugin to use new Editor (plan first to check fit).
 // TODO(burdon): Remove redundant hooks and simplify props.
 
-faker.seed(1234);
+random.seed(1234);
 
 const initialValue = ['# Blue Monday', '', 'How does it **feel**?', ''].join('\n');
 
-const items = faker.helpers.multiple(faker.commerce.productName, { count: 10 }).sort();
+const items = random.helpers.multiple(random.commerce.productName, { count: 10 }).sort();
 
 // TODO(burdon): Adapter other tests in react-ui-editor/stories to use this pattern.
 const withExtensions: Decorator<EditorContentProps> = (Story, { args }) => {

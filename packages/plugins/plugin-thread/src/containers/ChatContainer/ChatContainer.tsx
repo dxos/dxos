@@ -20,10 +20,11 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { MessagePanel } from '../../components';
+import { MessagePanel } from '#components';
+import { useStatus } from '#hooks';
+import { meta } from '#meta';
+
 import { command } from '../../extensions';
-import { useStatus } from '../../hooks';
-import { meta } from '../../meta';
 import { getMessageMetadata } from '../../util';
 
 export type ChatContainerProps = ThemedClassName<

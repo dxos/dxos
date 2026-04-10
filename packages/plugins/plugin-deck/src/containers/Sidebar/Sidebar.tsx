@@ -5,11 +5,13 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Label, Main } from '@dxos/react-ui';
 
-import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
-import { meta } from '../../meta';
-import { getMode } from '../../types';
+import { useBreakpoints, useDeckState, useHoistStatusbar } from '#hooks';
+import { meta } from '#meta';
+import { getMode } from '#types';
+
 import { layoutAppliesTopbar } from '../../util';
 
 const label = ['sidebar.title', { ns: meta.id }] satisfies Label;
@@ -22,7 +24,7 @@ export const Sidebar = () => {
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
-  const navigationData = useMemo(
+  const navigationData = useMemo<AppSurface.NavigationData<{ topbar: boolean; hoistStatusbar: boolean }>>(
     () => ({ popoverAnchorId, topbar, hoistStatusbar, current }),
     [popoverAnchorId, topbar, hoistStatusbar, current],
   );

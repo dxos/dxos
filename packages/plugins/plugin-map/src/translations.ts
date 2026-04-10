@@ -6,8 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as geoTranslations } from '@dxos/react-ui-geo';
 
-import { meta } from './meta';
-import { Map } from './types';
+import { meta } from '#meta';
+import { Map } from '#types';
 
 export const translations = [
   {

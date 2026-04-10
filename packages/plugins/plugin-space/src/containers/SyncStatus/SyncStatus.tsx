@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
@@ -14,9 +15,8 @@ import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
-import { createClientSaveTracker, getIcon, getStatus } from '../../components';
-import { meta } from '../../meta';
-import { log } from '@dxos/log';
+import { createClientSaveTracker, getIcon, getStatus } from '#components';
+import { meta } from '#meta';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
 
@@ -46,16 +46,20 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
 
     const t = setTimeout(() => {
       log.warn('sync stalled', { state });
-      // setClassNames('text-error-text');
+      setClassNames('text-error-text');
     }, SYNC_STALLED_TIMEOUT);
-    return () => clearTimeout(t);
+
+    return () => {
+      clearTimeout(t);
+      setClassNames(undefined);
+    };
   }, [offline, needsToUpload, needsToDownload]);
 
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon={getIcon(status)} iconOnly label={t(`${status} label`)} classNames={classNames} />
+          <IconButton icon={getIcon(status)} iconOnly label={t(`${status}.label`)} classNames={classNames} />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>

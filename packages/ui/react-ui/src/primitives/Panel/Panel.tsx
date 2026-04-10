@@ -4,9 +4,10 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React from 'react';
+import React, { type CSSProperties } from 'react';
 
 import { composableProps, PanelStyleProps, slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -17,34 +18,40 @@ import { useThemeContext } from '../../hooks';
 const GRID_TEMPLATE_ROWS = 'auto 1fr auto';
 const GRID_TEMPLATE_AREAS = '"toolbar" "content" "statusbar"';
 
-const Root = slottable<HTMLDivElement>(({ children, asChild, role, style, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp
-      {...rest}
-      role={role ?? 'none'}
-      style={{
-        gridTemplateRows: GRID_TEMPLATE_ROWS,
-        gridTemplateAreas: GRID_TEMPLATE_AREAS,
-        ...style,
-      }}
-      className={tx('panel.root', {}, className)}
-      ref={forwardedRef}
-    >
-      {children}
-    </Comp>
-  );
-});
+type PanelRootProps = SlottableProps<{ style?: CSSProperties }>;
 
-Root.displayName = 'Panel.Root';
+const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
+  ({ children, asChild, role, style, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp
+        {...rest}
+        role={role ?? 'none'}
+        style={{
+          gridTemplateRows: GRID_TEMPLATE_ROWS,
+          gridTemplateAreas: GRID_TEMPLATE_AREAS,
+          ...style,
+        }}
+        className={tx('panel.root', {}, className)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
+
+PanelRoot.displayName = 'Panel.Root';
 
 //
 // Toolbar
 //
 
-const Toolbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
+type PanelToolbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
+
+const PanelToolbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
   ({ children, asChild, size, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -57,13 +64,15 @@ const Toolbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
   },
 );
 
-Toolbar.displayName = 'Panel.Toolbar';
+PanelToolbar.displayName = 'Panel.Toolbar';
 
 //
 // Content
 //
 
-const Content = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+type PanelContentProps = SlottableProps;
+
+const PanelContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
@@ -74,13 +83,15 @@ const Content = slottable<HTMLDivElement>(({ children, asChild, ...props }, forw
   );
 });
 
-Content.displayName = 'Panel.Content';
+PanelContent.displayName = 'Panel.Content';
 
 //
 // Statusbar
 //
 
-const Statusbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
+type PanelStatusbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
+
+const PanelStatusbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
   ({ children, asChild, size, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -93,22 +104,17 @@ const Statusbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
   },
 );
 
-Statusbar.displayName = 'Panel.Statusbar';
+PanelStatusbar.displayName = 'Panel.Statusbar';
 
 //
 // Panel
 //
 
 export const Panel = {
-  Root,
-  Toolbar,
-  Content,
-  Statusbar,
+  Root: PanelRoot,
+  Toolbar: PanelToolbar,
+  Content: PanelContent,
+  Statusbar: PanelStatusbar,
 };
 
-import { type SlottableProps } from '@dxos/ui-types';
-
-export type PanelRootProps = SlottableProps;
-export type PanelToolbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
-export type PanelContentProps = SlottableProps;
-export type PanelStatusbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
+export type { PanelRootProps, PanelToolbarProps, PanelContentProps, PanelStatusbarProps };

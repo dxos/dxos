@@ -3,8 +3,9 @@
 //
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { AutomationCapabilities } from '../types';
 import { SpaceId } from '@dxos/keys';
+
+import { AutomationCapabilities } from '../types';
 
 /**
  * Resolves the compute runtime for a space.

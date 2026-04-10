@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type SpecSelectorProps = FormFieldComponentProps;
 

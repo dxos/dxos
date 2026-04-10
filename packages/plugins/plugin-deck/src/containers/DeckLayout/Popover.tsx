@@ -20,8 +20,8 @@ import {
 } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 
-import { useDeckState } from '../../hooks';
-import { meta } from '../../meta';
+import { useDeckState } from '#hooks';
+import { meta } from '#meta';
 
 const DEBOUNCE_DELAY = 40;
 
@@ -70,7 +70,8 @@ export const PopoverContent = () => {
   const { t } = useTranslation(meta.id);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
-  const popoverSubject = state.popoverContent?.subject;
+  const popoverSubject =
+    state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
   const isObjectPopover = Obj.isObject(popoverSubject);
   const objectMenuItems = useObjectMenuItems(popoverSubject);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
@@ -121,7 +122,9 @@ export const PopoverContent = () => {
       >
         <Popover.Viewport>
           {/* Base popover */}
-          {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
+          {state.popoverKind === 'base' && (
+            <Surface.Surface role='popover' data={state.popoverContent ?? undefined} limit={1} />
+          )}
 
           {/* Card popover */}
           {state.popoverKind === 'card' && (
@@ -144,7 +147,7 @@ export const PopoverContent = () => {
                   </Card.IconBlock>
                 </Card.Toolbar>
 
-                <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
+                <Surface.Surface role='card--content' data={state.popoverContent ?? undefined} limit={1} />
               </Card.Root>
             </Menu.Root>
           )}

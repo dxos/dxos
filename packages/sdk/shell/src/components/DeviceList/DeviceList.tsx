@@ -9,7 +9,6 @@ import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { DeviceListItem } from './DeviceListItem';
 import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
 

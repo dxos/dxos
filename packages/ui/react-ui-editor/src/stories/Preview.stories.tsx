@@ -9,10 +9,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Card, Popover, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -25,13 +25,12 @@ import { hoverableControls } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
-
 import { EditorStory } from './components';
 
 const handlePreviewLookup = async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
-  faker.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
-  const text = Array.from({ length: 2 }, () => faker.lorem.paragraphs()).join('\n\n');
+  random.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  const text = Array.from({ length: 2 }, () => random.lorem.paragraphs()).join('\n\n');
   return {
     label,
     text,

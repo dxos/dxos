@@ -8,6 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -16,15 +17,14 @@ import { getParentId, useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { CommentsPanel, type CommentsPanelProps } from '../../components';
-import { meta } from '../../meta';
-import { ThreadCapabilities, type ViewState } from '../../types';
-import { ThreadOperation } from '../../operations';
-import { ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { CommentsPanel, type CommentsPanelProps } from '#components';
+import { meta } from '#meta';
+import { ThreadOperation } from '#operations';
+import { ThreadCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export type ThreadCompanionProps = ObjectSurfaceProps<
+export type ThreadCompanionProps = AppSurface.ObjectArticleProps<
   Thread.Thread,
   {
     attendableId?: string;

@@ -8,7 +8,6 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const formats = {

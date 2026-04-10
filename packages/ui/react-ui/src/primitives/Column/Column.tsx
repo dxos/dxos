@@ -9,8 +9,8 @@ import React, { type CSSProperties } from 'react';
 import { type ColumnStyleProps, composableProps, slottable } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
 import { ScrollArea, type ScrollAreaRootProps } from '../../components';
+import { useThemeContext } from '../../hooks';
 
 //
 // Root
@@ -116,7 +116,7 @@ type ColumnContentProps = SlottableProps;
  */
 const ColumnContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props, { role: 'none' });
+  const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   return (
     <Comp {...rest} className={tx('column.content', {}, className)} ref={forwardedRef}>

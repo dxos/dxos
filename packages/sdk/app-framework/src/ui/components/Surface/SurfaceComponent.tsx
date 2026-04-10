@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   Fragment,
   type NamedExoticComponent,
@@ -22,8 +23,7 @@ import { byPosition } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
-import { useCapabilities } from '../../hooks';
-
+import { usePluginManager } from '../PluginManager/PluginManagerProvider';
 import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
@@ -240,8 +240,17 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
  * @internal
  */
 export const useSurfaces = () => {
-  const surfaces = useCapabilities(Capabilities.ReactSurface);
-  return useMemo(() => surfaces.flat(), [surfaces]);
+  const manager = usePluginManager();
+  const surfacesByModule = useAtomValue(manager.capabilities.atomByModule(Capabilities.ReactSurface));
+  return useMemo(() => {
+    const result: Definition[] = [];
+    for (const [moduleId, surfaces] of Object.entries(surfacesByModule)) {
+      for (const def of surfaces.flat()) {
+        result.push({ ...def, id: `${moduleId}.${def.id}` });
+      }
+    }
+    return result;
+  }, [surfacesByModule]);
 };
 
 /**

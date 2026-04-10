@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LogBuffer } from './log-buffer';
-
 import { type LogConfig, type LogEntry, LogLevel } from './index';
+import { LogBuffer } from './log-buffer';
 
 const baseConfig: LogConfig = {
   options: {},

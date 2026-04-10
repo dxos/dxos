@@ -19,6 +19,9 @@ export const createStreamer = (source: Stream.Stream<string>) =>
     ),
   );
 
+/** Matches opening tag names, including custom elements with hyphens (e.g. dom-widget). */
+const OPENING_TAG_NAME = /^<([a-zA-Z][\w-]*)(?:\s[^>]*)?>/;
+
 /**
  * Splits text into chunks, preserving XML/HTML fragments.
  */
@@ -33,7 +36,7 @@ export const splitFragments = (text: string): string[] => {
 
     // Check if this is an opening tag.
     if (token.startsWith('<') && !token.startsWith('</') && !token.endsWith('/>')) {
-      const tagMatch = token.match(/<(\w+)[^>]*>/);
+      const tagMatch = token.match(OPENING_TAG_NAME);
       if (tagMatch) {
         const tagName = tagMatch[1];
         const closingTag = `</${tagName}>`;

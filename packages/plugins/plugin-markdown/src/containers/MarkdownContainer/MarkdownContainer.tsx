@@ -8,8 +8,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
@@ -17,11 +16,11 @@ import { Panel } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
-import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '../../components';
-import { useLinkQuery } from '../../hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
+import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '#components';
+import { useLinkQuery } from '#hooks';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
-export type MarkdownContainerProps = ObjectSurfaceProps<
+export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
   {
     id: string;
@@ -97,10 +96,12 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
+            // TODO(wittjosiah): This should probably pre-validate.
+            navigation: 'immediate',
           });
         }
       },
-      [onSelectObject, invokePromise, object, id],
+      [onSelectObject, invokePromise, attendableId],
     );
 
     return (

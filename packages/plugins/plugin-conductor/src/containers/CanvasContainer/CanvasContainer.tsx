@@ -5,10 +5,10 @@
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
@@ -29,9 +29,9 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 
-export type CanvasContainerProps = ObjectSurfaceProps<CanvasBoard.CanvasBoard>;
+export type CanvasContainerProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
-export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps) => {
+export const CanvasContainer = ({ role, subject: canvas, attendableId: _attendableId }: CanvasContainerProps) => {
   const id = Obj.getDXN(canvas as any).toString();
   useObject(canvas);
   const graph = useMemo(

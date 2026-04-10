@@ -3,8 +3,8 @@
 //
 
 import { build } from 'esbuild';
-import path from 'path';
 import fs from 'node:fs/promises';
+import path from 'path';
 
 const PACKAGES = [
   // Effect-TS ecosystem.

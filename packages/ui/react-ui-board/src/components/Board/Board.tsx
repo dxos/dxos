@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
@@ -33,7 +33,6 @@ import {
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { BoardCell, type BoardCellProps } from './BoardCell';
 import { defaultGrid, defaultLayout } from './defs';
 import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter } from './geometry';

@@ -7,13 +7,13 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Trigger } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { Query, useObject, useQuery } from '@dxos/react-client/echo';
 
-import { Calendar } from '../types';
+import { Calendar } from '#types';
 
 /**
  * Finds or imports a function by key from Edge into the space database.

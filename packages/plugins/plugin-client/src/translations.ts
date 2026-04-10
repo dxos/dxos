@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Disambiguate with sdk/shell
 const pluginTranslations = [

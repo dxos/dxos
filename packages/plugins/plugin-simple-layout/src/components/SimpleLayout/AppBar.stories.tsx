@@ -7,13 +7,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { MobileLayout } from '../MobileLayout';
-
 import { AppBar, type AppBarProps } from './AppBar';
 
 const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });

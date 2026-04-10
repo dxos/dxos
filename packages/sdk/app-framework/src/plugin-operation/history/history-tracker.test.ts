@@ -25,7 +25,6 @@ import {
   toStringHandler,
   waitUntil,
 } from '../testing';
-
 import * as HistoryTracker from './history-tracker';
 import * as UndoMapping from './undo-mapping';
 import * as UndoRegistry from './undo-registry';

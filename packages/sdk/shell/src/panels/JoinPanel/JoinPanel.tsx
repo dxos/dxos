@@ -12,7 +12,6 @@ import { useId, useThemeContext } from '@dxos/react-ui';
 import { Viewport } from '../../components';
 import { ConfirmReset } from '../../steps';
 import { stepStyles } from '../../styles';
-
 import { JoinHeading } from './JoinHeading';
 import { useJoinMachine } from './joinMachine';
 import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';

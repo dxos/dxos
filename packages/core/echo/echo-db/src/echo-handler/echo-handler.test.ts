@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import * as Schema from 'effect/Schema';
+import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -19,8 +20,6 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { Context } from '@dxos/context';
-import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -29,7 +28,6 @@ import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-
 import { createDocAccessor } from './doc-accessor';
 import { createObject, getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';

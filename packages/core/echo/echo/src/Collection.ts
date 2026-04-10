@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as internal from './internal';
 import * as Annotation from './Annotation';
+import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
 import * as Type from './Type';

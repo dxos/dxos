@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { SelectionSchema } from '@dxos/react-ui-attention';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export const Select = Operation.make({
   meta: {

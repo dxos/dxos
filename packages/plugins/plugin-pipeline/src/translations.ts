@@ -4,7 +4,7 @@ import { Pipeline } from '@dxos/types';
 // Copyright 2023 DXOS.org
 //
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {

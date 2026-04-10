@@ -11,9 +11,8 @@ import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { Thread } from '@dxos/types';
 
-import { Delete } from './definitions';
-
 import { ThreadCapabilities } from '../types';
+import { Delete } from './definitions';
 
 const handler: Operation.WithHandler<typeof Delete> = Delete.pipe(
   Operation.withHandler(

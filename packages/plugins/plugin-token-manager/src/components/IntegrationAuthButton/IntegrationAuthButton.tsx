@@ -10,8 +10,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
-import { getPresetBySource, useOAuth } from '../../hooks';
-import { meta } from '../../meta';
+import { getPresetBySource, useOAuth } from '#hooks';
+import { meta } from '#meta';
 
 export type IntegrationAuthButtonProps = {
   source: string;

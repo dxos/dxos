@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
@@ -17,7 +17,7 @@ export const translations = [
         'bookmark.button': 'Bookmark',
         'scroll-to-end.label': 'Scroll to latest',
 
-        'settings-entity-extraction.label': 'Entity extraction',
+        'settings.entity-extraction.label': 'Entity extraction',
       },
     },
   },

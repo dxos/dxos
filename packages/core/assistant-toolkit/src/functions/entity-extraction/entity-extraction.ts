@@ -17,9 +17,9 @@ import { Operation } from '@dxos/operation';
 import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { EntityExtraction } from './definitions';
 import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
+import { EntityExtraction } from './definitions';
 
 export default EntityExtraction.pipe(
   Operation.withHandler(

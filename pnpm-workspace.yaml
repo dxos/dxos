@@ -16,6 +16,7 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@astrojs/starlight': ^0.32.5
+  '@assistant-ui/react': ^0.12.24
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -185,16 +186,16 @@ catalog:
   '@rollup/plugin-inject': ^5.0.5
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.3.3
-  '@storybook/addon-links': ^10.3.3
-  '@storybook/addon-themes': ^10.3.3
-  '@storybook/addon-vitest': ^10.3.4
-  '@storybook/builder-vite': ^10.3.4
-  '@storybook/html-vite': ^10.3.4
+  '@storybook/addon-docs': ^10.3.5
+  '@storybook/addon-links': ^10.3.5
+  '@storybook/addon-themes': ^10.3.5
+  '@storybook/addon-vitest': ^10.3.5
+  '@storybook/builder-vite': ^10.3.5
+  '@storybook/html-vite': ^10.3.5
   '@storybook/icons': ^2.0.1
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.3.4
-  '@storybook/web-components-vite': ^10.3.4
+  '@storybook/react-vite': ^10.3.5
+  '@storybook/web-components-vite': ^10.3.5
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
@@ -295,15 +296,15 @@ catalog:
   '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/devtools': ^0.1.13
   '@vitejs/plugin-react': ^6.0.1
-  '@vitest/browser': ^4.1.2
-  '@vitest/browser-playwright': ^4.1.2
-  '@vitest/coverage-v8': ^4.1.2
-  '@vitest/expect': ^4.1.2
-  '@vitest/runner': ^4.1.2
-  '@vitest/snapshot': ^4.1.2
-  '@vitest/spy': ^4.1.2
-  '@vitest/ui': ^4.1.2
-  '@vitest/utils': ^4.1.2
+  '@vitest/browser': ^4.1.4
+  '@vitest/browser-playwright': ^4.1.4
+  '@vitest/coverage-v8': ^4.1.4
+  '@vitest/expect': ^4.1.4
+  '@vitest/runner': ^4.1.4
+  '@vitest/snapshot': ^4.1.4
+  '@vitest/spy': ^4.1.4
+  '@vitest/ui': ^4.1.4
+  '@vitest/utils': ^4.1.4
   '@vscode/vsce': ^3.7.1
   '@xenova/transformers': ^2.17.2
   '@xstate/react': ^3.2.1
@@ -344,6 +345,7 @@ catalog:
   chartjs-node-canvas: ^5.0.0
   chess.js: ^1.0.0
   chromatic: ^13.0.1
+  cjs-module-lexer: ^2.2.0
   classnames: ^2.3.2
   cli-highlight: ^2.1.11
   codemirror: ^6.0.1
@@ -431,7 +433,7 @@ catalog:
   ink-table: ^3.1.0
   ink-text-input: ^6.0.0
   interface-blockstore: ^5.2.10
-  ioredis: ^5.3.2
+  ioredis: ^5.10.1
   iso-did: ^1.6.0
   isomorphic-fetch: ^3.0.0
   isomorphic-ws: ^5.0.0
@@ -576,7 +578,7 @@ catalog:
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.14.3
-  storybook: ^10.3.4
+  storybook: ^10.3.5
   storybook-solidjs-vite: ^10.0.12
   streamx: ^2.12.5
   style-mod: ^4.1.0
@@ -617,7 +619,7 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
-  vite: ^8.0.5
+  vite: ^8.0.8
   vite-node: ^6.0.0
   vite-plugin-devtools-json: ^0.4.1
   vite-plugin-glslify: ^2.3.0
@@ -628,7 +630,7 @@ catalog:
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
-  vitest: 4.1.2
+  vitest: 4.1.4
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-tree-sitter: ^0.25.10
@@ -735,6 +737,7 @@ peerDependencyRules:
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
+    'tsdown>@vitejs/devtools': '>=0.0.0'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
@@ -747,3 +750,7 @@ trustPolicyExclude:
   - rollup@3.30.0
   # @swc/core is used by @dxos/swc-log-plugin tooling without provenance attestation pnpm expects.
   - '@swc/core@1.13.5'
+  # Transitive deps without provenance.
+  - 'semver@6.3.1'
+  - 'semver@5.7.2'
+  - 'ua-parser-js@1.0.41'

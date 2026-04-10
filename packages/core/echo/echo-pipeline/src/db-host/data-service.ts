@@ -6,8 +6,8 @@ import { type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,7 +29,6 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
-
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 

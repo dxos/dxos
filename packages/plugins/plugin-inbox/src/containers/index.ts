@@ -7,6 +7,7 @@ import { type ComponentType, lazy } from 'react';
 export const CalendarArticle: ComponentType<any> = lazy(() => import('./CalendarArticle'));
 export const CalendarSettings: ComponentType<any> = lazy(() => import('./CalendarSettings'));
 export const DraftMessageArticle: ComponentType<any> = lazy(() => import('./DraftMessageArticle'));
+export const DraftsArticle: ComponentType<any> = lazy(() => import('./DraftsArticle'));
 export const EventArticle: ComponentType<any> = lazy(() => import('./EventArticle'));
 export const EventCard: ComponentType<any> = lazy(() => import('./EventCard'));
 export const MailboxArticle: ComponentType<any> = lazy(() => import('./MailboxArticle'));

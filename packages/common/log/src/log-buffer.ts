@@ -42,7 +42,10 @@ export class LogBuffer {
     this._buffer = new CircularBuffer<LogRecord>(size);
   }
 
-  /** Log processor that can be registered with `log.runtimeConfig.processors`. */
+  /**
+   * Log processor that can be registered with `log.runtimeConfig.processors`.
+   * Captures every level except TRACE (does not apply `shouldLog` / filter; use for full debug dumps).
+   */
   readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
     if (entry.level <= LogLevel.TRACE) {
       return;

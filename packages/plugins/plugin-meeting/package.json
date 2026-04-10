@@ -11,6 +11,14 @@
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -70,6 +78,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

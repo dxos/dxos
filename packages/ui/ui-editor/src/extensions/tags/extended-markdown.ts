@@ -7,7 +7,6 @@ import { type Extension } from '@codemirror/state';
 import { type ParseWrapper, parseMixed } from '@lezer/common';
 
 import { createMarkdownExtensions } from '../markdown';
-
 import { type XmlWidgetRegistry } from './xml-tags';
 
 export type ExtendedMarkdownOptions = {

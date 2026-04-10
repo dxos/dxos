@@ -28,13 +28,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Scanner } from '@tailwindcss/oxide';
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-
-import { Scanner } from '@tailwindcss/oxide';
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 
 // minimatch is a transitive CJS dependency — load via createRequire (ESM scope).

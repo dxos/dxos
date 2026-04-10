@@ -4,7 +4,6 @@
 
 import type { IceProvider } from '../../signal';
 import type { TransportFactory } from '../transport';
-
 import { getRtcConnectionFactory } from './rtc-connection-factory';
 import { RtcPeerConnection } from './rtc-peer-connection';
 

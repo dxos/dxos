@@ -6,6 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
@@ -15,9 +17,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { ViewModel } from '@dxos/schema';
 
-import { resolveSchemaWithRegistry } from '../../helpers';
-import { useTypeOptions } from '../../hooks';
-import { SpaceOperation } from '../../operations';
+import { SpaceOperation } from '#operations';
 
 export type ViewEditorProps = { view: View.View };
 

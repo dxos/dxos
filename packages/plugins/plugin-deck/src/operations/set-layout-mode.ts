@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
-import { updateActiveDeck } from './helpers';
 import { DeckCapabilities, type DeckState, type LayoutMode, getMode, isLayoutMode } from '../types';
+import { updateActiveDeck } from './helpers';
 
 /**
  * Transitions between layout modes (multi, solo, solo--fullscreen) or reverts to the previous mode.

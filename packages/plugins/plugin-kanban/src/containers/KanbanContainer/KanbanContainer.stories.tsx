@@ -19,28 +19,29 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
-import { useProjectionModel } from '../../hooks';
+import { useProjectionModel } from '#hooks';
+import { Kanban } from '#types';
+
 import { KanbanPlugin } from '../../KanbanPlugin';
 import { translations } from '../../translations';
-import { Kanban } from '../../types';
 
-faker.seed(0);
+random.seed(0);
 
 const createOrg = (status?: Organization.Organization['status']) => ({
-  name: faker.commerce.productName(),
-  description: faker.lorem.paragraph(),
-  image: faker.image.url(),
-  website: faker.internet.url(),
-  status: (status ?? faker.helpers.arrayElement(Organization.StatusOptions).id) as Organization.Organization['status'],
+  name: random.commerce.productName(),
+  description: random.lorem.paragraph(),
+  image: random.image.url(),
+  website: random.internet.url(),
+  status: (status ?? random.helpers.arrayElement(Organization.StatusOptions).id) as Organization.Organization['status'],
 });
 
 //
@@ -90,7 +91,7 @@ const DefaultComponent = () => {
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
-  const data = useMemo(() => (kanban ? { subject: kanban } : {}), [kanban]);
+  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : {}), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
@@ -188,9 +189,9 @@ export const Default: Story = {
 
     // Wait for the kanban columns to render by finding the status tags.
     // Organization.StatusOptions: prospect, qualified, active, commit, reject.
-    const activeTag = await canvas.findByText('Active', undefined, { timeout: 30_000 });
-    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 10_000 });
-    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 10_000 });
+    const activeTag = await canvas.findByText('Active', undefined, { timeout: 12_000 });
+    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 12_000 });
+    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 12_000 });
 
     // Verify all expected columns are rendered.
     await expect(activeTag).toBeTruthy();

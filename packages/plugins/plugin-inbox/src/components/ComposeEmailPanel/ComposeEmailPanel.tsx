@@ -11,7 +11,7 @@ import { Form } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 //
 // ComposeEmailPanel
@@ -83,7 +83,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     );
 
     return (
-      <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+      <div {...composableProps(props)} ref={forwardedRef}>
         <Form.Root
           testId='compose-email-form'
           autoFocus

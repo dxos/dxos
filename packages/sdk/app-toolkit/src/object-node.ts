@@ -162,7 +162,7 @@ export const createObjectNode = ({
     (object as any).name ||
     Obj.getLabel(object) ||
     metadata.label?.(object) ||
-    getDynamicLabel('object-name.placeholder', type, { default: 'New item' });
+    getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));

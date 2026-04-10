@@ -10,7 +10,6 @@ import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/rea
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../types';
-
 import { Header } from './Header';
 import { TodoContainer } from './TodoContainer';
 import { TodoFooter } from './TodoFooter';

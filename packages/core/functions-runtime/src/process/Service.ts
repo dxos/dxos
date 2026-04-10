@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Types from 'effect/Types';
 import * as Context from 'effect/Context';
 import type * as Layer from 'effect/Layer';
+import * as Types from 'effect/Types';
 
 // @import-as-namespace
 

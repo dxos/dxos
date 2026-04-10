@@ -31,7 +31,7 @@ import {
   type UseEditorMenuOptionsProps,
   useEditorMenuOptions,
   useExtensions,
-} from '../../hooks';
+} from '#hooks';
 
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,

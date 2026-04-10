@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
+import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';

@@ -213,8 +213,8 @@ const lineHeight = '30px';
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   const inner = Domino.of('span')
     .classNames(mx('inline-flex h-[26px] border rounded-xs', classNames))
-    .children(...children);
-  return Domino.of('span').classNames('inline-flex h-[28px] align-middle').children(inner).root;
+    .append(...children);
+  return Domino.of('span').classNames('inline-flex h-[28px] align-middle').append(inner).root;
 };
 
 /**
@@ -299,7 +299,7 @@ class ObjectWidget extends WidgetType {
           .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-[3px]')
           .text(key);
         const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
-        return Domino.of('span').classNames('inline-flex items-stretch').children(keyEl, valueEl);
+        return Domino.of('span').classNames('inline-flex items-stretch').append(keyEl, valueEl);
       }),
     );
   }

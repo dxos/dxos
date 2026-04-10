@@ -5,20 +5,21 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { getCompanionVariant } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
-import { useBreakpoints } from '../../hooks';
-import { meta } from '../../meta';
-import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
-import { DeckOperation } from '../../operations';
+import { useBreakpoints } from '#hooks';
+import { meta } from '#meta';
+import { DeckOperation } from '#operations';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
-import { usePlankContext } from './PlankRoot';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { usePlankContext } from './PlankRoot';
 
 const MAX_COMPANIONS = 5;
 
@@ -84,12 +85,12 @@ export const PlankHeading = memo(
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         fullscreen: !isCompanionNode,
-        companion: !isCompanionNode && companions && companions.length > 0,
+        companion: layoutMode !== 'multi' && !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled, layoutMode],
     );
 
-    const variant = isCompanionNode ? getCompanionVariant(id) : undefined;
+    const variant = isCompanionNode ? getLinkedVariant(id) : undefined;
     const sigilActions = useMemo(() => {
       if (!node) {
         return undefined;
@@ -148,8 +149,10 @@ export const PlankHeading = memo(
             ? [
                 hoverableControls,
                 hoverableFocusedWithinControls,
-                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent border-transparent transition-[background-color,border-color]',
-                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
+                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent',
+                'border-transparent transition-[background-color,border-color]',
+                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface',
+                'hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
               ]
             : []),
         ]}
@@ -181,7 +184,10 @@ export const PlankHeading = memo(
                   actions={sigilActions}
                   onAction={handleAction}
                 >
-                  <Surface.Surface role='menu-footer' data={{ subject: node.data }} />
+                  <Surface.Surface
+                    role='menu-footer'
+                    data={{ subject: node.data } satisfies AppSurface.MenuFooterData}
+                  />
                 </StackItem.Sigil>
               ) : (
                 <StackItem.SigilButton>
@@ -202,7 +208,9 @@ export const PlankHeading = memo(
             </TextTooltip>
           </>
         )}
-        {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
+        {node && part !== 'complementary' && (
+          <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+        )}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />
         ) : (

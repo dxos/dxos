@@ -32,7 +32,6 @@ import {
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import {
   SearchListInputContextProvider,
   SearchListItemContextProvider,

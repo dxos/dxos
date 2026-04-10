@@ -7,6 +7,7 @@ import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -18,7 +19,6 @@ import { Ref } from '@dxos/echo';
 import { FunctionInvocationService, FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationRegistry } from '@dxos/operation';
-import * as Option from 'effect/Option';
 
 import { RefFromLLM } from '../types';
 

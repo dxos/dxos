@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
-import * as Array from 'effect/Array';
 import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -39,7 +39,7 @@ export type TestDatabaseOptions = {
 };
 
 export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}): Layer.Layer<
-  Database.Service | QueueService | Feed.Service,
+  Database.Service | QueueService | Feed.FeedService,
   never,
   never
 > =>

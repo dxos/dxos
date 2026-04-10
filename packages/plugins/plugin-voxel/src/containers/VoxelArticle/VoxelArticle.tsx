@@ -4,16 +4,17 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
-import { Life, generateRandomModel } from '../../models';
-import { Voxel } from '../../types';
+import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '#components';
+import { Voxel } from '#types';
 
-export type VoxelArticleProps = ObjectSurfaceProps<Voxel.World>;
+import { Life, generateRandomModel } from '../../models';
+
+export type VoxelArticleProps = AppSurface.ObjectArticleProps<Voxel.World>;
 
 const LIFE_TICK_MS = 500;
 
@@ -23,7 +24,7 @@ const TOOL_HINTS: Record<ToolMode, string> = {
   remove: 'Click voxel to remove | Option-drag to orbit | Shift-drag to pan',
 };
 
-export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
+export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: VoxelArticleProps) => {
   const [voxelMap, updateVoxels] = useObject(world, 'voxels');
   const voxels = useMemo(() => Voxel.toVoxelArray(voxelMap), [voxelMap]);
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);

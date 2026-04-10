@@ -1,0 +1,203 @@
+---
+id: org.dxos.plugin.chess
+name: ChessPlugin
+version: 0.2.0
+extends: [dxos.plugin.chess@0.1.0]
+---
+
+Extends ChessPlugin to introduce UI components: the game Lobby and the Gameboard.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+
+## Types
+
+New types introduced in this version.
+
+```mdl
+type Player
+  fields:
+    id: string
+    name: string
+    color: Color
+```
+
+```mdl
+type GameStatus
+  literals: waiting | active | finished
+```
+
+```mdl
+type Game
+  fields:
+    id: string
+    players: Player[2]
+    board: Board
+    status: GameStatus
+    winner?: Player
+```
+
+## Components
+
+```mdl
+component Lobby
+  desc: Entry point where players create or join a game.
+  props:
+    playerId: string
+  state:
+    games: Game[]               # list of open/active games
+    selected?: Game
+  slots:
+    header?: ReactNode
+    empty?: ReactNode           # shown when games list is empty
+  actions:
+    createGame() → Game
+    joinGame(game: Game) → Game
+    spectate(game: Game)
+  emits:
+    onJoin(game: Game)
+  layout: |
+    ┌─────────────────────────┐
+    │ [header slot]           │
+    ├─────────────────────────┤
+    │ Game list               │
+    │  ┌───────────────────┐  │
+    │  │ game row          │  │
+    │  └───────────────────┘  │
+    │  [empty slot]           │
+    ├─────────────────────────┤
+    │ [Create Game]           │
+    └─────────────────────────┘
+```
+
+```mdl
+component Gameboard
+  desc: Interactive chess board for an active game.
+  props:
+    game: Game
+    playerId: string            # identifies which side the viewer plays
+  state:
+    selected?: Square           # currently selected square
+    highlights: Square[]        # legal move targets for selected piece
+    perspective: Color          # which side is at the bottom (default: player's color)
+  slots:
+    toolbar?: ReactNode
+    sidebar?: ReactNode
+    overlay?: ReactNode         # e.g. checkmate / promotion dialogs
+  actions:
+    selectSquare(square: Square)
+    submitMove(move: Move)
+    flipBoard()
+  emits:
+    onMove(move: Move)
+    onResign()
+  layout: |
+    ┌─────────────────────────┐
+    │ [toolbar slot]          │
+    ├──────────┬──────────────┤
+    │          │ [sidebar]    │
+    │  8×8     │              │
+    │  board   │ move history │
+    │          │              │
+    ├──────────┴──────────────┤
+    │ [overlay slot]          │
+    └─────────────────────────┘
+```
+
+## Features
+
+```mdl
+feat F-3: Lobby
+
+  req F-3.1: Player sees list of open games on entering the Lobby.
+  req F-3.2:
+    when: player creates a game
+    then: new Game created with status waiting; player assigned white
+
+  req F-3.3:
+    when: second player joins an open game
+    then: Game.status transitions to active; joining player assigned black
+
+  req F-3.4:
+    when: Game.status becomes active
+    then: both players navigated to Gameboard
+```
+
+```mdl
+feat F-4: Gameboard
+
+  req F-4.1:
+    when: player selects a square containing their piece
+    then: legal move targets highlighted on board
+
+  req F-4.2:
+    when: player selects a highlighted target square
+    then: Move submitted via submitMove(); board updated on success
+
+  req F-4.3:
+    when: pawn reaches the back rank
+    then: promotion dialog shown via overlay slot; player selects piece kind
+
+  req F-4.4:
+    when: Game.status is finished
+    then: result overlay shown (winner or draw); further moves disabled
+```
+
+## Acceptance
+
+```mdl
+test T-3: Create and join game
+  given: two players are in the Lobby
+  when: player A creates a game, player B joins it
+  then:
+    - Game.status === active
+    - Game.players[0].color === white   # creator
+    - Game.players[1].color === black   # joiner
+    - both players see the Gameboard
+```
+
+```mdl
+test T-4: Legal move highlight
+  given: Gameboard is shown, it is white's turn
+  when: white selects the e2 pawn
+  then:
+    - squares e3 and e4 are highlighted
+    - no other squares are highlighted
+```
+
+```mdl
+test T-5: Pawn promotion
+  given: white pawn is on e7, it is white's turn
+  when: white moves pawn to e8
+  then:
+    - promotion overlay appears
+    - after player selects queen, Move recorded with promotion: queen
+    - board shows white queen on e8
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Definitions for extensions introduced in this version.
+Extensions inherited from chess-1 (type, feat, test) are not repeated.
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```

@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type Meeting } from './types';
+import { type Meeting } from '#types';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (

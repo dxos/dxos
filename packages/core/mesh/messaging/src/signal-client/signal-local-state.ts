@@ -14,7 +14,6 @@ import {
 import { ComplexMap, ComplexSet, safeAwaitAll } from '@dxos/util';
 
 import type { Message, SwarmEvent } from '../signal-methods';
-
 import { type SignalRPCClient } from './signal-rpc-client';
 
 export class SignalLocalState {

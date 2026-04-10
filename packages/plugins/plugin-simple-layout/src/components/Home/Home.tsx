@@ -15,7 +15,8 @@ import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/reac
 import { mx } from '@dxos/ui-theme';
 import { byPosition, getHostPlatform, isTauri } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { useExpandPath } from '../hooks';
 
 export type HomeProps = {};

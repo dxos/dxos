@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import './emoji.css';
+
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -21,8 +23,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
-
-import './emoji.css';
 
 export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;

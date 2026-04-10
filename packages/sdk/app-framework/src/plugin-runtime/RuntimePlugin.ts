@@ -4,7 +4,6 @@
 
 import { ActivationEvents } from '../common';
 import { Capability, Plugin } from '../core';
-
 import { meta } from './meta';
 
 const ManagedRuntimeCapability = Capability.lazy('ManagedRuntime', () => import('./capability'));

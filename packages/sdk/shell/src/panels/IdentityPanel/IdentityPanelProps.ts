@@ -11,7 +11,6 @@ import type { ConnectionState } from '@dxos/react-client/mesh';
 
 import type { AgentFormProps } from '../../components';
 import type { InvitationManagerProps } from '../../steps';
-
 import type { IdentityEvent } from './identityMachine';
 
 export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation';

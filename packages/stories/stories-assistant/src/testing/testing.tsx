@@ -14,7 +14,6 @@ import {
   Plugin,
   PluginManager,
 } from '@dxos/app-framework';
-import { runAndForwardErrors } from '@dxos/effect';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
@@ -30,6 +29,8 @@ import {
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Feed, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -37,8 +38,8 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Assistant, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AssistantOperation } from '@dxos/plugin-assistant/operations';
 import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
-import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -310,13 +311,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               invariant(space, 'Space not found');
 
               const feed = space.db.add(Feed.make());
-              const queueDxn = Feed.getQueueDxn(feed)!;
-              const queue = space.queues.get(queueDxn);
               const chat = Obj.make(Assistant.Chat, {
                 name,
                 feed: Ref.make(feed),
               });
-              const binder = new AiContextBinder({ queue, registry });
+              const feedServiceLayer = createFeedServiceLayer(space.queues);
+              const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+              const binder = new AiContextBinder({ feed, runtime, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);

@@ -23,7 +23,6 @@ import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
-
 import type { SpaceStateManager } from './space-state-manager';
 
 export type QueryServiceProps = {

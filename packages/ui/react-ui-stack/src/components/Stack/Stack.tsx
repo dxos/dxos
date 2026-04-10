@@ -8,14 +8,13 @@ import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
   type KeyboardEvent,
-  PropsWithChildren,
   forwardRef,
   useCallback,
   useEffect,
   useState,
 } from 'react';
 
-import { ListItem, ScrollArea, ScrollAreaRootProps, type ThemedClassName, useId } from '@dxos/react-ui';
+import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
@@ -141,15 +140,17 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       };
     }, [stackElement, handleScroll]);
 
-    const Container = size === 'contain' ? ScrollContainer : 'div';
-
     return (
       <StackContext.Provider value={{ stackId, orientation, rail, size, onRearrange }}>
-        <Container
+        <div
           {...props}
           {...(Number.isFinite(separatorOnScroll) && { onScroll: handleScroll })}
           className={mx(
             'relative grid [--stack-gap:var(--spacing-trim-xs)]',
+            size === 'contain' &&
+              (orientation === 'horizontal'
+                ? 'overflow-x-auto overscroll-x-contain min-h-0 max-h-full h-full'
+                : 'overflow-y-auto min-w-0 max-w-full w-full'),
             rail
               ? orientation === 'horizontal'
                 ? railGridHorizontal
@@ -167,7 +168,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
             ...style,
           }}
           aria-orientation={orientation}
-          orientation={orientation}
           data-dx-stack={stackId}
           data-dx-stack-circular-focus={circularFocus}
           data-dx-last-focused-item={lastFocusedItem}
@@ -185,20 +185,10 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               edge={orientation === 'horizontal' ? 'left' : 'top'}
             />
           )}
-        </Container>
+        </div>
       </StackContext.Provider>
     );
   },
-);
-
-// TODO(burdon): Missing border.
-const ScrollContainer = ({
-  orientation,
-  ...props
-}: ThemedClassName<PropsWithChildren & Pick<ScrollAreaRootProps, 'orientation'>>) => (
-  <ScrollArea.Root orientation={orientation}>
-    <ScrollArea.Viewport {...props} />
-  </ScrollArea.Root>
 );
 
 export { StackContext };

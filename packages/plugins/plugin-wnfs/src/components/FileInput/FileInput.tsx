@@ -10,8 +10,8 @@ import { findAnnotation } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { WnfsAction } from '../../types';
+import { meta } from '#meta';
+import { WnfsAction } from '#types';
 
 export type FileInputProps = {
   schema: Schema.Schema.Any;

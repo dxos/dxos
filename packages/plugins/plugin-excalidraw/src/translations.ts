@@ -5,7 +5,7 @@
 import { Sketch } from '@dxos/plugin-sketch/types';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
@@ -24,8 +24,10 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Sketch',
         'settings.title': 'Sketch settings',
-        'settings-hover-tools.label': 'Auto hide controls',
-        'settings-grid-type.label': 'Dotted grid',
+        'settings.hover-tools.label': 'Auto hide controls',
+        'settings.hover-tools.description': 'Hide toolbar controls until you hover over them.',
+        'settings.grid-type.label': 'Dotted grid',
+        'settings.grid-type.description': 'Use a dotted grid instead of a mesh grid.',
       },
     },
   },

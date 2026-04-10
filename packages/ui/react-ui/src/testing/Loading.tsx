@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import React, { useEffect, useState } from 'react';
+
 import { mx } from '@dxos/ui-theme';
 import { safeStringify } from '@dxos/util';
-import React, { useEffect, useState } from 'react';
 
 export type LoadingProps = { data?: any };
 

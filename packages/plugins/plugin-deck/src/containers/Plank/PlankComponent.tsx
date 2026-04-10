@@ -6,20 +6,21 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { getCompanionVariant } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { useMainSize } from '../../hooks';
-import { PLANK_COMPANION_TYPE } from '../../types';
+import { useMainSize } from '#hooks';
+import { PLANK_COMPANION_TYPE } from '#types';
 
-import { PlankRootProps, usePlankContext } from './PlankRoot';
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
+import { PlankRootProps, usePlankContext } from './PlankRoot';
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;
@@ -49,7 +50,7 @@ export const PlankComponent = memo(
 
     const rootElement = useRef<HTMLDivElement | null>(null);
 
-    const variant = node?.type === PLANK_COMPANION_TYPE ? getCompanionVariant(id) : undefined;
+    const variant = node?.type === PLANK_COMPANION_TYPE ? getLinkedVariant(id) : undefined;
     const sizeKey = id.split('+')[0];
     const size = plankSizing?.[sizeKey] as number | undefined;
 
@@ -86,7 +87,7 @@ export const PlankComponent = memo(
       (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
     const sizeAttrs = useMainSize();
 
-    const data = useMemo(
+    const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
         node && {
           attendableId: id,
@@ -103,7 +104,6 @@ export const PlankComponent = memo(
     // TODO(wittjosiah): Change prop to accept a component.
     const placeholder = useMemo(() => <PlankLoading />, []);
 
-    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
     const className = mx(
       'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-coarse',
@@ -120,6 +120,8 @@ export const PlankComponent = memo(
         'mx-(--main-spacing) border-separator! border rounded-sm overflow-hidden',
     );
 
+    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
+
     return (
       <Root
         ref={rootElement}
@@ -127,14 +129,17 @@ export const PlankComponent = memo(
         data-popover-collision-boundary={true}
         tabIndex={0}
         {...(part.startsWith('solo')
-          ? ({ ...sizeAttrs, className } as any)
+          ? ({
+              className,
+              ...sizeAttrs,
+            } as any)
           : {
-              item: { id },
-              size,
-              onSizeChange: handleSizeChange,
+              role: 'article',
               classNames: className,
               order,
-              role: 'article',
+              size,
+              item: { id },
+              onSizeChange: handleSizeChange,
             })}
         {...(isAttendable ? attentionAttrs : {})}
         onKeyDown={handleKeyDown}

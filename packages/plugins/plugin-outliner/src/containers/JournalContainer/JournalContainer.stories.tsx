@@ -10,16 +10,12 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../translations';
-import { Journal, Outline } from '../../types';
+import { Journal, Outline } from '#types';
 
+import { translations } from '../../translations';
 import { JournalContainer } from './JournalContainer';
 
-type DefaultStoryProps = {
-  showCalendar?: boolean;
-};
-
-const DefaultStory = ({ showCalendar }: DefaultStoryProps) => {
+const DefaultStory = () => {
   const space = useSpace();
   const journal = useMemo(() => {
     if (space) {
@@ -32,7 +28,7 @@ const DefaultStory = ({ showCalendar }: DefaultStoryProps) => {
     return null;
   }
 
-  return <JournalContainer role='article' subject={journal} showCalendar={showCalendar} />;
+  return <JournalContainer role='article' subject={journal} attendableId='story' />;
 };
 
 const meta = {
@@ -58,9 +54,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const WithCalendar: Story = {
-  args: {
-    showCalendar: true,
-  },
-};

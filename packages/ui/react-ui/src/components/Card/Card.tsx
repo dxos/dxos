@@ -4,6 +4,7 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
+import DOMPurify from 'dompurify';
 import React, {
   CSSProperties,
   MouseEventHandler,
@@ -13,7 +14,6 @@ import React, {
   useContext,
   useMemo,
 } from 'react';
-import DOMPurify from 'dompurify';
 
 import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
@@ -230,7 +230,7 @@ CardTitle.displayName = CARD_TITLE_NAME;
 const CARD_CONTENT_NAME = 'Card.Content';
 
 const CardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { role: 'none' });
+  const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
 
@@ -252,7 +252,7 @@ const CARD_ROW_NAME = 'Card.Row';
 type CardRowProps = { icon?: string; fullWidth?: boolean };
 
 const CardRow = composable<HTMLDivElement, CardRowProps>(({ children, icon, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { role: 'none' });
+  const { className, ...rest } = composableProps(props);
   const { tx } = useThemeContext();
 
   return (

@@ -11,7 +11,7 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const ASSISTANT_OPERATION = `${meta.id}.operation`;
 
@@ -103,6 +103,20 @@ export const ResolveNavigationTargets = Operation.make({
     targets: Schema.Array(NavigationTargetSchema),
   }),
   services: [Capability.Service],
+});
+
+export const EnsureCompanionChat = Operation.make({
+  meta: { key: `${ASSISTANT_OPERATION}.ensure-companion-chat`, name: 'Ensure Companion Chat' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    companionTo: Obj.Unknown,
+  }),
+  output: Schema.Struct({
+    chat: Chat.Chat,
+    /** Whether the returned chat was already persisted in the space. */
+    persisted: Schema.Boolean,
+  }),
 });
 
 export const BlueprintForm = Schema.Struct({

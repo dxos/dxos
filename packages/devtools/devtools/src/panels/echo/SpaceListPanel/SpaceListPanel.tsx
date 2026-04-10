@@ -18,7 +18,6 @@ import { createFilename } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
-
 import { exportData, importData } from './backup';
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 

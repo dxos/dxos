@@ -58,7 +58,6 @@ import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
-
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 

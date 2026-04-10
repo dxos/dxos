@@ -20,7 +20,6 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
   FormFieldSet as NaturalFormFieldSet,

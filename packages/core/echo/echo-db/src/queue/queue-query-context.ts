@@ -13,7 +13,6 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { type QueryContext, isSimpleSelectionQuery } from '../query';
-
 import { type QueueImpl } from './queue';
 
 export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implements QueryContext<T> {

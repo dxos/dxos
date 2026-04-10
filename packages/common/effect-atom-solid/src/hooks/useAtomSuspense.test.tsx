@@ -9,7 +9,6 @@ import { Suspense } from 'solid-js';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { defaultRegistry } from '../registry';
-
 import { useAtomSuspense } from './useAtomSuspense';
 
 describe('useAtomSuspense', () => {

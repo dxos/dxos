@@ -9,12 +9,12 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data';
 import { SpaceObjectGenerator } from './generator';
 
-faker.seed(3);
+random.seed(3);
 
 describe('TestObjectGenerator', () => {
   // TODO(burdon): Use TestBuilder.
@@ -118,7 +118,7 @@ describe('TestObjectGenerator', () => {
       {
         [Types.task]: async (task, params) => {
           for (const _ in Array.from({ length: params.count })) {
-            task.name = faker.lorem.sentence();
+            task.name = random.lorem.sentence();
           }
         },
       },

@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Obj, Query } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, QueueService } from '@dxos/functions';
 import { type InvocationTraceEvent, createInvocationSpans } from '@dxos/functions-runtime';
 import { Operation } from '@dxos/operation';
-import { SpaceProperties } from '@dxos/client-protocol';
 
 import { InspectInvocations } from './definitions';
 

@@ -23,6 +23,6 @@ export class PromptWidget extends WidgetType {
    */
   override toDOM() {
     const inner = Domino.of('div').classNames('px-3 py-1.5 bg-(--user-fill) rounded-xs').text(this.text);
-    return Domino.of('div').classNames('flex justify-end my-2').children(inner).root;
+    return Domino.of('div').classNames('flex justify-end my-2').append(inner).root;
   }
 }

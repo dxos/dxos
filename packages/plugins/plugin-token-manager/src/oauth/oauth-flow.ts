@@ -15,7 +15,6 @@ import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult
 import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from '../defs';
-
 import { getEdgeAuthHeader } from './edge-auth-header';
 
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.

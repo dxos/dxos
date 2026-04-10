@@ -6,14 +6,15 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Scope from 'effect/Scope';
+
 import type { DXN, SpaceId } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from '../errors';
 import * as Process from './Process';
-import * as Scope from 'effect/Scope';
-import * as Either from 'effect/Either';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;

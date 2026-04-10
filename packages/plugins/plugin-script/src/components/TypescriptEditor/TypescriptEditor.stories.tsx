@@ -8,8 +8,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createDocAccessor } from '@dxos/echo-db';
 import { createObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 

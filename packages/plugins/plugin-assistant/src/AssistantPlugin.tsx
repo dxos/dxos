@@ -3,8 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Chat, Memory, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -14,9 +15,10 @@ import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
+import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -24,6 +26,7 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  CompanionChatProvisioner,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
@@ -32,12 +35,12 @@ import {
   ReactSurface,
   Settings,
   Toolkit,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { AssistantOperation } from '#operations';
+import { AssistantEvents } from '#types';
+
 import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { AssistantOperation } from './operations';
-import * as Option from 'effect/Option';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -202,6 +205,14 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Use a different event.
     activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      DeckEvents.StateReady,
+    ),
+    activate: CompanionChatProvisioner,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,

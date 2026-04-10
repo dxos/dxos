@@ -7,17 +7,17 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Entity, Obj } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { useRelatedObjects } from '../../hooks';
+import { useRelatedObjects } from '#hooks';
+import { meta } from '#meta';
 
-export const RecordArticle = ({ role, subject }: ObjectSurfaceProps) => {
+export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
   const related = useRelatedObjects(db, subject, { references: true, relations: true });

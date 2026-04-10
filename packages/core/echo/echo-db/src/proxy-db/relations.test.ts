@@ -8,7 +8,6 @@ import { Filter, type Hypergraph, Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
-
 import { type EchoDatabase } from './database';
 
 describe('Relations', () => {

@@ -218,6 +218,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     return Effect.gen(this, function* () {
       const handler = yield* this._resolveHandler(op);
       if (!handler) {
+        // TODO(burdon): Only throw in development mode.
         return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }
 

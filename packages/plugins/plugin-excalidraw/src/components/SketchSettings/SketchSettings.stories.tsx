@@ -7,13 +7,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { SketchSettings } from './SketchSettings';
 
 const meta = {
   title: 'plugins/plugin-excalidraw/components/SketchSettings',
   component: SketchSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',

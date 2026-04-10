@@ -8,10 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { Operation } from '@dxos/operation';
 
-import { OpenFile } from './definitions';
-
 import { FileCapabilities } from '../types';
 import { handleToLocalFile, legacyFileToLocalFile } from '../util';
+import { OpenFile } from './definitions';
 
 const handler: Operation.WithHandler<typeof OpenFile> = OpenFile.pipe(
   Operation.withHandler(

@@ -14,7 +14,7 @@ import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 import { composable, composableProps, slottable } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { PipelineColumn } from './PipelineColumn';
 
@@ -66,7 +66,7 @@ const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
     const Comp = asChild ? Slot : 'div';
     return (
       <Board.Root model={model}>
-        <Comp {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+        <Comp {...composableProps(props)} ref={forwardedRef}>
           {children}
         </Comp>
       </Board.Root>

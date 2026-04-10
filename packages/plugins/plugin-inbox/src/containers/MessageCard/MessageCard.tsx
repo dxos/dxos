@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui';
@@ -12,7 +12,7 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-export const MessageCard = ({ subject: message }: ObjectSurfaceProps<Message.Message>) => {
+export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
   const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), true);
   return (
     <Card.Content>

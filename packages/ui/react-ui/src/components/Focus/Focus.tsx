@@ -21,8 +21,8 @@ import React, {
   useState,
 } from 'react';
 
-import { type Axis } from '@dxos/ui-types';
 import { composableProps, slottable } from '@dxos/ui-theme';
+import { type Axis } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 

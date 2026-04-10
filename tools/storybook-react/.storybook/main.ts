@@ -3,10 +3,9 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
 //
 
+import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { type StorybookConfig } from '@storybook/react-vite';
 import { type InlineConfig } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';

@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { JSDOM } from 'jsdom';
 import type { AddressInfo } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { JSDOM } from 'jsdom';
 import { type InlineConfig, createServer } from 'vite';
 import { expect, test } from 'vitest';
 

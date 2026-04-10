@@ -15,10 +15,11 @@ import {
   MeetingState,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { Meeting, MeetingCapabilities } from '#types';
+
 import { translations } from './translations';
-import { Meeting, MeetingCapabilities } from './types';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);

@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import { inspect } from 'node:util';
 
 import { type ContentBlock, type Message } from '@dxos/types';
 

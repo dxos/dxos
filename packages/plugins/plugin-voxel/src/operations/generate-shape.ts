@@ -9,7 +9,6 @@ import { Operation } from '@dxos/operation';
 
 import { generateModel } from '../models';
 import { Voxel } from '../types';
-
 import { GenerateShape } from './definitions';
 
 const handler: Operation.WithHandler<typeof GenerateShape> = GenerateShape.pipe(

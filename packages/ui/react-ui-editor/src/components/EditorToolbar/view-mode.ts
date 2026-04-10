@@ -6,7 +6,6 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const viewModes = {

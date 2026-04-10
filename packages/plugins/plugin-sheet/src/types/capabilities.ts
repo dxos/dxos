@@ -6,7 +6,7 @@ import { Capability } from '@dxos/app-framework';
 import { type ComputeGraphRegistry } from '@dxos/compute';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type GridEntry = { grid: DxGridElement; setActiveRefs: (refs: GridContentProps['activeRefs']) => void };
 

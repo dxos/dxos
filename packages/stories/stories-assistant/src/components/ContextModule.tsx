@@ -4,21 +4,19 @@
 
 import React from 'react';
 
-import { Feed, Filter } from '@dxos/echo';
+import { Surface } from '@dxos/app-framework/ui';
+import { Filter } from '@dxos/echo';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
+import { Toolbar } from '@dxos/react-ui';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { type ComponentProps } from './types';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Toolbar } from '@dxos/react-ui';
-import { Surface } from '@dxos/app-framework/ui';
 
 export const ContextModule = ({ space }: ComponentProps) => {
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
-  const queueDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
-  const queue = space && queueDxn ? space.queues.get(queueDxn) : undefined;
-  const binder = useContextBinder(queue);
+  const binder = useContextBinder(space, feedTarget);
   const objects = binder?.getObjects() ?? [];
 
   return (

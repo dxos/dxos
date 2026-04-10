@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { createRtcTransportFactory } from '../transport';
 import { chooseInitiatorPeer } from '../transport/webrtc/utils';
-
 import { Connection } from './connection';
 
 // Segfault in node-datachannel.

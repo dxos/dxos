@@ -13,8 +13,8 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { Qualifier } from './definitions';
 import { Plan, Project } from '../../../types';
+import { Qualifier } from './definitions';
 
 export default Qualifier.pipe(
   Operation.withHandler(

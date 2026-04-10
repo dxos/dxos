@@ -16,7 +16,6 @@ import { trim } from '@dxos/util';
 
 import { createSystemPrompt } from '../templates/system';
 import { AssistantTestLayer } from '../testing';
-
 import { formatSystemPrompt } from './format';
 
 const OrganizationList = Operation.make({

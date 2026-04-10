@@ -11,7 +11,6 @@ import { trace } from '@dxos/tracing';
 
 import type { IceProvider } from '../../signal';
 import { type TransportOptions } from '../transport';
-
 import { type RtcConnectionFactory } from './rtc-connection-factory';
 import { RtcTransportChannel } from './rtc-transport-channel';
 import { areSdpEqual, chooseInitiatorPeer } from './utils';

@@ -13,14 +13,14 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { FeedPlugin } from '../../FeedPlugin';
-import { Subscription } from '../../types';
-import { translations } from '../../translations';
+import { Subscription } from '#types';
 
+import { FeedPlugin } from '../../FeedPlugin';
+import { translations } from '../../translations';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {
@@ -31,7 +31,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <SubscriptionsArticle role='article' space={space} />;
+  return <SubscriptionsArticle role='article' subject='feeds-root' attendableId='story' />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
@@ -52,9 +52,9 @@ const meta: Meta<typeof DefaultStory> = {
               Array.from({ length: 5 }).forEach(() => {
                 space.db.add(
                   Subscription.makeFeed({
-                    name: faker.company.name() + ' Blog',
-                    url: faker.internet.url(),
-                    description: faker.lorem.sentence(),
+                    name: random.company.name() + ' Blog',
+                    url: random.internet.url(),
+                    description: random.lorem.sentence(),
                   }),
                 );
               });

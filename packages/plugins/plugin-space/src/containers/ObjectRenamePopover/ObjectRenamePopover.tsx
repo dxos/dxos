@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const OBJECT_RENAME_POPOVER = `${meta.id}.ObjectRenamePopover`;
 

@@ -18,6 +18,7 @@ import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
+
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';

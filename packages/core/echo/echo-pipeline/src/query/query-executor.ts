@@ -9,7 +9,6 @@ import * as Runtime from 'effect/Runtime';
 
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
   DatabaseDirectory,
   EncodedReference,
@@ -18,6 +17,7 @@ import {
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
+import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
@@ -29,7 +29,6 @@ import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
-
 import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';

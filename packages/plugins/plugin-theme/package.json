@@ -12,6 +12,9 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#meta": "./src/meta.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",

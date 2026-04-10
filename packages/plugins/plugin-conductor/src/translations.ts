@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {

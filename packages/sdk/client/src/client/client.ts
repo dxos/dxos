@@ -44,7 +44,6 @@ import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-
 import { ClientRuntime } from './client-runtime';
 
 /**
@@ -424,7 +423,8 @@ export class Client {
     const edgeUrl = this._config!.get('runtime.services.edge.url');
     if (edgeUrl) {
       const { EdgeHttpClient } = await import('@dxos/edge-client');
-      this._edgeHttpClient = new EdgeHttpClient(edgeUrl);
+      const clientTag = this._config!.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
+      this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
 

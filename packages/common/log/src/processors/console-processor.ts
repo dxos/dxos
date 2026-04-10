@@ -2,15 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import chalk from 'chalk';
+import { inspect } from 'node:util';
 
 import { getPrototypeSpecificInstanceId, pickBy } from '@dxos/util';
 
 import { type LogConfig, LogLevel, shortLevelName } from '../config';
 import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
-
 import { getRelativeFilename } from './common';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {

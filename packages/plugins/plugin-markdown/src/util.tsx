@@ -6,7 +6,7 @@ import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 
-import { Markdown } from './types';
+import { Markdown } from '#types';
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.

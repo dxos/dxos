@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Pipeable from 'effect/Pipeable';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 
 export interface Service {

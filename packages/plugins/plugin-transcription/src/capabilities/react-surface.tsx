@@ -1,0 +1,29 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import React from 'react';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Transcript } from '@dxos/types';
+
+import { TranscriptionContainer } from '#containers';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'article.transcript',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        role: ['article', 'section'],
+        filter: AppSurface.objectArticle(Transcript.Transcript),
+        component: ({ data, role }) => (
+          <TranscriptionContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+    ]),
+  ),
+);

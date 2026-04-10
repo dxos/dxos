@@ -7,15 +7,14 @@ import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, FunctionError } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
 import { FunctionServiceError } from '../errors';
-
 import { createEdgeClient } from './functions';
 
 // TODO(wittjosiah): Copied from @dxos/functions-simulator-cloudflare.

@@ -3,14 +3,14 @@
 //
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
-import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
-import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
+import WasmPlugin from 'vite-plugin-wasm';
+import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
 
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
@@ -165,7 +165,59 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [...plugins, PluginImportSource(), process.env.VITE_INSPECT ? Inspect() : undefined, react()],
+    plugins: [
+      ...plugins,
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      process.env.VITE_INSPECT ? Inspect() : undefined,
+      react({
+        tsDecorators: true,
+        useAtYourOwnRisk_mutateSwcOptions: (options) => {
+          options.jsc ??= {};
+          options.jsc.target = 'esnext';
+        },
+        plugins: [
+          [
+            '@dxos/swc-log-plugin',
+            {
+              to_transform: [
+                {
+                  name: 'log',
+                  package: '@dxos/log',
+                  param_index: 2,
+                  include_args: false,
+                  include_call_site: true,
+                  include_scope: true,
+                },
+                {
+                  name: 'dbg',
+                  package: '@dxos/log',
+                  param_index: 1,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: false,
+                },
+                {
+                  name: 'invariant',
+                  package: '@dxos/invariant',
+                  param_index: 2,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: true,
+                },
+                {
+                  name: 'Context',
+                  package: '@dxos/context',
+                  param_index: 1,
+                  include_args: false,
+                  include_call_site: false,
+                  include_scope: false,
+                },
+              ],
+            },
+          ],
+        ],
+      }),
+    ],
   });
 
 /** Detect which project filter is active from CLI args to split coverage/results by project type. */

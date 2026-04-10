@@ -3,4 +3,4 @@
 //
 
 export { default as ProjectWizardBlueprint } from './blueprint';
-export { ProjectRules, CreateProject, ProjectWizardHandlers } from './functions';
+export { ProjectRules, CreateProject, SyncTriggers, ProjectWizardHandlers } from './functions';

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
 
-import { Panel, Slide } from '../../components';
+import { Panel, Slide } from '#components';
 
 type MarkdownSlideProps = {
   document: Markdown.Document;

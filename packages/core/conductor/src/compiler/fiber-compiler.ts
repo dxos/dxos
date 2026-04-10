@@ -35,7 +35,6 @@ import {
   ValueBag,
   isNotExecuted,
 } from '../types';
-
 import {
   type GraphDiagnostic,
   InputKind,
@@ -366,7 +365,7 @@ export class GraphExecutor {
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
-        Layer.succeed(Feed.Service, yield* Feed.Service),
+        Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
         Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),

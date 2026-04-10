@@ -14,16 +14,17 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { type Plugin, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
+import { observabilityTranslations } from '@dxos/plugin-observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
-import { observabilityTranslations } from '@dxos/plugin-observability';
 
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
@@ -226,7 +227,15 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const plugins = getPlugins(conf);
+  const builtinPlugins = getPlugins(conf);
+  let remotePlugins: Plugin.Plugin[] = [];
+  try {
+    remotePlugins = await UrlLoader.preload();
+  } catch (error) {
+    log.warn('failed to preload remote plugins', { error });
+  }
+  const plugins = [...builtinPlugins, ...remotePlugins];
+  const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -266,6 +275,7 @@ const main = async () => {
     const App = useApp({
       fallback: Fallback,
       placeholder: Placeholder,
+      pluginLoader,
       plugins,
       core,
       defaults,

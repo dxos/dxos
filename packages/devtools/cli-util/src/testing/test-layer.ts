@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import { ClientService, ConfigService } from '@dxos/client';
 
 import { CommandConfig } from '../services';
-
 import { TestConsole } from './test-console';
 
 export const TestLayer = Function.pipe(

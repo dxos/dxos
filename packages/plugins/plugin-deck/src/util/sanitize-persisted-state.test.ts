@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultDeck, type DeckState, type StoredDeckState } from '../types';
+import { defaultDeck, type DeckState, type StoredDeckState } from '#types';
 
 import { sanitizePersistedState } from './sanitize-persisted-state';
 

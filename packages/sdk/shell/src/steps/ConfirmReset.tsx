@@ -9,7 +9,6 @@ import { Dialog, Message, Trans, useTranslation } from '@dxos/react-ui';
 
 import { Action, InputLabel, TextInput } from '../components';
 import { translationKey } from '../translations';
-
 import { type StepProps } from './StepProps';
 
 type ConfirmResetOptions = Partial<{

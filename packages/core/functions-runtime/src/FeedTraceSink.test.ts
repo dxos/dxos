@@ -3,13 +3,15 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Layer from 'effect/Layer';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+
+import { Database, Filter, Query } from '@dxos/echo';
+import { Trace } from '@dxos/functions';
+
 import * as FeedTraceSink from './FeedTraceSink';
 import { TestDatabaseLayer } from './testing';
-import { Trace } from '@dxos/functions';
-import * as Schema from 'effect/Schema';
-import { Database, Filter, Query } from '@dxos/echo';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),

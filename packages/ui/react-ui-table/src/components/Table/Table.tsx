@@ -9,7 +9,6 @@ import React, { type PropsWithChildren, type RefObject, forwardRef, useImperativ
 import { type DxGridAxisMeta, type DxGridPosition } from '@dxos/react-ui-grid';
 
 import { type InsertRowResult } from '../../model';
-
 import { TableContent } from './TableContent';
 import { TableToolbar } from './TableToolbar';
 

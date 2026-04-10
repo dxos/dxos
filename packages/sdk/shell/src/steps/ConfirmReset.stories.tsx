@@ -9,7 +9,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { StorybookDialog } from '../story-components';
 import { translations } from '../translations';
-
 import { ConfirmReset } from './ConfirmReset';
 
 const meta = {

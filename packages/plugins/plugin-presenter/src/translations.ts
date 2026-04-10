@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
@@ -14,6 +14,7 @@ export const translations = [
         'settings.title': 'Presenter settings',
         'toggle-presentation.label': 'Present',
         'present-collections.label': 'Present collections (experimental)',
+        'present-collections.description': 'Enable presenting collections of documents as a slideshow.',
       },
     },
   },

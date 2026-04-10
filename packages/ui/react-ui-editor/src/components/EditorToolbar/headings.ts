@@ -8,7 +8,6 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { setHeading } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const headingIcons: Record<string, string> = {

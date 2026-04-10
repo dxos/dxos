@@ -7,9 +7,8 @@ import React from 'react';
 
 import { Input, ScrollArea } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-
-import { Column } from './Column';
 import { Flex } from '../Flex';
+import { Column } from './Column';
 
 const List = () => {
   return (

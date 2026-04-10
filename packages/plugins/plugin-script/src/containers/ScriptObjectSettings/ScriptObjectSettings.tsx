@@ -11,16 +11,16 @@ import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptObjectSettingsProps = {
   object: Script.Script;

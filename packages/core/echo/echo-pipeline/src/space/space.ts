@@ -17,7 +17,6 @@ import { type AsyncCallback, Callback } from '@dxos/util';
 
 import { type MetadataStore } from '../metadata';
 import { type PipelineAccessor } from '../pipeline';
-
 import { ControlPipeline } from './control-pipeline';
 import { type SpaceProtocol } from './space-protocol';
 

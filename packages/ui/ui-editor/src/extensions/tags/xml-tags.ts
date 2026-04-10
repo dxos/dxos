@@ -18,11 +18,11 @@ import { type FunctionComponent } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Domino } from '@dxos/ui';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
 import { scrollerLineEffect } from '../scroller';
-
 import { nodeToJson } from './xml-util';
 
 /**
@@ -54,9 +54,9 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
  */
 export type XmlWidgetProps<TProps = any, TContext = any> = TProps & {
   _tag: string;
-  context?: TContext;
-  range?: { from: number; to: number };
+  range: { from: number; to: number };
   view?: EditorView;
+  context?: TContext;
   onEvent?: XmlEventHandler;
 };
 
@@ -67,15 +67,31 @@ export type XmlWidgetFactory = (props: XmlWidgetProps, onEvent?: XmlEventHandler
 
 /**
  * Widget registry definition.
+ * NOTE: Widgets should NOT use top/bottom margins (it causes unstable measurements while scrolling which leads to jumps).
+ * If required, use encapsulated divs with padding instead.
  */
 export type XmlWidgetDef = {
-  /** Block widget. */
+  /**
+   * Block widget.
+   */
   block?: boolean;
 
-  /** Native widget (rendered inline). */
+  /**
+   * When true, the opening tag is flushed immediately and inner content streams character-by-character.
+   */
+  streaming?: boolean;
+
+  /**
+   * Native widget (rendered inline).
+   */
   factory?: XmlWidgetFactory;
 
-  /** React/Solid widget (rendered in portals outside of the editor). */
+  /**
+   * React/Solid widget (rendered in portals outside of the editor).
+   * Prefer an `id="..."` attribute on the tag so `updateWidget` can target the instance; if omitted,
+   * an id is derived from the tag’s document range (non-streaming) or opening position (streaming).
+   * Streaming tags use `cm-xml-<from>` so the same portal id is kept when the closing tag arrives.
+   */
   Component?: FunctionComponent<XmlWidgetProps>;
 };
 
@@ -85,6 +101,13 @@ export const getXmlTextChild = (children: any[]): string | null => {
   const child = children?.[0];
   return typeof child === 'string' ? child : null;
 };
+
+/** Stable id for portaled React/Solid widgets; explicit `id` on the tag wins for `updateWidget`. */
+const xmlWidgetId = (explicit: unknown, fallback: string): string =>
+  typeof explicit === 'string' && explicit.length > 0 ? explicit : fallback;
+
+/** Escapes a string for safe embedding in RegExp source (tag names from the registry). */
+const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Update context.
@@ -103,6 +126,8 @@ export const xmlTagUpdateEffect = StateEffect.define<{ id: string; value: any }>
 
 type WidgetDecorationSet = {
   from: number;
+  /** Start position of an active unclosed streaming tag (for rebuild range). */
+  streamingFrom?: number;
   decorations: DecorationSet;
 };
 
@@ -164,11 +189,11 @@ export type XmlTagsOptions = {
   /** Tag registry. */
   registry?: XmlWidgetRegistry;
 
+  /** Tags to bookmark for navigation. */
+  bookmarks?: string[];
+
   /** Called when widgets are mounted or unmounted. */
   setWidgets?: (widgets: XmlWidgetState[]) => void;
-
-  /** Tags to bookmark. */
-  bookmarks?: string[];
 };
 
 /**
@@ -355,7 +380,7 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
     create: (state) => {
       return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
     },
-    update: ({ from, decorations }, tr) => {
+    update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
       for (const effect of tr.effects) {
         if (effect.is(xmlTagResetEffect)) {
@@ -375,16 +400,22 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
           // Full rebuild from start.
           return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
         } else {
-          // Append-only: rebuild decorations from after the last widget and merge with existing decorations.
-          const result = buildDecorations(state, { from, to: state.doc.length }, registry, notifier);
+          // Rebuild from the streaming tag start (if active) so the tree walk can detect completion.
+          const rebuildFrom = streamingFrom ?? from;
+          const result = buildDecorations(state, { from: rebuildFrom, to: state.doc.length }, registry, notifier);
           return {
             from: result.from,
-            decorations: decorations.update({ add: decorationSetToArray(result.decorations) }),
+            streamingFrom: result.streamingFrom,
+            decorations: decorations.update({
+              // Remove old streaming decorations — they are rebuilt each tick.
+              filter: (_f, _t, deco) => !deco.spec.streaming,
+              add: decorationSetToArray(result.decorations),
+            }),
           };
         }
       }
 
-      return { from, decorations };
+      return { from, streamingFrom, decorations };
     },
     provide: (field) => [
       EditorView.decorations.from(field, (v) => v.decorations),
@@ -394,6 +425,7 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
+ * After the tree walk, scans for unclosed streaming tags and creates provisional decorations.
  */
 const buildDecorations = (
   state: EditorState,
@@ -411,6 +443,8 @@ const buildDecorations = (
   }
 
   let last = range.from;
+  let streamingFrom: number | undefined;
+
   tree.iterate({
     from: range.from,
     to: range.to,
@@ -423,17 +457,32 @@ const buildDecorations = (
             if (args) {
               const def = registry[args._tag];
               if (def) {
+                // Skip unclosed streaming elements — the unclosed tag scan handles them.
+                if (def.streaming && !node.node.getChild('CloseTag')) {
+                  return false;
+                }
+
                 // NOTE: The widget state may already have been updated before the widget is mounted.
                 const { block, factory, Component } = def;
-                const widgetState = args.id ? widgetStateMap[args.id] : undefined;
                 const nodeRange = { from: node.node.from, to: node.node.to };
-                const props = { context, range: nodeRange, ...args, ...widgetState } satisfies XmlWidgetProps;
+                const widgetId = xmlWidgetId(
+                  args.id,
+                  def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
+                );
+                const widgetState = widgetStateMap[widgetId];
+                const props = {
+                  range: nodeRange,
+                  context,
+                  ...args,
+                  id: widgetId,
+                  ...widgetState,
+                } satisfies XmlWidgetProps;
 
                 // Create widget.
                 const widget: WidgetType | undefined = factory
-                  ? factory(props)
+                  ? (factory(props) ?? undefined)
                   : Component
-                    ? args.id && new PlaceholderWidget(args.id, Component, props, notifier)
+                    ? new PlaceholderWidget(widgetId, Component, props, notifier)
                     : undefined;
 
                 // Add decoration.
@@ -466,7 +515,82 @@ const buildDecorations = (
     },
   });
 
-  return { from: last, decorations: builder.finish() };
+  // Scan for unclosed streaming tags at the document tail.
+  const streamingTagNames = Object.entries(registry)
+    .filter(([, def]) => def.streaming)
+    .map(([name]) => name)
+    // Longest names first so `react-widget` wins over `react` in alternation.
+    .sort((a, b) => b.length - a.length);
+
+  if (streamingTagNames.length > 0) {
+    const tailText = state.sliceDoc(range.from, range.to);
+    const streamingPattern = streamingTagNames.map(escapeRegExpSource).join('|');
+    const tagPattern = new RegExp(`<(${streamingPattern})(\\s[^>]*)?>`, 'g');
+    let match: RegExpExecArray | null;
+
+    while ((match = tagPattern.exec(tailText)) !== null) {
+      const tagName = match[1];
+      const closeTag = `</${tagName}>`;
+      const afterOpen = match.index + match[0].length;
+
+      // Only process if there's no closing tag after this opening tag.
+      if (tailText.indexOf(closeTag, afterOpen) === -1) {
+        const absoluteFrom = range.from + match.index;
+        const contentFrom = range.from + afterOpen;
+        const innerText = state.sliceDoc(contentFrom, range.to).trim();
+
+        const def = registry[tagName];
+        const props: XmlWidgetProps = {
+          _tag: tagName,
+          context,
+          range: { from: absoluteFrom, to: range.to },
+          children: innerText ? [innerText] : undefined,
+        };
+
+        // Parse attributes from the opening tag.
+        const attrPattern = /(\w+)="([^"]*)"/g;
+        let attrMatch: RegExpExecArray | null;
+        while ((attrMatch = attrPattern.exec(match[0])) !== null) {
+          props[attrMatch[1]] = attrMatch[2];
+        }
+
+        const widgetId = xmlWidgetId(props.id, `cm-xml-${absoluteFrom}`);
+        const widgetState = widgetStateMap[widgetId];
+        const mergedProps = { ...props, id: widgetId, ...widgetState };
+
+        const widget: WidgetType | undefined = def.factory
+          ? (def.factory(mergedProps) ?? undefined)
+          : def.Component
+            ? new PlaceholderWidget(widgetId, def.Component, mergedProps, notifier, true)
+            : undefined;
+
+        if (widget) {
+          builder.add(
+            absoluteFrom,
+            range.to,
+            Decoration.replace({
+              widget,
+              block: def.block,
+              atomic: true,
+              inclusive: true,
+              tag: tagName,
+              streaming: true,
+              contentFrom,
+            }),
+          );
+
+          // Set from to just before the streaming tag so next rebuild covers it.
+          streamingFrom = absoluteFrom;
+          last = absoluteFrom;
+        }
+
+        // Only one streaming tag at a time.
+        break;
+      }
+    }
+  }
+
+  return { from: last, streamingFrom, decorations: builder.finish() };
 };
 
 /**
@@ -480,6 +604,7 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
     public readonly Component: FunctionComponent<TProps>,
     public readonly props: TProps,
     private readonly notifier: XmlWidgetNotifier,
+    private readonly streaming?: boolean,
   ) {
     super();
     invariant(id);
@@ -490,6 +615,11 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   }
 
   override eq(other: this) {
+    // Streaming widgets always need updating (content changes on each tick).
+    if (this.streaming) {
+      return false;
+    }
+
     return this.id === other.id;
   }
 
@@ -497,10 +627,18 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
     return true;
   }
 
-  override toDOM(_view: EditorView) {
-    this._root = document.createElement('span');
-    this.notifier.mounted({ id: this.id, root: this._root, props: this.props, Component: this.Component });
+  override toDOM(view: EditorView) {
+    // NOTE: Set min-height to avoid jumps while scrolling.
+    this._root = Domino.of('div').classNames('min-h-[24px]').root;
+    const props: TProps = { ...(this.props as object), view } as TProps;
+    this.notifier.mounted({ id: this.id, root: this._root, props, Component: this.Component });
     return this._root;
+  }
+
+  override updateDOM(dom: HTMLElement) {
+    this._root = dom;
+    this.notifier.mounted({ id: this.id, root: dom, props: this.props, Component: this.Component });
+    return true;
   }
 
   override destroy(_dom: HTMLElement) {

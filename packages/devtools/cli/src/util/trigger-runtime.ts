@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom';
+import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
 import type * as PlatformError from '@effect/platform/Error';
 import * as FileSystem from '@effect/platform/FileSystem';
-import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
-import { Registry } from '@effect-atom/atom';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -30,7 +31,6 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 
 export type TriggerRuntimeServices =
   | TriggerDispatcher

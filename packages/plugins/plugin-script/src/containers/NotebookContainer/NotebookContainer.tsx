@@ -9,26 +9,27 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
+import { Operation } from '@dxos/operation';
+import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '../../components';
-import { meta } from '../../meta';
+import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
+import { meta } from '#meta';
+import { type Notebook } from '#types';
+
 import { ComputeGraph } from '../../notebook';
-import { type Notebook } from '../../types';
 
 const INCLUDE_BLUEPRINTS = [
   'org.dxos.blueprint.assistant',
@@ -38,7 +39,10 @@ const INCLUDE_BLUEPRINTS = [
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = ObjectSurfaceProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
+export type NotebookContainerProps = AppSurface.ObjectArticleProps<
+  Notebook.Notebook,
+  Pick<TypescriptEditorProps, 'env'>
+>;
 
 export const NotebookContainer = ({ role, subject: notebook, attendableId, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);

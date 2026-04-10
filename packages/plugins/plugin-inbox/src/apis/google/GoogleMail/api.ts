@@ -7,7 +7,6 @@ import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
-
 import { ErrorResponse, GoogleError, LabelsResponse, ListMessagesResponse, Message } from './types';
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.

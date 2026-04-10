@@ -47,7 +47,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-
 import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -259,8 +258,9 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
+      const clientTag = config?.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
       this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint);
+      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
     const {

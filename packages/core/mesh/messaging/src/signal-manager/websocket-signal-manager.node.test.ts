@@ -11,7 +11,6 @@ import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createMessage, expectPeerAvailable, expectReceivedMessage } from '../testing';
-
 import { WebsocketSignalManager } from './websocket-signal-manager';
 
 describe.skip('WebSocketSignalManager', () => {

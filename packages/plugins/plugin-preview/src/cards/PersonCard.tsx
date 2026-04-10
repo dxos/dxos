@@ -7,14 +7,14 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Avatar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
-export const PersonCard = ({ subject }: ObjectSurfaceProps<Person.Person>) => {
+export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
   const { invoke } = useOperationInvoker();
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
 

@@ -9,15 +9,15 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Graph } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 
-import { Adjust, ChangeCompanion } from './definitions';
-import { updateActiveDeck } from './helpers';
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, PLANK_COMPANION_TYPE } from '../types';
 import { computeActiveUpdates } from '../util';
+import { Adjust, ChangeCompanion } from './definitions';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
   Operation.withHandler(

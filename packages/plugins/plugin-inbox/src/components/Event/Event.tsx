@@ -11,9 +11,9 @@ import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { DateComponent } from '../DateComponent';
+import { meta } from '#meta';
 
+import { DateComponent } from '../DateComponent';
 import { EventAttendee } from './EventAttendee';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
@@ -75,7 +75,7 @@ type EventViewportProps = {};
 
 const EventViewport = composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
