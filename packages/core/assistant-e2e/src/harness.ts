@@ -16,6 +16,8 @@ import {
   DatabaseHandlers,
   MemoryBlueprint,
   WebSearchBlueprint,
+  WebSearchHandlers,
+  WebSearchToolkitGeneric,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -30,7 +32,13 @@ import { trim } from '@dxos/util';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: [AgentHandlers, DatabaseHandlers, BlueprintManagerHandlers, InboxOperationHandlerSet],
+  operationHandlers: [
+    AgentHandlers,
+    DatabaseHandlers,
+    BlueprintManagerHandlers,
+    InboxOperationHandlerSet,
+    WebSearchHandlers,
+  ],
   types: [
     Organization.Organization,
     Person.Person,
@@ -49,6 +57,7 @@ const TestLayer = AssistantTestLayer({
     // AssistantBlueprint.make(),
     InboxBlueprint.make(),
   ],
+  toolkits: [WebSearchToolkitGeneric],
 });
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;
