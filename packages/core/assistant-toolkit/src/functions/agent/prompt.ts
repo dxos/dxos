@@ -2,10 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, GenericToolkit, ModelName } from '@dxos/ai';
 import {
@@ -24,17 +29,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { type Message } from '@dxos/types';
-
-import { AgentPrompt } from './definitions';
-
 import { trim } from '@dxos/util';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Deferred from 'effect/Deferred';
-import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
+
 import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
+
+import { AgentPrompt } from './definitions';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 

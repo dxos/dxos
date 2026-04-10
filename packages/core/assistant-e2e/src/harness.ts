@@ -15,7 +15,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
@@ -87,13 +87,6 @@ export const agentTest: {
       }
     },
     Effect.provide(TestLayer),
-    withStaticSeed,
     TestHelpers.provideTestContext,
   );
 };
-
-const withStaticSeed: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R> = (_) =>
-  Effect.zipRight(
-    Effect.sync(() => Obj.ID.dangerouslyDisableRandomness()),
-    _,
-  );
