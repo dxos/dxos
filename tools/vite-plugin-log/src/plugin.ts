@@ -17,7 +17,7 @@ import {
 } from './definitions.ts';
 import { transform } from './transform.ts';
 
-/** Virtual module id resolved to the client runtime (uses the app’s @dxos/log). */
+/** Virtual module id resolved to the client runtime (uses the app's @dxos/log). */
 export const VITE_PLUGIN_LOG_RUNTIME_ID = '/@dxos-plugin-log/runtime';
 
 /** Standalone Rolldown meta plugin id (see {@link rolldownLogMetaPlugin}). */
@@ -27,7 +27,7 @@ const PLUGIN_NAME = 'dxos:vite-plugin-log';
 
 const LOG_META_EXCLUDE_ID_DEFAULT = /node_modules|\\0/;
 
-/** Inputs matching Rolldown’s `transform` hook `meta` plus `code` / `id`. */
+/** Inputs matching Rolldown's `transform` hook `meta` plus `code` / `id`. */
 export type RolldownLogMetaHookContext = {
   code: string;
   id: string;
@@ -35,6 +35,30 @@ export type RolldownLogMetaHookContext = {
   ast?: Program;
   magicString?: RolldownMagicString;
 };
+
+/**
+ * Standalone transform function for use in custom Rolldown plugins.
+ * Returns transformed code or null if no transformation was needed.
+ */
+export function rolldownLogMetaTransform(
+  options: LogMetaTransformOptions,
+  ctx: RolldownLogMetaHookContext,
+): { code: RolldownMagicString } | null {
+  const excludeId = options.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT;
+  if (excludeId instanceof RegExp && excludeId.test(ctx.id)) {
+    return null;
+  }
+  if (!['js', 'jsx', 'ts', 'tsx'].includes(ctx.moduleType)) {
+    return null;
+  }
+  const ms = ctx.magicString ?? new RolldownMagicString(ctx.code);
+  if (!ctx.ast) {
+    console.warn('No program', ctx.id);
+    return null;
+  }
+  transform(ms, ctx.ast, ctx.id, { specs: options.to_transform });
+  return { code: ms };
+}
 
 type ViteDevServer = Awaited<ReturnType<typeof import('vite').createServer>>;
 

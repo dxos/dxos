@@ -20137,6 +20137,18 @@ importers:
         specifier: 'catalog:'
         version: 4.1.4(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(@vitest/browser-playwright@4.1.4)(@vitest/coverage-v8@4.1.4)(@vitest/ui@4.1.4)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.9))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  tools/vite-plugin-log/example:
+    devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../packages/common/log
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:..
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.8(@types/node@22.10.2)(@vitejs/devtools@0.1.13)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   tools/vscode-file-templates:
     devDependencies:
       '@vscode/vsce':
