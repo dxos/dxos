@@ -13,7 +13,6 @@ import * as Schema from 'effect/Schema';
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
-import { ServiceResolver } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
