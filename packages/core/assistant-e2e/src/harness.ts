@@ -19,7 +19,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Database, Feed, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
@@ -72,12 +72,18 @@ export const agentTest: {
       const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
 
       yield* Database.add(prompt);
+      const conversationFeed = Feed.make();
+      yield* Database.add(conversationFeed);
       yield* Database.flush();
-      const exit = yield* Operation.invoke(AgentPrompt, {
-        prompt: Ref.make(prompt),
-        input: {},
-        systemInstructions: INSTRUCTIONS,
-      }).pipe(Effect.exit);
+      const exit = yield* Operation.invoke(
+        AgentPrompt,
+        {
+          prompt: Ref.make(prompt),
+          input: {},
+          systemInstructions: INSTRUCTIONS,
+        },
+        { conversation: Obj.getDXN(conversationFeed).toString() },
+      ).pipe(Effect.exit);
 
       if (options.expect === 'failure') {
         if (!Exit.isFailure(exit)) {
