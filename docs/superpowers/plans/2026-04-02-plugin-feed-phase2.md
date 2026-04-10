@@ -418,7 +418,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: post ?? 'feed',
               properties: {
-                label: ['feed companion label', { ns: meta.id }],
+                label: ['feed-companion.label', { ns: meta.id }],
                 icon: 'ph--article--regular',
                 disposition: 'hidden',
               },
@@ -822,7 +822,7 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
             id: `${meta.id}/sync-feed-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync feed error title', { ns: meta.id }],
+            title: ['sync-feed-error.title', { ns: meta.id }],
           });
         }),
       );
@@ -976,7 +976,7 @@ Add a third extension to the `Effect.all([...])` array in `app-graph-builder.ts`
               id: 'sync',
               data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
               properties: {
-                label: ['sync feed label', { ns: meta.id }],
+                label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
