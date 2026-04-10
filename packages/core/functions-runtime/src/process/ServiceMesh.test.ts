@@ -7,13 +7,12 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Scope from 'effect/Scope';
 
 import { ServiceResolver } from '@dxos/functions';
 import { type SpaceId } from '@dxos/keys';
 
 import * as Service from './Service';
-import { ServiceMesh, ServiceMeshService, layer as serviceMeshLayer } from './ServiceMesh';
+import * as ServiceMesh from './ServiceMesh';
 
 // Test service tags.
 class CounterService extends Context.Tag('test/CounterService')<CounterService, { count: () => number }>() {}
@@ -97,7 +96,7 @@ describe('ServiceMesh', () => {
       'creates and resolves application-scoped services',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('application')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('application')]);
 
         const result = yield* mesh.run(
           Effect.gen(function* () {
@@ -117,7 +116,7 @@ describe('ServiceMesh', () => {
       'caches application-scoped services across multiple runs',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('application')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('application')]);
 
         // First run.
         const result1 = yield* mesh.run(
@@ -147,7 +146,7 @@ describe('ServiceMesh', () => {
       'resolves space-scoped services with space context',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
         const spaceId = 'space-1' as SpaceId;
 
         const result = yield* mesh.run(
@@ -169,7 +168,7 @@ describe('ServiceMesh', () => {
       'creates separate instances for different spaces',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
         const space1 = 'space-1' as SpaceId;
         const space2 = 'space-2' as SpaceId;
 
@@ -201,7 +200,7 @@ describe('ServiceMesh', () => {
       'resolves process-scoped services with process context',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('process')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('process')]);
 
         const result = yield* mesh.run(
           Effect.gen(function* () {
@@ -222,7 +221,7 @@ describe('ServiceMesh', () => {
       'creates separate instances for different processes',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('process')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('process')]);
 
         const result1 = yield* mesh.run(
           Effect.gen(function* () {
@@ -254,7 +253,7 @@ describe('ServiceMesh', () => {
       'resolves service dependencies',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([
+        const mesh = new ServiceMesh.ServiceMesh([
           makeCounterService('application'),
           makeLoggerService('application'),
           makeCompositeService('application'),
@@ -281,7 +280,7 @@ describe('ServiceMesh', () => {
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
         // Add services in reverse dependency order.
-        const mesh = new ServiceMesh([
+        const mesh = new ServiceMesh.ServiceMesh([
           makeCompositeService('application'),
           makeLoggerService('application'),
           makeCounterService('application'),
@@ -309,7 +308,7 @@ describe('ServiceMesh', () => {
       'adds services dynamically',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh();
+        const mesh = new ServiceMesh.ServiceMesh();
 
         mesh.add(makeCounterService('application'));
 
@@ -331,7 +330,7 @@ describe('ServiceMesh', () => {
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
         const counterService = makeCounterService('application');
-        const mesh = new ServiceMesh([counterService]);
+        const mesh = new ServiceMesh.ServiceMesh([counterService]);
 
         mesh.remove(counterService);
 
@@ -356,7 +355,7 @@ describe('ServiceMesh', () => {
       'returns a resolver that can be used directly',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('application')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('application')]);
 
         // Use mesh.run which handles the scope internally.
         const count = yield* mesh.run(
@@ -375,7 +374,7 @@ describe('ServiceMesh', () => {
       'cleans up space-scoped services when resolver scope closes',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
         const spaceId = 'space-cleanup' as SpaceId;
 
         // First run - creates the service.
@@ -409,7 +408,7 @@ describe('ServiceMesh', () => {
       'caches space-scoped services within same run',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
         const spaceId = 'space-cache' as SpaceId;
 
         // Multiple resolves within the same run should use the same service instance.
@@ -441,7 +440,7 @@ describe('ServiceMesh', () => {
       'cleans up all services on destroy',
       Effect.fn(function* ({ expect }) {
         resetCreationCounters();
-        const mesh = new ServiceMesh([
+        const mesh = new ServiceMesh.ServiceMesh([
           makeCounterService('application'),
           makeCounterService('space'),
           makeCounterService('process'),
@@ -488,7 +487,7 @@ describe('ServiceMesh', () => {
     it.effect(
       'fails when space-scoped service is requested without space context',
       Effect.fn(function* ({ expect }) {
-        const mesh = new ServiceMesh([makeCounterService('space')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('space')]);
 
         const result = yield* mesh
           .run(
@@ -507,7 +506,7 @@ describe('ServiceMesh', () => {
     it.effect(
       'fails when process-scoped service is requested without process context',
       Effect.fn(function* ({ expect }) {
-        const mesh = new ServiceMesh([makeCounterService('process')]);
+        const mesh = new ServiceMesh.ServiceMesh([makeCounterService('process')]);
 
         const result = yield* mesh
           .run(
@@ -526,7 +525,7 @@ describe('ServiceMesh', () => {
     it.effect(
       'fails when service is not available',
       Effect.fn(function* ({ expect }) {
-        const mesh = new ServiceMesh();
+        const mesh = new ServiceMesh.ServiceMesh();
 
         const result = yield* mesh
           .run(
@@ -550,7 +549,7 @@ describe('ServiceMesh', () => {
         resetCreationCounters();
 
         const result = yield* Effect.gen(function* () {
-          const mesh = yield* ServiceMeshService;
+          const mesh = yield* ServiceMesh.ServiceMeshService;
           mesh.add(makeCounterService('application'));
 
           return yield* mesh.run(
@@ -559,7 +558,7 @@ describe('ServiceMesh', () => {
               return counter.count();
             }),
           );
-        }).pipe(Effect.provide(serviceMeshLayer()));
+        }).pipe(Effect.provide(ServiceMesh.layer()));
 
         expect(result).toBe(1);
       }),
