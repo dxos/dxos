@@ -33,6 +33,7 @@ import {
   ObjectDetails,
   ObjectRenamePopover,
   RecordArticle,
+  RelatedArticle,
   SchemaContainer,
   SmallPresenceLive,
   SpacePresence,
@@ -103,7 +104,13 @@ export default Capability.makeModule(
         id: 'companion.object-settings',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('settings'), AppSurface.companionArticle()),
-        component: ({ ref, data, role }) => <ObjectDetails subject={data.companionTo} role={role} ref={ref} />,
+        component: ({ ref, data, role }) => <ObjectDetails role={role} subject={data.companionTo} ref={ref} />,
+      }),
+      Surface.create({
+        id: 'companion.related',
+        role: 'article',
+        filter: AppSurface.and(AppSurface.literalArticle('related'), AppSurface.companionArticle()),
+        component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'space-settings-properties',

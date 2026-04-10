@@ -191,7 +191,7 @@ export const translations = [
         'join-success.label': 'Successfully joined space',
         'name.label': 'Name',
         'name.placeholder': 'Name',
-        'object-settings.label': 'Details',
+        'object-properties.label': 'Properties',
         'edge-replication.label': 'Enable EDGE Replication',
         'saving-locally.label': 'Writing to disk',
         'downloading.label': 'Replicating from peers',
@@ -218,6 +218,7 @@ export const translations = [
         'related-objects.label': 'Related Objects',
         'open-space-settings.label': 'Open settings',
         'row-details-no-selection.label': 'No objects selected',
+        'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
         'field-deleted.label': 'Field deleted',
 

@@ -102,13 +102,8 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
       return Adapter;
     }, [Tile, gutter]);
 
-    // TODO(burdon): Masonry currently doesn't support an external scroller.
+    // NOTE: Masonry currently doesn't support an external scroller.
     //  https://github.com/petyosi/react-virtuoso/issues/1305
-    if (columns === 1) {
-      return <VirtuosoMasonry data={items} columnCount={1} ItemContent={TileAdapter} useWindowScroll />;
-    }
-
-    // TODO(burdon): Factor out to separate Viewport component.
     return (
       <ScrollArea.Root {...composableProps(props)} thin padding ref={composedRef}>
         {width > 0 && (

@@ -18,6 +18,7 @@ export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCa
 export const ObjectDetails: ComponentType<any> = lazy(() => import('./ObjectDetails'));
 export const ObjectRenamePopover: ComponentType<any> = lazy(() => import('./ObjectRenamePopover'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
+export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));
 export const SchemaContainer: ComponentType<any> = lazy(() => import('./SchemaContainer'));
 export const SmallPresenceLive: ComponentType<any> = lazy(() => import('./SmallPresenceLive'));
 export const SpacePresence: ComponentType<any> = lazy(() => import('./SpacePresence'));

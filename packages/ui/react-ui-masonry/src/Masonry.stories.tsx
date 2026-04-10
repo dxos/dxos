@@ -9,7 +9,7 @@ import { Filter } from '@dxos/client/echo';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -70,21 +70,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-// TODO(burdon): Masonry currently doesn't support an external scroller.
-export const Single: Story = {
-  render: (props) => {
-    return (
-      <div className='dx-container flex justify-center'>
-        <ScrollArea.Root className='dx-card-max-width' thin padding>
-          <ScrollArea.Viewport>
-            <DefaultStory {...props} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </div>
-    );
-  },
-  args: {
-    columns: 1,
-  },
-};
