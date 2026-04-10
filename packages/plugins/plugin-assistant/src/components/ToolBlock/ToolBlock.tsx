@@ -41,7 +41,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             const tool = tools.find((tool) => tool.name === block.name);
             lastToolCall = { tool, block };
             return {
-              title: tool?.description ?? [t('tool-call.label'), tool?.name].join(' '),
+              title: tool?.description ?? [t('tool-call.label'), block?.name].join(' '),
               content: {
                 ...block,
                 input: safeParseJson(block.input),
@@ -59,7 +59,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             }
 
             const title =
-              lastToolCall?.tool?.description ?? [t('tool-result.label'), lastToolCall?.tool?.name].join(' ');
+              lastToolCall?.tool?.description ?? [t('tool-result.label'), lastToolCall?.block?.name].join(' ');
             lastToolCall = undefined;
             return {
               title,

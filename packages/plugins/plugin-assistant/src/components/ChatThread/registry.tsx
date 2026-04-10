@@ -157,6 +157,9 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       break;
     }
     case 'reference': {
+      if (block.pending) {
+        return;
+      }
       const dxn = block.reference.dxn;
       return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
     }
@@ -186,22 +189,32 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       break;
     }
     case 'stats': {
-      return `<stats>${ContentBlock.createStatsMessage(block)}</stats>`;
+      return renderXMLBlock('stats', { content: ContentBlock.createStatsMessage(block) });
     }
     case 'reasoning': {
-      const text = block.reasoningText ?? block.redactedText;
+      let text = block.reasoningText ?? block.redactedText;
       if (!text) {
         return;
       }
-      // TODO(dmaretskyi): The mixed Markdown/XML parser does not support parsing multi-line XML tags.
-      return `<reasoning>${text.replace(/\n/g, ' ').trim()}</reasoning>`;
+      return renderXMLBlock('reasoning', { content: text, pending: block.pending });
     }
     case 'summary': {
-      return `<summary>${block.content}</summary>`;
+      return renderXMLBlock('summary', { content: block.content, pending: block.pending });
     }
     default: {
       // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
     }
+  }
+};
+
+const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
+  // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
+  const content = (opts.content ?? '').replace(/\n\n/g, ' ').trim();
+
+  if (opts.pending) {
+    return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}`;
+  } else {
+    return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}</${tag}>`;
   }
 };
