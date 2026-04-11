@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Entity, Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
+import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import type { DXN, ObjectId } from '@dxos/keys';
@@ -244,14 +244,29 @@ class FilterClass implements Filter$.Any {
   }
 
   static updated(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
-    return FilterClass.#timeRangeFilter('updatedAt', range);
+    return FilterClass._timeRangeFilter('updatedAt', range);
   }
 
   static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
-    return FilterClass.#timeRangeFilter('createdAt', range);
+    return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static #timeRangeFilter(
+  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+    const items = Array.isArray(parents) ? parents : [parents];
+    const dxns = items.map((item) => {
+      if (isDxnLike(item)) {
+        return item.toString();
+      }
+      throw new TypeError('childOf requires DXN values in query-lite');
+    });
+    return new FilterClass({
+      type: 'child-of',
+      parents: dxns,
+      transitive: options?.transitive ?? true,
+    });
+  }
+
+  private static _timeRangeFilter(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
   ): Filter$.Any {
@@ -267,19 +282,6 @@ class FilterClass implements Filter$.Any {
       return FilterClass.everything();
     }
     return filters.length === 1 ? filters[0] : FilterClass.and(...filters);
-  }
-
-  static childOf(
-    parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[],
-    options?: Filter$.ChildOfOptions,
-  ): Filter$.Any {
-    const items = Array.isArray(parents) ? parents : [parents];
-    const dxns = items.map((item) => String(item));
-    return new FilterClass({
-      type: 'child-of',
-      parents: dxns,
-      transitive: options?.transitive ?? true,
-    });
   }
 
   static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
@@ -587,6 +589,16 @@ const makeTypeDxn = (typename: string) => {
   return `dxn:type:${typename}`;
 };
 
+const isDxnLike = (value: unknown): value is DXN => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    value.toString().startsWith('dxn:')
+  );
+};
+
 const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
 
 const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
@@ -627,14 +639,14 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
       return `Filter.and(${filter.filters.map(prettyFilter).join(', ')})`;
     case 'or':
       return `Filter.or(${filter.filters.map(prettyFilter).join(', ')})`;
-    case 'child-of':
-      return `Filter.childOf([${filter.parents.join(', ')}])`;
   }
 };
 
