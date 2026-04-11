@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, type ObjectId } from '@dxos/keys';
+import type { DXN, ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -244,17 +244,17 @@ class FilterClass implements Filter$.Any {
   }
 
   static updated(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
-    return FilterClass.#timeRangeFilter('updatedAt', range);
+    return FilterClass._timeRangeFilter('updatedAt', range);
   }
 
   static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
-    return FilterClass.#timeRangeFilter('createdAt', range);
+    return FilterClass._timeRangeFilter('createdAt', range);
   }
 
   static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
-      if (item instanceof DXN) {
+      if (isDxnLike(item)) {
         return item.toString();
       }
       throw new TypeError('childOf requires DXN values in query-lite');
@@ -266,7 +266,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static #timeRangeFilter(
+  private static _timeRangeFilter(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
   ): Filter$.Any {
@@ -587,6 +587,16 @@ const makeTypeDxn = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
   return `dxn:type:${typename}`;
+};
+
+const isDxnLike = (value: unknown): value is DXN => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    value.toString().startsWith('dxn:')
+  );
 };
 
 const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
