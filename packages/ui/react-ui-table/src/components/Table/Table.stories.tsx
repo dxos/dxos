@@ -73,8 +73,8 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      Obj.change(view, (obj) => {
-        obj.query.ast = newQuery as Mutable<typeof newQuery>;
+      Obj.change(view, (view) => {
+        view.query.ast = newQuery as Mutable<typeof newQuery>;
       });
     },
     [schema, view],
@@ -173,10 +173,10 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        Obj.change(view, (obj) => {
-          obj.projection.fields = [
-            obj.projection.fields.find((field) => field.path === 'name')!,
-            ...obj.projection.fields.filter((field) => field.path !== 'name'),
+        Obj.change(view, (view) => {
+          view.projection.fields = [
+            view.projection.fields.find((field) => field.path === 'name')!,
+            ...view.projection.fields.filter((field) => field.path !== 'name'),
           ];
         });
 
