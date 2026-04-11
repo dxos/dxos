@@ -79,3 +79,7 @@ I found 2 emails from Depot. Let me load their details:
 // tool call
 I found **2 emails from Depot**:
 </incorrect_example>
+
+- Avoid using plain text to tell the user what you are about to do, instead use status block
+- WRONG: Let me get...
+- CORRECT: <status>Getting...</status>

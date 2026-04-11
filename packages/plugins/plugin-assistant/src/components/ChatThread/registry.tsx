@@ -10,7 +10,7 @@ import { type BlockRenderer, type MessageThreadContext } from './sync';
 import {
   FallbackWidget,
   PromptWidget,
-  ReasoningWidget,
+  ReasoningPanelWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
@@ -38,10 +38,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   reasoning: {
     block: true,
     streaming: true,
-    factory: ({ children, range }) => {
-      const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text, range.from) : null;
-    },
+    Component: ReasoningPanelWidget,
   },
   reference: {
     block: false,

@@ -5,6 +5,7 @@
 import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
+import { XML_WIDGET_DATA_ATTR } from '@dxos/ui-editor';
 
 /**
  * Props used to derive a stable key for a reasoning block across CodeMirror widget rebuilds.
@@ -37,23 +38,41 @@ export class StatusWidget extends WidgetType {
 
   override toDOM() {
     return Domino.of('div')
-      .classNames('pt-2 pb-4')
+      .classNames('py-0.5')
+      .attributes({ [XML_WIDGET_DATA_ATTR]: '' })
       .append(
         Domino.of('div')
-          .classNames('relative overflow-hidden p-px rounded-sm border border-subdued-separator')
+          .classNames('relative overflow-hidden rounded-sm')
           .append(
             Domino.of('div')
-              .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-description p-2')
-              .attributes({ 'data-status-text': '' })
-              .text(this.text),
-            Domino.of('div').attributes({ 'data-id': this.#pos }),
+              .classNames(
+                'grid grid-cols-[24px_1fr] gap-x-0.5 gap-y-0 items-start px-0.5 py-0.5 text-placeholder',
+              )
+              .append(
+                Domino.of('div')
+                  .classNames('flex h-5 w-full shrink-0 items-center justify-center self-start')
+                  .append(
+                    Domino.of('span').classNames(
+                      'block size-1.5 shrink-0 rounded-full bg-current opacity-45',
+                    ),
+                  ),
+                Domino.of('div')
+                  .classNames('relative min-w-0')
+                  .append(
+                    Domino.of('div')
+                      .classNames('relative z-10 rounded-sm text-sm leading-5')
+                      .attributes({ 'data-status-text': '' })
+                      .text(this.text),
+                    Domino.of('div').attributes({ 'data-id': this.#pos }),
+                  ),
+              ),
           ),
       ).root;
   }
 
   override updateDOM(dom: HTMLElement) {
     // Update only the text leaf; `dom` may be wrapped in an outer shell, and the trail host is a
-    // sibling of the text node inside the bordered container — setting `textContent` on the wrong
+    // sibling of the text node inside the wrapper — setting `textContent` on the wrong
     // ancestor would remove `[data-id]`.
     dom.querySelector<HTMLElement>('[data-status-text]')?.replaceChildren(this.text);
 

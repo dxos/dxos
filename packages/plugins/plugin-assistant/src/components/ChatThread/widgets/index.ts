@@ -4,7 +4,7 @@
 
 export * from './FallbackWidget';
 export * from './PromptWidget';
-export * from './ReasoningWidget';
+export * from './ReasoningPanelWidget';
 export * from './ReferenceWidget';
 export * from './SelectWidget';
 export * from './StatsWidget';

@@ -85,12 +85,17 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, onEvent, paragraphToWidgetGapRem = 1.125 }, forwardedRef) => {
     // Store current content so that we can toggle debug mode.
     const contentRef = useRef(content);
 
     // Codemirror editor.
-    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, { debug, registry, options });
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
+      debug,
+      registry,
+      options,
+      paragraphToWidgetGapRem,
+    });
 
     // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -170,7 +175,10 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options'>;
+type MarkdownStreamTextEditorParams = Pick<
+  MarkdownStreamProps,
+  'debug' | 'registry' | 'options' | 'paragraphToWidgetGapRem'
+>;
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -182,7 +190,7 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options }: MarkdownStreamTextEditorParams,
+  { debug, registry, options, paragraphToWidgetGapRem }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -204,7 +212,12 @@ const useMarkdownStreamTextEditor = (
             skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
           }),
           preview(),
-          xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+          xmlTags({
+            registry,
+            setWidgets,
+            bookmarks: ['prompt'],
+            paragraphToWidgetGapRem,
+          }),
           scroller({ overScroll: 64 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
           ...(options?.wire
@@ -223,7 +236,7 @@ const useMarkdownStreamTextEditor = (
         ],
       ].filter(isTruthy),
     };
-  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader]);
+  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader, paragraphToWidgetGapRem]);
 
   const viewRef = useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };

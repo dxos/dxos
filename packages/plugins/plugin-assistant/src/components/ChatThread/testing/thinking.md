@@ -1,6 +1,6 @@
 <prompt>create a project to track what I order online based on my emails, dont asak me questions</prompt>
 <reasoning>The user wants me to create a project that tracks their online orders based on emails. They don't want me to ask questions - just go ahead and create it. Let me first get the project rules and query for available mailboxes/inboxes.</reasoning>
-Let me get the project rules and find your mailboxes to set this up.
+<status>Getting the project rules and finding your mailboxes to set this up...</status>
 <toolCall id="toolu_01QJcUw8RZDyemLdvMe8nSGZ" />
 <toolCall id="toolu_01JJZrCc17JqV5r36aR9wcaj" />
 <toolCall id="toolu_012r3VQFxvWZ9UmKxMNiJP48" />
@@ -18,3 +18,4 @@ Let me get the project rules and find your mailboxes to set this up.
 <toolCall id="toolu_01X4CVxXuBjgW2JESGUEsm6f" />
 <reasoning>The service seems to be temporarily unavailable. Let me try once more.</reasoning>
 <toolCall id="toolu_01S9vi1pMnwqUuxNpe5FU731" />
+Got the project created. Let me know if you need anything else.

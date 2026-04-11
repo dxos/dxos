@@ -90,7 +90,7 @@ export const translations = [
         'type-filter.placeholder': 'Type',
         'any-type-filter.label': 'Any',
         'no-blueprint.message': 'No active blueprints',
-        'tool-call.label': 'Calling tool...',
+        'tool-call.label': 'Calling',
         'tool-result.label': 'Success',
         'tool-error.label': 'Tool call failed',
 
@@ -113,6 +113,7 @@ export const translations = [
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
         'summary.label': 'Summary',
+        'thinking.label': 'Thinking',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
