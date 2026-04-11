@@ -76,6 +76,7 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },

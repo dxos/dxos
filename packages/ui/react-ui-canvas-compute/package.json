@@ -75,6 +75,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
+    "@effect/rpc": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

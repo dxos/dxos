@@ -92,6 +92,8 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",

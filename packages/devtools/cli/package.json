@@ -71,6 +71,7 @@
     "@effect/ai-openai": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/cluster": "catalog:",
+    "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/printer": "catalog:",

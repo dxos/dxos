@@ -63,6 +63,7 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "chalk": "catalog:",
     "effect": "catalog:",
     "jsonpath-plus": "catalog:"

@@ -130,6 +130,8 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
     "js-yaml": "catalog:",
