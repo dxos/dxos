@@ -3,18 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { createKvsStore } from '@dxos/effect';
 
 import { SlackFeed, SlackSettings } from '#components';
 import { meta } from '#meta';
 import { SlackCapabilities } from '#types';
 
 const SlackFeedWithSettings = () => {
-  const settingsAtom = useCapability(SlackCapabilities.Settings);
+  const capabilities = useCapabilities(SlackCapabilities.Settings);
+  const fallbackAtom = useMemo(
+    () => createKvsStore({ key: `${meta.id}.fallback`, schema: SlackCapabilities.SettingsSchema, defaultValue: () => ({}) }),
+    [],
+  );
+  const settingsAtom = capabilities[0] ?? fallbackAtom;
   const { settings } = useSettingsState<SlackCapabilities.Settings>(settingsAtom);
   const space = useActiveSpace();
 
