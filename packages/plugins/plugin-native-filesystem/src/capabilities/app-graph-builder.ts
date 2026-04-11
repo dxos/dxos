@@ -177,8 +177,8 @@ export default Capability.makeModule(
                     }),
                   );
 
-                  Obj.change(spacesOrder, (mutableOrder: Record<string, unknown>) => {
-                    mutableOrder.order = nextOrder.map((item) => {
+                  Obj.change(spacesOrder, (spacesOrder: Record<string, unknown>) => {
+                    spacesOrder.order = nextOrder.map((item) => {
                       if (isFilesystemWorkspace(item)) {
                         return item.id;
                       }

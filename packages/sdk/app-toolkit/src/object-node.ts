@@ -77,32 +77,32 @@ export const buildCollectionPartials = (
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
-    Obj.change(collection, (mutable) => {
-      if (!mutable.objects.find((object) => object.target === child.data)) {
+    Obj.change(collection, (collection) => {
+      if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
-          mutable.objects.splice(index, 0, Ref.make(child.data));
+          collection.objects.splice(index, 0, Ref.make(child.data));
         } else {
-          mutable.objects.push(Ref.make(child.data));
+          collection.objects.push(Ref.make(child.data));
         }
       }
     });
   },
   onTransferEnd: (child: Node.Node<Obj.Unknown>, _destination: Node.Node) => {
-    Obj.change(collection, (mutable) => {
-      const idx = mutable.objects.findIndex((object) => object.target === child.data);
+    Obj.change(collection, (collection) => {
+      const idx = collection.objects.findIndex((object) => object.target === child.data);
       if (idx > -1) {
-        mutable.objects.splice(idx, 1);
+        collection.objects.splice(idx, 1);
       }
     });
   },
   onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
     const newObject = await cloneObject(child.data, resolve, db);
     db.add(newObject);
-    Obj.change(collection, (mutable) => {
+    Obj.change(collection, (collection) => {
       if (typeof index !== 'undefined') {
-        mutable.objects.splice(index, 0, Ref.make(newObject));
+        collection.objects.splice(index, 0, Ref.make(newObject));
       } else {
-        mutable.objects.push(Ref.make(newObject));
+        collection.objects.push(Ref.make(newObject));
       }
     });
   },
@@ -173,8 +173,8 @@ export const createObjectNode = ({
     onRearrange = rearrangeCache.get(collectionDxn);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
-        Obj.change(parentCollection, (mutable) => {
-          mutable.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+        Obj.change(parentCollection, (parentCollection) => {
+          parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
       rearrangeCache.set(collectionDxn, onRearrange);

@@ -284,7 +284,7 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
         const tagDxn = Obj.getDXN(tag).toString();
-        Entity.change(org, (obj) => Entity.addTag(obj, tagDxn));
+        Entity.change(org, (org) => Entity.addTag(org, tagDxn));
         expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
@@ -451,5 +451,81 @@ describe('Database Blueprint', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+  );
+
+  it.effect(
+    'query operation: in param scopes to children via invokeFunction',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const parent = yield* Database.add(Obj.make(Organization.Organization, { name: 'Parent Org' }));
+        yield* Database.add(
+          Obj.make(Organization.Organization, {
+            [Obj.Parent]: parent,
+            name: 'Child Org',
+          }),
+        );
+        yield* Database.add(Obj.make(Organization.Organization, { name: 'Unrelated Org' }));
+        yield* Database.flush();
+
+        const { db } = yield* Database.Service;
+        const parentRef = db.makeRef(Obj.getDXN(parent)) as Ref.Ref<any>;
+
+        const results = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+          in: [parentRef],
+          limit: 20,
+        });
+        type QueryRow = { typename?: string; label?: string };
+        expect(results).toHaveLength(1);
+        expect((results as QueryRow[]).some((row) => String(row.label ?? '').includes('Child Org'))).toBe(true);
+        expect((results as QueryRow[]).some((row) => String(row.label ?? '').includes('Unrelated'))).toBe(false);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'query: in param scopes to feed children (agent uses Query tool)',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed1 = Feed.make({ name: 'inbox-1' });
+        yield* Database.add(feed1);
+        yield* Feed.append(feed1, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Alpha',
+            description: 'Mock email in-param-token-a1b2c3.',
+          }),
+        ]);
+
+        const feed2 = Feed.make({ name: 'inbox-2' });
+        yield* Database.add(feed2);
+        yield* Feed.append(feed2, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Beta',
+            description: 'Mock email in-param-token-d4e5f6.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const feed1Dxn = Obj.getDXN(feed1).toString();
+
+        const agent = yield* AgentService.createSession({
+          blueprints: [DatabaseBlueprint.make()],
+        });
+        yield* agent.submitPrompt(trim`
+          Query for organizations scoped to a specific feed. Use the Query tool with:
+          - in: [{"/" : "${feed1Dxn}"}]
+          - includeQueues: true
+          - includeContent: false
+          - limit: 20
+
+          Confirm which organizations you found.
+        `);
+        yield* agent.waitForCompletion();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
   );
 });

@@ -240,8 +240,8 @@ describe('Client', () => {
         ],
       }),
     );
-    Obj.change(thread2, (obj) => {
-      obj.messages.push(Ref.make(message));
+    Obj.change(thread2, (thread2) => {
+      thread2.messages.push(Ref.make(message));
     });
     await space2.db.flush();
 

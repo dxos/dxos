@@ -25,11 +25,11 @@ export class DeleteObjectsAction implements ActionHandler {
     ctx.setSelection(null);
 
     // Remove from ECHO scene.
-    Obj.change(scene, (sceneObj) => {
+    Obj.change(scene, (scene) => {
       for (const objId of selectedObjectIds) {
-        const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
+        const index = scene.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
         if (index !== -1) {
-          sceneObj.objects.splice(index, 1);
+          scene.objects.splice(index, 1);
         }
       }
     });
