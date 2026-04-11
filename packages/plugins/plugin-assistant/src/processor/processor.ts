@@ -27,7 +27,7 @@ import {
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import {
   Trace,
   type CredentialsService,
@@ -36,10 +36,11 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
-import { updateName } from './update-name';
+import { UpdateChatName } from '../operations/definitions';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -66,10 +67,17 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
+  /**
+   * Probability of automatically updating chat name after each request.
+   * Chat name is always updated if it has no name.
+   * @default 0.1 (10%)
+   */
+  autoUpdateNameChance?: number;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
+  autoUpdateNameChance: 0.1,
 };
 
 export type AiRequestOptions = {};
@@ -193,6 +201,8 @@ export class AiChatProcessor {
         log.info('session complete');
 
         this.#flushStreaming();
+
+        yield* this.#maybeUpdateChatName();
       });
 
       this.#requestFiber = this._runtime.runFork(effect);
@@ -248,8 +258,7 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    const runtime = await this._runtime.runPromise(Effect.runtime<any>());
-    await updateName(runtime, this._conversation, chat, this._options.model);
+    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
   }
 
   /**
@@ -302,5 +311,26 @@ export class AiChatProcessor {
       this.#registry.set(this.#streaming, []);
     }
     this.#finalizedIds.clear();
+  }
+
+  /**
+   * Conditionally schedule chat name update in detached fork mode.
+   * Updates if chat has no name OR based on random chance (default 10%).
+   */
+  #maybeUpdateChatName(): Effect.Effect<void, never, Operation.Service> {
+    const chat = this._options.chat?.target;
+    if (!chat) {
+      return Effect.void;
+    }
+
+    const chance = this._options.autoUpdateNameChance ?? defaultOptions.autoUpdateNameChance ?? 0.1;
+    const shouldUpdate = !chat.name || Math.random() < chance;
+    if (!shouldUpdate) {
+      return Effect.void;
+    }
+
+    // TODO(dmaretskyi): Operation.schedule didn't work.
+    log.info('scheduling chat name update', { hasName: !!chat.name, chance });
+    return Operation.schedule(UpdateChatName, { chat });
   }
 }

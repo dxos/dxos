@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -16,7 +16,6 @@ import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { MarkdownStream } from '@dxos/react-ui-components';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Message, Organization, Person } from '@dxos/types';
@@ -25,8 +24,6 @@ import { createMessageGenerator } from '#testing';
 
 import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
-import { componentRegistry } from './registry';
-import TEXT from './testing/thread.md?raw';
 
 random.seed(1);
 
@@ -133,20 +130,4 @@ export const Delayed: Story = {
       cursor: true,
     },
   },
-};
-
-export const Raw: Story = {
-  render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
-      <MarkdownStream content={TEXT} />
-    </div>
-  ),
-};
-
-export const Static: Story = {
-  render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
-      <MarkdownStream content={TEXT} registry={componentRegistry} />
-    </div>
-  ),
 };

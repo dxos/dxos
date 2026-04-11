@@ -24,7 +24,7 @@ random.seed(1234);
 const noOpProps: IdentityPanelImplProps = {
   titleId: 'storybookIdentityPanel',
   send: () => {},
-  activeView: 'identity action chooser',
+  activeView: 'identity-action-chooser',
   createInvitationUrl: (code) => code,
   identity: {
     did: IdentityDid.random(),
@@ -52,10 +52,10 @@ type Story = StoryObj<typeof meta>;
 
 export const IdentityActionChooser = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <IdentityPanelImpl
         {...noOpProps}
-        activeView='identity action chooser'
+        activeView='identity-action-chooser'
         IdentityActionChooser={IdentityActionChooserImpl}
       />
     </StorybookDialog>
@@ -63,10 +63,10 @@ export const IdentityActionChooser = () => {
 };
 
 const DeviceInvitationManagerWithState = (extraProps: InvitationManagerProps) => (
-  <StorybookDialog inOverlayLayout>
+  <StorybookDialog>
     <IdentityPanelImpl
       {...noOpProps}
-      activeView='device invitation manager'
+      activeView='device-invitation-manager'
       IdentityActionChooser={IdentityActionChooserImpl}
       InvitationManager={(props) => <InvitationManager {...props} {...extraProps} />}
     />

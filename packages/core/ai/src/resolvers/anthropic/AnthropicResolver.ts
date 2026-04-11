@@ -29,8 +29,6 @@ export const make = () =>
             } as const)
           : undefined;
         switch (model) {
-          case '@anthropic/claude-3-5-haiku-latest':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-latest' }).pipe(Layer.provide(clientLayer));
           case '@anthropic/claude-3-5-haiku-20241022':
             return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022' }).pipe(
               Layer.provide(clientLayer),

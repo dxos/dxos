@@ -36,16 +36,16 @@ export const InvitationManager = ({
   const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
     if (multiUse) {
-      return 'showing qr';
+      return 'showing-qr';
     }
     switch (true) {
       case statusValue === 5:
       case statusValue < 0:
-        return 'showing final';
+        return 'showing-final';
       case statusValue === 3:
-        return 'showing auth code';
+        return 'showing-auth-code';
       default:
-        return 'showing qr';
+        return 'showing-qr';
     }
   }, [statusValue]);
 
@@ -53,7 +53,7 @@ export const InvitationManager = ({
     <>
       <Viewport.Root activeView={activeView} classNames='grow py-1'>
         <Viewport.Views>
-          <InvitationManagerView id='showing qr' emoji={emoji}>
+          <InvitationManagerView id='showing-qr' emoji={emoji}>
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
@@ -78,13 +78,13 @@ export const InvitationManager = ({
             </span>
             <Clipboard.Button variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
-          <InvitationManagerView id='showing auth code'>
+          <InvitationManagerView id='showing-auth-code'>
             <Label>{t('auth-code.message')}</Label>
             <AuthCode code={authCode} large classNames='text-black dark:text-white' />
             <Label>{t('auth-other-device-emoji.message')}</Label>
             {emoji && <Emoji text={emoji} />}
           </InvitationManagerView>
-          <InvitationManagerView id='showing final'>
+          <InvitationManagerView id='showing-final'>
             {statusValue > 0 ? (
               <Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
             ) : (

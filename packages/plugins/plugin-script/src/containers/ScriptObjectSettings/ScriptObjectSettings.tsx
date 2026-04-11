@@ -162,7 +162,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   }
 
   return (
-    <div role='form' className='flex flex-col gap-2 my-form-padding'>
+    <div className='flex flex-col gap-2'>
       <h2>{t('remote-function-settings.heading')}</h2>
       {functionUrl && (
         <Input.Root>

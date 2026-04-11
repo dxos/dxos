@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
         subject: RESET_DIALOG,
         blockAlign: 'start',
         props: {
-          mode: data.mode ?? 'reset storage',
+          mode: data.mode ?? 'reset-storage',
         },
       });
     }),

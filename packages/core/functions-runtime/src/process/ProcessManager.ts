@@ -1285,14 +1285,20 @@ export namespace ProcessOperationInvoker {
           parentProcessId: opts.parentProcessId,
           name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         });
-        log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
+        log.info('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
 
         yield* handle.submitInput(input);
-        log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
+        log.info('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
         const fiber = yield* fiberFromProcess(handle);
         fiberCache.set(handle.pid, fiber);
         return fiber;
-      });
+      }).pipe(
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            log.info('operation interrupted', { opKey: op.meta.key });
+          }),
+        ),
+      );
 
     const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
       Effect.gen(function* () {
@@ -1315,7 +1321,13 @@ export namespace ProcessOperationInvoker {
       const options = args[1] as Operation.InvokeOptions | undefined;
       const tracing = options?.tracing as TracingOptions | undefined;
       return Effect.gen(function* () {
-        const fiber = yield* invokeFiber(op, input, { tracing, environment: { space: options?.spaceId } });
+        const fiber = yield* invokeFiber(op, input, {
+          tracing,
+          environment: {
+            ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
+            ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          },
+        });
         const output = yield* fiber.await.pipe(Effect.flatten);
 
         yield* PubSub.publish(pubsub, {
@@ -1335,15 +1347,30 @@ export namespace ProcessOperationInvoker {
     ): Effect.Effect<void> => {
       const input = args[0] as I;
       return Effect.gen(function* () {
+        log.info('scheduling operation', { opKey: op.meta.key });
         yield* Ref.update(pendingCount, (count) => count + 1);
         const fiber = yield* invokeFiber(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
           Effect.ignore,
-          Effect.fork,
+          Effect.forkDaemon,
         );
         pendingFibers.add(fiber);
-        fiber.addObserver(() => pendingFibers.delete(fiber));
-      });
+        fiber.addObserver((exit) => {
+          pendingFibers.delete(fiber);
+
+          if (Exit.isInterrupted(exit)) {
+            log.warn('scheduled operation interrupted', { opKey: op.meta.key });
+          } else if (Exit.isFailure(exit)) {
+            log.error('operation schedule failed', { opKey: op.meta.key, cause: Cause.pretty(exit.cause) });
+          }
+        });
+      }).pipe(
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            log.info('operation schedule interrupted', { opKey: op.meta.key });
+          }),
+        ),
+      );
     };
 
     const invokePromise: OperationInvoker.OperationInvoker['invokePromise'] = async <I, O>(

@@ -5,7 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
-import type { Key } from '@dxos/echo';
+import type { DXN, Key } from '@dxos/echo';
 
 import type { NoHandlerError } from './errors';
 import type * as Operation from './Operation';
@@ -16,6 +16,11 @@ import type * as Operation from './Operation';
 export interface InvokeOptions {
   /** Space ID to provide database context for the handler. */
   spaceId?: Key.SpaceId;
+  /**
+   * DXN string of the conversation feed (queue). Passed to the process environment so nested operations
+   * can resolve AiContextService and related services.
+   */
+  conversation?: DXN.String;
   /** Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired). */
   tracing?: unknown;
 }

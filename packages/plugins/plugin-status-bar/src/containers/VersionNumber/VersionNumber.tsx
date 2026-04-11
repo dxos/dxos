@@ -70,7 +70,7 @@ export const VersionNumber = (_props: VersionNumberProps) => {
               <Trans
                 {...{
                   t,
-                  i18nKey: 'powered by dxos message',
+                  i18nKey: 'powered-by-dxos.message',
                   components: {
                     dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
                   },

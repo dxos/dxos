@@ -6,6 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { assertArgument } from '@dxos/invariant';
+
 import { NoHandlerError } from './errors';
 import type * as Operation from './Operation';
 
@@ -19,6 +21,10 @@ export interface OperationHandlerSet {
 
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
 }
+
+export const isOperationHandlerSet = (value: unknown): value is OperationHandlerSet => {
+  return typeof value === 'object' && value !== null && TypeId in value;
+};
 
 export const empty: OperationHandlerSet = {
   [TypeId]: TypeId,
@@ -64,6 +70,7 @@ export const async = (
  *
  */
 export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
+  assertArgument(sets.every(isOperationHandlerSet), 'sets', 'sets must be an array of OperationHandlerSet');
   return async(() => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat()));
 };
 

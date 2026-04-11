@@ -55,13 +55,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    mode: 'reset storage' as const,
+    mode: 'reset-storage' as const,
   } as any,
 };
 
 export const JoinNewIdentity: Story = {
   args: {
-    mode: 'join new identity' as const,
+    mode: 'join-new-identity' as const,
   } as any,
 };
 
