@@ -7,6 +7,7 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { type BlockRenderer, type MessageThreadContext } from './sync';
+import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
   FallbackWidget,
   PromptWidget,
@@ -165,22 +166,18 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
     }
 
     case 'toolCall': {
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
-        blocks: [block],
-      });
+      applyToolBlockToWidgetState(context, block);
       return `<toolCall id="${block.toolCallId}" />`;
     }
 
     case 'toolResult': {
       // TODO(dmaretskyi): the parameter could be undefined, perhaps tool blocks are not arriving in order.
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
-        blocks: [...blocks, block],
-      }));
+      applyToolBlockToWidgetState(context, block);
       break;
     }
 
     case 'stats': {
-      return renderXMLBlock('stats', { content: ContentBlock.createStatsMessage(block) });
+      return '';
     }
 
     case 'reasoning': {

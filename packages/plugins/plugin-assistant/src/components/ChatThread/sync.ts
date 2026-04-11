@@ -8,6 +8,8 @@ import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/ui-editor';
 
+import { rehydrateToolWidgetsFromMessages } from './tool-widget-state';
+
 /**
  * Update document.
  */
@@ -89,7 +91,11 @@ export class MessageSyncer {
       const buffer: string[] = [];
       this.processBlocks(messages, (content) => buffer.push(content));
       const content = buffer.join('');
-      void this._document.setContent(content);
+      // `setContent` dispatches `xmlTagResetEffect`, which clears widget props accumulated during
+      // `processBlocks`; re-apply tool state after the document is replaced.
+      void this._document.setContent(content).then(() => {
+        rehydrateToolWidgetsFromMessages(this._context, messages);
+      });
 
       return true;
     } else {
