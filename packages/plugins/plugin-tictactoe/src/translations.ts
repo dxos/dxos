@@ -23,6 +23,13 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Tic-Tac-Toe',
+        'new-game': 'New Game',
+        'x-turn': "X's turn",
+        'o-turn': "O's turn",
+        'x-wins': 'X wins!',
+        'o-wins': 'O wins!',
+        'draw': "It's a draw!",
+        'ai-thinking': 'AI thinking...',
       },
     },
   },
