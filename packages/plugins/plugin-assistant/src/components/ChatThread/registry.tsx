@@ -203,9 +203,23 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
   }
 };
 
+/**
+ * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
+ */
+const escapeXmlTextContent = (raw: string): string =>
+  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Strip markdown-style ordered list prefixes (`1. `, `2. `, …) at line starts; they break the mixed
+ * XML / markdown path when embedded inside `<reasoning>` / `<status>` bodies.
+ */
+const stripLineLeadingNumberedListMarkers = (raw: string): string => raw.replace(/^\s*\d+\.\s+/gm, '');
+
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
-  const content = (opts.content ?? '').replace(/\n\n/g, ' ').trim();
+  const content = escapeXmlTextContent(
+    stripLineLeadingNumberedListMarkers((opts.content ?? '').replace(/\n\n/g, ' ').trim()),
+  );
 
   if (opts.pending) {
     return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}`;
