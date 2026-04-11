@@ -48,9 +48,26 @@ export const Query = Operation.make({
           "limit": 3
         }
       </example>
+
+      <example description="Emails from specific mailboxes">
+        {
+          "in": [{"/" : "dxn:echo:@:YYYYYY"}, {"/" : "dxn:echo:@:XXXXXXX"}],
+          "typename": "org.dxos.type.email",
+          "includeContent": true,
+          "limit": 20
+        }
+      </example>
     `,
   },
   input: Schema.Struct({
+    in: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+        description:
+          'Scope the query to children of specific objects (transitively). ' +
+          'Use this to query items within containers such as feeds or folders. ' +
+          'For example, to find emails use `in: [mailbox1.feed, mailbox2.feed]`.',
+      }),
+    ),
     typename: Schema.optional(
       Schema.String.annotations({
         description: 'The typename of the objects to list.',
