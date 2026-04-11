@@ -14,10 +14,10 @@ import { AiMove } from './definitions';
 
 const handler: Operation.WithHandler<typeof AiMove> = AiMove.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ game, difficulty }) {
+    Effect.fn(function* ({ game, level }) {
       const obj = (yield* Database.load(game)) as TicTacToe.Game;
       const marker = currentTurn(obj.board);
-      const diff = difficulty ?? obj.difficulty ?? 'medium';
+      const diff = level ?? obj.level ?? 'medium';
 
       const moveIndex = computeAiMove(obj.board, obj.size, obj.winCondition, marker, diff);
       if (moveIndex === -1) {
@@ -34,7 +34,6 @@ const handler: Operation.WithHandler<typeof AiMove> = AiMove.pipe(
       Obj.change(obj, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = newBoard;
-        mutable.status = status;
         mutable.moves = moves;
       });
 

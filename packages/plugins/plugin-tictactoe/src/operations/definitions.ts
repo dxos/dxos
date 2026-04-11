@@ -31,9 +31,9 @@ export const Create = Operation.make({
         description: 'Consecutive marks needed to win. Defaults to size.',
       }),
     ),
-    difficulty: Schema.optional(
-      Schema.String.annotations({
-        description: 'AI difficulty: easy, medium, or hard.',
+    level: Schema.optional(
+      TicTacToe.Level.annotations({
+        description: 'AI difficulty level.',
       }),
     ),
   }),
@@ -76,9 +76,9 @@ export const AiMove = Operation.make({
     game: Ref.Ref(TicTacToe.Game).annotations({
       description: 'The ID of the Tic-Tac-Toe game.',
     }),
-    difficulty: Schema.optional(
-      Schema.String.annotations({
-        description: 'Override AI difficulty: easy, medium, or hard.',
+    level: Schema.optional(
+      TicTacToe.Level.annotations({
+        description: 'Override AI difficulty level.',
       }),
     ),
   }),

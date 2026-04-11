@@ -7,6 +7,12 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
+export const Level = Schema.Literal('easy', 'medium', 'hard');
+export type Level = Schema.Schema.Type<typeof Level>;
+
+export const GameStatus = Schema.Literal('playing', 'x-wins', 'o-wins', 'draw');
+export type GameStatus = Schema.Schema.Type<typeof GameStatus>;
+
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
   board: Schema.String.annotations({
@@ -23,14 +29,11 @@ export const Game = Schema.Struct({
   winCondition: Schema.Number.annotations({
     description: 'Consecutive marks needed to win.',
   }),
-  difficulty: Schema.optional(
-    Schema.String.annotations({
-      description: 'AI difficulty: easy, medium, or hard.',
+  level: Schema.optional(
+    Level.annotations({
+      description: 'AI difficulty level.',
     }),
   ),
-  status: Schema.String.annotations({
-    description: 'Game status: playing, x-wins, o-wins, or draw.',
-  }),
   players: Schema.Struct({
     x: Schema.optional(
       Schema.String.annotations({
@@ -61,12 +64,12 @@ export const make = ({
   name,
   size = 3,
   winCondition,
-  difficulty = 'medium',
+  level,
 }: {
   name?: string;
   size?: number;
   winCondition?: number;
-  difficulty?: string;
+  level?: Level;
 } = {}) => {
   const effectiveWinCondition = winCondition ?? size;
   const board = '-'.repeat(size * size);
@@ -74,10 +77,10 @@ export const make = ({
   return Obj.make(Game, {
     name,
     board,
+    moves: '',
     size,
     winCondition: effectiveWinCondition,
-    difficulty,
-    status: 'playing',
+    level,
     players: {},
   });
 };

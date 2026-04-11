@@ -33,7 +33,6 @@ const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
       Obj.change(obj, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = result.board;
-        mutable.status = status;
         mutable.moves = moves;
       });
 

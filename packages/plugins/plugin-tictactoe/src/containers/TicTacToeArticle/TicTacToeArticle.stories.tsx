@@ -7,16 +7,16 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TicTacToe } from '#types';
+import { type TicTacToe, TicTacToe as TicTacToeTypes } from '#types';
 import { translations } from '../../translations';
 import { TicTacToeArticle } from './TicTacToeArticle';
 
-type DefaultStoryProps = { size?: number; winCondition?: number; difficulty?: string };
+type DefaultStoryProps = { size?: number; winCondition?: number; level?: TicTacToe.Level };
 
-const DefaultStory = ({ size = 3, winCondition, difficulty }: DefaultStoryProps) => {
+const DefaultStory = ({ size = 3, winCondition, level }: DefaultStoryProps) => {
   const game = useMemo(
-    () => TicTacToe.make({ name: 'Test Game', size, winCondition, difficulty }),
-    [size, winCondition, difficulty],
+    () => TicTacToeTypes.make({ name: 'Test Game', size, winCondition, level }),
+    [size, winCondition, level],
   );
   return <TicTacToeArticle role='article' subject={game} attendableId='story' />;
 };
@@ -33,5 +33,5 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { args: {} };
 export const Large5x5: Story = { args: { size: 5, winCondition: 4 } };
-export const WithAiEasy: Story = { args: { difficulty: 'easy' } };
-export const WithAiHard: Story = { args: { difficulty: 'hard' } };
+export const WithAiEasy: Story = { args: { level: 'easy' } };
+export const WithAiHard: Story = { args: { level: 'hard' } };

@@ -120,9 +120,10 @@ const findWinningLine = (board: string, size: number, winCondition: number): num
 
 /**
  * Checks the current game state.
- * Returns 'playing', 'x-wins', 'o-wins', or 'draw'.
  */
-export const checkWin = (board: string, size: number, winCondition: number): string => {
+export type GameStatus = 'playing' | 'x-wins' | 'o-wins' | 'draw';
+
+export const checkWin = (board: string, size: number, winCondition: number): GameStatus => {
   const winningLine = findWinningLine(board, size, winCondition);
   if (winningLine !== null) {
     const winner = board[winningLine[0]];
