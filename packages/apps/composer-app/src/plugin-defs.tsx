@@ -15,6 +15,7 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { ConnectionsPlugin } from '@dxos/plugin-connections';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
@@ -25,6 +26,7 @@ import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { InspectorPlugin } from '@dxos/plugin-inspector';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
@@ -45,6 +47,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SettingsPlugin } from '@dxos/plugin-settings';
+import { SlackPlugin } from '@dxos/plugin-slack';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
@@ -142,6 +145,9 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
+      ConnectionsPlugin.meta.id,
+      InspectorPlugin.meta.id,
+      SlackPlugin.meta.id,
       DailySummaryPlugin.meta.id,
       FeedPlugin.meta.id,
       MeetingPlugin.meta.id,
@@ -192,6 +198,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    ConnectionsPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
     isLabs && ExcalidrawPlugin(),
@@ -200,6 +207,7 @@ export const getPlugins = ({
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
+    InspectorPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
@@ -227,6 +235,7 @@ export const getPlugins = ({
     SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
+    SlackPlugin(),
     SketchPlugin(),
     SpacetimePlugin(),
     SpacePlugin({

@@ -244,6 +244,68 @@ export default defineConfig((env) => ({
       },
     },
 
+    // Anthropic API proxy to avoid CORS issues in dev.
+    {
+      name: 'anthropic-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/anthropic', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const targetPath = url.pathname.replace('/api/anthropic', '');
+          const targetUrl = `https://api.anthropic.com${targetPath}${url.search}`;
+          try {
+            const headers: Record<string, string> = {
+              'content-type': req.headers['content-type'] ?? 'application/json',
+            };
+            for (const [key, value] of Object.entries(req.headers)) {
+              if (typeof value === 'string' && (key.startsWith('x-') || key === 'authorization' || key === 'anthropic-version')) {
+                headers[key] = value;
+              }
+            }
+            const chunks: Buffer[] = [];
+            for await (const chunk of req) {
+              chunks.push(chunk);
+            }
+            const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+            const response = await globalThis.fetch(targetUrl, {
+              method: req.method ?? 'POST',
+              headers,
+              body,
+            });
+            const contentType = response.headers.get('content-type');
+            if (contentType) {
+              res.setHeader('content-type', contentType);
+            }
+            res.statusCode = response.status;
+            if (contentType?.includes('text/event-stream')) {
+              res.setHeader('cache-control', 'no-cache');
+              res.setHeader('connection', 'keep-alive');
+              const reader = response.body?.getReader();
+              if (reader) {
+                const pump = async () => {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                      res.end();
+                      break;
+                    }
+                    res.write(value);
+                  }
+                };
+                pump().catch(() => res.end());
+              } else {
+                res.end(await response.text());
+              }
+            } else {
+              res.end(await response.text());
+            }
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
+
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
