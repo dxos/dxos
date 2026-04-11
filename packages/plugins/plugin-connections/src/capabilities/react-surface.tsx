@@ -8,38 +8,42 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useSpaces } from '@dxos/react-client/echo';
 
 import { ConnectionsPanel } from '#containers';
 import { meta } from '#meta';
 
+/** Uses activeSpace if available, falls back to first space. */
+const ConnectionsWithSpace = () => {
+  const activeSpace = useActiveSpace();
+  const allSpaces = useSpaces();
+  const space = activeSpace ?? allSpaces[0];
+
+  if (!space) {
+    return (
+      <div className='flex items-center justify-center p-8 text-description text-sm'>
+        No space available. Create a space first.
+      </div>
+    );
+  }
+
+  return <ConnectionsPanel space={space} />;
+};
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      // Settings article — always accessible via Settings.
       Surface.create({
         id: 'connections-settings',
         role: 'article',
         filter: AppSurface.settingsArticle(meta.id),
-        component: () => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-          return <ConnectionsPanel space={space} />;
-        },
+        component: () => <ConnectionsWithSpace />,
       }),
-      // Deck companion panel.
       Surface.create({
         id: 'connections-companion',
         role: 'deck-companion--connections',
         filter: AppSurface.literalSection('connections'),
-        component: () => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-          return <ConnectionsPanel space={space} />;
-        },
+        component: () => <ConnectionsWithSpace />,
       }),
     ]),
   ),
