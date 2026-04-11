@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -249,6 +249,21 @@ class FilterClass implements Filter$.Any {
 
   static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
     return FilterClass.#timeRangeFilter('createdAt', range);
+  }
+
+  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+    const items = Array.isArray(parents) ? parents : [parents];
+    const dxns = items.map((item) => {
+      if (item instanceof DXN) {
+        return item.toString();
+      }
+      throw new TypeError('childOf requires DXN values in query-lite');
+    });
+    return new FilterClass({
+      type: 'child-of',
+      parents: dxns,
+      transitive: options?.transitive ?? true,
+    });
   }
 
   static #timeRangeFilter(
@@ -614,6 +629,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
