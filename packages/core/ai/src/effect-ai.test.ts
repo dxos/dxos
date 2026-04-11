@@ -97,7 +97,8 @@ const toolkitLayer = TestToolkit.toLayer({
         log.info('calculate', { sanitizedInput });
 
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        return Function(`"use strict"; return (${sanitizedInput})`)();
+        const evaluate = Function(`"use strict"; return (${sanitizedInput})`);
+        return evaluate();
       })();
 
       // TODO(burdon): How to return an error.
