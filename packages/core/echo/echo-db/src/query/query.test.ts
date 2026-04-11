@@ -2490,7 +2490,7 @@ describe('Query', () => {
       expect((objects2[0] as TestSchema.Task).title).toEqual('Task in feed 2');
     });
 
-    test('childOf with DXN argument', async () => {
+    test('childOf with Ref argument', async () => {
       const { db } = await builder.createDatabase();
       const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
       const child = db.add(
@@ -2501,8 +2501,8 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const parentDxn = Obj.getDXN(parent);
-      const objects = await db.query(Query.select(Filter.childOf(parentDxn))).run();
+      const parentRef = Ref.make(parent);
+      const objects = await db.query(Query.select(Filter.childOf(parentRef))).run();
       expect(objects).toHaveLength(1);
       expect(objects[0]).toMatchObject({ name: 'Child' });
     });
