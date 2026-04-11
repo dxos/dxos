@@ -14,7 +14,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'deck-companion',
+        id: `${meta.id}/deck-companion`,
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
