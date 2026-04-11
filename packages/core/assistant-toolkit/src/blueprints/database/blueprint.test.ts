@@ -476,12 +476,8 @@ describe('Database Blueprint', () => {
         });
         type QueryRow = { typename?: string; label?: string };
         expect(results).toHaveLength(1);
-        expect(
-          (results as QueryRow[]).some((row) => String(row.label ?? '').includes('Child Org')),
-        ).toBe(true);
-        expect(
-          (results as QueryRow[]).some((row) => String(row.label ?? '').includes('Unrelated')),
-        ).toBe(false);
+        expect((results as QueryRow[]).some((row) => String(row.label ?? '').includes('Child Org'))).toBe(true);
+        expect((results as QueryRow[]).some((row) => String(row.label ?? '').includes('Unrelated'))).toBe(false);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
