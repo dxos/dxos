@@ -212,9 +212,9 @@ Option A (WASM-first) is recommended for Phase 1 since it works everywhere and k
 ```protobuf
 // Extend existing PeerState (dxos/mesh/presence.proto)
 message PeerState {
-  dxos.keys.PublicKey identity_key = 1;
-  repeated dxos.keys.PublicKey connections = 2;
-  dxos.keys.PublicKey peer_id = 3;
+  repeated dxos.keys.PublicKey connections = 1;
+  dxos.keys.PublicKey identity_key = 2;
+  optional dxos.keys.PublicKey peer_id = 3;
 
   // New: iroh addressing info.
   optional bytes iroh_endpoint_id = 10;
