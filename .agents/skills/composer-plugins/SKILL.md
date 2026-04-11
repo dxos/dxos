@@ -19,7 +19,9 @@ The specification is the source of truth for what the plugin does. It must be:
 - **Kept up-to-date** — when features are discussed, added, or changed, update the spec first.
 - **Used for testing** — derive user feature tests and acceptance criteria from the spec's `feat`, `req`, and `test` blocks.
 
-When the user discusses new features or changes, update `PLUGIN.mdl` to reflect the agreed requirements before implementing. Tests should verify the behaviors described in the spec.
+When creating a plugin this should be the first file we create.
+When the user discusses new features or changes, update `PLUGIN.mdl` to reflect the agreed requirements before implementing.
+Tests should verify the behaviors described in the spec.
 
 ## Workflow
 

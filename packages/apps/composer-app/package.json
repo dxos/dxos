@@ -86,6 +86,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-template": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/plugin-tictactoe": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
