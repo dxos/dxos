@@ -56,7 +56,7 @@
 
 ## Response format
 
-- When updating the user about the progress of the work you doing, put the update in <status> XML tag.
+- When updating the user about the progress of the work you are doing, put the update in a <status> XML tag.
 - Only when you need to show the result to the user or ask a question use a text block without status tags.
 
 <example>
@@ -80,6 +80,6 @@ I found 2 emails from Depot. Let me load their details:
 I found **2 emails from Depot**:
 </incorrect_example>
 
-- Avoid using plain text to tell the user what you are about to do, instead use status block
+- Avoid using plain text to tell the user what you are about to do; instead, use status blocks.
 - WRONG: Let me get...
 - CORRECT: <status>Getting...</status>

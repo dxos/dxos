@@ -279,7 +279,7 @@ describe('LanguageModel', () => {
     { timeout: 120_000 },
   ); //
 
-  it.effect.only(
+  it.effect(
     'iterleaved thinking',
     Effect.fnUntraced(
       function* (_) {

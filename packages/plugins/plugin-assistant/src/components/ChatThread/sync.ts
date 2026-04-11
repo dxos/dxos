@@ -44,6 +44,7 @@ export type BlockRenderer = (
  * Syncs messages with the editor.
  */
 export class MessageSyncer {
+  #syncEpoch = 0;
   private _initialMessageId?: string;
   private _currentMessageIndex = 0;
   private _currentBlockIndex = 0;
@@ -64,6 +65,7 @@ export class MessageSyncer {
 
   reset() {
     log('reset');
+    this.#syncEpoch++;
     this._initialMessageId = undefined;
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
@@ -93,9 +95,18 @@ export class MessageSyncer {
       const content = buffer.join('');
       // `setContent` dispatches `xmlTagResetEffect`, which clears widget props accumulated during
       // `processBlocks`; re-apply tool state after the document is replaced.
-      void this._document.setContent(content).then(() => {
-        rehydrateToolWidgetsFromMessages(this._context, messages);
-      });
+      const epoch = this.#syncEpoch;
+      void this._document
+        .setContent(content)
+        .then(() => {
+          if (epoch !== this.#syncEpoch) {
+            return;
+          }
+          rehydrateToolWidgetsFromMessages(this._context, messages);
+        })
+        .catch((error) => {
+          log.warn('failed to replace thread content before widget rehydration', { error });
+        });
 
       return true;
     } else {

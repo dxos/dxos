@@ -210,17 +210,13 @@ const escapeXmlTextContent = (raw: string): string =>
   raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /**
- * Strip bullet-like leading characters on each line so the line starts with a Unicode letter, or trim
- * lines with no letters. Avoids list markers and other prefixes that break the mixed XML / markdown path
- * inside `<reasoning>` / `<status>` bodies.
+ * Strip actual list-marker prefixes without removing meaningful leading content.
  */
-const stripLineLeadingUntilFirstLetter = (line: string): string => {
-  const index = line.search(/\p{L}/u);
-  return index === -1 ? line.trim() : line.slice(index);
-};
-
 const stripBulletLikeLinePrefixes = (raw: string): string =>
-  raw.split(/\r?\n/).map(stripLineLeadingUntilFirstLetter).join('\n');
+  raw
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*(?:[-*+•]|\d+[.)]\s)/, ''))
+    .join('\n');
 
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
