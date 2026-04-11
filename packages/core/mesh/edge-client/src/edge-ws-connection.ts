@@ -50,7 +50,7 @@ export class EdgeWsConnection extends Resource {
 
   constructor(
     private readonly _identity: EdgeIdentity,
-    private readonly _connectionInfo: { url: URL; protocolHeader?: string },
+    private readonly _connectionInfo: { url: URL; protocolHeader?: string; headers?: Record<string, string> },
     private readonly _callbacks: EdgeWsConnectionCallbacks,
   ) {
     super();
@@ -121,6 +121,7 @@ export class EdgeWsConnection extends Resource {
       this._connectionInfo.protocolHeader
         ? [...baseProtocols, this._connectionInfo.protocolHeader]
         : [...baseProtocols],
+      this._connectionInfo.headers ? { headers: this._connectionInfo.headers } : undefined,
     );
     const muxer = new WebSocketMuxer(this._ws);
     this._wsMuxer = muxer;

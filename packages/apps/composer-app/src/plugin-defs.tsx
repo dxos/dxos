@@ -25,6 +25,7 @@ import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
@@ -144,6 +145,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
       FeedPlugin.meta.id,
+      IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
@@ -200,6 +202,7 @@ export const getPlugins = ({
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
+    IrohBeaconPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,

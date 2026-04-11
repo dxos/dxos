@@ -112,6 +112,7 @@ export const translations = [
 
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
+        'summary.label': 'Summary',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',

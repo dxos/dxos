@@ -17,7 +17,7 @@ import { IdentityInputImpl } from './steps';
 
 const DefaultStory = (props: JoinPanelImplProps) => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <JoinPanelImpl {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmReset} />
     </StorybookDialog>
   );
@@ -34,7 +34,7 @@ const meta = {
   },
   args: {
     titleId: 'storybookJoinPanel__title',
-    activeView: 'create identity input',
+    activeView: 'create-identity-input',
     failed: new Set(),
     pending: false,
     send: () => {},
@@ -48,49 +48,49 @@ type Story = StoryObj<typeof meta>;
 export const AdditionMethodChooser: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'addition method chooser',
+    activeView: 'addition-method-chooser',
   },
 };
 
 export const ResetIdentityConfirmation: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'reset identity confirmation',
+    activeView: 'reset-storage-confirmation',
   },
 };
 
 export const CreateIdentityInput: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'create identity input',
+    activeView: 'create-identity-input',
   },
 };
 
 export const RecoverIdentityInput: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'recover identity input',
+    activeView: 'recover-identity-input',
   },
 };
 
 export const HaloInvitationInput: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'halo invitation input',
+    activeView: 'halo-invitation-input',
   },
 };
 
 export const HaloInvitationRescuer: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'halo invitation rescuer',
+    activeView: 'halo-invitation-rescuer',
   },
 };
 
 export const HaloInvitationAuthenticator: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'halo invitation authenticator',
+    activeView: 'halo-invitation-authenticator',
     invitationAuthMethods: { Halo: Invitation.AuthMethod.SHARED_SECRET },
   },
 };
@@ -98,7 +98,7 @@ export const HaloInvitationAuthenticator: Story = {
 export const HaloInvitationAuthenticatorFailed: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'halo invitation authenticator',
+    activeView: 'halo-invitation-authenticator',
     invitationAuthMethods: { Halo: Invitation.AuthMethod.SHARED_SECRET },
     failed: new Set<'Halo' | 'Space'>(['Halo']),
   },
@@ -107,41 +107,41 @@ export const HaloInvitationAuthenticatorFailed: Story = {
 export const HaloInvitationAccepted: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'halo invitation accepted',
+    activeView: 'halo-invitation-accepted',
   },
 };
 
 export const IdentityAdded: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'identity added',
+    activeView: 'identity-added',
   },
 };
 
 export const SpaceInvitationInput: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'space invitation input',
+    activeView: 'space-invitation-input',
   },
 };
 
 export const SpaceInvitationRescuer: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'space invitation rescuer',
+    activeView: 'space-invitation-rescuer',
   },
 };
 
 export const SpaceInvitationAuthenticator: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'space invitation authenticator',
+    activeView: 'space-invitation-authenticator',
   },
 };
 
 export const SpaceInvitationAccepted: Story = {
   args: {
     mode: 'halo-only',
-    activeView: 'space invitation accepted',
+    activeView: 'space-invitation-accepted',
   },
 };

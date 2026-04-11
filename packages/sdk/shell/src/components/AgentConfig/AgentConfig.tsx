@@ -10,6 +10,7 @@ import { getSize, mx, textValence } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { type AgentFormProps } from '../DeviceList';
 
+// TODO(burdon): Deprecated? Docs required.
 export const AgentConfig = ({
   agentStatus,
   validationMessage,
@@ -101,7 +102,7 @@ export const AgentConfig = ({
                 <Trans
                   {...{
                     t,
-                    i18nKey: 'create agent clickwrap',
+                    i18nKey: 'create-agent-clickwrap',
                     components: {
                       tosLink: <Link target='_blank' rel='noreferrer' />,
                     },

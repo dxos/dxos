@@ -74,10 +74,10 @@ export class MessageSyncer {
    */
   append(messages: Message.Message[], flush = false): boolean {
     // TODO(dmaretskyi): MarkdownStream currently does not support streaming XML tags, so we need to remove pending non-text blocks.
-    messages = messages.map((message) => ({
-      ...message,
-      blocks: message.blocks.filter((block) => !block.pending || block._tag === 'text'),
-    }));
+    // messages = messages.map((message) => ({
+    //   ...message,
+    //   blocks: message.blocks.filter((block) => !block.pending || block._tag === 'text'),
+    // }));
 
     // Check if new set of messages.
     if (this._initialMessageId !== messages[0]?.id) {

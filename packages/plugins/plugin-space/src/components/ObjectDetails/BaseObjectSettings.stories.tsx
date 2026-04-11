@@ -7,7 +7,8 @@ import React, { useEffect, useState } from 'react';
 
 import { type Obj, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Loading, withTheme } from '@dxos/react-ui/testing';
+import { Panel } from '@dxos/react-ui';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
@@ -16,7 +17,6 @@ import { BaseObjectSettings } from './BaseObjectSettings';
 const DefaultStory = () => {
   const { space } = useClientStory();
   const [object, setObject] = useState<Obj.Unknown>();
-
   useEffect(() => {
     if (space && !object) {
       const object = space.db.add(Pipeline.make());
@@ -25,10 +25,16 @@ const DefaultStory = () => {
   }, [space, object]);
 
   if (!object) {
-    return <Loading data={{ space: !!space, object: !!object }} />;
+    return <Loading />;
   }
 
-  return <BaseObjectSettings object={object} classNames='w-[20rem]' />;
+  return (
+    <Panel.Root>
+      <Panel.Content asChild>
+        <BaseObjectSettings object={object} />
+      </Panel.Content>
+    </Panel.Root>
+  );
 };
 
 const meta = {
@@ -37,6 +43,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

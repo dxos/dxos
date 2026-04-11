@@ -7,9 +7,9 @@ import { WidgetType } from '@codemirror/view';
 import { Domino } from '@dxos/ui';
 
 /**
- * Simple summary widget.
+ * Simple stats widget.
  */
-export class SummaryWidget extends WidgetType {
+export class StatsWidget extends WidgetType {
   constructor(private text: string) {
     super();
   }

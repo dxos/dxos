@@ -4,30 +4,36 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Clipboard, Column, ElevationProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
+import { Clipboard, Dialog, Tooltip } from '@dxos/react-ui';
+import { type DialogSize } from '@dxos/ui-theme';
 
 export type StorybookDialogProps = PropsWithChildren & {
-  inOverlayLayout?: boolean;
+  /** Passed to `Dialog.Content` (default `md`). */
+  size?: DialogSize;
+  /** Passed to `Dialog.Overlay` (default `center`). */
+  blockAlign?: 'center' | 'start' | 'end';
 };
 
 /**
- * @deprecated Create decorator.
+ * Renders shell story content inside a real `Dialog` so Storybook matches production
+ * layout, portal/overlay behavior, and focus management. `Dialog.Content` supplies
+ * `Column.Root`; overlay layout is taken from `Dialog.Overlay` context.
  */
-export const StorybookDialog = (props: StorybookDialogProps) => {
-  const { inOverlayLayout = false } = props;
-  const { tx } = useThemeContext();
+export const StorybookDialog = ({ children, size = 'md', blockAlign = 'center' }: StorybookDialogProps) => {
   return (
     <Tooltip.Provider>
-      <ElevationProvider elevation='dialog'>
-        <Clipboard.Provider>
-          <div
-            role='group'
-            className={tx('dialog.content', { inOverlayLayout }, 'w-[30rem]', inOverlayLayout ? 'm-4' : '')}
-          >
-            <Column.Root>{props.children}</Column.Root>
-          </div>
-        </Clipboard.Provider>
-      </ElevationProvider>
+      <Clipboard.Provider>
+        <Dialog.Root defaultOpen modal>
+          <Dialog.Overlay blockAlign={blockAlign}>
+            <Dialog.Content size={size}>
+              <Dialog.Header>
+                <Dialog.Title classNames='sr-only'>Storybook Dialog</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>{children}</Dialog.Body>
+            </Dialog.Content>
+          </Dialog.Overlay>
+        </Dialog.Root>
+      </Clipboard.Provider>
     </Tooltip.Provider>
   );
 };

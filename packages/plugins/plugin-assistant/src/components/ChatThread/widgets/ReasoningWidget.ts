@@ -6,26 +6,6 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
-const trail = [
-  'absolute z-0 aspect-[2/1] w-16',
-  'bg-[radial-gradient(at_100%_50%,_theme(colors.green.700),_transparent_80%)]',
-  '[offset-anchor:100%_50%] [offset-path:border-box]',
-];
-
-/** Delay after the last content update before hiding the trail. */
-const TRAIL_REMOVAL_DELAY_MS = 1_000;
-
-/**
- * One pending removal timer per logical block. Streaming creates a new widget instance each tick;
- * `destroy` may run after the next instance has already scheduled, so we must not clear a newer timer.
- */
-const trailRemovalTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-const createTrailLayers = (): [HTMLElement, HTMLElement] => [
-  Domino.of('div').classNames(...trail, 'animate-trail').root,
-  Domino.of('div').classNames(...trail, 'animate-trail-offset').root,
-];
-
 /**
  * Props used to derive a stable key for a reasoning block across CodeMirror widget rebuilds.
  * CodeMirror does not assign persistent IDs to widgets; streaming re-runs the factory each tick.
@@ -118,3 +98,23 @@ export class ReasoningWidget extends WidgetType {
     this.#ownedTimerId = null;
   }
 }
+
+const trail = [
+  'absolute z-0 aspect-[2/1] w-16',
+  'bg-[radial-gradient(at_100%_50%,_theme(colors.green.700),_transparent_80%)]',
+  '[offset-anchor:100%_50%] [offset-path:border-box]',
+];
+
+/** Delay after the last content update before hiding the trail. */
+const TRAIL_REMOVAL_DELAY_MS = 1_000;
+
+/**
+ * One pending removal timer per logical block. Streaming creates a new widget instance each tick;
+ * `destroy` may run after the next instance has already scheduled, so we must not clear a newer timer.
+ */
+const trailRemovalTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+const createTrailLayers = (): [HTMLElement, HTMLElement] => [
+  Domino.of('div').classNames(...trail, 'animate-trail').root,
+  Domino.of('div').classNames(...trail, 'animate-trail-offset').root,
+];
