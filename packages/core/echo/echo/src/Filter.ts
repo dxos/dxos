@@ -344,15 +344,16 @@ export type ChildOfOptions = {
   transitive?: boolean;
 };
 
-type ChildOfParent = Obj.Unknown | Ref.Unknown;
-
 /**
  * Filter objects that are children of the specified parent(s).
  * Accepts ECHO objects, Refs, or arrays of either.
  * Refs are resolved to DXNs without loading; objects use {@link Obj.getDXN}.
  * With transitive=true (default), also matches grandchildren and beyond.
  */
-export const childOf = (parents: ChildOfParent | ChildOfParent[], options?: ChildOfOptions): Any => {
+export const childOf = (
+  parents: Obj.Unknown | Ref.Unknown | (Obj.Unknown | Ref.Unknown)[],
+  options?: ChildOfOptions,
+): Any => {
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
