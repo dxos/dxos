@@ -158,7 +158,10 @@ const ToolPanel = ({ items, onChangeOpen, textCrawlKey }: ToolPanelProps) => {
         )}
         <Json.Data
           data={items[selected]?.content}
-          classNames={mx('text-xs bg-transparent', open ? (items.length > 1 ? 'py-1 pl-8 pr-4' : 'py-1 px-4') : 'p-0.5')}
+          classNames={mx(
+            'text-xs bg-transparent',
+            open ? (items.length > 1 ? 'py-1 pl-8 pr-4' : 'py-1 px-4') : 'p-0.5',
+          )}
           replacer={{
             maxDepth: 3,
             maxArrayLen: 10,
