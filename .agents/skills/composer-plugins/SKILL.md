@@ -45,7 +45,9 @@ When asked to create a new plugin, start with a minimal skeleton before adding f
 12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
 13. `src/components/` — empty barrel, ready for primitives.
 
-Build and lint the skeleton before adding features. Add capabilities incrementally as needed (operations, blueprints, settings, etc.).
+Build and lint the skeleton before adding features.
+Add capabilities incrementally as needed (operations, blueprints, settings, etc.).
+Register the plugin with `composer-app`.
 
 ## Directory Structure
 
