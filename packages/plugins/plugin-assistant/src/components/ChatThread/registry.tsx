@@ -210,15 +210,22 @@ const escapeXmlTextContent = (raw: string): string =>
   raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /**
- * Strip markdown-style ordered list prefixes (`1. `, `2. `, …) at line starts; they break the mixed
- * XML / markdown path when embedded inside `<reasoning>` / `<status>` bodies.
+ * Strip bullet-like leading characters on each line so the line starts with a Unicode letter, or trim
+ * lines with no letters. Avoids list markers and other prefixes that break the mixed XML / markdown path
+ * inside `<reasoning>` / `<status>` bodies.
  */
-const stripLineLeadingNumberedListMarkers = (raw: string): string => raw.replace(/^\s*\d+\.\s+/gm, '');
+const stripLineLeadingUntilFirstLetter = (line: string): string => {
+  const index = line.search(/\p{L}/u);
+  return index === -1 ? line.trim() : line.slice(index);
+};
+
+const stripBulletLikeLinePrefixes = (raw: string): string =>
+  raw.split(/\r?\n/).map(stripLineLeadingUntilFirstLetter).join('\n');
 
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
   const content = escapeXmlTextContent(
-    stripLineLeadingNumberedListMarkers((opts.content ?? '').replace(/\n\n/g, ' ').trim()),
+    stripBulletLikeLinePrefixes((opts.content ?? '').replace(/\n\n/g, ' ').trim()),
   );
 
   if (opts.pending) {

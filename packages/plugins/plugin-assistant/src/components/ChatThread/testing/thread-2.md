@@ -48,3 +48,10 @@ What kind of information are you looking to organize? This will help me suggest 
 4. Research contacts on the web
 5. Save to database avoiding duplicates 
 6. Now I'm building the project structure to tie all these components together.</reasoning>
+
+<reasoning>I found the mailbox. Now I have all the information I need to create the CRM project. Let me create it with the appropriate blueprints and subscription to the mailbox. The project should:
+- Subscribe to the mailbox
+- On every email, extract People and Organizations
+- Save them to the database (checking for duplicates first)
+- Run web searches to enrich contact/org data
+- Blueprints needed: database, web-search, browser</reasoning>
