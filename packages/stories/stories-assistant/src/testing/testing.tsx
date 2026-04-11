@@ -203,7 +203,6 @@ export const getDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
     return [
       ((Story: FC, context: { id: string }) => {
         const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(null);
-
         useEffect(() => {
           void lazyPlugins().then(setLazyResult);
         }, []);

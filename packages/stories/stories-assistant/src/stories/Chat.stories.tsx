@@ -171,7 +171,7 @@ export const WithWebSearch: Story = {
 };
 
 // Test with prompt: Propose changes to my document based on the style guide.
-export const WithDocument: Story = {
+export const WithMarkdown: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const [{ MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([

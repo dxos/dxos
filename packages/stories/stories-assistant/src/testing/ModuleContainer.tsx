@@ -15,7 +15,7 @@ import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Loading } from '@dxos/react-ui/testing';
@@ -32,7 +32,7 @@ export type ModuleContainerProps = {
 export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showContext }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  const space = useSpace();
+  const [space] = useSpaces();
 
   useAsyncEffect(async () => {
     if (!space) {
