@@ -178,25 +178,40 @@ This is a later phase -- presence via gossip is the first milestone.
 
 ### Browser Considerations
 
-Iroh compiles to WASM but browsers lack raw UDP access. Browser peers will:
+**Browsers cannot run iroh directly.** The browser has no raw UDP access, so iroh's QUIC transport cannot operate in the browser. WASM compilation of iroh exists but is not useful without UDP sockets. The iroh team has medium-term plans for using WebRTC as an iroh transport, but this is complex and uncertain. WebTransport advocacy is ongoing but outlook is unclear.
 
-- Connect through iroh relay servers (similar to WebRTC TURN).
-- Traffic remains E2E encrypted; relay cannot read data.
-- Direct browser-to-browser connections are not possible via iroh today (WebRTC DataChannel integration is on iroh's long-term roadmap).
+**The practical approach is a bridge server** (confirmed by iroh team). This is the same pattern used by [freeq](https://github.com/chad/freeq): browser peers connect to a bridge server via WebSocket, and the bridge relays messages into the iroh network. Native/Tauri peers connect directly via iroh QUIC.
 
-**Implication:** For browser-only deployments, the latency profile is similar to the current WebRTC-via-EDGE model. The benefit is decoupling from EDGE for discovery and presence. Native/Electron/Tauri peers get true direct connections.
+```text
+Browser Peer A ──WebSocket──┐
+Browser Peer B ──WebSocket──┤── Bridge Server ──iroh QUIC──┐
+                            │                               ├── Iroh Network
+Native Peer C ──────────────────────────iroh QUIC──────────┘
+Native Peer D ──────────────────────────iroh QUIC──────────┘
+```
 
-### WASM Integration Strategy
+**Implications:**
 
-Since there is no ready-made NPM package for iroh:
+- Browser peers are relay-only (through bridge server), similar to current EDGE model.
+- Native/Tauri peers get true direct p2p connections with NAT traversal.
+- The bridge server can be colocated with or replace the EDGE server for iroh traffic.
+- E2E encryption is maintained -- the bridge forwards opaque gossip messages.
 
-1. **Option A: WASM bundle** -- Compile a minimal Rust crate (`iroh-endpoint` + `iroh-gossip`) to WASM via `wasm-bindgen`. Publish as an internal `@dxos/iroh-wasm` package. Thin TypeScript wrapper exposes typed APIs.
+### Platform Integration Strategy
 
-2. **Option B: Native sidecar** -- For Tauri/Electron, run iroh as a native Rust process. Communicate via IPC (stdin/stdout, Unix socket, or HTTP). Browser falls back to WASM.
+Based on guidance from the iroh team:
 
-3. **Option C: Hybrid** -- WASM for browsers, native for desktop. Unified TypeScript API abstracts the difference.
+1. **Native (Tauri, Node.js):** Use [iroh-ts](https://github.com/rayhanadev/iroh-ts) (napi-rs bindings) for raw QUIC connectivity. For higher-level protocols like iroh-gossip, build a small Rust crate wrapping `iroh-gossip` and expose it via napi-rs FFI. This avoids reimplementing gossip logic in TypeScript.
 
-Option A (WASM-first) is recommended for Phase 1 since it works everywhere and keeps the deployment model simple.
+2. **Browser:** Connect to a bridge server via WebSocket. The bridge server runs native iroh and relays gossip messages between browser peers and the iroh network. Browser and native peers participate in the same gossip topics transparently.
+
+3. **Bridge server:** A lightweight Rust service that:
+   - Runs an iroh endpoint and joins gossip topics on behalf of browser peers.
+   - Exposes a WebSocket API for browser peers to subscribe/publish to topics.
+   - Can be deployed alongside EDGE or as a standalone service.
+   - Stateless per-connection (gossip state is distributed, not stored on the bridge).
+
+**Rust FFI approach for gossip:** Rather than reimplementing epidemic broadcast trees in TypeScript over raw QUIC streams, the recommended approach is to build a thin Rust crate wrapping `iroh-gossip` and expose it via napi-rs (extending the iroh-ts pattern). This could be contributed upstream to iroh-ts or maintained as a separate `@dxos/iroh-gossip-ffi` package.
 
 ### Key Identity Mapping
 
@@ -231,10 +246,13 @@ packages/core/mesh/iroh/
     iroh-gossip-presence.ts     -- Presence over iroh-gossip topics.
     presence-aggregator.ts      -- Merges presence from multiple sources.
     iroh-transport-factory.ts   -- (Phase 3) TransportFactory implementation.
-    wasm/
-      iroh-bindings.ts          -- TypeScript wrapper over WASM bindings.
+    bridge/
+      bridge-client.ts          -- WebSocket client for browser peers to connect to bridge.
     testing/
       mock-iroh-endpoint.ts     -- In-memory mock for testing.
+
+packages/core/mesh/iroh-bridge/        -- (Phase 2+) Rust bridge server crate.
+packages/core/mesh/iroh-gossip-ffi/    -- (Phase 2+) Rust napi-rs crate wrapping iroh-gossip.
 ```
 
 ## Design Decisions
@@ -251,17 +269,17 @@ How should DXOS peers obtain their iroh EndpointId?
 
 **Recommendation: Option C** for Phase 1. Pragmatic bootstrap -- uses the existing trusted channel, avoids coupling crypto implementations, and works today. Option A can be revisited once iroh is proven and we understand whether key unification is worth the coupling.
 
-### D2. WASM vs Native (Tauri)
+### D2. Native + Bridge Server (Tauri / Browser)
 
 How should iroh run in desktop (Tauri) vs browser environments?
 
-| Option                                            | Pros                                                                                        | Cons                                                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **A. WASM everywhere**                            | Single code path; simpler build/test; works in all environments                             | No UDP hole-punching in browser (relay-only); WASM overhead on desktop; larger bundle |
-| **B. Native sidecar for Tauri, WASM for browser** | Full UDP/hole-punching on desktop; better performance; smaller browser bundle (lazy-loaded) | Two code paths; IPC complexity; harder to test; Tauri-specific build step             |
-| **C. Hybrid with unified TS API**                 | Best of both; platform-appropriate transport; clean abstraction                             | Most complex to build; API must abstract over different capabilities                  |
+| Option                                             | Pros                                                                                    | Cons                                                                                                    |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **A. WASM everywhere**                             | Single code path; simpler build/test                                                    | Browsers lack UDP access so WASM iroh can't connect; not a viable browser path (confirmed by iroh team) |
+| **B. Native for Tauri, bridge server for browser** | Full UDP/hole-punching on desktop; browser gets iroh via bridge; proven pattern (freeq) | Two integration paths; bridge server to operate; WebSocket protocol to define                           |
+| **C. Bridge server everywhere**                    | Single integration path; works in all environments                                      | Desktop loses direct p2p benefit; unnecessary hop for native peers; higher latency                      |
 
-**Recommendation: Option A (WASM-first)** for Phase 1. Keeps the deployment model simple and lets us validate the architecture before investing in platform-specific optimizations. Option B/C for Phase 3+ once we need direct UDP connectivity for data sync on desktop.
+**Recommendation: Option B (native + bridge).** Native/Tauri peers use iroh directly via napi-rs FFI (iroh-ts for raw QUIC, custom Rust crate for gossip). Browser peers connect through a bridge server via WebSocket. This is the approach recommended by the iroh team and validated by freeq. The `BeaconTransport` interface abstracts over the platform difference.
 
 ### D3. Relay Infrastructure
 
@@ -321,11 +339,17 @@ Phase 1 delivers:
 
 Applications can create additional channels on the same gossip topic for cursor positions, typing indicators, or custom data. This avoids building presence-specific plumbing that would need to be generalized later.
 
-### D7. WASM Bundle Size
+### D7. Bridge Server Deployment
 
-**Decision: Lazy-load the iroh WASM bundle.**
+**Decision: Bridge server colocated with or alongside EDGE.**
 
-Estimated size: 1-3 MB gzipped for a minimal build (endpoint + gossip). This is too large for the critical path bundle. The iroh module will be loaded on-demand when the first space is joined, behind a dynamic `import()`. The `IrohEndpointManager` initializes asynchronously and presence falls back to Teleport gossip until the WASM bundle is ready.
+The bridge server is a lightweight Rust service that joins iroh gossip topics on behalf of browser peers. Deployment options:
+
+- **Colocated with EDGE:** Run as a sidecar process alongside the existing EDGE server. Simplest operationally.
+- **Standalone:** Run independently, pointed to by DXOS client config. More flexible for scaling.
+- **Embedded in EDGE:** Long-term, the bridge logic could be integrated into EDGE itself.
+
+For Phase 1, the bridge server is not needed -- the BroadcastChannel PoC proves the plugin architecture. The bridge server becomes necessary when browser peers need to participate in real iroh gossip topics (Phase 2+).
 
 ## Open Questions
 
@@ -341,9 +365,12 @@ Estimated size: 1-3 MB gzipped for a minimal build (endpoint + gossip). This is 
 
 - [iroh GitHub](https://github.com/n0-computer/iroh)
 - [iroh documentation](https://docs.iroh.computer)
+- [iroh protocols](https://www.iroh.computer/proto) -- higher-level protocols (gossip, blobs, docs)
 - [iroh-gossip](https://github.com/n0-computer/iroh-gossip) -- epidemic broadcast tree pub-sub
+- [iroh-ts](https://github.com/rayhanadev/iroh-ts) -- napi-rs TypeScript bindings for iroh
 - [iroh & the Web](https://www.iroh.computer/blog/iroh-and-the-web) -- browser/WASM roadmap
 - [iroh 1.0 roadmap](https://www.iroh.computer/blog/road-to-1-0)
+- [freeq](https://github.com/chad/freeq) -- reference implementation: WebSocket for browser, iroh for native
 - DXOS mesh: `packages/core/mesh/network-manager/src/transport/transport.ts`
 - DXOS presence: `packages/core/mesh/teleport-extension-gossip/src/presence.ts`
 - DXOS signal: `packages/core/mesh/messaging/src/signal-methods.ts`
