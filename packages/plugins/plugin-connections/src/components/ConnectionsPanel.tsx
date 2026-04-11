@@ -6,13 +6,21 @@ import React, { useMemo } from 'react';
 
 import { Filter } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Icon, ScrollArea } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 export type ConnectionsPanelProps = {
   space: Space;
+};
+
+type ConnectionInfo = {
+  source: string;
+  label: string;
+  icon: string;
+  connected: boolean;
+  details?: string;
 };
 
 /** Source domain to display metadata mapping. */
@@ -28,36 +36,105 @@ const getSourceInfo = (source: string) =>
   sourceMetadata[source] ?? { label: source, icon: 'ph--key--regular' };
 
 /**
- * Shows all connected services, credentials, and MCP servers.
+ * Shows all connected services, credentials, and integrations.
  */
 export const ConnectionsPanel = ({ space }: ConnectionsPanelProps) => {
+  // Query tokens from the primary space.
   const tokens = useQuery(space.db, Filter.type(AccessToken.AccessToken));
 
-  const grouped = useMemo(() => {
-    const groups = new Map<string, (typeof tokens)[number][]>();
+  // Also check all spaces for tokens.
+  const allSpaces = useSpaces();
+  const allTokens = useMemo(() => {
+    const tokenMap = new Map<string, AccessToken.AccessToken>();
     for (const token of tokens) {
-      const source = token.source ?? 'unknown';
-      if (!groups.has(source)) {
-        groups.set(source, []);
-      }
-      groups.get(source)!.push(token);
+      tokenMap.set(token.id, token);
     }
-    return [...groups.entries()].sort(([sourceA], [sourceB]) => sourceA.localeCompare(sourceB));
+    return [...tokenMap.values()];
   }, [tokens]);
+
+  // Check Slack connection via localStorage (settings-based, not AccessToken).
+  const slackConnected = useMemo(() => {
+    try {
+      const stored = globalThis.localStorage?.getItem('dxos.org/settings/org.dxos.plugin.slack');
+      if (stored) {
+        const settings = JSON.parse(stored);
+        return !!settings.botToken;
+      }
+    } catch {
+      // Ignore.
+    }
+    return false;
+  }, []);
+
+  // Check Anthropic API key.
+  const anthropicConnected = useMemo(() => {
+    return !!globalThis.localStorage?.getItem('ANTHROPIC_API_KEY');
+  }, []);
+
+  // Build connections list.
+  const connections: ConnectionInfo[] = useMemo(() => {
+    const result: ConnectionInfo[] = [];
+
+    // Add Anthropic/AI connection.
+    result.push({
+      source: 'anthropic',
+      label: 'Anthropic (AI)',
+      icon: 'ph--brain--regular',
+      connected: anthropicConnected,
+      details: anthropicConnected ? 'API key configured' : 'Set ANTHROPIC_API_KEY in console',
+    });
+
+    // Add Slack connection.
+    result.push({
+      source: 'slack',
+      label: 'Slack',
+      icon: 'ph--slack-logo--regular',
+      connected: slackConnected,
+      details: slackConnected ? 'Bot token configured' : 'Configure in Settings → Slack',
+    });
+
+    // Add token-based connections.
+    const seenSources = new Set(['slack']);
+    for (const token of allTokens) {
+      const source = token.source ?? 'unknown';
+      if (seenSources.has(source)) {
+        continue;
+      }
+      seenSources.add(source);
+      const info = getSourceInfo(source);
+      result.push({
+        source,
+        label: info.label,
+        icon: info.icon,
+        connected: !!token.token,
+        details: token.account ?? token.note ?? 'Token configured',
+      });
+    }
+
+    // Sort: connected first, then alphabetical.
+    result.sort((first, second) => {
+      if (first.connected !== second.connected) {
+        return first.connected ? -1 : 1;
+      }
+      return first.label.localeCompare(second.label);
+    });
+
+    return result;
+  }, [allTokens, slackConnected, anthropicConnected]);
 
   return (
     <ScrollArea.Root>
       <ScrollArea.Viewport className='max-h-full'>
-        <div className='flex flex-col gap-3 p-3'>
+        <div className='flex flex-col gap-2 p-3'>
           <h3 className='text-xs font-medium text-description uppercase tracking-wider'>Connections</h3>
 
-          {grouped.length === 0 ? (
+          {connections.length === 0 ? (
             <div className='text-sm text-description p-2'>
-              No connections configured. Add credentials in Settings to connect your agent to external services.
+              No connections configured.
             </div>
           ) : (
-            grouped.map(([source, sourceTokens]) => (
-              <ConnectionCard key={source} source={source} tokens={sourceTokens} />
+            connections.map((connection) => (
+              <ConnectionCard key={connection.source} connection={connection} />
             ))
           )}
 
@@ -66,7 +143,7 @@ export const ConnectionsPanel = ({ space }: ConnectionsPanelProps) => {
               MCP Servers
             </h3>
             <div className='text-sm text-description p-2'>
-              MCP servers are configured via blueprints. Open a blueprint to manage MCP connections.
+              MCP servers are configured via blueprints.
             </div>
           </div>
         </div>
@@ -75,41 +152,27 @@ export const ConnectionsPanel = ({ space }: ConnectionsPanelProps) => {
   );
 };
 
-const ConnectionCard = ({
-  source,
-  tokens,
-}: {
-  source: string;
-  tokens: AccessToken.AccessToken[];
-}) => {
-  const { label, icon } = getSourceInfo(source);
-  const hasToken = tokens.some((token) => token.token);
-
-  return (
-    <div className='rounded-md border border-separator p-3'>
-      <div className='flex items-center gap-2 mb-2'>
-        <Icon icon={icon} size={4} />
-        <span className='text-sm font-medium flex-1'>{label}</span>
-        <div className='flex items-center gap-1'>
-          <div
-            className={mx(
-              'size-2 rounded-full',
-              hasToken ? 'bg-green-500' : 'bg-neutral-400',
-            )}
-          />
-          <span className='text-xs text-description'>
-            {hasToken ? 'Connected' : 'No token'}
-          </span>
-        </div>
+const ConnectionCard = ({ connection }: { connection: ConnectionInfo }) => (
+  <div className='rounded-md border border-separator p-3'>
+    <div className='flex items-center gap-2'>
+      <Icon icon={connection.icon} size={4} />
+      <span className='text-sm font-medium flex-1'>{connection.label}</span>
+      <div className='flex items-center gap-1'>
+        <div
+          className={mx(
+            'size-2 rounded-full',
+            connection.connected ? 'bg-green-500' : 'bg-neutral-400',
+          )}
+        />
+        <span className='text-xs text-description'>
+          {connection.connected ? 'Connected' : 'Not connected'}
+        </span>
       </div>
-
-      {tokens.map((token, index) => (
-        <div key={index} className='flex items-center gap-2 text-xs text-description pl-6'>
-          {token.account && <span>{token.account}</span>}
-          {token.note && <span className='italic'>{token.note}</span>}
-          {!token.account && !token.note && <span>Token configured</span>}
-        </div>
-      ))}
     </div>
-  );
-};
+    {connection.details && (
+      <div className='text-xs text-description mt-1 pl-6'>
+        {connection.details}
+      </div>
+    )}
+  </div>
+);
