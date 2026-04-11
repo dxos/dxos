@@ -12,5 +12,5 @@ export const meta: Plugin.Meta = {
     Real-time AI agent execution inspector.
     Shows every step an agent takes with the ability to stop execution.
   `,
-  icon: 'ph--magnifying-glass--regular',
+  icon: 'ph--heartbeat--regular',
 };
