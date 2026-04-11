@@ -23,6 +23,7 @@ import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import { on } from 'events';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -77,14 +78,14 @@ const TestToolkit = Toolkit.make(
     }),
     failure: Schema.Never,
   }),
-  Tool.make('get-date', {
-    description: 'Get the current date',
-    parameters: {
-      // TODO(burdon): This isn't working.
-      // location: Format.GeoPoint,
-    },
-    success: Schema.DateFromString,
-  }),
+  // Tool.make('get-date', {
+  //   description: 'Get the current date',
+  //   parameters: {
+  //     // TODO(burdon): This isn't working.
+  //     // location: Format.GeoPoint,
+  //   },
+  //   success: Schema.DateFromString,
+  // }),
 );
 
 // Tool handlers.
@@ -104,10 +105,10 @@ const toolkitLayer = TestToolkit.toLayer({
       yield* Console.log(`Executing calculation: ${input} = ${result}`);
       return { result };
     }),
-  'get-date': () =>
-    Effect.gen(function* () {
-      return new Date('2025-10-01');
-    }),
+  // 'get-date': () =>
+  //   Effect.gen(function* () {
+  //     return new Date('2025-10-01');
+  //   }),
 });
 
 /**
@@ -224,6 +225,28 @@ describe('LanguageModel', () => {
   );
 
   it.effect(
+    'adaptive thinking',
+    Effect.fn(
+      function* (_) {
+        const stream = LanguageModel.streamText({
+          prompt: 'I am testing adaptive thinking. Think for a bit, and then output a nowvel',
+        });
+        yield* Stream.runForEach(
+          stream,
+          Effect.fnUntraced(function* (item) {
+            log.info('item', { item, time: new Date().toISOString() });
+          }),
+        );
+      },
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  );
+
+  it.effect(
     'streaming with tools',
     Effect.fn(
       function* (_) {
@@ -249,6 +272,40 @@ describe('LanguageModel', () => {
       },
       Effect.provide(toolkitLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  ); //
+
+  it.effect.only(
+    'iterleaved thinking',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* Chat.empty;
+        const toolkit = yield* TestToolkit;
+
+        let prompt: Prompt.RawInput =
+          'I am testing iterleaved thinking. Perform 5 example calculations with the calculator tool. Call them in series and think about the next call between each tool call.';
+        do {
+          const stream = chat.streamText({ toolkit, prompt });
+          prompt = Prompt.empty;
+
+          yield* Stream.runForEach(
+            stream,
+            Effect.fnUntraced(function* (item) {
+              log.info('item', { item, time: new Date().toISOString() });
+            }),
+          );
+
+          log.break();
+        } while (yield* hasToolCall(chat));
+
+        console.log(JSON.stringify(yield* chat.export, null, 2));
+      },
+      Effect.provide(toolkitLayer),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
       TestHelpers.taggedTest('llm'),
