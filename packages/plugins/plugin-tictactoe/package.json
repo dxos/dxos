@@ -65,7 +65,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

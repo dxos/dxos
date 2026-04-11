@@ -3,4 +3,3 @@
 //
 
 export { default as TicTacToeBlueprint } from './tictactoe-blueprint';
-export * as TicTacToeFunctions from '#operations';

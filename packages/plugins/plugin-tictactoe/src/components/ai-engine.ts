@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { checkWin, getValidMoves } from './game-logic';
 
 /** Returns the opposing marker. */
@@ -152,7 +156,7 @@ const hardMove = (
 /**
  * Computes an AI move for the given board state.
  *
- * @param board - Flat string of size*size cells (' ', 'X', or 'O').
+ * @param board - Flat string of size*size cells ('-', 'X', or 'O').
  * @param size - Board dimension (e.g. 3 for 3x3).
  * @param winCondition - Number of consecutive markers needed to win.
  * @param marker - The AI's marker ('X' or 'O').
