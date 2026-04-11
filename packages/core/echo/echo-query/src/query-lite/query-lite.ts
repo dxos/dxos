@@ -637,10 +637,10 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.text(${JSON.stringify(filter.text)})`;
     case 'tag':
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
-    case 'child-of':
-      return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
