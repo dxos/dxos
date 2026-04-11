@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Entity, Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, type ObjectId } from '@dxos/keys';
+import type { DXN, ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -274,12 +274,7 @@ class FilterClass implements Filter$.Any {
     options?: Filter$.ChildOfOptions,
   ): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
-    const dxns = items.map((item) => {
-      if (item instanceof DXN) {
-        return item.toString();
-      }
-      throw new TypeError('query-lite childOf only supports DXN arguments');
-    });
+    const dxns = items.map((item) => String(item));
     return new FilterClass({
       type: 'child-of',
       parents: dxns,

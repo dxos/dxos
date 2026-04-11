@@ -51,7 +51,7 @@ export const Query = Operation.make({
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [mailbox1.feed, mailbox2.feed],
+          "in": [{"/" : "dxn:echo:@:YYYYYY"}, {"/" : "dxn:echo:@:XXXXXXX"}],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
