@@ -17,6 +17,7 @@ import {
   StatsWidget,
   SummaryWidget,
   ToolWidget,
+  StatusWidget,
 } from './widgets';
 
 /**
@@ -70,6 +71,14 @@ export const componentRegistry: XmlWidgetRegistry = {
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new StatsWidget(text) : null;
+    },
+  },
+  status: {
+    block: true,
+    streaming: true,
+    factory: ({ children, range }) => {
+      const text = getXmlTextChild(children);
+      return text ? new StatusWidget(text, range.from) : null;
     },
   },
 
@@ -187,6 +196,10 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
 
     case 'summary': {
       return renderXMLBlock('summary', { content: block.content, pending: block.pending });
+    }
+
+    case 'status': {
+      return renderXMLBlock('status', { content: block.statusText, pending: block.pending });
     }
 
     default: {

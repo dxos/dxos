@@ -11,3 +11,4 @@ export * from './StatsWidget';
 export * from './SummaryWidget';
 export * from './SuggestionWidget';
 export * from './ToolWidget';
+export * from './StatusWidget';

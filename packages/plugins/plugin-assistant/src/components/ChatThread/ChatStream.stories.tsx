@@ -17,10 +17,12 @@ import {
   textStream,
 } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type ContentBlock } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { translations } from '../../translations';
 import { componentRegistry } from './registry';
+import THINKING from './testing/thinking.md?raw';
 import THREAD_1 from './testing/thread-1.md?raw';
 import THREAD_WIDGETS from './testing/thread-widgets.md?raw';
 
@@ -40,9 +42,41 @@ const defaultStreamOptions: TextStreamOptions = {
   variance: 0.5,
 };
 
+/** Matches self-closing tool call tags in assistant markdown fixtures (e.g. thinking.md). */
+const TOOL_CALL_MARKUP_REGEX = /<toolCall\s+id="([^"]+)"\s*\/>/g;
+
+const extractToolCallIdsFromMarkdown = (markdown: string): string[] => [
+  ...markdown.matchAll(TOOL_CALL_MARKUP_REGEX),
+].map((match) => match[1]);
+
+const SAMPLE_TOOL_NAMES = [
+  'get_project_rules',
+  'list_mailboxes',
+  'query_inbox',
+  'enable_blueprint',
+  'create_schema',
+  'create_project',
+  'retry_operation',
+] as const;
+
+const sampleCallAndResultBlocks = (toolCallId: string, index: number): ContentBlock.Any[] => {
+  const name = SAMPLE_TOOL_NAMES[index % SAMPLE_TOOL_NAMES.length];
+  const input = JSON.stringify({ step: index + 1, tool: name });
+  const result = JSON.stringify({ ok: true, detail: `Sample result for ${name}.` });
+  return [
+    { _tag: 'toolCall', toolCallId, name, input, providerExecuted: false },
+    { _tag: 'toolResult', toolCallId, name, result, providerExecuted: false },
+  ];
+};
+
 type DefaultStoryProps = MarkdownStreamProps & {
   initialContent?: string;
   streamOptions?: TextStreamOptions;
+  /**
+   * When true, after loading `initialContent`, finds `<toolCall id="..." />` ids via
+   * {@link TOOL_CALL_MARKUP_REGEX} and seeds each portal widget with paired toolCall + toolResult blocks.
+   */
+  seedToolWidgetsFromMarkdown?: boolean;
 };
 
 const DefaultStory = ({
@@ -50,6 +84,7 @@ const DefaultStory = ({
   content,
   streamOptions = defaultStreamOptions,
   debug: debugProp,
+  seedToolWidgetsFromMarkdown = false,
   ...props
 }: DefaultStoryProps) => {
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
@@ -57,10 +92,29 @@ const DefaultStory = ({
   const [debug, setDebug] = useState(debugProp);
 
   useEffect(() => {
-    if (initialContent) {
-      void controller?.append(initialContent);
+    if (!controller || !initialContent) {
+      return;
     }
-  }, [controller, initialContent]);
+
+    let cancelled = false;
+    void (async () => {
+      await controller.append(initialContent);
+      if (cancelled || !seedToolWidgetsFromMarkdown) {
+        return;
+      }
+
+      const toolCallIds = extractToolCallIdsFromMarkdown(initialContent);
+      toolCallIds.forEach((toolCallId, index) => {
+        controller.updateWidget(toolCallId, {
+          blocks: sampleCallAndResultBlocks(toolCallId, index),
+        });
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [controller, initialContent, seedToolWidgetsFromMarkdown]);
 
   useEffect(() => {
     if (!controller || !streaming || !content) {
@@ -175,5 +229,16 @@ export const Debug: Story = {
     registry: componentRegistry,
     content: THREAD_1,
     debug: true,
+  },
+};
+
+export const Thinking: Story = {
+  args: {
+    initialContent: THINKING,
+    registry: componentRegistry,
+    seedToolWidgetsFromMarkdown: true,
+    options: {
+      autoScroll: true,
+    },
   },
 };
