@@ -119,8 +119,6 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "@peermetrics/webrtc-stats": "catalog:",
     "date-fns": "catalog:",
     "extendable-media-recorder": "catalog:",

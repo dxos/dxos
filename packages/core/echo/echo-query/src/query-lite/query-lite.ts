@@ -5,7 +5,6 @@
 import type * as Schema from 'effect/Schema';
 
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
-import * as EchoFilter from '@dxos/echo/Filter';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import type { DXN, ObjectId } from '@dxos/keys';
@@ -299,8 +298,6 @@ class FilterClass implements Filter$.Any {
   static pretty(filter: Filter$.Any): string {
     return prettyFilter(filter.ast);
   }
-
-  static childOf = EchoFilter.childOf;
 
   private constructor(public readonly ast: QueryAST.Filter) {}
 
@@ -615,8 +612,6 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.text(${JSON.stringify(filter.text)})`;
     case 'tag':
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
-    case 'child-of':
-      return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'not':

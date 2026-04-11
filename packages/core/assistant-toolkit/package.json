@@ -58,7 +58,6 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "dfx": "catalog:",
     "exa-js": "catalog:"
   },

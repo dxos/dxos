@@ -93,8 +93,6 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/rpc": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {

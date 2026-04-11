@@ -113,10 +113,8 @@
     "@effect-atom/atom": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/cli": "catalog:",
-    "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
-    "@effect/printer-ansi": "catalog:",
-    "@effect/rpc": "catalog:"
+    "@effect/printer-ansi": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
