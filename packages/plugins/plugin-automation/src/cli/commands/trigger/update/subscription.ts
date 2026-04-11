@@ -121,8 +121,8 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
-    Obj.change(trigger, (mutableTrigger) => {
-      mutableTrigger.function = Ref.make(foundFn);
+    Obj.change(trigger, (trigger) => {
+      trigger.function = Ref.make(foundFn);
     });
     currentFn = foundFn;
   }
@@ -211,8 +211,8 @@ const updateSpec = Effect.fn(function* (
       subscriptionOptions.delay = delayOptionValue.value;
     }
 
-    Obj.change(trigger, (mutableTrigger) => {
-      const spec = mutableTrigger.spec;
+    Obj.change(trigger, (trigger) => {
+      const spec = trigger.spec;
       if (spec?.kind === 'subscription') {
         // Cast needed because QueryAST types are deeply readonly but spec.query expects mutable.
         spec.query = { ast: queryAst } as NonNullable<typeof spec.query>;
@@ -250,8 +250,8 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    Obj.change(trigger, (mutableTrigger) => {
-      mutableTrigger.input = inputObj;
+    Obj.change(trigger, (trigger) => {
+      trigger.input = inputObj;
     });
   }
 });
@@ -273,7 +273,7 @@ const updateEnabled = Effect.fn(function* (
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
   });
-  Obj.change(trigger, (mutableTrigger) => {
-    mutableTrigger.enabled = enabledValue;
+  Obj.change(trigger, (trigger) => {
+    trigger.enabled = enabledValue;
   });
 });

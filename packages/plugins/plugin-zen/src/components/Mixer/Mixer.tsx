@@ -90,8 +90,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    Obj.change(dream, (obj) => {
-      obj.sequences = [...(obj.sequences ?? []), sequence];
+    Obj.change(dream, (dream) => {
+      dream.sequences = [...(dream.sequences ?? []), sequence];
     });
     setSelected(sequence.id);
   }, [dream]);

@@ -175,8 +175,8 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.change(rootCollection, (obj) => {
-            obj.objects.push(documentRef);
+          Obj.change(rootCollection, (rootCollection) => {
+            rootCollection.objects.push(documentRef);
           });
 
           // Create the HasSubject relation

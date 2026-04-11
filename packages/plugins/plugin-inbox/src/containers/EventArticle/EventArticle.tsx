@@ -30,8 +30,8 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      Obj.change(event, (obj) => {
-        obj.notes = Ref.make(Text.make());
+      Obj.change(event, (event) => {
+        event.notes = Ref.make(Text.make());
       });
     }
   }, [id, subject, db, shadowedEvent]);

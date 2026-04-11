@@ -38,15 +38,15 @@ export const ExemplarArticle = ({ role, subject, attendableId }: ExemplarArticle
   // ECHO objects are reactive proxies — changes replicate to other peers.
   const handleValuesChanged = useCallback(
     (values: Partial<{ name: string; description: string; status: 'active' | 'archived' | 'draft' }>) => {
-      Obj.change(subject, (draft) => {
+      Obj.change(subject, (subject) => {
         if (values.name !== undefined) {
-          draft.name = values.name;
+          subject.name = values.name;
         }
         if (values.description !== undefined) {
-          draft.description = values.description;
+          subject.description = values.description;
         }
         if (values.status !== undefined) {
-          draft.status = values.status;
+          subject.status = values.status;
         }
       });
     },

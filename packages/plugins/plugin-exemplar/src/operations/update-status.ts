@@ -18,8 +18,8 @@ const handler: Operation.WithHandler<typeof UpdateStatus> = UpdateStatus.pipe(
     // `Effect.sync` wraps a synchronous side-effect. For async work, use `Effect.promise`.
     // `Obj.change` provides a mutable draft for safe property assignment on ECHO objects.
     Effect.sync(() => {
-      Obj.change(item, (draft) => {
-        draft.status = status;
+      Obj.change(item, (item) => {
+        item.status = status;
       });
     }),
   ),

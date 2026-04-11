@@ -250,9 +250,9 @@ export class ExtrudeTool implements Tool {
     const modelObject = ctx.getObject(this._state.objectId);
     if (modelObject) {
       const meshData = serializeManifold(finalSolid);
-      Obj.change(modelObject, (obj) => {
-        obj.primitive = undefined;
-        obj.mesh = meshData;
+      Obj.change(modelObject, (modelObject) => {
+        modelObject.primitive = undefined;
+        modelObject.mesh = meshData;
       });
     }
 

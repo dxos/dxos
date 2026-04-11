@@ -408,8 +408,8 @@ describe('Query', () => {
       }
       const cutoff = secondAfterFlush * 1000;
 
-      Obj.change(obj, (o: any) => {
-        o.value = 999;
+      Obj.change(obj, (obj: any) => {
+        obj.value = 999;
       });
       await db.flush();
 
@@ -2253,8 +2253,8 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (obj) => {
-        obj.name = name;
+      Obj.change(contact, (contact) => {
+        contact.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));
 
