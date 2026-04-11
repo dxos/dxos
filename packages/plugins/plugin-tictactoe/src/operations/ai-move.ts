@@ -16,6 +16,10 @@ const handler: Operation.WithHandler<typeof AiMove> = AiMove.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, level }) {
       const obj = (yield* Database.load(game)) as TicTacToe.Game;
+      const currentStatus = checkWin(obj.board, obj.size, obj.winCondition);
+      if (currentStatus !== 'playing') {
+        return yield* Effect.fail(new Error('GameOver'));
+      }
       const marker = currentTurn(obj.board);
       const diff = level ?? obj.level ?? 'medium';
 

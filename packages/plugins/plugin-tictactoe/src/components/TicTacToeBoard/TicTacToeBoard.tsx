@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -66,6 +66,11 @@ export const TicTacToeBoard = ({
   onCellClick,
 }: TicTacToeBoardProps) => {
   const [lastPlaced, setLastPlaced] = useState<number | null>(null);
+
+  // Reset lastPlaced when board changes externally.
+  useEffect(() => {
+    setLastPlaced(null);
+  }, [board]);
 
   const handleCellClick = (index: number, row: number, col: number) => {
     setLastPlaced(index);

@@ -28,10 +28,16 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
   const { t } = useTranslation(meta.id);
   const [aiThinking, setAiThinking] = useState(false);
   const aiTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const boardRef = useRef<string>('');
+  const movesRef = useRef<string>('');
 
   // Subscribe to reactive ECHO properties.
   const [board] = useObject(game, 'board');
   const [moves] = useObject(game, 'moves');
+
+  // Keep refs in sync for use inside timeouts.
+  boardRef.current = board ?? '';
+  movesRef.current = moves ?? '';
   const [size] = useObject(game, 'size');
   const [winCondition] = useObject(game, 'winCondition');
   const [level] = useObject(game, 'level');
@@ -79,7 +85,16 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
 
     setAiThinking(true);
     aiTimeoutRef.current = setTimeout(() => {
-      const moveIndex = computeAiMove(board, size, winCondition, 'O', level);
+      // Read fresh values from refs to avoid stale closure.
+      const currentBoard = boardRef.current;
+      const currentMoves = movesRef.current;
+      const currentStatus = checkWin(currentBoard, size, winCondition);
+      if (currentStatus !== 'playing' || currentTurn(currentBoard) !== 'O') {
+        setAiThinking(false);
+        return;
+      }
+
+      const moveIndex = computeAiMove(currentBoard, size, winCondition, 'O', level);
       if (moveIndex === -1) {
         setAiThinking(false);
         return;
@@ -87,9 +102,9 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
 
       const row = Math.floor(moveIndex / size);
       const col = moveIndex % size;
-      const newBoard = board.substring(0, moveIndex) + 'O' + board.substring(moveIndex + 1);
+      const newBoard = currentBoard.substring(0, moveIndex) + 'O' + currentBoard.substring(moveIndex + 1);
       const moveEntry = `O:${row},${col}`;
-      const newMoves = moves ? `${moves};${moveEntry}` : moveEntry;
+      const newMoves = currentMoves ? `${currentMoves};${moveEntry}` : moveEntry;
 
       Obj.change(game, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;

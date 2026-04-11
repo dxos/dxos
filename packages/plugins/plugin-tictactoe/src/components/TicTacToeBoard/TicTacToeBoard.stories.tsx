@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -11,6 +11,9 @@ import { TicTacToeBoard, type TicTacToeBoardProps } from './TicTacToeBoard';
 
 const InteractiveStory = (args: TicTacToeBoardProps) => {
   const [board, setBoard] = useState(args.board);
+  useEffect(() => {
+    setBoard(args.board);
+  }, [args.board]);
 
   const handleCellClick = useCallback(
     (row: number, col: number) => {

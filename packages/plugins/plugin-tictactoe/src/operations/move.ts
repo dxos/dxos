@@ -16,6 +16,10 @@ const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, position }) {
       const obj = (yield* Database.load(game)) as TicTacToe.Game;
+      const currentStatus = checkWin(obj.board, obj.size, obj.winCondition);
+      if (currentStatus !== 'playing') {
+        return yield* Effect.fail(new Error('GameOver'));
+      }
       const [rowStr, colStr] = position.split(',');
       const row = parseInt(rowStr, 10);
       const col = parseInt(colStr, 10);

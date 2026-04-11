@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { computeAiMove } from './ai-engine';
+import { checkWin } from './game-logic';
 
 // 3x3 board: indices 0-8, empty = '-'
 const emptyBoard = '---------';
@@ -81,8 +82,10 @@ describe('computeAiMove', () => {
       const size = 3;
       const winCondition = 3;
       let currentMarker: 'X' | 'O' = 'X';
+      let status = 'playing';
 
       for (let turn = 0; turn < 9; turn++) {
+        if (status !== 'playing') break;
         const validMoves = board.split('').filter((c) => c === '-').length;
         if (validMoves === 0) break;
 
@@ -92,11 +95,13 @@ describe('computeAiMove', () => {
         const boardArr = board.split('');
         boardArr[move] = currentMarker;
         board = boardArr.join('');
+        status = checkWin(board, size, winCondition);
 
         currentMarker = currentMarker === 'X' ? 'O' : 'X';
       }
 
-      // Hard vs hard on 3x3 should always produce a full board (draw).
+      // Hard vs hard on 3x3 should end in a draw.
+      expect(status).toBe('draw');
       expect(board).not.toContain('-');
     });
   });
