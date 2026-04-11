@@ -17,7 +17,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -158,7 +158,7 @@ export default Commentary.pipe(
         let document: Markdown.Document;
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
+          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
           const rootCollection = yield* Database.load<Collection.Collection>(
             properties[Collection.Collection.typename],
           );
@@ -214,6 +214,7 @@ export default Commentary.pipe(
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
           FunctionInvocationService.layerNotAvailable,
+          Trace.writerLayerNoop,
         ),
       ),
     ),

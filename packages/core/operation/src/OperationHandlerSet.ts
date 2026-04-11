@@ -2,8 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
+import { assertArgument } from '@dxos/invariant';
+
+import { NoHandlerError } from './errors';
 import type * as Operation from './Operation';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;
@@ -16,6 +21,10 @@ export interface OperationHandlerSet {
 
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
 }
+
+export const isOperationHandlerSet = (value: unknown): value is OperationHandlerSet => {
+  return typeof value === 'object' && value !== null && TypeId in value;
+};
 
 export const empty: OperationHandlerSet = {
   [TypeId]: TypeId,
@@ -41,10 +50,18 @@ export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any
 export const async = (
   getHandlers: () => Promise<Operation.WithHandler<Operation.Definition.Any>[]>,
 ): OperationHandlerSet => {
+  // NOTE: Re-runing async module imports has a big performance penalty in Chrome.
+  let promise: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
+  const getHandlersCached = () => {
+    if (!promise) {
+      promise = getHandlers();
+    }
+    return promise;
+  };
   return {
     [TypeId]: TypeId,
     getHandlers,
-    handlers: Effect.promise(getHandlers),
+    handlers: Effect.promise(getHandlersCached),
   };
 };
 
@@ -53,6 +70,7 @@ export const async = (
  *
  */
 export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
+  assertArgument(sets.every(isOperationHandlerSet), 'sets', 'sets must be an array of OperationHandlerSet');
   return async(() => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat()));
 };
 
@@ -72,3 +90,43 @@ export const lazy = (
 ): OperationHandlerSet => {
   return async(() => Promise.all(modules.map((module) => module().then(({ default: handler }) => handler))));
 };
+
+/**
+ * Gets a handler for an operation by definition.
+ */
+export const getHandler = <const Op extends Operation.Definition.Any>(
+  set: OperationHandlerSet,
+  definition: Op,
+): Effect.Effect<Operation.WithHandler<Op>, NoHandlerError> =>
+  Effect.gen(function* () {
+    const handlers = yield* set.handlers;
+    const handler = handlers.find((handler) => handler.meta.key === definition.meta.key);
+    if (!handler) {
+      return yield* Effect.fail(new NoHandlerError(definition.meta.key));
+    }
+    return handler as any;
+  });
+
+/**
+ * Gets a handler for an operation by key.
+ */
+export const getHandlerByKey = (
+  set: OperationHandlerSet,
+  key: string,
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
+  Effect.gen(function* () {
+    const handlers = yield* set.handlers;
+    const handler = handlers.find((handler) => handler.meta.key === key);
+    if (!handler) {
+      return yield* Effect.fail(new NoHandlerError(key));
+    }
+    return handler as any;
+  });
+
+export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
+  OperationHandlerProvider,
+  OperationHandlerSet
+>() {}
+
+export const provide = (handlers: OperationHandlerSet): Layer.Layer<OperationHandlerProvider, never, never> =>
+  Layer.succeed(OperationHandlerProvider, handlers);

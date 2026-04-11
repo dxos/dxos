@@ -139,6 +139,9 @@
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
+      "path": "packages/core/assistant-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/core/assistant-toolkit/tsconfig.json"
     },
     {
@@ -313,7 +316,13 @@
       "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-exemplar/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-files/tsconfig.json"
@@ -326,6 +335,9 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
@@ -350,6 +362,9 @@
     },
     {
       "path": "packages/plugins/plugin-native/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
@@ -395,6 +410,12 @@
     },
     {
       "path": "packages/plugins/plugin-space/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spacetime/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spec/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
@@ -662,6 +683,9 @@
     },
     {
       "path": "tools/vite-plugin-import-source/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-log/tsconfig.json"
     },
     {
       "path": "tools/x/tsconfig.json"

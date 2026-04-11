@@ -16,8 +16,8 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../meta';
-import { SimpleLayoutState } from '../types';
+import { meta } from '#meta';
+import { SimpleLayoutState } from '#types';
 
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
@@ -62,7 +62,7 @@ export const useNavbarActions = (): NavbarActions => {
           variant: 'dropdownMenu',
           icon: 'ph--list--regular',
           iconOnly: true,
-          label: t('main menu label'),
+          label: t('main-menu.label'),
           testId: 'simpleLayoutPlugin.addSpace',
         });
         nodes.push(mainMenuGroup);

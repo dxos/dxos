@@ -8,7 +8,6 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { mx } from '@dxos/ui-theme';
 
 import { decorateMarkdown } from '../markdown';
-
 import { commands } from './commands';
 import { editor } from './editor';
 import { menu } from './menu';

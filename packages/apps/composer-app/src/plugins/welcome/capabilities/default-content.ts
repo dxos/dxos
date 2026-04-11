@@ -18,7 +18,7 @@ const SPACE_ICON = 'house-line';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
-    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client/types'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
@@ -26,8 +26,12 @@ export default Capability.makeModule(
     const { invoke, schedule } = operationInvoker;
     const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
+    const { getPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
 
-    const space = client.spaces.default;
+    const space = getPersonalSpace(client);
+    if (!space) {
+      return Capability.contributes(Capabilities.Null, null);
+    }
     Obj.change(space.properties, (obj) => {
       obj.icon = SPACE_ICON;
     });

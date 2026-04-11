@@ -8,19 +8,18 @@ import { Slot } from '@radix-ui/react-slot';
 import React from 'react';
 
 import { composableProps, slottable } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
+import { ThemedClassName } from '../../util';
 
 type ScopedProps<P> = P & { __scopeSplitter?: any };
 
-// TODO(burdon): Enable resize.
 // TODO(burdon): Generalize horizontal/vertical and change to start/end.
-type Mode = 'upper' | 'lower' | 'both';
+type Mode = 'top' | 'bottom' | 'split';
 
 type SplitterContextValue = {
   mode: Mode;
-  ratio: number;
+  ratio?: number;
   transition: number;
 };
 
@@ -38,21 +37,10 @@ const ROOT_NAME = 'Splitter.Root';
 
 type RootOwnProps = Partial<SplitterContextValue>;
 
-type RootProps = SlottableProps<RootOwnProps>;
+type RootProps = RootOwnProps;
 
 const Root = slottable<HTMLDivElement, RootOwnProps>(
-  (
-    {
-      asChild,
-      mode = 'upper',
-      ratio = 0.5,
-      transition = 250,
-      children,
-      // Extract scoped prop from the spread.
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ asChild, mode = 'top', ratio = 0.5, transition = 250, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
     const { className, ...restProps } = composableProps(rest);
@@ -60,7 +48,7 @@ const Root = slottable<HTMLDivElement, RootOwnProps>(
 
     return (
       <SplitterProvider scope={__scopeSplitter} mode={mode} ratio={ratio} transition={transition}>
-        <Comp role='none' {...restProps} ref={forwardedRef} className={tx('splitter.root', {}, className)}>
+        <Comp {...restProps} ref={forwardedRef} className={tx('splitter.root', {}, className)}>
           {children}
         </Comp>
       </SplitterProvider>
@@ -76,44 +64,42 @@ Root.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-type PanelOwnProps = {
-  position: 'upper' | 'lower';
-};
+type PanelOwnProps = ThemedClassName<{
+  position: 'top' | 'bottom';
+}>;
 
-type PanelProps = SlottableProps<PanelOwnProps>;
+type PanelProps = PanelOwnProps;
 
 const Panel = slottable<HTMLDivElement, PanelOwnProps>(
-  ({ asChild, children, position, style, ...props }, forwardedRef) => {
+  ({ classNames, asChild, children, position, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
-    const { className, ...restProps } = composableProps(rest);
     const Comp = asChild ? Slot : Primitive.div;
-    const { mode, ratio, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
+    const { mode, ratio = 0.5, transition } = useSplitterContext(PANEL_NAME, __scopeSplitter);
+    const { className, ...restProps } = composableProps(rest);
 
     // Calculate position and height based on mode and ratio.
-    const isUpper = position === 'upper';
-    const top = isUpper ? '0%' : mode === 'upper' ? '100%' : mode === 'lower' ? '0%' : `${ratio * 100}%`;
-
-    const height = isUpper
-      ? mode === 'upper'
+    const isTopPanel = position === 'top';
+    const topOffset = isTopPanel ? '0%' : mode === 'top' ? '100%' : mode === 'bottom' ? '0%' : `${ratio * 100}%`;
+    const height = isTopPanel
+      ? mode === 'top'
         ? '100%'
-        : mode === 'lower'
+        : mode === 'bottom'
           ? '0%'
           : `${ratio * 100}%`
-      : mode === 'lower'
+      : mode === 'bottom'
         ? '100%'
-        : mode === 'upper'
+        : mode === 'top'
           ? '0%'
           : `${(1 - ratio) * 100}%`;
 
     return (
       <Comp
-        role='none'
         {...restProps}
         ref={forwardedRef}
         className={tx('splitter.panel', {}, className)}
         style={{
-          top,
+          top: topOffset,
           height,
           transition: `top ${transition}ms, height ${transition}ms ease-out`,
           ...style,

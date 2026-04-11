@@ -5,6 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -25,13 +26,13 @@ describe('EdgeClient', () => {
     onTestFinished(cleanup);
 
     const { client, reconnectTrigger } = await openNewClient(endpoint);
-    await client.send(textMessage('Hello world 1'));
+    await client.send(Context.default(), textMessage('Hello world 1'));
     expect(client.isOpen).is.true;
 
     reconnectTrigger.reset();
     await closeConnection();
     await reconnectTrigger.wait();
-    await expect(client.send(textMessage('Hello world 2'))).resolves.not.toThrow();
+    await expect(client.send(Context.default(), textMessage('Hello world 2'))).resolves.not.toThrow();
   });
 
   test('isConnected', async () => {
@@ -59,13 +60,13 @@ describe('EdgeClient', () => {
     onTestFinished(cleanup);
 
     const { client, reconnectTrigger } = await openNewClient(endpoint);
-    await client.send(textMessage('Hello world 1'));
+    await client.send(Context.default(), textMessage('Hello world 1'));
     expect(client.isOpen).is.true;
 
     reconnectTrigger.reset();
     client.setIdentity(await createEphemeralEdgeIdentity());
     await reconnectTrigger.wait();
-    await expect(client.send(textMessage('Hello world 2'))).resolves.not.toThrow();
+    await expect(client.send(Context.default(), textMessage('Hello world 2'))).resolves.not.toThrow();
   });
 
   test('send blocks until connection becomes ready', async () => {
@@ -75,7 +76,7 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
     setTimeout(() => admitConnection.wake(), 20);
-    await client.send(textMessage('Hello world 1'));
+    await client.send(Context.default(), textMessage('Hello world 1'));
     await expect.poll(() => messageSink.length).toBe(1);
   });
 
@@ -86,11 +87,13 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
     setTimeout(async () => client.setIdentity(await createEphemeralEdgeIdentity()));
-    await expect(client.send(textMessage('Hello world 1'))).rejects.toThrow(EdgeIdentityChangedError);
+    await expect(client.send(Context.default(), textMessage('Hello world 1'))).rejects.toThrow(
+      EdgeIdentityChangedError,
+    );
 
     // Test recovers.
     setTimeout(() => admitConnection.wake(), 20);
-    await client.send(textMessage('Hello world 1'));
+    await client.send(Context.default(), textMessage('Hello world 1'));
     await expect.poll(() => messageSink.length).toBe(1);
   });
 
@@ -101,7 +104,9 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
     setTimeout(() => client.close());
-    await expect(client.send(textMessage('Hello world 1'))).rejects.toThrow(EdgeConnectionClosedError);
+    await expect(client.send(Context.default(), textMessage('Hello world 1'))).rejects.toThrow(
+      EdgeConnectionClosedError,
+    );
   });
 
   test('onReconnect trigger', async () => {
@@ -129,12 +134,12 @@ describe('EdgeClient', () => {
     onTestFinished(cleanup);
 
     const { client, identity: oldIdentity } = await openNewClient(endpoint);
-    await client.send(textMessage('Hello world 1', oldIdentity));
+    await client.send(Context.default(), textMessage('Hello world 1', oldIdentity));
     expect(client.isOpen).is.true;
 
     const newIdentity = await createEphemeralEdgeIdentity();
     client.setIdentity(newIdentity);
-    await client.send(textMessage('Hello world 2', newIdentity));
+    await client.send(Context.default(), textMessage('Hello world 2', newIdentity));
     await expect.poll(() => messageSourceLog.length).toBe(2);
     expect(messageSourceLog.map((m) => m.peerKey)).toStrictEqual([oldIdentity.peerKey, newIdentity.peerKey]);
   });
@@ -147,7 +152,7 @@ describe('EdgeClient', () => {
 
     const client = new EdgeClient(identity, { socketEndpoint: process.env.EDGE_ENDPOINT! });
     await openAndClose(client);
-    await client.send(textMessage('Hello world 1'));
+    await client.send(Context.default(), textMessage('Hello world 1'));
     expect(client.isOpen).is.true;
   });
 

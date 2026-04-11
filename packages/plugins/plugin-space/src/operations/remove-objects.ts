@@ -11,7 +11,6 @@ import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { getNestedObjects } from '../util';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(

@@ -15,7 +15,6 @@ import { log } from '@dxos/log';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
-
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
@@ -48,7 +47,7 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query): Promise<QueryResult.EntityEntry[]>;
+  run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -106,6 +105,7 @@ export class GraphQueryContext implements QueryContext {
   }
 
   async run(
+    ctx: Context,
     query: QueryAST.Query,
     { timeout = 30_000 }: QueryResult.RunOptions = {},
   ): Promise<QueryResult.EntityEntry[]> {
@@ -114,7 +114,7 @@ export class GraphQueryContext implements QueryContext {
         log('run query', {
           resolver: Object.getPrototypeOf(s).constructor.name,
         });
-        const results = await asyncTimeout<QueryResult.EntityEntry[]>(s.run(query), timeout);
+        const results = await asyncTimeout<QueryResult.EntityEntry[]>(s.run(ctx, query), timeout);
         log('run query results', {
           resolver: Object.getPrototypeOf(s).constructor.name,
           count: results.length,
@@ -215,7 +215,7 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
+  async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }

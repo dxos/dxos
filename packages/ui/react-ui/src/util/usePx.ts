@@ -17,6 +17,7 @@ export const usePx = (rem: number): number => {
     if (typeof document !== 'undefined') {
       return getDocumentElementFontSize();
     }
+
     return 16; // Default fallback for SSR
   });
 

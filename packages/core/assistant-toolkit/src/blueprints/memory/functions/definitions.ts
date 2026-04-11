@@ -11,7 +11,7 @@ import { Memory } from '../../../types/Memory';
 
 export const QueryMemories = Operation.make({
   meta: {
-    key: 'dxos.org/function/memory/query',
+    key: 'org.dxos.function.memory.query',
     name: 'Query memories',
     description:
       'Search for stored memories using full-text search. Returns memories matching the query terms. Use this to recall previously saved knowledge, facts, or preferences.',
@@ -36,7 +36,7 @@ export const QueryMemories = Operation.make({
 
 export const SaveMemory = Operation.make({
   meta: {
-    key: 'dxos.org/function/memory/save',
+    key: 'org.dxos.function.memory.save',
     name: 'Save memory',
     description:
       'Saves a new memory to the database. Use this to persist knowledge, facts, preferences, or any information that should be remembered across conversations.',
@@ -56,7 +56,7 @@ export const SaveMemory = Operation.make({
 
 export const DeleteMemory = Operation.make({
   meta: {
-    key: 'dxos.org/function/memory/delete',
+    key: 'org.dxos.function.memory.delete',
     name: 'Delete memory',
     description: 'Deletes a memory from the database. Use this to remove outdated or incorrect memories.',
   },

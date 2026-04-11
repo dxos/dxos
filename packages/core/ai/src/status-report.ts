@@ -24,7 +24,7 @@ export const AgentStatus = Schema.Struct({
   message: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.agent-status',
+    typename: 'org.dxos.type.agentStatus',
     version: '0.1.0',
   }),
 );

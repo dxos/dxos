@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
-import * as Cause from 'effect/Cause';
+import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';
@@ -18,25 +18,27 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
+import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { Trigger, type TriggerEvent } from '@dxos/functions';
+import { Process, QueueService, TracingService, Trigger, type TriggerEvent } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { FeedProtocol, type ObjectId } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 
+import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
 
 export interface TriggerDispatcherOptions {
-  registry: Registry.Registry;
+  services: Context.Context<TriggerDispatcherServices>;
 
   /**
    * Time control mode.
@@ -88,10 +90,9 @@ interface ScheduledTrigger {
   nextExecution: Date;
 }
 
-// TODO(dmaretskyi): Refactor service management.
 type TriggerDispatcherServices =
-  | FunctionInvocationService
-  // TODO(dmaretskyi): Move those into layer deps.
+  | Registry.AtomRegistry
+  | ProcessManager.ProcessManagerService
   | TriggerStateStore
   | TracingService
   | QueueService
@@ -127,7 +128,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      * Start the trigger dispatcher.
      * Will automatically invoke triggers.
      */
-    start(): Effect.Effect<void, never, TriggerDispatcherServices>;
+    start(): Effect.Effect<void>;
 
     /**
      * Stop the trigger dispatcher.
@@ -137,14 +138,12 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     /**
      * Refresh triggers.
      */
-    refreshTriggers(): Effect.Effect<void, never, Database.Service>;
+    refreshTriggers(): Effect.Effect<void>;
 
     /**
      * Manually invoke a specific trigger.
      */
-    invokeTrigger(
-      options: InvokeTriggerOptions,
-    ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices>;
+    invokeTrigger(options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult>;
 
     /**
      * Invoke all scheduled triggers who are due.
@@ -154,7 +153,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     invokeScheduledTriggers(opts?: {
       kinds?: Trigger.Kind[];
       untilExhausted?: boolean;
-    }): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices>;
+    }): Effect.Effect<TriggerExecutionResult[]>;
 
     /**
      * Advance the internal clock (manual time control only).
@@ -169,13 +168,13 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
   }
 >() {
   static layer = (
-    options: Omit<TriggerDispatcherOptions, 'registry'>,
-  ): Layer.Layer<TriggerDispatcher, never, Registry.AtomRegistry> =>
+    options: Omit<TriggerDispatcherOptions, 'services'>,
+  ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        const registry = yield* Registry.AtomRegistry;
-        return new TriggerDispatcherImpl({ ...options, registry });
+        const services = yield* Effect.context<TriggerDispatcherServices>();
+        return new TriggerDispatcherImpl({ ...options, services });
       }),
     );
 }
@@ -186,7 +185,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 
-  protected _registry: Registry.Registry;
+  private _services: Context.Context<TriggerDispatcherServices>;
   private _running = false;
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
@@ -199,7 +198,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _maxConcurrency: number;
 
   constructor(options: TriggerDispatcherOptions) {
-    this._registry = options.registry;
+    this._services = options.services;
     this.timeControl = options.timeControl;
     this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
     this._internalTime = options.startingTime ?? new Date();
@@ -214,14 +213,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     return this._state;
   }
 
-  start = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
+  start = (): Effect.Effect<void> =>
     Effect.gen(this, function* () {
       if (this._running) {
         return;
       }
 
       this._running = true;
-      this._registry.update(
+      const registry = yield* Registry.AtomRegistry;
+      registry.update(
         this._state,
         Struct.evolve({
           enabled: () => true,
@@ -236,7 +236,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             const error = causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
-            this._registry.update(
+            registry.update(
               this._state,
               Struct.evolve({
                 enabled: () => false,
@@ -252,7 +252,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       log.info('TriggerDispatcher started', { timeControl: this.timeControl });
-    });
+    }).pipe(Effect.provide(this._services));
 
   stop = (): Effect.Effect<void> =>
     Effect.gen(this, function* () {
@@ -261,7 +261,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       this._running = false;
-      this._registry.update(
+      const registry = yield* Registry.AtomRegistry;
+      registry.update(
         this._state,
         Struct.evolve({
           enabled: () => false,
@@ -278,37 +279,24 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       this._scheduledTriggers.clear();
 
       log.info('TriggerDispatcher stopped');
-    });
+    }).pipe(Effect.provide(this._services));
 
-  invokeTrigger = (
-    options: InvokeTriggerOptions,
-  ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices> =>
+  invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
     Effect.gen(this, function* () {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
-      const tracer = yield* TracingService;
-      const trace = yield* tracer.traceInvocationStart({
-        target: trigger.function?.dxn,
-        payload: {
-          trigger: {
-            id: trigger.id,
-            // TODO(dmaretskyi): Is `spec` always there>
-            kind: trigger.spec!.kind,
-          },
-          data: event,
-        },
-      });
-
+      const invocationId = ObjectId.random();
       const invocation: InvocationsState = {
-        invocationId: trace.invocationId,
+        invocationId,
         trigger,
         function: null,
         event,
         result: null,
       };
 
-      this._registry.update(
+      const registry = yield* Registry.AtomRegistry;
+      registry.update(
         this._state,
         Struct.evolve({
           invocations: (invocations) => [...invocations, invocation].slice(-MAX_TRACKED_INVOCATIONS),
@@ -330,7 +318,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         invariant(Obj.instanceOf(Operation.PersistentOperation, serializedOperation));
         const functionDef = Operation.deserialize(serializedOperation);
 
-        this._registry.update(
+        const registry = yield* Registry.AtomRegistry;
+        registry.update(
           this._state,
           Struct.evolve({
             invocations: Array.map((_) =>
@@ -342,9 +331,27 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // Prepare input data
         const inputData = this._prepareInputData(trigger, event);
 
-        // Invoke the function
-        return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
-          Effect.provide(TracingService.layerInvocation(trace)),
+        const manager = yield* ProcessManager.ProcessManagerService;
+        const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        const handle = yield* manager.spawn(executable, {
+          tracing: {
+            invocationPayload: {
+              trigger: {
+                id: trigger.id,
+                kind: trigger.spec!.kind,
+              },
+              data: event,
+            },
+            invocationTarget: trigger.function?.dxn,
+          },
+          name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
+        });
+
+        return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
+          Stream.runCollect,
+          Effect.map(Chunk.head),
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () => Effect.dieMessage('Trigger invocation produced no output')),
         );
       }).pipe(Effect.exit);
 
@@ -362,12 +369,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           error: causeToError(result.cause),
         });
       }
-      yield* tracer.traceInvocationEnd({
-        trace,
-        // TODO(dmaretskyi): Might miss errors.
-        exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
-      });
-      this._registry.update(
+      registry.update(
         this._state,
         Struct.evolve({
           invocations: Array.map((_) =>
@@ -377,12 +379,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       );
 
       return triggerExecutionResult;
-    });
+    }).pipe(Effect.provide(this._services));
 
   invokeScheduledTriggers = ({
     kinds = ['timer', 'queue', 'subscription'],
     untilExhausted = false,
-  } = {}): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices> =>
+  } = {}): Effect.Effect<TriggerExecutionResult[]> =>
     Effect.gen(this, function* () {
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
@@ -555,7 +557,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
       return invocations;
-    });
+    }).pipe(Effect.provide(this._services));
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
     Effect.gen(this, function* () {
@@ -580,7 +582,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }
   };
 
-  refreshTriggers = (): Effect.Effect<void, never, Database.Service> =>
+  refreshTriggers = (): Effect.Effect<void> =>
     Effect.gen(this, function* () {
       const triggers = yield* this._fetchTriggers();
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -628,7 +630,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       log('Updated scheduled triggers', { count: this._scheduledTriggers.size });
-    }).pipe(Effect.withSpan('TriggerDispatcher.refreshTriggers'));
+    })
+      .pipe(Effect.withSpan('TriggerDispatcher.refreshTriggers'))
+      .pipe(Effect.provide(this._services));
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
@@ -636,7 +640,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
-  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
+  private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
     Effect.gen(this, function* () {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);

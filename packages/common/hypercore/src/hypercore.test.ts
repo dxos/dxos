@@ -2,9 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import { promisify } from 'node:util';
-
 import { type AbstractValueEncoding } from 'hypercore';
+import { promisify } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { type Codec } from '@dxos/codec-protobuf';

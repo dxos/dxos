@@ -10,7 +10,7 @@ import {
   type ColumnStructure,
   type Kanban,
   UNCATEGORIZED_VALUE,
-} from '../types';
+} from '#types';
 
 /**
  * Column order from a raw arrangement object (e.g. when working with arrangement only).

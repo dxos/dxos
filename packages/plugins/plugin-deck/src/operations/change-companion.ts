@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { getCompanionVariant } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 
+import { DeckCapabilities } from '../types';
 import { ChangeCompanion } from './definitions';
 import { updateActiveDeck } from './helpers';
-import { DeckCapabilities } from '../types';
 
 const handler: Operation.WithHandler<typeof ChangeCompanion> = ChangeCompanion.pipe(
   Operation.withHandler(
@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof ChangeCompanion> = ChangeCompanion.p
           updateActiveDeck(state, { companionOpen: false }),
         );
       } else {
-        const variant = getCompanionVariant(input.companion);
+        const variant = getLinkedVariant(input.companion);
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, {
             companionOpen: true,

@@ -21,6 +21,7 @@ import {
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { trace } from '@dxos/tracing';
 
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
@@ -29,6 +30,7 @@ import { type InvitationsHandler, createAdmissionKeypair } from './invitations-h
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
  * emits events when the set changes.
  */
+@trace.resource()
 export class InvitationsManager {
   private readonly _createInvitations = new Map<string, CancellableInvitation>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();
@@ -48,7 +50,11 @@ export class InvitationsManager {
     private readonly _metadataStore: MetadataStore,
   ) {}
 
-  async createInvitation(options: Partial<Invitation> & Pick<Invitation, 'kind'>): Promise<CancellableInvitation> {
+  @trace.span({ showInBrowserTimeline: true })
+  async createInvitation(
+    ctx: Context,
+    options: Partial<Invitation> & Pick<Invitation, 'kind'>,
+  ): Promise<CancellableInvitation> {
     if (options.invitationId) {
       const existingInvitation = this._createInvitations.get(options.invitationId);
       if (existingInvitation) {
@@ -63,7 +69,11 @@ export class InvitationsManager {
     }
     const invitation = this._createInvitation(handler, options);
 
-    const { ctx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
+    const {
+      ctx: invitationCtx,
+      stream,
+      observableInvitation,
+    } = this._createObservableInvitation(ctx, handler, invitation);
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
@@ -84,12 +94,12 @@ export class InvitationsManager {
       return observableInvitation;
     }
 
-    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get());
+    this._invitationsHandler.handleInvitationFlow(invitationCtx, stream, handler, observableInvitation.get());
 
     return observableInvitation;
   }
 
-  async loadPersistentInvitations(): Promise<{ invitations: Invitation[] }> {
+  async loadPersistentInvitations(ctx: Context): Promise<{ invitations: Invitation[] }> {
     if (this._persistentInvitationsLoaded) {
       const invitations = this.getCreatedInvitations().filter((i) => i.persistent);
       return { invitations };
@@ -101,7 +111,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation({ ...persistentInvitation, persistent: false });
+        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 
@@ -115,7 +125,7 @@ export class InvitationsManager {
     }
   }
 
-  acceptInvitation(request: AcceptInvitationRequest): AuthenticatingInvitation {
+  acceptInvitation(_ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -123,8 +133,20 @@ export class InvitationsManager {
     }
 
     const handler = this._getHandler(options);
-    const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
-    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile);
+    const {
+      ctx: invitationCtx,
+      invitation,
+      stream,
+      otpEnteredTrigger,
+    } = this._createObservableAcceptingInvitation(handler, options);
+    this._invitationsHandler.acceptInvitation(
+      invitationCtx,
+      stream,
+      handler,
+      options,
+      otpEnteredTrigger,
+      request.deviceProfile,
+    );
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 
@@ -198,7 +220,7 @@ export class InvitationsManager {
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
-      persistent = _options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
+      persistent = _options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
       created = new Date(),
       guestKeypair = undefined,
       role = SpaceMember.Role.ADMIN,
@@ -232,17 +254,18 @@ export class InvitationsManager {
   }
 
   private _createObservableInvitation(
+    ctx: Context,
     handler: InvitationProtocol,
     invitation: Invitation,
   ): { ctx: Context; stream: PushStream<Invitation>; observableInvitation: CancellableInvitation } {
     const stream = new PushStream<Invitation>();
-    const ctx = new Context({
+    const invitationCtx = ctx.derive({
       onError: (err) => {
         stream.error(err);
-        void ctx.dispose();
+        void invitationCtx.dispose();
       },
     });
-    ctx.onDispose(() => {
+    invitationCtx.onDispose(() => {
       log('complete', { ...handler.toJSON() });
       stream.complete();
     });
@@ -251,10 +274,10 @@ export class InvitationsManager {
       subscriber: stream.observable,
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation.State.CANCELLED });
-        await ctx.dispose();
+        await invitationCtx.dispose();
       },
     });
-    return { ctx, stream, observableInvitation };
+    return { ctx: invitationCtx, stream, observableInvitation };
   }
 
   private _createObservableAcceptingInvitation(

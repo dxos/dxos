@@ -9,7 +9,6 @@ import { FieldPath } from '../Annotation';
 import { EchoObjectSchema } from '../Entity';
 import { FormatAnnotation, TypeFormat } from '../Format';
 import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../JsonSchema';
-
 import { composeSchema } from './compose';
 
 describe('schema composition', () => {

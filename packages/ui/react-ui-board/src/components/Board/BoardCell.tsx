@@ -12,7 +12,6 @@ import { Card } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
 import { type CellLayout, type Position } from './types';
@@ -82,7 +81,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
-            label={t('button delete')}
+            label={t('delete-object.button')}
             onClick={() => onDelete?.(item.id)}
           />
         )}

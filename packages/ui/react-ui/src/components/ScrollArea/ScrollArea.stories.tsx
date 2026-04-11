@@ -4,17 +4,16 @@
 
 import React, { PropsWithChildren, useMemo } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
-
-import { withLayout, withTheme } from '../../testing';
-
-import { ScrollArea } from './ScrollArea';
-import { Column } from '../../primitives';
-import { Input } from '../Input';
 import { ThemedClassName } from '@dxos/ui-types';
 
-faker.seed(123);
+import { Column } from '../../primitives';
+import { withLayout, withTheme } from '../../testing';
+import { Input } from '../Input';
+import { ScrollArea } from './ScrollArea';
+
+random.seed(123);
 
 export default {
   title: 'ui/react-ui-core/components/ScrollArea',
@@ -59,7 +58,7 @@ const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>)
 export const Vertical = {
   render: () => (
     <Container classNames='h-72 w-48'>
-      <ScrollArea.Root orientation='vertical' margin padding>
+      <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
           <List />
         </ScrollArea.Viewport>
@@ -71,7 +70,19 @@ export const Vertical = {
 export const VerticalThin = {
   render: () => (
     <Container classNames='h-72 w-48'>
-      <ScrollArea.Root orientation='vertical' margin padding thin>
+      <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+export const VerticalPadded = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' centered padding thin>
         <ScrollArea.Viewport>
           <List />
         </ScrollArea.Viewport>
@@ -100,7 +111,7 @@ export const VerticalColumn = {
 export const Horizontal = {
   render: () => (
     <Container classNames='w-96'>
-      <ScrollArea.Root orientation='horizontal' margin padding>
+      <ScrollArea.Root orientation='horizontal'>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -112,7 +123,7 @@ export const Horizontal = {
 export const HorizontalThin = {
   render: () => (
     <Container classNames='w-96'>
-      <ScrollArea.Root orientation='horizontal' margin padding thin>
+      <ScrollArea.Root orientation='horizontal' thin>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -177,7 +188,7 @@ export const NestedScrollAreas = {
       () =>
         Array.from({ length: 8 }).map((_, index) => ({
           id: String(index),
-          count: faker.number.int({ min: 5, max: 20 }),
+          count: random.number.int({ min: 5, max: 20 }),
         })),
       [],
     );

@@ -11,10 +11,9 @@ import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type Space, useQueue } from '@dxos/react-client/echo';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
@@ -50,8 +49,8 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   users = Array.from({ length: 5 }, () => ({
     identityDid: IdentityDid.random().toString(),
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
+    name: random.person.fullName(),
+    email: random.internet.email(),
   }));
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
@@ -63,19 +62,19 @@ export class MessageBuilder extends AbstractMessageBuilder {
   override async createMessage(numSegments = 1): Promise<Message.Message> {
     return Obj.make(Message.Message, {
       created: this.next().toISOString(),
-      sender: faker.helpers.arrayElement(this.users),
+      sender: random.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
     });
   }
 
   createBlock(): ContentBlock.Transcript {
-    let text = faker.lorem.paragraph();
+    let text = random.lorem.paragraph();
     if (this._space) {
-      const label = faker.commerce.productName();
+      const label = random.commerce.productName();
       const obj = this._space.db.add(
         Obj.make(TestItem, {
           title: label,
-          description: faker.lorem.paragraph(),
+          description: random.lorem.paragraph(),
         }),
       );
       const dxn = Ref.make(obj).dxn.toString();
@@ -99,14 +98,6 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
 // TODO(burdon): Reconcile with BlockBuilder.
 class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  executor = new FunctionExecutor(
-    new ServiceContainer().setServices({
-      // ai: {
-      //   client: this.AiService,
-      // },
-    }),
-  );
-
   space: Space | undefined;
   currentMessage: number = 0;
   transcriptMessages: Message.Message[] = [];
@@ -139,7 +130,6 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
     const { message: enhancedMessage } = await processTranscriptMessage({
       input: { message },
-      executor: this.executor,
       function: extractionAnthropicFunction,
     });
 

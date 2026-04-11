@@ -14,9 +14,10 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { type MaybePromise } from '@dxos/util';
 
-import { useInputSurfaceLookup } from '../../hooks';
-import { meta } from '../../meta';
-import { type CreateObject } from '../../types';
+import { useInputSurfaceLookup } from '#hooks';
+import { meta } from '#meta';
+import { type CreateObject } from '#types';
+
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */
@@ -144,7 +145,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.schema-input'
-          placeholder={t('schema input placeholder')}
+          placeholder={t('schema-input.placeholder')}
         />
         <SearchList.Viewport>
           {results.map((option) => (
@@ -206,7 +207,7 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.space-input'
-          placeholder={t('space input placeholder')}
+          placeholder={t('space-input.placeholder')}
         />
         <SearchList.Viewport>
           {results.map((space) => {

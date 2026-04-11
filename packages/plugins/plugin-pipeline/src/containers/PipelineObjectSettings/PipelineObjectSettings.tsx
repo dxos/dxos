@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
-import { useTypeOptions } from '@dxos/plugin-space';
-import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
@@ -18,14 +18,13 @@ import { Pipeline } from '@dxos/types';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
-// TODO(burdon): Standardize Object/Plugin settings.
 export type PipelineObjectSettingsProps = ThemedClassName<{
   pipeline: Pipeline.Pipeline;
 }>;
@@ -162,7 +161,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
 
   return (
     <div role='none' className={mx('py-form-padding overflow-y-auto', classNames)}>
-      <h2 className='text-sm text-description py-1'>{t('views label')}</h2>
+      <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
 
       <List.Root<Pipeline.Column>
         items={columns}
@@ -183,10 +182,10 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                   <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>
-                      {column.name || t('untitled view title')}
+                      {column.name || t('untitled-view.title')}
                     </List.ItemTitle>
                     <List.ItemDeleteButton
-                      label={t('delete view label')}
+                      label={t('delete-view.label')}
                       autoHide={false}
                       onClick={() => handleDelete(column)}
                       data-testid='view.delete'
@@ -194,7 +193,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                     <IconButton
                       iconOnly
                       variant='ghost'
-                      label={t('toggle expand label', { ns: osTranslations })}
+                      label={t('toggle-expand.label', { ns: osTranslations })}
                       icon={
                         expandedId === column.view.dxn.toString()
                           ? 'ph--caret-down--regular'
@@ -236,7 +235,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
       </List.Root>
 
       <div role='none' className='my-form-padding'>
-        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='w-full' />
+        <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>
   );

@@ -6,12 +6,11 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 
-import { useSimpleLayoutState } from '../../hooks';
-import { meta } from '../../meta';
+import { useSimpleLayoutState } from '#hooks';
+import { meta } from '#meta';
 
 const DEBOUNCE_DELAY = 40;
 
@@ -100,7 +99,9 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
+          {state.popoverKind === 'base' && (
+            <Surface.Surface role='popover' data={state.popoverContent ?? undefined} limit={1} />
+          )}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='dx-card-popover'>
               <Card.Toolbar>
@@ -109,7 +110,7 @@ export const PopoverContent = () => {
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
                 <Card.CloseIconButton onClick={handleClose} />
               </Card.Toolbar>
-              <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
+              <Surface.Surface role='card--content' data={state.popoverContent ?? undefined} limit={1} />
             </Card.Root>
           )}
         </Popover.Viewport>

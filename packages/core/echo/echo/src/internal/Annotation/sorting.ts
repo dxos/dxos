@@ -3,7 +3,6 @@
 //
 
 import type { AnyEntity } from '../common/types';
-
 import { getLabel, getTypename } from './annotations';
 
 /**

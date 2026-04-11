@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -17,16 +17,15 @@ import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } f
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Research } from './definitions';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../../crud';
 import { ResearchGraph } from '../types';
 import { ResearchDataTypes } from '../types';
-
+import { Research } from './definitions';
 import PROMPT from './research-instructions.tpl?raw';
 
 /**
@@ -103,6 +102,7 @@ export default Research.pipe(
           AiService.model('@anthropic/claude-sonnet-4-0'),
           ToolExecutionServices,
           FunctionInvocationService.layerNotAvailable,
+          Trace.writerLayerNoop,
         ).pipe(Layer.provide(GenericToolkit.providerEmpty)),
       ),
     ),

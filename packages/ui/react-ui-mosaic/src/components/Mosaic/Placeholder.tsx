@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   DropIndicator as NaturalDropIndicator,
   type DropIndicatorProps as NaturalDropIndicatorProps,
 } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef } from 'react';

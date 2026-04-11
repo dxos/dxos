@@ -8,13 +8,14 @@ import * as Option from 'effect/Option';
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
-import { Sketch } from '@dxos/plugin-sketch/types';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { Sketch } from '@dxos/plugin-sketch/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { ExcalidrawSettings, OperationHandler, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { ExcalidrawSettings, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export const ExcalidrawPlugin = Plugin.define(meta).pipe(

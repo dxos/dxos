@@ -11,16 +11,16 @@ import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptObjectSettingsProps = {
   object: Script.Script;
@@ -96,18 +96,18 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   return (
     <div className='flex flex-col gap-4 my-form-padding'>
       <div>
-        <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
+        <h2>{t('blueprint-editor.label', { default: 'Blueprint' })}</h2>
         <p className='text-description text-sm'>
-          {t('blueprint editor description', {
+          {t('blueprint-editor.description', {
             default: 'Create a blueprint that exposes this script as a tool.',
           })}
         </p>
       </div>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('blueprint instructions label', { default: 'Instructions' })}</Input.Label>
+          <Input.Label>{t('blueprint-instructions.label', { default: 'Instructions' })}</Input.Label>
           <Input.TextArea
-            placeholder={t('blueprint instructions placeholder', {
+            placeholder={t('blueprint-instructions.placeholder', {
               default: 'Describe how this tool should be used.',
             })}
             rows={6}
@@ -162,12 +162,12 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   }
 
   return (
-    <div role='form' className='flex flex-col gap-2 my-form-padding'>
-      <h2>{t('remote function settings heading')}</h2>
+    <div className='flex flex-col gap-2'>
+      <h2>{t('remote-function-settings.heading')}</h2>
       {functionUrl && (
         <Input.Root>
           <div role='none' className='flex flex-col gap-1'>
-            <Input.Label>{t('function url label')}</Input.Label>
+            <Input.Label>{t('function-url.label')}</Input.Label>
             <div role='none' className='flex gap-1'>
               <Input.TextInput
                 disabled
@@ -185,9 +185,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
       )}
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('function binding label')}</Input.Label>
+          <Input.Label>{t('function-binding.label')}</Input.Label>
           <Input.TextInput
-            placeholder={t('function binding placeholder')}
+            placeholder={t('function-binding.placeholder')}
             value={binding}
             onChange={handleBindingChange}
             onBlur={handleBindingBlur}
@@ -273,13 +273,13 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   return (
     <div className='flex flex-col gap-4 my-form-padding'>
       <div>
-        <h2>{t('script publish settings label')}</h2>
-        <p className='text-description text-sm'>{t('script publish settings description')}</p>
+        <h2>{t('script-publish-settings.label')}</h2>
+        <p className='text-description text-sm'>{t('script-publish-settings.description')}</p>
       </div>
       {!githubToken && (
         <div className='flex flex-col gap-2'>
-          <span>{t('no github token label')}</span>
-          <Button onClick={handleOpenTokenManager}>{t('open token manager label')}</Button>
+          <span>{t('no-github-token.label')}</span>
+          <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
         </div>
       )}
       {githubToken && (

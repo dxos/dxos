@@ -3,7 +3,6 @@
 //
 
 import { dirname, relative } from 'path';
-
 import pb from 'protobufjs';
 import * as ts from 'typescript';
 
@@ -11,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 
 import { normalizeFullyQualifiedName } from '../namespaces';
 import { type SubstitutionsMap } from '../parser';
-
 import { type GeneratorContext } from './context';
 import { attachDocComment } from './doc-comment';
 import { getTypeReference, types } from './types';

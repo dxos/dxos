@@ -6,11 +6,22 @@ import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-t
 
 import { mx } from '../../util';
 
+export const scrollbar = {
+  thin: {
+    size: 4,
+    padding: 4,
+  },
+  coarse: {
+    size: 8,
+    padding: 8,
+  },
+};
+
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
   autoHide?: boolean;
-  /** Balance left/right, top/bottom "margin" with scrollbar. */
-  margin?: boolean;
+  /** Balance left/right, top/bottom offset with scrollbar. */
+  centered?: boolean;
   /** Add default padding. */
   /** TODO(burdon): Integrate with Column.Root padding. */
   padding?: boolean;
@@ -21,7 +32,7 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
 };
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, margin, thin }, ...etc) =>
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
     // Expand
     'dx-container',
@@ -40,43 +51,36 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
  * NOTE: The browser reserves space for scrollbars.
  */
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, margin, padding, snap, thin, autoHide },
+  { orientation, centered, padding, snap, thin, autoHide },
   ...etc
-) =>
-  mx(
+) => {
+  return mx(
     'h-full w-full',
 
     orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
-    orientation === 'horizontal' && 'flex overflow-x-scroll',
+    orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',
     orientation === 'all' && 'overflow-scroll',
 
     '[&::-webkit-scrollbar-corner]:bg-transparent',
     '[&::-webkit-scrollbar-track]:bg-transparent',
     '[&::-webkit-scrollbar-thumb]:rounded-none',
 
-    thin
-      ? '[&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar]:h-[4px]'
-      : '[&::-webkit-scrollbar]:w-[8px] [&::-webkit-scrollbar]:h-[8px]',
+    '[&::-webkit-scrollbar]:w-[var(--scroll-width)] [&::-webkit-scrollbar]:h-[var(--scroll-width)]',
 
-    // NOTE: Uses --gutter CSS variable
-    // If contained within Column.Root grid the gutter is set by that component.
-
+    // If contained within Column.Root grid the gutter is set by that component (--gutter CSS variable).
+    // If centered, left padding compensates for scrollbar width so content is visually centered.
     (orientation === 'vertical' || orientation === 'all') &&
       (padding
-        ? thin
-          ? 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-4px)]'
-          : 'pl-[var(--gutter,16px)] pr-[calc(var(--gutter,16px)-8px)]'
-        : margin && (thin ? 'pl-[4px]' : 'pl-[8px]')),
-
-    // NOTE: Add minimal padding for form top/bottom outlines.
-    (orientation === 'vertical' || orientation === 'all') && 'pt-form-chrome pb-form-chrome',
+        ? [
+            centered ? 'pl-[var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))]' : 'pl-[var(--gutter,0)]',
+            'pr-[calc(var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))-var(--scroll-width))]',
+          ]
+        : centered && 'pl-[var(--scroll-width)]'),
 
     (orientation === 'horizontal' || orientation === 'all') &&
       (padding
-        ? thin
-          ? 'pt-[var(--gutter,8px)] pb-[calc(var(--gutter,8px)-4px)]'
-          : 'pt-[var(--gutter,16px)] pb-[calc(var(--gutter,16px)-8px)]'
-        : margin && (thin ? 'pt-[4px]' : 'pt-[8px]')),
+        ? [centered && 'pt-[calc(var(--scroll-width)+var(--scroll-padding))]', 'pb-[var(--scroll-padding)]']
+        : centered && 'pt-[var(--scroll-width)]'),
 
     snap && [
       orientation === 'vertical' && 'snap-y snap-mandatory',
@@ -98,6 +102,7 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
 
     ...etc,
   );
+};
 
 export const scrollAreaTheme: Theme<ScrollAreaStyleProps> = {
   root: scrollAreaRoot,

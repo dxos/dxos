@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
-import { NavTreeCapabilities } from '../types';
+import { NavTreeCapabilities } from '#types';
 
 export type UseNavTreeStateResult = {
   getItem: (path: string[]) => NavTreeCapabilities.NavTreeItemState;

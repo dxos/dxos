@@ -11,10 +11,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { ComposeEmailPanel, type ComposeEmailPanelProps } from './ComposeEmailPanel';
 
-type StoryProps = Pick<ComposeEmailPanelProps, 'onSend'>;
+type DefaultStoryProps = Pick<ComposeEmailPanelProps, 'onSend'>;
 
 const createInMemoryDraft = () =>
   Obj.make(Message.Message, {
@@ -27,7 +26,7 @@ const createInMemoryDraft = () =>
     },
   });
 
-const DefaultStory = (args: StoryProps) => {
+const DefaultStory = (args: DefaultStoryProps) => {
   const draft = useMemo(createInMemoryDraft, []);
   return <ComposeEmailPanel draft={draft} onSend={args.onSend} />;
 };

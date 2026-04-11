@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Filter, Type, useSpaces, useQuery } from '@dxos/react-client/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { Filter, Type, useSpaces, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const Counter = () => {

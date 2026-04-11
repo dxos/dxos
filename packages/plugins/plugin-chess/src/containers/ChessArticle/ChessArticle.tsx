@@ -4,18 +4,18 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '../../components';
-import { meta } from '../../meta';
-import { type Chess } from '../../types';
+import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
+import { meta } from '#meta';
+import { type Chess } from '#types';
 
-export type ChessArticleProps = SurfaceComponentProps<Chess.Game>;
+export type ChessArticleProps = AppSurface.ObjectArticleProps<Chess.Game>;
 
-export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
+export const ChessArticle = ({ role, attendableId: _attendableId, subject: game }: ChessArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
@@ -33,7 +33,7 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
             <Toolbar.IconButton
               icon='ph--info--regular'
               iconOnly
-              label={t('toggle info button')}
+              label={t('toggle-info.button')}
               disabled={showInfo}
               classNames={mx('invisible @3xl:visible')}
               onClick={() => setShowInfo((open) => !open)}

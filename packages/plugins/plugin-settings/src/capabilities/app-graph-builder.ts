@@ -1,0 +1,99 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
+import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
+import { isNonNullable } from '@dxos/util';
+
+import { meta } from '#meta';
+
+import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+    const managerAtom = capabilities.atom(Capabilities.PluginManager);
+    const settingsAtom = capabilities.atom(AppCapabilities.Settings);
+
+    const extensions = yield* Effect.all([
+      GraphBuilder.createExtension({
+        id: 'action',
+        match: NodeMatcher.whenRoot,
+        actions: () =>
+          Effect.succeed([
+            {
+              id: 'root',
+              data: () => Operation.invoke(SettingsOperation.Open, {}),
+              properties: {
+                label: ['open-settings.label', { ns: meta.id }],
+                icon: 'ph--gear--regular',
+                disposition: 'menu',
+                keyBinding: {
+                  macos: 'meta+,',
+                  windows: 'alt+,',
+                },
+              },
+            },
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'core',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            Node.make({
+              id: SETTINGS_ID,
+              type: meta.id,
+              properties: {
+                label: ['app-settings.label', { ns: meta.id }],
+                icon: 'ph--gear--regular',
+                disposition: 'pin-end',
+                position: 'hoist',
+                testId: 'treeView.appSettings',
+              },
+            }),
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'plugins',
+        match: NodeMatcher.whenId(getSpacePath(SETTINGS_ID)),
+        connector: (node, get) => {
+          const [manager] = get(managerAtom);
+          const allSettings = get(settingsAtom);
+          return Effect.succeed(
+            manager
+              .getPlugins()
+              .map((plugin: Plugin$.Plugin): [Plugin$.Meta, AppCapabilities.Settings] | null => {
+                const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
+                if (!settings) {
+                  return null;
+                }
+
+                return [plugin.meta, settings];
+              })
+              .filter(isNonNullable)
+              .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
+                Node.make({
+                  id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+                  type: 'category',
+                  data: settings,
+                  properties: {
+                    label: meta.name ?? meta.id,
+                    icon: meta.icon ?? 'ph--circle--regular',
+                  },
+                }),
+              ),
+          );
+        },
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

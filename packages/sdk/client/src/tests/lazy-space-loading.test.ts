@@ -19,11 +19,12 @@ import { SpaceState } from '../echo';
 import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '../testing';
 
 describe('Lazy Space Loading', () => {
-  test('default space is open by default', async () => {
+  test('explicitly created space is closed after reload', async () => {
     const [client] = await createInitializedClients(1);
+    const createdSpace = await client.spaces.create();
     await reload(client);
-    const space = client.spaces.default;
-    expect(space.state.get()).to.eq(SpaceState.SPACE_READY);
+    const space = findClientSpace(client, createdSpace);
+    expect(space.state.get()).to.eq(SpaceState.SPACE_CLOSED);
   });
 
   test('can access closed space information', async () => {
@@ -135,12 +136,9 @@ describe('Lazy Space Loading', () => {
   };
 
   const reload = async (client: Client) => {
-    await client.spaces.waitUntilReady();
     await client.destroy();
     log('restarted');
     await client.initialize();
-    await client.spaces.waitUntilReady();
-    await client.spaces.default.waitUntilReady();
   };
 });
 

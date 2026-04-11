@@ -6,6 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
+import { type Context } from '@dxos/context';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -43,6 +44,7 @@ export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
   getChangedObjects(
+    ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
@@ -163,6 +165,7 @@ export class IndexEngine {
   }
 
   update(
+    ctx: Context,
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
   ): Effect.Effect<
@@ -174,7 +177,7 @@ export class IndexEngine {
       let updated = 0;
       let done = true;
 
-      const { updated: updatedFtsIndex, done: doneFtsIndex } = yield* this.#update(this.#ftsIndex, dataSource, {
+      const { updated: updatedFtsIndex, done: doneFtsIndex } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
         indexName: 'fts5',
         spaceId: opts.spaceId,
         limit: opts.limit,
@@ -183,6 +186,7 @@ export class IndexEngine {
       done = done && doneFtsIndex;
 
       const { updated: updatedReverseRefIndex, done: doneReverseRefIndex } = yield* this.#update(
+        ctx,
         this.#reverseRefIndex,
         dataSource,
         {
@@ -208,6 +212,7 @@ export class IndexEngine {
    * 5. Updates the dependent index.
    */
   #update(
+    ctx: Context,
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
@@ -227,7 +232,9 @@ export class IndexEngine {
             // Pass undefined to get all cursors when spaceId is null.
             spaceId: opts.spaceId ?? undefined,
           });
-          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
+          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, {
+            limit: opts.limit,
+          });
           if (objects.length === 0) {
             return { updated: 0, done: true };
           }

@@ -11,9 +11,9 @@ import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { Button, Panel, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { FilesOperation } from '../../operations';
-import { type LocalEntity, type LocalFile } from '../../types';
+import { meta } from '#meta';
+import { FilesOperation } from '#operations';
+import { type LocalEntity, type LocalFile } from '#types';
 
 export type LocalFileContainerProps = {
   file: LocalFile;
@@ -51,7 +51,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
       <Panel.Content asChild>
         <div role='none' className='overflow-auto p-8 grid place-items-center'>
           <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
-            {t('missing file permissions')}
+            {t('missing-file-permissions.message')}
             {action && node && Node.isAction(action) && (
               <Button onClick={() => void runAction(action, { parent: node })}>
                 {toLocalizedString(action.properties.label, t)}

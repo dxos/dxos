@@ -9,9 +9,15 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ThemedClassName,
+  useMergeRefs,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
 
 import {
   type FormHandler,
@@ -21,7 +27,6 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
   FormFieldSet as NaturalFormFieldSet,
@@ -159,11 +164,11 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ComposableProps;
+type FormViewportProps = {};
 
 const FormViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' margin padding thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -179,17 +184,22 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const FormContent = ({ classNames, children }: FormContentProps) => {
+const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
-  const ref = useRef<HTMLDivElement>(null);
-  useKeyHandler(ref.current, form);
+  const localRef = useRef<HTMLDivElement>(null);
+  const mergedRef = useMergeRefs([forwardedRef, localRef]);
+  useKeyHandler(localRef, form);
 
   return (
-    <div ref={ref} role='form' className={mx('flex flex-col w-full', classNames)} data-testid={testId}>
+    <div
+      {...composableProps(props, { role: 'form', classNames: 'flex flex-col w-full pb-form-gap' })}
+      data-testid={testId}
+      ref={mergedRef}
+    >
       {children}
     </div>
   );
-};
+});
 
 FormContent.displayName = FORM_CONTENT_NAME;
 
@@ -237,7 +247,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
         <IconButton
           icon='ph--x--regular'
           iconEnd
-          label={t('cancel button label')}
+          label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
@@ -249,7 +259,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
           disabled={!canSave}
           icon='ph--check--regular'
           iconEnd
-          label={t('save button label')}
+          label={t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
         />
@@ -288,7 +298,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
         variant='primary'
         disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
-        label={label ?? t('save button label')}
+        label={label ?? t('save-button.label')}
         onClick={onSave}
         data-testid='save-button'
       />

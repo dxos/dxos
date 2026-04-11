@@ -12,9 +12,8 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { AddMessage } from './definitions';
-
 import { ThreadCapabilities } from '../types';
+import { AddMessage } from './definitions';
 
 const handler: Operation.WithHandler<typeof AddMessage> = AddMessage.pipe(
   Operation.withHandler(

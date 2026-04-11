@@ -3,15 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, type ContextBinding } from '@dxos/assistant';
-import { Database, Obj } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { AiConversation, functionInvocationServiceFromOperations, ToolExecutionServices } from '@dxos/assistant';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { type Message } from '@dxos/types';
 
 import { Project } from '../../../types';
 import { Agent } from './definitions';
@@ -24,14 +23,13 @@ export default Agent.pipe(
         invariant(Obj.instanceOf(Project.Project, project));
         invariant(project.chat, 'Project has no chat.');
 
-        const chatQueue = yield* project.chat.pipe(
+        const chatFeed = yield* project.chat.pipe(
           Database.load,
-          Effect.flatMap((chat) => Database.load(chat.queue)),
+          Effect.flatMap((chat) => Database.load(chat.feed)),
         );
-        invariant(chatQueue, 'Project chat queue not found.');
-        const conversation = yield* acquireReleaseResource(
-          () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
-        );
+        invariant(chatFeed, 'Project chat feed not found.');
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
 
         const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
         if (iniativesInContext.length !== 1) {
@@ -57,7 +55,12 @@ export default Agent.pipe(
           .pipe(Effect.retry({ times: 2 }));
       },
       Effect.scoped,
-      Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
+      Effect.provide(
+        Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+          Layer.provideMerge(functionInvocationServiceFromOperations),
+        ),
+      ),
     ),
   ),
+  Operation.opaqueHandler,
 );

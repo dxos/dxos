@@ -10,7 +10,6 @@ import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
 import { createAdmissionCredentials, createCredentialSignerWithKey } from '../credentials';
-
 import { MemberStateMachine } from './member-state-machine';
 
 const keyring = new Keyring();

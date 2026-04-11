@@ -11,7 +11,6 @@ import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { RecoveryCodeDialog } from './RecoveryCodeDialog';
 
 const DefaultStory = () => {

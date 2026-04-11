@@ -12,37 +12,36 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { RecordArticle } from './RecordArticle';
 
-faker.seed(0);
+random.seed(0);
 
 const PERSON_COUNT = 100;
 
-const StorybookRecordArticle = () => {
+const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
   const org = organizations[0];
-
   if (!org) {
-    return null;
+    return <Loading />;
   }
 
-  return <RecordArticle role='article' subject={org} />;
+  return <RecordArticle role='article' subject={org} attendableId='story' />;
 };
 
 const meta = {
   title: 'plugins/plugin-space/containers/RecordArticle',
-  component: StorybookRecordArticle,
-  render: () => <StorybookRecordArticle />,
+  render: DefaultStory,
   decorators: [
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
       plugins: [
@@ -57,7 +56,7 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
 
-              const factory = createObjectFactory(space.db, faker as any);
+              const factory = createObjectFactory(space.db, random as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 1 },

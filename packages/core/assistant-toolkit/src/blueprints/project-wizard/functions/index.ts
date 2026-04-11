@@ -9,4 +9,5 @@ export * from './definitions';
 export const ProjectWizardHandlers = OperationHandlerSet.lazy(
   () => import('./create-project'),
   () => import('./project-rules'),
+  () => import('./sync-triggers'),
 );

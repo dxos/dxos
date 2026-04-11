@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { createContext } from '@radix-ui/react-context';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
@@ -14,14 +14,14 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
+import { slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
-import { slottable } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
 
 //
 // Root
@@ -31,7 +31,12 @@ type DialogRootProps = DialogPrimitive.DialogProps;
 
 const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   <ElevationProvider elevation='dialog'>
-    <DialogPrimitive.Root {...props} />
+    <DialogPrimitive.Root
+      // NOTE: Radix warning unless set to undefined.
+      // https://www.radix-ui.com/primitives/docs/components/dialog#description
+      aria-describedby={undefined}
+      {...props}
+    />
   </ElevationProvider>
 );
 
@@ -158,7 +163,7 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
     return (
       <IconButton
         {...props}
-        label={label ?? t('close dialog label')}
+        label={label ?? t('close-dialog.label')}
         icon='ph--x--regular'
         iconOnly
         size={4}

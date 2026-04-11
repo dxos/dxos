@@ -9,14 +9,13 @@ import React, { useCallback, useState } from 'react';
 import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
-
 import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
@@ -72,7 +71,7 @@ const Person = Schema.Struct({
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
-type StoryProps<T extends AnyProperties> = {
+type DefaultStoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Schema.Schema<T>;
 } & FormRootProps<T>;
@@ -82,10 +81,10 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
   ...props
-}: StoryProps<T>) => {
+}: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
-  const client = useClient();
-  const space = client.spaces.default;
+  const spaces = useSpaces();
+  const space = spaces[0];
 
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
@@ -96,6 +95,10 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     log.info('cancel');
     setValues(valuesProp ?? {});
   }, []);
+
+  if (!space) {
+    return <></>;
+  }
 
   return (
     <Tooltip.Provider>
@@ -133,8 +136,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       types: [Tag.Tag, Organization, Person],
-      onCreateIdentity: ({ client }) => {
-        const space = client.spaces.default;
+      onCreateSpace: ({ space }) => {
         [
           ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
           ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
@@ -146,11 +148,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps<any>>;
+} satisfies Meta<DefaultStoryProps<any>>;
 
 export default meta;
 
-type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
 const values: Partial<Person> = {
   name: 'Alice',

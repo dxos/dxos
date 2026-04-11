@@ -10,12 +10,12 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { JsonPath } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 
+import * as Annotation from './Annotation';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Query from './Query';
 import * as Type from './Type';
-import * as Annotation from './Annotation';
 
 /**
  * Stored field metadata (e.g., for UX).

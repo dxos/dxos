@@ -23,8 +23,8 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { LayoutState, type LayoutStateProps } from '../../types';
+import { meta } from '#meta';
+import { LayoutState, type LayoutStateProps } from '#types';
 
 const debounce_delay = 100;
 
@@ -223,7 +223,7 @@ export const ErrorFallback = ({ error }: { error?: Error }) => {
       className={mx('overflow-auto p-8 dx-attention-surface grid place-items-center')}
     >
       <p className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}>
-        {error ? errorString : t('error fallback message')}
+        {error ? errorString : t('error-fallback.message')}
       </p>
     </div>
   );

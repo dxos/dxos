@@ -8,12 +8,14 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import { AssistantBlueprint } from '../blueprints';
+import { AssistantBlueprint } from '#blueprints';
+
 import { CreateChat } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
@@ -23,8 +25,9 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
-      const queue = space.queues.create();
-      const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
+      const feed = space.db.add(Feed.make());
+      const chat = Chat.make({ name, feed: Ref.make(feed) });
+      Obj.setParent(feed, chat);
       if (addToSpace) {
         space.db.add(chat);
       }
@@ -53,7 +56,9 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
         defaultBlueprintManagerBlueprint = db.add(BlueprintManagerBlueprint.make());
       }
 
-      const binder = new AiContextBinder({ queue, registry });
+      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+      const binder = new AiContextBinder({ feed, runtime, registry });
       yield* Effect.promise(() =>
         binder.use((b: AiContextBinder) =>
           b.bind({

@@ -20,6 +20,12 @@ export const matchServiceCredential =
     return capabilities.every((capability) => credentialCapabilities.includes(capability));
   };
 
+export type SignupResult = {
+  login: boolean;
+  token?: string;
+  type?: string;
+};
+
 /**
  * Magic link sign-up.
  */
@@ -33,7 +39,7 @@ export const signup = async ({
   email: string;
   redirectUrl?: string;
   identity: Identity | null;
-}): Promise<boolean> => {
+}): Promise<SignupResult> => {
   const response = await fetch(new URL('/account/signup', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -58,7 +64,7 @@ export const signup = async ({
     console.log(activationLink.href);
   }
 
-  return type === 'login';
+  return { login: type === 'login', token, type };
 };
 
 /**

@@ -10,9 +10,9 @@ import { Obj } from '@dxos/echo';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
-import { meta } from '../../meta';
-import { rangeFromIndex } from '../../types';
-import { Sheet } from '../../types';
+import { meta } from '#meta';
+import { rangeFromIndex } from '#types';
+import { Sheet } from '#types';
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;
@@ -34,11 +34,11 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   return (
     <>
       <Input.Root>
-        <Input.Label>{t('range list heading')}</Input.Label>
+        <Input.Label>{t('range-list.heading')}</Input.Label>
       </Input.Root>
       {sheet.ranges.length < 1 ? (
         <Message.Root>
-          <Message.Title>{t('no ranges message')}</Message.Title>
+          <Message.Title>{t('no-ranges.message')}</Message.Title>
         </Message.Root>
       ) : (
         <List.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
@@ -47,10 +47,10 @@ export const RangeList = ({ sheet }: RangeListProps) => {
               <List.Item key={i} item={range}>
                 <List.ItemDragHandle />
                 <List.ItemTitle onClick={() => handleSelectRange(range)}>
-                  {t('range title', {
+                  {t('range.title', {
                     position: rangeToA1Notation(rangeFromIndex(sheet, range.range)),
-                    key: t(`range key ${range.key} label`),
-                    value: t(`range value ${range.value} label`),
+                    key: t(`range-key.${range.key}.label`),
+                    value: t(`range-value.${range.value}.label`),
                   })}
                 </List.ItemTitle>
                 <List.ItemDeleteButton onClick={() => handleDeleteRange(range)} />

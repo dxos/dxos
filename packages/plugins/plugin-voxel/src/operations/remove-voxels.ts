@@ -8,7 +8,6 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { Voxel } from '../types';
-
 import { RemoveVoxels } from './definitions';
 
 const handler: Operation.WithHandler<typeof RemoveVoxels> = RemoveVoxels.pipe(

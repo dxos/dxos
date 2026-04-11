@@ -1,174 +1,82 @@
-# Container Audit
+# Component Audit
 
-## Goals
+## Phase 1
 
-Plugin development:
+TODO(burdon): Conduct audit across codebase.
 
-- Uses a standard set of react-ui containers.
-- Does not use raw HTML element (e.g., <div>) or className/classNames props.
-- Progressively factor out components into modular react-ui-xxx libs.
-- Surface containers just orchestrate composer framework capabilities.
-- Integrate attention into Panel.Root.
+### Radix-style components with non-headless Root
 
-## ISSUES
+Root components should be headless (context provider + `{children}` only).
+The following Root components render DOM elements and should be refactored.
 
-- Nomralize Radix Content/Viewport.
-  - TODO: Audit all radix Content/Viewports and check composition with ScrollArea
+#### react-ui
 
-## Top-level containers
+- [ ] `Card.Root` — renders `Primitive.div` / `Slot` (`Card.tsx`)
+- [ ] `Input.Root` — renders `InputRoot` primitive (`Input.tsx`)
+- [ ] `Toast.Root` — renders `ToastPrimitive.Root` (`Toast.tsx`)
+- [ ] `Message.Root` — renders `Primitive.div` / `Slot` (`Message.tsx`)
+- [ ] `ScrollArea.Root` — renders `Primitive.div` / `Slot` (`ScrollArea.tsx`)
+- [ ] `Toolbar.Root` — renders `ToolbarPrimitive.Root` (`Toolbar.tsx`)
+- [ ] `Breadcrumb.Root` — renders `Primitive.div` / `Slot` (`Breadcrumb.tsx`)
+- [ ] `Tree.Root` — renders `List` / `HTMLOListElement` (`Tree.tsx`)
+- [ ] `Treegrid.Root` — renders `Primitive.div` / `Slot` (`Treegrid.tsx`)
+- [ ] `Column.Root` — renders `Primitive.div` / `Slot` (`Column.tsx`)
 
-- Popover
-- Dialog
-- Card
-- Form
+#### react-ui-\*
 
-## Container primitives
+- [ ] `Listbox.Root` — renders `<ul>` (`react-ui-search/Listbox.tsx`)
+- [ ] `StackItem.Root` — renders `<div>` (`react-ui-stack/StackItem.tsx`)
+- [ ] `Map.Root` — renders `<div>` (`react-ui-geo/Map.tsx`)
+- [ ] `Thread.Root` — renders `<div>` (`react-ui-thread/Thread.tsx`)
+- [ ] `Mosaic.Root` — renders `Primitive.div` / `Slot` (`react-ui-mosaic/Root.tsx`)
+- [ ] `Settings.Root` — renders `ScrollArea.Root` (`react-ui-form/Settings.tsx`)
 
-- Panel
-- Column
+### Non-composable components used as asChild children
 
-## Layout primitives
+Components used as children of slottable parents via `asChild` that are not
+wrapped with `composable()`, `slottable()`, or marked with `Symbol.for('dxos.composable')`.
 
-- ScrollArea
-- ScrollContainer
-- Splitter
+#### react-ui core components
 
-## Non-headless intermediate Root components inside Panel.Root
+- [ ] `Button` — `memo(forwardRef(...))` (`Button.tsx`)
+- [ ] `IconButton` — `forwardRef(...)` (`IconButton.tsx`)
+- [ ] `ButtonGroup` — `forwardRef(...)` (`Button.tsx`)
+- [ ] `Toggle` — `forwardRef(...)` (`Toggle.tsx`)
+- [ ] `Link` — `forwardRef(...)` (`Link.tsx`)
 
-These components render DOM elements and are currently nested inside Panel.Root/Panel.Content.
-They need to be made headless (context-only) so they can be moved outside Panel.Root.
+#### react-ui compound sub-components
 
-- `TableComponent.Root` in `plugin-table/TableContainer` — renders a `div`.
+- [ ] `Message.Root`, `Message.Title`, `Message.Content` — use `Slot` directly, not `slottable()` (`Message.tsx`)
+- [ ] `Toast.Body`, `Toast.Title`, `Toast.Description`, `Toast.Actions` — use `Slot` directly, not `slottable()` (`Toast.tsx`)
 
-## Tasks
+#### asChild chains in Toolbar
 
-- [x] Rename Container.Column to Column.Root; move Container Row, Segment to Column
-- [x] Rename Container.Main to Panel.Root
-- [x] Move headless Root components outside Panel.Root (Event.Root, MarkdownEditor.Root, SearchList.Root, Chat.Root)
-- [x] Wrap toolbars in Panel.Toolbar asChild where missing
-- [x] Make non-headless intermediate Root components headless (Chessboard.Root, PipelineComponent.Root, TableComponent.Root)
-- [x] All primitives must spread ...props and useClassName; use SlottableProps
-- [x] Consistent use of `dx-document`, `@container`
-- [x] Audit radix primitives; rename `Root` to `Comp` for all radix asChild elements
+These use Radix `asChild` to pass non-composable children:
 
-## Cleanup
+- [ ] `ToolbarPrimitive.Button asChild` -> `Button` (`Toolbar.tsx:83`)
+- [ ] `ToolbarPrimitive.Button asChild` -> `IconButton` (`Toolbar.tsx:97`)
+- [ ] `ToolbarPrimitive.Button asChild` -> `Toggle` (`Toolbar.tsx:107`)
+- [ ] `ToolbarPrimitive.Link asChild` -> `Link` (`Toolbar.tsx:121`)
+- [ ] `ToolbarPrimitive.ToolbarToggleGroup asChild` -> `ButtonGroup` (`Toolbar.tsx:140`)
+- [ ] `ToolbarPrimitive.ToolbarToggleItem asChild` -> `Button` (`Toolbar.tsx:152`)
+- [ ] `ToolbarPrimitive.ToolbarToggleItem asChild` -> `IconButton` (`Toolbar.tsx:164`)
 
-- [ ] Doc -- how to write plugins; composable; separation of concerns; compact.
-  - [ ] Use radix context.
-    - [ ] raise(new Error()) for context; follow solid Map.tsx warning pattern
-      - throw new Error(`${displayName} must be used within Map.Root`);
-  - [ ] All Root components should be headless or support asChild.
+#### asChild chains in ToggleGroup
 
-- [ ] Splitter (e.g., JournalContainer); mobile layout
+- [ ] `ToggleGroupPrimitive.Root asChild` -> `ButtonGroup` (`ToggleGroup.tsx:18`)
+- [ ] `ToggleGroupPrimitive.Item asChild` -> `Button` (`ToggleGroup.tsx:30`)
+- [ ] `ToggleGroupPrimitive.Item asChild` -> `IconButton` (`ToggleGroup.tsx:42`)
 
-- [ ] HOC/marker interface for components.
+#### asChild chains in Select
 
-- [ ] Dialog.Body should delegate grid to children
-  - Search for all Dialog.Content cases.
-  - Push down pattern to lower-level components like Form, SearchList.
+- [ ] `SelectPrimitive.Trigger asChild` -> `Button` (`Select.tsx:39`)
 
-```text
+### Containers
 
-  Column Grid Structure
+- [ ] Use `dx-container` or `dx-expander` to grow containers (replace `h-full w-full`).
 
-  --------------------------
-  | O |                | X |
-  --------------------------
-  |   |                |   |
-  |   |                |   |
-  |   |                |   |
-  --------------------------
-  |   |                |   |
-  --------------------------
+## Notes
 
-```
-
-- Grid provides minimal padding for form borders.
-- Provides left/right gutter for icons.
-- Provides right gutter for scrollbar.
-
-### Column-aware components
-
-TODO(burdon): Need to create playground for this.
-
-- Card
-- Dialog
-  - Dialog.Header
-    - Dialog.Title
-  - Dialog.Body
-    - Dialog.Text
-  - Dialog.ActionBar
-- Form
-- ScrollArea
-- SearchList
-- Settings
-
-ISSUE: Prevent spreading other props (e.g., `extensions` in MarkdownToolbar)
-
-### Slot Composition Audit
-
-#### Phase 1
-
-Problem: some components are not propagating props to spread on their root DOM element when used as a slot child.
-
-- [ ] Create column-aligned Markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
-  - Consolidate all react-ui-xxx components into a single table with a column representing the package name.
-  - Create an empty row between packages.
-- [ ] Each row should include the following columns (in order):
-  - Package name (even for react-ui)
-  - Component name
-  - Root component is Headless (i.e., doesn't implement a DOM node)
-  - Root component implements SlottableProps: Yes/No
-  - Root component implements ComposableProps: Yes/No/ISSUE (if Root does not spread ...props on the first child element).
-
-| Package            | Component              | Headless | SlottableProps      | ComposableProps |
-| ------------------ | ---------------------- | -------- | ------------------- | --------------- |
-| react-ui           | `Panel.Root`           | No       | Yes                 | —               |
-| react-ui           | `Column.Root`          | No       | Yes                 | —               |
-| react-ui           | `Container`            | No       | Yes                 | —               |
-| react-ui           | `Flex`                 | No       | —                   | Yes             |
-| react-ui           | `Grid`                 | No       | —                   | Yes             |
-| react-ui           | `Card.Root`            | No       | Yes                 | —               |
-| react-ui           | `Breadcrumb.Root`      | No       | Yes                 | —               |
-| react-ui           | `ScrollArea.Root`      | No       | Yes                 | —               |
-| react-ui           | `Splitter.Root`        | No       | Yes                 | —               |
-| react-ui           | `Dialog.Root`          | Yes      | No                  | —               |
-| react-ui           | `AlertDialog.Root`     | Yes      | No                  | —               |
-| react-ui           | `Main.Root`            | Yes      | No                  | —               |
-| react-ui           | `Menu.Root`            | Yes      | No                  | —               |
-| react-ui           | `Popover.Root`         | Yes      | No                  | —               |
-| react-ui           | `Select.Root`          | Yes      | No                  | —               |
-| react-ui           | `Tooltip.Root`         | Yes      | No                  | —               |
-| react-ui           | `Input`                | No       | No                  | —               |
-| react-ui           | `List.ListItem.Root`   | No       | No                  | —               |
-| react-ui           | `Message.Root`         | No       | No (asChild inline) | —               |
-| react-ui           | `ScrollContainer.Root` | No       | No                  | —               |
-| react-ui           | `Toast.Root`           | No       | No                  | —               |
-| react-ui           | `Toolbar.Root`         | No       | No (TODO)           | —               |
-|                    |                        |          |                     |                 |
-| react-ui-attention | `AttendableContainer`  | No       | No (asChild inline) | —               |
-|                    |                        |          |                     |                 |
-| react-ui-editor    | `Editor.Root`          | Yes      | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-form      | `ObjectPicker.Root`    | Yes      | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-list      | `List.Root`            | Yes      | No                  | —               |
-| react-ui-list      | `Accordion.Root`       | Yes      | No                  | —               |
-| react-ui-list      | `Tree.Root`            | Yes      | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-menu      | `Menu.Root`            | Yes      | No                  | —               |
-| react-ui-menu      | `DropdownMenu.Root`    | Yes      | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-mosaic    | `Mosaic.Root`          | No       | No (asChild inline) | —               |
-| react-ui-mosaic    | `Board.Root`           | No       | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-search    | `SearchList.Root`      | Yes      | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-stack     | `StackItem.Root`       | No       | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-table     | `Table.Root`           | No       | —                   | Yes             |
-|                    |                        |          |                     |                 |
-| react-ui-tabs      | `Tabs.Root`            | No       | No                  | —               |
-|                    |                        |          |                     |                 |
-| react-ui-thread    | `Thread.Root`          | No       | No                  | —               |
-| react-ui-thread    | `Message.Root`         | No       | No                  | —               |
+- Radix
+- Slots
+- Containers

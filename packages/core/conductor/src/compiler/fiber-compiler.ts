@@ -15,6 +15,7 @@ import {
   CredentialsService,
   FunctionInvocationService,
   QueueService,
+  Trace,
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';
@@ -34,7 +35,6 @@ import {
   ValueBag,
   isNotExecuted,
 } from '../types';
-
 import {
   type GraphDiagnostic,
   InputKind,
@@ -356,6 +356,7 @@ export class GraphExecutor {
    * Creates a layer with all required services from the current context.
    */
   private _createServiceLayer() {
+    // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     return Effect.gen(this, function* () {
       return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
@@ -364,9 +365,10 @@ export class GraphExecutor {
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
-        Layer.succeed(Feed.Service, yield* Feed.Service),
+        Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
         Layer.succeed(TracingService, yield* TracingService),
+        Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
       );
     });
   }

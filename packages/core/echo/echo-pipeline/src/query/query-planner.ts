@@ -2,13 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Order } from '@dxos/echo';
+import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
+
+/**
+ * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
+ */
+const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
+  if (query === null) {
+    return new QueryError({
+      message: 'Query too complex',
+      context: { query: null },
+    });
+  }
+  const prettyQuery = Query.pretty(Query.fromAst(query));
+  return new QueryError({
+    message: `Query too complex: ${prettyQuery}`,
+    context: { query, prettyQuery },
+  });
+};
 
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
@@ -126,10 +143,7 @@ export class QueryPlanner {
           ]);
         }
         if (context.selectionInverted) {
-          throw new QueryError({
-            message: 'Query too complex',
-            context: { query: context.originalQuery },
-          });
+          throw queryTooComplexError(context.originalQuery);
         }
 
         // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
@@ -240,13 +254,31 @@ export class QueryPlanner {
         ]);
       }
 
+      // ChildOf
+      case 'child-of': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
       // Compare
       case 'compare':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       case 'in':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       case 'range':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
 
       // Boolean
       case 'not':
@@ -257,7 +289,8 @@ export class QueryPlanner {
       case 'and': {
         const flatFilters = _flattenAnd(filter.filters);
         const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
-        const nonTimestampFilters = flatFilters.filter((f) => f.type !== 'timestamp');
+        const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
+        const otherFilters = flatFilters.filter((f) => f.type !== 'timestamp' && f.type !== 'child-of');
 
         if (timestampFilters.length > 0 && context.selectionInverted) {
           throw new QueryError({
@@ -267,8 +300,8 @@ export class QueryPlanner {
           });
         }
 
-        if (timestampFilters.length > 0 && nonTimestampFilters.length <= 1) {
-          const innerFilter = nonTimestampFilters[0];
+        if (timestampFilters.length > 0 && otherFilters.length <= 1 && childOfFilters.length === 0) {
+          const innerFilter = otherFilters[0];
           const innerPlan = innerFilter
             ? this._generateSelectionFromFilter(innerFilter, context)
             : QueryPlan.Plan.make([
@@ -301,7 +334,7 @@ export class QueryPlanner {
           ]);
         }
 
-        if (timestampFilters.length > 0) {
+        if (timestampFilters.length > 0 && childOfFilters.length === 0) {
           throw new QueryError({
             message:
               'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
@@ -309,7 +342,31 @@ export class QueryPlanner {
           });
         }
 
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        if (childOfFilters.length > 0) {
+          const remainingFilters = flatFilters.filter((f) => f.type !== 'child-of');
+          const innerPlan =
+            remainingFilters.length === 1
+              ? this._generateSelectionFromFilter(remainingFilters[0], context)
+              : remainingFilters.length > 1
+                ? this._generateSelectionFromFilter({ type: 'and', filters: remainingFilters }, context)
+                : QueryPlan.Plan.make([
+                    {
+                      _tag: 'SelectStep',
+                      scope: context.scope,
+                      selector: { _tag: 'WildcardSelector' },
+                    },
+                    ...this._generateDeletedHandlingSteps(context),
+                  ]);
+
+          const childOfSteps: QueryPlan.Step[] = childOfFilters.map((f) => ({
+            _tag: 'FilterStep' as const,
+            filter: f,
+          }));
+
+          return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
+        }
+
+        throw queryTooComplexError(context.originalQuery);
       }
       case 'or':
         // Optimized case
@@ -336,7 +393,7 @@ export class QueryPlanner {
             },
           ]);
         } else {
-          throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+          throw queryTooComplexError(context.originalQuery);
         }
 
       default:

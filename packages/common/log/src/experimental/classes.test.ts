@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { log } from '../log';
-
 import { debugInfo, ownershipClass } from './ownership';
 
 describe('classes', function () {

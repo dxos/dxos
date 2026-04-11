@@ -18,7 +18,6 @@ import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
-
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
@@ -36,9 +35,9 @@ export type ViewEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-type StoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
+type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
   const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<View.View>();

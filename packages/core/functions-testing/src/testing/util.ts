@@ -7,13 +7,14 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
+import { Operation } from '@dxos/operation';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -58,7 +59,7 @@ export const deployFunction = async (
     entryPoint,
     verbose: true,
   });
-  const func = await functionsServiceClient.deploy({
+  const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,

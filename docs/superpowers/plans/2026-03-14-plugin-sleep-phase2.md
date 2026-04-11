@@ -837,13 +837,13 @@ Update `SleepArticle.tsx` to render the Mixer below the Editor, replacing the st
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 
 import { type Dream } from '../../types';
 import { Editor, Mixer } from '../../components';
 
-export type SleepArticleProps = SurfaceComponentProps<Dream.Dream>;
+export type SleepArticleProps = ObjectSurfaceProps<Dream.Dream>;
 
 export const SleepArticle = ({ role, subject: dream }: SleepArticleProps) => {
   return (

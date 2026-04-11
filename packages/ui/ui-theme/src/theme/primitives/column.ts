@@ -12,7 +12,7 @@ export type ColumnStyleProps = {
 };
 
 const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('dx-column w-full min-w-0 grid', ...etc);
+  return mx('dx-column grid', ...etc);
 };
 
 /**

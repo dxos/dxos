@@ -11,7 +11,6 @@ import { invariant } from '@dxos/invariant';
 
 import { type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
-
 import { useComputeContext } from './compute-context';
 
 export type ComputeNodeState = {

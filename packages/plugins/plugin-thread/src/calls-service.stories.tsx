@@ -12,13 +12,14 @@ import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 
+import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from '#hooks';
+
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
-import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
 
 // TODO(burdon): THIS IS TOO COMPLEX FOR A TEST SETUP.
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
@@ -130,9 +131,9 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   };
 };
 
-type StoryProps = { source: string };
+type DefaultStoryProps = { source: string };
 
-const DefaultStory = ({ source }: StoryProps) => {
+const DefaultStory = ({ source }: DefaultStoryProps) => {
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);
   // Get video stream track.
@@ -166,7 +167,7 @@ const DefaultStory = ({ source }: StoryProps) => {
           Re-pull video
         </Button>
       </div>
-      <Json data={metrics} />
+      <Json.Data data={metrics} />
     </div>
   );
 };
@@ -208,7 +209,7 @@ export const InaudibleAudioStreamTrack = {
 
     return (
       <div className='flex flex-col gap-4 items-center'>
-        <Json data={metrics} />
+        <Json.Data data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
     );
@@ -221,7 +222,7 @@ export const BlackVideoStreamTrack = {
     const { rePullTrack, metrics } = pushAndPullTrack(videoStreamTrack);
     return (
       <div className='flex flex-col gap-4 items-center'>
-        <Json data={metrics} />
+        <Json.Data data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
     );

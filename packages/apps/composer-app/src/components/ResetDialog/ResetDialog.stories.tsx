@@ -8,7 +8,6 @@ import { LogBuffer } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { ResetDialog } from './ResetDialog';
 
 const meta = {

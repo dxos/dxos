@@ -23,10 +23,10 @@ import { useQuery } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
-import { createNotebook } from '../../testing';
-import { translations } from '../../translations';
-import { Notebook } from '../../types';
+import { createNotebook } from '#testing';
+import { Notebook } from '#types';
 
+import { translations } from '../../translations';
 import { NotebookContainer } from './NotebookContainer';
 
 const meta: Meta<typeof NotebookContainer> = {
@@ -34,7 +34,7 @@ const meta: Meta<typeof NotebookContainer> = {
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
     return <NotebookContainer {...args} subject={notebooks[0]} attendableId='test' />;
   },
@@ -53,11 +53,11 @@ const meta: Meta<typeof NotebookContainer> = {
           types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              defaultSpace.db.add(createNotebook());
-              defaultSpace.db.add(Markdown.make({ content: '# Hello World' }));
-              defaultSpace.db.add(Operation.serialize(AgentPrompt));
+              personalSpace.db.add(createNotebook());
+              personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              personalSpace.db.add(Operation.serialize(AgentPrompt));
             }),
         }),
         AssistantPlugin(),

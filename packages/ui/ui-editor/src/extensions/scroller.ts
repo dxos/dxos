@@ -154,6 +154,7 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
         paddingBottom: `${overScroll}px`,
       },
       '.cm-scroller': {
+        overflowY: 'scroll',
         overflowAnchor: 'none',
         paddingBottom: '0',
       },
@@ -179,39 +180,49 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
 /**
  * Creates a smooth crawler that follows the live bottom of a CodeMirror 6 EditorView.
  *
- * Each animation frame the step is:
- *   step = clamp(|delta| * k, minStep, maxStep)  -- but never more than |delta|
+ * Uses a velocity-based approach with easing:
+ * - Accelerates smoothly when content starts arriving.
+ * - Maintains a steady cruise velocity during continuous streaming.
+ * - Decelerates smoothly when content stops arriving.
  *
- * Capping at |delta| is critical: it prevents overshoot, which would otherwise cause
- * oscillation when the proportional step (or minStep) exceeds the remaining distance.
- * The crawler settles exactly at the target with no bounce.
- *
- * @param k Fraction of remaining distance moved each frame (0 < k < 1).
- * @param minStep Min step size in px; prevents stalling on large distances.
- * @param maxStep Max step size in px.
- * @param targetDelta Snap-to-target threshold in px.
+ * @param accel Acceleration in px/frame^2 for ease-in/ease-out.
+ * @param maxVelocity Maximum scroll velocity in px/frame.
+ * @param snapThreshold Snap-to-target threshold in px.
  */
-export function createCrawler(view: EditorView, k = 0.3, maxStep = 2, targetDelta = 0.5) {
+export function createCrawler(view: EditorView, accel = 0.15, maxVelocity = 1, snapThreshold = 0.5) {
   const el = view.scrollDOM;
 
-  let currentTop = 0; // Float-precision position; avoids browser integer-rounding of scrollTop.
+  let currentTop = 0;
+  let velocity = 0;
   let rafId: number | null = null;
 
   function frame() {
-    // Recompute each frame so the animation chases a live-updating document's bottom.
     const targetTop = el.scrollHeight - el.clientHeight;
     const delta = targetTop - currentTop;
     const absDelta = Math.abs(delta);
-    if (absDelta < targetDelta) {
+
+    if (absDelta < snapThreshold && Math.abs(velocity) < snapThreshold) {
       el.scrollTop = targetTop;
       currentTop = targetTop;
+      velocity = 0;
       rafId = null;
       return;
     }
 
-    // Clamp step to [minStep, maxStep], then cap at absDelta to prevent overshoot.
-    const step = Math.sign(delta) * Math.min(absDelta, Math.max(1, Math.min(absDelta * k, maxStep)));
-    currentTop += step;
+    // Stopping distance at current velocity: v^2 / (2 * accel).
+    const stoppingDistance = (velocity * velocity) / (2 * accel);
+    const direction = Math.sign(delta);
+
+    if (velocity !== 0 && (absDelta <= stoppingDistance || direction !== Math.sign(velocity))) {
+      // Decelerate: close enough to target or moving the wrong way.
+      velocity -= Math.sign(velocity) * Math.min(accel, Math.abs(velocity));
+    } else {
+      // Accelerate toward target, capped at maxVelocity.
+      velocity += direction * accel;
+      velocity = Math.sign(velocity) * Math.min(Math.abs(velocity), maxVelocity);
+    }
+
+    currentTop += velocity;
     el.scrollTop = currentTop;
     rafId = requestAnimationFrame(frame);
   }
@@ -227,6 +238,7 @@ export function createCrawler(view: EditorView, k = 0.3, maxStep = 2, targetDelt
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
         rafId = null;
+        velocity = 0;
       }
     },
   };

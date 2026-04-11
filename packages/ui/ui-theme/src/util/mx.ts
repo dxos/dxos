@@ -12,11 +12,12 @@ import {
   isValidElement,
   type ReactNode,
   type RefAttributes,
+  CSSProperties,
 } from 'react';
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { log } from '@dxos/log';
-import { type ComposableProps, type SlottableProps } from '@dxos/ui-types';
+import { ThemedClassName, type ComposableProps, type SlottableProps } from '@dxos/ui-types';
 
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 
@@ -69,14 +70,20 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
  */
 // TODO(burdon): Move to react-ui.
 export const composableProps = <P extends HTMLElement = HTMLElement>(
-  { className, classNames, ...props }: ComposableProps,
-  { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},
+  { className, classNames, role, style, ...props }: ComposableProps,
+  { classNames: defaultClassNames, ...defaults }: ThemedClassName<Partial<HTMLAttributes<P>>> | undefined = {},
 ) => ({
   // Default props.
   ...(defaults as object),
 
   // Spread supplied props.
   ...props,
+
+  // Prefer explicit role, then defaults role, then 'none'.
+  role: role ?? defaults.role ?? 'none',
+
+  // Merge styles.
+  style: { ...defaults.style, ...style } as CSSProperties,
 
   // Compose classnames.
   className: mx(defaultClassNames, className, classNames),
@@ -92,10 +99,9 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
  * ```tsx
  * const MyPanel = slottable<HTMLDivElement, { border?: boolean }>(
  *   ({ children, asChild, border, ...props }, forwardedRef) => {
- *     const { className, ...rest } = composableProps(props);
  *     const Comp = asChild ? Slot : Primitive.div;
  *     return (
- *       <Comp {...rest} className={mx(border && 'border', className)} ref={forwardedRef}>
+ *       <Comp {...composableProps(props, { classNames: border && 'border' })} ref={forwardedRef}>
  *         {children}
  *       </Comp>
  *     );
@@ -126,11 +132,11 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
     }
 
     const result = render(props, forwardedRef);
-    if (!warn) {
-      return result;
+    if (warn) {
+      return createElement('div', { role: 'none', className: 'dx-slot-warning' }, result);
     }
 
-    return createElement('div', { className: 'dx-slot-warning border-2 border-rose-500', role: 'none' }, result);
+    return result;
   };
 
   const component = forwardRef(wrapped as any) as any;
@@ -144,12 +150,14 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
  * Consumers see only `ComposableProps<P>` — a narrow type exposing `classNames`, `className`,
  * `children`, and the custom props `P`.
  *
+ * For generic components, use `any` for the type parameter inside `composable` and
+ * cast the result to restore the generic signature for consumers.
+ *
  * @example
  * ```tsx
  * const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {
- *   const { className, ...rest } = composableProps(props);
  *   return (
- *     <button {...rest} className={mx('btn', className)} ref={forwardedRef}>
+ *     <button {...composableProps(props, { classNames: 'btn' })} ref={forwardedRef}>
  *       {children}
  *     </button>
  *   );

@@ -4,6 +4,7 @@
 
 import { type AiService } from '@dxos/ai';
 import { type Database, type Feed } from '@dxos/echo';
+import { type Trace } from '@dxos/functions';
 
 import {
   type CredentialsService,
@@ -24,13 +25,15 @@ export type InvocationServices = TracingService;
 
 /**
  * Services that are available to invoked functions.
+ * @deprecated
  */
 export type FunctionServices =
   | InvocationServices
   | AiService.AiService
   | CredentialsService
   | Database.Service
-  // TODO(wittjosiah): Remove QueueService — use Feed.Service instead.
+  // TODO(wittjosiah): Remove QueueService — use Feed.FeedService instead.
   | QueueService
-  | Feed.Service
+  | Feed.FeedService
+  | Trace.TraceService
   | FunctionInvocationService;

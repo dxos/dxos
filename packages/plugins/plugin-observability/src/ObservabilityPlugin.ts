@@ -15,11 +15,12 @@ import {
   ObservabilityState,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { ClientReadyEvent, ObservabilityEvents } from '#types';
+import { ObservabilityCapabilities } from '#types';
+
 import { translations } from './translations';
-import { ClientReadyEvent, ObservabilityEvents } from './types';
-import { ObservabilityCapabilities } from './types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;

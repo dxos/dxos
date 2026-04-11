@@ -11,7 +11,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -31,9 +31,10 @@ import {
 } from '@dxos/types';
 
 import {
-  AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
+  Migrations,
+  NavigationHandler,
   NavigationResolver,
   OperationHandler,
   UndoMappings,
@@ -43,12 +44,14 @@ import {
   SpaceSettings,
   SpaceState,
   SpacesReady,
-} from './capabilities';
-import { meta } from './meta';
+  AppGraphBuilder,
+} from '#capabilities';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceEvents } from '#types';
+import { type CreateObject, type SpacePluginOptions } from '#types';
+
 import { translations } from './translations';
-import { SpaceEvents } from './types';
-import { type CreateObject, type SpacePluginOptions } from './types';
-import { SpaceOperation } from './operations';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -148,7 +151,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
@@ -234,7 +240,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -247,6 +253,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       ClientEvents.SpacesReady,
     ),
     activate: SpacesReady,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

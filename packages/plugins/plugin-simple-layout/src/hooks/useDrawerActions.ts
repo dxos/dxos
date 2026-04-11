@@ -12,9 +12,9 @@ import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, createGapSeparator } from '@dxos/react-ui-menu';
 
-import { useMobileLayout } from '../components';
-import { meta } from '../meta';
-import { SimpleLayoutState as SimpleLayoutStateCapability } from '../types';
+import { useMobileLayout } from '#components';
+import { meta } from '#meta';
+import { SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
 
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
@@ -64,7 +64,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
             type: Node.ActionType,
             properties: {
               icon: isExpanded ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular',
-              label: isExpanded ? t('collapse drawer label') : t('expand drawer label'),
+              label: isExpanded ? t('collapse-drawer.label') : t('expand-drawer.label'),
               iconOnly: true,
             },
             data: () =>
@@ -80,7 +80,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
           type: Node.ActionType,
           properties: {
             icon: 'ph--x--regular',
-            label: t('close drawer label'),
+            label: t('close-drawer.label'),
             iconOnly: true,
           },
           data: () =>

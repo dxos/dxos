@@ -9,7 +9,6 @@ import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
 import { withTheme } from '../../testing';
-
 import { Avatar } from './Avatar';
 
 const hues = ['lime', 'teal', 'purple', 'pink'];

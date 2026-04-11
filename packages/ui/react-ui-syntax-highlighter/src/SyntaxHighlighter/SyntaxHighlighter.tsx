@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -11,6 +11,11 @@ import { ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
+
+const languages = {
+  js: 'javascript',
+  ts: 'typescript',
+};
 
 export type SyntaxHighlighterProps = NaturalSyntaxHighlighterProps & {
   fallback?: string;
@@ -23,7 +28,6 @@ export type SyntaxHighlighterProps = NaturalSyntaxHighlighterProps & {
  * https://github.com/react-syntax-highlighter/react-syntax-highlighter
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
-// TODO(burdon): Replace with react-ui-editor (and reuse styles).
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
   (
     { children, language = 'text', fallback = zeroWidthSpace, classNames, className, style, ...nativeProps },
@@ -34,10 +38,11 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
     return (
       <ScrollArea.Root {...composableProps({ classNames, className })} thin ref={forwardedRef}>
         <ScrollArea.Viewport>
+          {/* NOTE: The div prevents NativeSyntaxHighlighter from managing scrolling. */}
           <div role='none'>
             <NativeSyntaxHighlighter
               language={languages[language as keyof typeof languages] || language}
-              style={(style as { [key: string]: React.CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
+              style={(style as { [key: string]: CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
               customStyle={{
                 background: 'unset',
                 border: 'none',
@@ -58,8 +63,3 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
 );
 
 SyntaxHighlighter.displayName = 'SyntaxHighlighter';
-
-const languages = {
-  js: 'javascript',
-  ts: 'typescript',
-};

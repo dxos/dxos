@@ -11,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 
 import {
   DeckCapabilities,
-  type DeckEphemeralStateProps,
+  type EphemeralDeckState,
   type DeckPluginState,
   type DeckState,
-  type DeckStateProps,
-} from '../types';
+  type StoredDeckState,
+} from '#types';
 
 export type DeckStateHook = {
   /** Combined state value (reactive). Includes both persisted and ephemeral state. */
@@ -23,9 +23,9 @@ export type DeckStateHook = {
   /** The active deck, computed from decks[activeDeck]. */
   deck: DeckState;
   /** Update persisted state. */
-  updateState: (fn: (current: DeckStateProps) => DeckStateProps) => void;
+  updateState: (fn: (current: StoredDeckState) => StoredDeckState) => void;
   /** Update ephemeral state. */
-  updateEphemeral: (fn: (current: DeckEphemeralStateProps) => DeckEphemeralStateProps) => void;
+  updateEphemeral: (fn: (current: EphemeralDeckState) => EphemeralDeckState) => void;
 };
 
 /**
@@ -36,15 +36,14 @@ export const useDeckState = (): DeckStateHook => {
   const registry = useCapability(Capabilities.AtomRegistry);
   const stateAtom = useCapability(DeckCapabilities.State);
   const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
-
   const persistedState = useAtomValue(stateAtom);
   const ephemeralState = useAtomValue(ephemeralAtom);
 
   // Compute deck from decks[activeDeck] to ensure it's always current.
   const deck = useMemo(() => {
-    const d = persistedState.decks[persistedState.activeDeck];
-    invariant(d, `Deck not found: ${persistedState.activeDeck}`);
-    return d;
+    const deck = persistedState.decks[persistedState.activeDeck];
+    invariant(deck, `Deck not found: ${persistedState.activeDeck}`);
+    return deck;
   }, [persistedState.decks, persistedState.activeDeck]);
 
   // Combine persisted and ephemeral state into a unified view.
@@ -57,26 +56,18 @@ export const useDeckState = (): DeckStateHook => {
   );
 
   const updateState = useCallback(
-    (fn: (current: DeckStateProps) => DeckStateProps) => {
+    (fn: (current: StoredDeckState) => StoredDeckState) => {
       registry.set(stateAtom, fn(registry.get(stateAtom)));
     },
     [registry, stateAtom],
   );
 
   const updateEphemeral = useCallback(
-    (fn: (current: DeckEphemeralStateProps) => DeckEphemeralStateProps) => {
+    (fn: (current: EphemeralDeckState) => EphemeralDeckState) => {
       registry.set(ephemeralAtom, fn(registry.get(ephemeralAtom)));
     },
     [registry, ephemeralAtom],
   );
 
-  return useMemo(
-    () => ({
-      state,
-      deck,
-      updateState,
-      updateEphemeral,
-    }),
-    [state, deck, updateState, updateEphemeral],
-  );
+  return useMemo(() => ({ state, deck, updateState, updateEphemeral }), [state, deck, updateState, updateEphemeral]);
 };

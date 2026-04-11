@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import { useAtomValue } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';

@@ -9,8 +9,8 @@ import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, us
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { type RegistryTagType } from '../../types';
+import { meta } from '#meta';
+import { type RegistryTagType } from '#types';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
@@ -91,7 +91,7 @@ export const PluginItem = ({
             aria-describedby={descriptionId}
             classNames='cursor-pointer'
             icon='ph--gear--regular'
-            label={t('settings label')}
+            label={t('settings.label')}
             iconOnly
             size={4}
             onClick={handleSettings}
@@ -99,7 +99,7 @@ export const PluginItem = ({
           />
 
           <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
-            {t('details label')}
+            {t('details.label')}
           </Link>
 
           <div className='grow' />

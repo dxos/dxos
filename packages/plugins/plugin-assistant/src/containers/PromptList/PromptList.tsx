@@ -5,16 +5,16 @@
 import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { DatabaseBlueprint, MarkdownBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { IconButton } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
-import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { IconButton } from '@dxos/react-ui';
 
-import { AssistantOperation } from '../../operations';
+import { AssistantOperation } from '#operations';
 
-export type PromptListProps = SurfaceComponentProps<Obj.Unknown>;
+export type PromptListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 
 export const PromptList = ({ subject }: PromptListProps) => {
   const { invokePromise } = useOperationInvoker();

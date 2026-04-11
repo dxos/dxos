@@ -4,16 +4,15 @@
 
 /* eslint-disable no-console */
 
-import { statSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
-import * as fs from 'node:fs/promises';
-import { basename, dirname, join, relative, resolve } from 'node:path';
-
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import { type Message, build } from 'esbuild';
+import { statSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
+import * as fs from 'node:fs/promises';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';

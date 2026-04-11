@@ -11,7 +11,7 @@ import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { useKanbanBoard } from './KanbanBoard';
 
@@ -38,7 +38,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
       ...(onCardRemove
         ? [
             createMenuAction('remove', () => onCardRemove(data), {
-              label: t('remove card label'),
+              label: t('remove-card.label'),
               icon: 'ph--trash--regular',
             }),
           ]
@@ -57,7 +57,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
         debug={debug}
         dragHandle={dragHandle}
       >
-        <Focus.Group asChild>
+        <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
@@ -68,7 +68,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
                   iconOnly
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
-                  label={t('action menu label')}
+                  label={t('action-menu.label')}
                 />
               </Menu.Trigger>
               <Menu.Content items={menuItems} />
@@ -77,7 +77,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
               {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
             </Card.Content>
           </Card.Root>
-        </Focus.Group>
+        </Focus.Item>
       </Mosaic.Tile>
     </Menu.Root>
   );

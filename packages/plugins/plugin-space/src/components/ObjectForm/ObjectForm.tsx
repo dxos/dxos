@@ -12,7 +12,7 @@ import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
@@ -98,7 +98,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       defaultValues={values}
       createTypename={Type.getTypename(Tag.Tag)}
       createOptionIcon='ph--plus--regular'
-      createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
+      createOptionLabel={['add-tag.label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
       createFieldMap={createFieldMap}
       db={db}

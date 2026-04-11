@@ -3,17 +3,15 @@
 //
 
 import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
-import React, { forwardRef, useContext, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
-import { ComposableProps } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
-import { composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';
-
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
 import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
@@ -55,9 +53,9 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = ComposableProps;
+export type SheetToolbarProps = {};
 
-export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
+export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);

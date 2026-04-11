@@ -9,7 +9,6 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
-
 import { createSubscription } from './subscription';
 
 describe('create subscription', () => {

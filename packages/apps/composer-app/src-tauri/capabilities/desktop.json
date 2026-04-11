@@ -10,6 +10,20 @@
     "core:window:allow-set-focus",
     "core:window:allow-show",
     "core:window:allow-start-dragging",
+    "deep-link:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "fs:read-all",
+    {
+      "identifier": "fs:allow-watch",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }, { "path": "**/.composer" }, { "path": "**/.composer/**" }]
+    },
+    "fs:write-all",
+    "macos-passkey:default",
     "process:default",
     "shell:allow-open",
     {
@@ -22,6 +36,8 @@
         }
       ]
     },
+    "opener:allow-open-url",
+    "opener:default",
     "updater:default"
   ]
 }

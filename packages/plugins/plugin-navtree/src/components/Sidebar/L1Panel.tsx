@@ -17,8 +17,9 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useActions, useIsAlternateTree, useLoadDescendents } from '../../hooks';
-import { meta } from '../../meta';
+import { useActions, useIsAlternateTree, useLoadDescendents } from '#hooks';
+import { meta } from '#meta';
+
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemAction, NavTreeItemColumns } from '../NavTreeItem';
@@ -41,7 +42,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
   const shouldRenderContent = isCurrent || isActivated;
 
   return (
-    <Tabs.Tabpanel
+    <Tabs.Panel
       key={item.id}
       value={item.id}
       classNames={[
@@ -56,7 +57,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
       {...(!open && { inert: true })}
     >
       {shouldRenderContent && <L1PanelContent open={open} path={path} item={item} onBack={onBack} />}
-    </Tabs.Tabpanel>
+    </Tabs.Panel>
   );
 };
 
@@ -159,7 +160,10 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   }, [alternateTree, attended]);
 
   return (
-    <div className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'>
+    <div
+      data-tauri-drag-region
+      className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'
+    >
       {backCapableWorkspace ? (
         <IconButton
           density='coarse'
@@ -167,14 +171,16 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
-          label={t('button back')}
+          label={t('button-back.button')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
         />
       ) : (
-        <div className='w-6' />
+        <div data-tauri-drag-region className='w-6' />
       )}
-      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
+      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
+        {title}
+      </h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents dx-app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
@@ -211,7 +217,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
                 iconOnly
-                label={t('tree item actions label')}
+                label={t('tree-item-actions.label')}
                 data-testid='navtree.treeItem.actionsLevel0'
               />
             </Menu.Trigger>
@@ -260,7 +266,9 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
       type: Node.ActionType,
       data: () => Effect.void,
       properties: {
-        label: isAlternate ? ['button back', { ns: meta.id }] : (alternateTree.properties.label ?? alternateTree.id),
+        label: isAlternate
+          ? ['button-back.button', { ns: meta.id }]
+          : (alternateTree.properties.label ?? alternateTree.id),
         icon: isAlternate
           ? 'ph--arrow-u-down-left--regular'
           : (alternateTree.properties.icon ?? 'ph--placeholder--regular'),

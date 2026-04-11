@@ -3,12 +3,12 @@
 //
 
 import { readFile } from 'node:fs/promises';
-
 import { describe, expect, test } from 'vitest';
 
 import { Client, type Config } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
@@ -42,7 +42,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     }
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
-    const func = await functionsServiceClient.deploy({
+    const func = await functionsServiceClient.deploy(Context.default(), {
       ownerPublicKey: space.key,
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
@@ -55,7 +55,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     edgeClient.setIdentity(createEdgeIdentity(client));
 
     const input = { from: 'USD', to: 'EUR' };
-    const result = await functionsServiceClient.invoke(func, input);
+    const result = await functionsServiceClient.invoke(Context.default(), func, input);
     log.info('>>> result', { result, func });
     const resultNumber = Number(result);
     expect(resultNumber).toBeGreaterThan(0);

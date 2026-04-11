@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
@@ -14,6 +15,7 @@ import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
+
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
 import type { Resource } from './translations';
@@ -189,5 +191,30 @@ export namespace AppCapabilities {
 
   export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
     'org.dxos.app-framework.capability.navigation-target-resolver',
+  );
+
+  /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
+  );
+
+  /**
+   * Resolves a qualified graph path to a DXN.
+   * Each plugin recognizes its own path patterns and returns the corresponding DXN.
+   * Returns None if the path is not recognized by this resolver.
+   * Used to validate navigation targets against remote services (e.g., edge).
+   * @category Capability
+   */
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<DXN>>;
+
+  export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
+    'org.dxos.app-framework.capability.navigation-path-resolver',
   );
 }

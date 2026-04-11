@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 /**
  * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
@@ -28,7 +28,7 @@ const useMetadataResolver = () => {
 /**
  * Article view for collections.
  */
-export const CollectionArticle = ({ subject, attendableId }: SurfaceComponentProps<Collection.Collection>) => {
+export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
   const resolveMetadata = useMetadataResolver();
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata, attendableId);
@@ -36,7 +36,7 @@ export const CollectionArticle = ({ subject, attendableId }: SurfaceComponentPro
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root margin padding thin>
+        <ScrollArea.Root centered padding thin>
           <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'
@@ -67,7 +67,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const typename = Obj.getTypename(item.object) ?? '';
   const label =
     Obj.getLabel(item.object) ??
-    toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
+    toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(

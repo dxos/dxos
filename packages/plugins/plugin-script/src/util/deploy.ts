@@ -3,12 +3,13 @@
 //
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -51,7 +52,7 @@ export const deployScript = async ({
     }
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-    const newFunction = await functionsServiceClient.deploy({
+    const newFunction = await functionsServiceClient.deploy(Context.default(), {
       // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',

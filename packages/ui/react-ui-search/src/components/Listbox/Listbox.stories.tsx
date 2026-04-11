@@ -5,19 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { Listbox } from './Listbox';
 
-faker.seed(1234);
+random.seed(1234);
 
 type StoryItem = { value: string; label: string };
 
-const options: StoryItem[] = faker.helpers.multiple(
-  () => ({ value: faker.string.uuid(), label: faker.commerce.productName() }) satisfies StoryItem,
+const options: StoryItem[] = random.helpers.multiple(
+  () => ({ value: random.string.uuid(), label: random.commerce.productName() }) satisfies StoryItem,
   { count: 16 },
 );
 

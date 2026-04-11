@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expectTypeOf, test } from 'vitest';
+import { describe, expectTypeOf, test, expect } from 'vitest';
 
 import * as Entity from './Entity';
 import { SnapshotKindId } from './internal';
@@ -442,6 +442,98 @@ describe('Obj', () => {
       // - Obj.Any: can access arbitrary properties (has [key: string]: any)
       expectTypeOf<Obj.Unknown>().toMatchTypeOf<Obj.Any>();
       expectTypeOf<Obj.Any>().toMatchTypeOf<Obj.Unknown>();
+    });
+  });
+
+  describe('Obj.updateFrom', () => {
+    test('returns false when values already match', () => {
+      const target = Obj.make(TestSchema.Organization, { name: 'Acme', properties: { region: 'EU' } });
+      const source = Obj.make(TestSchema.Organization, { name: 'Acme', properties: { region: 'EU' } });
+      Obj.change(target, (mutable) => {
+        expect(Obj.updateFrom(mutable, source)).toBe(false);
+      });
+    });
+
+    test('updates scalar and nested record fields on Organization', () => {
+      const target = Obj.make(TestSchema.Organization, {
+        name: 'Old',
+        properties: { a: '1' },
+      });
+      const source = Obj.make(TestSchema.Organization, {
+        name: 'New',
+        properties: { a: '2', b: '3' },
+      });
+      Obj.change(target, (mutable) => {
+        expect(Obj.updateFrom(mutable, source)).toBe(true);
+      });
+      expect(target.name).toBe('New');
+      expect(target.properties).toEqual({ a: '2', b: '3' });
+    });
+
+    test('compares employer refs by DXN and updates Person fields', () => {
+      const orgA = Obj.make(TestSchema.Organization, { name: 'A' });
+      const orgB = Obj.make(TestSchema.Organization, { name: 'B' });
+      const target = Obj.make(TestSchema.Person, {
+        name: 'Ann',
+        username: 'ann',
+        email: 'ann@x.test',
+        employer: Ref.make(orgA),
+        address: { city: 'X', state: 'Y', zip: '1', coordinates: { lat: 0, lng: 0 } },
+      });
+      const source = Obj.make(TestSchema.Person, {
+        name: 'Ann',
+        username: 'ann',
+        email: 'ann@x.test',
+        employer: Ref.make(orgB),
+        address: { city: 'Portland', state: 'OR', zip: '97201', coordinates: { lat: 45.5, lng: -122.6 } },
+      });
+      Obj.change(target, (mutable) => {
+        expect(Obj.updateFrom(mutable, source)).toBe(true);
+      });
+      expect(target.employer?.dxn.toString()).toBe(Ref.make(orgB).dxn.toString());
+      expect(target.address?.city).toBe('Portland');
+    });
+
+    test('updates array of task refs when DXNs differ', () => {
+      const t1 = Obj.make(TestSchema.Task, { title: 'One' });
+      const t2 = Obj.make(TestSchema.Task, { title: 'Two' });
+      const t3 = Obj.make(TestSchema.Task, { title: 'Three' });
+      const target = Obj.make(TestSchema.Person, {
+        name: 'Bob',
+        username: 'bob',
+        email: 'bob@x.test',
+        tasks: [Ref.make(t1), Ref.make(t2)],
+      });
+      const source = Obj.make(TestSchema.Person, {
+        name: 'Bob',
+        username: 'bob',
+        email: 'bob@x.test',
+        tasks: [Ref.make(t1), Ref.make(t3)],
+      });
+      Obj.change(target, (mutable) => {
+        expect(Obj.updateFrom(mutable, source)).toBe(true);
+      });
+      expect(target.tasks?.map((r) => r.dxn.toString())).toEqual(source.tasks?.map((r) => r.dxn.toString()));
+    });
+
+    test('respects include option', () => {
+      const target = Obj.make(TestSchema.Organization, { name: 'Keep', properties: { x: '1' } });
+      const source = Obj.make(TestSchema.Organization, { name: 'Drop', properties: { x: '2' } });
+      Obj.change(target, (mutable) => {
+        expect(Obj.updateFrom(mutable, source, { include: ['properties'] })).toBe(true);
+      });
+      expect(target.name).toBe('Keep');
+      expect(target.properties).toEqual({ x: '2' });
+    });
+
+    test('respects exclude option', () => {
+      const target = Obj.make(TestSchema.Organization, { name: 'Old', properties: { x: '1' } });
+      const source = Obj.make(TestSchema.Organization, { name: 'New', properties: { x: '2' } });
+      Obj.change(target, (mutable) => {
+        expect(Obj.updateFrom(mutable, source, { exclude: ['name'] })).toBe(true);
+      });
+      expect(target.name).toBe('Old');
+      expect(target.properties).toEqual({ x: '2' });
     });
   });
 });

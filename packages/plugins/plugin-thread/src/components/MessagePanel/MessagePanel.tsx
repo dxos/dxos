@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
@@ -19,11 +20,11 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useOnEditAnalytics } from '../../hooks';
-import { meta } from '../../meta';
-import { getMessageMetadata } from '../../util';
+import { useOnEditAnalytics } from '#hooks';
+import { meta } from '#meta';
 
 import { command } from '../../extensions/command';
+import { getMessageMetadata } from '../../util';
 
 export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
@@ -108,7 +109,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon='ph--check--regular'
               iconOnly
-              label={t('accept proposal label')}
+              label={t('accept-proposal.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleAcceptProposal}
             />
@@ -119,7 +120,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={t('delete message label')}
+              label={t('delete-message.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleDelete}
             />
@@ -210,7 +211,12 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown
       className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
-      <Surface.Surface role='card--content' limit={1} data={{ subject }} fallback={title} />
+      <Surface.Surface
+        role='card--content'
+        limit={1}
+        data={{ subject } satisfies AppSurface.ObjectCardData}
+        fallback={title}
+      />
     </Card.Root>
   );
 });

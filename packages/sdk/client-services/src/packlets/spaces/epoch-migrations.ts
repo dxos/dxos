@@ -37,7 +37,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
   switch (context.migration) {
     case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
       const document = await context.echoHost.createDoc();
-      await context.echoHost.flush();
+      await context.echoHost.flush(ctx);
       return { newRoot: document.url };
     }
     case CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY: {
@@ -49,7 +49,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       });
 
       const newRoot = await context.echoHost.createDoc(rootHandle.doc());
-      await context.echoHost.flush();
+      await context.echoHost.flush(ctx);
       return { newRoot: newRoot.url };
     }
     case CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT: {
@@ -63,7 +63,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       invariant(context.newAutomergeRoot);
 
       // Defensive programming - it should be the responsibility of the caller to flush the new root.
-      await context.echoHost.flush();
+      await context.echoHost.flush(ctx);
       return {
         newRoot: context.newAutomergeRoot,
       };

@@ -37,12 +37,7 @@ export type TriggerEditorProps = {
   Pick<FormRootProps<TriggerFormSchema>, 'onSave' | 'onCancel'>;
 
 export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formProps }: TriggerEditorProps) => {
-  const fieldMap = useCustomInputs({
-    db,
-    types,
-    tags,
-    readonlySpec,
-  });
+  const fieldMap = useCustomInputs({ db, types, tags, readonlySpec });
 
   const handleValuesChanged = useCallback(
     (newValues: Partial<TriggerFormSchema>) => {

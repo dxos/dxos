@@ -6,8 +6,9 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { type ObjectJSON } from '@dxos/echo/internal';
+import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
+import { type ObjectJSON } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -29,12 +30,12 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
-  #syncQueue?: (request: SyncQueueRequest) => Promise<void>;
+  #syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
-    syncQueue?: (request: SyncQueueRequest) => Promise<void>,
+    syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>,
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
@@ -120,6 +121,6 @@ export class LocalQueueServiceImpl implements QueueService {
   }
 
   async syncQueue(request: SyncQueueRequest): Promise<void> {
-    await this.#syncQueue?.(request);
+    await this.#syncQueue?.(Context.default(), request);
   }
 }

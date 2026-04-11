@@ -4,8 +4,8 @@
 
 /* eslint-disable no-console */
 
-import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
@@ -43,7 +43,7 @@ export const SyncBench = () => {
 
   const spaceId = useAtomValue(spaceIdAtom) as SpaceId | undefined;
   const setSpaceId = useAtomSet(spaceIdAtom);
-  const space = spaceId ? client.spaces.get(spaceId) : client.spaces.default;
+  const space = spaceId ? client.spaces.get(spaceId) : client.spaces.get()[0];
 
   const [syncState, setSyncState] = useState<SpaceSyncState>();
   useEffect(() => {

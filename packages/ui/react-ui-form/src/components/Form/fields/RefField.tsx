@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-tag-picker.pcss';
-
 import React, { useCallback, useMemo } from 'react';
 
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
@@ -152,7 +151,7 @@ export const RefField = (props: RefFieldProps) => {
       <div>
         {readonly ? (
           !item ? (
-            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
+            <p className={mx('text-description', 'mb-2')}>{t('empty-readonly-ref-field.label')}</p>
           ) : (
             <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}
@@ -170,7 +169,7 @@ export const RefField = (props: RefFieldProps) => {
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
                   <div role='none' className='grow overflow-hidden'>
-                    <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
+                    <span className='flex truncate text-description'>{placeholder ?? t('ref-field.placeholder')}</span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>

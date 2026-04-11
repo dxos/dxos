@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
-import { ResetStorage } from './definitions';
-
 import { RESET_DIALOG } from '../constants';
+import { ResetStorage } from './definitions';
 
 const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
   Operation.withHandler(
@@ -18,7 +17,7 @@ const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
         subject: RESET_DIALOG,
         blockAlign: 'start',
         props: {
-          mode: data.mode ?? 'reset storage',
+          mode: data.mode ?? 'reset-storage',
         },
       });
     }),

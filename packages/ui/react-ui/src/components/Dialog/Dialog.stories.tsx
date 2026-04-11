@@ -5,16 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { ScrollArea } from '../ScrollArea';
-
 import { Dialog, type DialogContentProps } from './Dialog';
 
-type StoryProps = Pick<DialogContentProps, 'size'> &
+type DefaultStoryProps = Pick<DialogContentProps, 'size'> &
   Partial<{
     title: string;
     description: string;
@@ -27,7 +26,7 @@ type StoryProps = Pick<DialogContentProps, 'size'> &
  * Standard Dialog with non-scrolling content in Dialog.Body.
  * Dialog.Body delegates to Column.Content, which applies gutter padding via `px-[var(--gutter)]`.
  */
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
@@ -66,7 +65,7 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
  * The ScrollArea breaks out of Body's gutter padding via `--gutter-offset`
  * and applies its own asymmetric padding (accounting for scrollbar width).
  */
-const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
@@ -114,7 +113,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'start',
@@ -124,7 +123,7 @@ export const Default: Story = {
 export const Small: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -135,7 +134,7 @@ export const Small: Story = {
 export const Medium: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -146,7 +145,7 @@ export const Medium: Story = {
 export const Large: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: random.lorem.paragraph(2),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -157,7 +156,7 @@ export const Large: Story = {
 export const ExtraLarge: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: random.lorem.paragraph(2),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -169,7 +168,7 @@ export const Scrolling: Story = {
   render: ScrollingStory,
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(20),
+    description: random.lorem.paragraph(20),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',

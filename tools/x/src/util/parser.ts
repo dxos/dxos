@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
 import assert from 'node:assert';
 import path from 'path';
-
-import chalk from 'chalk';
 
 export type LogBuildError = {
   file: string;

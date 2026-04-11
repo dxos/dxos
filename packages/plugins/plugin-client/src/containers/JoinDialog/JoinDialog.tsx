@@ -12,8 +12,8 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { ClientOperation } from '../../operations';
+import { meta } from '#meta';
+import { ClientOperation } from '#operations';
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -39,7 +39,7 @@ export const JoinDialog = (props: JoinPanelProps) => {
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
+        <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
       </Dialog.Header>
       <Dialog.Body>
         <JoinPanel

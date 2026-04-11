@@ -6,13 +6,14 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ProjectRules, CreateProject } from './functions';
+import { ProjectRules, CreateProject, SyncTriggers } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.project-wizard';
 
 /**
  * Creates the Project blueprint. This is a function to avoid circular dependency issues.
  */
+// TODO(dmaretskyi): Combine with Project Blueprint
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
@@ -29,10 +30,14 @@ const make = () =>
         The project has a number of associated artifacts to work with. 
         Projects can subscribe to emails.
 
+        The project itself is an ECHO object and can be edited like any other object using the database blueprint.
+        You can edit the project's spec, name, and other properties directly.
+        If you edit the project's subscriptions array, you MUST call the sync-triggers function afterward to synchronize the triggers.
+
         IMPORTANT: Before attempting to create a project call the [project-rules] tool to get the rules for creating a project.
       `,
     }),
-    tools: Blueprint.toolDefinitions({ operations: [ProjectRules, CreateProject] }),
+    tools: Blueprint.toolDefinitions({ operations: [ProjectRules, CreateProject, SyncTriggers] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

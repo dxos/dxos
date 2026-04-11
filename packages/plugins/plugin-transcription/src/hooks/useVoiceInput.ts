@@ -10,7 +10,6 @@ import { log } from '@dxos/log';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
 import { type TranscriberProps } from '../transcriber';
-
 import { useAudioTrack } from './useAudioTrack';
 import { useTranscriber } from './useTranscriber';
 

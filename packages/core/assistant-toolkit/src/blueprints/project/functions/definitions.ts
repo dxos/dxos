@@ -4,11 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, GenericToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService, TriggerEvent } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { QueueService, TracingService, TriggerEvent } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { Project } from '../../../types';
 
@@ -25,15 +26,15 @@ export const Agent = Operation.make({
   }),
   output: Schema.Void,
   services: [
-    AiContextService,
     AiService.AiService,
     Database.Service,
-    FunctionInvocationService,
-    // TODO(dmaretskyi): Consider making TracingService a default to all operations.
+    QueueService,
+    Feed.FeedService,
+    OperationRegistry.Service,
+    // @deprecated TracingService kept for backward compat with tool handlers.
     TracingService,
-    // TODO(dmaretskyi): Handle those within session/conversation context.
-    ToolExecutionService,
-    ToolResolverService,
+    Trace.TraceService,
+    GenericToolkit.GenericToolkitProvider,
   ],
 });
 

@@ -15,9 +15,9 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
-import { SyncIssues } from './definitions';
 import { syncObjects } from '../../../sync';
 import { graphqlRequestBody } from '../../../util';
+import { SyncIssues } from './definitions';
 
 const queryIssues = `
 query Issues($teamId: String!, $after: DateTimeOrDuration!) {

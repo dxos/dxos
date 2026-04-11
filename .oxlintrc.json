@@ -11,6 +11,7 @@
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
+    "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
     "eslint/no-async-promise-executor": "off",
@@ -67,6 +68,7 @@
     "unicorn/no-useless-fallback-in-spread": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
+    "vitest/require-mock-type-parameters": "off",
     "vitest/warn-todo": "off",
     "unused-imports/no-unused-imports": "warn",
     "import-x-js/order": "off"

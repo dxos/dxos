@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ComposableProps, type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,
@@ -16,6 +16,7 @@ import {
   useGlobeZoomHandler,
   useTour,
 } from '@dxos/react-ui-geo';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types';
@@ -77,88 +78,83 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export type GlobeControlProps = ComposableProps<GeoControlProps & GlobeRootProps>;
+export type GlobeControlProps = GeoControlProps & GlobeRootProps;
 
-export const GlobeControl = ({
-  classNames,
-  center,
-  zoom,
-  markers = [],
-  selected = [],
-  onToggle,
-}: GlobeControlProps) => {
-  const [topology] = useAsyncState(loadTopology);
-  const { themeMode } = useThemeContext();
-  const styles = globeStyles(themeMode);
+export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
+  ({ center, zoom, markers = [], selected = [], onToggle, ...props }, forwardedRef) => {
+    const [topology] = useAsyncState(loadTopology);
+    const { themeMode } = useThemeContext();
+    const styles = globeStyles(themeMode);
 
-  const [controller, setController] = useState<GlobeController | null>();
-  const handleZoomAction = useGlobeZoomHandler(controller);
+    const [controller, setController] = useState<GlobeController | null>();
+    const handleZoomAction = useGlobeZoomHandler(controller);
 
-  const features = useMemo(
-    () => ({
-      points: markers?.map(({ location: { lat, lng } }) => ({ lat, lng })),
-      lines: [],
-    }),
-    [markers],
-  );
+    const features = useMemo(
+      () => ({
+        points: markers?.map(({ location: { lat, lng } }) => ({ lat, lng })),
+        lines: [],
+      }),
+      [markers],
+    );
 
-  const selectedPoints = useMemo<LatLngLiteral[]>(() => {
-    if (selected?.length === 0) {
-      return features.points;
-    }
-
-    const points = selected
-      .map((id) => {
-        const marker = markers.find((marker) => marker.id === id);
-        return marker ? marker.location : undefined;
-      })
-      .filter(isNonNullable);
-
-    return points;
-  }, [markers, selected]);
-
-  const [moved, setMoved] = useState(false);
-  useDrag(controller, {
-    onUpdate: () => setMoved(true),
-  });
-
-  // TODO(burdon): Redo.
-  const [active, setActive] = useState(false);
-  const [_, setRunning] = useTour(controller, selectedPoints?.length ? selectedPoints : features.points, {
-    running: active,
-    loop: true,
-    styles,
-    autoRotate: !moved,
-  });
-
-  useEffect(() => setActive(!!selectedPoints?.length), [selectedPoints?.length]);
-
-  const handleAction: ControlProps['onAction'] = (action) => {
-    switch (action) {
-      case 'toggle': {
-        onToggle?.();
-        break;
+    const selectedPoints = useMemo<LatLngLiteral[]>(() => {
+      if (selected?.length === 0) {
+        return features.points;
       }
 
-      case 'start': {
-        setRunning((running) => !running);
-        setMoved(false);
-        break;
-      }
-    }
-  };
+      const points = selected
+        .map((id) => {
+          const marker = markers.find((marker) => marker.id === id);
+          return marker ? marker.location : undefined;
+        })
+        .filter(isNonNullable);
 
-  return (
-    <Globe.Root classNames={classNames} center={center} zoom={zoom}>
-      <Globe.Canvas
-        ref={setController}
-        topology={topology}
-        projection='orthographic'
-        features={features}
-        styles={styles}
-      />
-      <Globe.Action onAction={handleAction} />
-      <Globe.Zoom onAction={handleZoomAction} />
-    </Globe.Root>
-  );
-};
+      return points;
+    }, [markers, selected]);
+
+    const [moved, setMoved] = useState(false);
+    useDrag(controller, {
+      onUpdate: () => setMoved(true),
+    });
+
+    // TODO(burdon): Redo.
+    const [active, setActive] = useState(false);
+    const [_, setRunning] = useTour(controller, selectedPoints?.length ? selectedPoints : features.points, {
+      running: active,
+      loop: true,
+      styles,
+      autoRotate: !moved,
+    });
+
+    useEffect(() => setActive(!!selectedPoints?.length), [selectedPoints?.length]);
+
+    const handleAction: ControlProps['onAction'] = (action) => {
+      switch (action) {
+        case 'toggle': {
+          onToggle?.();
+          break;
+        }
+
+        case 'start': {
+          setRunning((running) => !running);
+          setMoved(false);
+          break;
+        }
+      }
+    };
+
+    return (
+      <Globe.Root {...composableProps(props)} center={center} zoom={zoom} ref={forwardedRef}>
+        <Globe.Canvas
+          ref={setController}
+          topology={topology}
+          projection='orthographic'
+          features={features}
+          styles={styles}
+        />
+        <Globe.Action onAction={handleAction} />
+        <Globe.Zoom onAction={handleZoomAction} />
+      </Globe.Root>
+    );
+  },
+);

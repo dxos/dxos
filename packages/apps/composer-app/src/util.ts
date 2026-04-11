@@ -10,6 +10,7 @@ import { type Credential } from '@dxos/react-client/halo';
 
 export const isTrue = (str?: string | null, strict = true): boolean =>
   strict ? str === 'true' || str === '1' : str != null && !isFalse(str);
+
 export const isFalse = (str?: string | null): boolean => str === 'false' || str === '0';
 
 export const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
@@ -51,6 +52,7 @@ export const queryAllCredentials = (client: Client) => {
     spaceKey: identitySpace,
     noTail: true,
   });
+
   return new Promise<Credential[]>((resolve, reject) => {
     const credentials: Credential[] = [];
     stream?.subscribe(

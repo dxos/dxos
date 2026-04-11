@@ -8,8 +8,8 @@ import React from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Link, Message, Popover, Trans, useTranslation } from '@dxos/react-ui';
 
-import { StatusBar } from '../../components';
-import { meta } from '../../meta';
+import { StatusBar } from '#components';
+import { meta } from '#meta';
 
 export type VersionNumberProps = {};
 
@@ -43,12 +43,12 @@ export const VersionNumber = (_props: VersionNumberProps) => {
           classNames='z-[12] bg-warning-500 max-w-[min(calc(100vw-16px),40ch)]'
         >
           <Message.Root valence='warning' classNames='rounded-b-none p-5'>
-            <Message.Title>{t('warning title')}</Message.Title>
+            <Message.Title>{t('warning.title')}</Message.Title>
             <Message.Content>
-              {t('technology preview message')}
+              {t('technology-preview.message')}
               <br />
               <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
-                {t('learn more label')}
+                {t('learn-more.label')}
                 <Icon icon='ph--arrow-square-out--bold' classNames='dx-icon-inline ms-1' />
               </Link>
             </Message.Content>
@@ -56,12 +56,12 @@ export const VersionNumber = (_props: VersionNumberProps) => {
           <div role='none' className='py-4 px-5 space-b-2 text-base-surface-text'>
             {timestamp && (
               <p>
-                {t('released message', {
+                {t('released.message', {
                   released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
                 <br />
                 <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
-                  {t('see release label')}
+                  {t('see-release.label')}
                   <Icon icon='ph--arrow-square-out--bold' classNames='dx-icon-inline ms-1' />
                 </Link>
               </p>
@@ -70,7 +70,7 @@ export const VersionNumber = (_props: VersionNumberProps) => {
               <Trans
                 {...{
                   t,
-                  i18nKey: 'powered by dxos message',
+                  i18nKey: 'powered-by-dxos.message',
                   components: {
                     dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
                   },

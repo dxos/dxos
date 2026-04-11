@@ -14,7 +14,6 @@ import { ErrorBoundary } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
-
 import { ClientStory } from './context';
 
 type InitializeProps = {
@@ -39,8 +38,6 @@ const initializeClient = async (
   if (createIdentity || createSpace) {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity();
-      await client.spaces.waitUntilReady();
-      await client.spaces.default.waitUntilReady();
       await onCreateIdentity?.({ client }, context);
     }
   }

@@ -12,6 +12,11 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#meta": "./src/meta.ts"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",

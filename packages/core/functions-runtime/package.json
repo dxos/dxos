@@ -94,15 +94,21 @@
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",
     "i18next": "catalog:",
-    "iso-did": "catalog:",
-    "jsonata": "catalog:"
+    "iso-did": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
     "@aws-sdk/client-s3": "3.955.0",
     "@dxos/ai": "workspace:*",
     "@dxos/types": "workspace:*",
-    "chess.js": "catalog:"
+    "chess.js": "catalog:",
+    "date-fns": "catalog:",
+    "fast-xml-parser": "catalog:",
+    "jsonata": "catalog:",
+    "linkedom": "catalog:",
+    "papaparse": "catalog:",
+    "turndown": "catalog:",
+    "yaml": "catalog:"
   },
   "publishConfig": {
     "access": "public"

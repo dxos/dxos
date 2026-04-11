@@ -2,22 +2,42 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { ForwardedRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
-export type FilePreviewProps = ThemedClassName<{ type: string; url: string }>;
+export type FilePreviewProps = { type: string; url: string };
 
 /**
  * File/content preview iframe.
  */
-export const FilePreview = ({ type, url, classNames }: FilePreviewProps) => {
-  if (type.startsWith('image/')) {
-    return <img className={mx('w-full h-full object-contain', classNames)} src={url} />;
-  } else if (type.startsWith('video/')) {
-    return <video className={mx('w-full h-full object-contain', classNames)} src={url} controls />;
-  } else {
-    return <iframe className={mx('w-full h-full overflow-auto', classNames)} src={url} />;
-  }
-};
+export const FilePreview = composable<HTMLElement, FilePreviewProps>(
+  ({ type, url, children, ...props }, forwardedRef) => {
+    if (type.startsWith('image/')) {
+      return (
+        <img
+          {...composableProps(props, { classNames: 'h-full w-full object-contain' })}
+          src={url}
+          ref={forwardedRef as ForwardedRef<HTMLImageElement>}
+        />
+      );
+    } else if (type.startsWith('video/')) {
+      return (
+        <video
+          {...composableProps(props, { classNames: 'h-full w-full object-contain' })}
+          src={url}
+          controls
+          ref={forwardedRef as ForwardedRef<HTMLVideoElement>}
+        />
+      );
+    } else {
+      return (
+        <iframe
+          {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })}
+          src={url}
+          ref={forwardedRef as ForwardedRef<HTMLIFrameElement>}
+        />
+      );
+    }
+  },
+);

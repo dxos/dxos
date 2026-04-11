@@ -35,6 +35,7 @@
     "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/context": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "effect": "catalog:"

@@ -35,6 +35,9 @@
       "path": "../../../tools/vite-plugin-import-source"
     },
     {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -119,6 +122,9 @@
       "path": "../../plugins/plugin-explorer"
     },
     {
+      "path": "../../plugins/plugin-feed"
+    },
+    {
       "path": "../../plugins/plugin-files"
     },
     {
@@ -129,6 +135,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-iroh-beacon"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -153,6 +162,9 @@
     },
     {
       "path": "../../plugins/plugin-native"
+    },
+    {
+      "path": "../../plugins/plugin-native-filesystem"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -198,6 +210,12 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-spacetime"
+    },
+    {
+      "path": "../../plugins/plugin-spec"
     },
     {
       "path": "../../plugins/plugin-spotlight"
@@ -279,6 +297,9 @@
     },
     {
       "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-ui"
