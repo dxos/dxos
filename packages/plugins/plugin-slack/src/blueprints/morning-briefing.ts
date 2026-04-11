@@ -4,10 +4,17 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { trim } from '@dxos/util';
 
 export const MORNING_BRIEFING_KEY = 'org.dxos.blueprint.morning-briefing';
+
+// Tool keys from plugin-inbox operations (referenced by key to avoid Vite import resolution issues).
+const INBOX_TOOLS = [
+  'org.dxos.plugin.inbox.operation.read-email',
+  'org.dxos.plugin.inbox.operation.summarize-mailbox',
+  'org.dxos.plugin.inbox.operation.google-mail-sync',
+  'org.dxos.plugin.inbox.operation.google-calendar-sync',
+];
 
 const make = () =>
   Blueprint.make({
@@ -15,13 +22,8 @@ const make = () =>
     name: 'Morning Briefing',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
-      operations: [
-        InboxOperation.ReadEmail,
-        InboxOperation.SummarizeMailbox,
-        InboxOperation.GoogleMailSync,
-        InboxOperation.GoogleCalendarSync,
-      ],
-      tools: [],
+      operations: [],
+      tools: INBOX_TOOLS,
     }),
     instructions: Template.make({
       source: trim`

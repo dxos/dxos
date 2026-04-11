@@ -4,10 +4,15 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { trim } from '@dxos/util';
 
 export const MEETING_PREP_KEY = 'org.dxos.blueprint.meeting-prep';
+
+const INBOX_TOOLS = [
+  'org.dxos.plugin.inbox.operation.read-email',
+  'org.dxos.plugin.inbox.operation.summarize-mailbox',
+  'org.dxos.plugin.inbox.operation.google-calendar-sync',
+];
 
 const make = () =>
   Blueprint.make({
@@ -15,12 +20,8 @@ const make = () =>
     name: 'Meeting Prep',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
-      operations: [
-        InboxOperation.ReadEmail,
-        InboxOperation.GoogleCalendarSync,
-        InboxOperation.SummarizeMailbox,
-      ],
-      tools: [],
+      operations: [],
+      tools: INBOX_TOOLS,
     }),
     instructions: Template.make({
       source: trim`

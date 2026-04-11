@@ -4,10 +4,17 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { trim } from '@dxos/util';
 
 export const EMAIL_TRIAGE_KEY = 'org.dxos.blueprint.email-triage';
+
+const INBOX_TOOLS = [
+  'org.dxos.plugin.inbox.operation.read-email',
+  'org.dxos.plugin.inbox.operation.classify-email',
+  'org.dxos.plugin.inbox.operation.draft-email',
+  'org.dxos.plugin.inbox.operation.summarize-mailbox',
+  'org.dxos.plugin.inbox.operation.google-mail-sync',
+];
 
 const make = () =>
   Blueprint.make({
@@ -15,14 +22,8 @@ const make = () =>
     name: 'Email Triage',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
-      operations: [
-        InboxOperation.ReadEmail,
-        InboxOperation.ClassifyEmail,
-        InboxOperation.DraftEmail,
-        InboxOperation.SummarizeMailbox,
-        InboxOperation.GoogleMailSync,
-      ],
-      tools: [],
+      operations: [],
+      tools: INBOX_TOOLS,
     }),
     instructions: Template.make({
       source: trim`
