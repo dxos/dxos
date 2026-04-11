@@ -36,20 +36,19 @@ What kind of information are you looking to organize? This will help me suggest 
 <summary>OK (1 tool uses · 4.28k tokens · 11.1s)</summary>
 <summary>OK (4.30k tokens · 1.6s)</summary>
 
-<reasoning>Based on the rules, this is similar to the "Parcel tracking" example. I should: 1. First create an Order schema
-2. Query for mailboxes to subscribe to
-3. Query for available blueprints
-4. Create the project Let me first ask a couple of qualifying questions, then proceed. Actually, the example is pretty clear - let me set things up. But first let me check for mailboxes and blueprints. Let me query for mailboxes and blueprints in parallel.</reasoning>
+<reasoning>Based on the rules, this is similar to the "Parcel tracking" example. I should: 1. First create an Order schema 2. Query for mailboxes to subscribe to 3. Query for available blueprints 4. Create the project Let me first ask a couple of qualifying questions, then proceed. Actually, the example is pretty clear - let me set things up. But first let me check for mailboxes and blueprints. Let me query for mailboxes and blueprints in parallel.</reasoning>
 
 <reasoning>I found a mailbox at `dxn:echo:B6ON2Y6HN4KLJWZD75VUUDCUQ552ERQSG:01KNHKXSWWCBZX6TCPMF1M0PDE`. Now I have everything I need to create the CRM project. The project should:
+
 1. Subscribe to the mailbox
 2. Use database, web-search, and browser blueprints
 3. Extract People and Organizations from emails
 4. Research contacts on the web
-5. Save to database avoiding duplicates 
+5. Save to database avoiding duplicates
 6. Now I'm building the project structure to tie all these components together.</reasoning>
 
 <reasoning>I found the mailbox. Now I have all the information I need to create the CRM project. Let me create it with the appropriate blueprints and subscription to the mailbox. The project should:
+
 - Subscribe to the mailbox
 - On every email, extract People and Organizations
 - Save them to the database (checking for duplicates first)

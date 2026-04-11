@@ -95,9 +95,7 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
   }, [view]);
 
   const { callItems, resultItems } = useMemo(() => {
-    const callItems = items.filter(
-      (item) => item.content?._tag === 'toolCall' || item.content?._tag === 'stats',
-    );
+    const callItems = items.filter((item) => item.content?._tag === 'toolCall' || item.content?._tag === 'stats');
     const resultItems = items.filter((item) => item.content?._tag === 'toolResult');
     return { callItems, resultItems };
   }, [items]);
@@ -146,17 +144,9 @@ const ToolPanel = ({ items, onChangeOpen, textCrawlKey }: ToolPanelProps) => {
   return (
     <TogglePanel.Root classNames='w-full rounded-xs !border-0' open={open} onChangeOpen={setOpen}>
       <TogglePanel.Header classNames='text-sm text-placeholder p-0.5 gap-0.5'>
-        <TextCrawl
-          key={textCrawlKey}
-          size='sm'
-          lines={items.map((item) => item.title)}
-          autoAdvance
-          greedy
-        />
+        <TextCrawl key={textCrawlKey} size='sm' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
-      <TogglePanel.Content
-        classNames={items.length > 1 ? 'grid grid-cols-[32px_1fr]' : 'grid grid-cols-1'}
-      >
+      <TogglePanel.Content classNames={items.length > 1 ? 'grid grid-cols-[32px_1fr]' : 'grid grid-cols-1'}>
         {items.length > 1 && (
           <NumericTabs
             ref={tabsRef}

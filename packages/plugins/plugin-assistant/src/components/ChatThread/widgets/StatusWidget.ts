@@ -45,17 +45,11 @@ export class StatusWidget extends WidgetType {
           .classNames('relative overflow-hidden rounded-sm')
           .append(
             Domino.of('div')
-              .classNames(
-                'grid grid-cols-[24px_1fr] gap-x-0.5 gap-y-0 items-start px-0.5 py-0.5 text-placeholder',
-              )
+              .classNames('grid grid-cols-[24px_1fr] gap-x-0.5 gap-y-0 items-start px-0.5 py-0.5 text-placeholder')
               .append(
                 Domino.of('div')
                   .classNames('flex h-5 w-full shrink-0 items-center justify-center self-start')
-                  .append(
-                    Domino.of('span').classNames(
-                      'block size-1.5 shrink-0 rounded-full bg-current opacity-45',
-                    ),
-                  ),
+                  .append(Domino.of('span').classNames('block size-1.5 shrink-0 rounded-full bg-current opacity-45')),
                 Domino.of('div')
                   .classNames('relative min-w-0')
                   .append(

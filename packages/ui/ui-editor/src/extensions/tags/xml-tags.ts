@@ -232,10 +232,9 @@ export const xmlTags = ({
   const paragraphGapTheme =
     paragraphToWidgetGapRem != null && paragraphToWidgetGapRem > 0
       ? EditorView.baseTheme({
-          [`& .cm-content > .cm-line:not(:has([${XML_WIDGET_DATA_ATTR}])) + .cm-line:has([${XML_WIDGET_DATA_ATTR}])`]:
-            {
-              marginTop: `${paragraphToWidgetGapRem}rem`,
-            },
+          [`& .cm-content > .cm-line:not(:has([${XML_WIDGET_DATA_ATTR}])) + .cm-line:has([${XML_WIDGET_DATA_ATTR}])`]: {
+            marginTop: `${paragraphToWidgetGapRem}rem`,
+          },
         })
       : null;
 
@@ -664,8 +663,7 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
     // NOTE: Set min-height to avoid jumps while scrolling.
     this.#root = Domino.of('div')
       .classNames('min-h-[24px]')
-      .attributes({ [XML_WIDGET_DATA_ATTR]: '' })
-      .root;
+      .attributes({ [XML_WIDGET_DATA_ATTR]: '' }).root;
     const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
     return this.#root;

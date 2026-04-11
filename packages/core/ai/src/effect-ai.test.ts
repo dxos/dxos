@@ -23,7 +23,6 @@ import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import { on } from 'events';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';

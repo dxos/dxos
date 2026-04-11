@@ -236,7 +236,16 @@ const useMarkdownStreamTextEditor = (
         ],
       ].filter(isTruthy),
     };
-  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader, paragraphToWidgetGapRem]);
+  }, [
+    themeMode,
+    registry,
+    debug,
+    options?.autoScroll,
+    options?.wire,
+    options?.cursor,
+    options?.fader,
+    paragraphToWidgetGapRem,
+  ]);
 
   const viewRef = useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };

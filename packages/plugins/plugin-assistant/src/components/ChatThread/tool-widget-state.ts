@@ -39,10 +39,7 @@ export const applyToolBlockToWidgetState = (context: ToolWidgetStateSink, block:
  * Re-applies tool widget state after a full document replace (e.g. {@link MarkdownStreamController.setContent}),
  * which clears accumulated widget props via `xmlTagResetEffect`.
  */
-export const rehydrateToolWidgetsFromMessages = (
-  context: ToolWidgetStateSink,
-  messages: Message.Message[],
-): void => {
+export const rehydrateToolWidgetsFromMessages = (context: ToolWidgetStateSink, messages: Message.Message[]): void => {
   for (const message of messages) {
     for (const block of message.blocks) {
       applyToolBlockToWidgetState(context, block);

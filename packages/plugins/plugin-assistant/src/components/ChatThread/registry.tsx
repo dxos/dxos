@@ -224,9 +224,7 @@ const stripBulletLikeLinePrefixes = (raw: string): string =>
 
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
-  const content = escapeXmlTextContent(
-    stripBulletLikeLinePrefixes((opts.content ?? '').replace(/\n\n/g, ' ').trim()),
-  );
+  const content = escapeXmlTextContent(stripBulletLikeLinePrefixes((opts.content ?? '').replace(/\n\n/g, ' ').trim()));
 
   if (opts.pending) {
     return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}`;

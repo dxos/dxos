@@ -312,7 +312,7 @@ class FilterClass implements Filter$.Any {
   /** Returns a human-readable string representation of a Filter AST. */
   static pretty(filter: Filter$.Any): string {
     return prettyFilter(filter.ast);
-  };
+  }
 
   private constructor(public readonly ast: QueryAST.Filter) {}
 

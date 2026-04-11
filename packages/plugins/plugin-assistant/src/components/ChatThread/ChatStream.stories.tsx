@@ -45,9 +45,8 @@ const defaultStreamOptions: TextStreamOptions = {
 /** Matches self-closing tool call tags in assistant markdown fixtures (e.g. thinking.md). */
 const TOOL_CALL_MARKUP_REGEX = /<toolCall\s+id="([^"]+)"\s*\/>/g;
 
-const extractToolCallIdsFromMarkdown = (markdown: string): string[] => [
-  ...markdown.matchAll(TOOL_CALL_MARKUP_REGEX),
-].map((match) => match[1]);
+const extractToolCallIdsFromMarkdown = (markdown: string): string[] =>
+  [...markdown.matchAll(TOOL_CALL_MARKUP_REGEX)].map((match) => match[1]);
 
 const SAMPLE_TOOL_NAMES = [
   'get_project_rules',
