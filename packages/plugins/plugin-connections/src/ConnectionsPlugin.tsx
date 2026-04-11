@@ -3,9 +3,9 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, ReactSurface, Settings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from './translations';
 
@@ -13,5 +13,10 @@ export const ConnectionsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'settings',
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: Settings,
+  }),
   Plugin.make,
 );
