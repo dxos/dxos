@@ -59,6 +59,7 @@
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

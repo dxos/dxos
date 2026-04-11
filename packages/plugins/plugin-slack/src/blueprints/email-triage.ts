@@ -4,6 +4,7 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
+import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { trim } from '@dxos/util';
 
 export const EMAIL_TRIAGE_KEY = 'org.dxos.blueprint.email-triage';
@@ -14,15 +15,28 @@ const make = () =>
     name: 'Email Triage',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
-      operations: [],
+      operations: [
+        InboxOperation.ReadEmail,
+        InboxOperation.ClassifyEmail,
+        InboxOperation.DraftEmail,
+        InboxOperation.SummarizeMailbox,
+        InboxOperation.GoogleMailSync,
+      ],
       tools: [],
     }),
     instructions: Template.make({
       source: trim`
         {{! Email Triage }}
 
-        You are an email triage assistant. Your job is to process incoming emails
-        and classify them by urgency and action required.
+        You are an email triage assistant. You have tools to read and classify emails.
+
+        # Process
+
+        1. Sync the mailbox to get latest emails (use google-mail-sync).
+        2. Read the emails (use read-email).
+        3. For each email, classify it by urgency (use classify-email).
+        4. For urgent emails, draft responses (use draft-email).
+        5. Present the triaged results.
 
         # Classification Categories
 
@@ -30,15 +44,6 @@ const make = () =>
         - **Action Required**: Needs a response or action today.
         - **FYI**: Important to know but no action needed.
         - **Low Priority**: Can wait. Newsletter, promotional, automated notifications.
-
-        # For Each Email
-
-        1. Read the email content
-        2. Classify by category
-        3. For "Urgent" and "Action Required":
-           - Draft a concise response
-           - Identify the key ask or deadline
-        4. For all: extract any action items as checkboxes
 
         # Output Format
 
@@ -54,6 +59,7 @@ const make = () =>
         ## Action Items
         - [ ] Respond to X about Y (deadline: Z)
         - [ ] Review attachment from A
+        Format as markdown checkboxes.
       `,
     }),
   });

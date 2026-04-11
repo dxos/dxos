@@ -12589,6 +12589,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

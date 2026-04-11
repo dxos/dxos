@@ -4,6 +4,7 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
+import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { trim } from '@dxos/util';
 
 export const MORNING_BRIEFING_KEY = 'org.dxos.blueprint.morning-briefing';
@@ -14,7 +15,12 @@ const make = () =>
     name: 'Morning Briefing',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
-      operations: [],
+      operations: [
+        InboxOperation.ReadEmail,
+        InboxOperation.SummarizeMailbox,
+        InboxOperation.GoogleMailSync,
+        InboxOperation.GoogleCalendarSync,
+      ],
       tools: [],
     }),
     instructions: Template.make({
@@ -22,14 +28,16 @@ const make = () =>
         {{! Morning Briefing }}
 
         You are a personal executive assistant generating a morning briefing.
+        You have tools to read emails and sync calendars.
 
-        Your job is to synthesize information from multiple sources into a clear,
-        actionable daily briefing. The briefing should help the user start their day
-        knowing exactly what needs attention.
+        # Process
+
+        1. First, sync the mailbox to get latest emails (use google-mail-sync).
+        2. Then, sync the calendar to get today's events (use google-calendar-sync).
+        3. Read the latest emails (use read-email).
+        4. Synthesize everything into a structured briefing.
 
         # Briefing Structure
-
-        Generate the briefing as a structured document with these sections:
 
         ## Today's Schedule
         List today's calendar events chronologically with:
@@ -39,16 +47,10 @@ const make = () =>
 
         ## Email Highlights
         Summarize the most important unread emails:
-        - Urgent items requiring immediate response
-        - FYI items to be aware of
-        - Action items with deadlines
+        - **Urgent**: Requires response within the hour
+        - **Action Required**: Needs a response or action today
+        - **FYI**: Important to know but no action needed
         Group by priority, not chronologically.
-
-        ## Slack Activity
-        Summarize overnight Slack activity from monitored channels:
-        - Key decisions made
-        - Questions directed at the user
-        - Important announcements
 
         ## Action Items
         A consolidated, prioritized list of everything that needs attention today:
