@@ -21,7 +21,7 @@ export default Capability.makeModule(
             AppNode.makeDeckCompanion({
               id: 'connections',
               label: ['companion-label.label', { ns: meta.id }],
-              icon: meta.icon ?? 'ph--plugs-connected--regular',
+              icon: meta.icon ?? 'ph--globe-simple--regular',
               data: 'connections',
               position: 'fallback',
             }),

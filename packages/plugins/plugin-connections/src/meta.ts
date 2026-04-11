@@ -11,5 +11,5 @@ export const meta: Plugin.Meta = {
   description: trim`
     Visual connections panel for managing channel integrations and MCP servers.
   `,
-  icon: 'ph--plugs-connected--regular',
+  icon: 'ph--globe-simple--regular',
 };
