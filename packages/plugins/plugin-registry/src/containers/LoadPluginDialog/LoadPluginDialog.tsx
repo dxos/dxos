@@ -52,6 +52,7 @@ export const LoadPluginDialog = () => {
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
+        {/* TODO(burdon): Form section. */}
         <div className='flex flex-col gap-4'>
           <Input.Root validationValence={error ? 'error' : undefined}>
             <Input.Label>{t('plugin-url.label')}</Input.Label>
