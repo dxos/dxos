@@ -10,7 +10,15 @@ import { useObject } from '@dxos/echo-react';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { TicTacToeBoard, computeAiMove, checkWin, currentTurn, getWinningCells, makeBoard, placeMarker } from '#components';
+import {
+  TicTacToeBoard,
+  computeAiMove,
+  checkWin,
+  currentTurn,
+  getWinningCells,
+  makeBoard,
+  placeMarker,
+} from '#components';
 import { meta } from '#meta';
 import { type TicTacToe } from '#types';
 
@@ -49,8 +57,8 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
       const moveEntry = `${marker}:${row},${col}`;
       const newMoves = moves ? `${moves};${moveEntry}` : moveEntry;
 
-      Obj.change(game, (draft) => {
-        const mutable = draft as Obj.Mutable<typeof draft>;
+      Obj.change(game, (game) => {
+        const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = result.board;
         mutable.moves = newMoves;
       });
@@ -83,8 +91,8 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
       const moveEntry = `O:${row},${col}`;
       const newMoves = moves ? `${moves};${moveEntry}` : moveEntry;
 
-      Obj.change(game, (draft) => {
-        const mutable = draft as Obj.Mutable<typeof draft>;
+      Obj.change(game, (game) => {
+        const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = newBoard;
         mutable.moves = newMoves;
       });
@@ -101,8 +109,8 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
   // New game handler.
   const handleNewGame = useCallback(() => {
     const newBoard = makeBoard(size);
-    Obj.change(game, (draft) => {
-      const mutable = draft as Obj.Mutable<typeof draft>;
+    Obj.change(game, (game) => {
+      const mutable = game as Obj.Mutable<typeof game>;
       mutable.board = newBoard;
       mutable.moves = '';
     });

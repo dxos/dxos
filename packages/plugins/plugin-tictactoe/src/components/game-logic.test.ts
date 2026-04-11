@@ -4,14 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import {
-  checkWin,
-  currentTurn,
-  getValidMoves,
-  getWinningCells,
-  makeBoard,
-  placeMarker,
-} from './game-logic';
+import { checkWin, currentTurn, getValidMoves, getWinningCells, makeBoard, placeMarker } from './game-logic';
 
 describe('makeBoard', () => {
   test('creates a 3x3 board of dashes', ({ expect }) => {

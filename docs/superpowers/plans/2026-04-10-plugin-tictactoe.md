@@ -15,6 +15,7 @@
 ### Task 1: Package Skeleton
 
 **Files:**
+
 - Create: `packages/plugins/plugin-tictactoe/package.json`
 - Create: `packages/plugins/plugin-tictactoe/moon.yml`
 - Create: `packages/plugins/plugin-tictactoe/README.md`
@@ -88,15 +89,10 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
+      "types": ["dist/types/src/types/index.d.ts"]
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -292,7 +288,7 @@ export const translations = [
         'o-turn': "O's turn",
         'x-wins': 'X wins!',
         'o-wins': 'O wins!',
-        'draw': "It's a draw!",
+        draw: "It's a draw!",
         'ai-thinking': 'AI is thinking...',
         'difficulty-easy': 'Easy',
         'difficulty-medium': 'Medium',
@@ -450,6 +446,7 @@ export const TicTacToeHandlers = Handlers;
 - [ ] **Step 10: Create empty blueprint stubs**
 
 `src/blueprints/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -459,6 +456,7 @@ export { default as TicTacToeBlueprint } from './tictactoe-blueprint';
 ```
 
 `src/blueprints/tictactoe-blueprint.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -501,6 +499,7 @@ export default blueprint;
 - [ ] **Step 11: Create capability stubs**
 
 `src/capabilities/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -521,6 +520,7 @@ export const ReactSurface = Capability.lazy('ReactSurface', () => import('./reac
 ```
 
 `src/capabilities/react-surface.tsx`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -556,6 +556,7 @@ export default Capability.makeModule(() =>
 ```
 
 `src/capabilities/operation-handler.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -576,6 +577,7 @@ export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
 ```
 
 `src/capabilities/blueprint-definition.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -599,6 +601,7 @@ export default blueprintDefinition;
 - [ ] **Step 12: Create container stubs**
 
 `src/containers/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -611,6 +614,7 @@ export const TicTacToeCard: ComponentType<any> = lazy(() => import('./TicTacToeC
 ```
 
 `src/containers/TicTacToeArticle/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -620,6 +624,7 @@ export { TicTacToeArticle as default } from './TicTacToeArticle';
 ```
 
 `src/containers/TicTacToeArticle/TicTacToeArticle.tsx`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -648,6 +653,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
 ```
 
 `src/containers/TicTacToeCard/index.ts`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -657,6 +663,7 @@ export { TicTacToeCard as default } from './TicTacToeCard';
 ```
 
 `src/containers/TicTacToeCard/TicTacToeCard.tsx`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -757,11 +764,13 @@ export * from './TicTacToePlugin';
 - [ ] **Step 16: Register plugin in composer-app**
 
 Add to `packages/apps/composer-app/package.json` dependencies (alphabetical, after `@dxos/plugin-thread`):
+
 ```json
 "@dxos/plugin-tictactoe": "workspace:*",
 ```
 
 Add import to `packages/apps/composer-app/src/plugin-defs.tsx` (after the `ThreadPlugin` import, line 60):
+
 ```typescript
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 ```
@@ -789,6 +798,7 @@ git commit -m "feat(plugin-tictactoe): add plugin skeleton"
 ### Task 2: Game Logic (Pure Functions)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-tictactoe/src/components/game-logic.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/components/game-logic.test.ts`
 
@@ -801,14 +811,7 @@ git commit -m "feat(plugin-tictactoe): add plugin skeleton"
 
 import { describe, test } from 'vitest';
 
-import {
-  checkWin,
-  currentTurn,
-  getValidMoves,
-  getWinningCells,
-  makeBoard,
-  placeMarker,
-} from './game-logic';
+import { checkWin, currentTurn, getValidMoves, getWinningCells, makeBoard, placeMarker } from './game-logic';
 
 describe('game-logic', () => {
   describe('makeBoard', () => {
@@ -970,13 +973,7 @@ type PlaceResult = { board: string; error?: undefined } | { board: string; error
 /**
  * Places a marker at the given row/col. Returns the new board or an error.
  */
-export const placeMarker = (
-  board: string,
-  size: number,
-  row: number,
-  col: number,
-  marker: 'X' | 'O',
-): PlaceResult => {
+export const placeMarker = (board: string, size: number, row: number, col: number, marker: 'X' | 'O'): PlaceResult => {
   if (row < 0 || row >= size || col < 0 || col >= size) {
     return { board, error: 'OutOfBounds' };
   }
@@ -1073,6 +1070,7 @@ git commit -m "feat(plugin-tictactoe): add game logic with tests"
 ### Task 3: AI Engine
 
 **Files:**
+
 - Create: `packages/plugins/plugin-tictactoe/src/components/ai-engine.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/components/ai-engine.test.ts`
 
@@ -1373,6 +1371,7 @@ git commit -m "feat(plugin-tictactoe): add AI engine with easy/medium/hard diffi
 ### Task 4: Operation Handlers
 
 **Files:**
+
 - Create: `packages/plugins/plugin-tictactoe/src/operations/create.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/operations/move.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/operations/ai-move.ts`
@@ -1561,6 +1560,7 @@ git commit -m "feat(plugin-tictactoe): add operation handlers"
 ### Task 5: TicTacToeBoard Component
 
 **Files:**
+
 - Create: `packages/plugins/plugin-tictactoe/src/components/TicTacToeBoard/index.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/components/TicTacToeBoard/TicTacToeBoard.tsx`
 - Create: `packages/plugins/plugin-tictactoe/src/components/TicTacToeBoard/TicTacToeBoard.stories.tsx`
@@ -1569,6 +1569,7 @@ git commit -m "feat(plugin-tictactoe): add operation handlers"
 - [ ] **Step 1: Create the TicTacToeBoard component**
 
 `src/components/TicTacToeBoard/TicTacToeBoard.tsx`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -1678,6 +1679,7 @@ export * from './TicTacToeBoard';
 - [ ] **Step 4: Create storybook**
 
 `src/components/TicTacToeBoard/TicTacToeBoard.stories.tsx`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -1755,6 +1757,7 @@ git commit -m "feat(plugin-tictactoe): add TicTacToeBoard component with storybo
 ### Task 6: TicTacToeArticle Container
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-tictactoe/src/containers/TicTacToeArticle/TicTacToeArticle.tsx`
 - Create: `packages/plugins/plugin-tictactoe/src/containers/TicTacToeArticle/TicTacToeArticle.stories.tsx`
 
@@ -1916,6 +1919,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
 - [ ] **Step 2: Create storybook**
 
 `src/containers/TicTacToeArticle/TicTacToeArticle.stories.tsx`:
+
 ```typescript
 //
 // Copyright 2026 DXOS.org
@@ -1996,6 +2000,7 @@ git commit -m "feat(plugin-tictactoe): implement TicTacToeArticle with AI and ga
 ### Task 7: TicTacToeCard Container
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-tictactoe/src/containers/TicTacToeCard/TicTacToeCard.tsx`
 
 - [ ] **Step 1: Implement the card container**

@@ -30,8 +30,8 @@ const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
       const moveEntry = `${marker}:${row},${col}`;
       const moves = obj.moves ? `${obj.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(obj, (game) => {
-        const mutable = game as Obj.Mutable<typeof game>;
+      Obj.change(obj, (obj) => {
+        const mutable = obj as Obj.Mutable<typeof obj>;
         mutable.board = result.board;
         mutable.moves = moves;
       });

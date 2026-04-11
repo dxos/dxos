@@ -44,9 +44,7 @@ const Cell = ({ value, isWinning, isLastPlaced, disabled, ariaLabel, onClick }: 
     <button
       className={mx(
         'aspect-square flex items-center justify-center rounded-sm transition-colors',
-        isWinning
-          ? 'animate-pulse bg-emerald-100 dark:bg-emerald-900/40'
-          : 'bg-neutral-100 dark:bg-neutral-800',
+        isWinning ? 'animate-pulse bg-emerald-100 dark:bg-emerald-900/40' : 'bg-neutral-100 dark:bg-neutral-800',
         canClick && 'hover:bg-neutral-200 dark:hover:bg-neutral-700 cursor-pointer',
         !canClick && isEmpty && 'cursor-not-allowed opacity-60',
       )}
