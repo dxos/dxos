@@ -22,19 +22,15 @@ export type SlackFeedProps = {
 type AgentResponse = {
   messageTs: string;
   text: string;
-  status: 'thinking' | 'done' | 'error';
+  status: 'searching' | 'streaming' | 'posting' | 'done' | 'error';
+  /** Number of workspace results found during search. */
+  contextHits?: number;
 };
 
-/**
- * Live Slack feed with autonomous agent responses.
- * - @mentions auto-trigger the agent.
- * - Thread replies auto-continue conversations.
- * - Every response fires a parallel agent trace for Inspector visibility.
- */
 export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
   const {
     messages, users, polling, error: slackError, botUserId, pendingMentions,
-    startPolling, stopPolling, fetchMessages, fetchThread, trackThread,
+    startPolling, stopPolling, fetchMessages, trackThread,
     checkThreadReplies, clearPendingMentions, postMessage,
   } = useSlackMessages(settings.botToken, settings.monitoredChannels ?? []);
 
@@ -44,29 +40,42 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
   const handledRef = useRef<Set<string>>(new Set());
   const { searchContext } = useSpaceContext(db);
 
-  // Auto-scroll to bottom.
+  // Auto-scroll on any state change.
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages.length, responses.size]);
+  }, [messages.length, responses]);
 
-  // Auto-start monitoring when settings are configured.
+  // Auto-start monitoring.
   useEffect(() => {
     if (settings.botToken && (settings.monitoredChannels ?? []).length > 0 && !polling) {
       startPolling();
     }
   }, [settings.botToken, settings.monitoredChannels, polling, startPolling]);
 
-  /** Call AI with thread context and post response to Slack. */
+  /** Update a response entry. */
+  const updateResponse = useCallback((key: string, update: Partial<AgentResponse>) => {
+    setResponses((prev) => {
+      const existing = prev.get(key);
+      if (!existing) {
+        return prev;
+      }
+      return new Map(prev).set(key, { ...existing, ...update });
+    });
+  }, []);
+
+  /** Stream AI response and post to Slack. */
   const respondToMessage = useCallback(
-    async (channelId: string, threadTs: string, threadMessages: SlackMessage[], isAutoMention = false) => {
+    async (responseKey: string, channelId: string, threadTs: string, threadMessages: SlackMessage[]) => {
       const apiKey = globalThis.localStorage?.getItem('ANTHROPIC_API_KEY');
       if (!apiKey) {
         throw new Error('Set ANTHROPIC_API_KEY in localStorage');
       }
 
-      // Build conversation from thread.
+      // Phase 1: Search workspace.
+      updateResponse(responseKey, { status: 'searching', text: '' });
+
       const conversationMessages: { role: string; content: string }[] = [];
       for (const msg of threadMessages) {
         const isBot = msg.user === botUserId;
@@ -74,8 +83,7 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         if (isBot) {
           conversationMessages.push({ role: 'assistant', content: msg.text });
         } else {
-          // Strip the @mention from the text for cleaner prompts.
-          const cleanText = botUserId ? msg.text.replace(`<@${botUserId}>`, '').trim() : msg.text;
+          const cleanText = botUserId ? msg.text.replace(new RegExp(`<@${botUserId}>`, 'g'), '').trim() : msg.text;
           conversationMessages.push({
             role: 'user',
             content: threadMessages.length > 1 ? `${userName}: ${cleanText}` : cleanText,
@@ -83,17 +91,17 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         }
       }
 
+      const latestText = threadMessages[threadMessages.length - 1].text;
       const lastMsg = threadMessages[threadMessages.length - 1];
       const userName = users.get(lastMsg.user)?.realName ?? users.get(lastMsg.user)?.name ?? lastMsg.user;
       const channelName = lastMsg.channelName;
 
-      log.info('slack: calling AI', { channelName, user: userName, threadLength: conversationMessages.length, isAutoMention });
-
-      // Search ECHO space for relevant context based on the latest message.
-      const latestText = threadMessages[threadMessages.length - 1].text;
       const spaceContext = await searchContext(latestText);
+      const contextHits = spaceContext ? (spaceContext.match(/^\d+\./gm)?.length ?? 0) : 0;
 
-      // Fire parallel agent trace for Inspector visibility.
+      log.info('slack: workspace search complete', { contextHits });
+
+      // Fire parallel agent trace for Inspector.
       const tracePrompt = `[Slack #${channelName}] ${userName}: "${latestText}"`;
       void invokePromise(AssistantOperation.RunPromptInNewChat, {
         db,
@@ -101,7 +109,9 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         background: true,
       }).catch(() => {});
 
-      // Build system prompt with workspace context.
+      // Phase 2: Stream AI response.
+      updateResponse(responseKey, { status: 'streaming', text: '', contextHits });
+
       const systemPrompt = [
         'You are a helpful AI assistant participating in a Slack conversation.',
         'Be concise, friendly, and conversational. Do not use markdown formatting.',
@@ -114,7 +124,6 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         spaceContext,
       ].join('\n');
 
-      // Direct AI call for the actual Slack response.
       const aiResponse = await fetch('/api/anthropic/v1/messages', {
         method: 'POST',
         headers: {
@@ -125,6 +134,7 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 500,
+          stream: true,
           system: systemPrompt,
           messages: conversationMessages,
         }),
@@ -135,16 +145,57 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         throw new Error(`AI error ${aiResponse.status}: ${errorBody.slice(0, 200)}`);
       }
 
-      const data = await aiResponse.json();
-      const responseText =
-        data.content?.find((block: { type: string }) => block.type === 'text')?.text ?? 'No response generated.';
+      // Parse SSE stream.
+      let fullText = '';
+      const reader = aiResponse.body?.getReader();
+      const decoder = new TextDecoder();
 
-      await postMessage(channelId, responseText, threadTs);
-      log.info('slack: posted to Slack', { channelId, threadTs, length: responseText.length });
+      if (reader) {
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
 
-      return responseText;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) {
+              continue;
+            }
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              continue;
+            }
+            try {
+              const event = JSON.parse(data);
+              if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+                fullText += event.delta.text;
+                updateResponse(responseKey, { text: fullText });
+              }
+            } catch {
+              // Skip malformed events.
+            }
+          }
+        }
+      }
+
+      if (!fullText) {
+        throw new Error('No response generated');
+      }
+
+      // Phase 3: Post to Slack.
+      updateResponse(responseKey, { status: 'posting', text: fullText });
+      await postMessage(channelId, fullText, threadTs);
+      log.info('slack: posted to Slack', { channelId, threadTs, length: fullText.length });
+
+      updateResponse(responseKey, { status: 'done', text: fullText });
+      return fullText;
     },
-    [botUserId, users, postMessage, invokePromise, db, searchContext],
+    [botUserId, users, postMessage, invokePromise, db, searchContext, updateResponse],
   );
 
   /** Handle clicking robot icon. */
@@ -156,15 +207,12 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
       handledRef.current.add(message.ts);
 
       setResponses((prev) =>
-        new Map(prev).set(message.ts, { messageTs: message.ts, text: '', status: 'thinking' }),
+        new Map(prev).set(message.ts, { messageTs: message.ts, text: '', status: 'searching' }),
       );
 
       try {
-        const responseText = await respondToMessage(message.channelId, message.ts, [message]);
+        await respondToMessage(message.ts, message.channelId, message.ts, [message]);
         trackThread(message.ts, message.channelId);
-        setResponses((prev) =>
-          new Map(prev).set(message.ts, { messageTs: message.ts, text: responseText, status: 'done' }),
-        );
         setTimeout(() => void fetchMessages(), 2000);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -182,21 +230,15 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
     if (pendingMentions.length === 0) {
       return;
     }
-
     const mentions = [...pendingMentions];
     clearPendingMentions();
-
     for (const mention of mentions) {
       if (handledRef.current.has(mention.ts)) {
         continue;
       }
-      log.info('slack: auto-responding to @mention', {
-        user: users.get(mention.user)?.realName ?? mention.user,
-        channel: mention.channelName,
-      });
       void handleAskAgent(mention);
     }
-  }, [pendingMentions, clearPendingMentions, handleAskAgent, users]);
+  }, [pendingMentions, clearPendingMentions, handleAskAgent]);
 
   // Auto-respond to thread replies.
   useEffect(() => {
@@ -214,17 +256,12 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
           }
           handledRef.current.add(replyKey);
 
-          log.info('slack: auto-responding to thread reply', { threadTs: thread.threadTs, threadLength: thread.messages.length });
-
           setResponses((prev) =>
-            new Map(prev).set(replyKey, { messageTs: lastReply.ts, text: '', status: 'thinking' }),
+            new Map(prev).set(replyKey, { messageTs: lastReply.ts, text: '', status: 'searching' }),
           );
 
           try {
-            const responseText = await respondToMessage(thread.channelId, thread.threadTs, thread.messages);
-            setResponses((prev) =>
-              new Map(prev).set(replyKey, { messageTs: lastReply.ts, text: responseText, status: 'done' }),
-            );
+            await respondToMessage(replyKey, thread.channelId, thread.threadTs, thread.messages);
           } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
             setResponses((prev) =>
@@ -260,7 +297,6 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
 
   return (
     <div className='flex flex-col h-full'>
-      {/* Header */}
       <div className='flex items-center gap-2 px-3 py-2 border-b border-separator'>
         <Icon icon='ph--slack-logo--regular' size={4} />
         <span className='text-sm font-medium flex-1'>Slack</span>
@@ -274,17 +310,16 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
           <Icon icon='ph--arrow-clockwise--regular' size={3} />
         </Button>
         {polling ? (
-          <Button variant='ghost' classNames='p-1' onClick={stopPolling} title='Stop monitoring'>
+          <Button variant='ghost' classNames='p-1' onClick={stopPolling} title='Stop'>
             <Icon icon='ph--stop--regular' size={3} />
           </Button>
         ) : (
-          <Button variant='ghost' classNames='p-1' onClick={startPolling} title='Start monitoring'>
+          <Button variant='ghost' classNames='p-1' onClick={startPolling} title='Start'>
             <Icon icon='ph--play--regular' size={3} />
           </Button>
         )}
       </div>
 
-      {/* Message Feed */}
       <ScrollArea.Root className='flex-1'>
         <ScrollArea.Viewport ref={scrollRef} className='max-h-full'>
           {slackError && (
@@ -326,6 +361,49 @@ const formatTime = (ts: string): string => {
   return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 };
 
+const StatusLabel = ({ status, contextHits }: { status: AgentResponse['status']; contextHits?: number }) => {
+  switch (status) {
+    case 'searching':
+      return (
+        <div className='flex items-center gap-1.5'>
+          <Icon icon='ph--magnifying-glass--regular' size={3} classNames='animate-pulse text-amber-500' />
+          <span>Searching workspace...</span>
+        </div>
+      );
+    case 'streaming':
+      return (
+        <div className='flex items-center gap-1.5'>
+          <Icon icon='ph--brain--regular' size={3} classNames='text-purple-400' />
+          <span>
+            Generating response
+            {contextHits !== undefined && contextHits > 0 && ` (${contextHits} sources found)`}
+          </span>
+        </div>
+      );
+    case 'posting':
+      return (
+        <div className='flex items-center gap-1.5'>
+          <Icon icon='ph--paper-plane-right--regular' size={3} classNames='text-primary' />
+          <span>Posting to Slack...</span>
+        </div>
+      );
+    case 'done':
+      return (
+        <div className='flex items-center gap-1'>
+          <Icon icon='ph--check--regular' size={2.5} classNames='text-green-500' />
+          <span className='text-green-600 dark:text-green-400'>Posted to thread</span>
+        </div>
+      );
+    case 'error':
+      return (
+        <div className='flex items-center gap-1'>
+          <Icon icon='ph--warning--regular' size={2.5} classNames='text-error' />
+          <span>Error</span>
+        </div>
+      );
+  }
+};
+
 const MessageRow = ({
   message,
   user,
@@ -339,13 +417,12 @@ const MessageRow = ({
   response?: AgentResponse;
   onAskAgent: () => void;
 }) => {
-  const isThinking = response?.status === 'thinking';
+  const isActive = response?.status === 'searching' || response?.status === 'streaming' || response?.status === 'posting';
   const isDone = response?.status === 'done';
 
   return (
     <div className='flex flex-col'>
       <div className={mx('group flex gap-2 px-2 py-1 rounded-sm', !isBotMessage && 'hover:bg-hoverSurface')}>
-        {/* Avatar placeholder */}
         <div className={mx('mt-0.5 shrink-0 size-5 rounded-full flex items-center justify-center text-[10px]', isBotMessage ? 'bg-primary/20' : 'bg-neutral-200 dark:bg-neutral-700')}>
           {isBotMessage ? (
             <Icon icon='ph--robot--regular' size={3} />
@@ -369,47 +446,42 @@ const MessageRow = ({
           <p className={mx('text-sm break-words', isBotMessage && 'text-description')}>{message.text}</p>
         </div>
 
-        {!isBotMessage && !isDone && (
+        {!isBotMessage && !isDone && !isActive && (
           <div className='flex items-start pt-1 opacity-0 group-hover:opacity-100 transition-opacity'>
             <Button
               variant='ghost'
-              classNames={mx('p-0.5 rounded-full', isThinking && 'animate-pulse opacity-100')}
+              classNames='p-0.5 rounded-full'
               onClick={onAskAgent}
-              disabled={isThinking}
               title='Ask Agent to respond'
             >
-              <Icon
-                icon={isThinking ? 'ph--spinner-gap--regular' : 'ph--robot--regular'}
-                size={3.5}
-                classNames={isThinking ? 'animate-spin' : undefined}
-              />
+              <Icon icon='ph--robot--regular' size={3.5} />
             </Button>
           </div>
         )}
       </div>
 
-      {/* Agent response inline */}
-      {response && response.status !== 'thinking' && response.text && (
-        <div className={mx('ml-7 mr-2 mt-0.5 mb-1 px-2.5 py-1.5 rounded-sm text-xs', response.status === 'error' ? 'text-error bg-error/10' : 'border-l-2 border-primary/40')}>
-          {response.status === 'done' && (
-            <div className='flex items-center gap-1 mb-0.5 text-[10px] text-primary font-medium'>
-              <Icon icon='ph--check--regular' size={2.5} />
-              <span>Posted to thread</span>
-            </div>
-          )}
-          <p className='break-words whitespace-pre-wrap text-description'>{response.text}</p>
-        </div>
-      )}
-
-      {/* Thinking indicator */}
-      {isThinking && (
-        <div className='ml-7 mr-2 mt-0.5 mb-1 flex items-center gap-1.5 text-xs text-primary'>
-          <div className='flex gap-0.5'>
-            <div className='size-1 rounded-full bg-primary animate-bounce' style={{ animationDelay: '0ms' }} />
-            <div className='size-1 rounded-full bg-primary animate-bounce' style={{ animationDelay: '150ms' }} />
-            <div className='size-1 rounded-full bg-primary animate-bounce' style={{ animationDelay: '300ms' }} />
+      {/* Agent response area */}
+      {response && (
+        <div className={mx(
+          'ml-7 mr-2 mt-0.5 mb-1 rounded-sm text-xs',
+          response.status === 'error' ? 'text-error bg-error/10 px-2.5 py-1.5' : 'border-l-2 border-primary/40 px-2.5 py-1.5',
+        )}>
+          <div className='text-[10px] font-medium mb-0.5'>
+            <StatusLabel status={response.status} contextHits={response.contextHits} />
           </div>
-          <span className='text-[10px]'>Agent is thinking...</span>
+
+          {/* Streaming text — appears word by word. */}
+          {response.text && (
+            <p className={mx(
+              'break-words whitespace-pre-wrap',
+              response.status === 'streaming' ? 'text-foreground' : 'text-description',
+            )}>
+              {response.text}
+              {response.status === 'streaming' && (
+                <span className='inline-block w-1.5 h-3 bg-primary/60 animate-pulse ml-0.5 -mb-0.5' />
+              )}
+            </p>
+          )}
         </div>
       )}
     </div>
