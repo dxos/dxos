@@ -55,7 +55,7 @@ export const ConnectionsPanel = ({ space }: ConnectionsPanelProps) => {
   // Check Slack connection via localStorage (settings-based, not AccessToken).
   const slackConnected = useMemo(() => {
     try {
-      const stored = globalThis.localStorage?.getItem('dxos.org/settings/org.dxos.plugin.slack');
+      const stored = globalThis.localStorage?.getItem('org.dxos.plugin.slack');
       if (stored) {
         const settings = JSON.parse(stored);
         return !!settings.botToken;
