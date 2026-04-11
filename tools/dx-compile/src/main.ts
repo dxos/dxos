@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createRequire } from 'node:module';
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { basename, dirname, join } from 'node:path';
 
 const require = createRequire(import.meta.url);
