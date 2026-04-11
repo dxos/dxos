@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { TicTacToe } from '../types';
+import { TicTacToe } from '#types';
 import { Create } from './definitions';
 
 const handler: Operation.WithHandler<typeof Create> = Create.pipe(

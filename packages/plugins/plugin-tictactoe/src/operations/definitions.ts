@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Database, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { TicTacToe } from '../types';
+import { TicTacToe } from '#types';
 
 export const Create = Operation.make({
   meta: {
