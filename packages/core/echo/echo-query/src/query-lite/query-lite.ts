@@ -4,10 +4,10 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
+import type { Entity, Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -267,6 +267,24 @@ class FilterClass implements Filter$.Any {
       return FilterClass.everything();
     }
     return filters.length === 1 ? filters[0] : FilterClass.and(...filters);
+  }
+
+  static childOf(
+    parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[],
+    options?: Filter$.ChildOfOptions,
+  ): Filter$.Any {
+    const items = Array.isArray(parents) ? parents : [parents];
+    const dxns = items.map((item) => {
+      if (item instanceof DXN) {
+        return item.toString();
+      }
+      throw new TypeError('query-lite childOf only supports DXN arguments');
+    });
+    return new FilterClass({
+      type: 'child-of',
+      parents: dxns,
+      transitive: options?.transitive ?? true,
+    });
   }
 
   static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
@@ -620,6 +638,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.and(${filter.filters.map(prettyFilter).join(', ')})`;
     case 'or':
       return `Filter.or(${filter.filters.map(prettyFilter).join(', ')})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.join(', ')}])`;
   }
 };
 
