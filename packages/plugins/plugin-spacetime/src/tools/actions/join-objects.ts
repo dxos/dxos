@@ -57,14 +57,14 @@ export class JoinObjectsAction implements ActionHandler {
 
     ctx.setSelection(null);
 
-    Obj.change(scene, (sceneObj) => {
+    Obj.change(scene, (scene) => {
       for (const objId of objectsToDelete) {
-        const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
+        const index = scene.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
         if (index !== -1) {
-          sceneObj.objects.splice(index, 1);
+          scene.objects.splice(index, 1);
         }
       }
-      sceneObj.objects.push(Ref.make(newObject));
+      scene.objects.push(Ref.make(newObject));
     });
     Obj.setParent(newObject, scene);
 

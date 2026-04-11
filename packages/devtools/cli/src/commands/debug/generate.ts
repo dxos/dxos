@@ -96,8 +96,8 @@ export const handler = Effect.fn(function* ({
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {
       const object = random.helpers.arrayElement(queriedObjects);
-      Obj.change(object, (obj) => {
-        obj.title = random.lorem.word();
+      Obj.change(object, (object) => {
+        object.title = random.lorem.word();
       });
       yield* Database.flush();
       yield* pause(interval, jitter);

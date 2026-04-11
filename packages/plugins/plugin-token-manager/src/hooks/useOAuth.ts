@@ -55,7 +55,7 @@ export const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
     );
 
     if (userInfo.email) {
-      Obj.change(token, (obj) => (obj.account = userInfo.email));
+      Obj.change(token, (token) => (token.account = userInfo.email));
     }
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
@@ -100,8 +100,8 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
             return;
           }
 
-          Obj.change(token, (obj) => {
-            obj.token = data.accessToken;
+          Obj.change(token, (token) => {
+            token.token = data.accessToken;
           });
           yield* enrichGoogleTokenWithEmail(token);
           onAddAccessToken(token);

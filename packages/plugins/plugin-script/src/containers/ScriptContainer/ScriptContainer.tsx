@@ -51,8 +51,8 @@ export const ScriptContainer = ({
       listener({
         onChange: ({ text }) => {
           if (script.source.target?.content !== text) {
-            Obj.change(script, (obj) => {
-              obj.changed = true;
+            Obj.change(script, (script) => {
+              script.changed = true;
             });
           }
         },

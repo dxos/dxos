@@ -142,8 +142,8 @@ describe('Blueprint Manager', () => {
 
         const stored = yield* Blueprint.upsert('org.dxos.blueprint.database');
         const originalName = stored.name;
-        Obj.change(stored, (mutable) => {
-          mutable.name = '___TEST_MUTATED_BLUEPRINT_NAME___';
+        Obj.change(stored, (stored) => {
+          stored.name = '___TEST_MUTATED_BLUEPRINT_NAME___';
         });
         yield* Database.flush();
         expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
