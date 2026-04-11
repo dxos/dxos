@@ -24,7 +24,7 @@ The primary goals are:
 | Protocol mux    | ALPN-based; multiple protocols over single endpoint                                  |
 | Higher-level    | iroh-gossip (pub-sub), iroh-blobs (content-addressed transfer), iroh-docs (KV store) |
 | Browser support | WASM compilation works (v0.33+); relay-only (no raw UDP in browsers)                 |
-| Status          | v0.97 (Feb 2026), targeting 1.0 in Q1 2026                                           |
+| Status          | v0.97.0 (Mar 2026), pre-1.0 with active wire-protocol changes                        |
 
 ### Current DXOS Mesh Architecture
 
@@ -355,7 +355,7 @@ For Phase 1, the bridge server is not needed -- the BroadcastChannel PoC proves 
 
 1. **Key derivation vs announcement:** Decision D1 recommends announcement for Phase 1. Should we revisit derivation if we pursue key unification in Phase 3+?
 
-2. **iroh API stability:** iroh is targeting 1.0 in Q1 2026 with one planned breaking change to the wire protocol. How do we insulate DXOS from pre-1.0 churn? Pin to a specific version and upgrade deliberately?
+2. **iroh API stability:** iroh is pre-1.0 (v0.97.0 as of Mar 2026) with active wire-protocol breaking changes between releases. How do we insulate DXOS from pre-1.0 churn? Pin to a specific version and upgrade deliberately?
 
 3. **Failure modes:** Decision D5 recommends silent fallback. Do we need a mechanism for the application to _prefer_ iroh when available (e.g., for latency-sensitive features), or is the aggregator always authoritative?
 

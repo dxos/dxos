@@ -15,11 +15,7 @@ import { stepStyles } from '../../styles';
 import { translationKey } from '../../translations';
 import { useSpaceMachine } from './space-machine';
 import { SpaceManager } from './SpaceManager';
-import {
-  type SpacePanelHeadingProps,
-  type SpacePanelImplProps,
-  type SpacePanelProps,
-} from './SpacePanelProps';
+import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
 
 type SpacePanelActiveView = SpacePanelImplProps['activeView'];
 
