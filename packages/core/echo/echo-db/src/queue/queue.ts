@@ -9,7 +9,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -76,6 +76,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         return;
       }
 
+      this.#setParentOnItems(decodedObjects);
+
       for (const obj of decodedObjects) {
         this._objectCache.set(obj.id, obj as T);
       }
@@ -109,6 +111,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    */
   private _pollingHandlers: number = 0;
 
+  private _parentEntity: Obj.Unknown | undefined = undefined;
+
   private _objectCache = new Map<ObjectId, T>();
   private _objects: T[] = [];
   private _isLoading = true;
@@ -126,6 +130,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this._subspaceTag = subspaceTag ?? failedInvariant();
     this._spaceId = spaceId ?? failedInvariant();
     this._queueId = queueId ?? failedInvariant();
+  }
+
+  /**
+   * Set the parent entity for items in this queue.
+   * When set, all deserialized items will have their parent set to this entity.
+   */
+  setParentEntity(parent: Obj.Unknown): void {
+    this._parentEntity = parent;
   }
 
   toJSON() {
@@ -182,6 +194,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       setRefResolverOnData(item, this._refResolver);
       defineHiddenProperty(item, SelfDXNId, this._dxn.extend([item.id]));
     }
+
+    this.#setParentOnItems(items);
 
     // Optimistic update.
     this._objects = [...this._objects, ...items];
@@ -279,6 +293,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         .filter(Predicate.isNotUndefined),
     );
 
+    this.#setParentOnItems(decodedObjects as Entity.Unknown[]);
     return decodedObjects as T[];
   }
 
@@ -299,6 +314,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       dxn: this._dxn.extend([(obj as any).id]),
       database: this._database,
     });
+    this.#setParentOnItems([decoded]);
     return decoded;
   }
 
@@ -358,6 +374,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         this._pollingInterval = null;
       }
     };
+  }
+
+  #setParentOnItems(items: Entity.Unknown[]): void {
+    if (this._parentEntity) {
+      for (const item of items) {
+        defineHiddenProperty(item, ParentId, this._parentEntity);
+      }
+    }
   }
 
   async dispose() {
