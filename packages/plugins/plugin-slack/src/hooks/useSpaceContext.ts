@@ -19,9 +19,8 @@ export const useSpaceContext = (db: Database.Database | undefined) => {
       }
 
       try {
-        // Query all objects and do client-side text matching.
-        // This is simple but effective for demo purposes.
-        const allObjects = db.query(Filter.everything()).results;
+        // One-shot query — use .run() instead of .results to avoid subscriber requirement.
+        const allObjects = await db.query(Filter.everything()).run();
 
         const queryLower = query.toLowerCase();
         const queryWords = queryLower.split(/\s+/).filter((word) => word.length > 2);
