@@ -86,16 +86,16 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
 
   // Status text from translations.
   const statusText = (() => {
-    if (aiThinking) return t('ai-thinking');
+    if (aiThinking) return t('ai-thinking.label');
     switch (status) {
       case 'x-wins':
-        return t('x-wins');
+        return t('x-wins.label');
       case 'o-wins':
-        return t('o-wins');
+        return t('o-wins.label');
       case 'draw':
-        return t('draw');
+        return t('draw.label');
       default:
-        return turn === 'X' ? t('x-turn') : t('o-turn');
+        return turn === 'X' ? t('x-turn.label') : t('o-turn.label');
     }
   })();
 
@@ -103,7 +103,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
     <Panel.Root role={role} classNames='@container'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Button onClick={handleNewGame}>{t('new-game')}</Toolbar.Button>
+          <Toolbar.Button onClick={handleNewGame}>{t('new-game.button')}</Toolbar.Button>
           <div className='grow' />
           <span className={mx('text-sm', isGameOver && 'font-semibold')}>{statusText}</span>
         </Toolbar.Root>
