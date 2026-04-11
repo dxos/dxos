@@ -15,7 +15,14 @@ const make = () =>
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
       operations: [],
-      tools: [],
+      tools: [
+        // Database tools for querying the user's workspace.
+        'org.dxos.function.database.query',
+        'org.dxos.function.database.load',
+        // Email tools for checking inbox context.
+        'org.dxos.plugin.inbox.operation.read-email',
+        'org.dxos.plugin.inbox.operation.summarize-mailbox',
+      ],
     }),
     instructions: Template.make({
       source: trim`

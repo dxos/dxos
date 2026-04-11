@@ -11,7 +11,7 @@ import { AssistantOperation } from '@dxos/plugin-assistant/operations';
 import { Button, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type SlackMessage, type SlackUser, useSlackMessages } from '#hooks';
+import { type SlackMessage, type SlackUser, useSlackMessages, useSpaceContext } from '#hooks';
 import { type SlackCapabilities } from '#types';
 
 export type SlackFeedProps = {
@@ -42,6 +42,7 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
   const [responses, setResponses] = useState<Map<string, AgentResponse>>(new Map());
   const { invokePromise } = useOperationInvoker();
   const handledRef = useRef<Set<string>>(new Set());
+  const { searchContext } = useSpaceContext(db);
 
   // Auto-scroll to bottom.
   useEffect(() => {
@@ -88,15 +89,32 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
 
       log.info('slack: calling AI', { channelName, user: userName, threadLength: conversationMessages.length, isAutoMention });
 
+      // Search ECHO space for relevant context based on the latest message.
+      const latestText = threadMessages[threadMessages.length - 1].text;
+      const spaceContext = await searchContext(latestText);
+
       // Fire parallel agent trace for Inspector visibility.
-      const tracePrompt = `[Slack #${channelName}] ${userName}: "${threadMessages[threadMessages.length - 1].text}"`;
+      const tracePrompt = `[Slack #${channelName}] ${userName}: "${latestText}"`;
       void invokePromise(AssistantOperation.RunPromptInNewChat, {
         db,
         prompt: tracePrompt,
         background: true,
       }).catch(() => {});
 
-      // Direct AI call for the actual Slack response (faster).
+      // Build system prompt with workspace context.
+      const systemPrompt = [
+        'You are a helpful AI assistant participating in a Slack conversation.',
+        'Be concise, friendly, and conversational. Do not use markdown formatting.',
+        'Keep responses under 3 paragraphs.',
+        '',
+        'You have access to the user\'s Composer workspace data (documents, notes, tasks, emails).',
+        'When the user asks about their work, projects, or data, use the workspace context below to give informed answers.',
+        'If you reference workspace data, mention where the information came from.',
+        'If the workspace data doesn\'t contain relevant information, say so honestly.',
+        spaceContext,
+      ].join('\n');
+
+      // Direct AI call for the actual Slack response.
       const aiResponse = await fetch('/api/anthropic/v1/messages', {
         method: 'POST',
         headers: {
@@ -107,7 +125,7 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 500,
-          system: 'You are a helpful AI assistant participating in a Slack conversation. Be concise, friendly, and conversational. Do not use markdown formatting. Keep responses under 3 paragraphs.',
+          system: systemPrompt,
           messages: conversationMessages,
         }),
       });
@@ -126,7 +144,7 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
 
       return responseText;
     },
-    [botUserId, users, postMessage, invokePromise, db],
+    [botUserId, users, postMessage, invokePromise, db, searchContext],
   );
 
   /** Handle clicking robot icon. */
