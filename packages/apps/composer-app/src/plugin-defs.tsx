@@ -58,6 +58,7 @@ import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
@@ -245,6 +246,7 @@ export const getPlugins = ({
       noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
+    TicTacToePlugin(),
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),

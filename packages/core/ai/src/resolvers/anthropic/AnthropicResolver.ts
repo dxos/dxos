@@ -23,9 +23,7 @@ export const make = () =>
         const thinkingEnabled = options?.thinking ?? true;
         const thinking = thinkingEnabled
           ? ({
-              // TODO(dmaretskyi): Switch to adaptive thinking.
-              budget_tokens: 1024,
-              type: 'enabled',
+              type: 'adaptive' as any,
             } as const)
           : undefined;
         switch (model) {

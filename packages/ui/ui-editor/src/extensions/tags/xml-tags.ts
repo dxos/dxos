@@ -200,7 +200,16 @@ export type XmlTagsOptions = {
 
   /** Called when widgets are mounted or unmounted. */
   setWidgets?: (widgets: XmlWidgetState[]) => void;
+
+  /**
+   * When set, adds top margin on block widget lines that immediately follow a line without
+   * a `data-xml-widget` host (typically narrative text before portaled or status widgets).
+   */
+  paragraphToWidgetGapRem?: number;
 };
+
+/** Marks widget roots used by `paragraphToWidgetGapRem` line spacing in the editor theme. */
+export const XML_WIDGET_DATA_ATTR = 'data-xml-widget';
 
 /**
  * Implements custom XML tags via CodeMirror-native Widgets and portaled React/Solid components.
@@ -212,9 +221,23 @@ export type XmlTagsOptions = {
  * - Widget state can be update via effects.
  *   - NOTE: Widget state may be updated BEFORE the widget is mounted.
  */
-export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions = {}): Extension => {
+export const xmlTags = ({
+  registry,
+  setWidgets,
+  bookmarks,
+  paragraphToWidgetGapRem,
+}: XmlTagsOptions = {}): Extension => {
   const notifier = createWidgetMap(setWidgets);
   const widgetDecorationsField = createWidgetDecorationsField(registry, notifier);
+  const paragraphGapTheme =
+    paragraphToWidgetGapRem != null && paragraphToWidgetGapRem > 0
+      ? EditorView.baseTheme({
+          [`& .cm-content > .cm-line:not(:has([${XML_WIDGET_DATA_ATTR}])) + .cm-line:has([${XML_WIDGET_DATA_ATTR}])`]: {
+            marginTop: `${paragraphToWidgetGapRem}rem`,
+          },
+        })
+      : null;
+
   return [
     widgetContextStateField,
     widgetStateMapStateField,
@@ -222,6 +245,7 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions = {}
     createWidgetUpdatePlugin(widgetDecorationsField, notifier),
     createNavigationEffectPlugin(widgetDecorationsField, bookmarks),
     bookmarks?.length ? Prec.highest(keyHandlers) : [],
+    ...(paragraphGapTheme ? [paragraphGapTheme] : []),
   ];
 };
 
@@ -637,7 +661,9 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   override toDOM(view: EditorView) {
     this.#view = view;
     // NOTE: Set min-height to avoid jumps while scrolling.
-    this.#root = Domino.of('div').classNames('min-h-[24px]').root;
+    this.#root = Domino.of('div')
+      .classNames('min-h-[24px]')
+      .attributes({ [XML_WIDGET_DATA_ATTR]: '' }).root;
     const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
     return this.#root;
