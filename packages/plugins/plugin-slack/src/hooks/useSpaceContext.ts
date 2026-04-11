@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 /** Fields to extract text from for matching and context. */
@@ -128,48 +128,9 @@ export const useSpaceContext = (db: Database.Database | undefined) => {
           scoreObject(object);
         }
 
-        // 2. Find all Feed objects and query their contents.
-        // Only query data/content feeds, skip trace and system feeds.
-        const feedObjects = allObjects.filter((obj) => {
-          const typename = Obj.getSchema(obj)?.typename;
-          if (typename !== 'org.dxos.type.feed') {
-            return false;
-          }
-          // Skip trace feeds and system feeds — they can be very large.
-          const namespace = (obj as any).namespace;
-          const kind = (obj as any).kind;
-          const name = (obj as any).name;
-          if (namespace === 'trace' || kind === 'trace' || name === 'Execution Trace') {
-            return false;
-          }
-          return true;
-        });
-
-        let feedItemCount = 0;
-        for (const feedObj of feedObjects) {
-          try {
-            // Query items from this feed with a timeout to avoid hanging on large feeds.
-            const feedQueryPromise = db.query(Query.select(Filter.everything()).from(feedObj as Feed.Feed)).run();
-            const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Feed query timeout')), 5000),
-            );
-            const feedItems = await Promise.race([feedQueryPromise, timeoutPromise]);
-            feedItemCount += feedItems.length;
-            // Only include the most recent 50 items per feed to avoid overwhelming the context.
-            const recentItems = feedItems.slice(-50);
-            for (const item of recentItems) {
-              scoreObject(item, 2);
-            }
-          } catch {
-            // Some feeds may not be queryable or may timeout. Skip silently.
-          }
-        }
-
         log.info('slack: ECHO context search', {
           query: queryLower.slice(0, 50),
           topLevelObjects: allObjects.length,
-          feeds: feedObjects.length,
-          feedItems: feedItemCount,
           scored: scored.length,
         });
 
