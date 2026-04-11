@@ -6,8 +6,8 @@ import * as Layer from 'effect/Layer';
 
 import { type Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
 
-import type { QueueAPI } from './queue-factory';
 import type { QueueImpl } from './queue';
+import type { QueueAPI } from './queue-factory';
 
 /**
  * Creates a Feed.FeedService Effect layer backed by a QueueFactory.
