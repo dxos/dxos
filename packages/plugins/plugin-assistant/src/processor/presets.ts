@@ -27,11 +27,11 @@ const createModelLabel = (model: ModelName) => {
 export const AiServicePresets: AiServicePreset[] = [
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-opus-4-0' as const,
+    model: '@anthropic/claude-opus-4-6' as const,
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-sonnet-4-0' as const,
+    model: '@anthropic/claude-sonnet-4-5' as const,
   },
   {
     provider: 'dxos-remote' as const,
