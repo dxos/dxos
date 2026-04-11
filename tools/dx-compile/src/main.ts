@@ -14,8 +14,10 @@ import * as Function from 'effect/Function';
 import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
-import { yamlPlugin } from 'esbuild-plugin-yaml';
+import esbuildPluginYaml from 'esbuild-plugin-yaml';
 import pkgUp from 'pkg-up';
+
+const { yamlPlugin } = esbuildPluginYaml;
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
