@@ -4,15 +4,40 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
+
+import { checkWin, currentTurn, placeMarker } from '#components';
+import { type TicTacToe } from '#types';
 
 import { MakeMove } from './definitions';
 
-// TODO: Implement move logic.
 const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
   Operation.withHandler(
-    Effect.fn(function* () {
-      return yield* Effect.fail(new Error('Not implemented'));
+    Effect.fn(function* ({ game, position }) {
+      const obj = (yield* Database.load(game)) as TicTacToe.Game;
+      const [rowStr, colStr] = position.split(',');
+      const row = parseInt(rowStr, 10);
+      const col = parseInt(colStr, 10);
+      const marker = currentTurn(obj.board);
+
+      const result = placeMarker(obj.board, obj.size, row, col, marker);
+      if (result.error) {
+        return yield* Effect.fail(new Error(result.error));
+      }
+
+      const status = checkWin(result.board, obj.size, obj.winCondition);
+      const moveEntry = `${marker}:${row},${col}`;
+      const moves = obj.moves ? `${obj.moves};${moveEntry}` : moveEntry;
+
+      Obj.change(obj, (game) => {
+        const mutable = game as Obj.Mutable<typeof game>;
+        mutable.board = result.board;
+        mutable.status = status;
+        mutable.moves = moves;
+      });
+
+      return { board: result.board, status };
     }),
   ),
 );
