@@ -38,7 +38,7 @@ export default Capability.makeModule(
             //     );
             //   },
             //   properties: {
-            //     label: ['toggle fullscreen label', { ns: meta.id }],
+            //     label: ['toggle-fullscreen.label', { ns: meta.id }],
             //     icon: 'ph--arrows-out--regular',
             //     keyBinding: {
             //       macos: 'ctrl+meta+f',
@@ -103,8 +103,8 @@ export default Capability.makeModule(
               properties: {
                 label: [
                   state.sidebarState === 'expanded'
-                    ? 'collapse navigation sidebar label'
-                    : 'open navigation sidebar label',
+                    ? 'collapse-navigation-sidebar.label'
+                    : 'open-navigation-sidebar.label',
                   { ns: meta.id },
                 ],
                 icon: 'ph--sidebar--regular',

@@ -18,11 +18,11 @@ export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitat
 export type IdentityPanelImplProps = {
   titleId: string;
   activeView:
-    | 'device invitation manager'
-    | 'identity action chooser'
-    | 'confirm join new identity'
-    | 'confirm recover'
-    | 'confirm reset storage';
+    | 'device-invitation-manager'
+    | 'identity-action-chooser'
+    | 'confirm-join-new-identity'
+    | 'confirm-recover'
+    | 'confirm-reset-storage';
   initialDisposition?: IdentityPanelInitialDisposition;
   identity: Identity;
   devices: Device[];

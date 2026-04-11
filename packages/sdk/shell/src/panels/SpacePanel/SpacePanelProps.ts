@@ -14,7 +14,7 @@ export type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'share'>> & {
 
 export type SpacePanelImplProps = {
   titleId: string;
-  activeView: string;
+  activeView: 'space-manager' | 'space-invitation-manager' | 'never';
   send: (event: SingleOrArray<Event<any>>) => void;
   hideHeading?: boolean;
   target?: string;

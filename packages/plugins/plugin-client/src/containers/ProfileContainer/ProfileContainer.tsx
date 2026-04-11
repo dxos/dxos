@@ -165,7 +165,7 @@ export const ProfileContainer = () => {
       <Settings.Viewport>
         <Settings.Section title={t('profile.label')} description={t('profile.description')}>
           <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
-            <Form.Content>
+            <Form.Content classNames='gap-form-gap'>
               <Form.FieldSet />
             </Form.Content>
           </Form.Root>
