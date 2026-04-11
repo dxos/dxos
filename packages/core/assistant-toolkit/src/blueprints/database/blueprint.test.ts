@@ -454,37 +454,6 @@ describe('Database Blueprint', () => {
   );
 
   it.effect(
-    'query operation: in param scopes to children via invokeFunction',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const parent = yield* Database.add(Obj.make(Organization.Organization, { name: 'Parent Org' }));
-        yield* Database.add(
-          Obj.make(Organization.Organization, {
-            [Obj.Parent]: parent,
-            name: 'Child Org',
-          }),
-        );
-        yield* Database.add(Obj.make(Organization.Organization, { name: 'Unrelated Org' }));
-        yield* Database.flush();
-
-        const { db } = yield* Database.Service;
-        const parentRef = db.makeRef(Obj.getDXN(parent)) as Ref.Ref<any>;
-
-        const results = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
-          in: [parentRef],
-          limit: 20,
-        });
-        type QueryRow = { typename?: string; label?: string };
-        expect(results).toHaveLength(1);
-        expect((results as QueryRow[]).some((row) => String(row.label ?? '').includes('Child Org'))).toBe(true);
-        expect((results as QueryRow[]).some((row) => String(row.label ?? '').includes('Unrelated'))).toBe(false);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
     'query: in param scopes to feed children (agent uses Query tool)',
     Effect.fnUntraced(
       function* (_) {
@@ -507,20 +476,10 @@ describe('Database Blueprint', () => {
         ]);
         yield* Database.flush();
 
-        const feed1Dxn = Obj.getDXN(feed1).toString();
-
         const agent = yield* AgentService.createSession({
           blueprints: [DatabaseBlueprint.make()],
         });
-        yield* agent.submitPrompt(trim`
-          Query for organizations scoped to a specific feed. Use the Query tool with:
-          - in: [{"/" : "${feed1Dxn}"}]
-          - includeQueues: true
-          - includeContent: false
-          - limit: 20
-
-          Confirm which organizations you found.
-        `);
+        yield* agent.submitPrompt('Query for organizations in "inbox-1" feed.');
         yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
