@@ -172,8 +172,7 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
-  const { id, attendableId, compact, viewMode, onFileUpload } =
-    useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+  const { id, attendableId, compact, viewMode, onFileUpload } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
   const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 

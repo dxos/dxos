@@ -17,7 +17,12 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
-import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorContentProps, type MarkdownEditorProviderProps } from '#components';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+  type MarkdownEditorContentProps,
+  type MarkdownEditorProviderProps,
+} from '#components';
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
