@@ -20,7 +20,6 @@ import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -28,28 +27,30 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan, Project } from '../../types';
-import { MarkdownHandlers } from '../markdown';
+import { MarkdownBlueprint, MarkdownHandlers } from '../markdown';
 import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import ProjectBlueprintDef from './blueprint';
 import { Agent, ProjectHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
+const TYPES = [
+  Project.Project,
+  Plan.Plan,
+  Chat.CompanionTo,
+  Chat.Chat,
+  SpaceProperties,
+  Blueprint.Blueprint,
+  Trigger.Trigger,
+  Text.Text,
+  Markdown.Document,
+  Collection.Collection,
+];
+
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
   operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownHandlers, PlanningHandlers),
-  types: [
-    Project.Project,
-    Plan.Plan,
-    Chat.CompanionTo,
-    Chat.Chat,
-    SpaceProperties,
-    Blueprint.Blueprint,
-    Trigger.Trigger,
-    Text.Text,
-    Markdown.Document,
-    Collection.Collection,
-  ],
+  types: TYPES,
   tracing: 'pretty',
 });
 
@@ -63,37 +64,24 @@ const SYSTEM = trim`
 const AddArtifactTestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownHandlers),
-  types: [
-    Project.Project,
-    Plan.Plan,
-    Chat.CompanionTo,
-    Chat.Chat,
-    SpaceProperties,
-    Blueprint.Blueprint,
-    Trigger.Trigger,
-    Text.Text,
-    Markdown.Document,
-    Collection.Collection,
-  ],
+  types: TYPES,
   tracing: 'pretty',
 });
 
-describe('Project AddArtifact', () => {
+describe('Project', () => {
   const blueprint = ProjectBlueprintDef.make();
 
   it.scoped(
     'agent adds artifact to project',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Test Project',
-              spec: 'A test project for adding artifacts.',
-              blueprints: [Ref.make(MarkdownBlueprint.make())],
-            },
-            blueprint,
-          ),
+        const project = yield* Project.makeInitialized(
+          {
+            name: 'Test Project',
+            spec: 'A test project for adding artifacts.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+          },
+          blueprint,
         );
         yield* Database.flush();
 
@@ -129,23 +117,18 @@ describe('Project AddArtifact', () => {
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
-});
 
-describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
-  const blueprint = ProjectBlueprintDef.make();
   it.scoped(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Shopping list',
-              spec: 'Keep a shopping list of items to buy.',
-              blueprints: [Ref.make(MarkdownBlueprint.make())],
-            },
-            blueprint,
-          ),
+        const project = yield* Project.makeInitialized(
+          {
+            name: 'Shopping list',
+            spec: 'Keep a shopping list of items to buy.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+          },
+          blueprint,
         );
         const chatFeed = project.chat?.target?.feed?.target;
         invariant(chatFeed, 'Project chat feed not found.');
@@ -171,24 +154,22 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Expense tracking',
-              spec: trim`
-                Keep a list of expenses in a markdown document (create artifact "Expenses").
-                Process incoming emails, add the relevant ones to the list.
+        const project = yield* Project.makeInitialized(
+          {
+            name: 'Expense tracking',
+            spec: trim`
+              Keep a list of expenses in a markdown document (create artifact "Expenses").
+              Process incoming emails, add the relevant ones to the list.
 
-                Format:
+              Format:
 
-                ## Expenses
-                - Flight to London (2026-02-01): £100
-                - Hotel in London (2026-02-01): £100
-              `,
-              blueprints: [Ref.make(MarkdownBlueprint.make())],
-            },
-            blueprint,
-          ),
+              ## Expenses
+              - Flight to London (2026-02-01): £100
+              - Hotel in London (2026-02-01): £100
+            `,
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+          },
+          blueprint,
         );
         yield* Database.flush();
 
@@ -230,36 +211,34 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
     'planning',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Egg making',
-              spec: trim`
-                I'm testing how planning (task management) works.
-                Create tasks to make scrambled eggs.
+        const project = yield* Project.makeInitialized(
+          {
+            name: 'Egg making',
+            spec: trim`
+              I'm testing how planning (task management) works.
+              Create tasks to make scrambled eggs.
 
-                Then simulate this plan execution in a markdown document.
-                The document should reflect the state of all objects involved in the cooking process.
-                The document should also have the log of actions taken.
+              Then simulate this plan execution in a markdown document.
+              The document should reflect the state of all objects involved in the cooking process.
+              The document should also have the log of actions taken.
 
-                Important: simualte actions one by one, in the order they are listed.
-                Simlate by updating the local document.
+              Important: simualte actions one by one, in the order they are listed.
+              Simlate by updating the local document.
 
-                <example>
-                  # State
+              <example>
+                # State
 
-                  - 2 raw eggs
-                  - 1 frying pan
-                  
-                  # Action log
-                  
-                  - Taken 2 raw eggs out of the fridge.
-                </example>
-              `,
-              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint.make()))],
-            },
-            blueprint,
-          ),
+                - 2 raw eggs
+                - 1 frying pan
+                
+                # Action log
+                
+                - Taken 2 raw eggs out of the fridge.
+              </example>
+            `,
+            blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint.make()))],
+          },
+          blueprint,
         );
         yield* Database.flush();
 

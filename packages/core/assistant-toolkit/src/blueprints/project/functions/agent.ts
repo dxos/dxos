@@ -6,14 +6,41 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, functionInvocationServiceFromOperations, ToolExecutionServices } from '@dxos/assistant';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
+import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
+import { FunctionInvocationService, FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { Project } from '../../../types';
 import { Agent } from './definitions';
+
+/**
+ * Creates a FunctionInvocationService that propagates the conversation DXN to child operations.
+ * This ensures nested operations (e.g., get-context) can resolve AiContextService.
+ */
+const functionInvocationServiceWithConversation = (
+  conversationDxn: DXN,
+): Layer.Layer<FunctionInvocationService, never, OperationRegistry.Service | Operation.Service> =>
+  Layer.effect(
+    FunctionInvocationService,
+    Effect.gen(function* () {
+      const operationRegistry = yield* OperationRegistry.Service;
+      const operationInvoker = yield* Operation.Service;
+      return FunctionInvocationService.of({
+        invokeFunction: <I, O>(operationDef: Operation.Definition<I, O, any>, input: I) =>
+          operationInvoker
+            .invoke(operationDef, input, { conversation: conversationDxn.toString() })
+            .pipe(Effect.orDie),
+        resolveFunction: (key: string) =>
+          operationRegistry.resolve(key).pipe(
+            Effect.flatten,
+            Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(key))),
+          ),
+      });
+    }),
+  );
 
 export default Agent.pipe(
   Operation.withHandler(
@@ -48,18 +75,21 @@ export default Agent.pipe(
           input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
         }
 
+        const feedDxn = Obj.getDXN(chatFeed);
         yield* conversation
           .createRequest({
             prompt: input,
           })
-          .pipe(Effect.retry({ times: 2 }));
+          .pipe(
+            Effect.provide(
+              Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+                Layer.provideMerge(functionInvocationServiceWithConversation(feedDxn)),
+              ),
+            ),
+            Effect.retry({ times: 2 }),
+          );
       },
       Effect.scoped,
-      Effect.provide(
-        Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
-          Layer.provideMerge(functionInvocationServiceFromOperations),
-        ),
-      ),
     ),
   ),
   Operation.opaqueHandler,
