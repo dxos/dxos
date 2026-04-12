@@ -2,6 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './TileCell';
-export * from './TileGrid';
 export * from './TileCanvas';
