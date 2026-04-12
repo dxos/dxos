@@ -80,7 +80,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
               <Input.Label>{t('input-queue.label')}</Input.Label>
             </Input.Root>
             <Mosaic.Container asChild withFocus autoScroll={viewport}>
-              <ScrollArea.Root orientation='vertical' padding>
+              <ScrollArea.Root orientation='vertical' padding thin>
                 <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.VirtualStack
                     Tile={StackTile}
@@ -143,10 +143,10 @@ const MasonryArtifactTile = ({ data }: { data: Obj.Unknown; index: number }) => 
 );
 
 const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
-  ({ data, location, debug }, forwardedRef) => (
+  ({ data, location, debug, current }, forwardedRef) => (
     <Menu.Root>
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Item asChild>
+        <Focus.Item asChild current={current}>
           <ArtifactTileCard ref={forwardedRef} data={data} />
         </Focus.Item>
       </Mosaic.Tile>

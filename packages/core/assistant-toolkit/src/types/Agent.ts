@@ -190,10 +190,10 @@ export const resetChatHistory = (
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Agent, never, AiContextService> = Effect.gen(function* () {
+export const getFromChatContext: Effect.Effect<Agent, Error, AiContextService> = Effect.gen(function* () {
   const agents = yield* Function.pipe(AiContextService.findObjects(Agent));
   if (agents.length !== 1) {
-    throw new Error('There should be exactly one agent in context. Got: ' + agents.length);
+    return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
   }
   const agent = agents[0];
   return agent;
