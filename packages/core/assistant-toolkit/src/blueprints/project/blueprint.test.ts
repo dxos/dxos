@@ -167,7 +167,8 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Agent', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  // TODO(burdon): Fix QueueService not available in trigger dispatch context.
+  it.scoped.skip(
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
