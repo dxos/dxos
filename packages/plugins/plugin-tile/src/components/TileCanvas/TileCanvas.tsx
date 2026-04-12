@@ -34,6 +34,7 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredCell, setHoveredCell] = useState<Coord | undefined>();
   const [isPanning, setIsPanning] = useState(false);
+  const [isPainting, setIsPainting] = useState(false);
   const [panStart, setPanStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const { tileSize, gridType, gridWidth, gridHeight, groutWidth } = pattern;
@@ -81,6 +82,8 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
       setIsPanning(true);
       setPanStart({ x: event.clientX, y: event.clientY });
       event.preventDefault();
+    } else if (event.button === 0) {
+      setIsPainting(true);
     }
   }, []);
 
@@ -102,7 +105,18 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
+    setIsPainting(false);
   }, []);
+
+  const handleCellHover = useCallback(
+    (coord: Coord) => {
+      setHoveredCell(coord);
+      if (isPainting) {
+        onCellPaint(coord, activeColor);
+      }
+    },
+    [isPainting, activeColor, onCellPaint],
+  );
 
   const viewBoxStr = `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`;
 
@@ -130,7 +144,7 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
         viewBox={viewBox}
         hoveredCell={hoveredCell}
         onClick={handleCellClick}
-        onHover={setHoveredCell}
+        onHover={handleCellHover}
       />
 
       {showRoom && (

@@ -15,9 +15,10 @@ export const axialToPixel = (q: number, r: number, gridType: Tile.GridType, tile
       return { x: q * tileSize, y: r * tileSize };
 
     case 'hex': {
-      // Flat-top hexagon.
+      // Flat-top hexagon with offset coordinates (rectangular layout).
+      // Odd columns are shifted down by half a row height.
       const x = tileSize * (3 / 2) * q;
-      const y = tileSize * Math.sqrt(3) * (r + q / 2);
+      const y = tileSize * Math.sqrt(3) * r + (q % 2 === 0 ? 0 : (tileSize * Math.sqrt(3)) / 2);
       return { x, y };
     }
 
@@ -39,11 +40,11 @@ export const pixelToAxial = (x: number, y: number, gridType: Tile.GridType, tile
       return { q: Math.round(x / tileSize), r: Math.round(y / tileSize) };
 
     case 'hex': {
-      // Inverse of flat-top hex formula.
-      const q = ((2 / 3) * x) / tileSize;
-      const r = ((-1 / 3) * x + (Math.sqrt(3) / 3) * y) / tileSize;
-      // Round to nearest hex using cube coordinate rounding.
-      return hexRound(q, r);
+      // Inverse of flat-top offset hex formula.
+      const q = Math.round(x / (tileSize * (3 / 2)));
+      const yOffset = q % 2 === 0 ? 0 : (tileSize * Math.sqrt(3)) / 2;
+      const r = Math.round((y - yOffset) / (tileSize * Math.sqrt(3)));
+      return { q, r };
     }
 
     case 'triangle': {
