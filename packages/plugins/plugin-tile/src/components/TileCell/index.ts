@@ -3,4 +3,3 @@
 //
 
 export * from './TileCell';
-export * from './TileGrid';
