@@ -41,14 +41,12 @@ export const TileArticle = ({ role, subject: pattern }: TileArticleProps) => {
 
   return (
     <Panel.Root role={role} classNames='flex flex-col grow overflow-hidden'>
-      <Panel.Content>
-        <TileCanvas
-          pattern={pattern}
-          activeColor={activeColor}
-          onCellPaint={handleCellPaint}
-          onCellClear={handleCellClear}
-        />
-      </Panel.Content>
+      <TileCanvas
+        pattern={pattern}
+        activeColor={activeColor}
+        onCellPaint={handleCellPaint}
+        onCellClear={handleCellClear}
+      />
     </Panel.Root>
   );
 };

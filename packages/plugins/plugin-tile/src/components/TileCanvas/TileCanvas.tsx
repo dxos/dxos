@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { type Tile } from '#types';
-import { type Coord, type ViewBox, gridToPhysical } from '#geometry';
+import { type Coord, type ViewBox, axialToPixel } from '#geometry';
 
 import { TileGrid } from '../TileGrid';
 
@@ -16,7 +16,19 @@ export type TileCanvasProps = {
   onCellClear: (coord: Coord) => void;
 };
 
-const INITIAL_PADDING = 50;
+/**
+ * Compute the bounding box of the grid in SVG coordinates.
+ * Uses the last tile center + tileSize to get the right/bottom edge.
+ */
+const computeGridExtent = (gridType: Tile.GridType, gridWidth: number, gridHeight: number, tileSize: number) => {
+  const lastCol = axialToPixel(gridWidth - 1, 0, gridType, tileSize);
+  const lastRow = axialToPixel(0, gridHeight - 1, gridType, tileSize);
+  const lastCorner = axialToPixel(gridWidth - 1, gridHeight - 1, gridType, tileSize);
+
+  const maxX = Math.max(lastCol.x, lastCorner.x) + tileSize;
+  const maxY = Math.max(lastRow.y, lastCorner.y) + tileSize;
+  return { width: maxX + tileSize, height: maxY + tileSize };
+};
 
 export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: TileCanvasProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -25,13 +37,14 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
   const [panStart, setPanStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const { tileSize, gridType, gridWidth, gridHeight, groutWidth } = pattern;
-  const physical = gridToPhysical(tileSize, groutWidth, gridWidth, gridHeight, gridType);
+  const extent = computeGridExtent(gridType, gridWidth, gridHeight, tileSize);
+  const padding = tileSize;
 
   const [viewBox, setViewBox] = useState<ViewBox>({
-    x: -INITIAL_PADDING,
-    y: -INITIAL_PADDING,
-    width: physical.widthMm + INITIAL_PADDING * 2,
-    height: physical.heightMm + INITIAL_PADDING * 2,
+    x: -padding,
+    y: -padding,
+    width: extent.width + padding,
+    height: extent.height + padding,
   });
 
   const handleCellClick = useCallback(
@@ -99,7 +112,8 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
     <svg
       ref={svgRef}
       viewBox={viewBoxStr}
-      className='grow'
+      className='grow w-full h-full'
+      preserveAspectRatio='xMidYMid meet'
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
