@@ -14,9 +14,10 @@ import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
+import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
-import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '#components';
+import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorContentProps, type MarkdownEditorProviderProps } from '#components';
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
@@ -27,7 +28,7 @@ export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
     settings: Markdown.Settings;
     selectionManager?: SelectionManager;
   } & Pick<MarkdownPluginState, 'extensionProviders'> &
-    Pick<MarkdownEditorRootProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
 
@@ -105,7 +106,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     );
 
     return (
-      <MarkdownEditor.Root
+      <MarkdownEditorProvider
         id={id}
         attendableId={attendableId}
         object={object}
@@ -118,18 +119,22 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         onSelectObject={handleSelectObject}
         {...props}
       >
-        <Panel.Root role={role} ref={forwardedRef}>
-          {settings.toolbar && (
-            <Panel.Toolbar classNames='bg-toolbar-surface'>
-              <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
-            </Panel.Toolbar>
-          )}
-          <Panel.Content>
-            <MarkdownEditor.Content initialValue={initialValue} />
-            <MarkdownEditor.Blocks />
-          </Panel.Content>
-        </Panel.Root>
-      </MarkdownEditor.Root>
+        {(editorRootProps) => (
+          <Editor.Root {...editorRootProps}>
+            <Panel.Root role={role} ref={forwardedRef}>
+              {settings.toolbar && (
+                <Panel.Toolbar classNames='bg-toolbar-surface'>
+                  <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
+                </Panel.Toolbar>
+              )}
+              <Panel.Content>
+                <MarkdownEditor.Content initialValue={initialValue} />
+                <MarkdownEditor.Blocks />
+              </Panel.Content>
+            </Panel.Root>
+          </Editor.Root>
+        )}
+      </MarkdownEditorProvider>
     );
   },
 );

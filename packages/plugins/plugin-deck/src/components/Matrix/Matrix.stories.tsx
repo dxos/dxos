@@ -155,7 +155,7 @@ const DefaultStory = ({ Tile }: DefaultStoryProps) => {
   const currentIndex = items.findIndex((item) => item.id === current);
 
   return (
-    <Mosaic.Root classNames='dx-container'>
+    <Mosaic.Root>
       <Matrix.Root Tile={Tile} items={items} current={current} onCurrentChange={handleCurrentChange} ref={controller}>
         <Panel.Root>
           <Panel.Toolbar asChild>

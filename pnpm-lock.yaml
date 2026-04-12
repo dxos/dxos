@@ -7450,6 +7450,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

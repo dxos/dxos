@@ -3,6 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
@@ -33,9 +34,12 @@ type EditorContextValue = {
   controller?: EditorController;
   setController: (controller: EditorController) => void;
   extensions?: Extension[];
-} & Pick<NaturalEditorToolbarProps, 'state'>;
+  state: Atom.Writable<EditorToolbarState>;
+};
 
 const [EditorContextProvider, useEditorContext] = createContext<EditorContextValue>('Editor');
+
+export { useEditorContext };
 
 //
 // Root
@@ -156,19 +160,6 @@ EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 // Editor
 //
 
-/**
- * Compound editor component following the Radix UI pattern.
- *
- * @example
- * ```tsx
- * EditorMenuGroup.Root>
- *   EditorMenuGroup.Toolbar />
- *   EditorMenuGroup.Viewport>
- *     EditorMenuGroup.Content extensions={[...]} />
- *   </Editor.Viewport>
- * </Editor.Root>
- * ```
- */
 export const Editor = {
   Root: EditorRoot,
   Viewport: EditorViewport,
@@ -176,10 +167,4 @@ export const Editor = {
   Toolbar: EditorToolbar,
 };
 
-export type {
-  EditorController,
-  EditorRootProps,
-  EditorViewportProps,
-  EditorContentProps,
-  // EditorToolbarProps, // TODO(burdon): Restore once removed deprecated props.
-};
+export type { EditorController, EditorRootProps, EditorViewportProps, EditorContentProps, EditorToolbarProps };

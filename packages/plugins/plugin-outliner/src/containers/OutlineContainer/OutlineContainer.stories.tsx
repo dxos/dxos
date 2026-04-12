@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -16,7 +16,7 @@ import { translations } from '../../translations';
 import { OutlineContainer } from './OutlineContainer';
 
 const DefaultStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const outline = useMemo(() => {
     if (space) {
       return space.db.add(Outline.make({ content: '- Item 1\n- Item 2\n- Item 3' }));
@@ -32,7 +32,7 @@ const DefaultStory = () => {
 };
 
 const EmptyStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const outline = useMemo(() => {
     if (space) {
       return space.db.add(Outline.make());
