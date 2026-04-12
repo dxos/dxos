@@ -36,7 +36,7 @@ export const ApplyPreset = Operation.make({
   input: Schema.Struct({
     pattern: Tile.Pattern,
     preset: Schema.String,
-    colors: Schema.Array(Schema.String),
+    colorCount: Schema.Number,
   }),
   output: Tile.Pattern,
   services: [Database.Service],

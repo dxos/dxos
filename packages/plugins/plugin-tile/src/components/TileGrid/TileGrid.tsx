@@ -15,7 +15,8 @@ export type TileGridProps = {
   gridHeight: number;
   tileSize: number;
   groutWidth: number;
-  cells: Record<string, string>;
+  palette: string[];
+  cells: Record<string, number>;
   viewBox: ViewBox;
   hoveredCell?: Coord;
   onClick?: (coord: Coord) => void;
@@ -28,6 +29,7 @@ export const TileGrid = ({
   gridHeight,
   tileSize,
   groutWidth,
+  palette,
   cells,
   viewBox,
   hoveredCell,
@@ -60,7 +62,7 @@ export const TileGrid = ({
           gridType={gridType}
           tileSize={tileSize}
           groutWidth={groutWidth}
-          color={cells[`${q},${r}`]}
+          color={cells[`${q},${r}`] != null ? palette[cells[`${q},${r}`]] : undefined}
           hovered={hoveredCell?.q === q && hoveredCell?.r === r}
           onClick={onClick}
           onHover={onHover}

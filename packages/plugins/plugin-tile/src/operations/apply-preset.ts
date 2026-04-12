@@ -13,8 +13,8 @@ import { ApplyPreset } from './definitions';
 
 const handler: Operation.WithHandler<typeof ApplyPreset> = ApplyPreset.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ pattern, preset, colors }) {
-      const cells = generatePreset(preset, pattern.gridType, pattern.gridWidth, pattern.gridHeight, [...colors]);
+    Effect.fn(function* ({ pattern, preset, colorCount }) {
+      const cells = generatePreset(preset, pattern.gridType, pattern.gridWidth, pattern.gridHeight, colorCount);
       Obj.change(pattern, (pattern) => {
         pattern.cells = cells;
       });

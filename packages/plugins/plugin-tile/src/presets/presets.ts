@@ -24,22 +24,23 @@ export const listPresets = (): Preset[] => [
 
 /**
  * Generate a cells map for a named preset pattern.
+ * Values are color palette indices.
  */
 export const applyPreset = (
   preset: string,
   gridType: Tile.GridType,
   gridWidth: number,
   gridHeight: number,
-  colors: string[],
-): Record<string, string> => {
-  const cells: Record<string, string> = {};
-  const color = (index: number) => colors[index % colors.length];
+  colorCount: number,
+): Record<string, number> => {
+  const cells: Record<string, number> = {};
+  const colorIndex = (index: number) => index % colorCount;
 
   switch (preset) {
     case 'checkerboard':
       for (let r = 0; r < gridHeight; r++) {
         for (let q = 0; q < gridWidth; q++) {
-          cells[`${q},${r}`] = color((q + r) % 2);
+          cells[`${q},${r}`] = colorIndex((q + r) % 2);
         }
       }
       break;
@@ -48,7 +49,7 @@ export const applyPreset = (
       for (let r = 0; r < gridHeight; r++) {
         for (let q = 0; q < gridWidth; q++) {
           const block = Math.floor(q / 2) + Math.floor(r / 2);
-          cells[`${q},${r}`] = color((block + (r % 2)) % 2);
+          cells[`${q},${r}`] = colorIndex((block + (r % 2)) % 2);
         }
       }
       break;
@@ -57,7 +58,7 @@ export const applyPreset = (
       for (let r = 0; r < gridHeight; r++) {
         for (let q = 0; q < gridWidth; q++) {
           const index = ((q % 3) + (r % 3)) % 3;
-          cells[`${q},${r}`] = color(index);
+          cells[`${q},${r}`] = colorIndex(index);
         }
       }
       break;
@@ -68,7 +69,7 @@ export const applyPreset = (
           const cx = gridWidth / 2;
           const cy = gridHeight / 2;
           const dist = Math.abs(q - cx) + Math.abs(r - cy);
-          cells[`${q},${r}`] = color(Math.floor(dist) % colors.length);
+          cells[`${q},${r}`] = colorIndex(Math.floor(dist) % colorCount);
         }
       }
       break;
@@ -79,7 +80,7 @@ export const applyPreset = (
           const blockQ = Math.floor(q / 2);
           const blockR = Math.floor(r / 2);
           const inBlock = (q % 2) + (r % 2);
-          cells[`${q},${r}`] = color((blockQ + blockR + (inBlock > 0 ? 1 : 0)) % 2);
+          cells[`${q},${r}`] = colorIndex((blockQ + blockR + (inBlock > 0 ? 1 : 0)) % 2);
         }
       }
       break;
@@ -88,7 +89,7 @@ export const applyPreset = (
       for (let r = 0; r < gridHeight; r++) {
         for (let q = 0; q < gridWidth; q++) {
           const section = (q + r) % 4;
-          cells[`${q},${r}`] = color(section % colors.length);
+          cells[`${q},${r}`] = colorIndex(section % colorCount);
         }
       }
       break;

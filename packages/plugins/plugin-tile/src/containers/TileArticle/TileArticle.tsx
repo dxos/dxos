@@ -14,16 +14,14 @@ import { type Tile } from '#types';
 
 export type TileArticleProps = AppSurface.ObjectArticleProps<Tile.Pattern>;
 
-const DEFAULT_COLOR = '#3b82f6';
-
 export const TileArticle = ({ role, subject: pattern }: TileArticleProps) => {
-  const [activeColor, setActiveColor] = useState(DEFAULT_COLOR);
+  const [activeColorIndex, setActiveColorIndex] = useState(0);
 
   const handleCellPaint = useCallback(
-    (coord: Coord, color: string) => {
+    (coord: Coord, colorIndex: number) => {
       Obj.change(pattern, (pattern) => {
         const mutable = pattern as Obj.Mutable<typeof pattern>;
-        mutable.cells[`${coord.q},${coord.r}`] = color;
+        mutable.cells[`${coord.q},${coord.r}`] = colorIndex;
       });
     },
     [pattern],
@@ -43,7 +41,7 @@ export const TileArticle = ({ role, subject: pattern }: TileArticleProps) => {
     <Panel.Root role={role} classNames='flex flex-col grow overflow-hidden'>
       <TileCanvas
         pattern={pattern}
-        activeColor={activeColor}
+        activeColorIndex={activeColorIndex}
         onCellPaint={handleCellPaint}
         onCellClear={handleCellClear}
       />

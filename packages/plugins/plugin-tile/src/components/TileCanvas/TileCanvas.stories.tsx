@@ -10,6 +10,8 @@ import { type Coord } from '#geometry';
 
 import { TileCanvas } from './TileCanvas';
 
+const DEFAULT_PALETTE = ['#6366f1', '#ef4444', '#10b981', '#f59e0b'];
+
 const makePattern = (gridType: Tile.GridType): Tile.Pattern =>
   ({
     gridType,
@@ -18,17 +20,16 @@ const makePattern = (gridType: Tile.GridType): Tile.Pattern =>
     tileSize: 50,
     groutWidth: 2,
     repeatMode: 'single',
+    palette: DEFAULT_PALETTE,
     cells: {},
-  }) as Tile.Pattern;
-
-const ACTIVE_COLOR = '#6366f1';
+  }) as unknown as Tile.Pattern;
 
 const TileCanvasStory = ({ gridType }: { gridType: Tile.GridType }) => {
-  const [cells, setCells] = useState<Record<string, string>>({});
+  const [cells, setCells] = useState<Record<string, number>>({});
   const pattern: Tile.Pattern = { ...makePattern(gridType), cells };
 
-  const handleCellPaint = (coord: Coord, color: string) => {
-    setCells((prev) => ({ ...prev, [`${coord.q},${coord.r}`]: color }));
+  const handleCellPaint = (coord: Coord, colorIndex: number) => {
+    setCells((prev) => ({ ...prev, [`${coord.q},${coord.r}`]: colorIndex }));
   };
 
   const handleCellClear = (coord: Coord) => {
@@ -43,7 +44,7 @@ const TileCanvasStory = ({ gridType }: { gridType: Tile.GridType }) => {
     <div className='flex' style={{ height: '600px', width: '100%' }}>
       <TileCanvas
         pattern={pattern}
-        activeColor={ACTIVE_COLOR}
+        activeColorIndex={0}
         onCellPaint={handleCellPaint}
         onCellClear={handleCellClear}
       />

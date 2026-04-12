@@ -31,105 +31,99 @@ describe('listPresets', () => {
 });
 
 describe('applyPreset checkerboard', () => {
-  const colors = ['#000', '#fff'];
-
   test('fills all 16 cells on a 4x4 grid', ({ expect }) => {
-    const cells = applyPreset('checkerboard', 'square', 4, 4, colors);
+    const cells = applyPreset('checkerboard', 'square', 4, 4, 2);
     expect(Object.keys(cells).length).toBe(16);
   });
 
-  test('produces alternating colors', ({ expect }) => {
-    const cells = applyPreset('checkerboard', 'square', 4, 4, colors);
-    expect(cells['0,0']).toBe('#000');
-    expect(cells['1,0']).toBe('#fff');
-    expect(cells['0,1']).toBe('#fff');
-    expect(cells['1,1']).toBe('#000');
+  test('produces alternating indices', ({ expect }) => {
+    const cells = applyPreset('checkerboard', 'square', 4, 4, 2);
+    expect(cells['0,0']).toBe(0);
+    expect(cells['1,0']).toBe(1);
+    expect(cells['0,1']).toBe(1);
+    expect(cells['1,1']).toBe(0);
   });
 
-  test('uses only the provided colors', ({ expect }) => {
-    const cells = applyPreset('checkerboard', 'square', 4, 4, colors);
+  test('uses only valid indices', ({ expect }) => {
+    const cells = applyPreset('checkerboard', 'square', 4, 4, 2);
     for (const value of Object.values(cells)) {
-      expect(colors).toContain(value);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(2);
     }
   });
 });
 
 describe('applyPreset herringbone', () => {
-  const colors = ['#aaa', '#bbb'];
-
   test('generates cells for a 6x6 grid', ({ expect }) => {
-    const cells = applyPreset('herringbone', 'square', 6, 6, colors);
+    const cells = applyPreset('herringbone', 'square', 6, 6, 2);
     expect(Object.keys(cells).length).toBe(36);
   });
 
-  test('uses only the provided colors', ({ expect }) => {
-    const cells = applyPreset('herringbone', 'square', 6, 6, colors);
+  test('uses only valid indices', ({ expect }) => {
+    const cells = applyPreset('herringbone', 'square', 6, 6, 2);
     for (const value of Object.values(cells)) {
-      expect(colors).toContain(value);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(2);
     }
   });
 });
 
 describe('applyPreset honeycomb', () => {
-  const colors = ['#f00', '#0f0', '#00f'];
-
   test('works on hex grid 5x5 with 3 colors', ({ expect }) => {
-    const cells = applyPreset('honeycomb', 'hex', 5, 5, colors);
+    const cells = applyPreset('honeycomb', 'hex', 5, 5, 3);
     expect(Object.keys(cells).length).toBe(25);
   });
 
-  test('uses only the provided colors', ({ expect }) => {
-    const cells = applyPreset('honeycomb', 'hex', 5, 5, colors);
+  test('uses only valid indices', ({ expect }) => {
+    const cells = applyPreset('honeycomb', 'hex', 5, 5, 3);
     for (const value of Object.values(cells)) {
-      expect(colors).toContain(value);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(3);
     }
   });
 });
 
 describe('applyPreset diamond', () => {
-  const colors = ['#111', '#222', '#333'];
-
   test('fills all cells on a 6x6 grid', ({ expect }) => {
-    const cells = applyPreset('diamond', 'square', 6, 6, colors);
+    const cells = applyPreset('diamond', 'square', 6, 6, 3);
     expect(Object.keys(cells).length).toBe(36);
   });
 
-  test('uses only the provided colors', ({ expect }) => {
-    const cells = applyPreset('diamond', 'square', 6, 6, colors);
+  test('uses only valid indices', ({ expect }) => {
+    const cells = applyPreset('diamond', 'square', 6, 6, 3);
     for (const value of Object.values(cells)) {
-      expect(colors).toContain(value);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(3);
     }
   });
 });
 
 describe('applyPreset basketweave', () => {
-  const colors = ['#ccc', '#ddd'];
-
   test('fills all cells on a 4x4 grid', ({ expect }) => {
-    const cells = applyPreset('basketweave', 'square', 4, 4, colors);
+    const cells = applyPreset('basketweave', 'square', 4, 4, 2);
     expect(Object.keys(cells).length).toBe(16);
   });
 
-  test('uses only the provided colors', ({ expect }) => {
-    const cells = applyPreset('basketweave', 'square', 4, 4, colors);
+  test('uses only valid indices', ({ expect }) => {
+    const cells = applyPreset('basketweave', 'square', 4, 4, 2);
     for (const value of Object.values(cells)) {
-      expect(colors).toContain(value);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(2);
     }
   });
 });
 
 describe('applyPreset pinwheel', () => {
-  const colors = ['#a00', '#0a0', '#00a', '#aa0'];
-
   test('fills all cells on a 4x4 grid', ({ expect }) => {
-    const cells = applyPreset('pinwheel', 'triangle', 4, 4, colors);
+    const cells = applyPreset('pinwheel', 'triangle', 4, 4, 4);
     expect(Object.keys(cells).length).toBe(16);
   });
 
-  test('uses only the provided colors', ({ expect }) => {
-    const cells = applyPreset('pinwheel', 'triangle', 4, 4, colors);
+  test('uses only valid indices', ({ expect }) => {
+    const cells = applyPreset('pinwheel', 'triangle', 4, 4, 4);
     for (const value of Object.values(cells)) {
-      expect(colors).toContain(value);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThan(4);
     }
   });
 });

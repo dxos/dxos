@@ -25,8 +25,11 @@ export const Pattern = Schema.Struct({
   repeatMode: RepeatMode.annotations({ description: 'Single canvas or repeating motif.' }),
   repeatWidth: Schema.optional(Schema.Number.annotations({ description: 'Motif width in cells (repeat mode).' })),
   repeatHeight: Schema.optional(Schema.Number.annotations({ description: 'Motif height in cells (repeat mode).' })),
-  cells: Schema.Record({ key: Schema.String, value: Schema.String }).annotations({
-    description: 'Map of "q,r" coordinate keys to color hex strings.',
+  palette: Schema.Array(Schema.String).annotations({
+    description: 'Color palette; index maps to hex color string.',
+  }),
+  cells: Schema.Record({ key: Schema.String, value: Schema.Number }).annotations({
+    description: 'Map of "q,r" coordinate keys to palette color index.',
   }),
 }).pipe(
   Type.object({
@@ -67,5 +70,6 @@ export const make = ({
     tileSize,
     groutWidth,
     repeatMode,
+    palette: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
     cells: {},
   });

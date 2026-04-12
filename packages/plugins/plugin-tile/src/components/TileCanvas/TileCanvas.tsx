@@ -11,8 +11,8 @@ import { TileGrid } from '../TileGrid';
 
 export type TileCanvasProps = {
   pattern: Tile.Pattern;
-  activeColor: string;
-  onCellPaint: (coord: Coord, color: string) => void;
+  activeColorIndex: number;
+  onCellPaint: (coord: Coord, colorIndex: number) => void;
   onCellClear: (coord: Coord) => void;
 };
 
@@ -30,7 +30,7 @@ const computeGridExtent = (gridType: Tile.GridType, gridWidth: number, gridHeigh
   return { width: maxX + tileSize, height: maxY + tileSize };
 };
 
-export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: TileCanvasProps) => {
+export const TileCanvas = ({ pattern, activeColorIndex, onCellPaint, onCellClear }: TileCanvasProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredCell, setHoveredCell] = useState<Coord | undefined>();
   const [isPanning, setIsPanning] = useState(false);
@@ -51,13 +51,13 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
   const handleCellClick = useCallback(
     (coord: Coord) => {
       const key = `${coord.q},${coord.r}`;
-      if (pattern.cells[key] === activeColor) {
+      if (pattern.cells[key] === activeColorIndex) {
         onCellClear(coord);
       } else {
-        onCellPaint(coord, activeColor);
+        onCellPaint(coord, activeColorIndex);
       }
     },
-    [pattern.cells, activeColor, onCellPaint, onCellClear],
+    [pattern.cells, activeColorIndex, onCellPaint, onCellClear],
   );
 
   const handleWheel = useCallback((event: React.WheelEvent) => {
@@ -112,10 +112,10 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
     (coord: Coord) => {
       setHoveredCell(coord);
       if (isPainting) {
-        onCellPaint(coord, activeColor);
+        onCellPaint(coord, activeColorIndex);
       }
     },
-    [isPainting, activeColor, onCellPaint],
+    [isPainting, activeColorIndex, onCellPaint],
   );
 
   const viewBoxStr = `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`;
@@ -140,6 +140,7 @@ export const TileCanvas = ({ pattern, activeColor, onCellPaint, onCellClear }: T
         gridHeight={gridHeight}
         tileSize={tileSize}
         groutWidth={groutWidth}
+        palette={pattern.palette as unknown as string[]}
         cells={pattern.cells}
         viewBox={viewBox}
         hoveredCell={hoveredCell}
