@@ -66,7 +66,7 @@ export const Agent = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--circuitry--regular',
+    icon: 'ph--drone--regular',
     hue: 'sky',
   }),
   QueueAnnotation.set(true),
@@ -171,13 +171,13 @@ export const resetChatHistory = (
         objects,
       }),
     );
+
     const chat = yield* Database.add(
       Chat.make({
         feed: Ref.make(feed),
       }),
     );
     Obj.setParent(feed, chat);
-
     Obj.change(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
@@ -195,6 +195,7 @@ export const getFromChatContext: Effect.Effect<Agent, Error, AiContextService> =
   if (agents.length !== 1) {
     return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
   }
+
   const agent = agents[0];
   return agent;
 });
