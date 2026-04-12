@@ -7362,6 +7362,9 @@ importers:
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../../ui/react-ui-markdown
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
