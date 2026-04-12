@@ -59,6 +59,7 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
+import { TilePlugin } from '@dxos/plugin-tile';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
@@ -247,6 +248,7 @@ export const getPlugins = ({
       platform: isMobile ? 'mobile' : 'desktop',
     }),
     TicTacToePlugin(),
+    TilePlugin(),
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),

@@ -2512,6 +2512,9 @@ importers:
       '@dxos/plugin-tictactoe':
         specifier: workspace:*
         version: link:../../plugins/plugin-tictactoe
+      '@dxos/plugin-tile':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-tile
       '@dxos/plugin-token-manager':
         specifier: workspace:*
         version: link:../../plugins/plugin-token-manager
