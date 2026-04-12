@@ -13,6 +13,7 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import type * as Entity from './Entity';
 import * as internal from './internal';
 import * as Ref from './Ref';
 
@@ -337,6 +338,31 @@ export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', 
  * Filter objects by createdAt timestamp.
  */
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
+
+export type ChildOfOptions = {
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive?: boolean;
+};
+
+/**
+ * Filter objects that are children of the specified parent(s).
+ * Accepts ECHO objects, DXN values, or arrays of either.
+ * With transitive=true (default), also matches grandchildren and beyond.
+ */
+export const childOf = (parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[], options?: ChildOfOptions): Any => {
+  const items = Array.isArray(parents) ? parents : [parents];
+  const dxns = items.map((item) => {
+    if (item instanceof DXN) {
+      return item.toString();
+    }
+    return internal.getDXN(item).toString();
+  });
+  return new FilterClass({
+    type: 'child-of',
+    parents: dxns,
+    transitive: options?.transitive ?? true,
+  });
+};
 
 /**
  * Negate the filter.

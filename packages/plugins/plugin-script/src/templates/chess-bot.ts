@@ -51,8 +51,8 @@ export default ChessBot.pipe(
 
       chess.move(move.san);
       const newPgn = chess.pgn();
-      Obj.change(loadedGame, (obj) => {
-        obj.pgn = newPgn;
+      Obj.change(loadedGame, (loadedGame) => {
+        loadedGame.pgn = newPgn;
       });
       yield* Database.flush();
       return { state: chess.ascii() };

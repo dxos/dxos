@@ -33,8 +33,8 @@ const removeQueryCollections = async (space: Space) => {
     return;
   }
 
-  Obj.change(rootCollection, (obj) => {
-    obj.objects = objects
+  Obj.change(rootCollection, (rootCollection) => {
+    rootCollection.objects = objects
       .filter((object) => Obj.getTypename(object) !== 'org.dxos.type.queryCollection')
       .map((object) => Ref.make(object));
   });

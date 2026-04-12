@@ -78,8 +78,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
                 }
               });
             } else {
-              Obj.change(graph, (obj) => {
-                obj.query.ast = ast as Obj.Mutable<typeof ast>;
+              Obj.change(graph, (graph) => {
+                graph.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
           }
@@ -137,10 +137,10 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        Obj.change(notebook, (obj) => {
-          const cell = obj.cells.splice(from, 1)[0];
+        Obj.change(notebook, (notebook) => {
+          const cell = notebook.cells.splice(from, 1)[0];
           if (cell) {
-            obj.cells.splice(to, 0, cell);
+            notebook.cells.splice(to, 0, cell);
           }
         });
       }
@@ -173,8 +173,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      Obj.change(notebook, (obj) => {
-        obj.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (notebook) => {
+        notebook.cells.splice(idx, 0, cell);
       });
     },
     [db, notebook],
@@ -185,8 +185,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        Obj.change(notebook, (obj) => {
-          obj.cells.splice(idx, 1);
+        Obj.change(notebook, (notebook) => {
+          notebook.cells.splice(idx, 1);
         });
       }
     },

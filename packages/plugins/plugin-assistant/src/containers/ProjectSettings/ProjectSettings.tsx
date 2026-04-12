@@ -13,14 +13,20 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Project, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { createDocAccessor } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { MarkdownEditor } from '@dxos/plugin-markdown';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { useObject } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
-import { useTranslation, Input } from '@dxos/react-ui';
+import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
+import {
+  createBasicExtensions,
+  createDataExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+} from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
@@ -47,7 +53,6 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
   }, [project, computeRuntime]);
 
   const spec = useAtomValue(AtomRef.make(project.spec));
-  const [specInitialValue] = useObject(spec, 'content');
 
   useEffect(() => {
     const db = Obj.getDatabase(project);
@@ -94,12 +99,25 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
     ),
   );
 
+  const extension = useMemo(
+    () =>
+      spec && [
+        createBasicExtensions({ placeholder: t('project.spec.placeholder') }),
+        createThemeExtensions({ syntaxHighlighting: true }),
+        createDataExtensions({ id: project.id, text: createDocAccessor(spec, ['content']) }),
+        createMarkdownExtensions(),
+        decorateMarkdown(),
+      ],
+    [spec, project.id, t],
+  );
+
   return (
     <div role='none' className='dx-container grid grid-rows-[min-content_1fr_min-content] gap-2 pb-trim-md'>
       <div role='none' className='flex flex-col'>
         <Input.Root>
           <Input.Label>{t('subscriptions.label')}</Input.Label>
         </Input.Root>
+
         {subscribableObjects.map((object) => (
           <Input.Root key={object.id}>
             <div className='flex items-center gap-2'>
@@ -121,19 +139,19 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
             </div>
           </Input.Root>
         ))}
-      </div>
-      <div className='dx-expander flex flex-col'>
+
         <Input.Root>
           <Input.Label>{t('instructions.label')}</Input.Label>
           {spec && (
-            <MarkdownEditor.Root id={spec.id} object={spec}>
-              <MarkdownEditor.Content initialValue={specInitialValue} />
-            </MarkdownEditor.Root>
+            <Editor.Root>
+              <Editor.Content classNames='h-[8lh]' extensions={extension} />
+            </Editor.Root>
           )}
         </Input.Root>
+
+        {/* TODO(burdon): Move into toolbar in parent. */}
+        <Button onClick={handleResetHistory}>{t('reset-history.button')}</Button>
       </div>
-      {/* TODO(burdon): Move into toolbar in parent. */}
-      <Button onClick={handleResetHistory}>{t('reset-history.button')}</Button>
     </div>
   );
 };

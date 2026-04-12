@@ -147,7 +147,9 @@ export const Default: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
-      return { plugins: [MarkdownPlugin()] };
+      return {
+        plugins: [MarkdownPlugin()],
+      };
     },
     config: config.remote,
   }),
@@ -160,7 +162,9 @@ export const WithWebSearch: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
-      return { plugins: [MarkdownPlugin()] };
+      return {
+        plugins: [MarkdownPlugin()],
+      };
     },
     config: config.remote,
   }),
@@ -171,14 +175,16 @@ export const WithWebSearch: Story = {
 };
 
 // Test with prompt: Propose changes to my document based on the style guide.
-export const WithDocument: Story = {
+export const WithMarkdown: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const [{ MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-thread'),
       ]);
-      return { plugins: [MarkdownPlugin(), ThreadPlugin()] };
+      return {
+        plugins: [MarkdownPlugin(), ThreadPlugin()],
+      };
     },
     config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space }) => {
@@ -215,7 +221,9 @@ export const WithBlueprints: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-table'),
       ]);
-      return { plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()] };
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -235,7 +243,10 @@ export const WithChess: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
-      return { plugins: [ChessPlugin()], types: [Chess.Game] };
+      return {
+        plugins: [ChessPlugin()],
+        types: [Chess.Game],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -285,7 +296,9 @@ export const WithMail: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-thread'),
       ]);
-      return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -319,7 +332,9 @@ export const WithGmail: Story = {
         import('@dxos/plugin-inbox'),
         import('@dxos/plugin-token-manager'),
       ]);
-      return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
+      return {
+        plugins: [InboxPlugin(), TokenManagerPlugin()],
+      };
     },
     config: config.persistent,
     types: [Feed.Feed, Mailbox.Mailbox],
@@ -349,7 +364,9 @@ export const WithCalendar: Story = {
         import('@dxos/plugin-inbox'),
         import('@dxos/plugin-token-manager'),
       ]);
-      return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
+      return {
+        plugins: [InboxPlugin(), TokenManagerPlugin()],
+      };
     },
     config: config.remote,
     types: [Feed.Feed, Calendar.Calendar, Event.Event],
@@ -381,7 +398,10 @@ export const WithMap: Story = {
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
-      return { plugins: [MapPlugin(), TablePlugin()], types: [View.View, Map.Map, Table.Table] };
+      return {
+        plugins: [MapPlugin(), TablePlugin()],
+        types: [View.View, Map.Map, Table.Table],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -424,7 +444,10 @@ export const WithTrip: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-map'),
       ]);
-      return { plugins: [MarkdownPlugin(), MapPlugin()], types: [Map.Map] };
+      return {
+        plugins: [MarkdownPlugin(), MapPlugin()],
+        types: [Map.Map],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -479,7 +502,10 @@ export const WithBoard: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { Board, BoardPlugin } = await import('@dxos/plugin-board');
-      return { plugins: [BoardPlugin()], types: [Board.Board] };
+      return {
+        plugins: [BoardPlugin()],
+        types: [Board.Board],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -509,7 +535,9 @@ export const WithResearch: Story = {
         import('@dxos/plugin-table'),
         import('@dxos/plugin-thread'),
       ]);
-      return { plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()] };
+      return {
+        plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+      };
     },
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
@@ -555,7 +583,9 @@ export const WithTranscription: Story = {
         import('@dxos/plugin-transcription'),
         import('@dxos/plugin-preview'),
       ]);
-      return { plugins: [TranscriptionPlugin(), PreviewPlugin()] };
+      return {
+        plugins: [TranscriptionPlugin(), PreviewPlugin()],
+      };
     },
     config: config.remote,
     types: [Transcript.Transcript],
@@ -622,7 +652,10 @@ export const WithChessTrigger: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
-      return { plugins: [ChessPlugin()], types: [Chess.Game] };
+      return {
+        plugins: [ChessPlugin()],
+        types: [Chess.Game],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -695,7 +728,6 @@ export const WithResearchQueue: Story = {
             org: Schema.Any,
           }),
           output: Schema.Any,
-
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(ResearchBlueprint.make())],
@@ -735,7 +767,9 @@ export const WithProject: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-pipeline'),
       ]);
-      return { plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()] };
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
+      };
     },
     config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
@@ -759,8 +793,8 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, (obj) => {
-          Obj.getMeta(obj).tags = [tagDxn];
+        Obj.change(person, (person) => {
+          Obj.getMeta(person).tags = [tagDxn];
         });
       });
 
@@ -783,18 +817,19 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, (obj) => {
-          Obj.getMeta(obj).tags = [tagDxn];
+        Obj.change(research, (research) => {
+          Obj.getMeta(research).tags = [tagDxn];
         });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.change(organization, (org) => {
-          Obj.getMeta(org).tags = [tagDxn];
+        Obj.change(organization, (organization) => {
+          Obj.getMeta(organization).tags = [tagDxn];
         });
       });
+
       // TODO(wittjosiah): Support relations.
       // space.db.add(
       //   Relation.make(HasSubject, {
@@ -911,7 +946,9 @@ export const WithScript: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-script'),
       ]);
-      return { plugins: [MarkdownPlugin(), ScriptPlugin()] };
+      return {
+        plugins: [MarkdownPlugin(), ScriptPlugin()],
+      };
     },
     config: config.local,
     types: [Script.Script, Text.Text],
@@ -966,7 +1003,9 @@ export const WithPrompt: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
-      return { plugins: [MarkdownPlugin()] };
+      return {
+        plugins: [MarkdownPlugin()],
+      };
     },
     config: config.remote,
     types: [Text.Text],
@@ -980,7 +1019,6 @@ export const WithPrompt: Story = {
             org: Schema.Any,
           }),
           output: Schema.Any,
-
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(ResearchBlueprint.make())],

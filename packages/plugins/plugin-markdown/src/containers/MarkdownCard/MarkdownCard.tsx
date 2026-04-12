@@ -6,9 +6,10 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, useTranslation } from '@dxos/react-ui';
+import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
-import { MarkdownEditor } from '#components';
+import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
@@ -27,9 +28,13 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
     <Card.Content>
       {snippet && (
         <Card.Section className='px-1'>
-          <MarkdownEditor.Root id={subject.id} viewMode='readonly' extensions={extensions}>
-            <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
-          </MarkdownEditor.Root>
+          <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
+            {(editorRootProps) => (
+              <Editor.Root {...editorRootProps}>
+                <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
+              </Editor.Root>
+            )}
+          </MarkdownEditorProvider>
         </Card.Section>
       )}
       <Card.Section>

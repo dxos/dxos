@@ -90,7 +90,7 @@ export const translations = [
         'type-filter.placeholder': 'Type',
         'any-type-filter.label': 'Any',
         'no-blueprint.message': 'No active blueprints',
-        'tool-call.label': 'Calling tool...',
+        'tool-call.label': 'Calling',
         'tool-result.label': 'Success',
         'tool-error.label': 'Tool call failed',
 
@@ -113,6 +113,7 @@ export const translations = [
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
         'summary.label': 'Summary',
+        'thinking.label': 'Thinking',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
@@ -124,6 +125,13 @@ export const translations = [
         'objects-in-context.title': 'Content',
         'remove-object-in-context.label': 'Remove document',
         'chat-model.title': 'Model',
+
+        'debug.button': 'Debug',
+        'online-switch.label': 'Online',
+        'run-prompt.label': 'Run prompt',
+        'typename.label': 'Typename',
+        'branch-thread.menu': 'Branch chat',
+        'chat-toolbar.title': 'Chat toolbar',
 
         'settings.default.label': 'Default',
         'settings.custom-prompts.label': 'Use custom prompts',
@@ -145,15 +153,12 @@ export const translations = [
         'trigger-last-invocation.label': 'Last run',
         'trigger-duration.label': 'Duration',
 
-        'debug.button': 'Debug',
-        'online-switch.label': 'Online',
-        'run-prompt.label': 'Run prompt',
-        'typename.label': 'Typename',
-        'branch-thread.menu': 'Branch chat',
-        'chat-toolbar.title': 'Chat toolbar',
+        // ProjectArticle.
+        'project-empty-spec.message': 'Open Properties to configure the project specification.',
 
-        // ProjectSettings
+        // ProjectSettings.
         'instructions.label': 'Instructions',
+        'project.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
       },
