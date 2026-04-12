@@ -199,7 +199,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
     return Effect.gen(this, function* () {
       const match = yield* this._getHandlers().pipe(
-        Effect.map((handlers) => handlers.find((reg) => reg.meta.key === operation.meta.key)),
+        // Last registration wins so plugins can override earlier handlers (e.g. story testing hooks).
+        Effect.map((handlers) => handlers.findLast((reg) => reg.meta.key === operation.meta.key)),
       );
 
       return match?.handler;
