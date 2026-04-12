@@ -22,9 +22,6 @@ import { AssistantPlugin } from '../../AssistantPlugin';
 import { translations } from '../../translations';
 import { ProjectSettings } from './ProjectSettings';
 
-const EMPTY_PROJECT_NAME = 'Empty project';
-const WITH_SUBSCRIPTIONS_NAME = 'Project with subscriptions';
-
 type DefaultStoryProps = {};
 
 const DefaultStory = (_: DefaultStoryProps) => {
