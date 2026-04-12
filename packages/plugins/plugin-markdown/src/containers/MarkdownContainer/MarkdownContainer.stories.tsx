@@ -16,7 +16,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -45,7 +45,7 @@ const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions'
 
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
-  const space = useSpace();
+  const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
   const id = doc && Obj.getDXN(doc).toString();

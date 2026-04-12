@@ -12,7 +12,7 @@ import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { random } from '@dxos/random';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
+import { useQueue, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -32,7 +32,7 @@ type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQue
 type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<Message.Message>(queueDxn);
   const [done, setDone] = useState(false);

@@ -7,7 +7,7 @@ import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -30,7 +30,7 @@ const instances = {};
 
 const DefaultStory = () => {
   const { themeMode } = useThemeContext();
-  const space = useSpace();
+  const [space] = useSpaces();
   const [blockstore, setBlockstore] = useState<Blockstore>();
 
   useEffect(() => {

@@ -10,7 +10,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Chat, Memory, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
@@ -150,6 +150,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
+      Feed.Feed,
       HasSubject.HasSubject,
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,

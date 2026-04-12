@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Filter } from '@dxos/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { Assistant, Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { useQuery } from '@dxos/react-client/echo';
@@ -24,12 +24,15 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const runtime = useComputeRuntime(space.id);
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
+  const feedTarget = chat?.feed?.target;
+  const queue = feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
+
   if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} processor={processor}>
+    <Chat.Root chat={chat} queue={queue} processor={processor}>
       <Panel.Root className='dx-document'>
         {/* TODO(burdon): Chat.Toolbar => Menu.Root which doesn't handle slot. Need to audit Root components. */}
         <Panel.Toolbar>

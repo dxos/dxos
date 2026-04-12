@@ -24,7 +24,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { IndexKind, useSpace } from '@dxos/react-client/echo';
+import { IndexKind, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
@@ -76,7 +76,7 @@ const DefaultStory = ({
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
-  const space = useSpace();
+  const [space] = useSpaces();
 
   useEffect(() => {
     if (!space) {
