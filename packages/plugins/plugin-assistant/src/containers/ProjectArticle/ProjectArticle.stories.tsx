@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Plan, Project } from '@dxos/assistant-toolkit';
@@ -21,22 +21,11 @@ import { Organization } from '@dxos/types';
 import { translations } from '../../translations';
 import { ProjectArticle } from './ProjectArticle';
 
-const EMPTY_PROJECT_NAME = 'Empty project';
-const ARTIFACTS_PROJECT_NAME = 'Project with artifacts';
+type DefaultStoryProps = {};
 
-type DefaultStoryProps = {
-  targetName: typeof EMPTY_PROJECT_NAME | typeof ARTIFACTS_PROJECT_NAME;
-};
-
-const DefaultStory = ({ targetName }: DefaultStoryProps) => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
-  const [project, setProject] = useState<(typeof projects)[number]>();
-  useEffect(() => {
-    setProject(projects.find((candidate) => candidate.name === targetName));
-  }, [projects, targetName]);
-
+const DefaultStory = (_: DefaultStoryProps) => {
+  const [space] = useSpaces();
+  const [project] = useQuery(space?.db, Filter.type(Project.Project));
   if (!project) {
     return <Loading />;
   }
@@ -44,24 +33,9 @@ const DefaultStory = ({ targetName }: DefaultStoryProps) => {
   return <ProjectArticle role='article' subject={project} attendableId='story' />;
 };
 
-const createEmptyProject = () =>
-  Obj.make(Project.Project, {
-    name: EMPTY_PROJECT_NAME,
-    spec: Ref.make(Text.make('')),
-    plan: Ref.make(Plan.makePlan({ tasks: [] })),
-    artifacts: [],
-    subscriptions: [],
-  });
-
 const meta = {
   title: 'plugins/plugin-assistant/containers/ProjectArticle',
   render: DefaultStory,
-  argTypes: {
-    targetName: {
-      control: 'select',
-      options: [EMPTY_PROJECT_NAME, ARTIFACTS_PROJECT_NAME],
-    },
-  },
   decorators: [
     withPluginManager({
       plugins: [
@@ -71,10 +45,9 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
-              const space = yield* Effect.promise(() => client.spaces.create());
+              const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
 
-              space.db.add(createEmptyProject());
               const organization = space.db.add(
                 Obj.make(Organization.Organization, {
                   name: 'Acme Corp',
@@ -84,7 +57,6 @@ const meta = {
 
               space.db.add(
                 Obj.make(Project.Project, {
-                  name: ARTIFACTS_PROJECT_NAME,
                   spec: Ref.make(Text.make('Initiative spec for the story.')),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
@@ -108,14 +80,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = {
-  args: {
-    targetName: EMPTY_PROJECT_NAME,
-  },
-};
-
-export const WithArtifacts: Story = {
-  args: {
-    targetName: ARTIFACTS_PROJECT_NAME,
-  },
-};
+export const Default: Story = {};

@@ -26,7 +26,7 @@ import * as Plan from './Plan';
  * Project schema definition.
  */
 export const Project = Schema.Struct({
-  name: Schema.String,
+  name: Schema.optional(Schema.String),
   spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
   artifacts: Schema.Array(
