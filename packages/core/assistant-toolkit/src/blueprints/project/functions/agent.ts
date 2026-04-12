@@ -30,9 +30,7 @@ const functionInvocationServiceWithConversation = (
       const operationInvoker = yield* Operation.Service;
       return FunctionInvocationService.of({
         invokeFunction: <I, O>(operationDef: Operation.Definition<I, O, any>, input: I) =>
-          operationInvoker
-            .invoke(operationDef, input, { conversation: conversationDxn.toString() })
-            .pipe(Effect.orDie),
+          operationInvoker.invoke(operationDef, input, { conversation: conversationDxn.toString() }).pipe(Effect.orDie),
         resolveFunction: (key: string) =>
           operationRegistry.resolve(key).pipe(
             Effect.flatten,
@@ -44,53 +42,50 @@ const functionInvocationServiceWithConversation = (
 
 export default Agent.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(
-      function* ({ project: projectRef, prompt, event }) {
-        const project = yield* Database.load(projectRef);
-        invariant(Obj.instanceOf(Project.Project, project));
-        invariant(project.chat, 'Project has no chat.');
+    Effect.fnUntraced(function* ({ project: projectRef, prompt, event }) {
+      const project = yield* Database.load(projectRef);
+      invariant(Obj.instanceOf(Project.Project, project));
+      invariant(project.chat, 'Project has no chat.');
 
-        const chatFeed = yield* project.chat.pipe(
-          Database.load,
-          Effect.flatMap((chat) => Database.load(chat.feed)),
-        );
-        invariant(chatFeed, 'Project chat feed not found.');
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
+      const chatFeed = yield* project.chat.pipe(
+        Database.load,
+        Effect.flatMap((chat) => Database.load(chat.feed)),
+      );
+      invariant(chatFeed, 'Project chat feed not found.');
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
 
-        const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
-        if (iniativesInContext.length !== 1) {
-          throw new Error('There should be exactly one project in context. Got: ' + iniativesInContext.length);
-        }
+      const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
+      if (iniativesInContext.length !== 1) {
+        throw new Error('There should be exactly one project in context. Got: ' + iniativesInContext.length);
+      }
 
-        if (!prompt && !event) {
-          throw new Error('Either prompt or event must be provided.');
-        }
+      if (!prompt && !event) {
+        throw new Error('Either prompt or event must be provided.');
+      }
 
-        let input = '';
-        if (prompt) {
-          input += `${prompt}\n\n`;
-        }
-        if (event) {
-          input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
-        }
+      let input = '';
+      if (prompt) {
+        input += `${prompt}\n\n`;
+      }
+      if (event) {
+        input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
+      }
 
-        const feedDxn = Obj.getDXN(chatFeed);
-        yield* conversation
-          .createRequest({
-            prompt: input,
-          })
-          .pipe(
-            Effect.provide(
-              Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
-                Layer.provideMerge(functionInvocationServiceWithConversation(feedDxn)),
-              ),
+      const feedDxn = Obj.getDXN(chatFeed);
+      yield* conversation
+        .createRequest({
+          prompt: input,
+        })
+        .pipe(
+          Effect.provide(
+            Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+              Layer.provideMerge(functionInvocationServiceWithConversation(feedDxn)),
             ),
-            Effect.retry({ times: 2 }),
-          );
-      },
-      Effect.scoped,
-    ),
+          ),
+          Effect.retry({ times: 2 }),
+        );
+    }, Effect.scoped),
   ),
   Operation.opaqueHandler,
 );
