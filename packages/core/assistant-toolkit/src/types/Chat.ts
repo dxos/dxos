@@ -22,7 +22,7 @@ export const Chat = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--atom--regular',
+    icon: 'ph--sparkle--regular',
     hue: 'sky',
   }),
 );

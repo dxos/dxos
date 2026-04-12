@@ -21,7 +21,7 @@ Spec {
   name?: string
   content: Ref<Text.Text>   // from @dxos/schema
 }
-typename: 'org.dxos.plugin.deus.spec'
+typename: 'org.dxos.plugin.spec'
 version: '0.1.0'
 ```
 
