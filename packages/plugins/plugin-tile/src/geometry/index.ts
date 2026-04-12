@@ -6,4 +6,4 @@ export * from './types';
 export * from './axial';
 export * from './vertices';
 export * from './viewport';
-// export * from './measurement';
+export * from './measurement';
