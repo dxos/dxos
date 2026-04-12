@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Plan, Project } from '@dxos/assistant-toolkit';
+import { Plan, Agent } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -20,22 +20,22 @@ import { Organization } from '@dxos/types';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { translations } from '../../translations';
-import { ProjectSettings } from './ProjectSettings';
+import { AgentSettings } from './AgentSettings';
 
 type DefaultStoryProps = {};
 
 const DefaultStory = (_: DefaultStoryProps) => {
   const [space] = useSpaces();
-  const [project] = useQuery(space?.db, Filter.type(Project.Project));
-  if (!project) {
+  const [agent] = useQuery(space?.db, Filter.type(Agent.Agent));
+  if (!agent) {
     return <Loading />;
   }
 
-  return <ProjectSettings role='article' subject={project} />;
+  return <AgentSettings role='article' subject={agent} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/ProjectSettings',
+  title: 'plugins/plugin-assistant/containers/AgentSettings',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -43,7 +43,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Project.Project, Plan.Plan, Text.Text, Organization.Organization],
+          types: [Agent.Agent, Plan.Plan, Text.Text, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -58,7 +58,7 @@ const meta = {
               );
 
               space.db.add(
-                Obj.make(Project.Project, {
+                Obj.make(Agent.Agent, {
                   spec: Ref.make(Text.make('Initiative spec for the story.')),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: [{ name: 'Organization', data: Ref.make(organization) }],

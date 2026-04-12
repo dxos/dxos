@@ -13,7 +13,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { Annotation, Database, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -23,9 +23,9 @@ import * as Chat from './Chat';
 import * as Plan from './Plan';
 
 /**
- * Project schema definition.
+ * Agent schema definition.
  */
-export const Project = Schema.Struct({
+export const Agent = Schema.Struct({
   name: Schema.optional(Schema.String),
   spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
@@ -57,13 +57,14 @@ export const Project = Schema.Struct({
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent on subscriptions',
     description:
-      'If enabled, the qualifying agent will be used to determine if the event is relevant to the project. Related events will be added to the input queue of the project. It is recommended to enable this.',
+      'If enabled, the qualifying agent will be used to determine if the event is relevant to the agent. Related events will be added to the input queue of the agent. It is recommended to enable this.',
   }),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.project',
+    typename: 'org.dxos.type.agent',
     version: '0.1.0',
   }),
+  LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
     hue: 'sky',
@@ -71,27 +72,26 @@ export const Project = Schema.Struct({
   QueueAnnotation.set(true),
 );
 
-export interface Project extends Schema.Schema.Type<typeof Project> {}
+export interface Agent extends Schema.Schema.Type<typeof Agent> {}
 
 /**
- * Creates a fully initialized Project with chat, queue, and context bindings.
+ * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
- * @param props - Project properties including spec, plan, blueprints, and context objects.
- * @param blueprint - The blueprint to use for the project context.
- * @returns An Effect that yields the initialized Project.
+ * @param props - Agent properties including spec, plan, blueprints, and context objects.
+ * @param blueprint - The blueprint to use for the agent context.
+ * @returns An Effect that yields the initialized Agent.
  */
-// TODO(burdon): Rename make and move into Project.ts?
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Project>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
-    Partial<Pick<Obj.MakeProps<typeof Project>, 'artifacts' | 'subscriptions'>> & {
+  props: Omit<Obj.MakeProps<typeof Agent>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
+    Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
       spec: string;
       blueprints?: Ref.Ref<Blueprint.Blueprint>[];
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Project, never, QueueService | Feed.FeedService | Database.Service> =>
+): Effect.Effect<Agent, never, QueueService | Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
-    const project = Obj.make(Project, {
+    const agent = Obj.make(Agent, {
       ...props,
       spec: Ref.make(Text.make(props.spec)),
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
@@ -99,21 +99,21 @@ export const makeInitialized = (
       subscriptions: props.subscriptions ?? [],
       useQualifyingAgent: props.useQualifyingAgent ?? true,
     });
-    yield* Database.add(project);
+    yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Feed.FeedService>();
     const contextBinder = new AiContextBinder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
-    const projectBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
+    const agentBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
       contextBinder.bind({
-        blueprints: [Ref.make(projectBlueprint), ...(props.blueprints ?? [])],
-        objects: [Ref.make(project), ...(props.contextObjects ?? [])],
+        blueprints: [Ref.make(agentBlueprint), ...(props.blueprints ?? [])],
+        objects: [Ref.make(agent), ...(props.contextObjects ?? [])],
       }),
     );
     const chat = yield* Database.add(
       Chat.make({
-        [Obj.Parent]: project,
+        [Obj.Parent]: agent,
         feed: Ref.make(feed),
       }),
     );
@@ -121,34 +121,34 @@ export const makeInitialized = (
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
-        [Relation.Target]: project,
+        [Relation.Target]: agent,
       }),
     );
 
     const inputQueue = yield* QueueService.createQueue();
 
-    Obj.change(project, (project) => {
-      project.chat = Ref.make(chat);
-      project.queue = Ref.fromDXN(inputQueue.dxn);
+    Obj.change(agent, (agent) => {
+      agent.chat = Ref.make(chat);
+      agent.queue = Ref.fromDXN(inputQueue.dxn);
     });
 
-    return project;
+    return agent;
   });
 
 /**
- * Resets the project chat history by rebuilding the chat context.
+ * Resets the agent chat history by rebuilding the chat context.
  * Preserves the existing blueprints and objects from the current chat context.
  *
- * @param project - The project whose chat history should be reset. Must have an existing chat.
+ * @param agent - The agent whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
  */
 export const resetChatHistory = (
-  project: Project,
+  agent: Agent,
 ): Effect.Effect<void, ObjectNotFoundError, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
-    invariant(project.chat, 'Project must have an existing chat to reset.');
+    invariant(agent.chat, 'Agent must have an existing chat to reset.');
 
-    const existingFeed = yield* project.chat.pipe(Database.load).pipe(
+    const existingFeed = yield* agent.chat.pipe(Database.load).pipe(
       Effect.map((_) => _.feed),
       Effect.flatMap(Database.load),
     );
@@ -178,23 +178,23 @@ export const resetChatHistory = (
     );
     Obj.setParent(feed, chat);
 
-    Obj.change(project, (project) => {
-      project.chat = Ref.make(chat);
+    Obj.change(agent, (agent) => {
+      agent.chat = Ref.make(chat);
     });
 
     yield* Database.add(
       Relation.make(Chat.CompanionTo, {
         [Relation.Source]: chat,
-        [Relation.Target]: project,
+        [Relation.Target]: agent,
       }),
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Project, never, AiContextService> = Effect.gen(function* () {
-  const projects = yield* Function.pipe(AiContextService.findObjects(Project));
-  if (projects.length !== 1) {
-    throw new Error('There should be exactly one project in context. Got: ' + projects.length);
+export const getFromChatContext: Effect.Effect<Agent, never, AiContextService> = Effect.gen(function* () {
+  const agents = yield* Function.pipe(AiContextService.findObjects(Agent));
+  if (agents.length !== 1) {
+    throw new Error('There should be exactly one agent in context. Got: ' + agents.length);
   }
-  const project = projects[0];
-  return project;
+  const agent = agents[0];
+  return agent;
 });

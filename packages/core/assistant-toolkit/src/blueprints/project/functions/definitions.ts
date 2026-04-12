@@ -11,16 +11,16 @@ import { QueueService, TracingService, TriggerEvent } from '@dxos/functions';
 import { Trace } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
-import { Project } from '../../../types';
+import { Agent } from '../../../types';
 
-export const Agent = Operation.make({
+export const AgentWorker = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.agent',
-    name: 'Project Agent',
-    description: 'Agentic worker that drives the project autonomously.',
+    key: 'org.dxos.function.agent.worker',
+    name: 'Agent Worker',
+    description: 'Agentic worker that drives the agent autonomously.',
   },
   input: Schema.Struct({
-    project: Schema.suspend(() => Ref.Ref(Project.Project)),
+    agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
     prompt: Schema.optional(Schema.String),
     event: Schema.optional(TriggerEvent.TriggerEvent),
   }),
@@ -40,13 +40,13 @@ export const Agent = Operation.make({
 
 export const Qualifier = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.qualifier',
-    name: 'Project Qualifier',
+    key: 'org.dxos.function.agent.qualifier',
+    name: 'Agent Qualifier',
     description:
-      'Qualifier that determines if the event is relevant to the project. Puts the data into the input queue of the project.',
+      'Qualifier that determines if the event is relevant to the agent. Puts the data into the input queue of the agent.',
   },
   input: Schema.Struct({
-    project: Schema.suspend(() => Ref.Ref(Project.Project)),
+    agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
     event: TriggerEvent.TriggerEvent,
   }),
   output: Schema.Void,
@@ -55,9 +55,9 @@ export const Qualifier = Operation.make({
 
 export const GetContext = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.get-context',
-    name: 'Get Project Context',
-    description: 'Get the context of an project.',
+    key: 'org.dxos.function.agent.get-context',
+    name: 'Get Agent Context',
+    description: 'Get the context of an agent.',
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
@@ -78,7 +78,7 @@ export const GetContext = Operation.make({
 
 export const AddArtifact = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.add-artifact',
+    key: 'org.dxos.function.agent.add-artifact',
     name: 'Add artifact',
     description: 'Adds a new artifact.',
   },

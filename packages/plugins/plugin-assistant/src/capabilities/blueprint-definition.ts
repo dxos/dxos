@@ -7,7 +7,11 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import {
+  AgentBlueprint,
+  AgentBlueprintHandlers,
   AgentHandlers,
+  AgentWizardBlueprint,
+  AgentWizardHandlers,
   BlueprintManagerBlueprint,
   BlueprintManagerHandlers,
   BrowserBlueprint,
@@ -17,10 +21,6 @@ import {
   EntityExtractionHandlers,
   LinearBlueprint,
   PlanningBlueprint,
-  ProjectBlueprint,
-  ProjectHandlers,
-  ProjectWizardBlueprint,
-  ProjectWizardHandlers,
   ResearchBlueprint,
   WebSearchBlueprint,
   MemoryBlueprint,
@@ -39,19 +39,19 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, AgentBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, MemoryBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, AutomationBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, BlueprintManagerBlueprint),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectWizardBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, AgentWizardBlueprint),
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
+    Capability.contributes(Capabilities.OperationHandler, AgentBlueprintHandlers),
     Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
     Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
     Capability.contributes(Capabilities.OperationHandler, EntityExtractionHandlers),
-    Capability.contributes(Capabilities.OperationHandler, ProjectHandlers),
-    Capability.contributes(Capabilities.OperationHandler, ProjectWizardHandlers),
+    Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
   ]),
 );
 

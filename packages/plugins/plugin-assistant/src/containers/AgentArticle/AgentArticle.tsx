@@ -9,25 +9,25 @@ import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Project } from '@dxos/assistant-toolkit';
+import { type Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Input, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
+export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
-export const ProjectArticle = ({ role, subject: project }: ProjectArticleProps) => {
+export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const inputQueue = useAtomValue(
-    AtomObj.make(project).pipe((_) =>
+    AtomObj.make(agent).pipe((_) =>
       Atom.make((get) =>
         Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
       ),
@@ -39,35 +39,70 @@ export const ProjectArticle = ({ role, subject: project }: ProjectArticleProps) 
   const artifacts = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(project).pipe((project) =>
+        AtomObj.make(agent).pipe((agent) =>
           Atom.make((get) => {
-            return get(project).artifacts.map((artifact) => get(AtomRef.make(artifact.data)));
+            return get(agent)
+              .artifacts.map((artifact) => get(AtomRef.make(artifact.data)))
+              .filter(isNonNullable);
           }),
         ),
-      [project],
+      [agent],
     ),
   );
 
-  const objects = [...artifacts, ...inputQueueObjects].filter(isNonNullable);
-
   return (
-    <Panel.Root role={role} className='dx-document'>
-      <Panel.Toolbar />
-      <Panel.Content>
-        {objects.length === 0 && (
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
+      <Panel.Content className='dx-container flex flex-col'>
+        {artifacts.length === 0 && (
           <Message.Root classNames='m-2' valence='info'>
             <Message.Title>{t('project-empty-spec.message')}</Message.Title>
+            <Message.Content>{t('project-empty-spec.description')}</Message.Content>
           </Message.Root>
         )}
 
-        {/* TODO(burdon): Use masonry? */}
-        <Mosaic.Container asChild withFocus autoScroll={viewport}>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.Stack Tile={StackTile} items={objects} getId={(item) => item.id} draggable={false} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
+        {/* TODO(burdon): Add popovers for documentation. */}
+        <div role='none' className='dx-container grid grid-cols-2 gap-2 px-2'>
+          <div role='none' className='dx-container flex flex-col'>
+            <Input.Root>
+              <Input.Label>{t('artifacts.label')}</Input.Label>
+            </Input.Root>
+            <Mosaic.Container asChild withFocus autoScroll={viewport}>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport ref={setViewport}>
+                  <Mosaic.Stack
+                    Tile={StackTile}
+                    classNames='gap-2'
+                    items={artifacts}
+                    getId={(item) => item.id}
+                    draggable={false}
+                  />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </div>
+          <div role='none' className='dx-container flex flex-col'>
+            <Input.Root>
+              <Input.Label>{t('input-queue.label')}</Input.Label>
+            </Input.Root>
+            <Mosaic.Container asChild withFocus autoScroll={viewport}>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport ref={setViewport}>
+                  {/* TODO(burdon): Virtualize. */}
+                  <Mosaic.Stack
+                    Tile={StackTile}
+                    classNames='gap-2'
+                    items={inputQueueObjects}
+                    getId={(item) => item.id}
+                    draggable={false}
+                  />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </div>
+        </div>
       </Panel.Content>
     </Panel.Root>
   );
@@ -88,7 +123,7 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
       <Menu.Root>
         <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
           <Focus.Item asChild>
-            <Card.Root ref={forwardedRef} data-testid='board-item'>
+            <Card.Root ref={forwardedRef} data-testid='board-item' fullWidth>
               <Card.Toolbar>
                 <Card.IconBlock padding>
                   <Card.Icon icon={icon} />

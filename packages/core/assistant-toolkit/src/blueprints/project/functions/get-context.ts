@@ -7,28 +7,28 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { Plan, Project } from '../../../types';
+import { Plan, Agent } from '../../../types';
 import { GetContext } from './definitions';
 
 export default GetContext.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const project = yield* Project.getFromChatContext;
+      const agent = yield* Agent.getFromChatContext;
 
       return {
-        id: project.id,
-        name: project.name,
-        spec: yield* project.spec.pipe(Database.load).pipe(
+        id: agent.id,
+        name: agent.name,
+        spec: yield* agent.spec.pipe(Database.load).pipe(
           Effect.map((_) => _.content),
           Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
         ),
         plan: yield* (
-          project.plan?.pipe(Database.load).pipe(
+          agent.plan?.pipe(Database.load).pipe(
             Effect.map(Plan.formatPlan),
             Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
           ) ?? Effect.succeed('No plan found.')
         ),
-        artifacts: yield* Effect.forEach(project.artifacts, (artifact) =>
+        artifacts: yield* Effect.forEach(agent.artifacts, (artifact) =>
           Effect.gen(function* () {
             return {
               name: artifact.name,
