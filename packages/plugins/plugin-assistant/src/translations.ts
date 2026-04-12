@@ -154,7 +154,7 @@ export const translations = [
         'chat-toolbar.title': 'Chat toolbar',
 
         // ProjectArticle.
-        'project-empty-spec.message': 'Open Settings to configure the project specification.',
+        'project-empty-spec.message': 'Open Properties to configure the project specification.',
 
         // ProjectSettings.
         'instructions.label': 'Instructions',
