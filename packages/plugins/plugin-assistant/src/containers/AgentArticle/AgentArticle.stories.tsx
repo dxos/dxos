@@ -21,6 +21,7 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
+
 import { translations } from '../../translations';
 import { AgentArticle } from './AgentArticle';
 
@@ -46,14 +47,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [
-            Agent.Agent,
-            Message.Message,
-            Plan.Plan,
-            Text.Text,
-            Organization.Organization,
-            Person.Person,
-          ],
+          types: [Agent.Agent, Message.Message, Plan.Plan, Text.Text, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
