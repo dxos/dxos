@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Project } from '@dxos/assistant-toolkit';
+import { Chat, Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -57,16 +57,16 @@ export const translations = [
         'delete-object.label': 'Delete AI Chat',
         'object-deleted.label': 'AI Chat deleted',
       },
-      [Project.Project.typename]: {
-        'typename.label': 'Project',
-        'typename.label_zero': 'Projects',
-        'typename.label_one': 'Project',
-        'typename.label_other': 'Projects',
-        'object-name.placeholder': 'New project',
-        'add-object.label': 'Add project',
-        'rename-object.label': 'Rename project',
-        'delete-object.label': 'Delete project',
-        'object-deleted.label': 'Project deleted',
+      [Agent.Agent.typename]: {
+        'typename.label': 'Agent',
+        'typename.label_zero': 'Agents',
+        'typename.label_one': 'Agent',
+        'typename.label_other': 'Agents',
+        'object-name.placeholder': 'New agent',
+        'add-object.label': 'Add agent',
+        'rename-object.label': 'Rename agent',
+        'delete-object.label': 'Delete agent',
+        'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
@@ -153,12 +153,15 @@ export const translations = [
         'trigger-last-invocation.label': 'Last run',
         'trigger-duration.label': 'Duration',
 
-        // ProjectArticle.
-        'project-empty-spec.message': 'Open Properties to configure the project specification.',
+        // AgentArticle.
+        'project-empty-spec.message': 'Open Properties to configure the agent.',
+        'project-empty-spec.description': 'Open Assistant to interact with the agent.',
+        'artifacts.label': 'Artifacts',
+        'input-queue.label': 'Inputs',
 
-        // ProjectSettings.
+        // AgentSettings.
         'instructions.label': 'Instructions',
-        'project.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
+        'agent.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
       },

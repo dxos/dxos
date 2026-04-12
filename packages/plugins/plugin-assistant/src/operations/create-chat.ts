@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -43,9 +43,9 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       if (!defaultDatabaseBlueprint) {
         defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
       }
-      let defaultProjectWizardBlueprint = blueprints.find((blueprint) => blueprint.key === ProjectWizardBlueprint.key);
-      if (!defaultProjectWizardBlueprint) {
-        defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
+      let defaultAgentWizardBlueprint = blueprints.find((blueprint) => blueprint.key === AgentWizardBlueprint.key);
+      if (!defaultAgentWizardBlueprint) {
+        defaultAgentWizardBlueprint = db.add(AgentWizardBlueprint.make());
       }
       // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
       const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
@@ -65,7 +65,7 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
             blueprints: [
               Ref.make(defaultAssistantBlueprint!),
               Ref.make(defaultDatabaseBlueprint!),
-              Ref.make(defaultProjectWizardBlueprint!),
+              Ref.make(defaultAgentWizardBlueprint!),
               Ref.make(defaultBlueprintManagerBlueprint!),
             ],
           }),
