@@ -14,6 +14,7 @@ import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Input, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
@@ -69,19 +70,9 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
             <Input.Root>
               <Input.Label>{t('artifacts.label')}</Input.Label>
             </Input.Root>
-            <Mosaic.Container asChild withFocus autoScroll={viewport}>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport ref={setViewport}>
-                  <Mosaic.Stack
-                    Tile={StackTile}
-                    classNames='gap-2'
-                    items={artifacts}
-                    getId={(item) => item.id}
-                    draggable={false}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
+            <Masonry.Root Tile={MasonryArtifactTile}>
+              <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} />
+            </Masonry.Root>
           </div>
           <div role='none' className='dx-container flex flex-col'>
             <Input.Root>
@@ -90,13 +81,15 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
             <Mosaic.Container asChild withFocus autoScroll={viewport}>
               <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport ref={setViewport}>
-                  {/* TODO(burdon): Virtualize. */}
-                  <Mosaic.Stack
+                  <Mosaic.VirtualStack
                     Tile={StackTile}
                     classNames='gap-2'
-                    items={inputQueueObjects}
-                    getId={(item) => item.id}
                     draggable={false}
+                    estimateSize={() => 160}
+                    gap={8}
+                    getId={(item: Obj.Unknown) => item.id}
+                    getScrollElement={() => viewport}
+                    items={inputQueueObjects}
                   />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
@@ -108,53 +101,65 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   );
 };
 
-const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
-  ({ data, location, debug }, forwardedRef) => {
-    const objectMenuItems = useObjectMenuItems(data);
-    const icon = Function.pipe(
-      Obj.getSchema(data),
-      Option.fromNullable,
-      Option.flatMap(Annotation.IconAnnotation.get),
-      Option.map(({ icon }) => icon),
-      Option.getOrElse(() => 'ph--placeholder--regular'),
-    );
+const ArtifactTileCard = forwardRef<HTMLDivElement, { data: Obj.Unknown }>(({ data }, forwardedRef) => {
+  const objectMenuItems = useObjectMenuItems(data);
+  const icon = Function.pipe(
+    Obj.getSchema(data),
+    Option.fromNullable,
+    Option.flatMap(Annotation.IconAnnotation.get),
+    Option.map(({ icon }) => icon),
+    Option.getOrElse(() => 'ph--placeholder--regular'),
+  );
 
-    return (
-      <Menu.Root>
-        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-          <Focus.Item asChild>
-            <Card.Root ref={forwardedRef} data-testid='board-item' fullWidth>
-              <Card.Toolbar>
-                <Card.IconBlock padding>
-                  <Card.Icon icon={icon} />
-                </Card.IconBlock>
-                <Card.Title>{Obj.getLabel(data)}</Card.Title>
-                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.IconBlock padding>
-                  <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-                    <Toolbar.IconButton
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--dots-three-vertical--regular'
-                      label='Actions'
-                    />
-                  </Menu.Trigger>
-                  <Menu.Content items={objectMenuItems} />
-                </Card.IconBlock>
-              </Card.Toolbar>
-              <Card.Content>
-                <Surface.Surface
-                  role='card--content'
-                  limit={1}
-                  data={{ subject: data } satisfies AppSurface.ObjectCardData}
-                />
-              </Card.Content>
-            </Card.Root>
-          </Focus.Item>
-        </Mosaic.Tile>
-      </Menu.Root>
-    );
-  },
+  return (
+    <Card.Root ref={forwardedRef} data-testid='board-item' fullWidth>
+      <Card.Toolbar>
+        <Card.IconBlock padding>
+          <Card.Icon icon={icon} />
+        </Card.IconBlock>
+        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+        <Card.IconBlock padding>
+          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+            <Toolbar.IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label='Actions'
+            />
+          </Menu.Trigger>
+          <Menu.Content items={objectMenuItems} />
+        </Card.IconBlock>
+      </Card.Toolbar>
+      <Card.Content>
+        <Surface.Surface
+          role='card--content'
+          limit={1}
+          data={{ subject: data } satisfies AppSurface.ObjectCardData}
+        />
+      </Card.Content>
+    </Card.Root>
+  );
+});
+
+ArtifactTileCard.displayName = 'ArtifactTileCard';
+
+const MasonryArtifactTile = ({ data }: { data: Obj.Unknown; index: number }) => (
+  <Menu.Root>
+    <ArtifactTileCard data={data} />
+  </Menu.Root>
+);
+
+const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
+  ({ data, location, debug }, forwardedRef) => (
+    <Menu.Root>
+      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+        <Focus.Item asChild>
+          <ArtifactTileCard ref={forwardedRef} data={data} />
+        </Focus.Item>
+      </Mosaic.Tile>
+    </Menu.Root>
+  ),
 );
 
 StackTile.displayName = 'StackTile';

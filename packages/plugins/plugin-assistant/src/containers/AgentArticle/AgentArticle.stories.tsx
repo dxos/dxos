@@ -18,8 +18,9 @@ import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 
+import { createMessage } from '#testing';
 import { translations } from '../../translations';
 import { AgentArticle } from './AgentArticle';
 
@@ -45,7 +46,14 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Agent.Agent, Plan.Plan, Text.Text, Organization.Organization, Person.Person],
+          types: [
+            Agent.Agent,
+            Message.Message,
+            Plan.Plan,
+            Text.Text,
+            Organization.Organization,
+            Person.Person,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -59,16 +67,27 @@ const meta = {
                   { type: Person.Person, count: 10 },
                 ]),
               );
-              const artifacts = created.map((obj) => ({
-                name: Obj.getLabel(obj) ?? 'Artifact',
-                data: Ref.make(obj),
-              }));
+
+              const inputQueue = space.queues.create();
+              yield* Effect.promise(() =>
+                inputQueue.append([
+                  createMessage('user', [{ _tag: 'text', text: 'Summarize the current artifacts.' }]),
+                  createMessage('assistant', [
+                    { _tag: 'text', text: 'Here is a quick overview of the organizations and contacts in context.' },
+                  ]),
+                  createMessage('user', [{ _tag: 'text', text: 'Flag anything that needs follow-up.' }]),
+                ]),
+              );
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  spec: Ref.make(Text.make('Initiative spec for the story.')),
+                  spec: Ref.make(Text.make()),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
-                  artifacts,
+                  artifacts: created.map((obj) => ({
+                    name: Obj.getLabel(obj) ?? 'Artifact',
+                    data: Ref.make(obj),
+                  })),
+                  queue: Ref.fromDXN(inputQueue.dxn),
                   subscriptions: [],
                 }),
               );

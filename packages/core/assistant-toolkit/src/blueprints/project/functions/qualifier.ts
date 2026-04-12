@@ -44,14 +44,14 @@ export default Qualifier.pipe(
                   Respond with true if the event is relevant to the agent, false otherwise.
                   If you are not sure, return true.
                   The qualified events will be forwarded to the larger agent that will process them.
-                  <project id="${id}" name="${name}">
+                  <agent id="${id}" name="${name}">
                     <spec>
                     ${spec.content}
                     </spec>
                     <plan>
                       ${Plan.formatPlan(plan)}
                     </plan>
-                  </project>
+                  </agent>
                 `,
               }),
               Prompt.userMessage({

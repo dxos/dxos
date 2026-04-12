@@ -27,7 +27,7 @@ export default AgentRules.pipe(
         - Browser -- Virtual browser via playwright when simple WebSearch is not enough.
         - Memory -- Memory to store and retrieve information.
 
-        Experimental blueprints that are discoraged:
+        Experimental blueprints that are discouraged:
 
         - Research
         - Design
