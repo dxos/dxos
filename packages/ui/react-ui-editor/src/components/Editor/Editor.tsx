@@ -39,6 +39,9 @@ type EditorContextValue = {
 
 const [EditorContextProvider, useEditorContext] = createContext<EditorContextValue>('Editor');
 
+/**
+ * Access the editor context. Must be used within `Editor.Root`.
+ */
 export { useEditorContext };
 
 //

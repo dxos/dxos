@@ -18,7 +18,7 @@ import { useClient } from '../client';
  */
 // TODO(wittjosiah): Currently unable to remove `PublicKey` from this api.
 //  When initially joining a space that is all that is returned.
-export const useSpace = (spaceId: SpaceId | PublicKey | undefined): Space | undefined => {
+export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
   if (!spaceId) {

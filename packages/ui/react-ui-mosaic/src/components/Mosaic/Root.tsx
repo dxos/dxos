@@ -110,7 +110,7 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(({ children, asCh
           source: {
             data: sourceData,
             handler: handlers[sourceData.containerId],
-            // TOOD(burdon): Check id matches.
+            // TODO(burdon): Check id matches.
             container: location.initial.dropTargets.find((target) => target.data.type === 'container')?.element,
           },
           target: targetData && {

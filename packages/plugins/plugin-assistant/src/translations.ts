@@ -153,10 +153,10 @@ export const translations = [
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
 
-        // ProjectArticle
+        // ProjectArticle.
         'project-empty-spec.message': 'Open Settings to configure the project specification.',
 
-        // ProjectSettings
+        // ProjectSettings.
         'instructions.label': 'Instructions',
         'project.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
