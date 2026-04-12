@@ -7,6 +7,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
+import { composable } from '@dxos/ui-theme';
+
 import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Agent } from '@dxos/assistant-toolkit';
@@ -101,7 +103,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   );
 };
 
-const ArtifactTileCard = forwardRef<HTMLDivElement, { data: Obj.Unknown }>(({ data }, forwardedRef) => {
+const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ data, ...props }, forwardedRef) => {
   const objectMenuItems = useObjectMenuItems(data);
   const icon = Function.pipe(
     Obj.getSchema(data),
@@ -112,7 +114,7 @@ const ArtifactTileCard = forwardRef<HTMLDivElement, { data: Obj.Unknown }>(({ da
   );
 
   return (
-    <Card.Root ref={forwardedRef} data-testid='board-item' fullWidth>
+    <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
       <Card.Toolbar>
         <Card.IconBlock padding>
           <Card.Icon icon={icon} />
