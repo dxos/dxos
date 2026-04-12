@@ -126,6 +126,13 @@ export const translations = [
         'remove-object-in-context.label': 'Remove document',
         'chat-model.title': 'Model',
 
+        'debug.button': 'Debug',
+        'online-switch.label': 'Online',
+        'run-prompt.label': 'Run prompt',
+        'typename.label': 'Typename',
+        'branch-thread.menu': 'Branch chat',
+        'chat-toolbar.title': 'Chat toolbar',
+
         'settings.default.label': 'Default',
         'settings.custom-prompts.label': 'Use custom prompts',
         'settings.custom-prompts.description': 'Allow the assistant to use custom prompts defined in your spaces.',
@@ -145,13 +152,6 @@ export const translations = [
         'trigger-runtime.label': 'Auto trigger execution',
         'trigger-last-invocation.label': 'Last run',
         'trigger-duration.label': 'Duration',
-
-        'debug.button': 'Debug',
-        'online-switch.label': 'Online',
-        'run-prompt.label': 'Run prompt',
-        'typename.label': 'Typename',
-        'branch-thread.menu': 'Branch chat',
-        'chat-toolbar.title': 'Chat toolbar',
 
         // ProjectArticle.
         'project-empty-spec.message': 'Open Properties to configure the project specification.',
