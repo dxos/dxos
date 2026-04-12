@@ -81,7 +81,7 @@ export const DeviceListItem = forwardRef<
                         : device.profile.type === DeviceType.NATIVE
                           ? 'ph--desktop--regular'
                           : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type)
-                            ? 'ph--robot--regular'
+                            ? 'ph--drone--regular'
                             : device.profile.type === DeviceType.MOBILE
                               ? 'ph--device-mobile--regular'
                               : 'ph--devices--regular',

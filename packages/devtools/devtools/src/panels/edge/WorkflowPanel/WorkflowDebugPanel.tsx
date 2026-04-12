@@ -232,7 +232,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
 
 const RobotAvatar = () => (
   <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--robot--regular' />
+    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
   </Avatar.Root>
 );
 

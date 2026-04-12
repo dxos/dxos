@@ -34,7 +34,7 @@ enum IconType {
   // Interactions.
   USER = 'ph--user--regular',
   USER_INTERACTION = 'ph--user-sound--regular',
-  AGENT = 'ph--robot--regular',
+  AGENT = 'ph--drone--regular',
   THINK = 'ph--brain--regular',
   LINK = 'ph--link--regular',
   TOOL = 'ph--wrench--regular',
