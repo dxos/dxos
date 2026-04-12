@@ -108,7 +108,7 @@ export const ProjectSettings = ({ subject: project }: ProjectSettingsProps) => {
         createMarkdownExtensions(),
         decorateMarkdown(),
       ],
-    [spec],
+    [spec, project.id, t],
   );
 
   return (
