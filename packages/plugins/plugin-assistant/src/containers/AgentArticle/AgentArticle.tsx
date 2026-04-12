@@ -7,8 +7,6 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { composable } from '@dxos/ui-theme';
-
 import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Agent } from '@dxos/assistant-toolkit';
@@ -19,6 +17,7 @@ import { Card, Input, Message, Panel, ScrollArea, Toolbar, useTranslation } from
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { composable } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -81,7 +80,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
               <Input.Label>{t('input-queue.label')}</Input.Label>
             </Input.Root>
             <Mosaic.Container asChild withFocus autoScroll={viewport}>
-              <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Root orientation='vertical' padding>
                 <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.VirtualStack
                     Tile={StackTile}
@@ -123,22 +122,13 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
         <Card.IconBlock padding>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label='Actions'
-            />
+            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
         </Card.IconBlock>
       </Card.Toolbar>
       <Card.Content>
-        <Surface.Surface
-          role='card--content'
-          limit={1}
-          data={{ subject: data } satisfies AppSurface.ObjectCardData}
-        />
+        <Surface.Surface role='card--content' limit={1} data={{ subject: data } satisfies AppSurface.ObjectCardData} />
       </Card.Content>
     </Card.Root>
   );
