@@ -12,6 +12,7 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
@@ -58,7 +59,7 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     const db = Obj.getDatabase(agent);
     if (!db) return;
     return Obj.subscribe(agent, () => {
-      queueMicrotask(() => void invokePromise(SyncTriggers, { agent: Ref.make(agent) }));
+      queueMicrotask(() => invokePromise(SyncTriggers, { agent: Ref.make(agent) }).catch((err) => log.catch(err)));
     });
   }, [agent, invokePromise]);
 

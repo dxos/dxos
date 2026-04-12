@@ -51,26 +51,16 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
     );
 
+    // Remove all existing triggers — they will be recreated with the current config.
+    // This ensures operation and concurrency stay in sync when useQualifyingAgent is toggled.
     for (const trigger of triggers) {
-      const target = Obj.getKeys(trigger, AGENT_TRIGGER_TARGET_EXTENSION_KEY).at(0)?.id;
-
-      const exists = agent.subscriptions.find((subscription) => subscription.dxn.toString() === target);
-      if (!exists && !(agent.useQualifyingAgent && target === Obj.getDXN(agent)?.toString())) {
-        yield* Database.remove(trigger);
-      }
+      yield* Database.remove(trigger);
     }
 
-    // lazy import to avoid circular dependency issues.
+    // Lazy import to avoid circular dependency issues.
     const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../project'));
 
     for (const subscription of agent.subscriptions) {
-      const relevantTrigger = triggers.find((trigger) =>
-        Obj.getKeys(trigger, AGENT_TRIGGER_TARGET_EXTENSION_KEY).some((key) => key.id === subscription.dxn.toString()),
-      );
-      if (relevantTrigger) {
-        continue;
-      }
-
       const targetOption = yield* Database.loadOption(subscription);
       if (Option.isNone(targetOption)) {
         continue;
@@ -118,38 +108,31 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       );
     }
 
-    if (agent.useQualifyingAgent) {
-      const qualifierTrigger = triggers.find((trigger) =>
-        Obj.getKeys(trigger, AGENT_TRIGGER_TARGET_EXTENSION_KEY).some(
-          (key) => key.id === Obj.getDXN(agent)?.toString(),
-        ),
+    if (agent.useQualifyingAgent && agent.queue) {
+      yield* Database.add(
+        Trigger.make({
+          [Obj.Parent]: agent,
+          [Obj.Meta]: {
+            keys: [
+              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+              {
+                source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
+                id: Obj.getDXN(agent)?.toString() ?? '',
+              },
+            ],
+          },
+          function: Ref.make(Operation.serialize(AgentWorker)),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: agent.queue.dxn.toString(),
+          },
+          input: {
+            agent: Ref.make(agent),
+            event: '{{event}}',
+          },
+        }),
       );
-      if (!qualifierTrigger && agent.queue) {
-        yield* Database.add(
-          Trigger.make({
-            [Obj.Parent]: agent,
-            [Obj.Meta]: {
-              keys: [
-                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-                {
-                  source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                  id: Obj.getDXN(agent)?.toString() ?? '',
-                },
-              ],
-            },
-            function: Ref.make(Operation.serialize(AgentWorker)),
-            enabled: true,
-            spec: {
-              kind: 'queue',
-              queue: agent.queue.dxn.toString(),
-            },
-            input: {
-              agent: Ref.make(agent),
-              event: '{{event}}',
-            },
-          }),
-        );
-      }
     }
 
     yield* Database.flush();
