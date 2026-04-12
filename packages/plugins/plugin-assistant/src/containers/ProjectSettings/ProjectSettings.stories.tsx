@@ -12,7 +12,6 @@ import { Obj, Ref } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -66,13 +65,12 @@ const meta = {
                   spec: Ref.make(Text.make('Initiative spec for the story.')),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
-                  subscriptions: [Ref.make(organization)],
+                  subscriptions: [],
                 }),
               );
             }),
         }),
         StorybookPlugin({}),
-        PreviewPlugin(),
         AutomationPlugin(),
         AssistantPlugin(),
       ],
