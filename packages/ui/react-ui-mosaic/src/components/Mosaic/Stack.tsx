@@ -54,8 +54,8 @@ type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 type MosaicStackProps<TData = any> = ThemedClassName<
   {
     role?: string;
-    getId: GetId<TData>;
     orientation?: Axis;
+    getId: GetId<TData>;
     items?: readonly TData[];
     scrollIntoView?: boolean;
     Tile: MosaicStackTileComponent<TData>;
@@ -69,8 +69,8 @@ type MosaicStackProps<TData = any> = ThemedClassName<
 const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
   (
     {
-      getId,
       orientation: orientationProp = 'vertical',
+      getId,
       items,
       scrollIntoView = true,
       Tile,
@@ -162,9 +162,9 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
   (
     {
       orientation = 'vertical',
-      items,
       getId,
-      scrollIntoView,
+      items,
+      scrollIntoView = true,
       Tile,
       estimateSize,
       getScrollElement,
