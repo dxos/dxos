@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-const SPEC_TYPENAME = 'org.dxos.plugin.spec.spec';
+import { Spec } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [SPEC_TYPENAME]: {
+      [Type.getTypename(Spec.Spec)]: {
         'typename.label': 'Spec',
         'typename.label_zero': 'Specs',
         'typename.label_one': 'Spec',
