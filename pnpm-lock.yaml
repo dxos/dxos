@@ -8900,6 +8900,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../plugin-github
       '@dxos/plugin-granola':
         specifier: workspace:*
         version: link:../plugin-granola

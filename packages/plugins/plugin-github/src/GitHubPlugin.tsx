@@ -50,7 +50,7 @@ export const GitHubPlugin = Plugin.define(meta).pipe(
     ],
   }),
   AppPlugin.addSchemaModule({
-    schema: [GitHub.GitHubAccount, GitHub.GitHubRepo],
+    schema: [GitHub.GitHubAccount, GitHub.GitHubRepo, GitHub.GitHubPullRequest],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

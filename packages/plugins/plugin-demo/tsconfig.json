@@ -38,6 +38,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../plugin-github"
+    },
+    {
       "path": "../plugin-granola"
     },
     {

@@ -14,8 +14,11 @@ import { Button, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { bootstrapFromEnv, type BootstrapResult } from './bootstrap-from-env';
 import { matchNoteToCards } from './match-cards';
+import { pollMergedPullRequests } from './pr-poller';
 import { seedSoftwareTeamFixture } from './seed-fixture';
 import { Demo } from '#types';
+
+const PR_POLL_INTERVAL_MS = 15_000;
 
 /** Delay before running aiMatch on a newly-injected Granola note. Tuned so the viewer sees the note land before matches appear. */
 const MATCH_DELAY_MS = 800;
@@ -238,6 +241,41 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
 
     return () => clearTimeout(timer);
   }, [db, events, cards, matches]);
+
+  // PR poller: when GITHUB_PAT + GITHUB_REPO are in localStorage, poll for
+  // newly-merged PRs every 15s. The poller upserts GitHubPullRequest objects
+  // and emits a DemoEvent (kind=pr-merged) on each transition from
+  // not-merged → merged, which the nudge observer above converts into a
+  // DemoNudge.
+  useEffect(() => {
+    if (!db) {
+      return;
+    }
+    const pat = globalThis.localStorage?.getItem('GITHUB_PAT') ?? '';
+    const repo = globalThis.localStorage?.getItem('GITHUB_REPO') ?? '';
+    if (!pat || !repo) {
+      return;
+    }
+    let cancelled = false;
+
+    const tick = async () => {
+      if (cancelled) {
+        return;
+      }
+      try {
+        await pollMergedPullRequests(db, { pat, repo });
+      } catch (err) {
+        log.info('demo: pr-poller tick failed', { error: String(err) });
+      }
+    };
+
+    void tick();
+    const handle = setInterval(tick, PR_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(handle);
+    };
+  }, [db]);
 
   const emit = useCallback(
     async (kind: string, label: string, payload?: unknown) => {

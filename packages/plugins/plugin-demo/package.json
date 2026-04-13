@@ -58,6 +58,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-granola": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
