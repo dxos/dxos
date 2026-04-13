@@ -32,7 +32,7 @@ export class Compiler {
 
     // TODO(wittjosiah): Figure out how to get workers working in plugin packages.
     //   https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
-    this._fsMap = await createDefaultMapFromCDN(this._options, '5.7.2', true, ts);
+    this._fsMap = await createDefaultMapFromCDN(this._options, ts.version, true, ts);
     if (globals) {
       this._fsMap.set(GLOBALS, globals);
     }
