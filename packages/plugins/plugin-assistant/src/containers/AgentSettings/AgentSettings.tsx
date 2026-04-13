@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
@@ -16,6 +16,7 @@ import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
@@ -36,7 +37,6 @@ export type AgentSettingsProps = AppSurface.ObjectSettingsProps<Agent.Agent>;
 export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-  const { invokePromise } = useOperationInvoker();
 
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(agent)!.spaceId);
@@ -59,9 +59,12 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     const db = Obj.getDatabase(agent);
     if (!db) return;
     return Obj.subscribe(agent, () => {
-      queueMicrotask(() => invokePromise(SyncTriggers, { agent: Ref.make(agent) }).catch((err) => log.catch(err)));
+      queueMicrotask(() => {
+        const runtime = computeRuntime.getRuntime(db.spaceId);
+        runtime.runPromise(Operation.invoke(SyncTriggers, { agent: Ref.make(agent) })).catch((err) => log.catch(err));
+      });
     });
-  }, [agent, invokePromise]);
+  }, [agent, computeRuntime]);
 
   const db = Obj.getDatabase(agent);
   const feedFilter = useMemo(() => {
