@@ -7,7 +7,6 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Yaml from 'yaml';
 
 import { CommandConfig, printList } from '@dxos/cli-util';

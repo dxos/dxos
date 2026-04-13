@@ -8,4 +8,4 @@ import { processEvent } from './process-event';
 
 export { processEvent };
 
-export const ProjectPrompts: Prompt.Prompt[] = [processEvent];
+export const AgentPrompts: Prompt.Prompt[] = [processEvent];

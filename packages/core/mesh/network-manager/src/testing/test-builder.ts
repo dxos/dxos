@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -28,7 +29,6 @@ import {
   TransportKind,
   createRtcTransportFactory,
 } from '../transport';
-
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
@@ -169,7 +169,7 @@ export class TestPeer {
 
     await this._proxy?.close();
     await this._service?.close();
-    await this._networkManager.close();
+    await this._networkManager.close(Context.default());
   }
 
   getSwarm(topic: PublicKey): TestSwarmConnection {
@@ -218,7 +218,7 @@ export class TestSwarmConnection {
   // TODO(burdon): Need to create new plugin instance per swarm?
   //  If so, then perhaps joinSwarm should return swarm object with access to plugins.
   async join(topology = new FullyConnectedTopology()): Promise<this> {
-    await this.peer._networkManager.joinSwarm({
+    await this.peer._networkManager.joinSwarm(Context.default(), {
       topic: this.topic,
       peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
       protocolProvider: this.protocol.factory,
@@ -229,7 +229,7 @@ export class TestSwarmConnection {
   }
 
   async leave(): Promise<this> {
-    await this.peer._networkManager.leaveSwarm(this.topic);
+    await this.peer._networkManager.leaveSwarm(Context.default(), this.topic);
     return this;
   }
 }

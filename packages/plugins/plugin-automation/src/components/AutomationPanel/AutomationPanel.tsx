@@ -8,11 +8,13 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
+import { Context } from '@dxos/context';
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { Function, Script, Trigger } from '@dxos/functions';
+import { Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { useTypeOptions } from '@dxos/plugin-space';
+import { Operation } from '@dxos/operation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -22,7 +24,8 @@ import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
@@ -39,7 +42,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
-  const functions = useQuery(space.db, Filter.type(Function.Function));
+  const functions = useQuery(space.db, Filter.type(Operation.PersistentOperation));
   const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
   const filteredTriggers = useMemo(() => {
     return object ? triggers.filter(triggerMatch(object)) : triggers;
@@ -74,8 +77,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Obj.change(selected, (mutable) => {
-        Object.assign(mutable, trigger);
+      Obj.change(selected, (selected) => {
+        Object.assign(selected, trigger);
       });
     } else {
       space.db.add(Trigger.make(trigger));
@@ -92,19 +95,19 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
-    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (t) => {
-      Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
+    Obj.change(trigger, (trigger) => {
+      Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
 
   if (trigger) {
     return (
-      <Settings.Item title={t('trigger editor title')} description={t('trigger editor description')}>
+      <Settings.Item title={t('trigger-editor.title')} description={t('trigger-editor.description')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -119,7 +122,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {filteredTriggers.length > 0 && (
         <List.Root<Trigger.Trigger>
           items={filteredTriggers}
@@ -145,8 +148,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
       )}
 
       {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
-      <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
-    </Settings.Container>
+      <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
+    </Settings.Panel>
   );
 };
 
@@ -159,7 +162,7 @@ const TriggerListItem = ({
   onForceRun,
 }: {
   trigger: Trigger.Trigger;
-  functions: Function.Function[];
+  functions: Operation.PersistentOperation[];
   onSelect?: (trigger: Trigger.Trigger) => void;
   onDelete?: (trigger: Trigger.Trigger) => void;
   onResetCursor?: (trigger: Trigger.Trigger) => void;
@@ -268,7 +271,7 @@ const getWebhookUrl = (client: Client, trigger: Trigger.Trigger) => {
   return new URL(`/webhook/${spaceId}:${trigger.id}`, edgeUrl).toString();
 };
 
-const getFunctionName = (functions: Function.Function[], trigger: Trigger.Trigger) => {
+const getFunctionName = (functions: Operation.PersistentOperation[], trigger: Trigger.Trigger) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
   const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
@@ -278,7 +281,7 @@ const getFunctionName = (functions: Function.Function[], trigger: Trigger.Trigge
 
 const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   const fn = trigger.function?.target;
-  if (!Obj.instanceOf(Function.Function, fn)) {
+  if (!Obj.instanceOf(Operation.PersistentOperation, fn)) {
     return false;
   }
 

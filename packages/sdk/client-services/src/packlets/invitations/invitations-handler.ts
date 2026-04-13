@@ -200,7 +200,7 @@ export class InvitationsHandler {
         ctx,
         async () => {
           // ensure the swarm is closed before changing state and closing the stream.
-          await swarmConnection.close();
+          await swarmConnection.close(ctx);
           guardedState.set(null, Invitation.State.EXPIRED);
           metrics.increment('dxos.invitation.expired');
           await ctx.dispose();
@@ -436,7 +436,7 @@ export class InvitationsHandler {
     } else {
       label = `invitation host for space ${invitation.spaceKey?.truncate()}`;
     }
-    const swarmConnection = await this._networkManager.joinSwarm({
+    const swarmConnection = await this._networkManager.joinSwarm(ctx, {
       topic: invitation.swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
@@ -444,7 +444,7 @@ export class InvitationsHandler {
       topology: new InvitationTopology(role),
       label,
     });
-    ctx.onDispose(() => swarmConnection.close());
+    ctx.onDispose(() => swarmConnection.close(ctx));
     return swarmConnection;
   }
 

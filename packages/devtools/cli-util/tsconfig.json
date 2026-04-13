@@ -30,6 +30,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     }
   ]

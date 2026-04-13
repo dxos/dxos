@@ -5,7 +5,7 @@
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
@@ -21,7 +21,6 @@ import {
   type MenuItemsMap,
 } from '../types';
 import { executeMenuAction } from '../util';
-
 import { ActionLabel } from './ActionLabel';
 import { ToolbarMenu } from './ToolbarMenu';
 
@@ -60,7 +59,7 @@ type MenuDropdownContextValue = {
   caller?: string;
 };
 
-const MenuDropdownContext = React.createContext<MenuDropdownContextValue>({
+const MenuDropdownContext = createContext<MenuDropdownContextValue>({
   closeMenu: () => {},
 });
 
@@ -200,16 +199,16 @@ const useMenu = (consumerName: string): MenuContextValue => {
 // Menu.Root
 //
 
-type MenuRootProps = PropsWithChildren<
-  Omit<MenuProviderProps, 'children'> &
-    Pick<DropdownMenuRootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
-      /** Identifies the component that owns this menu (passed to action handlers). */
-      caller?: string;
-    }
->;
+type MenuRootProps = MenuProviderProps &
+  Pick<DropdownMenuRootProps, 'children' | 'open' | 'defaultOpen' | 'onOpenChange'> & {
+    /** Identifies the component that owns this menu (passed to action handlers). */
+    caller?: string;
+  };
 
 /**
  * Menu context boundary.
+ *
+ * NOTE: This component is headless since it's root div has `contents`.
  *
  * Provides the menu context (action dispatch, contribution registry, icon size, etc.)
  * and an optional dropdown root for use with `Menu.Trigger` + `Menu.Content`.

@@ -13,6 +13,8 @@ import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
+import { Markdown } from '../types';
+
 export const useLinkQuery = (db: Database.Database | undefined) => {
   const { t } = useTranslation();
 
@@ -36,6 +38,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
 
   const handleLinkQuery = useCallback(
     async (query?: string): Promise<EditorMenuGroup[]> => {
+      // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
@@ -49,7 +52,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         // TODO(wittjosiah): Remove metadata labels.
         const type = Obj.getTypename(object)!;
         const metadata = resolve(type);
-        return metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New object' }];
+        return metadata.label?.(object) || ['object-name.placeholder', { ns: type, defaultValue: 'New object' }];
       };
 
       const items =
@@ -65,6 +68,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
               icon: metadata.icon,
               onSelect: ({ view, head }) => {
                 const link = `[${label}](${Obj.getDXN(object)})`;
+                // "@@" inserts a block embed on its own line instead of an inline link.
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
                 } else {
@@ -74,9 +78,30 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
             };
           }) ?? [];
 
-      return [{ id: 'echo', items }];
+      // Add "Create new document" option at the end.
+      const createItem: EditorMenuItem = {
+        id: 'create-document',
+        label: ['add-object.label', { ns: Markdown.Document.typename }],
+        icon: 'ph--plus--regular',
+        onSelect: ({ view, head }) => {
+          const doc = Markdown.make({ name: name || undefined });
+          db?.add(doc);
+          const label = name || t('object-name.placeholder', { ns: Markdown.Document.typename });
+          const link = `[${label}](${Obj.getDXN(doc)})`;
+          if (query?.startsWith('@')) {
+            insertAtLineStart(view, head, `!${link}\n`);
+          } else {
+            insertAtCursor(view, head, `${link} `);
+          }
+        },
+      };
+
+      return [
+        { id: 'echo', items },
+        { id: 'create', items: [createItem] },
+      ];
     },
-    [db, filter, resolve],
+    [db, filter, resolve, t],
   );
 
   return handleLinkQuery;

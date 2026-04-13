@@ -4,8 +4,7 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { focusRing, surfaceShadow, surfaceZIndex } from '../../fragments';
-import { mx } from '../../util';
+import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type PopoverStyleProps = Partial<{
   constrainBlock: boolean;
@@ -18,7 +17,7 @@ export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation
     'dx-modal-surface border border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
-    focusRing,
+    'dx-focus-ring',
     ...etc,
   );
 
@@ -26,7 +25,7 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
   mx(
     'flex flex-col min-h-0 min-w-popover-min-width',
     (constrainBlock || constrainInline) && 'overflow-hidden',
-    // Ensures it respects available height from Radix (or 100dvh).
+    constrainBlock && 'max-h-(--radix-popover-content-available-height)',
     constrainBlock &&
       'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
     constrainInline && 'max-w-(--radix-popover-content-available-width)',

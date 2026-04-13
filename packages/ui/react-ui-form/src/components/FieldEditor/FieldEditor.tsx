@@ -68,7 +68,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
           {...props}
           options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
             value,
-            label: t(`format ${value}`),
+            label: t(`format.${value}.label`),
           }))}
         />
       ),

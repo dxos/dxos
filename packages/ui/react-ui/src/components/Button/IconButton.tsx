@@ -8,7 +8,6 @@ import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon, type IconProps } from '../Icon';
 import { Tooltip, type TooltipSide } from '../Tooltip';
-
 import { Button, type ButtonProps } from './Button';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
@@ -44,10 +43,9 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   },
 );
 
-// TODO(burdon): Inherit size from container/density.
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
-    { size = 5, icon, iconOnly, iconEnd, iconClassNames, label, caretDown, noTooltip: _, classNames, ...props },
+    { size, icon, iconOnly, iconEnd, iconClassNames, label, caretDown, noTooltip: _, classNames, ...props },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();

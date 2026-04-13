@@ -25,7 +25,7 @@ export const Text = Schema.Struct({
   content: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.blade-runner.text',
+    typename: 'org.dxos.type.bladeRunner.text',
     version: '0.1.0',
   }),
 );

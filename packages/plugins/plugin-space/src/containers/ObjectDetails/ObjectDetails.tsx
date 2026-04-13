@@ -5,17 +5,17 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { BaseObjectSettings } from '../../components';
+import { BaseObjectSettings } from '#components';
 
-export type ObjectDetailsProps = SurfaceComponentProps<Obj.Unknown>;
+export type ObjectDetailsProps = AppSurface.ObjectSettingsProps<Obj.Unknown>;
 
 export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
   ({ role, subject: object }, forwardedRef) => {
-    const data = useMemo(() => ({ subject: object }), [object]);
+    const data = useMemo<AppSurface.ObjectSettingsData>(() => ({ subject: object }), [object]);
 
     return (
       <Panel.Root role={role} className='dx-document' ref={forwardedRef}>
@@ -26,8 +26,6 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
           <BaseObjectSettings object={object}>
             <Surface.Surface role='base-object-settings' data={data} />
             <Surface.Surface role='object-settings' data={data} />
-            {/* TODO(wittjosiah): Remove (or add as surface)? */}
-            {/* <AdvancedObjectSettings object={object} /> */}
           </BaseObjectSettings>
         </Panel.Content>
       </Panel.Root>

@@ -12,6 +12,7 @@ import { createSignal } from 'solid-js';
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { type AiConversation } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -22,8 +23,15 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';
-import { type AiChatServices, Provider, chatLayer, createLogBuffer, functions, toolkits, types } from '../../util';
-
+import {
+  type AiChatServices,
+  Provider,
+  chatLayer,
+  createLogBuffer,
+  operationHandlers,
+  toolkits,
+  types,
+} from '../../util';
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
 
@@ -80,18 +88,18 @@ export const chat = Command.make(
       const processor = new ChatProcessor({
         runtime,
         toolkit,
-        functions,
+        functions: operationHandlers,
         metadata: service.metadata,
         registry,
       });
       const [conversation, setConversation] = createSignal<AiConversation | undefined>(undefined);
 
       invariant(client.halo.identity);
-      const space = yield* Effect.promise(async () => {
-        // TODO(burdon): Hangs if identity is not ready.
-        await client.spaces.waitUntilReady();
-        return client.spaces.default;
-      });
+      const space = getPersonalSpace(client) ?? client.spaces.get()[0];
+      if (!space) {
+        log.error('no space available for chat');
+        return;
+      }
 
       const handleChatLoad = async () => {
         const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
@@ -164,6 +172,6 @@ export const chat = Command.make(
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),
-  Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
+  Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions: operationHandlers })),
   Command.provideEffectDiscard(() => withTypes(...types)),
 );

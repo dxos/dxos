@@ -10,6 +10,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -32,6 +35,9 @@
     },
     {
       "path": "../functions-runtime-cloudflare"
+    },
+    {
+      "path": "../operation"
     },
     {
       "path": "../protocols"

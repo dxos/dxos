@@ -12,6 +12,7 @@ import {
   type Echo,
   type Halo,
   STATUS_TIMEOUT,
+  LegacySpaceProperties,
   SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
@@ -43,7 +44,6 @@ import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-
 import { ClientRuntime } from './client-runtime';
 
 /**
@@ -146,7 +146,7 @@ export class Client {
     // TODO(wittjosiah): This is ill-advised.
     //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
     //   Moving this to `initialize` causes issues with re-initialization.
-    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties, LegacySpaceProperties]);
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
@@ -416,25 +416,31 @@ export class Client {
         this.reloaded.emit();
       }
     });
+    log('client._open: opening services...');
     await this._services.open();
+    log('client._open: services opened');
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
     if (edgeUrl) {
       const { EdgeHttpClient } = await import('@dxos/edge-client');
-      this._edgeHttpClient = new EdgeHttpClient(edgeUrl);
+      const clientTag = this._config!.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
+      this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
 
+    log('client._open: connecting echo client to service...');
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
       queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
     });
+    log('client._open: opening echo client...');
     await this._echoClient.open(this._ctx);
+    log('client._open: echo client opened');
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._instanceId);
 
     const shell = this._shellManager
       ? new Shell({
@@ -447,9 +453,11 @@ export class Client {
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
+    log('client._open: subscribing to system status...');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
       async ({ status }) => {
+        log('client._open: status received', { status });
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
 
@@ -459,6 +467,7 @@ export class Client {
         }, STATUS_TIMEOUT);
       },
       (err) => {
+        log('client._open: status error', { err });
         trigger.wake(err);
         if (err) {
           this._statusUpdate.emit(null);
@@ -466,12 +475,16 @@ export class Client {
       },
     );
 
+    log('client._open: waiting for status trigger...');
     const err = await trigger.wait();
     if (err) {
       throw err;
     }
+    log('client._open: status trigger resolved');
 
-    await this._runtime.open();
+    log('client._open: opening runtime...');
+    await this._runtime.open(this._ctx);
+    log('client._open: runtime opened');
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
     await this._iframeManager?.open();
@@ -509,6 +522,7 @@ export class Client {
    */
   @synchronized
   async destroy(): Promise<void> {
+    log.info('client.destroy: destroying client', { initialized: this._initialized });
     if (!this._initialized) {
       return;
     }
@@ -526,11 +540,12 @@ export class Client {
   }
 
   private async _close(): Promise<void> {
-    log('closing...');
+    log.info('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
-    await this._runtime?.close();
+    await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
+    log.info('client._close: closing services...');
     await this._services?.close();
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;

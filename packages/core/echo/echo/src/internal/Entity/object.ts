@@ -9,7 +9,6 @@ import { invariant } from '@dxos/invariant';
 
 import { type TypeAnnotation, TypeAnnotationId, type TypeMeta, makeTypeJsonSchemaAnnotation } from '../Annotation';
 import { EntityKind } from '../common/types';
-
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**

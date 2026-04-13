@@ -161,7 +161,6 @@ export function makeProperty<T extends Obj.Unknown, K extends keyof T>(
   }
 
   assertArgument(Obj.isObject(obj), 'obj', 'Object must be a reactive object');
-  assertArgument(key in obj, 'key', 'Property must exist on object');
   return propertyFamily(obj)(key);
 }
 

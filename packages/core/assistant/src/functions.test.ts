@@ -12,37 +12,46 @@ import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
 import { AssistantTestLayer } from './testing';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const readName = defineFunction({
-  key: 'org.dxos.function.read-name',
-  name: 'Read Name',
-  description: 'Reads the name of an organization.',
-  inputSchema: Schema.Struct({
+const ReadName = Operation.make({
+  meta: {
+    key: 'org.dxos.function.read-name',
+    name: 'Read Name',
+    description: 'Reads the name of an organization.',
+  },
+  input: Schema.Struct({
     org: Ref.Ref(Organization.Organization),
   }),
-  outputSchema: Schema.String,
-  handler: Effect.fnUntraced(function* ({ data }) {
-    const org = yield* Database.load(data.org);
-    return org.name ?? '<no org>';
-  }),
+  output: Schema.String,
+  services: [Database.Service],
 });
+
+const Handlers = OperationHandlerSet.make(
+  Operation.withHandler(
+    ReadName,
+    Effect.fnUntraced(function* ({ org }) {
+      const resolved = yield* Database.load(org);
+      return resolved.name ?? '<no org>';
+    }),
+  ),
+);
 
 const blueprint = Blueprint.make({
   key: 'org.dxos.blueprint.test',
   name: 'Test blueprint',
-  tools: Blueprint.toolDefinitions({ functions: [readName] }),
+  tools: Blueprint.toolDefinitions({ operations: [ReadName] }),
 });
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  functions: [readName],
+  operationHandlers: Handlers,
   types: [Organization.Organization],
 });
 
@@ -58,12 +67,11 @@ describe('Research', () => {
           }),
         );
         yield* Database.flush();
-        yield* new AiSession().run({
+        yield* new AiSession({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({
             blueprints: [blueprint],
           }),
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
         });
       },
       Effect.provide(TestLayer),

@@ -4,8 +4,7 @@
 
 import { type ComponentFunction, type Size, type Theme } from '@dxos/ui-types';
 
-import { getSize, getSizeHeight } from '../../fragments';
-import { mx } from '../../util';
+import { mx, getSize, getHeight } from '../../util';
 
 export type AvatarStyleProps = Partial<{
   size: Size;
@@ -30,7 +29,7 @@ export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly 
   mx('text-description', srOnly && 'sr-only', ...etc);
 
 export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
-  mx('w-full h-full bg-(--surface-bg)', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
+  mx('h-full w-full bg-(--surface-bg)', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
@@ -75,7 +74,7 @@ export const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, sr
     srOnly
       ? 'sr-only'
       : 'rounded-full truncate text-sm leading-none py-1 px-2 relative z-[1] flex items-center justify-center',
-    size && getSizeHeight(size),
+    size && getHeight(size),
     ...etc,
   );
 

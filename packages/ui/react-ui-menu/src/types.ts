@@ -50,6 +50,7 @@ export type MenuContextValue = {
   items: MenuItemsAccessor;
   iconSize: IconButtonProps['size'];
   attendableId?: string;
+  /** TODO(burdon): Remove and assume always active if attendableId is undefined. */
   /** If true, the menu is always active regardless of attention state. */
   alwaysActive?: boolean;
   /** Atom holding the current set of imperatively added menu items. */

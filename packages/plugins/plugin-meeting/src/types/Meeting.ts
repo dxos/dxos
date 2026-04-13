@@ -60,13 +60,5 @@ export const Meeting = Schema.Struct({
     hue: 'rose',
   }),
 );
+
 export interface Meeting extends Schema.Schema.Type<typeof Meeting> {}
-
-// TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    entityExtraction: Schema.optional(Schema.Boolean).pipe(Schema.withConstructorDefault(() => true)),
-  }),
-);
-
-export interface Settings extends Schema.Schema.Type<typeof Settings> {}

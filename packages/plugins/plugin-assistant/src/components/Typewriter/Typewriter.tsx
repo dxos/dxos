@@ -7,7 +7,7 @@ import type * as LanguageModel from '@effect/ai/LanguageModel';
 import type * as Runtime from 'effect/Runtime';
 import React, { useMemo, useRef } from 'react';
 
-import { DensityProvider, ThemeProvider } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -40,15 +40,11 @@ export const Typewriter = ({ initialContent = '', extensions = [], runtime }: Ty
 
   return (
     <ThemeProvider>
-      <DensityProvider density='fine'>
-        <div className='w-full h-full grid overflow-hidden'>
-          <Editor.Root ref={editorRef}>
-            <Editor.Viewport>
-              <Editor.Content initialValue={initialContent} extensions={extension} />
-            </Editor.Viewport>
-          </Editor.Root>
-        </div>
-      </DensityProvider>
+      <Editor.Root ref={editorRef}>
+        <Editor.Viewport>
+          <Editor.Content initialValue={initialContent} extensions={extension} />
+        </Editor.Viewport>
+      </Editor.Root>
     </ThemeProvider>
   );
 };

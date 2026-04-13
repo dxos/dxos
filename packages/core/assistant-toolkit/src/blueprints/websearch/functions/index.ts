@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as Fetch } from './fetch';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const WebSearchFunctions = {
-  Fetch,
-};
+export * from './definitions';
+
+export const WebSearchHandlers = OperationHandlerSet.lazy(() => import('./fetch'));

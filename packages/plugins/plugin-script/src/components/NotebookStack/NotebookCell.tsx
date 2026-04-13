@@ -23,11 +23,11 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
-import { type ComputeGraph } from '../../notebook';
-import { type Notebook } from '../../types';
-import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
+import { meta } from '#meta';
+import { type Notebook } from '#types';
 
+import { type ComputeGraph } from '../../notebook';
+import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
 import { type NotebookMenuProps } from './NotebookMenu';
 
 const editorStyles = 'p-2 ps-3';
@@ -61,8 +61,8 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
       invariant(cell.source?.target);
-      Obj.change(cell.source.target, (s) => {
-        s.content = value;
+      Obj.change(cell.source.target, (obj) => {
+        obj.content = value;
       });
     },
     [cell],
@@ -98,7 +98,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             extensions={extensions}
             env={env}
             options={{
-              placeholder: t('notebook cell placeholder'),
+              placeholder: t('notebook-cell.placeholder'),
               highlightActiveLine: false,
               lineNumbers: false,
             }}
@@ -201,7 +201,7 @@ const NotebookTextEditor = ({
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({
-        placeholder: t('notebook markdown placeholder'),
+        placeholder: t('notebook-markdown.placeholder'),
         readOnly,
       }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),

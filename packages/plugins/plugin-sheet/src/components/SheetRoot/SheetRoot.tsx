@@ -14,13 +14,13 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
+import { type Sheet } from '#types';
+
 import { type SheetModel, useSheetModel } from '../../model';
-import { type Sheet } from '../../types';
 
 export type SheetContextValue = {
   id: string;
   attendableId: string;
-
   model: SheetModel;
 
   // Cursor state.

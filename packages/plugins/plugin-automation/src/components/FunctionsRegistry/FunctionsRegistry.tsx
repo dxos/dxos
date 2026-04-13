@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
-import { Function } from '@dxos/functions';
+import { Context } from '@dxos/context';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
+import * as OperationModule from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -15,7 +16,7 @@ import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-h-[2.5rem]';
 
@@ -26,12 +27,12 @@ type FunctionsRegistryProps = {
 export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   const client = useClient();
   const [loading, setLoading] = useState(true);
-  const [functions, setFunctions] = useState<Function.Function[]>([]);
+  const [functions, setFunctions] = useState<OperationModule.Operation.PersistentOperation[]>([]);
   const { t } = useTranslation(meta.id);
 
-  const dbFunctions = useQuery(space.db, Filter.type(Function.Function));
+  const dbFunctions = useQuery(space.db, Filter.type(OperationModule.Operation.PersistentOperation));
 
-  const state = (func: Function.Function) => {
+  const state = (func: OperationModule.Operation.PersistentOperation) => {
     const dbFunction = dbFunctions.find((f) => f.key === func.key);
     if (!dbFunction) {
       return 'import';
@@ -44,32 +45,38 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   useAsyncEffect(async () => {
     setLoading(true);
-    const functions = await getDeployedFunctions(client, true);
+    const functions = await getDeployedFunctions(Context.default(), client, true);
     setFunctions(functions);
     setLoading(false);
   }, []);
 
   const hanleImportOrUpdate = useCallback(
-    async (func: Function.Function) => {
-      const functions = await space.db.query(Query.type(Function.Function, { key: func.key })).run();
+    async (func: OperationModule.Operation.PersistentOperation) => {
+      const functions = await space.db
+        .query(Query.type(OperationModule.Operation.PersistentOperation, { key: func.key }))
+        .run();
       const [existingFunc] = functions;
       if (!existingFunc) {
         space.db.add(func);
         return;
       }
-      Function.setFrom(existingFunc, func);
+      OperationModule.Operation.setFrom(existingFunc, func);
     },
     [space],
   );
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {functions.length > 0 && (
-        <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
+        <List.Root<OperationModule.Operation.PersistentOperation>
+          items={functions}
+          isItem={Schema.is(OperationModule.Operation.PersistentOperation)}
+          getId={(func) => func.id}
+        >
           {({ items }) => (
             <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (
-                <List.Item<Function.Function>
+                <List.Item<OperationModule.Operation.PersistentOperation>
                   key={func.id}
                   item={func}
                   classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-h-[3rem]')}
@@ -89,7 +96,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
                     iconOnly
                     icon={state(func) === 'update' ? 'ph--arrows-clockwise--regular' : 'ph--download--regular'}
                     label={
-                      state(func) === 'update' ? t('update function button label') : t('import function button label')
+                      state(func) === 'update' ? t('update-function-button.label') : t('import-function-button.label')
                     }
                     disabled={state(func) === 'none'}
                     onClick={() => hanleImportOrUpdate(func)}
@@ -101,10 +108,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && !loading && (
-        <div className='text-center py-4 text-gray-500'>{t('no functions found')}</div>
-      )}
-      {loading && <div className='text-center py-4 text-gray-500'>{t('loading functions')}</div>}
-    </Settings.Container>
+      {loading && <div className='text-center py-4 text-gray-500'>{t('loading-functions.message')}</div>}
+    </Settings.Panel>
   );
 };

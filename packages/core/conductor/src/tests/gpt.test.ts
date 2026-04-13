@@ -15,7 +15,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, TracingService } from '@dxos/functions';
+import { CredentialsService, Trace, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 
@@ -32,6 +32,7 @@ const TestLayer = Layer.empty.pipe(
       CredentialsService.configuredLayer([]),
       Feed.notAvailable,
       TracingService.layerNoop,
+      Trace.writerLayerNoop,
     ),
   ),
 );

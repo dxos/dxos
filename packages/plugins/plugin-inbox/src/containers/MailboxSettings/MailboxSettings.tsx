@@ -6,41 +6,18 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
 
-import { useSyncTrigger } from '../../hooks';
-import { meta } from '../../meta';
-import { Mailbox } from '../../types';
+import { useSyncTrigger } from '#hooks';
+import { meta } from '#meta';
+import { Mailbox } from '#types';
 
-export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailbox>) => {
+export const MailboxSettings = ({ subject }: AppSurface.ObjectSettingsProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const mailboxSchema = useMemo(() => omitId(Mailbox.Mailbox), []);
-
-  const handleChange = useCallback(
-    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
-      if (!isValid) {
-        return;
-      }
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      if (changedPaths.length > 0) {
-        Obj.change(subject, () => {
-          for (const path of changedPaths) {
-            const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
-            Obj.setValue(subject, parts, value);
-          }
-        });
-      }
-    },
-    [subject],
-  );
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
@@ -53,6 +30,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
     if (!db) {
       return;
     }
+
     void invokePromise(LayoutOperation.Open, {
       subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
       workspace: getSpacePath(db.spaceId),
@@ -61,25 +39,18 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
 
   return (
     <div className='flex flex-col gap-4'>
-      <Form.Root schema={mailboxSchema} values={subject} db={db} onValuesChanged={handleChange}>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-      <h2>{t('mailbox sync label')}</h2>
+      <h2>{t('mailbox-sync.label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>
           <Button onClick={handleToggleSync} disabled={pending}>
             {pending
-              ? t('enabling background sync label')
+              ? t('enabling-background-sync.label')
               : syncEnabled
-                ? t('disable background sync label')
-                : t('enable background sync label')}
+                ? t('disable-background-sync.label')
+                : t('enable-background-sync.label')}
           </Button>
           {syncTrigger && (
-            <IconButton iconOnly icon='ph--gear--regular' label={t('view trigger label')} onClick={handleViewTrigger} />
+            <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
           )}
         </ButtonGroup>
       </div>

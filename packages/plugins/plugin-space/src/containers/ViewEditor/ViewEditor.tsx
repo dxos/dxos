@@ -6,6 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
@@ -15,9 +17,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { ViewModel } from '@dxos/schema';
 
-import { resolveSchemaWithRegistry } from '../../helpers';
-import { useTypeOptions } from '../../hooks';
-import { SpaceOperation } from '../../types';
+import { SpaceOperation } from '#operations';
 
 export type ViewEditorProps = { view: View.View };
 
@@ -54,8 +54,8 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
-      Obj.change(view, (v) => {
-        v.query.ast = query.ast as Mutable<typeof query.ast>;
+      Obj.change(view, (view) => {
+        view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
@@ -66,8 +66,8 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         query,
         jsonSchema: JsonSchema.toJsonSchema(newSchema),
       });
-      Obj.change(view, (v) => {
-        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+      Obj.change(view, (view) => {
+        view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 
       setSchema(() => newSchema);

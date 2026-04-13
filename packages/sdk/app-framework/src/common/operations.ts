@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/operation';
 
 import { Capability } from '../core';
-
 import { Label } from './translations';
 
 const UNDO_NAMESPACE = 'org.dxos.app-framework.undo';
@@ -28,11 +27,9 @@ export namespace UndoOperation {
     },
     executionMode: 'sync',
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),
+    }),
+    output: Schema.Void,
   });
 }

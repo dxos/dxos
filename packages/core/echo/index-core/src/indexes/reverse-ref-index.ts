@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 
 import { EscapedPropPath } from '../utils';
-
 import type { Index, IndexerObject } from './interface';
 
 /**

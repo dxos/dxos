@@ -8,14 +8,28 @@ import React, { useCallback, useMemo } from 'react';
 import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
+import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
   object: Obj.Unknown;
+};
+
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
 };
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
@@ -40,8 +54,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      Obj.change(object, (obj) => {
-        Obj.getMeta(obj).tags = [...(Obj.getMeta(obj).tags ?? []), Obj.getDXN(newObject).toString()];
+      Obj.change(object, (object) => {
+        Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
       });
     }
   }, []);
@@ -58,8 +72,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       // Handle tags separately using Obj.change.
       const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
       if (hasTagsChange) {
-        Obj.change(object, (obj) => {
-          Obj.getMeta(obj).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+        Obj.change(object, (object) => {
+          Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
         });
       }
 
@@ -82,9 +96,11 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     <Form.Root
       schema={formSchema}
       defaultValues={values}
+      createTypename={Type.getTypename(Tag.Tag)}
       createOptionIcon='ph--plus--regular'
-      createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
+      createOptionLabel={['add-tag.label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
+      createFieldMap={createFieldMap}
       db={db}
       onValuesChanged={handleChange}
       onCreate={handleCreate}

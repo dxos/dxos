@@ -3,19 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Query } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { Database, Filter, Query as EchoQuery } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'example.org/function/query',
-  name: 'Query',
-  description: 'Queries the database',
-  inputSchema: Schema.Any,
-  outputSchema: Schema.Any,
-  handler: Effect.fn(function* ({ data }) {
-    const results = yield* Database.runQuery(Query.select(Filter.everything()));
-    return { count: results.length };
-  }),
-});
+import { QueryDb } from './definitions';
+
+export default QueryDb.pipe(
+  Operation.withHandler(
+    Effect.fn(function* (data) {
+      const results = yield* Database.runQuery(EchoQuery.select(Filter.everything()));
+      return { count: results.length };
+    }),
+  ),
+);

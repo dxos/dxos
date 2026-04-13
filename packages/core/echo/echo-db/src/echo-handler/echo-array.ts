@@ -5,7 +5,6 @@
 import { batchEvents } from '@dxos/echo/internal';
 
 import type { KeyPath } from '../core-db';
-
 import { type EchoReactiveHandler } from './echo-handler';
 import { type ObjectInternals, symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Voxel } from '../../types';
+import { Voxel } from '#types';
 
 import { VoxelCard } from './VoxelCard';
 
@@ -22,7 +22,7 @@ const SAMPLE_VOXELS: Voxel.VoxelData[] = [
 
 const CardStory = () => {
   const world = useMemo(() => Voxel.make({ voxels: SAMPLE_VOXELS }), []);
-  return <VoxelCard subject={world} />;
+  return <VoxelCard subject={world} role='card--content' />;
 };
 
 const meta = {

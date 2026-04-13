@@ -32,11 +32,17 @@
   - [x] play/stop button
   - [x] storybook
 
-## Phase 3 (Sequencer & Dynamic Sounds)
-
-- [ ] Consider renaming plugin (broader than sleep).
+## Phase 3 (Sequencer)
 
 - [ ] Build `Sequencer` class that schedules and crossfades sampled sounds over a configurable timeline.
+- [ ] Sequence (grid of spans); generic (use for drum machine).
+  - [ ] Scroll grid left/right
+  - [ ] Fixed number of rows
+  - [ ] Drag to select/create/resize span.
+  - [ ] Each row associated with a sound.
+
+## Phase 4
+
 - [ ] Replace bundled soundtrack enum with dynamic file storage via the WNFS plugin (drag-and-drop upload).
 - [ ] Add playback transport controls (play, pause, stop, seek) to the `SleepArticle`.
 - [ ] Implement volume envelope curves (fade-in at start, fade-out at end) configurable per Dream.

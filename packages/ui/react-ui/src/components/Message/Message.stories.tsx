@@ -5,22 +5,21 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
-
 import { Message } from './Message';
 
-faker.seed(123);
+random.seed(123);
 
-type StoryProps = {
+type DefaultStoryProps = {
   valence: MessageValence;
   title: string;
   body: string;
 };
 
-const DefaultStory = ({ valence, title, body }: StoryProps) => (
+const DefaultStory = ({ valence, title, body }: DefaultStoryProps) => (
   <div className='w-[30rem]'>
     <Message.Root valence={valence}>
       {title && <Message.Title>{title}</Message.Title>}
@@ -53,7 +52,7 @@ export const Default: Story = {
   args: {
     valence: 'neutral',
     title: 'Alert title',
-    body: faker.lorem.paragraphs(1),
+    body: random.lorem.paragraphs(1),
   },
 };
 
@@ -61,6 +60,6 @@ export const Error: Story = {
   args: {
     valence: 'error',
     title: 'Error title',
-    body: faker.lorem.paragraphs(1),
+    body: random.lorem.paragraphs(1),
   },
 };

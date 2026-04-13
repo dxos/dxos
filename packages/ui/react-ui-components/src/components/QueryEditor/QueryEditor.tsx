@@ -19,7 +19,6 @@ import {
 import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-
 import { type CompletionOptions, completions } from './autocomplete';
 import { query } from './query-extension';
 
@@ -59,7 +58,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
-        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query editor placeholder') }),
+        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query-editor.placeholder') }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
         query({ tags }),
         extension,

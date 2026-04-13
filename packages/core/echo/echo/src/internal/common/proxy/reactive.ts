@@ -3,7 +3,6 @@
 //
 
 import { type RefTypeId } from '../../Ref/ref';
-
 import { getProxyTarget } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
 

@@ -20,8 +20,8 @@ import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { isInstanceOf } from './internal/Annotation';
-import type { Ref } from './internal/Ref/ref';
 import { type AnyProperties } from './internal/common/types';
+import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
@@ -293,6 +293,19 @@ export const runQuery: {
   <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
 } = (queryOrFilter: Query.Any | Filter.Any) =>
   query(queryOrFilter as any).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
+
+/**
+ * Executes the query once and returns the first result as or None.
+ */
+export const runQueryFirst: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<Option.Option<Filter.Type<F>>, never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  query(queryOrFilter as any).pipe(
+    Effect.flatMap((queryResult) =>
+      promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
+    ),
+  );
 
 /**
  * Creates a schema query result that can be subscribed to.

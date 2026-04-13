@@ -6,11 +6,9 @@ import type { FlameChartNodes } from 'flame-chart-js';
 import React, { type FC, useMemo, useState } from 'react';
 
 import { IconButton, Input } from '@dxos/react-ui';
-
 // Deliberately not using the common components export to aid in code-splitting.
 
 import { FlameChart } from '../../../components/FlameChart';
-
 import { type State } from './types';
 
 export const TraceView: FC<{

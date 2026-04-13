@@ -11,22 +11,22 @@ import { Surface } from '@dxos/app-framework/ui';
 import {
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-  type SurfaceComponentProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
 import { type Pipeline } from '@dxos/types';
 
-import { type ItemProps, PipelineComponent } from '../../components';
-import { usePipelineBoardModel } from '../../hooks';
+import { type ItemProps, PipelineComponent } from '#components';
+import { usePipelineBoardModel } from '#hooks';
 
 const PIPELINE_ITEM = 'PipelineItem';
 
-export type PipelineContainerProps = SurfaceComponentProps<Pipeline.Pipeline>;
+export type PipelineContainerProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
 
 export const PipelineContainer = ({ role, subject: pipeline, attendableId }: PipelineContainerProps) => {
   const registry = useCapability(Capabilities.AtomRegistry);
@@ -37,7 +37,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${COMPANION_PREFIX}settings`,
+        companion: linkedSegment('settings'),
       }),
     [invokePromise],
   );
@@ -49,7 +49,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
           <PipelineComponent.Toolbar disabled={!hasAttention} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <PipelineComponent.Content model={model}>
+          <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
         </Panel.Content>

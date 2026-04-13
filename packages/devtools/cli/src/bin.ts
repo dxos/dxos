@@ -20,11 +20,11 @@ import * as Option from 'effect/Option';
 import { createCliApp } from '@dxos/app-framework/cli';
 import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
-import { DEFAULT_PROFILE, DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 
-import { chat, debug, dx, fn, hub, repl } from './commands';
+import { admin, chat, debug, dx, fn, hub, repl } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 
 let filter = LogLevel.ERROR;
@@ -78,6 +78,7 @@ const program = Effect.gen(function* () {
       fn,
 
       // TODO(burdon): Admin-only. Where should these commands live?
+      admin,
       debug,
       hub,
     ],

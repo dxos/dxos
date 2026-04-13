@@ -3,19 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Agent, AgentBlueprint, Chat, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
+import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -23,18 +26,21 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  CompanionChatProvisioner,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  OperationResolver,
+  Migrations,
+  OperationHandler,
   ReactSurface,
   Settings,
   Toolkit,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { AssistantOperation } from '#operations';
+import { AssistantEvents } from '#types';
+
 import { translations } from './translations';
-import { AssistantEvents, AssistantOperation } from './types';
-import * as Option from 'effect/Option';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -46,10 +52,19 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props, { db }) =>
-            Operation.invoke(AssistantOperation.CreateChat, { db, name: props?.name }).pipe(
-              Effect.map(({ object }) => object),
-            )) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
+                db: options.db,
+                name: props?.name,
+              });
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -58,7 +73,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           icon: Annotation.IconAnnotation.get(Blueprint.Blueprint).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Blueprint.Blueprint).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: AssistantOperation.BlueprintForm,
-          createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Blueprint.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -66,7 +90,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Prompt.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Prompt.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -74,38 +107,53 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Sequence).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Sequence).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Obj.make(Sequence, props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
-        id: Type.getTypename(Project.Project),
+        id: Type.getTypename(Agent.Agent),
         metadata: {
-          icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((_, { db }) =>
-            Project.makeInitialized(
-              {
-                name: 'New Project',
-                spec: 'Not specified yet',
-              },
-              ProjectBlueprint.make(),
-            ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
+          icon: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = yield* Agent.makeInitialized({ name: '', spec: '' }, AgentBlueprint.make()).pipe(
+                withComputeRuntime(options.db.spaceId),
+              );
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
+      Feed.Feed,
       HasSubject.HasSubject,
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,
-      Project.Project,
+      Agent.Agent,
       Plan.Plan,
       Sequence,
+      Memory.Memory,
     ],
   }),
   AppPlugin.addSettingsModule({ activate: Settings }),
@@ -154,6 +202,18 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Use a different event.
     activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      DeckEvents.StateReady,
+    ),
+    activate: CompanionChatProvisioner,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.make,
 );

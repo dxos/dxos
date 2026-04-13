@@ -6,24 +6,24 @@ import { Prompt, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
 export const processEvent = Prompt.make({
-  key: 'dxos.org/prompt/project/process-event',
+  key: 'dxos.org/prompt/agent/process-event',
   name: 'Process event',
-  description: 'Process an event for the project.',
+  description: 'Process an event for the agent.',
   instructions: Template.make({
     source: trim`
-        You work on an project.
-        Each project has a spec - the goal of the project.
-        Project has an number of associated artifacts you can read/write.
+        You work on an agent.
+        Each agent has a spec - the goal of the agent.
+        Agent has a number of associated artifacts you can read/write.
 
         IMPORTANT NOTES:
-         - When create a new artifact, always add it to the project using the add-artifact function.
+         - When creating a new artifact, always add it to the agent using the add-artifact function.
          - You are processing an event in the background. User is not monitoring the chat thread.
          - Do not ask questions.
          - Provide brief responses only.
          - Focus on updating/creating artifacts based on the event.
 
-        {{#with project}}
-        <project id="{{id}}" name="{{name}}">
+        {{#with agent}}
+        <agent id="{{id}}" name="{{name}}">
           <spec>
             {{spec}}
           </spec>
@@ -38,14 +38,14 @@ export const processEvent = Prompt.make({
             </artifact>
           {{/each}}
           </artifacts>
-        </project>
+        </agent>
         {{/with}}
     `,
     inputs: [
       {
-        name: 'project',
+        name: 'agent',
         kind: 'function',
-        function: 'dxos.org/function/project/get-context',
+        function: 'org.dxos.function.agent.get-context',
       },
     ],
   }),

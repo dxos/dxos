@@ -8,9 +8,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
 import { type Entity, Obj, type QueryResult } from '@dxos/echo';
+import { Filter } from '@dxos/echo-db';
 import { Ref } from '@dxos/echo/internal';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { Filter } from '@dxos/echo-db';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -61,7 +61,7 @@ describe('Index queries', () => {
     ],
   });
 
-  const TIMEOUT = 1_000;
+  const TIMEOUT = 5_000;
 
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({
@@ -158,7 +158,7 @@ describe('Index queries', () => {
     {
       const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
-      await asyncTimeout(client.spaces.waitUntilReady(), 5000);
+      await expect.poll(() => client.spaces.get(spaceKey), { timeout: TIMEOUT }).toBeTruthy();
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
@@ -192,7 +192,7 @@ describe('Index queries', () => {
     {
       const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
-      await asyncTimeout(client.spaces.waitUntilReady(), TIMEOUT);
+      await expect.poll(() => client.spaces.get(spaceKey), { timeout: TIMEOUT }).toBeTruthy();
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 

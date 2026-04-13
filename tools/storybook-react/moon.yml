@@ -18,7 +18,7 @@ tasks:
       - static/*
       - $NODE_OPTIONS
     outputs:
-      - out/storybook/
+      - out/storybook-react/
   serve:
     command: storybook dev
     args:

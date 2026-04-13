@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
 import { type PointTransform, round } from '../layout';
-
 import { useEditorContext } from './useEditorContext';
 
 export const createSnap =

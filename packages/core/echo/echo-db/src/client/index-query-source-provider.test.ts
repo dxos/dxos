@@ -101,7 +101,7 @@ describe('IndexQuerySource', () => {
 
     const query = makeQuery();
     source.update(query);
-    const results = await source.run(query);
+    const results = await source.run(Context.default(), query);
 
     expect(results).toEqual([]);
     expect(calls).toHaveLength(1);

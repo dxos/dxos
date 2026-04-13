@@ -5,9 +5,10 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
+import { type LayoutOperation } from '@dxos/app-toolkit';
 import { type Label } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type LayoutStateProps = {
   sidebarState?: 'expanded' | 'collapsed' | 'closed';
@@ -29,6 +30,8 @@ export type LayoutStateProps = {
   popoverKind?: 'base' | 'card';
   popoverTitle?: Label;
   popoverContent?: any;
+
+  toasts: LayoutOperation.Toast[];
 
   workspace: string;
 };

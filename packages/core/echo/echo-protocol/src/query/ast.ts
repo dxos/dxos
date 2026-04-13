@@ -108,6 +108,20 @@ export interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
 export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
 /**
+ * Filter by system timestamp (createdAt / updatedAt).
+ * Timestamps are unix milliseconds stored in the object meta index.
+ */
+const FilterTimestamp_ = Schema.Struct({
+  type: Schema.Literal('timestamp'),
+  field: Schema.Literal('createdAt', 'updatedAt'),
+  operator: Schema.Literal('gt', 'gte', 'lt', 'lte'),
+  value: Schema.Number,
+});
+
+export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimestamp_> {}
+export const FilterTimestamp: Schema.Schema<FilterTimestamp> = FilterTimestamp_;
+
+/**
  * Text search.
  */
 const FilterTextSearch_ = Schema.Struct({
@@ -153,6 +167,21 @@ export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
 export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
 /**
+ * Filter objects that are children of the specified parents.
+ * With transitive=true (default), matches grandchildren and beyond.
+ */
+const FilterChildOf_ = Schema.Struct({
+  type: Schema.Literal('child-of'),
+  /** Parent DXNs to match children of. */
+  parents: Schema.Array(DXN.Schema),
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive: Schema.Boolean,
+});
+
+export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_> {}
+export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union(
@@ -162,7 +191,9 @@ export const Filter = Schema.Union(
   FilterContains,
   FilterTag,
   FilterRange,
+  FilterTimestamp,
   FilterTextSearch,
+  FilterChildOf,
   FilterNot,
   FilterAnd,
   FilterOr,

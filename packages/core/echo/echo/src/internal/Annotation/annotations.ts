@@ -15,7 +15,6 @@ import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
@@ -90,14 +89,15 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
  * Fully qualified globally unique typename.
  * Example: `org.dxos.type.message`
  */
-// TODO(burdon): Reconcile with short DXN format.
-// TODO(burdon): Change "type" => "schema" throughout.
-export const TypenameSchema = Schema.String.pipe(Schema.pattern(/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/)).annotations(
-  {
-    description: 'Fully qualified globally unique typename in lowercase reverse-DNS form.',
-    example: 'org.dxos.type.message',
-  },
-);
+// TODO(wittjosiah): Factor out to DXN spec.
+// TODO(wittjosiah): Switch to atproto NSID regex once legacy typenames are fully migrated:
+//   /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/
+export const TypenameSchema = Schema.String.pipe(
+  Schema.pattern(/^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9-]*){2,}$/),
+).annotations({
+  description: 'Fully qualified globally unique typename in reverse-DNS form.',
+  example: 'org.dxos.type.message',
+});
 
 /**
  * Semantic version format: `major.minor.patch`
@@ -338,6 +338,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
+ * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
 // TODO(burdon): Convert to JsonPath?
 export const getLabelWithSchema = <S extends Schema.Schema.Any>(
@@ -353,7 +354,13 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
     );
     const value = getField(object, accessor as JsonPath);
     switch (typeof value) {
-      case 'string':
+      case 'string': {
+        const trimmed = value.trim();
+        if (trimmed.length > 0) {
+          return value;
+        }
+        continue;
+      }
       case 'number':
       case 'boolean':
       case 'bigint':

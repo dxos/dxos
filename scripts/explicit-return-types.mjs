@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
+import chalk from 'chalk';
+import fs from 'fs/promises';
+import { globby } from 'globby';
 import { Project, ts } from 'ts-morph';
+import { Type } from 'ts-morph';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { globby } from 'globby';
-import fs from 'fs/promises';
-import chalk from 'chalk';
-import { Type } from 'ts-morph';
 
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))

@@ -4,26 +4,30 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin name': 'Registry',
-        'details label': 'Details',
-        'home page label': 'Website',
-        'source label': 'Source',
-        'plugin registry label': 'Plugin Registry',
-        'all plugins label': 'All',
-        'installed plugins label': 'Enabled',
-        'recommended plugins label': 'Recommended',
-        'labs plugins label': 'Labs',
-        'community plugins label': 'Community',
-        'load by url label': 'Load by URL (soon)',
-        'coming soon label': 'Coming soon!',
-        'open plugin registry label': 'Open plugin registry',
-        'settings label': 'Settings',
+        'plugin.name': 'Registry',
+        'details.label': 'Details',
+        'home-page.label': 'Website',
+        'source.label': 'Source',
+        'plugin-registry.label': 'Plugin Registry',
+        'all-plugins.label': 'All',
+        'installed-plugins.label': 'Enabled',
+        'recommended-plugins.label': 'Recommended',
+        'labs-plugins.label': 'Labs',
+        'community-plugins.label': 'Community',
+        'load-by-url.label': 'Load from URL',
+        'load-by-url-dialog.title': 'Load Plugin from URL',
+        'plugin-url.label': 'Plugin URL',
+        'load-plugin.label': 'Load Plugin',
+        'loading.label': 'Loading...',
+        'coming-soon.label': 'Coming soon!',
+        'open-plugin-registry.label': 'Open plugin registry',
+        'settings.label': 'Settings',
       },
     },
   },

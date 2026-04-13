@@ -4,9 +4,9 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { forwardRef } from 'react';
+import React, { type CSSProperties } from 'react';
 
-import { composableProps } from '@dxos/ui-theme';
+import { composableProps, PanelStyleProps, slottable } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -18,57 +18,61 @@ import { useThemeContext } from '../../hooks';
 const GRID_TEMPLATE_ROWS = 'auto 1fr auto';
 const GRID_TEMPLATE_AREAS = '"toolbar" "content" "statusbar"';
 
-type RootProps = SlottableProps<HTMLDivElement>;
+type PanelRootProps = SlottableProps<{ style?: CSSProperties }>;
 
-const Root = forwardRef<HTMLDivElement, RootProps>(({ children, asChild, role, style, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp
-      {...rest}
-      role={role ?? 'none'}
-      style={{
-        gridTemplateRows: GRID_TEMPLATE_ROWS,
-        gridTemplateAreas: GRID_TEMPLATE_AREAS,
-        ...style,
-      }}
-      className={tx('panel.root', {}, className)}
-      ref={forwardedRef}
-    >
-      {children}
-    </Comp>
-  );
-});
+const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
+  ({ children, asChild, role, style, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp
+        {...rest}
+        role={role ?? 'none'}
+        style={{
+          gridTemplateRows: GRID_TEMPLATE_ROWS,
+          gridTemplateAreas: GRID_TEMPLATE_AREAS,
+          ...style,
+        }}
+        className={tx('panel.root', {}, className)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
 
-Root.displayName = 'Panel.Root';
+PanelRoot.displayName = 'Panel.Root';
 
 //
 // Toolbar
 //
 
-type ToolbarProps = SlottableProps<HTMLDivElement>;
+type PanelToolbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
 
-const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp {...rest} data-slot='toolbar' className={tx('panel.toolbar', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
+const PanelToolbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
+  ({ children, asChild, size, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp {...rest} data-slot='toolbar' className={tx('panel.toolbar', { size }, className)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
 
-Toolbar.displayName = 'Panel.Toolbar';
+PanelToolbar.displayName = 'Panel.Toolbar';
 
 //
 // Content
 //
 
-type ContentProps = SlottableProps<HTMLDivElement>;
+type PanelContentProps = SlottableProps;
 
-const Content = forwardRef<HTMLDivElement, ContentProps>(({ children, asChild, ...props }, forwardedRef) => {
+const PanelContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
@@ -79,41 +83,38 @@ const Content = forwardRef<HTMLDivElement, ContentProps>(({ children, asChild, .
   );
 });
 
-Content.displayName = 'Panel.Content';
+PanelContent.displayName = 'Panel.Content';
 
 //
 // Statusbar
 //
 
-type StatusbarProps = SlottableProps<HTMLDivElement>;
+type PanelStatusbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
 
-const Statusbar = forwardRef<HTMLDivElement, StatusbarProps>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp {...rest} data-slot='statusbar' className={tx('panel.statusbar', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
+const PanelStatusbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
+  ({ children, asChild, size, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp {...rest} data-slot='statusbar' className={tx('panel.statusbar', { size }, className)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
 
-Statusbar.displayName = 'Panel.Statusbar';
+PanelStatusbar.displayName = 'Panel.Statusbar';
 
 //
 // Panel
 //
 
 export const Panel = {
-  Root,
-  Toolbar,
-  Content,
-  Statusbar,
+  Root: PanelRoot,
+  Toolbar: PanelToolbar,
+  Content: PanelContent,
+  Statusbar: PanelStatusbar,
 };
 
-export type {
-  RootProps as PanelRootProps,
-  ToolbarProps as PanelToolbarProps,
-  ContentProps as PanelContentProps,
-  StatusbarProps as PanelStatusbarProps,
-};
+export type { PanelRootProps, PanelToolbarProps, PanelContentProps, PanelStatusbarProps };

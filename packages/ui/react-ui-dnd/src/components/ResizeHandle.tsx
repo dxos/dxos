@@ -34,7 +34,7 @@ const getNextSize = (
     Math.max(
       minSize,
       startSize +
-        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? -1 : 1),
+        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('start') ? -1 : 1),
     ),
   );
 };
@@ -136,8 +136,8 @@ export const ResizeHandle = ({
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
-          ? 'cursor-col-resize w-4 inset-y-0 data-[side="w-end"]:end-0 data-[side="w-end"]:before:end-0 data-[side="w-start"]:start-0 data-[side="w-start"]:before:start-0 border-b-0! before:inset-y-0 before:w-1'
-          : 'cursor-row-resize h-4 inset-x-0 data-[side="h-end"]:bottom-0 data-[side="h-end"]:before:bottom-0 data-[side="h-start"]:top-0 data-[side="h-start"]:before:top-0 border-x-0! before:inset-x-0 before:h-1',
+          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:end-0 data-[side=inline-end]:before:end-0 data-[side=inline-start]:start-0 data-[side=inline-start]:before:start-0 border-b-0! before:inset-y-0 before:w-1'
+          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:bottom-0 data-[side=block-end]:before:bottom-0 data-[side=block-start]:top-0 data-[side=block-start]:before:top-0 border-x-0! before:inset-x-0 before:h-1',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'

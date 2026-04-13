@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Awaited } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -37,8 +38,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     topic,
   }: {
     signalApiUrl: string;
-    onSignal?: (msg: SignalMessage) => Promise<void>;
-    onOffer?: (msg: OfferMessage) => Promise<Answer>;
+    onSignal?: (ctx: Context, msg: SignalMessage) => Promise<void>;
+    onOffer?: (ctx: Context, msg: OfferMessage) => Promise<Answer>;
     topic: PublicKey;
   }) => {
     const peer = { peerKey: PublicKey.random().toHex() };
@@ -52,12 +53,12 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     await messenger.listen({
       peer,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async (message) => await router.receiveMessage(message),
+      onMessage: async (message) => await router.receiveMessage(Context.default(), message),
     });
 
     const router: SwarmMessenger = new SwarmMessenger({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: async (message) => await messenger.sendMessage(message),
+      sendMessage: async (ctx, message) => await messenger.sendMessage(ctx, message),
       onSignal,
       onOffer,
       topic,
@@ -72,7 +73,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
 
   test('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
-    const signalMock1 = async (msg: SignalMessage) => {
+    const signalMock1 = async (_ctx: Context, msg: SignalMessage) => {
       received.push(msg);
     };
     const { signalManager: signalManager1, peer: peer1 } = await createSignalClientAndMessageRouter({
@@ -89,8 +90,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
 
     const msg: SignalMessage = {
       author: peer2,
@@ -102,7 +103,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
         signalBatch: undefined,
       },
     };
-    await router2.signal(msg);
+    await router2.signal(Context.default(), msg);
 
     await expect.poll(() => received[0]).toEqual(expect.objectContaining(msg));
   });
@@ -125,9 +126,9 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
-    const answer = await router1.offer({
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
+    const answer = await router1.offer(Context.default(), {
       author: peer1,
       recipient: peer2,
       sessionId: PublicKey.random(),
@@ -139,7 +140,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
 
   test('signaling between 3 clients', async () => {
     const received1: SignalMessage[] = [];
-    const signalMock1 = async (msg: SignalMessage) => {
+    const signalMock1 = async (_ctx: Context, msg: SignalMessage) => {
       received1.push(msg);
     };
     const {
@@ -153,7 +154,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
     const received2: SignalMessage[] = [];
-    const signalMock2 = async (msg: SignalMessage) => {
+    const signalMock2 = async (_ctx: Context, msg: SignalMessage) => {
       received2.push(msg);
     };
     const {
@@ -167,7 +168,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
     const received3: SignalMessage[] = [];
-    const signalMock3 = async (msg: SignalMessage) => {
+    const signalMock3 = async (_ctx: Context, msg: SignalMessage) => {
       received3.push(msg);
     };
     const {
@@ -181,9 +182,9 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
-    await signalManager3.join({ topic, peer: peer3 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
+    await signalManager3.join(Context.default(), { topic, peer: peer3 });
 
     // sending signal from peer1 to peer3.
     const msg1to3: SignalMessage = {
@@ -193,7 +194,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
       data: { signal: { payload: { msg: '1to3' } }, signalBatch: undefined },
     };
-    await router1.signal(msg1to3);
+    await router1.signal(Context.default(), msg1to3);
     await expect.poll(() => received3[0]).toEqual(expect.objectContaining(msg1to3));
 
     // sending signal from peer2 to peer3.
@@ -204,7 +205,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
       data: { signal: { payload: { msg: '2to3' } }, signalBatch: undefined },
     };
-    await router2.signal(msg2to3);
+    await router2.signal(Context.default(), msg2to3);
     await expect.poll(() => received3[1]).toEqual(expect.objectContaining(msg2to3));
 
     // sending signal from peer3 to peer1.
@@ -215,7 +216,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
       data: { signal: { payload: { msg: '3to1' } }, signalBatch: undefined },
     };
-    await router3.signal(msg3to1);
+    await router3.signal(Context.default(), msg3to1);
     await expect.poll(() => received1[0]).toEqual(expect.objectContaining(msg3to1));
   });
 
@@ -241,11 +242,11 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
 
     // sending offer from peer1 to peer2.
-    const answer1 = await router1.offer({
+    const answer1 = await router1.offer(Context.default(), {
       author: peer1,
       recipient: peer2,
       sessionId: PublicKey.random(),
@@ -255,7 +256,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     expect(answer1.accept).toEqual(true);
 
     // sending offer from peer2 to peer1.
-    const answer2 = await router2.offer({
+    const answer2 = await router2.offer(Context.default(), {
       author: peer2,
       recipient: peer1,
       sessionId: PublicKey.random(),

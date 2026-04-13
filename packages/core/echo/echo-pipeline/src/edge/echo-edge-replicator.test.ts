@@ -7,6 +7,7 @@ import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
@@ -17,7 +18,6 @@ import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { openAndClose } from '@dxos/test-utils';
 
 import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
-
 import { EchoEdgeReplicator } from './echo-edge-replicator';
 
 describe('EchoEdgeReplicator', () => {
@@ -28,7 +28,7 @@ describe('EchoEdgeReplicator', () => {
 
     const { context, connectionOpen } = createMockContext();
     const replicator = await connectReplicator(client, context);
-    await replicator.connectToSpace(spaceId);
+    await replicator.connectToSpace(Context.default(), spaceId);
 
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
@@ -55,7 +55,7 @@ describe('EchoEdgeReplicator', () => {
         documentSpaceId: { [documentId]: spaceId },
       });
       const replicator = await connectReplicator(client, context);
-      await replicator.connectToSpace(spaceId);
+      await replicator.connectToSpace(Context.default(), spaceId);
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
       expect(openConnections[0].shouldAdvertise({ documentId })).toBeTruthy();
@@ -69,7 +69,7 @@ describe('EchoEdgeReplicator', () => {
       const remoteCollections: { [peerId: string]: { [documentId: string]: boolean } } = {};
       const { context, openConnections } = createMockContext({ remoteCollections });
       const replicator = await connectReplicator(client, context);
-      await replicator.connectToSpace(spaceId);
+      await replicator.connectToSpace(Context.default(), spaceId);
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
       const connection = openConnections[0];
@@ -82,7 +82,7 @@ describe('EchoEdgeReplicator', () => {
   const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
     // EdgeHttpClient functionality is not tested here.
     const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
-    await replicator.connect(context);
+    await replicator.connect(Context.default(), context);
     onTestFinished(() => replicator.disconnect());
     return replicator;
   };

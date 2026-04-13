@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { useThemeContext } from '@dxos/react-ui';
 
-import { DeckCapabilities, type LayoutMode } from '../types';
+import { DeckCapabilities, type LayoutMode } from '#types';
 
 export const useHoistStatusbar = (breakpoint: string, layoutMode?: LayoutMode): boolean => {
   const { safeAreaPadding } = useThemeContext();

@@ -26,8 +26,7 @@
 
 //     await client.initialize();
 //     await client.halo.createIdentity();
-//     await client.spaces.waitUntilReady();
-//     space = client.spaces.default;
+//     space = await client.spaces.create();
 //   });
 
 //   afterEach(async () => {

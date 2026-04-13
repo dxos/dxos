@@ -8,11 +8,14 @@ import * as Option from 'effect/Option';
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Pipeline } from '@dxos/types';
 
-import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export const PipelinePlugin = Plugin.define(meta).pipe(
@@ -23,11 +26,20 @@ export const PipelinePlugin = Plugin.define(meta).pipe(
       metadata: {
         icon: Annotation.IconAnnotation.get(Pipeline.Pipeline).pipe(Option.getOrThrow).icon,
         iconHue: Annotation.IconAnnotation.get(Pipeline.Pipeline).pipe(Option.getOrThrow).hue ?? 'white',
-        createObject: ((props) => Effect.sync(() => Pipeline.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Pipeline.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+
   AppPlugin.addSchemaModule({ schema: [Pipeline.Pipeline] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

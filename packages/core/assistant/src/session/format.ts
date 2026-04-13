@@ -15,7 +15,6 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
-
 import { ArtifactDiffResolver } from './artifact-diff';
 import { type AiSessionRunError, type AiSessionRunProps } from './session';
 

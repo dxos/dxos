@@ -53,10 +53,10 @@ export type TableChangeCallback<T extends TableRow> = {
  * Use this when the table and rows are stored in the ECHO database.
  */
 export const createEchoChangeCallback = <T extends TableRow>(table: Table.Table): TableChangeCallback<T> => ({
-  table: (mutate) => Obj.change(table, (mutableTable) => mutate(mutableTable as unknown as Table.Table)),
+  table: (mutate) => Obj.change(table, (table) => mutate(table as unknown as Table.Table)),
   row: (row, mutate) => {
     if (Obj.isObject(row)) {
-      Obj.change(row, (mutableRow) => mutate(mutableRow as T));
+      Obj.change(row, (row) => mutate(row as T));
     } else {
       mutate(row);
     }
@@ -894,14 +894,14 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       if (field) {
         // Persist sort to view.query.ast
         const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
-        Obj.change(view, (v) => {
-          v.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
+        Obj.change(view, (view) => {
+          view.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
         });
       }
     } else {
       // Clear sort from view.query.ast
-      Obj.change(view, (v) => {
-        v.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
+      Obj.change(view, (view) => {
+        view.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
       });
     }
 

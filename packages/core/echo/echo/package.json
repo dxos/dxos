@@ -117,6 +117,11 @@
       "source": "./src/Type.ts",
       "types": "./dist/types/src/Type.d.ts",
       "default": "./dist/lib/neutral/Type.mjs"
+    },
+    "./Extension": {
+      "source": "./src/Extension.ts",
+      "types": "./dist/types/src/Extension.d.ts",
+      "default": "./dist/lib/neutral/Extension.mjs"
     }
   },
   "files": [

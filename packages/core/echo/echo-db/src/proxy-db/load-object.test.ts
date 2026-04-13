@@ -13,7 +13,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder, createTmpPath } from '../testing';
-
 import { loadObjectReferences } from './load-object';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.

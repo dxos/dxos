@@ -36,13 +36,13 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
       data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
-      <span>{t('done label')}</span>
+      <span>{t('done.label')}</span>
     </Action>
   );
 
   return (
     <>
-      <InputLabel>{t('identity added label')}</InputLabel>
+      <InputLabel>{t('identity-added.label')}</InputLabel>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
         <Avatar.Root labelId={labelId}>
           <Avatar.Content
@@ -69,7 +69,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
             onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
           >
-            {t('continue label')}
+            {t('continue.label')}
           </Action>
         )}
       </ActionBar>

@@ -30,6 +30,7 @@ import {
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -39,7 +40,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
 import { TestAdapter, type TestConnectionStateProvider } from '../testing';
-
 import { FIND_PARAMS } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
@@ -961,7 +961,7 @@ const createTeleportTestPeer = async (
   });
   await echoAdapter.open();
   await echoAdapter.whenConnected();
-  await echoAdapter.addReplicator(meshAdapter);
+  await echoAdapter.addReplicator(Context.default(), meshAdapter);
   const [teleport] = teleportBuilder.createPeers({ factory: () => new TeleportPeer() });
   return { repo, meshAdapter, teleport };
 };

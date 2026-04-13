@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
+
 import type { SpaceList } from '../echo/space-list';
 import type { HaloProxy } from '../halo/halo-proxy';
 import type { MeshProxy } from '../mesh/mesh-proxy';
@@ -20,15 +22,15 @@ export class ClientRuntime {
     this.shell = shell;
   }
 
-  async open(): Promise<void> {
+  async open(ctx: Context): Promise<void> {
     await this.mesh._open();
-    await this.spaces._open();
+    await this.spaces._open(ctx);
     await this.halo._open();
   }
 
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     await this.halo._close();
-    await this.spaces._close();
+    await this.spaces._close(ctx);
     await this.mesh._close();
   }
 }

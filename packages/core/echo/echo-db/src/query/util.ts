@@ -24,6 +24,32 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
   return [...spaces];
 };
 
+const filterContainsTimestamp = (filter: QueryAST.Filter) => {
+  if (filter.type === 'timestamp') {
+    return true;
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsTimestamp);
+  }
+  if (filter.type === 'not') {
+    return filterContainsTimestamp(filter.filter);
+  }
+  return false;
+};
+
+const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+  if (filter.type === 'child-of') {
+    return true;
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsChildOf);
+  }
+  if (filter.type === 'not') {
+    return filterContainsChildOf(filter.filter);
+  }
+  return false;
+};
+
 /**
  * Extracts the filter and options from a query.
  * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
@@ -56,6 +82,9 @@ export const isSimpleSelectionQuery = (
       };
     }
     case 'select': {
+      if (filterContainsTimestamp(query.filter) || filterContainsChildOf(query.filter)) {
+        return null;
+      }
       return { filter: query.filter, options: undefined };
     }
     default: {

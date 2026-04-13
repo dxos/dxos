@@ -18,13 +18,11 @@ export namespace CollaborationOperation {
       description: 'Accept a proposal from a collaborator.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        subject: Schema.Any,
-        anchor: Schema.String,
-        proposal: ContentBlock.Proposal,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      subject: Schema.Any,
+      anchor: Schema.String,
+      proposal: ContentBlock.Proposal,
+    }),
+    output: Schema.Void,
   });
 }

@@ -10,7 +10,6 @@ import { EchoObjectSchema } from '../../Entity';
 import { setValue } from '../../Obj';
 import { Ref } from '../../Ref';
 import { foreignKey, getMeta } from '../types';
-
 import { makeObject } from './make-object';
 import { change, subscribe } from './reactive';
 

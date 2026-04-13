@@ -29,7 +29,6 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
-
 import { WorkerSession } from './worker-session';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
@@ -176,7 +175,7 @@ export class WorkerRuntime {
     this._releaseLock();
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
-    await this._clientServices.close();
+    await this._clientServices.close(Context.default());
     await this._runtime.dispose();
     await this._onStop?.();
     await this._livenessLock.release();

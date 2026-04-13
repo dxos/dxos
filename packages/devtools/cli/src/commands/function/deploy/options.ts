@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Key } from '@dxos/echo';
-import { type Function } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 
 import { getNextVersion, loadFunctionObject } from './echo';
 
@@ -39,7 +39,7 @@ export const parseOptions = Effect.fn(function* (options: {
 
   const existingObject = yield* Option.all([space, options.functionId]).pipe(
     Option.match({
-      onNone: () => Effect.succeed(Option.none<Function.Function>()),
+      onNone: () => Effect.succeed(Option.none<Operation.PersistentOperation>()),
       onSome: ([space, functionId]) => loadFunctionObject(space, functionId).pipe(Effect.map(Option.some)),
     }),
   );

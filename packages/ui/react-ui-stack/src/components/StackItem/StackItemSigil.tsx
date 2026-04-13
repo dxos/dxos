@@ -12,7 +12,6 @@ import { mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-
 import { MenuSignifierHorizontal } from './MenuSignifier';
 
 export type KeyBinding = {
@@ -81,7 +80,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
         classNames={!hasActions && 'cursor-default'}
       >
         <span className='sr-only'>{triggerLabel}</span>
-        <Icon icon={icon} size={5} />
+        <Icon icon={icon} />
       </StackItemSigilButton>
     );
 

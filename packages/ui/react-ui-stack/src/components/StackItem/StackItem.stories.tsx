@@ -19,7 +19,7 @@ const DefaultStory = (props: StackItemRootProps) => {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>
-                <Icon icon='ph--dots-three--regular' size={5} />
+                <Icon icon='ph--dots-three--regular' />
               </StackItem.SigilButton>
             </DropdownMenu.Trigger>
           </DropdownMenu.Root>

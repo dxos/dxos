@@ -9,7 +9,6 @@ import { jsonlogify } from '@dxos/util';
 
 import { type LogFilter, LogLevel } from '../config';
 import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
-
 import { getRelativeFilename } from './common';
 
 // Amount of time to retry writing after encountering EAGAIN before giving up.

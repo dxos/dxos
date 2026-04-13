@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
 import { renderHook, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { useObject } from './useObject';
 
@@ -63,8 +63,8 @@ describe('useObject', () => {
     expect(result.current[0]).toBe('Test');
 
     // Update the property via Obj.change
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Wait for reactivity to update
@@ -85,8 +85,8 @@ describe('useObject', () => {
     expect(result.current[0].name).toBe('Test');
 
     // Update a property via Obj.change
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Wait for reactivity to update
@@ -107,8 +107,8 @@ describe('useObject', () => {
     expect(result.current[0]).toBe('Test');
 
     // Update a different property via Obj.change
-    Obj.change(obj, (o) => {
-      o.email = 'newemail@example.com';
+    Obj.change(obj, (obj) => {
+      obj.email = 'newemail@example.com';
     });
 
     // Wait a bit to ensure no update happens

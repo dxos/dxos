@@ -3,7 +3,7 @@
 //
 
 import { unrefTimeout } from '@dxos/async';
-import { type Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
@@ -37,6 +37,7 @@ export type TraceSpanProps = {
   methodName: string;
   parentCtx: Context | null;
   showInBrowserTimeline: boolean;
+  showInRemoteTracing?: boolean;
   op?: string;
   attributes?: Record<string, any>;
 };
@@ -377,7 +378,8 @@ export class TracingSpan {
   error: SerializedError | null = null;
 
   private _showInBrowserTimeline: boolean;
-  private readonly _ctx: Context | null = null;
+  private _showInRemoteTracing: boolean;
+  private readonly _ctx: Context;
 
   constructor(
     private _traceProcessor: TraceProcessor,
@@ -388,15 +390,15 @@ export class TracingSpan {
     this.resourceId = _traceProcessor.getResourceId(params.instance);
     this.startTs = performance.now();
     this._showInBrowserTimeline = params.showInBrowserTimeline;
+    this._showInRemoteTracing = params.showInRemoteTracing ?? true;
     this.op = params.op;
     this.attributes = params.attributes ?? {};
 
+    const baseCtx = params.parentCtx ?? new Context();
+    this._ctx = this._showInRemoteTracing
+      ? baseCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: this.id } })
+      : baseCtx.derive();
     if (params.parentCtx) {
-      this._ctx = params.parentCtx.derive({
-        attributes: {
-          [TRACE_SPAN_ATTRIBUTE]: this.id,
-        },
-      });
       const parentId = params.parentCtx.getAttribute(TRACE_SPAN_ATTRIBUTE);
       if (typeof parentId === 'number') {
         this.parentId = parentId;
@@ -409,8 +411,18 @@ export class TracingSpan {
     return resource ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}` : this.methodName;
   }
 
-  get ctx(): Context | null {
+  /** Sanitized class name of the owning resource, if available. */
+  get sanitizedClassName(): string | undefined {
+    const resource = this.resourceId != null ? this._traceProcessor.resources.get(this.resourceId) : undefined;
+    return resource?.sanitizedClassName;
+  }
+
+  get ctx(): Context {
     return this._ctx;
+  }
+
+  get showInRemoteTracing(): boolean {
+    return this._showInRemoteTracing;
   }
 
   markSuccess(): void {
@@ -537,13 +549,13 @@ const areEqualShallow = (a: any, b: any) => {
 };
 
 export const sanitizeClassName = (className: string) => {
+  let name = className.replace(/^_+/, '');
   const SANITIZE_REGEX = /[^_](\d+)$/;
-  const m = className.match(SANITIZE_REGEX);
-  if (!m) {
-    return className;
-  } else {
-    return className.slice(0, -m[1].length);
+  const m = name.match(SANITIZE_REGEX);
+  if (m) {
+    name = name.slice(0, -m[1].length);
   }
+  return name;
 };
 
 const isSetLike = (value: any): value is Set<any> =>

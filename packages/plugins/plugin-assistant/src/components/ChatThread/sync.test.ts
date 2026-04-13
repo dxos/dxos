@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { type ContentBlock } from '@dxos/types';
 
-import { createMessage } from '../../testing';
+import { createMessage } from '#testing';
 
 import { blockToMarkdown } from './registry';
 import { MessageSyncer, type TextModel } from './sync';
@@ -20,15 +20,15 @@ import { MessageSyncer, type TextModel } from './sync';
 class TestDocument implements TextModel {
   private readonly _view = new EditorView({ extensions: [] });
 
-  get view() {
-    return this._view;
+  get length() {
+    return this._view.state.doc.length;
   }
 
   get content() {
     return this._view.state.doc.toString();
   }
 
-  async reset(text: string) {
+  async setContent(text: string) {
     this._view.dispatch({
       changes: { from: 0, to: this._view.state.doc.length, insert: text },
     });
@@ -58,8 +58,8 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
-      Obj.change(messages[1], (m) => {
-        m.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      Obj.change(messages[1], (obj) => {
+        obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', 'How can I help?', ''].join('\n'));
@@ -80,15 +80,15 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
-      Obj.change(messages[1], (m) => {
-        const block = m.blocks[0] as Mutable<ContentBlock.Text>;
+      Obj.change(messages[1], (obj) => {
+        const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
         block.text = 'Hi there! How are you?';
         block.pending = false;
       });
       syncer.append(messages);
 
-      Obj.change(messages[1], (m) => {
-        m.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      Obj.change(messages[1], (obj) => {
+        obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.append(messages);
       expect(doc.content).toEqual(

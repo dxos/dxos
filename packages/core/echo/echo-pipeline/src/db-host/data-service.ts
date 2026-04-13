@@ -7,6 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { UpdateScheduler } from '@dxos/async';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,7 +29,6 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
-
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
@@ -100,11 +100,11 @@ export class DataServiceImpl implements DataService {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    await synchronizer.update(request.updates);
+    await synchronizer.update(Context.default(), request.updates);
   }
 
   async flush(request: FlushRequest): Promise<void> {
-    await this._automergeHost.flush(request);
+    await this._automergeHost.flush(Context.default(), request);
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
@@ -124,7 +124,7 @@ export class DataServiceImpl implements DataService {
     request: WaitUntilHeadsReplicatedRequest,
     options?: RequestOptions | undefined,
   ): Promise<void> {
-    await this._automergeHost.waitUntilHeadsReplicated(request.heads);
+    await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
   }
 
   async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {

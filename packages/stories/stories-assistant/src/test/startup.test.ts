@@ -13,7 +13,7 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Config } from '@dxos/react-client';
+import { type Client, Config } from '@dxos/react-client';
 
 const localConfig = new Config({
   runtime: {
@@ -38,8 +38,17 @@ describe('ClientPlugin startup', () => {
 
     // Phase 1: Lazy-load plugins.
     let phaseStart = performance.now();
-    const [{ OperationPlugin, PluginManager, RuntimePlugin }, { ClientCapabilities, ClientPlugin }, { GraphPlugin }] =
-      await Promise.all([import('@dxos/app-framework'), import('@dxos/plugin-client'), import('@dxos/plugin-graph')]);
+    const [
+      { OperationPlugin, PluginManager, RuntimePlugin },
+      { ClientPlugin },
+      { GraphPlugin },
+      { ClientCapabilities },
+    ] = await Promise.all([
+      import('@dxos/app-framework'),
+      import('@dxos/plugin-client/cli'),
+      import('@dxos/plugin-graph'),
+      import('@dxos/plugin-client/types'),
+    ]);
     mark('dynamic imports', phaseStart);
 
     // Phase 2: Create PluginManager with core plugins + ClientPlugin.
@@ -61,12 +70,8 @@ describe('ClientPlugin startup', () => {
           yield* Effect.promise(() => client.halo.createIdentity());
           mark('createIdentity', identityStart);
 
-          const spacesStart = performance.now();
-          yield* Effect.promise(() => client.spaces.waitUntilReady());
-          mark('spaces.waitUntilReady', spacesStart);
-
           const spaceStart = performance.now();
-          const space = client.spaces.default;
+          const space = yield* Effect.promise(() => client.spaces.create());
           yield* Effect.promise(() => space.waitUntilReady());
           mark('space.waitUntilReady', spaceStart);
 
@@ -158,7 +163,7 @@ describe('ClientPlugin startup', () => {
     mark('total startup', totalStart);
 
     // Verify client is ready.
-    const client = manager.capabilities.get(ClientCapabilities.Client);
+    const client = manager.capabilities.get(ClientCapabilities.Client) as Client;
     expect(client).toBeDefined();
     expect(client.halo.identity.get()).toBeDefined();
 

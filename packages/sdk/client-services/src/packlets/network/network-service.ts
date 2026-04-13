@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
@@ -48,15 +49,15 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   async joinSwarm(request: JoinRequest): Promise<void> {
-    return this.signalManager.join(request);
+    return this.signalManager.join(Context.default(), request);
   }
 
   async leaveSwarm(request: LeaveRequest): Promise<void> {
-    return this.signalManager.leave(request);
+    return this.signalManager.leave(Context.default(), request);
   }
 
   async querySwarm(request: QueryRequest): Promise<SwarmResponse> {
-    return this.signalManager.query(request);
+    return this.signalManager.query(Context.default(), request);
   }
 
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
@@ -70,7 +71,7 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   async sendMessage(message: Message): Promise<void> {
-    return this.signalManager.sendMessage(message);
+    return this.signalManager.sendMessage(Context.default(), message);
   }
 
   subscribeMessages(peer: Peer): Stream<Message> {

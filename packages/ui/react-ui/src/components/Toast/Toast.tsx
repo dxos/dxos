@@ -4,47 +4,32 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import {
-  ToastAction as ToastActionPrimitive,
-  type ToastActionProps as ToastActionPrimitiveProps,
-  ToastClose as ToastClosePrimitive,
-  type ToastCloseProps as ToastClosePrimitiveProps,
-  ToastDescription as ToastDescriptionPrimitive,
-  type ToastDescriptionProps as ToastDescriptionPrimitiveProps,
-  ToastProvider as ToastProviderPrimitive,
-  type ToastProviderProps as ToastProviderPrimitiveProps,
-  Root as ToastRootPrimitive,
-  type ToastProps as ToastRootPrimitiveProps,
-  ToastTitle as ToastTitlePrimitive,
-  type ToastTitleProps as ToastTitlePrimitiveProps,
-  ToastViewport as ToastViewportPrimitive,
-  type ToastViewportProps as ToastViewportPrimitiveProps,
-} from '@radix-ui/react-toast';
+import * as ToastPrimitive from '@radix-ui/react-toast';
 import React, { type ComponentPropsWithRef, type FunctionComponent, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
-type ToastProviderProps = ToastProviderPrimitiveProps;
+type ToastProviderProps = ToastPrimitive.ToastProviderProps;
 
-const ToastProvider: FunctionComponent<ToastProviderProps> = ToastProviderPrimitive;
+const ToastProvider: FunctionComponent<ToastProviderProps> = ToastPrimitive.Provider;
 
-type ToastViewportProps = ThemedClassName<ToastViewportPrimitiveProps>;
+type ToastViewportProps = ThemedClassName<ToastPrimitive.ToastViewportProps>;
 
 const ToastViewport = forwardRef<HTMLOListElement, ToastViewportProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return <ToastViewportPrimitive className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />;
+  return <ToastPrimitive.Viewport {...props} className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />;
 });
 
-type ToastRootProps = ThemedClassName<ToastRootPrimitiveProps>;
+type ToastRootProps = ThemedClassName<ToastPrimitive.ToastProps>;
 
 const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(({ classNames, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <ToastRootPrimitive {...props} className={tx('toast.root', {}, classNames)} ref={forwardedRef}>
+    <ToastPrimitive.Root {...props} className={tx('toast.root', {}, classNames)} ref={forwardedRef}>
       <ElevationProvider elevation='toast'>{children}</ElevationProvider>
-    </ToastRootPrimitive>
+    </ToastPrimitive.Root>
   );
 });
 
@@ -56,22 +41,22 @@ const ToastBody = forwardRef<HTMLDivElement, ToastBodyProps>(({ asChild, classNa
   return <Comp {...props} className={tx('toast.body', {}, classNames)} ref={forwardedRef} />;
 });
 
-type ToastTitleProps = ThemedClassName<ToastTitlePrimitiveProps>;
+type ToastTitleProps = ThemedClassName<ToastPrimitive.ToastTitleProps>;
 
 const ToastTitle = forwardRef<HTMLHeadingElement, ToastTitleProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : ToastTitlePrimitive;
+    const Comp = asChild ? Slot : ToastPrimitive.Title;
     return <Comp {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
-type ToastDescriptionProps = ThemedClassName<ToastDescriptionPrimitiveProps>;
+type ToastDescriptionProps = ThemedClassName<ToastPrimitive.ToastDescriptionProps>;
 
 const ToastDescription = forwardRef<HTMLParagraphElement, ToastDescriptionProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : ToastDescriptionPrimitive;
+    const Comp = asChild ? Slot : ToastPrimitive.Description;
     return <Comp {...props} className={tx('toast.description', {}, classNames)} ref={forwardedRef} />;
   },
 );
@@ -86,13 +71,13 @@ const ToastActions = forwardRef<HTMLDivElement, ToastActionsProps>(
   },
 );
 
-type ToastActionProps = ToastActionPrimitiveProps;
+type ToastActionProps = ToastPrimitive.ToastActionProps;
 
-const ToastAction: FunctionComponent<ToastActionProps> = ToastActionPrimitive;
+const ToastAction: FunctionComponent<ToastActionProps> = ToastPrimitive.Action;
 
-type ToastCloseProps = ToastClosePrimitiveProps;
+type ToastCloseProps = ToastPrimitive.ToastCloseProps;
 
-const ToastClose: FunctionComponent<ToastCloseProps> = ToastClosePrimitive;
+const ToastClose: FunctionComponent<ToastCloseProps> = ToastPrimitive.Close;
 
 export const Toast = {
   Provider: ToastProvider,

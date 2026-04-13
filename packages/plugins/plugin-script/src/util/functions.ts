@@ -3,10 +3,11 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Operation } from '@dxos/operation';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { getSpace } from '@dxos/react-client/echo';
 /**
@@ -35,33 +36,33 @@ export const getFunctionUrl = ({
 
 export const updateFunctionMetadata = (
   script: Script.Script,
-  storedFunction: Function.Function,
+  storedFunction: Operation.PersistentOperation,
   meta: any,
   functionId: string,
 ) => {
-  Obj.change(storedFunction, (f) => {
+  Obj.change(storedFunction, (storedFunction) => {
     if (script.description !== undefined && script.description.trim() !== '') {
-      f.description = script.description;
+      storedFunction.description = script.description;
     } else if (meta.description) {
-      f.description = meta.description;
+      storedFunction.description = meta.description;
     } else {
       log.verbose('no description in function metadata', { functionId });
     }
 
     if (meta.inputSchema) {
-      f.inputSchema = meta.inputSchema;
+      storedFunction.inputSchema = meta.inputSchema;
     } else {
       log.verbose('no input schema in function metadata', { functionId });
     }
 
     if (meta.outputSchema) {
-      f.outputSchema = meta.outputSchema;
+      storedFunction.outputSchema = meta.outputSchema;
     } else {
       log.verbose('no output schema in function metadata', { functionId });
     }
 
     if (meta.key) {
-      f.key = meta.key;
+      storedFunction.key = meta.key;
     } else {
       log.verbose('no key in function metadata', { functionId });
     }

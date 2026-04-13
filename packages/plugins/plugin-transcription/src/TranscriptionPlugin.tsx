@@ -10,8 +10,9 @@ import { Annotation, Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 
-import { BlueprintDefinition, OperationResolver, ReactSurface, Transcriber } from './capabilities';
-import { meta } from './meta';
+import { BlueprintDefinition, OperationHandler, ReactSurface, Transcriber } from '#capabilities';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 import { renderByline } from './util';
 
@@ -38,7 +39,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

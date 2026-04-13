@@ -4,7 +4,6 @@
 
 import { type Context, ContextDisposedError } from '@dxos/context';
 
-import { promiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
 /**
@@ -57,12 +56,11 @@ export const asyncReturn = () => sleep(0);
 /**
  * Wait for promise or throw error.
  */
-export const asyncTimeout = async <T>(
-  // TODO(dmaretskyi): This callback API is unintuitive and leads to bugs.
-  promise: Promise<T> | (() => Promise<T>),
-  timeout: number,
-  err?: Error | string,
-): Promise<T> => {
+export const asyncTimeout = async <T>(promise: Promise<T>, timeout: number, err?: Error | string): Promise<T> => {
+  if (typeof promise === 'function') {
+    throw new Error('First argument must be a promise.');
+  }
+
   let timeoutId: NodeJS.Timeout;
   const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
   const timeoutPromise = new Promise<T>((resolve, reject) => {
@@ -73,8 +71,7 @@ export const asyncTimeout = async <T>(
     unrefTimeout(timeoutId);
   });
 
-  const conditionTimeout = typeof promise === 'function' ? promiseFromCallback<T>(promise) : promise;
-  return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
+  return await Promise.race([promise, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
 };

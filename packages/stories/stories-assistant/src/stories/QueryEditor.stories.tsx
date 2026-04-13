@@ -8,19 +8,19 @@ import React, { useState } from 'react';
 import { Obj, Tag } from '@dxos/echo';
 import { translations } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { ScrollArea } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
 
-faker.seed(1);
-const generator = faker as any as ValueGenerator;
+random.seed(1);
+const generator = random as any as ValueGenerator;
 
 const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const { space } = useClientStory();
@@ -70,8 +70,8 @@ const meta: Meta<typeof QueryEditor> = {
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
-      onCreateIdentity: async ({ client }) => {
-        const space = client.spaces.default;
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },
@@ -79,8 +79,8 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.change(obj, (o) => {
-            Obj.getMeta(o).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          Obj.change(obj, (obj) => {
+            Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
           });
         });
       },

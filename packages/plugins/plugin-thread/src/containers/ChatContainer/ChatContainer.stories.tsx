@@ -5,25 +5,26 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, Capability, OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { faker } from '@dxos/random';
+import { corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
+import { withLayout, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
-import { translations } from '../../translations';
-import { Channel } from '../../types';
+import { Channel } from '#types';
 
+import { translations } from '../../translations';
 import { ChatContainer } from './ChatContainer';
 
-faker.seed(1);
+random.seed(1);
 
 const DefaultStory = () => {
   const client = useClient();
@@ -52,12 +53,11 @@ const meta = {
   component: ThreadComponent.Root as any,
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin()],
+      plugins: corePlugins(),
       capabilities: [
         Capability.contributes(
           Capabilities.ReactSurface,

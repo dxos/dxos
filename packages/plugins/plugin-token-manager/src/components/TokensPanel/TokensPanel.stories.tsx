@@ -6,42 +6,48 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
-import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { random } from '@dxos/random';
+import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
+import { translations } from '../../translations';
 import { TokensPanel, type TokensPanelProps } from './TokensPanel';
 
-faker.seed(1);
+random.seed(1);
 
 const generator = new TestObjectGenerator(
   { [AccessToken.AccessToken.typename]: AccessToken.AccessToken },
   {
     [AccessToken.AccessToken.typename]: async () => ({
-      token: faker.string.hexadecimal({ length: 32 }),
-      source: faker.internet.url(),
-      note: faker.lorem.sentence(faker.number.int({ min: 1, max: 9 })),
+      token: random.string.hexadecimal({ length: 32 }),
+      source: random.internet.url(),
+      note: random.lorem.sentence(random.number.int({ min: 1, max: 9 })),
     }),
   },
 );
 
-const TokensPanelStory = (props: Omit<TokensPanelProps, 'tokens' | 'spaceId'>) => {
+const DefaultStory = (props: Omit<TokensPanelProps, 'tokens' | 'spaceId'>) => {
   const [tokens, setTokens] = useState<AccessToken.AccessToken[]>([]);
   useEffect(() => {
     void Promise.all([...Array(5)].map(() => generator.createObject())).then((generated) =>
       setTokens(generated as AccessToken.AccessToken[]),
     );
   }, []);
+
   if (tokens.length === 0) {
-    return <div>Loading tokens...</div>;
+    return <Loading data={{ tokens: tokens.length }} />;
   }
+
   return <TokensPanel tokens={tokens} spaceId={'space:test' as any} {...props} />;
 };
 
 const meta = {
   title: 'plugins/plugin-token-manager/components/TokensPanel',
   decorators: [withTheme()],
-  component: TokensPanelStory,
+  component: DefaultStory,
+  parameters: {
+    translations,
+  },
   args: {
     adding: false,
     onNew: () => console.log('onNew'),
@@ -50,7 +56,7 @@ const meta = {
     onDelete: (token: any) => console.log('onDelete', token),
     onAddAccessToken: (token: any) => console.log('onAddAccessToken', token),
   },
-} satisfies Meta<typeof TokensPanelStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -58,5 +64,8 @@ type Story = StoryObj<typeof meta>;
 
 // Show form view by default (list view requires client context for NewTokenSelector).
 export const Default: Story = {
-  args: { adding: true },
+  args: {
+    // TODO(burdon): Need to mock OAuth to support NewTokenSelector.
+    adding: true,
+  },
 };
