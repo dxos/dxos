@@ -56,13 +56,13 @@ export const createMessageGenerator = (): MessageGenerator[] => [
 
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
-        Obj.change(message, (obj) => {
-          const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
+        Obj.change(message, (message) => {
+          const block = message.blocks[0] as Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
       }
-      Obj.change(message, (obj) => {
-        const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
+      Obj.change(message, (message) => {
+        const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });
     });
