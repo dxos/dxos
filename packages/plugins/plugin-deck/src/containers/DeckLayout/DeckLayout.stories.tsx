@@ -11,7 +11,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -202,13 +202,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           Surface.create({
             id: 'story-article-companion',
             role: 'article',
-            filter: (data): data is Record<string, unknown> =>
+            filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
               typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
-            component: ({ data }) => {
-              const subject = (data as any)?.subject;
-              const companionTo = (data as any)?.companionTo;
-              const properties = (data as any)?.properties;
-              const variant = (data as any)?.variant as string | undefined;
+            component: ({ data: { subject, companionTo, properties, variant } }) => {
               if (companionTo == null) {
                 return <Loading />;
               }
@@ -318,24 +314,34 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
 
   return (
     <List>
-      {items.map((node) => (
-        <ListItem.Root
-          key={node.id}
-          classNames='dx-hover'
-          onClick={() =>
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' })
-          }
-        >
-          {node.properties.icon && (
-            <ListItem.Endcap>
-              <Icon icon={node.properties.icon} size={4} />
-            </ListItem.Endcap>
-          )}
-          <ListItem.Heading classNames='cursor-pointer truncate'>
-            {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-          </ListItem.Heading>
-        </ListItem.Root>
-      ))}
+      {items.map((node) => {
+        const open = () =>
+          void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
+        return (
+          <ListItem.Root
+            key={node.id}
+            classNames='dx-hover cursor-pointer'
+            role='button'
+            tabIndex={0}
+            onClick={open}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                open();
+              }
+            }}
+          >
+            {node.properties.icon && (
+              <ListItem.Endcap>
+                <Icon icon={node.properties.icon} size={4} />
+              </ListItem.Endcap>
+            )}
+            <ListItem.Heading classNames='truncate'>
+              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
+            </ListItem.Heading>
+          </ListItem.Root>
+        );
+      })}
     </List>
   );
 };
