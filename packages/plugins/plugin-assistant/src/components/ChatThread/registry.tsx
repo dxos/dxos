@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import React from 'react';
+
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
@@ -11,7 +13,7 @@ import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
   FallbackWidget,
   PromptWidget,
-  ReasoningPanelWidget,
+  ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
@@ -39,7 +41,10 @@ export const componentRegistry: XmlWidgetRegistry = {
   reasoning: {
     block: true,
     streaming: true,
-    Component: ReasoningPanelWidget,
+    factory: ({ children, range }) => {
+      const text = getXmlTextChild(children);
+      return text ? new ReasoningWidget(text, range.from) : null;
+    },
   },
   reference: {
     block: false,
@@ -90,9 +95,12 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   toolCall: {
     block: true,
-    Component: ToolWidget,
+    Component: (props) => (
+      <div role='none' className='py-2'>
+        <ToolWidget {...props} />
+      </div>
+    ),
   },
-
   toolResult: {
     block: true,
     Component: FallbackWidget,

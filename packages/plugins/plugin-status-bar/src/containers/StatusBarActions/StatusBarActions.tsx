@@ -20,7 +20,7 @@ export const StatusBarActions = (_props: StatusBarActionsProps) => {
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <div role='none' className='h-full flex items-center gap-2 mx-2'>
+      <div role='none' className='h-full flex items-center px-2 gap-2'>
         <EnvironmentLabel />
         <VersionNumber />
         <div role='none' className='grow' />
