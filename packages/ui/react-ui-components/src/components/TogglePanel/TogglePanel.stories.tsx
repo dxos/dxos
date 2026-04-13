@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, Input, Toolbar } from '@dxos/react-ui';
+import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -70,16 +70,18 @@ const DefaultStory = (props: TogglePanelRootProps) => {
   }, [running]);
 
   return (
-    <div className='flex flex-col w-[30rem]'>
-      <Toolbar.Root>
-        <Input.Root>
-          <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
-        </Input.Root>
-        <div className='grow' />
-        <div>{count}</div>
-      </Toolbar.Root>
-      <div className='flex p-4'>
-        <TogglePanel.Root classNames='border border-separator rounded-md' {...props}>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Input.Root>
+            <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
+          </Input.Root>
+          <div className='grow' />
+          <div>{count}</div>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <TogglePanel.Root classNames='border border-separator' {...props}>
           <TogglePanel.Header
             icon={
               running ? (
@@ -89,12 +91,14 @@ const DefaultStory = (props: TogglePanelRootProps) => {
           >
             Test
           </TogglePanel.Header>
-          <TogglePanel.Content classNames='bg-modal-surface'>
-            <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
+          <TogglePanel.Content>
+            <TogglePanel.Viewport>
+              <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
+            </TogglePanel.Viewport>
           </TogglePanel.Content>
         </TogglePanel.Root>
-      </div>
-    </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -114,10 +118,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {},
-};
-
-export const Shrink: Story = {
-  args: {
-    shrink: true,
-  },
 };
