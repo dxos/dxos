@@ -9524,9 +9524,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
-      '@dxos/plugin-dealflow':
-        specifier: workspace:*
-        version: link:../plugin-dealflow
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
