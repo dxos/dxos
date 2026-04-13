@@ -13,6 +13,19 @@ import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
 import { getTypeDXN, setTypename } from '../Annotation';
+import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import {
+  ATTR_META,
+  ATTR_PARENT,
+  ATTR_TYPE,
+  type AnyEntity,
+  EntityKind,
+  KindId,
+  MetaId,
+  ObjectMetaSchema,
+  ParentId,
+  setSchema,
+} from '../common/types';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
@@ -27,20 +40,7 @@ import {
   SelfDXNId,
   assertObjectModel,
 } from '../Entity';
-import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
-import {
-  ATTR_META,
-  ATTR_PARENT,
-  ATTR_TYPE,
-  type AnyEntity,
-  EntityKind,
-  KindId,
-  MetaId,
-  ObjectMetaSchema,
-  ParentId,
-  setSchema,
-} from '../common/types';
 
 // Re-export for backward compatibility.
 export { attachTypedJsonSerializer };

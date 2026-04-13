@@ -21,7 +21,6 @@ import { isTruthy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
 import { renderByline } from '../../util';
-
 import { transcription } from './transcription-extension';
 
 export { renderByline };

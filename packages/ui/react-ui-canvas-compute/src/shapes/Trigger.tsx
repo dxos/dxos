@@ -10,7 +10,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -48,13 +48,13 @@ export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
 export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const functionTrigger = shape.functionTrigger?.target;
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
-      Obj.change(functionTrigger, (obj) => {
-        obj.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
+      Obj.change(functionTrigger, (functionTrigger) => {
+        functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
       });
     }
   }, [functionTrigger, functionTrigger?.spec]);

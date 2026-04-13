@@ -35,6 +35,8 @@ export type MessengerConfig = {
   timeout?: number;
   protocol?: Protocol;
   disableAuth?: boolean;
+  /** Sent as `X-DXOS-Client-Tag` on the WebSocket upgrade (Node/`ws` only; ignored in browsers). */
+  clientTag?: string;
 };
 
 export interface EdgeConnection extends Required<Lifecycle> {
@@ -228,7 +230,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
     log('Opening websocket', { url: url.toString(), protocolHeader });
     const connection = new EdgeWsConnection(
       identity,
-      { url, protocolHeader },
+      {
+        url,
+        protocolHeader,
+        headers: this._config.clientTag ? { 'X-DXOS-Client-Tag': this._config.clientTag } : undefined,
+      },
       {
         onConnected: () => {
           if (this._isActive(connection)) {

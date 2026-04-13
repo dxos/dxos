@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/operation';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const TOKEN_MANAGER_OPERATION = `${meta.id}.operation`;
 

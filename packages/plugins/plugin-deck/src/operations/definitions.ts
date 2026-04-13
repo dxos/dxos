@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),

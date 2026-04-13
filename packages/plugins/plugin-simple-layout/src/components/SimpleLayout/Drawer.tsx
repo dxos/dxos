@@ -5,13 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { getCompanionVariant } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
-import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
+import { useCompanions, useDrawerActions, useSimpleLayoutState } from '#hooks';
+
 import { Loading } from '../Loading';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
@@ -35,16 +36,17 @@ export const Drawer = () => {
   const parentNode = useNode(graph, activeId);
 
   // Build Surface data for the companion content.
-  const data = useMemo(() => {
-    return (
-      node && {
-        attendableId: companionId,
-        subject: node.data,
-        companionTo: parentNode?.data,
-        properties: node.properties,
-        variant,
-      }
-    );
+  const data = useMemo<AppSurface.ArticleData | undefined>(() => {
+    if (!node || !companionId) {
+      return undefined;
+    }
+    return {
+      attendableId: companionId,
+      subject: node.data,
+      companionTo: parentNode?.data,
+      properties: node.properties,
+      variant,
+    };
   }, [companionId, node, parentNode, variant]);
 
   // Get drawer actions (tabs + toolbar buttons).
@@ -79,7 +81,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((c) => getCompanionVariant(c.id) === preferredVariant);
+      const preferred = companions.find((c) => getLinkedVariant(c.id) === preferredVariant);
       if (preferred) {
         return preferred;
       }
@@ -90,7 +92,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
   }, [companions, preferredVariant]);
 
   const companionId = selectedCompanion?.id;
-  const variant = companionId ? getCompanionVariant(companionId) : undefined;
+  const variant = companionId ? getLinkedVariant(companionId) : undefined;
 
   return { selectedCompanion, companionId, variant };
 };

@@ -5,8 +5,8 @@
 import { formatDistance } from 'date-fns';
 import React from 'react';
 
-import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 import { useConfig } from '@dxos/react-client';
+import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
@@ -49,7 +49,7 @@ export const AboutDialog = () => {
             <Trans
               {...{
                 t,
-                i18nKey: 'powered by dxos message',
+                i18nKey: 'powered-by-dxos.message',
                 components: {
                   dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
                 },

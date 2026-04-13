@@ -12,9 +12,9 @@ import { Script } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ScriptToolbarState, type ScriptToolbarStateStore } from '../../hooks';
-import { translations } from '../../translations';
+import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
 
+import { translations } from '../../translations';
 import { ScriptToolbar } from './ScriptToolbar';
 
 // Create a mock store for stories.

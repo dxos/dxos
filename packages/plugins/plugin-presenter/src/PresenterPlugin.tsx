@@ -5,8 +5,9 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, PresenterSettings, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, PresenterSettings, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 // TODO(burdon): Only scale markdown content.

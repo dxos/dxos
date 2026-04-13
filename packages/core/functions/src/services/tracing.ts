@@ -16,6 +16,7 @@ import type { Trigger } from '../types';
 /**
  * Provides a way for compute primitives (functions, workflows, tools)
  * to emit an execution trace as a series of structured ECHO objects.
+ * @deprecated Use Trace.TraceService instead.
  */
 export class TracingService extends Context.Tag('@dxos/functions/TracingService')<
   TracingService,
@@ -30,6 +31,11 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
      * @param event - The event to write. Must be an a typed object.
      */
     write: (event: Obj.Unknown, traceContext: TracingService.TraceContext) => void;
+
+    /**
+     * Write an ephemeral event.
+     */
+    ephemeral: (event: Obj.Unknown, traceContext: TracingService.TraceContext) => void;
 
     traceInvocationStart({
       payload,
@@ -51,6 +57,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   static noop: Context.Tag.Service<TracingService> = {
     getTraceContext: () => ({}),
     write: () => {},
+    ephemeral: () => {},
     traceInvocationStart: () =>
       Effect.sync(() => ({ invocationId: ObjectId.random(), invocationTraceQueue: undefined })),
     traceInvocationEnd: () => Effect.sync(() => {}),
@@ -69,6 +76,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         const context = mapContext(tracing.getTraceContext());
         return {
           write: (event, context) => tracing.write(event, context),
+          ephemeral: (event, context) => tracing.ephemeral(event, context),
           getTraceContext: () => context,
           traceInvocationStart: () => Effect.die('Tracing invocation inside another invocation is not supported.'),
           traceInvocationEnd: () => Effect.die('Tracing invocation inside another invocation is not supported.'),
@@ -106,7 +114,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   });
 
   static emitConverationMessage: (
-    data: Obj.MakeProps<typeof Message.Message>,
+    data: Obj.MakeProps<typeof Message.Message> | Message.Message,
   ) => Effect.Effect<void, never, TracingService> = Effect.fnUntraced(function* (data) {
     const tracing = yield* TracingService;
     tracing.write(
@@ -121,6 +129,12 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
       tracing.getTraceContext(),
     );
   });
+
+  static emitEphemeralMessage: (data: Message.Message) => Effect.Effect<void, never, TracingService> =
+    Effect.fnUntraced(function* (data) {
+      const tracing = yield* TracingService;
+      tracing.ephemeral(data, tracing.getTraceContext());
+    });
 }
 
 export namespace TracingService {
@@ -159,6 +173,24 @@ export namespace TracingService {
       kind: Trigger.Kind;
     };
     chat?: Ref.Ref<Obj.Unknown>;
+    process?: {
+      pid: string;
+      parentPid?: string;
+      /**
+       * Key of the executable.
+       */
+      key: string;
+
+      /**
+       * Process name.
+       */
+      name?: string;
+
+      /**
+       * Target object that the process is assigned to.
+       */
+      target?: string;
+    };
   }
 }
 

@@ -227,7 +227,7 @@ class ManagerImpl implements PluginManager {
       log('add plugin', { id });
       const plugin = yield* this._pluginLoader(id);
       this._addPlugin(plugin);
-      return yield* this.enable(id);
+      return yield* this.enable(plugin.meta.id);
     });
   }
 

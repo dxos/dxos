@@ -5,28 +5,30 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SpaceSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface, useActiveSpace, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
-import { invariant } from '@dxos/invariant';
 
-import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
-import { meta } from '../../meta';
-import { FeedOperation } from '../../operations';
-import { Subscription } from '../../types';
+import { SubscriptionStack, type SubscriptionStackAction } from '#components';
+import { meta } from '#meta';
+import { FeedOperation } from '#operations';
+import { Subscription } from '#types';
 
-export type SubscriptionsArticleProps = SpaceSurfaceProps;
+export type SubscriptionsArticleProps = AppSurface.ArticleProps<'feeds-root'>;
 
-export const SubscriptionsArticle = ({ role, attendableId, space }: SubscriptionsArticleProps) => {
+export const SubscriptionsArticle = ({ role, attendableId }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
+  const space = useActiveSpace();
 
   const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
   const currentId = useSelected(attendableId, 'single');
@@ -41,7 +43,7 @@ export const SubscriptionsArticle = ({ role, attendableId, space }: Subscription
             selection: { mode: 'single', id: action.feedId },
           });
 
-          const companion = companionSegment('feed');
+          const companion = linkedSegment('feed');
           if (layout.mode === 'simple') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,

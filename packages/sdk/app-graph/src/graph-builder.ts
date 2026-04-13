@@ -21,7 +21,15 @@ import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullab
 import * as Graph from './graph';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import { nodeArgsUnchanged, normalizeRelation, primaryKey, primaryParts, qualifyId, validateSegmentId } from './util';
+import {
+  getParentId,
+  nodeArgsUnchanged,
+  normalizeRelation,
+  primaryKey,
+  primaryParts,
+  qualifyId,
+  validateSegmentId,
+} from './util';
 
 //
 // Extension Types
@@ -295,7 +303,6 @@ class GraphBuilderImpl implements GraphBuilder {
     this._subscriptions.set(subscriptionKey(id, 'expand', key), cancel);
   }
 
-  // TODO(wittjosiah): If the same node is added by a connector, the resolver should probably cancel itself?
   private async _onInitialize(id: string) {
     log('onInitialize', { id });
     const resolver = this._resolvers(id);
@@ -304,17 +311,24 @@ class GraphBuilderImpl implements GraphBuilder {
       resolver,
       (node) => {
         const trigger = this._initialized[id];
+        const connectorOwned = [...this._connectorPrevious.values()].some((ids) => ids.includes(id));
         Option.match(node, {
           onSome: (node) => {
-            const connectorOwned = [...this._connectorPrevious.values()].some((ids) => ids.includes(id));
             if (!connectorOwned) {
               Graph.addNodes(this._graph, [node]);
+              // Connect resolved node to its parent via a child edge.
+              const parentId = getParentId(id);
+              if (parentId) {
+                Graph.addEdges(this._graph, [{ source: parentId, target: id, relation: 'child' }]);
+              }
             }
             trigger?.wake();
           },
           onNone: () => {
             trigger?.wake();
-            Graph.removeNodes(this._graph, [id]);
+            if (!connectorOwned) {
+              Graph.removeNodes(this._graph, [id]);
+            }
           },
         });
       },

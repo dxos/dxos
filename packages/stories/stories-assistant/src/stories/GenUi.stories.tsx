@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { translations } from '@dxos/plugin-assistant';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { GenUiModule } from '../components/GenUiModule';
+import { GenUiModule } from '../components';
 import { ModuleContainer, config, getDecorators } from '../testing';
 
 const storybook: Meta<typeof ModuleContainer> = {

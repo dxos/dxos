@@ -7,9 +7,8 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Tooltip } from '../Tooltip';
-
-import { IconButton, type IconButtonProps } from './IconButton';
 import { Button } from './Button';
+import { IconButton, type IconButtonProps } from './IconButton';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (

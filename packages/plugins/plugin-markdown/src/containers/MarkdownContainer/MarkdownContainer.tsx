@@ -8,27 +8,32 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
+import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
-import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '../../components';
-import { useLinkQuery } from '../../hooks';
-import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+  type MarkdownEditorContentProps,
+  type MarkdownEditorProviderProps,
+} from '#components';
+import { useLinkQuery } from '#hooks';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
-export type MarkdownContainerProps = ObjectSurfaceProps<
+export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
   Markdown.Document | Text.Text,
   {
     id: string;
     settings: Markdown.Settings;
     selectionManager?: SelectionManager;
   } & Pick<MarkdownPluginState, 'extensionProviders'> &
-    Pick<MarkdownEditorRootProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+    Pick<MarkdownEditorProviderProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
     Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
 
@@ -97,14 +102,16 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           void invokePromise?.(LayoutOperation.Open, {
             subject: [targetId],
             pivotId: attendableId,
+            // TODO(wittjosiah): This should probably pre-validate.
+            navigation: 'immediate',
           });
         }
       },
-      [onSelectObject, invokePromise, object, id],
+      [onSelectObject, invokePromise, attendableId],
     );
 
     return (
-      <MarkdownEditor.Root
+      <MarkdownEditorProvider
         id={id}
         attendableId={attendableId}
         object={object}
@@ -117,18 +124,22 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         onSelectObject={handleSelectObject}
         {...props}
       >
-        <Panel.Root role={role} ref={forwardedRef}>
-          {settings.toolbar && (
-            <Panel.Toolbar classNames='bg-toolbar-surface'>
-              <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
-            </Panel.Toolbar>
-          )}
-          <Panel.Content>
-            <MarkdownEditor.Content initialValue={initialValue} />
-            <MarkdownEditor.Blocks />
-          </Panel.Content>
-        </Panel.Root>
-      </MarkdownEditor.Root>
+        {(editorRootProps) => (
+          <Editor.Root {...editorRootProps}>
+            <Panel.Root role={role} ref={forwardedRef}>
+              {settings.toolbar && (
+                <Panel.Toolbar classNames='bg-toolbar-surface'>
+                  <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
+                </Panel.Toolbar>
+              )}
+              <Panel.Content>
+                <MarkdownEditor.Content initialValue={initialValue} />
+                <MarkdownEditor.Blocks />
+              </Panel.Content>
+            </Panel.Root>
+          </Editor.Root>
+        )}
+      </MarkdownEditorProvider>
     );
   },
 );

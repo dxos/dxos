@@ -5,13 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl, sizes } from './TextCrawl';
 
-faker.seed(1234);
+random.seed(1234);
 
 const meta = {
   title: 'ui/react-ui-components/TextCrawl',
@@ -25,8 +25,8 @@ const meta = {
 export default meta;
 
 const createLines = () => {
-  const length = faker.number.int({ min: 1, max: 10 });
-  return Array.from({ length }, (_, i) => `[${i + 1}/${length}] ${faker.lorem.paragraph()}`);
+  const length = random.number.int({ min: 1, max: 10 });
+  return Array.from({ length }, (_, i) => `[${i + 1}/${length}] ${random.lorem.paragraph()}`);
 };
 
 type Story = StoryObj<typeof TextCrawl>;
@@ -57,7 +57,7 @@ export const Controlled: Story = {
           <Toolbar.Button
             onClick={() =>
               setLines((lines) => {
-                return [...lines, `[${lines.length + 1}/${lines.length + 1}] ${faker.lorem.paragraph()}`];
+                return [...lines, `[${lines.length + 1}/${lines.length + 1}] ${random.lorem.paragraph()}`];
               })
             }
           >

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type FC,
   forwardRef,
@@ -20,7 +20,6 @@ import { type Axis, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-
 import { useMosaicContainerContext } from './Container';
 import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
 import { styles } from './styles';

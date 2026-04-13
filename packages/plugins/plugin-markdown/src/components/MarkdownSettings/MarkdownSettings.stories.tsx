@@ -7,14 +7,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { MarkdownSettings } from './MarkdownSettings';
 
 const meta = {
   title: 'plugins/plugin-markdown/components/MarkdownSettings',
   tags: ['settings'],
   component: MarkdownSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

@@ -9,7 +9,7 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { type Actor } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
   const { t } = useTranslation(meta.id);

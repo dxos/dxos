@@ -38,7 +38,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
-            <Json data={selectedObject} />
+            <Json.Data data={selectedObject} />
           </Grid>
         </Panel.Content>
       </Panel.Root>

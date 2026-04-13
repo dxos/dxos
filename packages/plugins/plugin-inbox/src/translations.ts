@@ -6,8 +6,8 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
-import { meta } from './meta';
-import { Calendar, Mailbox } from './types';
+import { meta } from '#meta';
+import { Calendar, Mailbox } from '#types';
 
 export const translations = [
   {
@@ -85,6 +85,7 @@ export const translations = [
         'event-toolbar-create-note.menu': 'Create note',
 
         'message-toolbar.label': 'Message toolbar',
+        'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
@@ -102,6 +103,8 @@ export const translations = [
         'mailboxes-section.label': 'Mailboxes',
         'all-mail.label': 'All Mail',
         'drafts.label': 'Drafts',
+        'drafts.article.description': 'Draft list (coming soon).',
+        'drafts.empty.message': 'No drafts yet.',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',

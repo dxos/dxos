@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Sketch } from '@dxos/plugin-sketch/types';
 
-import { EXCALIDRAW_SCHEMA } from '../types';
+import { EXCALIDRAW_SCHEMA } from '#types';
 
 import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
 

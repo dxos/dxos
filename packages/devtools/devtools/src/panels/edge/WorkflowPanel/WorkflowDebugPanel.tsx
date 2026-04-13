@@ -8,11 +8,11 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
-import { Database } from '@dxos/echo';
 import { Context } from '@dxos/context';
+import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { createEventLogger } from '@dxos/functions';
+import { createEventLogger, Trace } from '@dxos/functions';
 import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
@@ -137,6 +137,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
+              Effect.provide(Trace.writerLayerNoop),
               Effect.scoped,
             ),
         );
@@ -231,7 +232,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
 
 const RobotAvatar = () => (
   <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--robot--regular' />
+    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
   </Avatar.Root>
 );
 

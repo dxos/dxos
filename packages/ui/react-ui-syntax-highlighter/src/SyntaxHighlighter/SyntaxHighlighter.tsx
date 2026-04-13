@@ -12,6 +12,11 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
 
+const languages = {
+  js: 'javascript',
+  ts: 'typescript',
+};
+
 export type SyntaxHighlighterProps = NaturalSyntaxHighlighterProps & {
   fallback?: string;
 };
@@ -23,7 +28,6 @@ export type SyntaxHighlighterProps = NaturalSyntaxHighlighterProps & {
  * https://github.com/react-syntax-highlighter/react-syntax-highlighter
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
-// TODO(burdon): Replace with react-ui-editor (and reuse styles).
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
   (
     { children, language = 'text', fallback = zeroWidthSpace, classNames, className, style, ...nativeProps },
@@ -34,6 +38,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
     return (
       <ScrollArea.Root {...composableProps({ classNames, className })} thin ref={forwardedRef}>
         <ScrollArea.Viewport>
+          {/* NOTE: The div prevents NativeSyntaxHighlighter from managing scrolling. */}
           <div role='none'>
             <NativeSyntaxHighlighter
               language={languages[language as keyof typeof languages] || language}
@@ -58,8 +63,3 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
 );
 
 SyntaxHighlighter.displayName = 'SyntaxHighlighter';
-
-const languages = {
-  js: 'javascript',
-  ts: 'typescript',
-};

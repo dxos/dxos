@@ -39,6 +39,7 @@ export const Sequence = Schema.Struct({
     hue: 'sky',
   }),
 );
+
 export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}
 
 /**

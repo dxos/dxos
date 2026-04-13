@@ -12,7 +12,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { TestBuilder, type TestPeer } from '../testing';
-
 import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationsHandler } from './invitations-handler';
 import { SpaceInvitationProtocol } from './space-invitation-protocol';

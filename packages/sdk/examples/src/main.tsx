@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
@@ -38,7 +38,7 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   );
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
+  const space = await clients[0].spaces.create({ name: random.commerce.productName() });
   await onCreateSpace?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
   return { spaceId: space.id, clients };

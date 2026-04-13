@@ -1,9 +1,10 @@
 import 'zx/globals';
-import { $, fs } from 'zx';
+
 import chalk from 'chalk';
 import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import YAML from 'yaml';
+import { $, fs } from 'zx';
 
 const SEVERITIES = ['conventional', 'info', 'warning', 'error'];
 const SEVERITY_ICONS = {

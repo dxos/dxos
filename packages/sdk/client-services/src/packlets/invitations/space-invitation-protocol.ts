@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
   getCredentialAssertion,
 } from '@dxos/credentials';
-import { Context } from '@dxos/context';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -23,7 +23,6 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
-
 import { type InvitationProtocol } from './invitation-protocol';
 import { computeExpirationTime } from './utils';
 

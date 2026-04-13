@@ -10,7 +10,7 @@ import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { TemplateEditor } from './TemplateEditor';
 
@@ -66,7 +66,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
           <span className='text-neutral-500'>/</span>
           <Input.Root>
             <Input.TextInput
-              placeholder={t('command placeholder')}
+              placeholder={t('command.placeholder')}
               classNames='w-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {

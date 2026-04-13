@@ -35,6 +35,9 @@
       "path": "../../../tools/vite-plugin-import-source"
     },
     {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -134,6 +137,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-iroh-beacon"
+    },
+    {
       "path": "../../plugins/plugin-kanban"
     },
     {
@@ -206,6 +212,12 @@
       "path": "../../plugins/plugin-space"
     },
     {
+      "path": "../../plugins/plugin-spacetime"
+    },
+    {
+      "path": "../../plugins/plugin-spec"
+    },
+    {
       "path": "../../plugins/plugin-spotlight"
     },
     {
@@ -225,6 +237,9 @@
     },
     {
       "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-tictactoe"
     },
     {
       "path": "../../plugins/plugin-token-manager"
@@ -285,6 +300,9 @@
     },
     {
       "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-ui"

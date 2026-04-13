@@ -6,9 +6,9 @@ import * as Registry from '@effect-atom/atom/Registry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { TestSchema } from '@dxos/echo/testing';
 
 import * as AtomRef from './ref-atom';
 
@@ -60,8 +60,8 @@ describe('AtomRef - Basic Functionality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate target - ref atom does NOT react to this.
-    Obj.change(targetObj, (obj) => {
-      obj.name = 'Updated';
+    Obj.change(targetObj, (targetObj) => {
+      targetObj.name = 'Updated';
     });
 
     // Update count should still be 1 - ref atom doesn't subscribe to target changes.

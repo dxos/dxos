@@ -7,18 +7,17 @@ import React, { useState } from 'react';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
-
+import { Focus } from '../Focus';
 import { Mosaic, MosaicStackProps } from './Mosaic';
 import { MosaicStack } from './Stack';
-import { Focus } from '../Focus';
 
-faker.seed(999);
+random.seed(999);
 
 const NUM_ITEMS = 50;
 
@@ -26,8 +25,8 @@ const NUM_ITEMS = 50;
 const createTestItems = (n: number) =>
   Array.from({ length: n }, () =>
     Obj.make(TestItem, {
-      name: faker.lorem.sentence(3),
-      description: faker.lorem.paragraph(),
+      name: random.lorem.sentence(3),
+      description: random.lorem.paragraph(),
     }),
   );
 
@@ -37,7 +36,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
-    <Mosaic.Root classNames='dx-container' debug={props.debug}>
+    <Mosaic.Root debug={props.debug}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -78,7 +77,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
-    <Mosaic.Root classNames='dx-container' debug={props.debug}>
+    <Mosaic.Root debug={props.debug}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>

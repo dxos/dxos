@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 // TODO(wittjosiah): Factor out. Generate?
 const IdentitySchema = Schema.Struct({

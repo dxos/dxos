@@ -56,7 +56,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
           )}
         >
-          <Json classNames='text-sm' data={filter} />
+          <Json.Data classNames='text-sm' data={filter} />
         </div>
       )}
 

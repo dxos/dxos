@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
+import { Agent } from '../../../types';
 import { AddArtifact } from './definitions';
-import { Project } from '../../../types';
 
 export default AddArtifact.pipe(
   Operation.withHandler(
@@ -17,10 +17,10 @@ export default AddArtifact.pipe(
         throw new Error('Artifact not found.');
       }
 
-      const project = yield* Project.getFromChatContext;
+      const agent = yield* Agent.getFromChatContext;
 
-      Obj.change(project, (project) => {
-        project.artifacts.push({
+      Obj.change(agent, (agent) => {
+        agent.artifacts.push({
           name,
           data: artifact,
         });

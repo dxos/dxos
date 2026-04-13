@@ -11,7 +11,6 @@ import { log } from '@dxos/log';
 import { type ReplicantProps } from '../plan';
 import { createRedisRpcPort, createRedisWritableStream } from '../redis';
 import { PERFETTO_EVENTS, registerPerfettoTracer } from '../tracing';
-
 import { initDiagnostics } from './diagnostics';
 import { type ReplicantEnv } from './interface';
 import { ReplicantRpcServer } from './replicant-rpc-server';

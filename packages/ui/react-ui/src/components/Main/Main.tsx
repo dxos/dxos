@@ -30,7 +30,6 @@ import { type MainStyleProps, osTranslations } from '@dxos/ui-theme';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider';
-
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_NAME = 'Main';

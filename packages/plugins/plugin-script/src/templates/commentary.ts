@@ -17,7 +17,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -175,8 +175,8 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.change(rootCollection, (obj) => {
-            obj.objects.push(documentRef);
+          Obj.change(rootCollection, (rootCollection) => {
+            rootCollection.objects.push(documentRef);
           });
 
           // Create the HasSubject relation
@@ -214,6 +214,7 @@ export default Commentary.pipe(
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
           FunctionInvocationService.layerNotAvailable,
+          Trace.writerLayerNoop,
         ),
       ),
     ),

@@ -15,7 +15,7 @@ import { type Operation } from '@dxos/operation';
 import { type Label } from '@dxos/ui-types';
 import { type ComplexMap, type Position } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import * as Settings from './Settings';
 import { type ObjectViewerProps } from './types';

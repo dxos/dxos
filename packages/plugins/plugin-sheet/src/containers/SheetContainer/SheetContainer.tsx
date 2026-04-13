@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, Sheet, useComputeGraph } from '../../components';
-import { type Sheet as SheetType } from '../../types';
+import { ComputeGraphContextProvider, Sheet, useComputeGraph } from '#components';
+import { type Sheet as SheetType } from '#types';
 
-export type SheetContainerProps = ObjectSurfaceProps<
+export type SheetContainerProps = AppSurface.ObjectArticleProps<
   SheetType.Sheet,
   {
     space: Space;

@@ -12,6 +12,17 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing/index.ts",
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -66,6 +77,7 @@
     "src"
   ],
   "dependencies": {
+    "@automerge/automerge": "catalog:",
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/language": "catalog:",
@@ -147,9 +159,7 @@
     "typescript": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

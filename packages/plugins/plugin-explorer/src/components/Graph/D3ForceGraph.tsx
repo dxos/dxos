@@ -17,7 +17,6 @@ import {
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
-
 import '@dxos/react-ui-graph/styles/graph.css';
 
 export type D3ForceGraphProps = {
@@ -71,7 +70,7 @@ export const D3ForceGraph = composable<HTMLDivElement, D3ForceGraphProps>(
     );
 
     return (
-      <div {...composableProps(props, { role: 'none', classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         <SVG.Root ref={svgRef}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}

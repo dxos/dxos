@@ -16,6 +16,7 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@astrojs/starlight': ^0.32.5
+  '@assistant-ui/react': ^0.12.24
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -27,6 +28,8 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
+  '@babylonjs/core': ^7.52.5
+  '@babylonjs/loaders': ^7.54.3
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
@@ -284,7 +287,6 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
-  '@typescript/native-preview': 7.0.0-dev.20250808.1
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
@@ -316,6 +318,7 @@ catalog:
   assert: ^2.0.0
   astro: ^5.15.9
   autoprefixer: ^10.4.12
+  babylonjs-gltf2interface: ^7.0.0
   base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
@@ -339,6 +342,7 @@ catalog:
   chartjs-node-canvas: ^5.0.0
   chess.js: ^1.0.0
   chromatic: ^13.0.1
+  cjs-module-lexer: ^2.2.0
   classnames: ^2.3.2
   cli-highlight: ^2.1.11
   codemirror: ^6.0.1
@@ -467,6 +471,7 @@ catalog:
   luxon: ^3.4.4
   madge: 8.0.0
   main-thread-scheduling: ^14.1.1
+  manifold-3d: ^3.0.0
   marked: ^12.0.2
   mathjs: ^14.2.1
   md5-hex: 5.0.0
@@ -491,6 +496,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.6.0
+  papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
   partykit: ^0.0.103
@@ -595,7 +601,7 @@ catalog:
   type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
-  typescript: ^5.9.3
+  typescript: ^6.0.2
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
@@ -638,7 +644,7 @@ catalog:
   ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
-  yaml: ^2.7.0
+  yaml: ^2.8.2
   yargs: ~16.2.0
   youtube-caption-extractor: ^1.9.1
   youtube-transcript: ^1.2.1
@@ -726,6 +732,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
+    manifold-3d>esbuild-wasm: '*'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
@@ -736,3 +743,5 @@ trustPolicy: no-downgrade
 
 trustPolicyExclude:
   - rollup@3.30.0
+  - mermaid@10.9.4
+  - undici-types@6.20.0

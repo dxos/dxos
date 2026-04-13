@@ -11,16 +11,16 @@ import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptObjectSettingsProps = {
   object: Script.Script;
@@ -64,14 +64,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (obj) => {
-          obj.content = instructions;
+        Obj.change(text, (text) => {
+          text.content = instructions;
         });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (obj) => {
-              obj.tools = [...(obj.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (existingBlueprint) => {
+              existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }
         }
@@ -151,8 +151,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 
   const handleBindingBlur = useCallback(() => {
     if (fn) {
-      Obj.change(fn, (obj) => {
-        obj.binding = binding;
+      Obj.change(fn, (fn) => {
+        fn.binding = binding;
       });
     }
   }, [fn, binding]);
@@ -162,7 +162,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   }
 
   return (
-    <div role='form' className='flex flex-col gap-2 my-form-padding'>
+    <div className='flex flex-col gap-2'>
       <h2>{t('remote-function-settings.heading')}</h2>
       {functionUrl && (
         <Input.Root>
@@ -173,8 +173,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
                 disabled
                 value={functionUrl}
                 onChange={(event) => {
-                  Obj.change(fn, (obj) => {
-                    obj.name = event.target.value;
+                  Obj.change(fn, (fn) => {
+                    fn.name = event.target.value;
                   });
                 }}
               />
@@ -260,8 +260,8 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, (obj) => {
-            Obj.getMeta(obj).keys.push({ source: 'github.com', id: gistId });
+          Obj.change(object, (object) => {
+            Obj.getMeta(object).keys.push({ source: 'github.com', id: gistId });
           });
         }
       }

@@ -13,8 +13,8 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { SpaceOperation } from '../../operations';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;
@@ -82,10 +82,10 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         <Toast.Description>
           {t(
             found
-              ? 'found object description'
+              ? 'found-object.description'
               : waiting
-                ? 'waiting for object description'
-                : 'object not found description',
+                ? 'waiting-for-object.description'
+                : 'object-not-found.description',
           )}
         </Toast.Description>
       </Toast.Body>
@@ -104,7 +104,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         ) : (
           <Toast.Close asChild>
             <Button onClick={handleClose}>
-              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+              {t(waiting ? 'close.label' : 'confirm.label', { ns: osTranslations })}
             </Button>
           </Toast.Close>
         )}

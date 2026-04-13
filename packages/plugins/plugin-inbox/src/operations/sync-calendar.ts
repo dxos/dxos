@@ -10,9 +10,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import { SyncCalendar } from './definitions';
 
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
       const { CalendarFunctions } = yield* Effect.promise(() => import('./google/calendar'));
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
-          invokeFunctionWithTracing(CalendarFunctions.Sync, {
+          Operation.invoke(CalendarFunctions.Sync, {
             calendar: Ref.make(calendar),
           }),
         ),

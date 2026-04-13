@@ -10,8 +10,9 @@ import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { Journal as JournalType, getDateString, parseDateString } from '../../types';
+import { meta } from '#meta';
+import { Journal as JournalType, getDateString, parseDateString } from '#types';
+
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
@@ -31,7 +32,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
   const entryRefs = useMemo(
     () =>
       Object.entries(journalSnapshot?.entries ?? {})
-        .toSorted(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
+        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
         .map(([dateKey, ref]) => ({ dateKey, ref })),
     [journalSnapshot],
   );
@@ -42,8 +43,8 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (obj) => {
-      obj.entries[getDateString(date)] = Ref.make(entry);
+    Obj.change(journal, (journal) => {
+      journal.entries[getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);
 
@@ -56,7 +57,13 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
           </div>
         )}
         {entryRefs.map(({ dateKey, ref }, i) => (
-          <JournalEntry key={dateKey} entryRef={ref} classNames='p-2' onSelect={onSelect} autoFocus={i === 0} />
+          <JournalEntry
+            key={dateKey}
+            entryRef={ref}
+            classNames='p-2'
+            onSelect={onSelect}
+            autoFocus={i === entryRefs.length - 1}
+          />
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>

@@ -11,7 +11,7 @@ import { type Operation } from '@dxos/operation';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type FunctionInputEditorProps = {
   type: SchemaAST.AST;

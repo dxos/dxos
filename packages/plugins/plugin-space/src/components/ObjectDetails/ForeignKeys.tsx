@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type Key } from '@dxos/echo';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ForeignKeysProps = {
   keys: Key.ForeignKey[];

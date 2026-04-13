@@ -5,12 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { Message } from './Message';
 
 const DefaultStory = () => {
@@ -18,10 +17,10 @@ const DefaultStory = () => {
     () =>
       MessageType.make({
         sender: {
-          name: faker.person.fullName(),
-          email: faker.internet.email(),
+          name: random.person.fullName(),
+          email: random.internet.email(),
         },
-        blocks: [{ _tag: 'text', text: faker.lorem.paragraph(2) }],
+        blocks: [{ _tag: 'text', text: random.lorem.paragraph(2) }],
       }),
     [],
   );

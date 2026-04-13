@@ -21,8 +21,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-
-import { type ViewMode, useMessageToolbarActions } from './useToolbar';
+import { type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -35,6 +34,7 @@ type MessageContextValue = {
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
   sender: DXN | undefined;
+  onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
@@ -53,6 +53,7 @@ type MessageRootProps = PropsWithChildren<
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'plain',
+  onOpen,
   onReply,
   onReplyAll,
   onForward,
@@ -64,6 +65,7 @@ const MessageRoot = ({
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
+      onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
@@ -83,12 +85,12 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
+  const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
       <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );

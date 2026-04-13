@@ -6,7 +6,7 @@ import { Obj } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 
-import { Sheet } from './types';
+import { Sheet } from '#types';
 
 export const serializer: TypedObjectSerializer<Sheet.Sheet> = {
   serialize: async ({ object }): Promise<string> => {

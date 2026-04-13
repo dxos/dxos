@@ -9,13 +9,31 @@ import type { AuthenticatingInvitationObservable, Invitation, InvitationResult }
 
 import { type ConfirmResetProps, type StepProps } from '../../steps';
 import { type FailReason } from '../../types';
-
 import { type JoinSend } from './joinMachine';
 import { type IdentityInputProps } from './steps';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 
 export type JoinPanelInitialDisposition = 'default' | 'accept-halo-invitation' | 'recover-identity';
+
+export type JoinPanelActiveView =
+  | 'addition-method-chooser'
+  | 'reset-storage-confirmation'
+  | 'create-identity-input'
+  | 'recover-identity-input'
+  | 'halo-invitation-input'
+  | 'halo-invitation-rescuer'
+  | 'halo-invitation-authenticator'
+  | 'halo-invitation-accepted'
+  | 'identity-added'
+  | 'space-invitation-input'
+  | 'space-invitation-rescuer'
+  | 'space-invitation-authenticator'
+  | 'space-invitation-accepted'
+  | 'never';
+
+/** @deprecated Use JoinPanelActiveView. */
+export type JoinView = JoinPanelActiveView;
 
 export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
   send: JoinSend;
@@ -41,7 +59,7 @@ export type JoinPanelImplProps = Pick<
 > & {
   send: JoinSend;
   titleId: string;
-  activeView: string; // TODO(burdon): Should be literal type.
+  activeView: JoinPanelActiveView;
   failed: Set<'Halo' | 'Space'>;
   pending: boolean;
   unredeemedCodes?: Partial<{
@@ -79,6 +97,8 @@ export type JoinPanelImplProps = Pick<
   IdentityInput?: FC<IdentityInputProps>;
   ConfirmReset?: FC<ConfirmResetProps>;
 };
+
+// TODO(burdon): Many of these types seem not be used.
 
 export interface IdentityAction {
   type: 'select identity' | 'added identity';
@@ -124,16 +144,8 @@ export type InvitationView =
   | 'invitation authenticator'
   | 'invitation accepted';
 
-export type JoinView =
-  | 'identity selector'
-  | 'addition method chooser'
-  | 'identity input'
-  | 'identity added'
-  | 'space invitation acceptor'
-  | 'halo invitation acceptor';
-
 export interface JoinStateContext {
-  activeView: JoinView;
+  activeView: JoinPanelActiveView;
   unredeemedSpaceInvitationCode?: string;
   spaceInvitation?: AuthenticatingInvitationObservable;
   spaceViewState: InvitationView;

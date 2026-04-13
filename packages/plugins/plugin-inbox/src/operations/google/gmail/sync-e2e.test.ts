@@ -4,7 +4,6 @@
 
 import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -13,13 +12,13 @@ import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';

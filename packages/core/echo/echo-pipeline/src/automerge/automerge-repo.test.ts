@@ -40,7 +40,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
 import { TestAdapter, type TestConnectionStateProvider } from '../testing';
-
 import { FIND_PARAMS } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';

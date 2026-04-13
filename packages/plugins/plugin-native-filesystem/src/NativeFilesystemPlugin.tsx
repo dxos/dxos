@@ -4,12 +4,13 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { AppGraphBuilder, Markdown, OperationHandler, ReactSurface, State } from './capabilities';
-import { meta } from './meta';
-import { NativeFilesystemCapabilities } from './types';
+import { AppGraphBuilder, Markdown, OperationHandler, ReactSurface, State } from '#capabilities';
+import { meta } from '#meta';
+import { NativeFilesystemCapabilities } from '#types';
+
 import { translations } from './translations';
 
 const StateReady = AppActivationEvents.createStateEvent(NativeFilesystemCapabilities.State.identifier);

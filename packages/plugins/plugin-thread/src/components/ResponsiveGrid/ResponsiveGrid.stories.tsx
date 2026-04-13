@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
@@ -107,13 +106,13 @@ const videoUrls = [
 ];
 
 const createItem = (type?: 'image' | 'video') => {
-  const id = faker.string.uuid();
+  const id = random.string.uuid();
   return {
     id,
     type,
-    name: faker.person.fullName(),
+    name: random.person.fullName(),
     imageUrl: `https://placehold.co/3200x1800/333/999?font=roboto&text=${id.slice(0, 2)}`,
-    videoUrl: faker.helpers.arrayElement(videoUrls),
+    videoUrl: random.helpers.arrayElement(videoUrls),
   };
 };
 

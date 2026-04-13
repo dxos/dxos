@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { Board, type BoardController, type BoardRootProps, type Position } from 
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board as BoardType } from '../../types';
+import { type Board as BoardType } from '#types';
 
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
@@ -24,7 +24,7 @@ type PickerState = {
   position: Position;
 };
 
-export type BoardContainerProps = ObjectSurfaceProps<BoardType.Board>;
+export type BoardContainerProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
 export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
@@ -73,11 +73,11 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      Obj.change(board, (obj) => {
+      Obj.change(board, (board) => {
         if (idx !== -1) {
-          obj.items.splice(idx, 1);
+          board.items.splice(idx, 1);
         }
-        delete obj.layout.cells[id];
+        delete board.layout.cells[id];
       });
     },
     [board],
@@ -86,8 +86,8 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      Obj.change(board, (obj) => {
-        obj.layout.cells[id] = { ...layout, ...position };
+      Obj.change(board, (board) => {
+        board.layout.cells[id] = { ...layout, ...position };
       });
     },
     [board],
@@ -106,11 +106,11 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
       }
 
       // Create a reference to the selected object and add it to the board.
-      Obj.change(board, (obj) => {
-        obj.items.push(Ref.make(selectedObject));
+      Obj.change(board, (board) => {
+        board.items.push(Ref.make(selectedObject));
 
         // Set the layout position for the new item.
-        obj.layout.cells[selectedObject.id.toString()] = pickerState.position;
+        board.layout.cells[selectedObject.id.toString()] = pickerState.position;
       });
 
       // Close the picker.

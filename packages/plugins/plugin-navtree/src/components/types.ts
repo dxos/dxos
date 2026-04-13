@@ -8,7 +8,7 @@ import { type Node } from '@dxos/app-graph';
 import type { Density } from '@dxos/react-ui';
 import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
 
-import type { NavTreeItemGraphNode } from '../types';
+import type { NavTreeItemGraphNode } from '#types';
 
 import type { L1PanelProps } from './Sidebar';
 

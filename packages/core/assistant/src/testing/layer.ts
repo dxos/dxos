@@ -3,20 +3,51 @@
 //
 
 import { Registry } from '@effect-atom/atom';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, type ModelName } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import {
+  AiService,
+  ConsolePrinter,
+  GenericToolkit,
+  type ModelName,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Feed, type Type } from '@dxos/echo';
-import { CredentialsService, type ServiceCredential, TracingService } from '@dxos/functions';
-import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Database, DXN, Feed, Type } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import type { TestContextService } from '@dxos/effect/testing';
+import {
+  CredentialsService,
+  FunctionInvocationService,
+  QueueService,
+  type ServiceCredential,
+  ServiceNotAvailableError,
+  Trace,
+  TracingService,
+} from '@dxos/functions';
+import {
+  Process,
+  ProcessManager,
+  ServiceResolver,
+  TracingServiceExt,
+  TriggerDispatcher,
+  TriggerStateStore,
+} from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
-import { OperationHandlerSet } from '@dxos/operation';
+import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
 import { ToolExecutionServices } from '../functions';
-import { Blueprint } from '@dxos/blueprints';
+import { AgentService } from '../service';
+import { CompleteBlock } from '../tracing';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -33,7 +64,42 @@ interface TestLayerOptions {
   tracing?: 'noop' | 'console' | 'pretty';
 
   disableLlmMemoization?: boolean;
+
+  /**
+   * Core system prompt for the agent.
+   */
+  systemPrompt?: string;
 }
+
+export type AssistantTestServices =
+  // Convinience
+  | LanguageModel.LanguageModel
+  | Feed.FeedService
+  | CredentialsService
+  | AgentService.AgentService
+  | AiService.AiService
+  | Database.Service
+  | QueueService
+  // Registries
+  | Blueprint.RegistryService
+  | OperationRegistry.Service
+  | GenericToolkit.GenericToolkitProvider
+  | Operation.Service
+  // Core
+  | ProcessManager.ProcessManagerService
+  | Process.ProcessMonitorService
+  | Registry.AtomRegistry
+  // Should those be here?
+  | OperationHandlerSet.OperationHandlerProvider
+  | KeyValueStore.KeyValueStore
+  | ServiceResolver.ServiceResolver
+  | TracingService
+  | Trace.TraceService
+  | Trace.TraceSink
+  // Deprecated
+  | ToolExecutionService
+  | ToolResolverService
+  | FunctionInvocationService;
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
@@ -45,16 +111,80 @@ export const AssistantTestLayer = ({
   tracing = 'noop',
   disableLlmMemoization = false,
   blueprints = [],
-}: TestLayerOptions = {}) => {
+  systemPrompt,
+}: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const toolkit = GenericToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  return Layer.mergeAll(
-    AiService.model(model),
-    ToolExecutionServices,
-    Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
-  ).pipe(
+  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed);
+  types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
+
+  return Layer.empty.pipe(
+    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+    Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
+    Layer.provideMerge(AgentService.layer({ systemPrompt })),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+    Layer.provideMerge(
+      // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
+      Layer.effect(
+        ServiceResolver.ServiceResolver,
+        Effect.gen(function* () {
+          const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
+            Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+            Effect.map(Layer.succeedContext),
+          );
+          // AiContextBinder.
+          return ServiceResolver.compose(
+            ServiceResolver.succeed(AiContextService, (context) =>
+              Effect.gen(function* () {
+                if (!context.conversation) {
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                }
+                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const runtime = yield* Effect.runtime<Feed.FeedService>();
+                const binder = yield* acquireReleaseResource(
+                  () =>
+                    new AiContextBinder({
+                      feed,
+                      runtime,
+                    }),
+                );
+                return { binder };
+              }).pipe(Effect.provide(services)),
+            ),
+            // AiConversationService.
+            ServiceResolver.succeed(AiConversationService, (context) =>
+              Effect.gen(function* () {
+                if (!context.conversation) {
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
+                }
+                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const runtime = yield* Effect.runtime<Feed.FeedService>();
+                const conversation = yield* acquireReleaseResource(
+                  () =>
+                    new AiConversation({
+                      feed,
+                      runtime,
+                    }),
+                );
+                return conversation;
+              }).pipe(Effect.provide(services)),
+            ),
+            yield* ServiceResolver.fromRequirements(
+              Database.Service,
+              GenericToolkit.GenericToolkitProvider,
+              Feed.FeedService,
+              AiService.AiService,
+              OperationRegistry.Service,
+              Blueprint.RegistryService,
+              FunctionInvocationService,
+            ),
+          );
+        }),
+      ),
+    ),
+    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model), ToolExecutionServices)),
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
         functions: operationHandlersSet,
@@ -68,7 +198,6 @@ export const AssistantTestLayer = ({
           types,
         }),
         CredentialsService.configuredLayer(credentials),
-        Feed.notAvailable,
         Match.value(tracing).pipe(
           Match.when('noop', () => TracingService.layerNoop),
           Match.when('console', () => TracingServiceExt.layerLogInfo()),
@@ -79,18 +208,51 @@ export const AssistantTestLayer = ({
           ),
           Match.exhaustive,
         ),
+        Match.value(tracing).pipe(
+          Match.when('noop', () => Trace.layerNoop),
+          Match.when('console', () => Trace.layerConsole),
+          Match.when('pretty', () => TraceSinkPretty()),
+          Match.exhaustive,
+        ),
       ),
     ),
+    Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
     Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+    Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
+    Layer.provideMerge(KeyValueStore.layerMemory),
+    Layer.provideMerge(Registry.layer),
+    Layer.orDie,
   );
 };
 
 interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 
-export const AssistantTestLayerWithTriggers = (options: TestLayerWithTriggersOptions) =>
+export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerDispatcher | TriggerStateStore;
+
+export const AssistantTestLayerWithTriggers = (
+  options: TestLayerWithTriggersOptions,
+): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
   Layer.mergeAll(
     AssistantTestLayer(options),
     TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
       Layer.provide(Registry.layer),
     ),
-  ).pipe(Layer.provideMerge(TriggerStateStore.layerMemory));
+    TriggerStateStore.layerMemory,
+  ) as any;
+
+const TraceSinkPretty = () =>
+  Layer.succeed(Trace.TraceSink, {
+    write: (message) => {
+      for (const event of message.events) {
+        if (Trace.isOfType(CompleteBlock, event)) {
+          const tag = message.meta.processName ?? `[${message.meta.pid ?? 'unknown'}]`;
+          console.log(`[${tag}] ${event.data.role.toUpperCase()}`);
+          new ConsolePrinter({ tag }).printContentBlock(event.data.block);
+        } else if (Trace.isOfType(Process.SpawnedEvent, event)) {
+          console.log(`[${message.meta.pid}] Process spawned: ${message.meta.processName}`);
+        } else if (Trace.isOfType(Process.ExitedEvent, event)) {
+          console.log(`[${message.meta.pid}] Process exited: ${event.data.outcome}`);
+        }
+      }
+    },
+  });

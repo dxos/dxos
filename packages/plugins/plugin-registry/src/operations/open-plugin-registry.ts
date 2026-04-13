@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
-import { REGISTRY_ID } from '../meta';
+import { REGISTRY_ID } from '#meta';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> =
   SettingsOperation.OpenPluginRegistry.pipe(

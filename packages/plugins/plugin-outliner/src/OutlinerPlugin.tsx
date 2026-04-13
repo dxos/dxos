@@ -10,13 +10,14 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, Migrations, OperationHandler, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, Migrations, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { Journal, Outline } from '#types';
+
 import { translations } from './translations';
-import { Journal, Outline } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

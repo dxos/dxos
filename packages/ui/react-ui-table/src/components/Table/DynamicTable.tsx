@@ -16,7 +16,6 @@ import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
 import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
-
 import { Table, type TableController } from './Table';
 
 export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{

@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type SpotlightState = {
   /** Dialog surface data (commands dialog is the default). */

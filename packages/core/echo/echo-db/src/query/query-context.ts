@@ -5,8 +5,8 @@
 import { type Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { type Entity, type QueryResult } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
+import { type AnyProperties } from '@dxos/echo/internal';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;

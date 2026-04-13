@@ -8,11 +8,11 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 
-import { NativeFilesystemCapabilities, type NativeFilesystemState } from '../../types';
+import { NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
+
 import { loadWorkspace, refreshWorkspace } from '../../util';
-
 import { createDirectoryWatcher } from './directory-watcher';
 import * as FilesystemManager from './FilesystemManager';
 import { createMarkdownDocuments } from './markdown-documents';

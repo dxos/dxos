@@ -3,39 +3,37 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, type ContextBinding } from '@dxos/assistant';
-import { Database, Obj } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { AiConversation, functionInvocationServiceFromOperations, ToolExecutionServices } from '@dxos/assistant';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { type Message } from '@dxos/types';
 
-import { Project } from '../../../types';
-import { Agent } from './definitions';
+import { Agent } from '../../../types';
+import { AgentWorker } from './definitions';
 
-export default Agent.pipe(
+export default AgentWorker.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
-      function* ({ project: projectRef, prompt, event }) {
-        const project = yield* Database.load(projectRef);
-        invariant(Obj.instanceOf(Project.Project, project));
-        invariant(project.chat, 'Project has no chat.');
+      function* ({ agent: agentRef, prompt, event }) {
+        const agent = yield* Database.load(agentRef);
+        invariant(Obj.instanceOf(Agent.Agent, agent));
+        invariant(agent.chat, 'Agent has no chat.');
 
-        const chatQueue = yield* project.chat.pipe(
+        const chatFeed = yield* agent.chat.pipe(
           Database.load,
-          Effect.flatMap((chat) => Database.load(chat.queue)),
+          Effect.flatMap((chat) => Database.load(chat.feed)),
         );
-        invariant(chatQueue, 'Project chat queue not found.');
-        const conversation = yield* acquireReleaseResource(
-          () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
-        );
+        invariant(chatFeed, 'Agent chat feed not found.');
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
 
-        const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
-        if (iniativesInContext.length !== 1) {
-          throw new Error('There should be exactly one project in context. Got: ' + iniativesInContext.length);
+        const agentsInContext = conversation.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
+        if (agentsInContext.length !== 1) {
+          throw new Error('There should be exactly one agent in context. Got: ' + agentsInContext.length);
         }
 
         if (!prompt && !event) {
@@ -57,7 +55,12 @@ export default Agent.pipe(
           .pipe(Effect.retry({ times: 2 }));
       },
       Effect.scoped,
-      Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
+      Effect.provide(
+        Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+          Layer.provideMerge(functionInvocationServiceFromOperations),
+        ),
+      ),
     ),
   ),
+  Operation.opaqueHandler,
 );

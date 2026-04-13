@@ -42,7 +42,6 @@ import {
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { type ServiceContext } from '../services';
-
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';

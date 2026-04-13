@@ -32,7 +32,6 @@ import {
   toolkits,
   types,
 } from '../../util';
-
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
 

@@ -9,22 +9,22 @@ import { testFunctionPlugins } from '@dxos/compute/testing';
 import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
+
+import { withComputeGraphDecorator } from '#testing';
+import { Sheet } from '#types';
 
 import { useSheetModel } from '../../model';
-import { withComputeGraphDecorator } from '../../testing';
-import { Sheet } from '../../types';
-
 import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 
 const DefaultStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<Sheet.Sheet>();
   const [text, setText] = useState(`${FUNCTION_NAME}(100)`);

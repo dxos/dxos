@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { type EditorStateStore, type EditorViewMode } from '@dxos/ui-editor';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import type * as Markdown from './Markdown';
 import { type MarkdownExtensionProvider } from './types';

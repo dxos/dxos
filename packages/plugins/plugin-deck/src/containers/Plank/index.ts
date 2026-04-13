@@ -3,7 +3,5 @@
 //
 
 export * from './Plank';
-export * from './PlankControls';
 export * from './PlankError';
-export * from './PlankHeading';
 export * from './PlankLoading';

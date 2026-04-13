@@ -9,9 +9,8 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { NativeFilesystemCapabilities } from '../types';
-
-import { OpenDirectory } from './definitions';
 import { loadWorkspace, openDirectoryPicker } from '../util';
+import { OpenDirectory } from './definitions';
 
 export default OpenDirectory.pipe(
   Operation.withHandler(

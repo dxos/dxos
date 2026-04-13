@@ -15,10 +15,12 @@ import React, {
   useCallback,
 } from 'react';
 
+import { composable, composableProps } from '@dxos/ui-theme';
+
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-// TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
+// TODO(thure): https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
 
 const TREEGRID_ROW_NAME = 'TreegridRow';
 
@@ -34,17 +36,19 @@ type TreegridRowContextValue = {
 const [TreegridRowProvider, useTreegridRowContext] =
   createTreegridRowContext<TreegridRowContextValue>(TREEGRID_ROW_NAME);
 
-const PATH_SEPARATOR = '~';
-const PARENT_OF_SEPARATOR = ' ';
+// TODO(burdon): Replace with functions.
+export const TREEGRID_PATH_SEPARATOR = '~';
+export const TREEGRID_PARENT_OF_SEPARATOR = ' ';
 
 type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   gridTemplateColumns: CSSProperties['gridTemplateColumns'];
   asChild?: boolean;
 };
 
-const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
-  ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
+const TreegridRoot = composable<HTMLDivElement, TreegridRootProps>(
+  ({ asChild, classNames, children, style, gridTemplateColumns, onKeyDown: onKeyDownProp, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const { className, role: _role, ...rest } = composableProps<HTMLDivElement>(props, { classNames });
     const Comp = asChild ? Slot : Primitive.div;
     const { findFirstFocusable } = useFocusFinders();
 
@@ -89,16 +93,16 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
             break;
           }
         }
-        props.onKeyDown?.(event);
+        onKeyDownProp?.(event);
       },
-      [findFirstFocusable],
+      [findFirstFocusable, onKeyDownProp],
     );
 
     return (
       <Comp
         role='treegrid'
-        {...props}
-        className={tx('treegrid.root', {}, classNames)}
+        {...rest}
+        className={tx('treegrid.root', {}, className)}
         style={{ ...style, gridTemplateColumns }}
         onKeyDown={handleKeyDown}
         ref={forwardedRef}
@@ -136,7 +140,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
   ) => {
     const { tx } = useThemeContext();
     const Comp = asChild ? Slot : Primitive.div;
-    const pathParts = id.split(PATH_SEPARATOR);
+    const pathParts = id.split(TREEGRID_PATH_SEPARATOR);
     const level = pathParts.length - 1;
     const [open, onOpenChange] = useControllableState({
       prop: propsOpen,
@@ -181,8 +185,4 @@ export const Treegrid = {
   Root: TreegridRoot,
   Row: TreegridRow,
   Cell: TreegridCell,
-  PARENT_OF_SEPARATOR,
-  PATH_SEPARATOR,
-  createTreegridRowScope,
-  useTreegridRowContext,
 };

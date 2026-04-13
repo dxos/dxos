@@ -102,7 +102,7 @@ this.stateUpdate.on(this._ctx, () => {
 });
 ```
 
-Lifecycle ctx is correct because it is scoped to the object's lifetime and carries no trace span (callbacks are trace roots).
+Lifecycle ctx is correct because it is scoped to the object's lifetime. When the class uses `@trace.resource({ lifecycle: true })`, `this._ctx` carries the lifecycle span's trace context, so callbacks appear as children of the lifecycle span rather than orphaned roots or stale children of the `_open` span.
 
 ### 3. Detached async work: use class lifecycle ctx
 

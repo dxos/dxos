@@ -22,7 +22,6 @@ import {
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
-
 import { type SignalManager } from './signal-manager';
 import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 

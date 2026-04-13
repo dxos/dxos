@@ -12,7 +12,7 @@ import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const useEdgeStatus = (): EdgeStatus.ConnectionState => {
   const [status, setStatus] = useState(EdgeStatus.ConnectionState.NOT_CONNECTED);

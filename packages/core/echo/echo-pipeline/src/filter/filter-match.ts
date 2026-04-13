@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
@@ -74,6 +74,10 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
 
     case 'timestamp': {
       throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
+    }
+
+    case 'child-of': {
+      throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
     }
 
     case 'not': {
@@ -156,6 +160,10 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
 
     case 'timestamp': {
       throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
+    }
+
+    case 'child-of': {
+      throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
     }
 
     case 'not': {

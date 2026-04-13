@@ -4,20 +4,20 @@
 
 import React, { useMemo } from 'react';
 
-import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
-import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
+import { createDataExtensions, listener, editorClassNames } from '@dxos/ui-editor';
 
-import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '../../components';
-import { useDeployState, useToolbarState } from '../../hooks';
-import { type Settings } from '../../types';
+import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
+import { useDeployState, useToolbarState } from '#hooks';
+import { type Settings } from '#types';
 
-export type ScriptEditorProps = ObjectSurfaceProps<
+export type ScriptEditorProps = AppSurface.ObjectArticleProps<
   Script.Script,
   {
     settings?: Settings.Settings;
@@ -51,8 +51,8 @@ export const ScriptContainer = ({
       listener({
         onChange: ({ text }) => {
           if (script.source.target?.content !== text) {
-            Obj.change(script, (obj) => {
-              obj.changed = true;
+            Obj.change(script, (script) => {
+              script.changed = true;
             });
           }
         },
@@ -71,7 +71,7 @@ export const ScriptContainer = ({
       </Panel.Toolbar>
       <Panel.Content asChild>
         <TypescriptEditor
-          classNames={stackItemContentEditorClassNames(role)}
+          classNames={editorClassNames(role)}
           id={script.id}
           env={env}
           initialValue={script.source?.target?.content}

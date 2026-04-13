@@ -11,7 +11,7 @@ import {
 } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { layoutStateAccess } from './state-access';
 
@@ -32,12 +32,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
 
-      const validatedId = yield* validateNavigationTarget({
-        graph,
-        subjectId: id,
-        pathResolvers,
-        checkRemoteExistence,
-      });
+      const validatedId =
+        input.navigation === 'immediate'
+          ? id
+          : yield* validateNavigationTarget({
+              graph,
+              subjectId: id,
+              pathResolvers,
+              checkRemoteExistence,
+            });
 
       updateState((state) => {
         const newHistory = state.active ? [...state.history, state.active] : state.history;

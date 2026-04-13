@@ -10,9 +10,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import { SyncMailbox } from './definitions';
 
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
       const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
-          invokeFunctionWithTracing(GmailFunctions.Sync, {
+          Operation.invoke(GmailFunctions.Sync, {
             mailbox: Ref.make(mailbox),
           }),
         ),

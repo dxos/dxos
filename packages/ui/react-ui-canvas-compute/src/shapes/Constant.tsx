@@ -18,7 +18,6 @@ import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 import { safeParseJson } from '@dxos/util';
 
 import { useComputeNodeState } from '../hooks';
-
 import { Box, TypeSelect } from './common';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 

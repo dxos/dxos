@@ -12,7 +12,6 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';
-
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
 import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';

@@ -8,7 +8,6 @@ import React from 'react';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayoutVariants, withTheme } from '../../testing';
-
 import {
   type CheckboxProps,
   Input,

@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
-import { StatusBar } from '../../components';
-import { meta } from '../../meta';
+import { StatusBar } from '#components';
+import { meta } from '#meta';
+
 import VersionNumber from '../VersionNumber';
 
 export type StatusBarActionsProps = {};
@@ -19,20 +20,23 @@ export const StatusBarActions = (_props: StatusBarActionsProps) => {
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <EnvironmentLabel />
-      <VersionNumber />
-      <StatusBar.Button asChild>
-        <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
-          <Icon icon='ph--discord-logo--regular' />
-          <StatusBar.Text classNames='hidden sm:block'>{t('discord.label')}</StatusBar.Text>
-        </a>
-      </StatusBar.Button>
-      <StatusBar.Button asChild>
-        <a href='https://github.com/dxos/dxos' target='_blank' rel='noopener noreferrer'>
-          <Icon icon='ph--github-logo--regular' />
-          <StatusBar.Text classNames='hidden sm:block'>{t('github.label')}</StatusBar.Text>
-        </a>
-      </StatusBar.Button>
+      <div role='none' className='h-full flex items-center px-2 gap-2'>
+        <EnvironmentLabel />
+        <VersionNumber />
+        <div role='none' className='grow' />
+        <StatusBar.Button asChild>
+          <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
+            <Icon icon='ph--discord-logo--regular' />
+            <StatusBar.Text classNames='hidden sm:block'>{t('discord.label')}</StatusBar.Text>
+          </a>
+        </StatusBar.Button>
+        <StatusBar.Button asChild>
+          <a href='https://github.com/dxos/dxos' target='_blank' rel='noopener noreferrer'>
+            <Icon icon='ph--github-logo--regular' />
+            <StatusBar.Text classNames='hidden sm:block'>{t('github.label')}</StatusBar.Text>
+          </a>
+        </StatusBar.Button>
+      </div>
     </Popover.Root>
   );
 };

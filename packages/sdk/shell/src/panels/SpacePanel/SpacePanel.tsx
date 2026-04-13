@@ -13,10 +13,11 @@ import { CloseButton, Heading, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
 import { translationKey } from '../../translations';
-
 import { useSpaceMachine } from './space-machine';
 import { SpaceManager } from './SpaceManager';
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
+
+type SpacePanelActiveView = SpacePanelImplProps['activeView'];
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation(translationKey);
@@ -52,12 +53,12 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
       {!hideHeading && <SpacePanelHeading {...rest} {...{ titleId, space }} />}
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='space manager' classNames={stepStyles}>
-            <SpaceManagerComponent active={activeView === 'space manager'} space={space} target={target} {...rest} />
+          <Viewport.View id='space-manager' classNames={stepStyles}>
+            <SpaceManagerComponent active={activeView === 'space-manager'} space={space} target={target} {...rest} />
           </Viewport.View>
-          <Viewport.View id='space invitation manager' classNames={stepStyles}>
+          <Viewport.View id='space-invitation-manager' classNames={stepStyles}>
             <InvitationManagerComponent
-              active={activeView === 'space invitation manager'}
+              active={activeView === 'space-invitation-manager'}
               {...rest}
               invitationUrl={props.invitationUrl}
             />
@@ -99,12 +100,12 @@ export const SpacePanel = ({
     return subscription.unsubscribe;
   }, [spaceService]);
 
-  const activeView = useMemo(() => {
+  const activeView = useMemo((): SpacePanelActiveView => {
     switch (true) {
       case spaceState.matches('managingSpace'):
-        return 'space manager';
+        return 'space-manager';
       case spaceState.matches('managingSpaceInvitation'):
-        return 'space invitation manager';
+        return 'space-invitation-manager';
       default:
         return 'never';
     }

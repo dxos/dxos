@@ -3,7 +3,6 @@
 //
 
 import { Duplex } from 'stream';
-
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event as AsyncEvent, TestStream, Trigger, sleep } from '@dxos/async';
@@ -14,7 +13,6 @@ import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type RpcPort, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
-
 import { RtcTransportProxy } from './rtc-transport-proxy';
 import { RtcTransportService } from './rtc-transport-service';
 import { handleChannelErrors } from './test-utils';

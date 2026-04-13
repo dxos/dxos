@@ -15,25 +15,7 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '../../meta';
-
-const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
-    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
-    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-    return (
-      <>
-        {layout !== 'inline' && <Form.Label label={label} />}
-        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
-    );
-  },
-};
-
-// TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
-const BaseSchema = Schema.Struct({
-  tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-});
+import { meta as pluginMeta } from '#meta';
 
 export type BaseObjectSettingsProps = PropsWithChildren<{
   object: Obj.Unknown;
@@ -68,8 +50,8 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
       invariant(Type.isObjectSchema(schema));
       const newObject = db.add(Obj.make(schema, values));
       if (Obj.instanceOf(Tag.Tag, newObject)) {
-        Obj.change(object, (obj) => {
-          Obj.getMeta(obj).tags = [...(Obj.getMeta(obj).tags ?? []), Obj.getDXN(newObject).toString()];
+        Obj.change(object, (object) => {
+          Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
         });
       }
     }, []);
@@ -89,8 +71,8 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
         // Handle tags separately using Obj.change.
         const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
         if (hasTagsChange) {
-          Obj.change(object, (obj) => {
-            Obj.getMeta(obj).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+          Obj.change(object, (object) => {
+            Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           });
         }
 
@@ -113,8 +95,6 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
       return null;
     }
 
-    const { className } = composableProps(props);
-
     return (
       <Form.Root
         schema={formSchema}
@@ -128,8 +108,8 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
         onValuesChanged={handleChange}
         onCreate={handleCreate}
       >
-        <Form.Viewport>
-          <Form.Content classNames={className}>
+        <Form.Viewport {...composableProps(props)}>
+          <Form.Content>
             <Form.FieldSet />
             {children}
           </Form.Content>
@@ -138,3 +118,21 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
     );
   },
 );
+
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
+};
+
+// TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
+const BaseSchema = Schema.Struct({
+  tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
+});

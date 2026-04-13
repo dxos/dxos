@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
@@ -24,6 +25,7 @@ import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
@@ -47,13 +49,16 @@ import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
-import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { SpacetimePlugin } from '@dxos/plugin-spacetime';
+import { SpecPlugin } from '@dxos/plugin-spec';
+import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
@@ -65,7 +70,7 @@ import { isTruthy } from '@dxos/util';
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
-const APP_LINK_ORIGIN = 'https://composer.dxos.org';
+const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
 
 export type State = {
   appKey: string;
@@ -131,6 +136,8 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
+    SpecPlugin.meta.id,
+
     // Dev
     isDev && DebugPlugin.meta.id,
 
@@ -139,6 +146,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
       FeedPlugin.meta.id,
+      IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
@@ -195,6 +203,7 @@ export const getPlugins = ({
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
+    IrohBeaconPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
@@ -212,10 +221,10 @@ export const getPlugins = ({
       observability: () => observability,
     }),
     OutlinerPlugin(),
+    PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    PipelinePlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
@@ -223,19 +232,21 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SpacetimePlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,
     }),
+    SpecPlugin(),
     StackPlugin(),
     StatusBarPlugin(),
-
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
+    TicTacToePlugin(),
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),

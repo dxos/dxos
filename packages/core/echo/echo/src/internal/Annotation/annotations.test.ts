@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { EchoObjectSchema } from '../Entity';
-
 import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.

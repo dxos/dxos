@@ -5,10 +5,11 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, HelpState, OperationHandler, ReactRoot, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, HelpState, OperationHandler, ReactRoot, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { type Step } from '#types';
+
 import { translations } from './translations';
-import { type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 

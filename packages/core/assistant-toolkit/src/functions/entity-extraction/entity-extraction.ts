@@ -17,9 +17,9 @@ import { Operation } from '@dxos/operation';
 import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { EntityExtraction } from './definitions';
 import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
+import { EntityExtraction } from './definitions';
 
 export default EntityExtraction.pipe(
   Operation.withHandler(
@@ -55,13 +55,13 @@ export default EntityExtraction.pipe(
             throw new Error('Multiple organizations created');
           } else if (created.length === 1) {
             organization = yield* Database.resolve(created[0], Organization.Organization);
-            Obj.change(organization, (org) => {
-              const meta = Obj.getMeta(org);
+            Obj.change(organization, (organization) => {
+              const meta = Obj.getMeta(organization);
               meta.tags ??= [];
               meta.tags.push(...(tags ?? []));
             });
-            Obj.change(contact, (obj) => {
-              obj.organization = Ref.make(organization!);
+            Obj.change(contact, (contact) => {
+              contact.organization = Ref.make(organization!);
             });
           }
         }
@@ -79,6 +79,7 @@ export default EntityExtraction.pipe(
       ),
     ),
   ),
+  Operation.opaqueHandler,
 );
 
 const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: readonly string[]) {
@@ -108,8 +109,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   yield* Database.add(newContact);
 
   if (name) {
-    Obj.change(newContact, (obj) => {
-      obj.fullName = name;
+    Obj.change(newContact, (newContact) => {
+      newContact.fullName = name;
     });
   }
 
@@ -149,8 +150,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   if (matchingOrg) {
     log.info('found matching organization', { organization: matchingOrg });
-    Obj.change(newContact, (obj) => {
-      obj.organization = Ref.make(matchingOrg);
+    Obj.change(newContact, (newContact) => {
+      newContact.organization = Ref.make(matchingOrg);
     });
   }
 

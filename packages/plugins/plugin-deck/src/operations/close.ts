@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 
-import { updateActiveDeck } from './helpers';
 import { closeEntry } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOperation.Close.pipe(
   Operation.withHandler(

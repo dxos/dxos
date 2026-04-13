@@ -14,11 +14,11 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { type SheetModel } from '../../model';
-import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '../../types';
-import { useSheetContext } from '../SheetRoot';
+import { meta } from '#meta';
+import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '#types';
 
+import { type SheetModel } from '../../model';
+import { useSheetContext } from '../SheetRoot';
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
 export type AlignAction = { key: AlignKey; value: AlignValue };
@@ -104,7 +104,7 @@ const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackR
         key: alignKey,
         value: alignValue as AlignValue,
         checked: state[alignKey] === alignValue,
-        label: [`range value ${alignValue} label`, { ns: meta.id }],
+        label: [`range-value.${alignValue}.label`, { ns: meta.id }],
         icon,
         testId: `grid.toolbar.${alignKey}.${alignValue}`,
       },

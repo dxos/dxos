@@ -33,6 +33,7 @@ import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
+  Trace,
   TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -41,7 +42,6 @@ import { type ContentBlock } from '@dxos/types';
 
 import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
-
 import { resolveComputeNode } from './node-defs';
 
 // TODO(burdon): API package for conductor.
@@ -87,7 +87,7 @@ type ComputeOutputEvent = {
 export type ComputeServices =
   | AiService.AiService
   | Database.Service
-  | Feed.Service
+  | Feed.FeedService
   | QueueService
   | CredentialsService
   | FunctionInvocationService;
@@ -267,6 +267,7 @@ export class ComputeGraphController extends Resource {
             Effect.provide(
               ComputeEventLogger.layerFromTracing.pipe(
                 Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
+                Layer.provideMerge(Trace.writerLayerNoop),
               ),
             ),
             Effect.flatMap(computeValueBag),
@@ -334,6 +335,7 @@ export class ComputeGraphController extends Resource {
               Effect.provide(
                 ComputeEventLogger.layerFromTracing.pipe(
                   Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
+                  Layer.provideMerge(Trace.writerLayerNoop),
                 ),
               ),
 

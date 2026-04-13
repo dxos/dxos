@@ -9,7 +9,6 @@ import { waitForCondition } from '@dxos/async';
 import { Config, SystemStatus } from '@dxos/client';
 
 import { createClient, createClientContextProvider } from '../testing/util';
-
 import { useConfig } from './useConfig';
 
 // TODO(burdon): Disabled in CI since flaky.

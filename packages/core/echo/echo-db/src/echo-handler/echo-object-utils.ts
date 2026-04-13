@@ -3,12 +3,11 @@
 //
 
 import { type Obj } from '@dxos/echo';
+import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
-import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 
 import { type ObjectCore } from '../core-db';
-
 import { type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 
 /**

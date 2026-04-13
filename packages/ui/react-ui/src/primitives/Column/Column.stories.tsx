@@ -7,10 +7,10 @@ import React from 'react';
 
 import { Input, ScrollArea } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-
-import { Column } from './Column';
 import { Flex } from '../Flex';
+import { Column } from './Column';
 
+// TODO(burdon): Content is clipped!
 const List = () => {
   return (
     <ScrollArea.Root centered>

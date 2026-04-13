@@ -49,3 +49,15 @@ runs:
           "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > temp.json && \
         mv temp.json "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
       shell: bash
+
+    - name: Update version in package.json
+      run: |
+        PACKAGE_JSON="${{ inputs.working-directory }}/../package.json"
+        if [ -f "$PACKAGE_JSON" ]; then
+          jq \
+            --arg version "${{ inputs.version }}" \
+            '.version = $version' \
+            "$PACKAGE_JSON" > temp.json && \
+          mv temp.json "$PACKAGE_JSON"
+        fi
+      shell: bash

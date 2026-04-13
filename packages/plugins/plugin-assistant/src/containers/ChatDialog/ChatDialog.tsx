@@ -10,10 +10,10 @@ import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
-import { Chat, type ChatRootProps } from '../../components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
-import { meta } from '../../meta';
-import { AssistantCapabilities } from '../../types';
+import { Chat, type ChatRootProps } from '#components';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { meta } from '#meta';
+import { AssistantCapabilities } from '#types';
 
 export type ChatDialogProps = {
   chat?: ChatTypes.Chat;
@@ -24,14 +24,14 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   const db = chat && Obj.getDatabase(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const services = useChatServices({ id: db?.spaceId });
+  const runtime = useChatServices({ id: db?.spaceId });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
   const processor = useChatProcessor({
     chat,
     preset,
-    services,
+    runtime,
     blueprintRegistry,
     settings,
   });

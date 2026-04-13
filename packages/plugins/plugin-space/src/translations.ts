@@ -7,7 +7,7 @@ import { Collection } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Disambiguate with sdk/shell.
 export const translations = [
@@ -135,6 +135,8 @@ export const translations = [
         'space-settings.description':
           'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
         'show-hidden-spaces.label': 'Show archived spaces',
+        'show-hidden-spaces.description':
+          'Display archived spaces in the sidebar so they can be accessed or unarchived.',
         'save-files-to-directory.label': 'Save files to disk',
         'select-path.label': 'Select path',
         'snapshot-by-schema.label': 'Snapshot of objects',
@@ -189,7 +191,7 @@ export const translations = [
         'join-success.label': 'Successfully joined space',
         'name.label': 'Name',
         'name.placeholder': 'Name',
-        'object-settings.label': 'Details',
+        'object-properties.label': 'Properties',
         'edge-replication.label': 'Enable EDGE Replication',
         'saving-locally.label': 'Writing to disk',
         'downloading.label': 'Replicating from peers',
@@ -212,10 +214,11 @@ export const translations = [
         'advanced-settings.label': 'Advanced',
         'settings.space-list.label': 'Spaces',
         'settings.open-settings.label': 'Open settings',
+        'settings-panel.label': 'Open settings',
         'related-actions.label': 'Related Actions',
         'related-objects.label': 'Related Objects',
-        'open-space-settings.label': 'Open settings',
         'row-details-no-selection.label': 'No objects selected',
+        'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
         'field-deleted.label': 'Field deleted',
 
@@ -230,7 +233,7 @@ export const translations = [
         'space-locked.label': 'Lock space',
         'space-locked.description': 'Locking a space prevents new members from being invited to the space.',
 
-        'settings-panel.label': 'Space Settings',
+        'settings.panel.label': 'Space Settings',
         'open-current-space-settings.label': 'Open current space settings',
         'space-settings-properties.label': 'General settings',
         'space-properties-settings-verbose.label': 'Manage space properties',
@@ -260,7 +263,7 @@ export const translations = [
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
 
-        'sync-edge-connected.label': 'Edge connected',
+        'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
         'sync-no-connection.label': 'No connection to edge service',
         'sync-latency.label': 'Latency',

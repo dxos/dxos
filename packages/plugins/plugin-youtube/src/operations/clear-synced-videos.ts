@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { Channel, Video } from '../types';
-
 import { ClearSyncedVideos } from './definitions';
 
 const handler: Operation.WithHandler<typeof ClearSyncedVideos> = ClearSyncedVideos.pipe(
@@ -26,9 +25,9 @@ const handler: Operation.WithHandler<typeof ClearSyncedVideos> = ClearSyncedVide
       yield* Database.add(newFeed);
       Obj.setParent(newFeed, channel);
 
-      Obj.change(channel, (mutable) => {
-        mutable.feed = Ref.make(newFeed);
-        delete mutable.lastSyncedAt;
+      Obj.change(channel, (channel) => {
+        channel.feed = Ref.make(newFeed);
+        delete channel.lastSyncedAt;
       });
 
       if (videos.length > 0) {

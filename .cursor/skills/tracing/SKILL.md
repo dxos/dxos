@@ -143,6 +143,41 @@ class DataSpace {
 TRACE_PROCESSOR.findResourcesByAnnotation(DataSpaceResource);
 ```
 
+#### Lifecycle span (`lifecycle: true`)
+
+For `Resource` subclasses that set up background work (subscriptions, timers) in `_open`, enable `lifecycle: true` to get a long-lived span that starts on `open()` and ends on `close()`. `this._ctx` carries the lifecycle span's trace context, so background callbacks are properly parented.
+
+```typescript
+@trace.resource({ lifecycle: true })
+class AutomergeHost extends Resource {
+  @trace.span()
+  protected override async _open(ctx: Context): Promise<void> {
+    // Direct calls use ctx → children of _open span.
+    await this._collectionSynchronizer.open(ctx);
+
+    // Subscriptions use this._ctx → children of lifecycle span.
+    this._networkAdapter.on(this._ctx, () => this._handleUpdate(this._ctx));
+  }
+}
+```
+
+Trace hierarchy produced:
+
+```text
+caller
+  └─ AutomergeHost.lifecycle [════ open ════════════════════ close ════]
+       ├─ AutomergeHost._open [==]
+       │    └─ CollectionSynchronizer.lifecycle (nested, child of _open)
+       ├─ subscription callback 1 (child of lifecycle)
+       └─ subscription callback 2 (child of lifecycle)
+```
+
+Rules:
+- Requires the class to `extend Resource`. Throws at decoration time otherwise.
+- When `_open` throws, the lifecycle span records the error and ends immediately.
+- Double `open()` calls do not start a second lifecycle span.
+- Works gracefully when no `TracingBackend` is registered (no-op).
+
 ### `@trace.span()`
 
 Method decorator. Creates a span for the method's execution duration.

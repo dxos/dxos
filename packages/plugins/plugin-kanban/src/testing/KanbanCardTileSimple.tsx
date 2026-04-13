@@ -9,8 +9,8 @@ import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
-import { type KanbanCardProps, useKanbanBoard } from '../components';
-import { meta } from '../meta';
+import { type KanbanCardProps, useKanbanBoard } from '#components';
+import { meta } from '#meta';
 
 const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
 

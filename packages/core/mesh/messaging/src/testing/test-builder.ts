@@ -6,7 +6,6 @@ import { type Context } from '@dxos/context';
 
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '../signal-manager';
 import { type Message } from '../signal-methods';
-
 import { TestPeer } from './test-peer';
 
 export type TestBuilderOptions = {

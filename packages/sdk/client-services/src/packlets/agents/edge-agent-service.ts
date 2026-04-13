@@ -13,6 +13,7 @@ import {
   QueryAgentStatusResponse,
   type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
+
 import { type EdgeAgentManager } from './edge-agent-manager';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.

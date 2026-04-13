@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { Reconnect } from './definitions';
-
 import { FileCapabilities } from '../types';
 import { getDirectoryChildren } from '../util';
+import { Reconnect } from './definitions';
 
 const handler: Operation.WithHandler<typeof Reconnect> = Reconnect.pipe(
   Operation.withHandler(

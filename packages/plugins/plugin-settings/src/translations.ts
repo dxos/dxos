@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/app-toolkit';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {

@@ -24,7 +24,6 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { getDate, isSameDay } from './util';
 
 const maxRows = 50 * 100;

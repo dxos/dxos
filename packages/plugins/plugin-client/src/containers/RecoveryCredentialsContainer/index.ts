@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
-
-export default RecoveryCredentialsContainer;
+export { RecoveryCredentialsContainer as default } from './RecoveryCredentialsContainer';

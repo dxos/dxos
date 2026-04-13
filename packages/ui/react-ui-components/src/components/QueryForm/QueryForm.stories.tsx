@@ -10,12 +10,11 @@ import { Tag, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { QueryForm, type QueryFormProps } from './QueryForm';
 
 const types = [
@@ -44,7 +43,7 @@ const meta = {
           <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 
-        <Json data={query} classNames='p-2 text-xs' />
+        <Json.Data data={query} classNames='p-2 text-xs' />
       </div>
     );
   },

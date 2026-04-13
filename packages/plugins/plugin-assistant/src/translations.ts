@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Project } from '@dxos/assistant-toolkit';
+import { Chat, Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 // TODO(burdon): Standardize translation names.
 export const translations = [
@@ -57,16 +57,16 @@ export const translations = [
         'delete-object.label': 'Delete AI Chat',
         'object-deleted.label': 'AI Chat deleted',
       },
-      [Project.Project.typename]: {
-        'typename.label': 'Project',
-        'typename.label_zero': 'Projects',
-        'typename.label_one': 'Project',
-        'typename.label_other': 'Projects',
-        'object-name.placeholder': 'New project',
-        'add-object.label': 'Add project',
-        'rename-object.label': 'Rename project',
-        'delete-object.label': 'Delete project',
-        'object-deleted.label': 'Project deleted',
+      [Agent.Agent.typename]: {
+        'typename.label': 'Agent',
+        'typename.label_zero': 'Agents',
+        'typename.label_one': 'Agent',
+        'typename.label_other': 'Agents',
+        'object-name.placeholder': 'New agent',
+        'add-object.label': 'Add agent',
+        'rename-object.label': 'Rename agent',
+        'delete-object.label': 'Delete agent',
+        'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
@@ -90,7 +90,7 @@ export const translations = [
         'type-filter.placeholder': 'Type',
         'any-type-filter.label': 'Any',
         'no-blueprint.message': 'No active blueprints',
-        'tool-call.label': 'Calling tool...',
+        'tool-call.label': 'Calling',
         'tool-result.label': 'Success',
         'tool-error.label': 'Tool call failed',
 
@@ -112,6 +112,8 @@ export const translations = [
 
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
+        'summary.label': 'Summary',
+        'thinking.label': 'Thinking',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
@@ -124,12 +126,23 @@ export const translations = [
         'remove-object-in-context.label': 'Remove document',
         'chat-model.title': 'Model',
 
-        'settings-default.label': 'Default',
-        'settings-custom-prompts.label': 'Use custom prompts',
-        'settings-llm-provider.label': 'LLM provider',
-        'settings-edge-llm-model.label': 'Remote language model',
-        'settings-ollama-llm-model.label': 'Ollama language model',
-        'settings-default-llm-model.label': 'Default language model',
+        'debug.button': 'Debug',
+        'online-switch.label': 'Online',
+        'run-prompt.label': 'Run prompt',
+        'typename.label': 'Typename',
+        'branch-thread.menu': 'Branch chat',
+        'chat-toolbar.title': 'Chat toolbar',
+
+        'settings.default.label': 'Default',
+        'settings.custom-prompts.label': 'Use custom prompts',
+        'settings.custom-prompts.description': 'Allow the assistant to use custom prompts defined in your spaces.',
+        'settings.llm-provider.label': 'LLM provider',
+        'settings.llm-provider.description': 'Select which language model service to use for AI responses.',
+        'settings.edge-llm-model.label': 'Remote language model',
+        'settings.edge-llm-model.description': 'Choose the remote language model used for AI requests.',
+        'settings.ollama-llm-model.label': 'Ollama language model',
+        'settings.ollama-llm-model.description': 'Choose the locally hosted Ollama model for AI requests.',
+        'settings.default-llm-model.label': 'Default language model',
 
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',
@@ -140,12 +153,17 @@ export const translations = [
         'trigger-last-invocation.label': 'Last run',
         'trigger-duration.label': 'Duration',
 
-        'debug.button': 'Debug',
-        'online-switch.label': 'Online',
-        'run-prompt.label': 'Run prompt',
-        'typename.label': 'Typename',
-        'branch-thread.menu': 'Branch chat',
-        'chat-toolbar.title': 'Chat toolbar',
+        // AgentArticle.
+        'project-empty-spec.message': 'Open Properties to configure the agent.',
+        'project-empty-spec.description': 'Open Assistant to interact with the agent.',
+        'artifacts.label': 'Artifacts',
+        'input-queue.label': 'Inputs',
+
+        // AgentSettings.
+        'instructions.label': 'Instructions',
+        'agent.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
+        'reset-history.button': 'Reset',
+        'subscriptions.label': 'Subscriptions',
       },
     },
   },

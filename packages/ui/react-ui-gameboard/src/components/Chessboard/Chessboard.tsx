@@ -21,7 +21,6 @@ import {
   locationToString,
   useGameboardContext,
 } from '../Gameboard';
-
 import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
 
 /** Fallback atom for when model is undefined. */

@@ -83,7 +83,7 @@ export const FunctionInvocationServiceLayerTest = ({
 } = {}): Layer.Layer<
   FunctionInvocationService,
   never,
-  AiService.AiService | CredentialsService | Database.Service | QueueService | Feed.Service
+  AiService.AiService | CredentialsService | Database.Service | QueueService | Feed.FeedService
 > =>
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provide(FunctionImplementationResolver.layerTest({ functions })),

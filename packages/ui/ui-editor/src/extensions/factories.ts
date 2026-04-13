@@ -17,7 +17,6 @@ import {
   keymap,
   lineNumbers,
   placeholder,
-  scrollPastEnd,
 } from '@codemirror/view';
 import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -31,10 +30,10 @@ import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
 import { baseTheme, createFontTheme, editorGutter } from '../styles';
-
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
+import { scrollPastEnd } from './scroll-past-end';
 
 //
 // Basic

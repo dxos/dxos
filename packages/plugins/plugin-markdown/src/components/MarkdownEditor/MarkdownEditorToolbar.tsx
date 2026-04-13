@@ -8,9 +8,9 @@ import React, { useCallback, useState } from 'react';
 import { type FileInfo } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { EditorToolbar, type EditorToolbarProps } from '@dxos/react-ui-editor';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 export type MarkdownEditorToolbarProps = {
   id: string;

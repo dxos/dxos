@@ -20,10 +20,11 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { MessagePanel } from '../../components';
+import { MessagePanel } from '#components';
+import { useStatus } from '#hooks';
+import { meta } from '#meta';
+
 import { command } from '../../extensions';
-import { useStatus } from '../../hooks';
-import { meta } from '../../meta';
 import { getMessageMetadata } from '../../util';
 
 export type ChatContainerProps = ThemedClassName<
@@ -80,8 +81,8 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
         return false;
       }
 
-      Obj.change(thread, (obj) => {
-        obj.messages.push(
+      Obj.change(thread, (thread) => {
+        thread.messages.push(
           Ref.make(
             Obj.make(Message.Message, {
               created: new Date().toISOString(),

@@ -11,7 +11,6 @@ import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
-
 import { createFeedServiceLayer } from './feed-service';
 
 describe('Feed', () => {

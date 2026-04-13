@@ -8,13 +8,13 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Script, Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { useTypeOptions } from '@dxos/plugin-space';
+import { Operation } from '@dxos/operation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -24,7 +24,8 @@ import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
@@ -76,8 +77,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Obj.change(selected, (mutable) => {
-        Object.assign(mutable, trigger);
+      Obj.change(selected, (selected) => {
+        Object.assign(selected, trigger);
       });
     } else {
       space.db.add(Trigger.make(trigger));
@@ -98,8 +99,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (obj) => {
-      Obj.deleteKeys(obj, KEY_QUEUE_CURSOR);
+    Obj.change(trigger, (trigger) => {
+      Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
@@ -121,7 +122,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {filteredTriggers.length > 0 && (
         <List.Root<Trigger.Trigger>
           items={filteredTriggers}
@@ -148,7 +149,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
       {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
       <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
-    </Settings.Container>
+    </Settings.Panel>
   );
 };
 

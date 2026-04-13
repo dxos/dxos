@@ -7,13 +7,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { PresenterSettings } from './PresenterSettings';
 
 const meta = {
   title: 'plugins/plugin-presenter/components/PresenterSettings',
   component: PresenterSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',

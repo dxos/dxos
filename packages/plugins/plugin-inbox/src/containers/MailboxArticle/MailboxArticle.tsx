@@ -6,34 +6,35 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MessageStackActionHandler, MessageStack } from '../../components';
-import { POPOVER_SAVE_FILTER } from '../../constants';
-import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
-import { sortByCreated } from '../../util';
+import { type MessageStackActionHandler, MessageStack } from '#components';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { type Mailbox } from '#types';
 
+import { POPOVER_SAVE_FILTER } from '../../constants';
+import { getMailboxMessagePath } from '../../paths';
+import { sortByCreated } from '../../util';
 import { NewMailbox } from './NewMailbox';
 
-export type MailboxArticleProps = ObjectSurfaceProps<
+export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
-    attendableId?: string;
   }
 >;
 
@@ -52,7 +53,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({ db, sortDescending: sortDescending.atom });
+  const menuActions = useMailboxActions({ db, mailbox, sortDescending: sortDescending.atom });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
@@ -135,15 +136,22 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companion = companionSegment('message');
+          const companion = linkedSegment('message');
           if (layout.mode === 'simple') {
             // Simple layout: open drawer with message companion.
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,
               state: 'expanded',
             });
-          } else {
-            // Deck layout: open as companion panel.
+          } else if (layout.mode === 'multi' && message && db) {
+            // Multi deck: open the message plank beside this mailbox (pivot).
+            void invokePromise(LayoutOperation.Open, {
+              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+              pivotId: id,
+              navigation: 'immediate',
+            });
+          } else if (message) {
+            // Solo deck: show message in the companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
             });
@@ -177,7 +185,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleClear = useCallback(() => {
@@ -187,10 +195,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
-        {!isEmpty && (
-          <ElevationProvider elevation='positioned'>
-            <Menu.Root {...menuActions} attendableId={id}>
+      {!isEmpty && (
+        <ElevationProvider elevation='positioned'>
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Panel.Toolbar asChild>
               <Menu.Toolbar>
                 <QueryEditor
                   ref={filterEditorRef}
@@ -215,10 +223,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                   onClick={() => handleClear()}
                 />
               </Menu.Toolbar>
-            </Menu.Root>
-          </ElevationProvider>
-        )}
-      </Panel.Toolbar>
+            </Panel.Toolbar>
+          </Menu.Root>
+        </ElevationProvider>
+      )}
       <Panel.Content asChild>
         {isEmpty ? (
           <NewMailbox mailbox={mailbox} />
@@ -299,9 +307,11 @@ const useMessageTagsMap = (
 
 const useMailboxActions = ({
   db,
+  mailbox,
   sortDescending,
 }: {
   db?: Database.Database;
+  mailbox?: Mailbox.Mailbox;
   sortDescending: Atom.Writable<boolean>;
 }) => {
   const { t } = useTranslation(meta.id);
@@ -330,11 +340,11 @@ const useMailboxActions = ({
               icon: 'ph--paper-plane-right--regular',
               label: t('compose-email.label'),
             },
-            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
+            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
           )
           .build();
       }),
-    [sortDescending, invokePromise, db],
+    [sortDescending, invokePromise, db, mailbox],
   );
 
   return useMenuActions(menu);

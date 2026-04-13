@@ -4,14 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Collection, Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const ASSISTANT_OPERATION = `${meta.id}.operation`;
 
@@ -41,7 +42,7 @@ export const CreateChat = Operation.make({
 
 export const UpdateChatName = Operation.make({
   meta: { key: `${ASSISTANT_OPERATION}.update-chat-name`, name: 'Update Chat Name' },
-  services: [Capability.Service],
+  services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
     chat: Chat.Chat,
   }),
@@ -103,6 +104,20 @@ export const ResolveNavigationTargets = Operation.make({
     targets: Schema.Array(NavigationTargetSchema),
   }),
   services: [Capability.Service],
+});
+
+export const EnsureCompanionChat = Operation.make({
+  meta: { key: `${ASSISTANT_OPERATION}.ensure-companion-chat`, name: 'Ensure Companion Chat' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    companionTo: Obj.Unknown,
+  }),
+  output: Schema.Struct({
+    chat: Chat.Chat,
+    /** Whether the returned chat was already persisted in the space. */
+    persisted: Schema.Boolean,
+  }),
 });
 
 export const BlueprintForm = Schema.Struct({

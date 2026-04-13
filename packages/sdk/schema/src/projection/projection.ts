@@ -8,6 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { Format, Obj } from '@dxos/echo';
 import { View } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import {
   EchoSchema,
   type JsonProp,
@@ -18,13 +19,11 @@ import {
   typeToFormat,
 } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
-import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
-
 import { PropertySchema, type PropertyType } from './format';
 
 export const VIEW_FIELD_LIMIT = 32;
@@ -67,7 +66,7 @@ export const createEchoChangeCallback = (
   schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
 ): ProjectionChangeCallback => ({
   // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
-  projection: (mutate) => Obj.change(view, (obj) => mutate(obj.projection as Mutable<View.Projection>)),
+  projection: (mutate) => Obj.change(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
   schema:
     schema instanceof EchoSchema
       ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))

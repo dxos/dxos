@@ -7,9 +7,9 @@ import React, { forwardRef, useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-import { type DeckAction, type LayoutMode } from '../../types';
-import { DeckOperation } from '../../operations';
+import { meta } from '#meta';
+import { DeckOperation } from '#operations';
+import { type DeckAction, type LayoutMode } from '#types';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 
@@ -22,26 +22,17 @@ export type PlankCapabilities = {
   companion?: boolean;
 };
 
-export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
-  onClick?: PlankControlHandler;
-  variant?: 'hide-disabled' | 'default';
-  close?: boolean | 'minify-start' | 'minify-end';
-  capabilities: PlankCapabilities;
-  layoutMode?: LayoutMode;
-  pin?: 'start' | 'end' | 'both';
-};
-
-const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
-};
+//
+// Controls
+//
 
 const plankControlSpacing = 'px-2';
 
-type PlankComplimentControlsProps = {
+export type PlankCompanionControlsProps = {
   primary?: string;
 };
 
-export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
+export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionControlsProps>(
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { invokePromise } = useOperationInvoker();
@@ -61,6 +52,23 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
     );
   },
 );
+
+const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
+  return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
+};
+
+//
+// PlankControls
+//
+
+export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
+  onClick?: PlankControlHandler;
+  variant?: 'hide-disabled' | 'default';
+  close?: boolean | 'minify-start' | 'minify-end';
+  capabilities: PlankCapabilities;
+  layoutMode?: LayoutMode;
+  pin?: 'start' | 'end' | 'both';
+};
 
 // TODO(wittjosiah): Duplicate of stack LayoutControls?
 //   Translations were to be duplicated between packages.
@@ -93,10 +101,10 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                 <PlankControl
                   label={t(
                     layoutMode === 'solo--fullscreen'
-                      ? 'exit fullscreen label'
+                      ? 'exit-fullscreen.label'
                       : layoutIsAnySolo
-                        ? 'show deck plank label'
-                        : 'show solo plank label',
+                        ? 'show-deck-plank.label'
+                        : 'show-solo-plank.label',
                   )}
                   classNames={buttonClassNames}
                   icon={
@@ -111,7 +119,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
               </>
             )}
 
-            {!layoutIsAnySolo && (
+            {!layoutIsAnySolo && layoutMode !== 'multi' && (
               <>
                 <PlankControl
                   label={t('increment-start.label')}
@@ -133,7 +141,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
         ) : (
           capabilities.fullscreen && (
             <PlankControl
-              label={t(layoutMode === 'solo--fullscreen' ? 'exit fullscreen label' : 'show fullscreen plank label')}
+              label={t(layoutMode === 'solo--fullscreen' ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
               classNames={buttonClassNames}
               icon={layoutMode === 'solo--fullscreen' ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
               onClick={() => onClick?.('solo--fullscreen')}
@@ -143,7 +151,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
         {close && !layoutIsAnySolo && (
           <PlankControl
-            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'}.label`)}
             classNames={buttonClassNames}
             data-testid='plankHeading.close'
             icon={

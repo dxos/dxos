@@ -11,7 +11,7 @@ import { Form } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 //
 // ComposeEmailPanel
@@ -41,8 +41,8 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
 
     const handleValuesChanged = useCallback(
       (newValues: Partial<ComposeEmailForm>) => {
-        Obj.change(draft, (msg) => {
-          const properties = (msg.properties ??= {});
+        Obj.change(draft, (draft) => {
+          const properties = (draft.properties ??= {});
           if (newValues.to !== undefined) {
             properties.to = newValues.to;
           }
@@ -56,11 +56,11 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
             properties.subject = newValues.subject;
           }
           if (newValues.body !== undefined) {
-            const textBlock = msg.blocks.find((b) => b._tag === 'text');
+            const textBlock = draft.blocks.find((b) => b._tag === 'text');
             if (textBlock && 'text' in textBlock) {
               textBlock.text = newValues.body;
             } else {
-              msg.blocks.push({ _tag: 'text', text: newValues.body });
+              draft.blocks.push({ _tag: 'text', text: newValues.body });
             }
           }
         });
@@ -83,7 +83,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     );
 
     return (
-      <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+      <div {...composableProps(props)} ref={forwardedRef}>
         <Form.Root
           testId='compose-email-form'
           autoFocus

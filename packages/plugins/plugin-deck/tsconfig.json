@@ -43,6 +43,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -67,13 +70,25 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-primitives/react-error-boundary"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -92,6 +107,9 @@
     },
     {
       "path": "../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-tabs"

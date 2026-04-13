@@ -8,14 +8,14 @@ import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { CreateProject } from './definitions';
-import { Project } from '../../../types';
-import { ProjectBlueprint, syncProjectTriggers } from '../../project';
+import { Agent } from '../../../types';
+import { AgentBlueprint } from '../../project';
+import { CreateAgent, SyncTriggers } from './definitions';
 
-export default CreateProject.pipe(
+export default CreateAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, spec, blueprints, subscriptions }) {
-      const project = yield* Project.makeInitialized(
+      const agent = yield* Agent.makeInitialized(
         {
           name,
           spec,
@@ -24,10 +24,10 @@ export default CreateProject.pipe(
           ),
           subscriptions,
         },
-        Obj.clone(ProjectBlueprint.make()),
+        Obj.clone(AgentBlueprint.make()),
       );
-      yield* syncProjectTriggers(project);
-      return project;
+      yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+      return agent;
     }),
   ),
 );

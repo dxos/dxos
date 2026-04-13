@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FilesSettings } from './FilesSettings';
-
-export default FilesSettings;
+export { FilesSettings as default } from './FilesSettings';

@@ -15,22 +15,23 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
+
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { translations } from '../../translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '../../types';
 
-faker.seed(1);
+random.seed(1);
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
 const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions', name: 'Story Extensions' }).pipe(
@@ -44,7 +45,7 @@ const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions'
 
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
-  const space = useSpace();
+  const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
   const id = doc && Obj.getDXN(doc).toString();

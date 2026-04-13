@@ -3,14 +3,13 @@
 //
 
 import { rmSync } from 'node:fs';
-
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Obj } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
+import { Ref } from '@dxos/echo/internal';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
@@ -241,8 +240,8 @@ describe('Client', () => {
         ],
       }),
     );
-    Obj.change(thread2, (obj) => {
-      obj.messages.push(Ref.make(message));
+    Obj.change(thread2, (thread2) => {
+      thread2.messages.push(Ref.make(message));
     });
     await space2.db.flush();
 

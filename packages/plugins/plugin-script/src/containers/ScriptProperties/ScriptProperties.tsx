@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptPropertiesProps = {
   object: Script.Script;
@@ -23,8 +23,8 @@ export const ScriptProperties = ({ object }: ScriptPropertiesProps) => {
         placeholder={t('description.placeholder')}
         value={object.description ?? ''}
         onChange={(event) => {
-          Obj.change(object, (obj) => {
-            obj.description = event.target.value;
+          Obj.change(object, (object) => {
+            object.description = event.target.value;
           });
         }}
       />

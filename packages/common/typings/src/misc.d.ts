@@ -7,3 +7,7 @@ declare module 'end-of-stream-promise';
 declare module 'signal-promise';
 declare module 'y-monaco';
 declare module 'react-flame-graph';
+
+declare module '*.css';
+declare module '*.pcss';
+declare module '@dxos-theme';

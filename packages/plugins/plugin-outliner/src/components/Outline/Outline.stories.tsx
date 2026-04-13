@@ -5,18 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../translations';
-import { Outline } from '../../types';
+import { Outline } from '#types';
 
+import { translations } from '../../translations';
 import { Outline as OutlineComponent } from './Outline';
 
 const OutlineStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const text = useMemo(() => {
     if (space) {
       return space.db.add(Text.make('- [x] Initial content'));

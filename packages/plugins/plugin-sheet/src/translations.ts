@@ -4,8 +4,8 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Sheet } from './types';
+import { meta } from '#meta';
+import { Sheet } from '#types';
 
 export const translations = [
   {
@@ -24,13 +24,16 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Sheets',
         'cell.placeholder': 'Cell value...',
-        'range-key-alignment.label': 'Align',
-        'range-key-style.label': 'Style',
-        'range-value-start.label': 'Align left',
-        'range-value-center.label': 'Align center',
-        'range-value-end.label': 'Align right',
-        'range-value-softwrap.label': 'Wrap text',
-        'range-value-highlight.label': 'Highlight',
+
+        'range-key.alignment.label': 'Align',
+        'range-key.style.label': 'Style',
+
+        'range-value.start.label': 'Align left',
+        'range-value.center.label': 'Align center',
+        'range-value.end.label': 'Align right',
+        'range-value.softwrap.label': 'Wrap text',
+        'range-value.highlight.label': 'Highlight',
+
         'toolbar-action.label': '{{value}}',
         'selection-overlaps-existing-comment.label': 'Selected cell already has a comment',
         'comment.label': 'Add comment',

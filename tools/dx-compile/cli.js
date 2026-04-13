@@ -1,5 +1,7 @@
+#!/usr/bin/env node
+
 //
 // Copyright 2025 DXOS.org
 //
 
-require('./dist/src/cli.js');
+void import('./dist/src/cli.js');

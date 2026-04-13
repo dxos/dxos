@@ -43,7 +43,7 @@ export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) => {
-  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make(content)) });
+  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
   // TODO(dmaretskyi): We need a better way to set parents when creating hierarchies.
   Obj.setParent(doc.content.target!, doc);
   return doc;

@@ -4,8 +4,8 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Sketch } from './types';
+import { meta } from '#meta';
+import { Sketch } from '#types';
 
 export const translations = [
   {
@@ -23,10 +23,12 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Sketch',
-        'settings.title': 'Sketch plugin settings',
-        'settings-hover-tools.label': 'Auto hide controls',
-        'settings-grid-show.label': 'Show grid',
-        'settings-grid-type.label': 'Dotted grid',
+        'settings.title': 'Sketch settings',
+        'settings.hover-tools.label': 'Auto hide controls',
+        'settings.grid-show.label': 'Show grid',
+        'settings.grid-show.description': 'Display a background grid on the sketch canvas.',
+        'settings.grid-type.label': 'Dotted grid',
+        'settings.grid-type.description': 'Use a dotted grid instead of a mesh grid.',
       },
     },
   },

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 export const TestItemSchema = Schema.Struct({
   id: Obj.ID,
@@ -21,10 +21,10 @@ export const TestList = Schema.Struct({
 export type TestList = Schema.Schema.Type<typeof TestList>;
 
 export const createList = (n = 10): TestList => ({
-  items: faker.helpers.multiple(
+  items: random.helpers.multiple(
     () => ({
-      id: faker.string.uuid(),
-      name: faker.commerce.productName(),
+      id: random.string.uuid(),
+      name: random.commerce.productName(),
     }),
     { count: n },
   ),

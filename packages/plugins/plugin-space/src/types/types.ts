@@ -12,7 +12,7 @@ import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { type ComplexMap } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export * as Settings from './Settings';
 

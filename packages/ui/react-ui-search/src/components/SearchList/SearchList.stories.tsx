@@ -5,16 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { useSearchListInput, useSearchListItem, useSearchListResults } from './hooks';
 import { SearchList } from './SearchList';
 
-faker.seed(1234);
+random.seed(1234);
 
 type StoryItem = {
   id: string;
@@ -22,8 +21,8 @@ type StoryItem = {
   icon?: string;
 };
 
-const defaultItems: StoryItem[] = faker.helpers.uniqueArray(faker.commerce.productName, 16).map((label) => ({
-  id: faker.string.uuid(),
+const defaultItems: StoryItem[] = random.helpers.uniqueArray(random.commerce.productName, 16).map((label) => ({
+  id: random.string.uuid(),
   label,
   icon: 'ph--file--regular',
 }));

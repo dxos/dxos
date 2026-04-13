@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { fetchRss } from './fetch-rss';
 import { fetchAtproto, parseAtprotoActor } from './fetch-atproto';
+import { fetchRss } from './fetch-rss';
 
 // Sample RSS XML fixture.
 const RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>

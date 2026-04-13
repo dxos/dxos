@@ -158,14 +158,14 @@ const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: stri
   if (Ref.isRef(textRef)) {
     const text: Text.Text | undefined = yield* Effect.promise(() => textRef.load());
     if (text) {
-      Obj.change(text, (mutable) => {
-        mutable.content = newContent;
+      Obj.change(text, (text) => {
+        text.content = newContent;
       });
       return;
     }
   }
-  Obj.change(doc, (mutable) => {
-    mutable.content = Ref.make(Text.make(newContent));
+  Obj.change(doc, (doc) => {
+    doc.content = Ref.make(Text.make(newContent));
   });
 });
 

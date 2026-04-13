@@ -9,7 +9,7 @@ import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTran
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type State = 'pending';
 
@@ -190,6 +190,6 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
 
 const RobotAvatar = () => (
   <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--robot--regular' />
+    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
   </Avatar.Root>
 );

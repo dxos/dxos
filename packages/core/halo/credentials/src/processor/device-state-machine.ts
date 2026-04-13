@@ -10,7 +10,6 @@ import { type Chain, type Credential, type DeviceProfileDocument } from '@dxos/p
 import { ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
-
 import { type CredentialProcessor } from './credential-processor';
 
 export type DeviceStateMachineProps = {

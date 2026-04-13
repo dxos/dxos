@@ -2,19 +2,39 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
+import { Context, LifecycleState, Resource, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR, sanitizeClassName } from './trace-processor';
 import type { RemoteSpan } from './tracing-types';
 
+const LIFECYCLE_SPAN = Symbol('dxos.tracing.lifecycle-span');
+
+export type ResourceOptions = {
+  annotation?: symbol;
+  /**
+   * Start a lifecycle span on `open()` and end it on `close()`.
+   * `this._ctx` carries the lifecycle span's trace context, so background work
+   * (subscriptions, timers) becomes children of the lifecycle span.
+   * Direct calls within `_open` use the `_open` span's context as usual.
+   * Requires the class to extend {@link Resource}.
+   */
+  lifecycle?: boolean;
+};
+
 /**
  * Annotates a class as a tracked resource.
  */
 const resource =
-  (options?: { annotation?: symbol }) =>
+  (options?: ResourceOptions) =>
   <T extends { new (...args: any[]): {} }>(constructor: T) => {
+    if (options?.lifecycle && !(constructor.prototype instanceof Resource)) {
+      throw new Error(
+        `@trace.resource({ lifecycle: true }) requires ${constructor.name} to extend Resource`,
+      );
+    }
+
     const klass = (() =>
       class extends constructor {
         constructor(...rest: any[]) {
@@ -22,6 +42,65 @@ const resource =
           TRACE_PROCESSOR.createTraceResource({ constructor, annotation: options?.annotation, instance: this });
         }
       })();
+
+    if (options?.lifecycle) {
+      const sanitizedName = sanitizeClassName(constructor.name);
+      const proto = klass.prototype as any;
+      const originalOpen = proto.open;
+      const originalClose = proto.close;
+
+      proto.open = async function (ctx?: Context): Promise<any> {
+        const self = this as any;
+
+        if (self._lifecycleState !== LifecycleState.CLOSED) {
+          return originalOpen.call(this, ctx);
+        }
+
+        const parentSpanContext = ctx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
+        const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(this);
+        const spanAttributes: Record<string, any> = {};
+        if (resourceEntry) {
+          spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
+        }
+
+        const remoteSpan = TRACE_PROCESSOR.tracingBackend?.startSpan({
+          name: `${sanitizedName}.lifecycle`,
+          op: 'lifecycle',
+          attributes: spanAttributes,
+          parentContext: parentSpanContext,
+        });
+        self[LIFECYCLE_SPAN] = remoteSpan;
+
+        let openCtx = ctx;
+        if (remoteSpan?.spanContext != null) {
+          const traceAttrs = { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext };
+          openCtx = ctx
+            ? ctx.derive({ attributes: traceAttrs })
+            : new Context({ attributes: traceAttrs });
+        }
+
+        try {
+          return await originalOpen.call(this, openCtx);
+        } catch (err) {
+          remoteSpan?.setError?.(err);
+          remoteSpan?.end();
+          self[LIFECYCLE_SPAN] = undefined;
+          throw err;
+        }
+      };
+
+      proto.close = async function (ctx?: Context): Promise<any> {
+        const self = this as any;
+        const result = await originalClose.call(this, ctx);
+        const remoteSpan: RemoteSpan | undefined = self[LIFECYCLE_SPAN];
+        if (remoteSpan) {
+          remoteSpan.end();
+          self[LIFECYCLE_SPAN] = undefined;
+        }
+        return result;
+      };
+    }
+
     Object.defineProperty(klass, 'name', { value: constructor.name });
     return klass;
   };

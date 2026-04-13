@@ -14,7 +14,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
-
 import { type TemplateChangeCallback, TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`
@@ -43,7 +42,7 @@ const DefaultStory = () => {
 
   const handleChange: TemplateChangeCallback = useCallback(
     (mutate) => {
-      Obj.change(blueprint, (obj) => mutate(obj.instructions));
+      Obj.change(blueprint, (blueprint) => mutate(blueprint.instructions));
     },
     [blueprint],
   );

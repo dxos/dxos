@@ -8,7 +8,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;

@@ -13,12 +13,13 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import type * as Entity from './Entity';
 import * as internal from './internal';
 import * as Ref from './Ref';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Types.Contravariant<T> };
+  '~Filter': { value: Types.Covariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -278,7 +279,7 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * Predicate for property to be in the provided array.
  * @param values - Values to check against.
  */
-const in$ = <T>(...values: T[]): Filter<T | undefined> => {
+const in$ = <T>(...values: T[]): Filter<T> => {
   return new FilterClass({
     type: 'in',
     values,
@@ -302,7 +303,7 @@ export const contains = <T>(value: T): Filter<readonly T[] | undefined> => {
  * @param from - Start of the range (inclusive).
  * @param to - End of the range (exclusive).
  */
-export const between = <T>(from: T, to: T): Filter<unknown> => {
+export const between = <T>(from: T, to: T): Filter<T> => {
   return new FilterClass({
     type: 'range',
     from,
@@ -337,6 +338,31 @@ export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', 
  * Filter objects by createdAt timestamp.
  */
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
+
+export type ChildOfOptions = {
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive?: boolean;
+};
+
+/**
+ * Filter objects that are children of the specified parent(s).
+ * Accepts ECHO objects, DXN values, or arrays of either.
+ * With transitive=true (default), also matches grandchildren and beyond.
+ */
+export const childOf = (parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[], options?: ChildOfOptions): Any => {
+  const items = Array.isArray(parents) ? parents : [parents];
+  const dxns = items.map((item) => {
+    if (item instanceof DXN) {
+      return item.toString();
+    }
+    return internal.getDXN(item).toString();
+  });
+  return new FilterClass({
+    type: 'child-of',
+    parents: dxns,
+    transitive: options?.transitive ?? true,
+  });
+};
 
 /**
  * Negate the filter.

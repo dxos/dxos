@@ -16,7 +16,6 @@ import { trim } from '@dxos/util';
 
 import { createSystemPrompt } from '../templates/system';
 import { AssistantTestLayer } from '../testing';
-
 import { formatSystemPrompt } from './format';
 
 const OrganizationList = Operation.make({
@@ -35,7 +34,7 @@ const Handlers = OperationHandlerSet.make(
     OrganizationList,
     Effect.fnUntraced(function* () {
       const organizations = yield* Database.runQuery(Query.type(Organization.Organization));
-      return organizations.map((organization) => organization.name);
+      return organizations.map((organization) => organization.name ?? '<no org>');
     }),
   ),
 );
@@ -106,7 +105,7 @@ describe('format', () => {
                 {{#each organizations}}
                   - {{this}}
                 {{/each}}
-                `,
+              `,
               inputs: [
                 {
                   name: 'organizations',

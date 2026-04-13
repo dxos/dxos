@@ -21,7 +21,6 @@ import {
   type SpaceMemberListProps,
 } from '../../components';
 import { translationKey } from '../../translations';
-
 import { type SpacePanelStepProps } from './SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {

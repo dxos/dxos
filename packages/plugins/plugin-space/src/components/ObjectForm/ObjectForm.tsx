@@ -12,7 +12,7 @@ import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '../../meta';
+import { meta as pluginMeta } from '#meta';
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
@@ -54,8 +54,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      Obj.change(object, (obj) => {
-        Obj.getMeta(obj).tags = [...(Obj.getMeta(obj).tags ?? []), Obj.getDXN(newObject).toString()];
+      Obj.change(object, (object) => {
+        Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
       });
     }
   }, []);
@@ -72,8 +72,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       // Handle tags separately using Obj.change.
       const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
       if (hasTagsChange) {
-        Obj.change(object, (obj) => {
-          Obj.getMeta(obj).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+        Obj.change(object, (object) => {
+          Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
         });
       }
 

@@ -4,22 +4,22 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
-import { useBreakpoints } from '../../hooks';
-import { meta } from '../../meta';
-import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
-import { DeckOperation } from '../../operations';
-import { soloInlinePadding } from '../DeckMain/fragments';
+import { useBreakpoints } from '#hooks';
+import { meta } from '#meta';
+import { DeckOperation } from '#operations';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
+import { usePlankContext } from './PlankRoot';
 
 const MAX_COMPANIONS = 5;
 
@@ -56,9 +56,8 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise } = useOperationInvoker();
+    const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
-    const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
@@ -82,16 +81,16 @@ export const PlankHeading = memo(
     const capabilities = useMemo(
       () => ({
         deck: deckEnabled ?? true,
-        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
+        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'multi'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
         fullscreen: !isCompanionNode,
-        companion: !isCompanionNode && companions && companions.length > 0,
+        companion: layoutMode !== 'multi' && !isCompanionNode && companions && companions.length > 0,
       }),
-      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled, layoutMode],
     );
 
-    const variant = isCompanionNode ? getCompanionVariant(id) : undefined;
+    const variant = isCompanionNode ? getLinkedVariant(id) : undefined;
     const sigilActions = useMemo(() => {
       if (!node) {
         return undefined;
@@ -118,19 +117,9 @@ export const PlankHeading = memo(
 
     const handlePlankAction = useCallback(
       (eventType: DeckOperation.PartAdjustment) => {
-        if (eventType.startsWith('solo')) {
-          return invokePromise(DeckOperation.Adjust, { type: eventType, id });
-        } else if (eventType === 'close') {
-          if (part === 'complementary') {
-            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-          } else {
-            return invokePromise(LayoutOperation.Close, { subject: [id] });
-          }
-        } else {
-          return invokePromise(DeckOperation.Adjust, { type: eventType, id });
-        }
+        onAdjust?.(id, eventType);
       },
-      [invokePromise, id, part],
+      [onAdjust, id],
     );
 
     const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
@@ -140,10 +129,10 @@ export const PlankHeading = memo(
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
         if (tabId) {
-          void invokePromise(DeckOperation.ChangeCompanion, { companion: tabId });
+          onChangeCompanion?.(tabId);
         }
       },
-      [invokePromise],
+      [onChangeCompanion],
     );
 
     return (
@@ -153,13 +142,17 @@ export const PlankHeading = memo(
         style={iconSize(5)}
         classNames={[
           'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
-          part === 'solo' ? soloInlinePadding : 'px-1',
+          part === 'solo'
+            ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
+            : 'px-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [
                 hoverableControls,
                 hoverableFocusedWithinControls,
-                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent border-transparent transition-[background-color,border-color]',
-                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
+                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent',
+                'border-transparent transition-[background-color,border-color]',
+                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface',
+                'hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
               ]
             : []),
         ]}
@@ -191,7 +184,10 @@ export const PlankHeading = memo(
                   actions={sigilActions}
                   onAction={handleAction}
                 >
-                  <Surface.Surface role='menu-footer' data={{ subject: node.data }} />
+                  <Surface.Surface
+                    role='menu-footer'
+                    data={{ subject: node.data } satisfies AppSurface.MenuFooterData}
+                  />
                 </StackItem.Sigil>
               ) : (
                 <StackItem.SigilButton>
@@ -212,7 +208,9 @@ export const PlankHeading = memo(
             </TextTooltip>
           </>
         )}
-        {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
+        {node && part !== 'complementary' && (
+          <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+        )}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />
         ) : (

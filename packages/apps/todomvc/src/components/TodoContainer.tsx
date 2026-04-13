@@ -8,7 +8,6 @@ import { type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 
 import { type Todo } from '../types';
-
 import { TodoItem } from './TodoItem';
 
 export type TodoContainerProps = {

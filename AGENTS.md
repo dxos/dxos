@@ -48,6 +48,7 @@
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
+- Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
 
 ### React
 
@@ -95,8 +96,9 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push any pending changes.
+  - Commit and push all pending changes.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
+  - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
   - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".

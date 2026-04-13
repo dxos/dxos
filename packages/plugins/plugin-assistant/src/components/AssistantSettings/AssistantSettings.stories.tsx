@@ -7,14 +7,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { AssistantSettings } from './AssistantSettings';
 
 const meta = {
   title: 'plugins/plugin-assistant/components/AssistantSettings',
   tags: ['settings'],
   component: AssistantSettings,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

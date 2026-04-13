@@ -12,7 +12,8 @@ import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter } from '@dxos/react-client/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import { CreateTriggerFromTemplate } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateTriggerFromTemplate.pipe(
@@ -30,8 +31,8 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
           );
           const [fn] = functions;
           if (fn) {
-            Obj.change(trigger, (obj) => {
-              obj.function = Ref.make(fn);
+            Obj.change(trigger, (trigger) => {
+              trigger.function = Ref.make(fn);
             });
           }
         }
@@ -39,14 +40,14 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
 
       switch (template.type) {
         case 'timer': {
-          Obj.change(trigger, (obj) => {
-            obj.spec = { kind: 'timer', cron: template.cron };
+          Obj.change(trigger, (trigger) => {
+            trigger.spec = { kind: 'timer', cron: template.cron };
           });
           break;
         }
         case 'queue': {
-          Obj.change(trigger, (obj) => {
-            obj.spec = {
+          Obj.change(trigger, (trigger) => {
+            trigger.spec = {
               kind: 'queue',
               queue: (template.queueDXN as DXN).toString(),
             };

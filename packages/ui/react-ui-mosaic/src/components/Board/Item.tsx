@@ -13,7 +13,6 @@ import { getHashStyles } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
-
 import { useBoard } from './Board';
 import { useBoardColumn } from './Column';
 
