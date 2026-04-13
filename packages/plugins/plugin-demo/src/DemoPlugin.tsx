@@ -42,7 +42,7 @@ export const DemoPlugin = Plugin.define(meta).pipe(
     ],
   }),
   AppPlugin.addSchemaModule({
-    schema: [Demo.DemoController, Demo.DemoEvent, Demo.DemoMatch],
+    schema: [Demo.DemoController, Demo.DemoEvent, Demo.DemoMatch, Demo.DemoNudge],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

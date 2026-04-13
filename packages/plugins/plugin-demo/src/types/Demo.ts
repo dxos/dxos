@@ -95,6 +95,40 @@ export const DemoMatch = Schema.Struct({
 
 export interface DemoMatch extends Schema.Schema.Type<typeof DemoMatch> {}
 
+/**
+ * A proactive message the agent would send to Slack in response to an external
+ * signal (e.g. a GitHub PR merge that touches a card discussed in a recent
+ * meeting). For offline demos we just write the nudge to ECHO and render it in
+ * the demo panel as a Slack-styled preview; when a real bot token is
+ * configured the same content is also posted to a real Slack channel.
+ */
+export const DemoNudge = Schema.Struct({
+  /** Slack channel name (without '#'). */
+  channel: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** Mentioned handle (without '@'). */
+  mention: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+  /** Message body (markdown-ish). */
+  text: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** Trello card the nudge is about. */
+  card: Schema.optional(Ref.Ref(Trello.TrelloCard).pipe(FormInputAnnotation.set(false))),
+  /** ISO timestamp when the nudge was emitted. */
+  emittedAt: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** Did we post this to a real Slack workspace, or is it preview-only? */
+  posted: Schema.optional(Schema.Boolean.pipe(FormInputAnnotation.set(false))),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.demoNudge',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['text']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--chat-circle-text--regular',
+    hue: 'cyan',
+  }),
+);
+
+export interface DemoNudge extends Schema.Schema.Type<typeof DemoNudge> {}
+
 /** Input schema for creating a DemoController. */
 export const CreateDemoControllerSchema = Schema.Struct({
   name: Schema.optional(

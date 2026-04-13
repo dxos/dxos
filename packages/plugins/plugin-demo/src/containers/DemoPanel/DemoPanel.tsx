@@ -18,6 +18,17 @@ import { Demo } from '#types';
 /** Delay before running aiMatch on a newly-injected Granola note. Tuned so the viewer sees the note land before matches appear. */
 const MATCH_DELAY_MS = 800;
 
+/** Delay before the proactive Slack nudge fires on a pr-merged event. Same rationale — viewer sees the event land first. */
+const NUDGE_DELAY_MS = 600;
+
+type PrPayload = {
+  number?: number;
+  repo?: string;
+  title?: string;
+  author?: string;
+  relatedKeywords?: readonly string[];
+};
+
 export type DemoPanelProps = {
   role: string;
   subject: Demo.DemoController;
@@ -64,10 +75,12 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
   const db = Obj.getDatabase(controller);
   const events: Demo.DemoEvent[] = useQuery(db!, Filter.type(Demo.DemoEvent));
   const matches: Demo.DemoMatch[] = useQuery(db!, Filter.type(Demo.DemoMatch));
+  const nudges: Demo.DemoNudge[] = useQuery(db!, Filter.type(Demo.DemoNudge));
   const syncRecords: Granola.GranolaSyncRecord[] = useQuery(db!, Filter.type(Granola.GranolaSyncRecord));
   const cards: Trello.TrelloCard[] = useQuery(db!, Filter.type(Trello.TrelloCard));
   const [busy, setBusy] = useState(false);
   const processedGranolaEventIds = useRef(new Set<string>());
+  const processedPrEventIds = useRef(new Set<string>());
 
   // Autonomous matcher: whenever an unhandled `granola-note` event appears,
   // look up its sync record, run aiMatch against open Trello cards, and write
@@ -136,6 +149,92 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
 
     return () => clearTimeout(timer);
   }, [db, events, syncRecords, cards]);
+
+  // Proactive nudge: on each unhandled `pr-merged` event, find which Trello
+  // card the PR relates to (via keyword overlap with the card name/description
+  // plus any DemoMatch already linking the card to a recent meeting), then
+  // write a DemoNudge describing the Slack message the agent would send.
+  useEffect(() => {
+    if (!db) {
+      return;
+    }
+    const unhandled = events.filter(
+      (event) =>
+        event.kind === 'pr-merged' &&
+        !event.handled &&
+        !processedPrEventIds.current.has(event.id),
+    );
+    if (unhandled.length === 0) {
+      return;
+    }
+    for (const event of unhandled) {
+      processedPrEventIds.current.add(event.id);
+    }
+
+    const timer = setTimeout(async () => {
+      for (const event of unhandled) {
+        try {
+          const payload: PrPayload = event.payload ? JSON.parse(event.payload) : {};
+          const keywords = (payload.relatedKeywords ?? []).map((kw) => kw.toLowerCase());
+          const relevantCard = cards.find((card) => {
+            if (card.closed) {
+              return false;
+            }
+            const haystack = `${card.name ?? ''} ${card.description ?? ''}`.toLowerCase();
+            return keywords.some((keyword) => haystack.includes(keyword));
+          });
+          if (!relevantCard) {
+            log.info('demo: pr-merged had no matching card', { keywords });
+            Obj.change(event, (mutable) => {
+              mutable.handled = true;
+            });
+            continue;
+          }
+          const linkedMatch = matches
+            .filter((match) => match.card?.target?.id === relevantCard.id)
+            .sort((first, second) => (second.createdAt ?? '').localeCompare(first.createdAt ?? ''))[0];
+          const meetingContext = linkedMatch?.document?.target?.name;
+
+          const lines: string[] = [];
+          lines.push(
+            `Hey @alice — the fix you ${
+              meetingContext ? `discussed in "${meetingContext}"` : 'have been tracking'
+            } just shipped.`,
+          );
+          lines.push('');
+          if (payload.title) {
+            lines.push(`• **PR ${payload.number ? `#${payload.number} ` : ''}**${payload.title}`);
+          }
+          if (payload.author) {
+            lines.push(`• author: @${payload.author}`);
+          }
+          lines.push('');
+          lines.push(
+            `The card "${relevantCard.name}" is still in "${relevantCard.listName ?? 'your board'}" — want me to move it to Done?`,
+          );
+
+          db.add(
+            Obj.make(Demo.DemoNudge, {
+              channel: 'widgets-eng',
+              mention: 'alice',
+              text: lines.join('\n'),
+              card: Ref.make(relevantCard),
+              emittedAt: new Date().toISOString(),
+              posted: false,
+            }),
+          );
+          Obj.change(event, (mutable) => {
+            mutable.handled = true;
+          });
+          log.info('demo: nudge emitted', { cardId: relevantCard.id, pr: payload.number });
+        } catch (err) {
+          log.warn('demo: nudge loop failed', { error: String(err) });
+        }
+      }
+    }, NUDGE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [db, events, cards, matches]);
 
   const emit = useCallback(
     async (kind: string, label: string, payload?: unknown) => {
@@ -218,14 +317,23 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
     try {
       const allEvents = await db.query(Filter.type(Demo.DemoEvent)).run();
       const allMatches = await db.query(Filter.type(Demo.DemoMatch)).run();
+      const allNudges = await db.query(Filter.type(Demo.DemoNudge)).run();
       for (const event of allEvents) {
         db.remove(event);
       }
       for (const match of allMatches) {
         db.remove(match);
       }
+      for (const nudge of allNudges) {
+        db.remove(nudge);
+      }
       processedGranolaEventIds.current.clear();
-      log.info('demo: events + matches cleared', { events: allEvents.length, matches: allMatches.length });
+      processedPrEventIds.current.clear();
+      log.info('demo: state cleared', {
+        events: allEvents.length,
+        matches: allMatches.length,
+        nudges: allNudges.length,
+      });
     } finally {
       setBusy(false);
     }
@@ -265,6 +373,32 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
                 <Icon icon='ph--chat-circle--regular' size={4} />
                 <span>Simulate Slack message</span>
               </Button>
+
+              {nudges.length > 0 && (
+                <>
+                  <div className='text-xs text-subdued uppercase tracking-wider pt-4 pb-1'>
+                    Proactive nudges ({nudges.length})
+                  </div>
+                  {[...nudges]
+                    .sort((first, second) => (second.emittedAt ?? '').localeCompare(first.emittedAt ?? ''))
+                    .slice(0, 5)
+                    .map((nudge) => (
+                      <div
+                        key={nudge.id}
+                        className='border border-separator rounded p-3 text-sm bg-base'
+                      >
+                        <div className='flex gap-2 items-center text-xs text-subdued mb-2'>
+                          <Icon icon='ph--hash--regular' size={4} />
+                          <span>#{nudge.channel}</span>
+                          {!nudge.posted && (
+                            <span className='ml-auto italic'>preview · not posted to real Slack</span>
+                          )}
+                        </div>
+                        <div className='whitespace-pre-wrap leading-relaxed'>{nudge.text}</div>
+                      </div>
+                    ))}
+                </>
+              )}
 
               {matches.length > 0 && (
                 <>
