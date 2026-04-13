@@ -8274,9 +8274,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
-      '@dxos/plugin-dealflow':
-        specifier: workspace:*
-        version: link:../plugin-dealflow
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -9500,9 +9497,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
-      '@dxos/plugin-dealflow':
-        specifier: workspace:*
-        version: link:../plugin-dealflow
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -12007,9 +12001,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
-      '@dxos/plugin-dealflow':
-        specifier: workspace:*
-        version: link:../plugin-dealflow
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -20573,6 +20564,19 @@ importers:
       ts-morph:
         specifier: 'catalog:'
         version: 16.0.0
+
+  tools/demo:
+    dependencies:
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.7
+      playwright:
+        specifier: 'catalog:'
+        version: 1.57.0
+    devDependencies:
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
 
   tools/dx-build:
     dependencies:
