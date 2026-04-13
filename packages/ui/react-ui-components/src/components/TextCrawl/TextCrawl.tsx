@@ -139,7 +139,7 @@ export const TextCrawl = ({
     };
 
     if (wasReset) {
-      setIndex(greedy ? lines.length - 1 : 0);
+      setIndex(greedy ? Math.max(0, lines.length - 1) : 0);
     } else {
       const now = Date.now();
       const wasVisible = now - lastUpdatedRef.current >= minDuration;

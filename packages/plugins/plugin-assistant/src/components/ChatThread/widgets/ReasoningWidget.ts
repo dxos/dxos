@@ -41,6 +41,7 @@ export class ReasoningWidget extends WidgetType {
       .append(
         Domino.of('div')
           .classNames('relative overflow-hidden p-px rounded-sm border border-subdued-separator')
+          .attributes({ 'data-trail-container': '' })
           .append(
             Domino.of('div')
               .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-description px-2 py-1')
@@ -63,7 +64,13 @@ export class ReasoningWidget extends WidgetType {
     // ancestor would remove `[data-id]`.
     dom.querySelector<HTMLElement>('[data-reasoning-text]')?.replaceChildren(this.text);
 
-    const trailHost = dom.querySelector<HTMLElement>('[data-id]');
+    // Recreate trail host if it was removed by a prior timeout (streaming paused > TRAIL_REMOVAL_DELAY_MS).
+    const container = dom.querySelector<HTMLElement>('[data-trail-container]');
+    let trailHost = container?.querySelector<HTMLElement>('[data-id]');
+    if (container && !trailHost) {
+      trailHost = Domino.of('div').attributes({ 'data-id': this.#pos }).root;
+      container.append(trailHost);
+    }
     if (trailHost?.childElementCount === 0) {
       trailHost.append(...createTrailLayers());
     }

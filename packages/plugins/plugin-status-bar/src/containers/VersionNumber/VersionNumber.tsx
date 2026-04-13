@@ -63,8 +63,8 @@ export const VersionNumber = (_props: VersionNumberProps) => {
             )}
             <div>
               <p>
-                {t('see-release.label')}
-                <Link classNames='' href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
+                <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
+                  {t('see-release.label')}
                   <Icon icon='ph--arrow-square-out--bold' size={4} classNames='dx-icon-inline ms-1' />
                 </Link>
               </p>
