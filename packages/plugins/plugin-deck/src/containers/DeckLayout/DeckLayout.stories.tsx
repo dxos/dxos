@@ -17,7 +17,7 @@ import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-gr
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
+import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -39,6 +39,9 @@ import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);
 
+// TODO(burdon): Show/hide companions.
+// TODO(burdon): Companion width.
+
 // TODO(burdon): Factor out.
 const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
@@ -47,7 +50,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableDeck: true,
       enableStatusbar: false,
       enableNativeRedirect: false,
-      encapsulatedPlanks: true,
+      encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
     return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
@@ -63,10 +66,10 @@ const storyDeckState = Capability.makeModule(() =>
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
+      previousMode: {},
       decks: {
         default: { ...defaultDeck },
       },
-      previousMode: {},
     };
 
     const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
@@ -170,35 +173,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
           }),
           Surface.create({
-            id: 'story-article-companion',
-            role: 'article',
-            filter: (data): data is Record<string, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
-            component: ({ data }) => {
-              const subject = (data as any)?.subject;
-              const companionTo = (data as any)?.companionTo;
-              const properties = (data as any)?.properties;
-              const variant = (data as any)?.variant as string | undefined;
-
-              if (companionTo == null) {
-                return <Loading />;
-              }
-
-              const jsonPayload = {
-                primaryItem: companionTo,
-                companion: { data: subject, properties, variant },
-              };
-
-              return (
-                <Json.Root data={jsonPayload}>
-                  <Json.Content>
-                    <Json.Data />
-                  </Json.Content>
-                </Json.Root>
-              );
-            },
-          }),
-          Surface.create({
             id: 'story-article',
             role: 'article',
             filter: (data): data is Record<string, unknown> =>
@@ -206,7 +180,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
-
               if (subject == null) {
                 return <Loading />;
               }
@@ -217,11 +190,40 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                     {attendableId && <ItemComponent id={attendableId} />}
                     <Json.Root data={subject}>
                       <Json.Content>
+                        <Json.Filter />
                         <Json.Data />
                       </Json.Content>
                     </Json.Root>
                   </Panel.Content>
                 </Panel.Root>
+              );
+            },
+          }),
+          Surface.create({
+            id: 'story-article-companion',
+            role: 'article',
+            filter: (data): data is Record<string, unknown> =>
+              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
+            component: ({ data }) => {
+              const subject = (data as any)?.subject;
+              const companionTo = (data as any)?.companionTo;
+              const properties = (data as any)?.properties;
+              const variant = (data as any)?.variant as string | undefined;
+              if (companionTo == null) {
+                return <Loading />;
+              }
+
+              return (
+                <Json.Root
+                  data={{
+                    primaryItem: companionTo,
+                    companion: { data: subject, properties, variant },
+                  }}
+                >
+                  <Json.Content>
+                    <Json.Data />
+                  </Json.Content>
+                </Json.Root>
               );
             },
           }),
@@ -318,24 +320,26 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   return (
     <Panel.Root>
       <Panel.Content>
-        {items.map((node) => (
-          <Button
-            key={node.id}
-            variant='ghost'
-            onClick={() =>
-              void invokePromise(LayoutOperation.Open, {
-                subject: [node.id],
-                pivotId: id,
-                navigation: 'immediate',
-              })
-            }
-          >
-            {node.properties.icon && <Icon icon={node.properties.icon} size={4} />}
-            <span className='truncate'>
-              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-            </span>
-          </Button>
-        ))}
+        <List>
+          {items.map((node) => (
+            <ListItem.Root
+              key={node.id}
+              classNames='dx-hover'
+              onClick={() =>
+                void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' })
+              }
+            >
+              {node.properties.icon && (
+                <ListItem.Endcap>
+                  <Icon icon={node.properties.icon} size={4} />
+                </ListItem.Endcap>
+              )}
+              <ListItem.Heading classNames='cursor-pointer truncate'>
+                {typeof node.properties.label === 'string' ? node.properties.label : node.id}
+              </ListItem.Heading>
+            </ListItem.Root>
+          ))}
+        </List>
       </Panel.Content>
     </Panel.Root>
   );
@@ -363,35 +367,26 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-const SoloStory = () => {
-  const { invokePromise } = useOperationInvoker();
-  useAsyncEffect(async () => {
-    await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-    await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
-  });
-
-  return <DeckLayout />;
-};
-
 export const Solo: Story = {
-  render: () => <SoloStory />,
-};
-
-const MultiStory = () => {
-  const { invokePromise } = useOperationInvoker();
-  useAsyncEffect(async () => {
-    await invokePromise(LayoutOperation.Open, {
-      subject: [STORY_ITEMS[0].id],
-      navigation: 'immediate',
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
     });
-    await invokePromise(LayoutOperation.SetLayoutMode, {
-      mode: 'multi',
-    });
-  });
 
-  return <DeckLayout />;
+    return <DeckLayout />;
+  },
 };
 
 export const Multi: Story = {
-  render: () => <MultiStory />,
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
+    });
+
+    return <DeckLayout />;
+  },
 };

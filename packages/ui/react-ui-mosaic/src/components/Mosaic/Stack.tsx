@@ -83,7 +83,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
 
     const rootRef = useRef<HTMLDivElement>(null);
     const scrollToId = useCallback((targetId: string) => {
-      const el = rootRef.current?.querySelector<HTMLElement>(`[data-mosaic-tile-id="${CSS.escape(targetId)}"]`);
+      const el = rootRef.current?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(targetId)}"]`);
       el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, []);
 

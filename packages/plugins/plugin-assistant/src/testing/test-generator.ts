@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal';
 import { ContextQueueService } from '@dxos/functions';
 import { random } from '@dxos/random';
-import { renderObjectLink } from '@dxos/react-ui-components';
+import { renderObjectLink, textStream } from '@dxos/react-ui-components';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -35,6 +36,36 @@ export const createMessageGenerator = (): MessageGenerator[] => [
         ]),
       ]),
     );
+  }),
+
+  // Streaming text block: appends a pending text block, then mutates `text` in chunks
+  // so the syncer renders progressive deltas through the queue (not via the controller).
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    const message = createMessage('assistant', [{ _tag: 'text', text: '', pending: true }]);
+    yield* Effect.promise(() => queue.append([message]));
+
+    const fullText =
+      trim`
+      Streaming a response **word by word** through the queue:
+
+      ${random.lorem.paragraph()}
+
+      ${random.lorem.paragraph()}
+    ` + '\n';
+
+    yield* Effect.promise(async () => {
+      for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
+        Obj.change(message, (obj) => {
+          const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
+          block.text += chunk;
+        });
+      }
+      Obj.change(message, (obj) => {
+        const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
+        block.pending = false;
+      });
+    });
   }),
 
   Effect.gen(function* () {

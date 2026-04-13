@@ -21,11 +21,13 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
      * 50rem = 800px. Maximum content width for solo mode.
      * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
      */
-    className: 'mx-auto! w-full pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
-  },
-  scroll: {
-    // NOTE: Child widgets must have `max-w-[100cqi]`.
-    className: 'dx-size-container',
+    className: mx(
+      // NOTE: Container for widget sizing (must have `max-w-[100cqi]`).
+      'dx-size-container',
+      // Wider margin for web (vs. mobile).
+      'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
+      'mx-auto! w-full',
+    ),
   },
 };
 
