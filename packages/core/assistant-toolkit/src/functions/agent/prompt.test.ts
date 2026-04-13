@@ -54,6 +54,7 @@ describe('Agent prompt', () => {
 
         const prompt = yield* Database.add(
           Prompt.make({
+            key: 'dxos.org/prompt/test/agent-chat-mode-queue',
             name: 'chat-mode-test',
             instructions: 'Reply with a single word: ack.',
             blueprints: [],
