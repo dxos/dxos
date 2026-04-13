@@ -1,0 +1,5 @@
+# Persistent Chromium profile — identity state, IndexedDB, etc. Never commit.
+playwright-user-data/
+
+# Real credentials — use .env.demo.example as a template.
+.env.demo

@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/demo-setup",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Playwright-driven demo bootstrap: opens a fresh Chrome, wires credentials from .env.demo, seeds fixture data, leaves Composer ready to record.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "bin": {
+    "demo-reset": "./reset.ts",
+    "demo-setup": "./setup.ts"
+  },
+  "scripts": {
+    "reset": "tsx reset.ts",
+    "setup": "tsx setup.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "playwright": "catalog:"
+  },
+  "devDependencies": {
+    "tsx": "catalog:"
+  }
+}

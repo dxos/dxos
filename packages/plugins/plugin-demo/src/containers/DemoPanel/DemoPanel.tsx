@@ -12,6 +12,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
+import { bootstrapFromEnv, type BootstrapResult } from './bootstrap-from-env';
 import { matchNoteToCards } from './match-cards';
 import { seedSoftwareTeamFixture } from './seed-fixture';
 import { Demo } from '#types';
@@ -80,6 +81,7 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
   const syncRecords: Granola.GranolaSyncRecord[] = useQuery(db!, Filter.type(Granola.GranolaSyncRecord));
   const cards: Trello.TrelloCard[] = useQuery(db!, Filter.type(Trello.TrelloCard));
   const [busy, setBusy] = useState(false);
+  const [lastBootstrap, setLastBootstrap] = useState<BootstrapResult | undefined>(undefined);
   const processedGranolaEventIds = useRef(new Set<string>());
   const processedPrEventIds = useRef(new Set<string>());
 
@@ -310,6 +312,23 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
     [emit],
   );
 
+  const handleBootstrap = useCallback(async () => {
+    if (!db) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await bootstrapFromEnv(db);
+      setLastBootstrap(result);
+      (globalThis as any).__dxosDemoReady = true;
+      if (typeof globalThis.document !== 'undefined') {
+        globalThis.document.body.setAttribute('data-demo-ready', 'true');
+      }
+    } finally {
+      setBusy(false);
+    }
+  }, [db]);
+
   const handleSeed = useCallback(async () => {
     if (!db) {
       return;
@@ -377,10 +396,36 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
           <ScrollArea.Viewport>
             <div className='flex flex-col gap-2 p-2'>
               <div className='text-xs text-subdued uppercase tracking-wider pt-2 pb-1'>Setup</div>
+              <Button disabled={busy} onClick={handleBootstrap}>
+                <Icon icon='ph--rocket-launch--regular' size={4} />
+                <span>Bootstrap from .env.demo (seed + wire credentials)</span>
+              </Button>
               <Button disabled={busy} onClick={handleSeed}>
                 <Icon icon='ph--seedling--regular' size={4} />
-                <span>Seed Widgets-team board ({cards.length} existing cards)</span>
+                <span>Seed Widgets-team board only ({cards.length} existing cards)</span>
               </Button>
+              {lastBootstrap && (
+                <div className='text-xs border border-separator rounded p-2 bg-base space-y-1'>
+                  {lastBootstrap.created.length > 0 && (
+                    <div>
+                      <span className='font-medium text-success'>Created:</span>{' '}
+                      {lastBootstrap.created.join('; ')}
+                    </div>
+                  )}
+                  {lastBootstrap.skipped.length > 0 && (
+                    <div>
+                      <span className='font-medium text-subdued'>Skipped:</span>{' '}
+                      {lastBootstrap.skipped.join('; ')}
+                    </div>
+                  )}
+                  {lastBootstrap.errors.length > 0 && (
+                    <div>
+                      <span className='font-medium text-error'>Errors:</span>{' '}
+                      {lastBootstrap.errors.join('; ')}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className='text-xs text-subdued uppercase tracking-wider pt-4 pb-1'>Inject event</div>
               <Button disabled={busy} onClick={handleGranolaNote}>
