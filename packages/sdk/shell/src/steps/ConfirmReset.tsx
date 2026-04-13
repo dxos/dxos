@@ -51,22 +51,6 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
       </Message.Root>
       <TextInput
         {...{ validationMessage }}
-        // label={
-        //   <InputLabel classNames='text-start'>
-        //     <Trans
-        //       i18nKey={`${translationKey}:${
-        //         mode === 'join-new-identity'
-        //           ? 'join-new-identity-input.label'
-        //           : mode === 'recover'
-        //             ? 'recover-reset-input.label'
-        //             : 'reset-storage-input.label'
-        //       }`}
-        //       values={{
-        //         confirmationValue,
-        //       }}
-        //     />
-        //   </InputLabel>
-        // }
         disabled={disabled}
         data-testid={`${testIdAffix}.reset-identity-input`}
         placeholder={t('confirmation.placeholder', { confirmationValue })}

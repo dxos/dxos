@@ -238,8 +238,8 @@ import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-// NOTE: typename is defined in Task 3 as 'org.dxos.plugin.deus.spec'.
-const SPEC_TYPENAME = 'org.dxos.plugin.deus.spec';
+// NOTE: typename is defined in Task 3 as 'org.dxos.plugin.spec'.
+const SPEC_TYPENAME = 'org.dxos.plugin.spec';
 
 export const translations = [
   {
@@ -299,7 +299,7 @@ export const Spec = Schema.Struct({
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.plugin.deus.spec',
+    typename: 'org.dxos.plugin.spec',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
