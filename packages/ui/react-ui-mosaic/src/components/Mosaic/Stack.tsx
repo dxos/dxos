@@ -57,6 +57,7 @@ type MosaicStackProps<TData = any> = ThemedClassName<
     getId: GetId<TData>;
     orientation?: Axis;
     items?: readonly TData[];
+    scrollIntoView?: boolean;
     Tile: MosaicStackTileComponent<TData>;
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
@@ -67,10 +68,18 @@ type MosaicStackProps<TData = any> = ThemedClassName<
  */
 const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
   (
-    { getId, orientation: orientationProp = 'vertical', items, Tile, draggable = true, debug, ...props },
+    {
+      getId,
+      orientation: orientationProp = 'vertical',
+      items,
+      scrollIntoView = true,
+      Tile,
+      draggable = true,
+      debug,
+      ...props
+    },
     forwardedRef,
   ) => {
-    invariant(Tile);
     const {
       id,
       orientation = orientationProp,
@@ -82,10 +91,17 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
     const rootRef = useRef<HTMLDivElement>(null);
-    const scrollToId = useCallback((targetId: string) => {
-      const el = rootRef.current?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(targetId)}"]`);
-      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }, []);
+    const scrollToId = useCallback(
+      (targetId: string) => {
+        if (!scrollIntoView) {
+          return;
+        }
+
+        const el = rootRef.current?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(targetId)}"]`);
+        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      },
+      [scrollIntoView],
+    );
 
     useEffect(() => {
       registerScrollTo(scrollToId);
@@ -148,6 +164,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       orientation = 'vertical',
       items,
       getId,
+      scrollIntoView,
       Tile,
       estimateSize,
       getScrollElement,
@@ -191,11 +208,15 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       (targetId: string) => {
         const itemIndex = visibleItems.findIndex((item) => getId(item) === targetId);
         if (itemIndex >= 0) {
+          if (!scrollIntoView) {
+            return;
+          }
+
           const virtualIndex = draggable ? itemIndex * 2 + 1 : itemIndex;
           virtualizer.scrollToIndex(virtualIndex, { align: 'start', behavior: 'smooth' });
         }
       },
-      [visibleItems, getId, draggable, virtualizer],
+      [visibleItems, getId, draggable, virtualizer, scrollIntoView],
     );
 
     useEffect(() => {

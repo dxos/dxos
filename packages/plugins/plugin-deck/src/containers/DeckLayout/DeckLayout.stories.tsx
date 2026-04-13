@@ -310,38 +310,33 @@ type ItemComponentProps = {
 const ItemComponent = ({ id }: ItemComponentProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
-
-  const plankConnections = useConnections(graph, id, 'child');
+  const connections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () => plankConnections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
-    [plankConnections],
+    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
+    [connections],
   );
 
   return (
-    <Panel.Root>
-      <Panel.Content>
-        <List>
-          {items.map((node) => (
-            <ListItem.Root
-              key={node.id}
-              classNames='dx-hover'
-              onClick={() =>
-                void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' })
-              }
-            >
-              {node.properties.icon && (
-                <ListItem.Endcap>
-                  <Icon icon={node.properties.icon} size={4} />
-                </ListItem.Endcap>
-              )}
-              <ListItem.Heading classNames='cursor-pointer truncate'>
-                {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-              </ListItem.Heading>
-            </ListItem.Root>
-          ))}
-        </List>
-      </Panel.Content>
-    </Panel.Root>
+    <List>
+      {items.map((node) => (
+        <ListItem.Root
+          key={node.id}
+          classNames='dx-hover'
+          onClick={() =>
+            void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' })
+          }
+        >
+          {node.properties.icon && (
+            <ListItem.Endcap>
+              <Icon icon={node.properties.icon} size={4} />
+            </ListItem.Endcap>
+          )}
+          <ListItem.Heading classNames='cursor-pointer truncate'>
+            {typeof node.properties.label === 'string' ? node.properties.label : node.id}
+          </ListItem.Heading>
+        </ListItem.Root>
+      ))}
+    </List>
   );
 };
 
