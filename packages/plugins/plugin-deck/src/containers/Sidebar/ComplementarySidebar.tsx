@@ -200,7 +200,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
         />
       </Panel.Content>
       {!hoistStatusbar && (
-        <Panel.Statusbar classNames='px-1' size='sm'>
+        <Panel.Statusbar size='sm'>
           <Surface.Surface role='status-bar--r1-footer' limit={1} />
         </Panel.Statusbar>
       )}
