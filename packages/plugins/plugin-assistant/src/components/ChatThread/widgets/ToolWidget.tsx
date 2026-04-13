@@ -110,6 +110,11 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
 
+  // Clamp selected to avoid out-of-bounds after items shrink.
+  useEffect(() => {
+    setSelected((prev) => Math.min(prev, Math.max(0, items.length - 1)));
+  }, [items.length]);
+
   useEffect(() => {
     onChangeOpen?.(open);
     if (open) {
