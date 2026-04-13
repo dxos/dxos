@@ -13,24 +13,24 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { Plan, Project } from '../../../types';
+import { Plan, Agent } from '../../../types';
 import { Qualifier } from './definitions';
 
 export default Qualifier.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
-      function* ({ project: projectRef, event }) {
-        const project = yield* Database.load(projectRef);
-        invariant(Obj.instanceOf(Project.Project, project));
-        invariant(project.chat, 'Project has no chat.');
+      function* ({ agent: agentRef, event }) {
+        const agent = yield* Database.load(agentRef);
+        invariant(Obj.instanceOf(Agent.Agent, agent));
+        invariant(agent.chat, 'Agent has no chat.');
 
-        const { id, name, queue } = project;
+        const { id, name, queue } = agent;
         if (!queue) {
-          throw new Error('Project has no queue.');
+          throw new Error('Agent has no queue.');
         }
 
-        const plan = yield* Database.load(project.plan);
-        const spec = yield* Database.load(project.spec);
+        const plan = yield* Database.load(agent.plan);
+        const spec = yield* Database.load(agent.spec);
 
         const { value } = yield* Effect.scoped(
           LanguageModel.generateObject({
@@ -40,18 +40,18 @@ export default Qualifier.pipe(
             prompt: Prompt.fromMessages([
               Prompt.systemMessage({
                 content: trim`
-                  You are a qualifying agent that determines if the event is relevant to the project.
-                  Respond with true if the event is relevant to the project, false otherwise.
+                  You are a qualifying agent that determines if the event is relevant to the agent.
+                  Respond with true if the event is relevant to the agent, false otherwise.
                   If you are not sure, return true.
                   The qualified events will be forwarded to the larger agent that will process them.
-                  <project id="${id}" name="${name}">
+                  <agent id="${id}" name="${name}">
                     <spec>
                     ${spec.content}
                     </spec>
                     <plan>
                       ${Plan.formatPlan(plan)}
                     </plan>
-                  </project>
+                  </agent>
                 `,
               }),
               Prompt.userMessage({

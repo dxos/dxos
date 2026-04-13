@@ -10,7 +10,6 @@ import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -94,80 +93,63 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
     }, 1_000);
   }, [view]);
 
-  const { callItems, resultItems } = useMemo(() => {
-    const callItems = items.filter((item) => item.content?._tag === 'toolCall' || item.content?._tag === 'stats');
-    const resultItems = items.filter((item) => item.content?._tag === 'toolResult');
-    return { callItems, resultItems };
-  }, [items]);
-
-  if (callItems.length === 0 && resultItems.length === 0) {
+  // Ignore if empty.
+  if (!items.length) {
     return null;
   }
 
-  return (
-    <div className='flex flex-col gap-1'>
-      {callItems.length > 0 && (
-        <ToolPanel items={callItems} onChangeOpen={handleChangeOpen} textCrawlKey='tool-call-crawl' />
-      )}
-      {resultItems.length > 0 && (
-        <ToolPanel items={resultItems} onChangeOpen={handleChangeOpen} textCrawlKey='tool-result-crawl' />
-      )}
-    </div>
-  );
+  return <ToolPanel items={items} onChangeOpen={handleChangeOpen} />;
 };
 
 type ToolPanelProps = {
   items: { title: string; content: any }[];
-  textCrawlKey: string;
 } & Pick<TogglePanelRootProps, 'onChangeOpen'>;
 
-const ToolPanel = ({ items, onChangeOpen, textCrawlKey }: ToolPanelProps) => {
+const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
 
+  // Clamp selected to avoid out-of-bounds after items shrink.
+  useEffect(() => {
+    setSelected((prev) => Math.min(prev, Math.max(0, items.length - 1)));
+  }, [items.length]);
+
   useEffect(() => {
     onChangeOpen?.(open);
-    if (open && items.length > 1) {
+    if (open) {
       tabsRef.current?.focus();
     }
-  }, [open, onChangeOpen, items.length]);
+  }, [open, onChangeOpen]);
 
   const handleSelect = useCallback((index: number) => {
     setSelected(index);
   }, []);
 
-  useEffect(() => {
-    setSelected((previous) => Math.min(previous, Math.max(0, items.length - 1)));
-  }, [items.length]);
-
   return (
-    <TogglePanel.Root classNames='w-full rounded-xs !border-0' open={open} onChangeOpen={setOpen}>
-      <TogglePanel.Header classNames='text-sm text-placeholder p-0.5 gap-0.5'>
-        <TextCrawl key={textCrawlKey} size='sm' lines={items.map((item) => item.title)} autoAdvance greedy />
+    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
+      <TogglePanel.Header classNames='text-sm text-placeholder'>
+        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
-      <TogglePanel.Content classNames={items.length > 1 ? 'grid grid-cols-[32px_1fr]' : 'grid grid-cols-1'}>
-        {items.length > 1 && (
+      <TogglePanel.Content>
+        <TogglePanel.Viewport classNames='grid grid-cols-[32px_1fr]'>
           <NumericTabs
             ref={tabsRef}
-            classNames='p-0.5'
+            classNames='p-1'
             length={items.length}
             selected={selected}
             onSelect={handleSelect}
           />
-        )}
-        <Json.Data
-          data={items[selected]?.content}
-          classNames={mx(
-            'text-xs bg-transparent',
-            open ? (items.length > 1 ? 'py-1 pl-8 pr-4' : 'py-1 px-4') : 'p-0.5',
-          )}
-          replacer={{
-            maxDepth: 3,
-            maxArrayLen: 10,
-            maxStringLen: 128,
-          }}
-        />
+          <Json.Data
+            data={items[selected]?.content}
+            classNames='p-1 text-xs bg-transparent'
+            replacer={{
+              maxDepth: 3,
+              maxArrayLen: 10,
+              maxStringLen: 128,
+            }}
+          />
+        </TogglePanel.Viewport>
       </TogglePanel.Content>
     </TogglePanel.Root>
   );

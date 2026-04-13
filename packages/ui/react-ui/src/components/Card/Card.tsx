@@ -391,7 +391,7 @@ const CardPoster = (props: CardPosterProps) => {
 
   if (props.image) {
     return (
-      <div role='none' className='col-span-full mb-1'>
+      <div role='none' className='col-span-full'>
         <Image classNames={[tx('card.poster', {}), aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );
