@@ -4,8 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { Trello } from '@dxos/plugin-trello/types';
 
 // @import-as-namespace
 
@@ -62,6 +64,36 @@ export const DemoEvent = Schema.Struct({
 );
 
 export interface DemoEvent extends Schema.Schema.Type<typeof DemoEvent> {}
+
+/**
+ * Edge object linking a Granola meeting note to a Trello card with a confidence
+ * level and one-sentence explanation. Written by the demo panel's aiMatch
+ * pipeline; rendered as a pill on the card and in the demo panel log.
+ */
+export const DemoMatch = Schema.Struct({
+  document: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
+  card: Ref.Ref(Trello.TrelloCard).pipe(FormInputAnnotation.set(false)),
+  /** 'high' | 'medium' | 'low'. */
+  confidence: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** One-sentence LLM (or heuristic) explanation for the match. */
+  reasoning: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** ISO timestamp when the match was computed. */
+  createdAt: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** 'ai' | 'heuristic' — which path produced this match. */
+  source: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.demoMatch',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['reasoning']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--link--regular',
+    hue: 'cyan',
+  }),
+);
+
+export interface DemoMatch extends Schema.Schema.Type<typeof DemoMatch> {}
 
 /** Input schema for creating a DemoController. */
 export const CreateDemoControllerSchema = Schema.Struct({

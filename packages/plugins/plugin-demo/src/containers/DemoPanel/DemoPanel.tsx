@@ -2,16 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Granola } from '@dxos/plugin-granola/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { Trello } from '@dxos/plugin-trello/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
+import { matchNoteToCards } from './match-cards';
 import { Demo } from '#types';
+
+/** Delay before running aiMatch on a newly-injected Granola note. Tuned so the viewer sees the note land before matches appear. */
+const MATCH_DELAY_MS = 800;
 
 export type DemoPanelProps = {
   role: string;
@@ -58,7 +63,79 @@ let fixtureIndex = 0;
 export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
   const db = Obj.getDatabase(controller);
   const events: Demo.DemoEvent[] = useQuery(db!, Filter.type(Demo.DemoEvent));
+  const matches: Demo.DemoMatch[] = useQuery(db!, Filter.type(Demo.DemoMatch));
+  const syncRecords: Granola.GranolaSyncRecord[] = useQuery(db!, Filter.type(Granola.GranolaSyncRecord));
+  const cards: Trello.TrelloCard[] = useQuery(db!, Filter.type(Trello.TrelloCard));
   const [busy, setBusy] = useState(false);
+  const processedGranolaEventIds = useRef(new Set<string>());
+
+  // Autonomous matcher: whenever an unhandled `granola-note` event appears,
+  // look up its sync record, run aiMatch against open Trello cards, and write
+  // DemoMatch rows. The delay gives the viewer a beat to see the note land
+  // before the links appear.
+  useEffect(() => {
+    if (!db) {
+      return;
+    }
+    const unhandled = events.filter(
+      (event) =>
+        event.kind === 'granola-note' &&
+        !event.handled &&
+        !processedGranolaEventIds.current.has(event.id),
+    );
+    if (unhandled.length === 0) {
+      return;
+    }
+    for (const event of unhandled) {
+      processedGranolaEventIds.current.add(event.id);
+    }
+
+    const timer = setTimeout(async () => {
+      for (const event of unhandled) {
+        try {
+          const payload = event.payload ? (JSON.parse(event.payload) as { granolaId?: string }) : {};
+          const granolaId = payload.granolaId;
+          const record = syncRecords.find((candidate) => candidate.granolaId === granolaId);
+          if (!record) {
+            log.info('demo: granola event has no sync record yet', { granolaId });
+            continue;
+          }
+          const document = record.document?.target;
+          const cardMatches = await matchNoteToCards({ record, document, cards });
+          if (document) {
+            for (const match of cardMatches) {
+              const card = cards.find((candidate) => candidate.id === match.cardId);
+              if (!card) {
+                continue;
+              }
+              db.add(
+                Obj.make(Demo.DemoMatch, {
+                  document: Ref.make(document),
+                  card: Ref.make(card),
+                  confidence: match.confidence,
+                  reasoning: match.reasoning,
+                  source: match.source,
+                  createdAt: new Date().toISOString(),
+                }),
+              );
+            }
+          }
+          Obj.change(event, (mutable) => {
+            mutable.handled = true;
+          });
+          log.info('demo: wrote matches', {
+            granolaId,
+            matches: cardMatches.length,
+            via: cardMatches[0]?.source ?? 'none',
+          });
+        } catch (err) {
+          log.warn('demo: match loop failed', { error: String(err) });
+        }
+      }
+    }, MATCH_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [db, events, syncRecords, cards]);
 
   const emit = useCallback(
     async (kind: string, label: string, payload?: unknown) => {
@@ -140,10 +217,15 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
     setBusy(true);
     try {
       const allEvents = await db.query(Filter.type(Demo.DemoEvent)).run();
+      const allMatches = await db.query(Filter.type(Demo.DemoMatch)).run();
       for (const event of allEvents) {
         db.remove(event);
       }
-      log.info('demo: events cleared', { count: allEvents.length });
+      for (const match of allMatches) {
+        db.remove(match);
+      }
+      processedGranolaEventIds.current.clear();
+      log.info('demo: events + matches cleared', { events: allEvents.length, matches: allMatches.length });
     } finally {
       setBusy(false);
     }
@@ -183,6 +265,45 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
                 <Icon icon='ph--chat-circle--regular' size={4} />
                 <span>Simulate Slack message</span>
               </Button>
+
+              {matches.length > 0 && (
+                <>
+                  <div className='text-xs text-subdued uppercase tracking-wider pt-4 pb-1'>
+                    Auto-linked ({matches.length})
+                  </div>
+                  {[...matches]
+                    .sort((first, second) => (second.createdAt ?? '').localeCompare(first.createdAt ?? ''))
+                    .slice(0, 10)
+                    .map((match) => {
+                      const docName = match.document?.target?.name ?? 'note';
+                      const cardName = match.card?.target?.name ?? 'card';
+                      const icon =
+                        match.confidence === 'high'
+                          ? 'ph--check-circle--fill'
+                          : match.confidence === 'medium'
+                            ? 'ph--warning-circle--regular'
+                            : 'ph--link--regular';
+                      return (
+                        <div
+                          key={match.id}
+                          className='flex gap-2 items-start border border-separator rounded p-2 text-sm bg-base'
+                        >
+                          <Icon icon={icon} size={4} />
+                          <div className='flex-1'>
+                            <div className='font-medium'>
+                              <span className='text-subdued'>{docName}</span>
+                              <span className='mx-1'>→</span>
+                              <span>{cardName}</span>
+                            </div>
+                            <div className='text-xs text-subdued'>
+                              {match.confidence} · {match.source ?? 'ai'} · {match.reasoning}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </>
+              )}
 
               <div className='text-xs text-subdued uppercase tracking-wider pt-4 pb-1'>
                 Recent events ({events.length})
