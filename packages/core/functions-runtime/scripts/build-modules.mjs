@@ -32,6 +32,7 @@ const PACKAGES = [
 
   // DXOS SDK.
   '@dxos/echo',
+  '@dxos/keys',
   '@dxos/functions',
   '@dxos/functions-runtime-cloudflare',
   '@dxos/ai',

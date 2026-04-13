@@ -34,6 +34,8 @@ export default Capability.makeModule(() =>
     const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
 
     const compiler = new Compiler({
+      target: ts.ScriptTarget.ES2022,
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
       skipLibCheck: true,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
       allowImportingTsExtensions: true,

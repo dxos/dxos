@@ -14,6 +14,9 @@ import { invariant } from '@dxos/invariant';
 
 const GLOBALS = 'globals.d.ts';
 
+/** TS version hosted on playgroundcdn.typescriptlang.org used to fetch lib .d.ts files. */
+const CDN_TS_VERSION = '5.7.2';
+
 const defaultOptions: ts.CompilerOptions = {
   lib: ['DOM', 'es2022'],
   target: ts.ScriptTarget.ES2022,
@@ -32,7 +35,7 @@ export class Compiler {
 
     // TODO(wittjosiah): Figure out how to get workers working in plugin packages.
     //   https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
-    this._fsMap = await createDefaultMapFromCDN(this._options, ts.version, true, ts);
+    this._fsMap = await createDefaultMapFromCDN(this._options, CDN_TS_VERSION, true, ts);
     if (globals) {
       this._fsMap.set(GLOBALS, globals);
     }
