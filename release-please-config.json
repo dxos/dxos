@@ -50,6 +50,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/ai-match/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
@@ -196,6 +201,11 @@
         {
           "type": "json",
           "path": "packages/common/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/sync-engine/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -530,7 +540,22 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-connections/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crypto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-daily-summary/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-dealflow/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -570,6 +595,16 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-github/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-granola/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-graph/package.json",
           "jsonpath": "$.version"
         },
@@ -581,6 +616,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-inspector/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -670,6 +710,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-research/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
@@ -696,6 +741,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-sketch/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-slack/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -766,6 +816,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-transformer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-trello/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1061,6 +1116,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-url-enricher/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -19,6 +19,9 @@
       "path": "packages/apps/todomvc/tsconfig.json"
     },
     {
+      "path": "packages/common/ai-match/tsconfig.json"
+    },
+    {
       "path": "packages/common/async/tsconfig.json"
     },
     {
@@ -107,6 +110,9 @@
     },
     {
       "path": "packages/common/storybook-utils/tsconfig.json"
+    },
+    {
+      "path": "packages/common/sync-engine/tsconfig.json"
     },
     {
       "path": "packages/common/test-utils/tsconfig.json"
@@ -304,7 +310,16 @@
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-connections/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-crypto/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-dealflow/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
@@ -328,6 +343,12 @@
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-github/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-granola/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
@@ -335,6 +356,9 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-inspector/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
@@ -388,6 +412,9 @@
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-research/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-script/tsconfig.json"
     },
     {
@@ -404,6 +431,9 @@
     },
     {
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-slack/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-space/tsconfig.json"
@@ -446,6 +476,9 @@
     },
     {
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-trello/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
@@ -623,6 +656,9 @@
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-url-enricher/tsconfig.json"
     },
     {
       "path": "packages/ui/solid-ui/tsconfig.json"
