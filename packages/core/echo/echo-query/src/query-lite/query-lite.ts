@@ -414,6 +414,13 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  static id(objectId: ObjectId): Query$.Any {
+    return new QueryClass({
+      type: 'select',
+      filter: FilterClass.id(objectId).ast,
+    });
+  }
+
   static all(...queries: Query$.Any[]): Query$.Any {
     if (queries.length === 0) {
       throw new TypeError(
