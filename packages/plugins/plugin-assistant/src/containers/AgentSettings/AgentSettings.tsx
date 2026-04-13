@@ -12,11 +12,11 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
@@ -61,9 +61,7 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     return Obj.subscribe(agent, () => {
       queueMicrotask(() => {
         const runtime = computeRuntime.getRuntime(db.spaceId);
-        runtime
-          .runPromise(Operation.invoke(SyncTriggers, { agent: Ref.make(agent) }))
-          .catch((err) => log.catch(err));
+        runtime.runPromise(Operation.invoke(SyncTriggers, { agent: Ref.make(agent) })).catch((err) => log.catch(err));
       });
     });
   }, [agent, computeRuntime]);
