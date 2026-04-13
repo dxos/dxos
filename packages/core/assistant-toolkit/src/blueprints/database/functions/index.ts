@@ -2,32 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as ContextAdd } from './context-add';
-import { default as ContextRemove } from './context-remove';
-import { default as Load } from './load';
-import { default as ObjectCreate } from './object-create';
-import { default as ObjectDelete } from './object-delete';
-import { default as ObjectUpdate } from './object-update';
-import { default as Query } from './query';
-import { default as RelationCreate } from './relation-create';
-import { default as RelationDelete } from './relation-delete';
-import { default as SchemaAdd } from './schema-add';
-import { default as SchemaList } from './schema-list';
-import { default as TagAdd } from './tag-add';
-import { default as TagRemove } from './tag-remove';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const DatabaseFunctions = {
-  ContextAdd,
-  ContextRemove,
-  Load,
-  ObjectCreate,
-  ObjectDelete,
-  ObjectUpdate,
-  Query,
-  RelationCreate,
-  RelationDelete,
-  SchemaAdd,
-  SchemaList,
-  TagAdd,
-  TagRemove,
-};
+export * from './definitions';
+
+export const DatabaseHandlers = OperationHandlerSet.lazy(
+  () => import('./context-add'),
+  () => import('./context-remove'),
+  () => import('./load'),
+  () => import('./object-create'),
+  () => import('./object-delete'),
+  () => import('./object-update'),
+  () => import('./query'),
+  () => import('./relation-create'),
+  () => import('./relation-delete'),
+  () => import('./schema-add'),
+  () => import('./schema-list'),
+  () => import('./tag-add'),
+  () => import('./tag-remove'),
+);

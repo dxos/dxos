@@ -46,6 +46,13 @@ export const reset = (event: ActivationEvent.ActivationEvent): Effect.Effect<boo
   Effect.flatMap(Service, (manager) => manager.reset(event));
 
 /**
+ * Shuts down the plugin manager, deactivating all active modules and clearing lifecycle state.
+ * Accesses the PluginManager via the Effect layer system.
+ */
+export const shutdown = (): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.shutdown());
+
+/**
  * Computes a module ID from plugin ID and export name.
  */
 const computeModuleId = (pluginId: string, moduleName: string): string => {

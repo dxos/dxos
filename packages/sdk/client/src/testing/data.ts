@@ -15,7 +15,7 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(
     Type.object({
-      typename: 'org.dxos.text-v0',
+      typename: 'org.dxos.textV0',
       version: '0.1.0',
     }),
   );

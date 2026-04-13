@@ -24,7 +24,6 @@ import { log } from '@dxos/log';
 import { App, render } from '../../../components';
 import { theme } from '../../../theme';
 import { createLogBuffer, triggerRuntimeLayer } from '../../../util';
-
 import { Trace } from './components/Trace';
 
 // Defines the custom `trace` command for edge functions.

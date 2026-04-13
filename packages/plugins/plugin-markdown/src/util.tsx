@@ -6,7 +6,7 @@ import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 
-import { Markdown } from './types';
+import { Markdown } from '#types';
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.
@@ -116,8 +116,8 @@ export const getContentSnippet = (content = '', maxLines = 3) => {
 export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {
   const name = getFallbackName(content);
   if (doc.fallbackName !== name) {
-    Obj.change(doc, (d) => {
-      d.fallbackName = name;
+    Obj.change(doc, (doc) => {
+      doc.fallbackName = name;
     });
   }
 }, 200);

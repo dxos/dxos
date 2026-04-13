@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Inspector from 'node:inspector/promises';
-
 import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Inspector from 'node:inspector/promises';
 
 import { ClientService } from '@dxos/client';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';

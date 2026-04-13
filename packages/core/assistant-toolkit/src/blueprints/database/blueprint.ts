@@ -8,7 +8,21 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { DatabaseFunctions } from './functions';
+import {
+  Query,
+  Load,
+  ObjectCreate,
+  ObjectUpdate,
+  ObjectDelete,
+  SchemaAdd,
+  SchemaList,
+  ContextAdd,
+  ContextRemove,
+  RelationCreate,
+  RelationDelete,
+  TagAdd,
+  TagRemove,
+} from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.database';
 
@@ -17,22 +31,36 @@ const instructions = trim`
   You can manage schemas, relations, tags, and add objects to the chat context.
 `;
 
-const functions = Object.values(DatabaseFunctions);
-
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Database',
     description: 'Query and manipulate objects in the ECHO database.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({
+      operations: [
+        ContextAdd,
+        ContextRemove,
+        Load,
+        ObjectCreate,
+        ObjectDelete,
+        ObjectUpdate,
+        Query,
+        RelationCreate,
+        RelationDelete,
+        SchemaAdd,
+        SchemaList,
+        TagAdd,
+        TagRemove,
+      ],
+    }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

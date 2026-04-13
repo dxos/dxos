@@ -4,7 +4,6 @@
 
 import { type Context, ContextDisposedError } from '@dxos/context';
 
-import { promiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
 /**

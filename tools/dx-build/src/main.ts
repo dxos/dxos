@@ -7,7 +7,6 @@
 import { spawnSync } from 'node:child_process';
 import { readdir, rm, stat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-
 import ts from 'typescript';
 
 const VERBOSE = false,

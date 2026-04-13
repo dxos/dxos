@@ -2,19 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
+import { useObject } from '@dxos/echo-react';
+import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { mx } from '@dxos/ui-theme';
 
-import { useCountdown } from '../../hooks';
+import { useCountdown } from '#hooks';
+import { meta } from '#meta';
+import { Dream, Sequence } from '#types';
 
 import { MixerEngine } from '../../generator';
-import { Dream, Sequence } from '../../types';
-
-import { Sequencer } from '../Sequencer';
+import { Sound } from '../Sound';
 
 //
 // Mixer
@@ -28,9 +28,10 @@ export type MixerProps = ThemedClassName<{
 /** Multi-layer audio mixer with sequencer layers. */
 export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
-  const layers = dream.sequences ?? [];
+  const [dreamSnapshot] = useObject(dream);
+  const layers = dreamSnapshot?.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
-  const durationSeconds = dream.duration ?? 0;
+  const durationSeconds = dreamSnapshot?.duration ?? 0;
   const timed = durationSeconds > 0;
   const { remaining, formattedTime, start: startCountdown, stop: stopCountdown } = useCountdown(durationSeconds);
 
@@ -87,16 +88,10 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     }
   }, [playing, timed, layers, engine, startCountdown, stopCountdown]);
 
-  const handleStop = useCallback(async () => {
-    await engine.stop();
-    setPlaying(false);
-    stopCountdown();
-  }, [engine, stopCountdown]);
-
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    Obj.change(dream, (d) => {
-      d.sequences = [...(d.sequences ?? []), sequence];
+    Obj.change(dream, (dream) => {
+      dream.sequences = [...(dream.sequences ?? []), sequence];
     });
     setSelected(sequence.id);
   }, [dream]);
@@ -107,8 +102,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleDelete = useCallback(
     (id: string) => {
-      Obj.change(dream, (d) => {
-        d.sequences = (d.sequences ?? []).filter((layer) => layer.id !== id);
+      Obj.change(dream, (dream) => {
+        dream.sequences = (dream.sequences ?? []).filter((layer) => layer.id !== id);
       });
       if (selected === id) {
         setSelected(undefined);
@@ -120,25 +115,25 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     [dream, selected, playing, engine],
   );
 
-  const handleChange = useCallback(
+  const handleUpdate = useCallback(
     (updated: Sequence.Sequence) => {
-      Obj.change(dream, (d) => {
-        d.sequences = (d.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
+      Obj.change(dream, (dream) => {
+        dream.sequences = (dream.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
       });
       if (playing) {
         void engine.updateLayer(updated);
       }
     },
-    [dream, playing, engine],
+    [engine, dream, playing],
   );
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      Obj.change(dream, (d) => {
-        const next = [...(d.sequences ?? [])];
+      Obj.change(dream, (dream) => {
+        const next = [...(dream.sequences ?? [])];
         const [moved] = next.splice(fromIndex, 1);
         next.splice(toIndex, 0, moved);
-        d.sequences = next;
+        dream.sequences = next;
       });
     },
     [dream],
@@ -149,16 +144,14 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   }, []);
 
   return (
-    <Splitter.Root mode={selectedLayer ? 'both' : 'upper'} classNames={classNames}>
-      <Splitter.Panel asChild position='upper'>
+    <Splitter.Root mode={selectedLayer ? 'split' : 'top'} classNames={classNames}>
+      <Splitter.Panel asChild position='top'>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
-              {playing && timed && (
-                <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>
-              )}
+              {playing && timed && <span className='tabular-nums text-description p-1'>{formattedTime}</span>}
               <Toolbar.IconButton
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
@@ -167,7 +160,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
               />
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Panel.Content asChild>
+          <Panel.Content>
             <List.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
@@ -181,7 +174,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
                     item={layer}
                     selected={layer.id === selected}
                     onLayerSelect={handleSelect}
-                    onLayerUpdate={handleChange}
+                    onLayerUpdate={handleUpdate}
                     onLayerDelete={handleDelete}
                   />
                 ))
@@ -191,8 +184,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
         </Panel.Root>
       </Splitter.Panel>
 
-      <Splitter.Panel asChild position='lower'>
-        {displayedLayer && <Sequencer sequence={displayedLayer} onUpdate={handleChange} />}
+      <Splitter.Panel asChild position='bottom'>
+        {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleUpdate} />}
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -217,27 +210,29 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
+  const { t } = useTranslation(meta.id);
   return (
     <List.Item
       item={item}
       selected={selected}
-      classNames='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center'
+      classNames='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] gap-1 items-center'
       onClick={() => onLayerSelect(item.id)}
     >
       <List.ItemDragHandle />
-      <Icon classNames='mr-2' size={4} icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
       <List.ItemTitle>{item.name ?? Sequence.getSourceLabel(item.source)}</List.ItemTitle>
       <IconButton
+        variant='ghost'
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         iconOnly
-        label={item.muted ? 'Unmute' : 'Mute'}
+        label={t(item.muted ? 'unmute button label' : 'mute button label')}
         onClick={(event) => {
           event.stopPropagation();
           onLayerUpdate({ ...item, muted: !item.muted });
         }}
       />
       <List.ItemDeleteButton
-        onClick={(event: React.MouseEvent) => {
+        onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);
         }}

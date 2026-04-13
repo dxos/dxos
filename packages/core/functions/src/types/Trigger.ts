@@ -8,7 +8,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Annotation, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
-import { Expando } from '@dxos/schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -25,11 +24,12 @@ export const EmailSpec = Schema.Struct({
 });
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
+// TODO(burdon): Change to Feed.
 // TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
 export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
-  // TODO(dmaretskyi): Change to a reference.
+  // TODO(dmaretskyi): Rename to `feed` and change to a reference.
   queue: DXN.Schema,
 });
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
@@ -103,7 +103,7 @@ const TriggerSchema = Schema.Struct({
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref.Ref(Expando.Expando).annotations({ title: 'Function' })),
+  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.
@@ -123,7 +123,7 @@ const TriggerSchema = Schema.Struct({
       title: 'Concurrency',
       default: 1,
       description:
-        'Maximum number of concurrent invocations of the trigger. For queue triggers, this will process queue items in parallel.',
+        'Maximum number of concurrent invocations of the trigger. For Feed triggers, this will process Feed items in parallel.',
     }),
   ),
 

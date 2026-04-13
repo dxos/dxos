@@ -2,9 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
@@ -12,13 +9,17 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
+import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { PublicKey } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { bundle } from './bundle';
@@ -78,7 +79,7 @@ export const deploy = Command.make(
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const func = yield* Effect.tryPromise(() =>
-      functionsServiceClient.deploy({
+      functionsServiceClient.deploy(Context.default(), {
         functionId,
         ownerPublicKey: PublicKey.fromHex(ownerPublicKey),
         name,
@@ -94,10 +95,10 @@ export const deploy = Command.make(
       }),
     );
 
-    let functionObject: Function.Function;
+    let functionObject: Operation.PersistentOperation;
     if (Option.isSome(existingObject)) {
       functionObject = existingObject.value;
-      Function.setFrom(functionObject, func);
+      Operation.setFrom(functionObject, func);
     } else if (Option.isSome(space)) {
       functionObject = yield* Database.add(func);
     } else {

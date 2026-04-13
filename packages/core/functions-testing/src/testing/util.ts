@@ -7,13 +7,14 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
+import { Operation } from '@dxos/operation';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -27,7 +28,7 @@ export const writeBundle = (path: string, bundle: BundleResult) => {
 export const setup = async (config: Config) => {
   const client = await new Client({
     config,
-    types: [Function.Function, Trigger.Trigger],
+    types: [Operation.PersistentOperation, Trigger.Trigger],
   }).initialize();
   await client.halo.createIdentity();
 
@@ -53,12 +54,12 @@ export const deployFunction = async (
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
   runtime: FunctionRuntimeKind,
-) => {
+): Promise<Operation.PersistentOperation> => {
   const artifact = await bundleFunction({
     entryPoint,
     verbose: true,
   });
-  const func = await functionsServiceClient.deploy({
+  const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,

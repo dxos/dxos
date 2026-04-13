@@ -9,23 +9,27 @@ import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { Operation } from '@dxos/operation';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
-import { MarkdownBlueprint } from './blueprints';
+import { MarkdownBlueprint } from '#blueprints';
 import {
   AnchorSort,
   AppGraphSerializer,
   BlueprintDefinition,
   MarkdownSettings,
   MarkdownState,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { MarkdownOperation } from '#operations';
+import { Markdown, MarkdownEvents } from '#types';
+
 import { translations } from './translations';
-import { Markdown, MarkdownEvents } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
@@ -54,11 +58,21 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
             return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
           }
         },
-        createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Markdown.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
+        scrollToAnchor: MarkdownOperation.ScrollToAnchor,
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,

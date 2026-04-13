@@ -3,4 +3,4 @@
 //
 
 export { default as MemoryBlueprint } from './blueprint';
-export { MemoryFunctions } from './functions';
+export { QueryMemories, SaveMemory, DeleteMemory, MemoryHandlers } from './functions';

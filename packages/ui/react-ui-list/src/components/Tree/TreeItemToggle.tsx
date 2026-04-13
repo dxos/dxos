@@ -14,7 +14,7 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
 
 export const TreeItemToggle = memo(
   forwardRef<HTMLButtonElement, TreeItemToggleProps>(
-    ({ open, isBranch, hidden, classNames, ...props }, forwardedRef) => {
+    ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {
       return (
         <IconButton
           ref={forwardedRef}
@@ -24,8 +24,8 @@ export const TreeItemToggle = memo(
           density='fine'
           classNames={[
             'h-full w-6 px-0',
-            '[&_svg]:transition-[transform] [&_svg]:duration-200',
-            open && '[&_svg]:rotate-90',
+            '[&_svg]:transition-transform [&_svg]:duration-200',
+            open ? '[&_svg]:rotate-90' : '[&_svg]:rotate-0',
             hidden ? 'hidden' : !isBranch && 'invisible',
             classNames,
           ]}

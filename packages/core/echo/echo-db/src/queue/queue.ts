@@ -17,7 +17,6 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueryResultImpl } from '../query';
-
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 
@@ -240,7 +239,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
-    return new QueryResultImpl(new QueueQueryContext(this), queryWithScope);
+    return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 
   async sync({

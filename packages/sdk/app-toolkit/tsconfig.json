@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -61,6 +64,12 @@
     },
     {
       "path": "../app-graph"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../react-client"
     },
     {
       "path": "../schema"

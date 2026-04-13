@@ -13,7 +13,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
-
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 
 const FENCE = '```';
@@ -45,7 +44,7 @@ const TEMPLATE = trim`
 const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
   const [blueprint] = useState(() => {
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     return space.db.add(
       Blueprint.make({
         key: 'example.com/blueprint/test',

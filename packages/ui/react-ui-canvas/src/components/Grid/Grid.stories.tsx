@@ -8,7 +8,6 @@ import React, { useRef, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type ProjectionState } from '../../hooks';
-
 import { GridComponent, type GridProps } from './Grid';
 
 const DefaultStory = (props: GridProps) => {

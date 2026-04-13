@@ -16,7 +16,6 @@ describe('device list', () => {
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;

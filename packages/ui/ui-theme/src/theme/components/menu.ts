@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { dataDisabled, subduedFocus, surfaceShadow, surfaceZIndex } from '../../fragments';
-import { mx } from '../../util';
+import { dataDisabled } from '../../fragments';
+import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;
@@ -26,8 +26,8 @@ export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) 
 export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
     'flex cursor-pointer select-none items-center gap-2 rounded-xs px-2 py-2 text-sm',
-    'data-[highlighted]:bg-hover-surface',
-    subduedFocus,
+    'hover:bg-hover-surface data-[highlighted]:bg-hover-surface',
+    'dx-focus-subdued',
     dataDisabled,
     ...etc,
   );

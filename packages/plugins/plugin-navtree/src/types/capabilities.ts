@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace NavTreeCapabilities {
   export type NavTreeItemState = { open: boolean; current: boolean; alternateTree?: boolean };

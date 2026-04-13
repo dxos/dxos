@@ -3,7 +3,9 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
@@ -11,8 +13,7 @@ import type { GenericToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
-import type { Database, Type } from '@dxos/echo';
-import type { FunctionDefinition } from '@dxos/functions';
+import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 
 import type { FileInfo } from './file';
@@ -128,7 +129,6 @@ export namespace AppCapabilities {
   // TODO(burdon): Move type upstream (into blueprint package).
   export type BlueprintDefinition = {
     key: string;
-    functions: FunctionDefinition.Any[];
     make: () => Blueprint.Blueprint;
   };
 
@@ -151,11 +151,6 @@ export namespace AppCapabilities {
     'org.dxos.app-framework.capability.ai-model-resolver',
   );
 
-  /**
-   * @category Capability
-   */
-  export const Functions = Capability$.make<FunctionDefinition.Any[]>('org.dxos.app-framework.capability.functions');
-
   export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
   /**
@@ -172,4 +167,54 @@ export namespace AppCapabilities {
    * @category Capability
    */
   export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
+
+  export type NavigationTarget = {
+    /** Navigation path usable with the Open operation. */
+    path: string;
+    /** Human-readable label. */
+    label: string;
+    /** Object type. */
+    type: string;
+  };
+
+  export type NavigationQuery = {
+    dxn?: DXN.String;
+  };
+
+  /**
+   * Resolves a query to navigation targets.
+   * Each plugin interprets the query and returns matching targets.
+   * When called without a query, returns the plugin's default navigable pages.
+   * @category Capability
+   */
+  export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
+
+  export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
+    'org.dxos.app-framework.capability.navigation-target-resolver',
+  );
+
+  /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
+  );
+
+  /**
+   * Resolves a qualified graph path to a DXN.
+   * Each plugin recognizes its own path patterns and returns the corresponding DXN.
+   * Returns None if the path is not recognized by this resolver.
+   * Used to validate navigation targets against remote services (e.g., edge).
+   * @category Capability
+   */
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<DXN>>;
+
+  export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
+    'org.dxos.app-framework.capability.navigation-path-resolver',
+  );
 }

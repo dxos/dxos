@@ -17,7 +17,7 @@ export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> &
     <IconButton
       icon='ph--x--bold'
       size={4}
-      label={t('exit label')}
+      label={t('exit.label')}
       iconOnly
       variant='ghost'
       classNames='py-0 px-2 absolute top-0 right-0 z-[1]'

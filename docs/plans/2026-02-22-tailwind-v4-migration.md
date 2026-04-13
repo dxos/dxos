@@ -6,7 +6,7 @@
 
 **Architecture:**
 
-- `packages/ui/ui-theme/src/theme.css` is the source CSS with `@import 'tailwindcss'`, `@theme`, `@plugin`, and layer imports
+- `packages/ui/ui-theme/src/main.css` is the source CSS with `@import 'tailwindcss'`, `@theme`, `@plugin`, and layer imports
 - `scripts/process-theme-css.mjs` builds `dist/plugin/node-esm/theme.css` by inlining all `@import`s, leaving `@apply` for Vite to process at runtime
 - `ThemePlugin` (Vite plugin) resolves the virtual `@dxos-theme` module to the dist/theme.css, runs it through PostCSS+Tailwind with content paths to generate utilities and process `@apply`
 
@@ -55,7 +55,7 @@ import postcssNesting from 'postcss-nesting';
 // Do NOT run tailwindcss() here - @apply is processed at Vite runtime with content paths.
 const processor = postcss([postcssImport(), postcssNesting()]);
 
-const inputFile = 'src/theme.css';
+const inputFile = 'src/main.css';
 const outputFiles = ['dist/plugin/node-esm/theme.css', 'dist/plugin/node-cjs/theme.css'];
 
 async function processCSS() {
@@ -92,7 +92,7 @@ cd packages/ui/ui-theme && node scripts/process-theme-css.mjs
 Expected output:
 
 ```
-Reading src/theme.css...
+Reading src/main.css...
 Processing CSS (inlining imports)...
 Writing dist/plugin/node-esm/theme.css...
 Writing dist/plugin/node-cjs/theme.css...

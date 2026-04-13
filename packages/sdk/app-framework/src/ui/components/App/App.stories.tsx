@@ -48,9 +48,9 @@ const TestPlugin = Plugin.define<{ error?: boolean }>({
 
 const core = [TestPlugin.meta.id];
 
-type StoryProps = { plugins?: Plugin.Plugin[] };
+type DefaultStoryProps = { plugins?: Plugin.Plugin[] };
 
-const DefaultStory = ({ plugins }: StoryProps) => {
+const DefaultStory = ({ plugins }: DefaultStoryProps) => {
   const App = useApp({
     plugins,
     core,

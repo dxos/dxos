@@ -7,7 +7,6 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
-
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
 
 // TODO(burdon): Create Radix-style Root, Item, etc?

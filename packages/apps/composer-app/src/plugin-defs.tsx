@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
@@ -15,14 +16,16 @@ import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
+import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FilesPlugin } from '@dxos/plugin-files';
+import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
@@ -31,6 +34,7 @@ import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin } from '@dxos/plugin-native';
+import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { OutlinerPlugin } from '@dxos/plugin-outliner';
@@ -46,22 +50,27 @@ import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { SpacetimePlugin } from '@dxos/plugin-spacetime';
+import { SpecPlugin } from '@dxos/plugin-spec';
+import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
+import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
-const APP_LINK_ORIGIN = 'https://composer.dxos.org';
+const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
 
 export type State = {
   appKey: string;
@@ -82,16 +91,19 @@ export type PluginConfig = State & {
 };
 
 export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
-  const useSimpleLayout = isPopover || isMobile;
+  const layoutPluginId = isPopover
+    ? SpotlightPlugin.meta.id
+    : isMobile
+      ? SimpleLayoutPlugin.meta.id
+      : DeckPlugin.meta.id;
   return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
-    FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
-    isTauri && !isMobile && NativePlugin.meta.id,
+    layoutPluginId,
+    isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -124,15 +136,20 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
+    SpecPlugin.meta.id,
+
     // Dev
     isDev && DebugPlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
-      PipelinePlugin.meta.id,
+      DailySummaryPlugin.meta.id,
+      FeedPlugin.meta.id,
+      IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
+      PipelinePlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
@@ -153,7 +170,7 @@ export const getPlugins = ({
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const useSimpleLayout = isPopover || isMobile;
+  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AssistantPlugin(),
@@ -178,33 +195,36 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
-    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
-    isLabs && FilesPlugin(),
+    FeedPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
+    IrohBeaconPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
+    layoutPlugin,
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isTauri && !isMobile && NativePlugin(),
+    isTauri && !isMobile && !isPopover && NativePlugin(),
+    NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
     }),
     OutlinerPlugin(),
+    PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
-    PipelinePlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
@@ -212,24 +232,28 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SpacetimePlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,
     }),
+    SpecPlugin(),
     StackPlugin(),
     StatusBarPlugin(),
-
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,
+      platform: isMobile ? 'mobile' : 'desktop',
     }),
+    TicTacToePlugin(),
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
+    YouTubePlugin(),
     ZenPlugin(),
   ]
     .filter(isTruthy)

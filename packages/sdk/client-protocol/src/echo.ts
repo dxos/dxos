@@ -6,6 +6,7 @@ import type { MulticastObservable } from '@dxos/async';
 import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
@@ -16,12 +17,6 @@ import type { SpaceProperties } from './types';
  */
 // TODO(wittjosiah): Rename Database (not product name).
 export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
-  /**
-   * Observable which indicates when the default space is available.
-   */
-  // TODO(wittjosiah): Remove. Ensure default space is always available.
-  get isReady(): MulticastObservable<boolean>;
-
   /**
    * Returns the list of spaces.
    */
@@ -39,19 +34,12 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   get(spaceKey: PublicKey): Space | undefined;
 
   /**
-   * Returns the default space.
-   */
-  get default(): Space;
-
-  /**
-   * Resolves when the default space is available.
-   */
-  waitUntilReady(): Promise<void>;
-
-  /**
    * Creates a new space.
    */
-  create(props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>): Promise<Space>;
+  create(
+    props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>,
+    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+  ): Promise<Space>;
 
   /**
    * Creates a space from the given archive.

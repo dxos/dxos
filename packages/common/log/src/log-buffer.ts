@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { CircularBuffer } from '@dxos/util';
+import { CircularBuffer, getDebugName } from '@dxos/util';
 
 import { type LogConfig, LogLevel, shortLevelName } from './config';
 import { type LogEntry, type LogProcessor } from './context';
@@ -24,6 +24,8 @@ export type LogRecord = {
   f?: string;
   /** Line number. */
   n?: number;
+  /* Object from which the log was emitted. */
+  o?: string;
   /** Error stack. */
   e?: string;
   /** Context JSON. */
@@ -40,7 +42,10 @@ export class LogBuffer {
     this._buffer = new CircularBuffer<LogRecord>(size);
   }
 
-  /** Log processor that can be registered with `log.runtimeConfig.processors`. */
+  /**
+   * Log processor that can be registered with `log.runtimeConfig.processors`.
+   * Captures every level except TRACE (does not apply `shouldLog` / filter; use for full debug dumps).
+   */
   readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
     if (entry.level <= LogLevel.TRACE) {
       return;
@@ -74,6 +79,10 @@ export class LogBuffer {
       } catch {
         // Skip context that throws or is non-serializable.
       }
+    }
+    const scope = entry.meta?.S;
+    if (typeof scope === 'object' && scope !== null && Object.getPrototypeOf(scope) !== Object.prototype) {
+      record.o = getDebugName(scope);
     }
 
     this._buffer.push(record);

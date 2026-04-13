@@ -6,7 +6,6 @@ import { For, Match, Switch } from 'solid-js';
 
 import { theme } from '../../../theme';
 import { type Message } from '../types';
-
 import { Markdown } from './Markdown';
 
 export type ChatMessagesProps = {

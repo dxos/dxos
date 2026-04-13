@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import '../../styles/graph.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
@@ -11,10 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
 import { type D3Callable } from '../util';
-
 import { Pulsar } from './pulsar';
-
-import '../../styles/graph.css';
 
 type Datum = {
   x: number;
@@ -22,11 +21,11 @@ type Datum = {
   r: number;
 };
 
-type StoryProps = {
+type DefaultStoryProps = {
   count: number;
 } & Pulsar.Options;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   return (
     <SVG.Root>
       <StoryComponent {...props} />
@@ -34,7 +33,7 @@ const DefaultStory = (props: StoryProps) => {
   );
 };
 
-const StoryComponent: FC<StoryProps> = ({ count = 1, ...options }) => {
+const StoryComponent: FC<DefaultStoryProps> = ({ count = 1, ...options }) => {
   const items = useMemo<Datum[]>(
     () =>
       Array.from({ length: count }, () => {

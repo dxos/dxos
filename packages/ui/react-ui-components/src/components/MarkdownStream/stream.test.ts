@@ -33,6 +33,12 @@ describe('stream', () => {
           '<select><option /><option>Test</option></select>',
           '\nB',
         ]);
+        // Hyphenated custom element names must resolve to the correct closing tag.
+        expect(splitFragments('A\n<dom-widget>Hello</dom-widget>\nB')).toEqual([
+          'A\n',
+          '<dom-widget>Hello</dom-widget>',
+          '\nB',
+        ]);
       }
     }),
   );
@@ -52,6 +58,14 @@ describe('stream', () => {
       const text = 'Hello <b>World</b>!';
       const result = yield* testStreamer(text);
       expect(result).toEqual(['Hello ', '<b>World</b>', '!']);
+    }).pipe(Effect.provide(TestContext.TestContext)),
+  );
+
+  it.effect('stream keeps hyphenated custom elements intact', ({ expect }) =>
+    Effect.gen(function* () {
+      const text = 'Before <dom-widget>Hello</dom-widget> after';
+      const result = yield* testStreamer(text);
+      expect(result).toEqual(['Before ', '<dom-widget>Hello</dom-widget>', ' after']);
     }).pipe(Effect.provide(TestContext.TestContext)),
   );
 

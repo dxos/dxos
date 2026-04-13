@@ -11,7 +11,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -31,21 +31,27 @@ import {
 } from '@dxos/types';
 
 import {
-  AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
-  OperationResolver,
+  Migrations,
+  NavigationHandler,
+  NavigationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactRoot,
   ReactSurface,
   Repair,
   SpaceSettings,
   SpaceState,
   SpacesReady,
-} from './capabilities';
-import { meta } from './meta';
+  AppGraphBuilder,
+} from '#capabilities';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceEvents } from '#types';
+import { type CreateObject, type SpacePluginOptions } from '#types';
+
 import { translations } from './translations';
-import { SpaceEvents } from './types';
-import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -58,7 +64,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Collection.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: false,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -67,14 +82,18 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, { db }) =>
+          createObject: ((props, options) =>
             Effect.gen(function* () {
               const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                db,
+                db: options.db,
                 name: props.name,
                 schema: createDefaultSchema(),
               });
-              return result.object;
+              return {
+                id: result.id,
+                subject: [],
+                object: result.object,
+              };
             })) satisfies CreateObject,
         },
       },
@@ -83,7 +102,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Organization.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -91,7 +119,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Person.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -100,11 +137,25 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: Task.Task,
-          createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Task.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [
@@ -176,9 +227,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(OperationResolver),
-        activatesOn: ActivationEvents.SetupOperationResolver,
-        activate: () => OperationResolver({ createInvitationUrl, observability }),
+        id: Capability.getModuleTag(UndoMappings),
+        activatesOn: ActivationEvents.SetupOperationHandler,
+        activate: () => UndoMappings({ createInvitationUrl, observability }),
       };
     },
   ),
@@ -189,7 +240,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -202,6 +253,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       ClientEvents.SpacesReady,
     ),
     activate: SpacesReady,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

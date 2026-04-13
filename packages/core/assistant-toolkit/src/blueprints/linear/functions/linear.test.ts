@@ -10,12 +10,13 @@ import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
+import { OperationHandlerSet } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
 const TestLayer = AssistantTestLayer({
-  functions: [fetchLinearIssues],
+  operationHandlers: OperationHandlerSet.make(fetchLinearIssues),
   types: [Task.Task, Person.Person, Pipeline.Pipeline],
   credentials: [{ service: 'linear.app', apiKey: process.env.LINEAR_API_KEY }],
   tracing: 'pretty',

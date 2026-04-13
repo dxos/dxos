@@ -14,7 +14,6 @@ import type { MaybePromise } from '@dxos/util';
 
 import { ClientServicesProxy } from '../service-proxy';
 import { SharedWorkerConnection } from '../shared-worker-connection';
-
 import {
   type DedicatedWorkerMessage,
   type DedicatedWorkerReadyMessage,

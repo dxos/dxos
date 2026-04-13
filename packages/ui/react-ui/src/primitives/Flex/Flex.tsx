@@ -2,28 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React from 'react';
 
-import { composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
+import { composableProps, mx, slottable } from '@dxos/ui-theme';
 
-export type FlexProps = ComposableProps<HTMLDivElement> & {
-  column?: boolean;
-  grow?: boolean;
-};
+export type FlexProps = { column?: boolean; grow?: boolean };
 
-export const Flex = forwardRef<HTMLDivElement, FlexProps>(
-  ({ children, role, column, grow, ...props }, forwardedRef) => {
+export const Flex = slottable<HTMLDivElement, FlexProps>(
+  ({ children, asChild, column, grow, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <div
+      <Comp
         ref={forwardedRef}
         {...rest}
-        role={role ?? 'none'}
         className={mx('flex', column && 'flex-col', grow && 'flex-1 overflow-hidden', className)}
       >
         {children}
-      </div>
+      </Comp>
     );
   },
 );

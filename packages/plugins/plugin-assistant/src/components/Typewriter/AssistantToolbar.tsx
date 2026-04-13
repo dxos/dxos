@@ -118,7 +118,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
               onClick={handleCasual}
               disabled={isProcessing}
             >
-              <Icon icon='ph--caret-left--regular' size={4} />
+              <Icon icon='ph--caret-left--regular' />
               <span className='text-[10px] leading-none text-neutral-500 font-medium'>Casual</span>
             </Button>
 
@@ -128,7 +128,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
               onClick={handleRegenerate}
               disabled={isProcessing}
             >
-              <Icon icon='ph--arrows-clockwise--regular' size={4} classNames={isProcessing ? 'animate-spin' : ''} />
+              <Icon icon='ph--arrows-clockwise--regular' classNames={isProcessing ? 'animate-spin' : ''} />
               <span className='text-[10px] leading-none text-neutral-500 font-medium'>Different</span>
             </Button>
 
@@ -138,7 +138,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
               onClick={handleFormal}
               disabled={isProcessing}
             >
-              <Icon icon='ph--caret-right--regular' size={4} />
+              <Icon icon='ph--caret-right--regular' />
               <span className='text-[10px] leading-none text-neutral-500 font-medium'>Formal</span>
             </Button>
           </div>
@@ -151,7 +151,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
             onClick={() => setShowPromptInput(true)}
             disabled={isProcessing}
           >
-            <Icon icon='ph--keyboard--regular' size={4} />
+            <Icon icon='ph--keyboard--regular' />
             <span className='text-[10px] leading-none text-neutral-500 font-medium'>Instruct</span>
           </Button>
         </div>

@@ -8,7 +8,6 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Graph, type GraphProps as SVGGraphProps } from '../Graph';
 import { Mesh, type MeshProps as SVGMeshProps } from '../Mesh';
-
 import { Grid, type GridProps as SVGGridProps } from './Grid';
 import { Markers, type MarkersProps as SVGMarkersProps } from './Markers';
 import { Root, type RootProps as SVGRootProps } from './Root';

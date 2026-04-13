@@ -11,7 +11,6 @@ import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
 import { IdentityServiceImpl } from './identity-service';
 
 describe('IdentityService', () => {
@@ -47,6 +46,12 @@ describe('IdentityService', () => {
     test('fails to create identity if one already exists', async () => {
       await identityService.createIdentity({});
       await expect(identityService.createIdentity({})).rejects.toThrowError('Identity already exists');
+    });
+
+    test('creates identity with no spaces', async () => {
+      await identityService.createIdentity({});
+      const dataSpaces = [...(serviceContext.dataSpaceManager?.spaces?.values() ?? [])];
+      expect(dataSpaces.length).to.eq(0);
     });
   });
 
@@ -89,37 +94,11 @@ describe('IdentityService', () => {
   });
 });
 
-describe('open', () => {
-  test('identity without default space fixed', async () => {
-    const serviceContext = await createServiceContext();
-    await serviceContext.open(new Context());
-    const identity = await serviceContext.createIdentity();
-    const identityService = createIdentityService(serviceContext);
-    const getDataSpaces = () => [...(serviceContext.dataSpaceManager?.spaces?.values() ?? [])];
-    expect(getDataSpaces().length).to.eq(0);
-    expect(identity.defaultSpaceId).to.be.undefined;
-    await identityService.open();
-    expect(getDataSpaces()[0].id === identity.defaultSpaceId).to.be.true;
-  });
-
-  test('identity without default space credential fixed', async () => {
-    const serviceContext = await createServiceContext();
-    await serviceContext.open(new Context());
-    const identity = await serviceContext.createIdentity();
-    const space = await serviceContext.dataSpaceManager!.createDefaultSpace();
-    const identityService = createIdentityService(serviceContext);
-    expect(identity.defaultSpaceId).to.be.undefined;
-    await identityService.open();
-    expect(identity.defaultSpaceId === space.id).to.be.true;
-  });
-});
-
 const createIdentityService = (serviceContext: ServiceContext) => {
   return new IdentityServiceImpl(
     serviceContext.identityManager,
     serviceContext.recoveryManager,
     serviceContext.keyring,
-    () => serviceContext.dataSpaceManager!,
     (options) => serviceContext.createIdentity(options),
   );
 };

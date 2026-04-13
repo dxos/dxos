@@ -8,13 +8,11 @@ import { trim } from '@dxos/util';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.map';
 
-const functions: AppCapabilities.BlueprintDefinition['functions'] = [];
-
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Map',
-    tools: Blueprint.toolDefinitions({ functions, tools: [] }),
+    tools: Blueprint.toolDefinitions({ tools: [] }),
     instructions: Template.make({
       source: trim`
         You can create and update maps to show geospatial data.
@@ -24,7 +22,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

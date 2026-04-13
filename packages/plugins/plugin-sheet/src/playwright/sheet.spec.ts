@@ -4,7 +4,7 @@
 
 import { type Page, expect, test } from '@playwright/test';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { SheetManager } from './sheet-manager';
@@ -39,7 +39,7 @@ test.describe('plugin-sheet', () => {
     // Confirm editor displays
     await expect(sheet.cellEditor()).toBeVisible();
     // Type in a value and press enter
-    const testString = faker.string.uuid();
+    const testString = random.string.uuid();
     await sheet.setFocusedCellValue(testString, 'Enter');
     // Expect that value to now show in the grid
     await expect(sheet.cellByText(testString)).toBeVisible();

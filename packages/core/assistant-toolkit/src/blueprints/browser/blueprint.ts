@@ -20,6 +20,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Browser',
     description: 'Access to a real isolated browser.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
@@ -35,7 +36,6 @@ const make = () =>
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
   make,
-  functions: [],
 };
 
 export default blueprint;

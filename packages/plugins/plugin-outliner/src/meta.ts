@@ -17,3 +17,5 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',
   tags: ['labs'],
 };
+
+export const QUICK_ENTRY_DIALOG = `${meta.id}.quick-entry-dialog`;

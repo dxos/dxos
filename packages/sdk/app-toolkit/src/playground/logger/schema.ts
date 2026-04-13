@@ -15,8 +15,6 @@ export class Log extends Schema.TaggedClass<Log>()('org.dxos.test.logger.log', {
 
 export const LogOperation = Operation.make({
   meta: { key: 'org.dxos.test.logger.log', name: 'Log' },
-  schema: {
-    input: Schema.Struct({ message: Schema.String }),
-    output: Schema.Void,
-  },
+  input: Schema.Struct({ message: Schema.String }),
+  output: Schema.Void,
 });

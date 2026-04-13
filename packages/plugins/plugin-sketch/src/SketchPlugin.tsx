@@ -6,13 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphSerializer, OperationResolver, ReactSurface, SketchSettings } from './capabilities';
-import { meta } from './meta';
+import { AppGraphSerializer, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
+import { meta } from '#meta';
+import { Sketch } from '#types';
+
 import { translations } from './translations';
-import { Sketch } from './types';
 import { serializer } from './util';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
@@ -26,11 +29,20 @@ export const SketchPlugin = Plugin.define(meta).pipe(
         loadReferences: async (sketch: Sketch.Sketch) => await RefArray.loadAll([sketch.canvas]),
         serializer,
         comments: 'unanchored',
-        createObject: ((props) => Effect.sync(() => Sketch.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Sketch.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Sketch.Canvas, Sketch.Sketch] }),
   AppPlugin.addSettingsModule({ activate: SketchSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

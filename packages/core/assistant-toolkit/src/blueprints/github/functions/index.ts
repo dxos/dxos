@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { default as FetchPrs } from './fetch-prs';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const GithubFunctions = {
-  FetchPrs,
-};
+export * from './definitions';
+
+export const GithubHandlers = OperationHandlerSet.lazy(() => import('./fetch-prs'));

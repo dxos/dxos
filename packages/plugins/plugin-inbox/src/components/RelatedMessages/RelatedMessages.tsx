@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type RelatedMessagesProps = {
   messages: Message.Message[];
@@ -23,9 +23,9 @@ export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesPro
 
   return (
     <>
-      <Card.Text>
-        <h3 className='text-xs text-description uppercase font-medium'>{t('related messages title')}</h3>
-      </Card.Text>
+      <Card.Row>
+        <Card.Heading variant='subtitle'>{t('related-messages.title')}</Card.Heading>
+      </Card.Row>
       {messages.map((message) => (
         <Card.Action
           key={message.id}

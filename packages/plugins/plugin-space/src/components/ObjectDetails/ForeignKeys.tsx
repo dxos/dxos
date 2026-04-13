@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type Key } from '@dxos/echo';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ForeignKeysProps = {
   keys: Key.ForeignKey[];
@@ -44,7 +44,13 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
         <div className='text-description text-sm truncate'>{forignKey.id}</div>
       </ListItem.Heading>
       <ListItem.Endcap>
-        <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete key')} onClick={handleDelete} />
+        <IconButton
+          iconOnly
+          icon='ph--x--regular'
+          variant='ghost'
+          label={t('delete-key.button')}
+          onClick={handleDelete}
+        />
       </ListItem.Endcap>
     </ListItem.Root>
   );

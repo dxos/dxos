@@ -47,7 +47,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-
 import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -147,7 +146,7 @@ export class ClientServicesHost {
             void this.open(new Context());
           }
         },
-        onRelease: () => this.close(),
+        onRelease: () => this.close(Context.default()),
       });
     }
 
@@ -259,8 +258,9 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint);
+      const clientTag = config?.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
     const {
@@ -345,7 +345,6 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      () => this._serviceContext.dataSpaceManager!,
       (params) => this._createIdentity(params),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
@@ -422,7 +421,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     if (!this._open) {
       return;
     }

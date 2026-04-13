@@ -28,4 +28,5 @@ tasks:
       - '--entryPoint=src/Order.ts'
       - '--entryPoint=src/Key.ts'
       - '--entryPoint=src/Type.ts'
+      - '--entryPoint=src/Extension.ts'
       - '--platform=neutral'

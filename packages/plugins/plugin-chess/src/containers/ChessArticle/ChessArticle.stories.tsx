@@ -8,18 +8,18 @@ import React, { useMemo } from 'react';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Chess } from '../../types';
+import { Chess } from '#types';
 
+import { translations } from '../../translations';
 import { ChessArticle } from './ChessArticle';
 
-type StoryProps = {
+type DefaultStoryProps = {
   pgn?: string;
 };
 
-const DefaultStory = ({ pgn }: StoryProps) => {
+const DefaultStory = ({ pgn }: DefaultStoryProps) => {
   const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
-  return <ChessArticle subject={game} />;
+  return <ChessArticle role='article' subject={game} attendableId='story' />;
 };
 
 const meta = {

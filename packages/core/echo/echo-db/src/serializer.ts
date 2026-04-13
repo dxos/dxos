@@ -58,13 +58,26 @@ export class Serializer {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
+    const deferred: Obj.JSON[] = [];
     for (const object of objects) {
       const shouldImport = opts?.onObject ? await opts.onObject(object) : true;
+      if (!shouldImport) {
+        continue;
+      }
 
-      if (shouldImport) {
+      if (object['@relationSource'] || object['@relationTarget']) {
+        deferred.push(object);
+      } else {
         await this._importObject(database, object);
       }
     }
+
+    // Flush so source/target objects are queryable before importing relations.
+    await database.flush();
+    for (const object of deferred) {
+      await this._importObject(database, object);
+    }
+
     await database.flush();
   }
 
@@ -87,8 +100,7 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): DXN | un
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return EncodedRef.toDXN(encoded);
   } else if (typeof encoded === 'string') {
-    // TODO(mykola): Never reached?
-    return DXN.fromTypename(encoded);
+    return DXN.tryParse(encoded) ?? DXN.fromTypename(encoded);
   }
 };
 

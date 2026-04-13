@@ -6,12 +6,11 @@ import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem } from '../StackItem';
 import { type StackItemData } from '../types';
-
 import { Stack } from './Stack';
 
 type StoryStackItem = {
@@ -22,7 +21,7 @@ type StoryStackItem = {
 
 const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div className='overflow-hidden'>
+    <div role='none' className='overflow-hidden'>
       <p className='place-content-center p-4'>{item.title}</p>
     </div>
   );
@@ -30,16 +29,16 @@ const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
 
 const DefaultStory = () => {
   const [columns, setColumns] = useState<StoryStackItem[]>(
-    faker.helpers.multiple(
+    random.helpers.multiple(
       () =>
         ({
-          id: faker.string.uuid(),
-          title: faker.lorem.paragraph(),
-          items: faker.helpers.multiple(
+          id: random.string.uuid(),
+          title: random.lorem.paragraph(),
+          items: random.helpers.multiple(
             () =>
               ({
-                id: faker.string.uuid(),
-                title: faker.lorem.paragraph(),
+                id: random.string.uuid(),
+                title: random.lorem.paragraph(),
               }) satisfies StoryStackItem,
             { count: { min: 32, max: 64 } },
           ),
@@ -77,7 +76,6 @@ const DefaultStory = () => {
             targetColumn.items
           ) {
             const [movedCard] = sourceColumn.items.splice(sourceCardIndex, 1);
-
             let insertIndex;
             if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
               insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;

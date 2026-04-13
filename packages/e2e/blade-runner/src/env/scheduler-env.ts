@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import fs from 'node:fs';
 import path from 'node:path';
-
-import { type Callback, Redis, type RedisOptions } from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
@@ -27,7 +26,6 @@ import {
 import { REDIS_PORT, WebSocketRedisProxy, createRedisReadableStream, createRedisRpcPort } from '../redis';
 import { writeEventStreamToAFile } from '../tracing';
 import { ReadableMuxer } from '../tracing/readable-muxer';
-
 import { type RpcHandle, type SchedulerEnv } from './interface';
 import { ReplicantRpcHandle, close, open } from './replicant-rpc-handle';
 

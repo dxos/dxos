@@ -5,14 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { AlertDialog } from './AlertDialog';
 
-type StoryProps = Partial<{
+type DefaultStoryProps = Partial<{
   title: string;
   description: string;
   openTrigger: string;
@@ -20,7 +19,7 @@ type StoryProps = Partial<{
   actionTrigger: string;
 }>;
 
-const DefaultStory = ({ title, description, openTrigger, cancelTrigger, actionTrigger }: StoryProps) => {
+const DefaultStory = ({ title, description, openTrigger, cancelTrigger, actionTrigger }: DefaultStoryProps) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Trigger asChild>
@@ -60,8 +59,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    title: faker.lorem.sentence(3),
-    description: faker.lorem.paragraph(1),
+    title: random.lorem.sentence(3),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open AlertDialog',
     cancelTrigger: 'Cancel',
     actionTrigger: 'Action',

@@ -3,4 +3,4 @@
 //
 
 export { default as VoxelBlueprint } from './voxel-blueprint';
-export { VoxelFunctions } from './functions';
+export { AddVoxels, GenerateShape, QueryWorld, RemoveVoxels } from '../operations';

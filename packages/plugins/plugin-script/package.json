@@ -12,6 +12,17 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing/index.ts",
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -24,6 +35,12 @@
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs",
       "types": "./dist/types/src/blueprints/index.d.ts"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "node": "./dist/lib/node-esm/operations/index.mjs",
+      "types": "./dist/types/src/operations/index.d.ts"
     },
     "./templates": {
       "source": "./src/templates/index.ts",
@@ -44,6 +61,9 @@
       "blueprints": [
         "dist/types/src/blueprints/index.d.ts"
       ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
+      ],
       "templates": [
         "dist/types/src/templates/index.d.ts"
       ],
@@ -57,6 +77,7 @@
     "src"
   ],
   "dependencies": {
+    "@automerge/automerge": "catalog:",
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/language": "catalog:",
@@ -75,6 +96,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -125,6 +147,7 @@
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "@octokit/core": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@typescript/vfs": "catalog:",
     "@valtown/codemirror-continue": "catalog:",
     "@valtown/codemirror-ts": "catalog:",
@@ -136,9 +159,7 @@
     "typescript": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

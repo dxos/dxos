@@ -32,9 +32,11 @@ export const TranscriptionStory: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer.Root pin>
-        <ScrollContainer.Viewport>
-          <Transcription model={model} />
-        </ScrollContainer.Viewport>
+        <ScrollContainer.Content>
+          <ScrollContainer.Viewport>
+            <Transcription model={model} />
+          </ScrollContainer.Viewport>
+        </ScrollContainer.Content>
       </ScrollContainer.Root>
     </div>
   );

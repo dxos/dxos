@@ -13,8 +13,8 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { SpaceOperation } from '../../types';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;
@@ -64,47 +64,47 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         <Toast.Title classNames='flex items-center gap-2'>
           {found ? (
             <>
-              <Icon icon='ph--check-circle--regular' size={5} />
-              <span>{t('found object label')}</span>
+              <Icon icon='ph--check-circle--regular' />
+              <span>{t('found-object.label')}</span>
             </>
           ) : waiting ? (
             <>
-              <Icon icon='ph--circle-notch--regular' size={5} classNames='animate-spin' />
-              <span>{t('waiting for object label')}</span>
+              <Icon icon='ph--circle-notch--regular' classNames='animate-spin' />
+              <span>{t('waiting-for-object.label')}</span>
             </>
           ) : (
             <>
-              <Icon icon='ph--circle-dashed--regular' size={5} />
-              <span>{t('object not found label')}</span>
+              <Icon icon='ph--circle-dashed--regular' />
+              <span>{t('object-not-found.label')}</span>
             </>
           )}
         </Toast.Title>
         <Toast.Description>
           {t(
             found
-              ? 'found object description'
+              ? 'found-object.description'
               : waiting
-                ? 'waiting for object description'
-                : 'object not found description',
+                ? 'waiting-for-object.description'
+                : 'object-not-found.description',
           )}
         </Toast.Description>
       </Toast.Body>
       <Toast.Actions>
         {found ? (
           <>
-            <Toast.Action altText={t('go to object alt')} asChild>
+            <Toast.Action altText={t('go-to-object.alt')} asChild>
               <Button variant='primary' onClick={handleNavigate}>
-                {t('go to object label')}
+                {t('go-to-object.label')}
               </Button>
             </Toast.Action>
             <Toast.Close asChild>
-              <Button onClick={handleClose}>{t('close label', { ns: osTranslations })}</Button>
+              <Button onClick={handleClose}>{t('close.label', { ns: osTranslations })}</Button>
             </Toast.Close>
           </>
         ) : (
           <Toast.Close asChild>
             <Button onClick={handleClose}>
-              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+              {t(waiting ? 'close.label' : 'confirm.label', { ns: osTranslations })}
             </Button>
           </Toast.Close>
         )}

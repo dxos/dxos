@@ -82,6 +82,7 @@ export const make = (props: MailboxProps = {}) => {
     filters: [],
     ...props,
   });
+
   // TODO(wittjosiah): Parent should be declarative in the schema.
   Obj.setParent(feed, mailbox);
   return mailbox;

@@ -27,16 +27,16 @@ export const StackItemHeading = ({
   classNames,
   asChild,
   separateOnScroll,
+  role,
   ...props
 }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-
   const Comp = asChild ? Slot : Primitive.div;
 
   return (
     <Comp
-      role='heading'
       {...props}
+      role={role ?? 'heading'}
       className={mx(
         'flex items-center border-x-0! bg-header-surface',
         separateOnScroll

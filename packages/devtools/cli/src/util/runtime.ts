@@ -16,9 +16,9 @@ import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
 import {
   CredentialsService,
-  type FunctionDefinition,
   type FunctionInvocationService,
   type QueueService,
+  Trace,
   TracingService,
 } from '@dxos/functions';
 import {
@@ -26,16 +26,18 @@ import {
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   RemoteFunctionExecutionService,
 } from '@dxos/functions-runtime';
+import { type OperationHandlerSet } from '@dxos/operation';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
-  | Feed.Service
+  | Feed.FeedService
   | FunctionInvocationService
   | QueueService
-  | TracingService;
+  | TracingService
+  | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
 export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
@@ -44,7 +46,7 @@ export type Provider = Schema.Schema.Type<typeof Provider>;
 export type LayerOptions = {
   provider: Provider;
   spaceId: Option.Option<Key.SpaceId>;
-  functions: FunctionDefinition.Any[];
+  functions: OperationHandlerSet.OperationHandlerSet;
 };
 
 // TODO(wittjosiah): Factor out.
@@ -66,11 +68,12 @@ export const chatLayer = ({
 
   return FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
+    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(TracingService.layerNoop),
+    Layer.provideMerge(Trace.writerLayerNoop),
     Layer.provideMerge(Feed.notAvailable),
   );
 };

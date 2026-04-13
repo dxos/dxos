@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
+import { defineConfig } from 'vitest/config';
 /**
  * Config for the vitest vscode extension.
  */

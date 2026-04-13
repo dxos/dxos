@@ -9,11 +9,12 @@ import { JSONPath } from 'jsonpath-plus';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { isInstanceOf } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { FunctionDefinition, FunctionInvocationService, QueueService } from '@dxos/functions';
+import { isInstanceOf } from '@dxos/echo/internal';
+import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
@@ -39,7 +40,6 @@ import {
   defineComputeNode,
   synchronizedComputeFunction,
 } from '../types';
-
 import { gptNode } from './gpt';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
 import { templateNode } from './template';
@@ -356,7 +356,7 @@ export const registry: Record<NodeType, Executable> = {
         }
 
         const func = yield* Database.load(functionRef);
-        const funcDefinition = FunctionDefinition.deserialize(func);
+        const funcDefinition = Operation.deserialize(func);
         return yield* FunctionInvocationService.invokeFunction(funcDefinition, input);
       }),
     ),

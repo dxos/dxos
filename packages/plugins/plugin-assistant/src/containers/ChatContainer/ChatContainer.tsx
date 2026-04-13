@@ -6,29 +6,30 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
-import { type Obj } from '@dxos/echo';
+import { Feed, type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
+import { getParentId } from '@dxos/react-ui-attention';
 
-import { Chat as ChatComponent, type ChatRootProps } from '../../components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
-import { AssistantCapabilities, type ChatType } from '../../types';
+import { Chat as ChatComponent, type ChatRootProps } from '#components';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { AssistantCapabilities, type ChatType } from '#types';
 
-export type ChatContainerProps = SurfaceComponentProps<
-  ChatType.Chat | undefined,
-  {
-    space?: Space;
-    companionTo?: Obj.Unknown;
-  } & Pick<ChatRootProps, 'onEvent'>
->;
+export type ChatContainerProps = (
+  | AppSurface.ObjectArticleProps<ChatType.Chat | undefined>
+  | AppSurface.ObjectSectionProps<ChatType.Chat | undefined>
+) & {
+  space?: Space;
+  companionTo?: Obj.Unknown;
+} & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
-  const { role, subject: chat, space: spaceProp, companionTo, onEvent } = props;
+  const { role, attendableId, subject: chat, space: spaceProp, companionTo, onEvent } = props;
+  const parentId = attendableId ? getParentId(attendableId) : undefined;
   const space = spaceProp ?? getSpace(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const services = useChatServices({ id: space?.id, chat });
+  const runtime = useChatServices({ id: space?.id });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
@@ -36,7 +37,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
     space,
     chat,
     preset,
-    services,
+    runtime,
     blueprintRegistry,
     settings,
   });
@@ -45,37 +46,39 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   const stateAtom = useCapability(AssistantCapabilities.State);
   const pendingSubmitted = useRef(false);
   useEffect(() => {
-    if (!processor || !chat || pendingSubmitted.current) {
+    if (!processor || !attendableId || pendingSubmitted.current) {
       return;
     }
 
-    const chatPath = getObjectPathFromObject(chat);
     const state = registry.get(stateAtom);
-    const pendingPrompt = state.pendingPrompts[chatPath];
+    const pendingPrompt = state.pendingPrompts[attendableId];
     if (pendingPrompt) {
       pendingSubmitted.current = true;
       registry.update(stateAtom, (current) => {
-        const { [chatPath]: _, ...rest } = current.pendingPrompts;
+        const { [attendableId]: _, ...rest } = current.pendingPrompts;
         return { ...current, pendingPrompts: rest };
       });
       void processor.request({ message: pendingPrompt });
     }
-  }, [processor, chat, registry, stateAtom]);
+  }, [processor, attendableId, registry, stateAtom]);
+
+  const feedTarget = chat?.feed.target;
+  const queue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
 
   if (!processor) {
     return null;
   }
 
   return (
-    <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
-      <Panel.Root role={role} classNames='dx-document' ref={forwardedRef}>
-        <Panel.Toolbar>
-          <ChatComponent.Toolbar companionTo={companionTo} />
+    <ChatComponent.Root db={space?.db} chat={chat} queue={queue} processor={processor} onEvent={onEvent}>
+      <Panel.Root role={role} ref={forwardedRef}>
+        <Panel.Toolbar className='bg-toolbar-surface'>
+          <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
         </Panel.Toolbar>
         <Panel.Content>
           <ChatComponent.Viewport>
             <ChatComponent.Thread />
-            <div role='none' className='p-4'>
+            <div role='none' className='dx-document p-4'>
               <ChatComponent.Prompt
                 {...chatProps}
                 outline

@@ -5,9 +5,10 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
-import type { Key } from '@dxos/echo';
+import type { DXN, Key } from '@dxos/echo';
 
-import type * as Operation from './operation';
+import type { NoHandlerError } from './errors';
+import type * as Operation from './Operation';
 
 /**
  * Options for operation invocation.
@@ -15,6 +16,13 @@ import type * as Operation from './operation';
 export interface InvokeOptions {
   /** Space ID to provide database context for the handler. */
   spaceId?: Key.SpaceId;
+  /**
+   * DXN string of the conversation feed (queue). Passed to the process environment so nested operations
+   * can resolve AiContextService and related services.
+   */
+  conversation?: DXN.String;
+  /** Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired). */
+  tracing?: unknown;
 }
 
 /**
@@ -29,7 +37,7 @@ export interface OperationService {
   invoke: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-  ) => Effect.Effect<O, Error>;
+  ) => Effect.Effect<O, NoHandlerError>;
 
   /**
    * Schedule an operation to run as a followup.
@@ -49,16 +57,6 @@ export interface OperationService {
     op: Operation.Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
-
-  /**
-   * Synchronously invoke an operation.
-   * Only works for operations marked with `executionMode: 'sync'`.
-   * Throws if the operation is async or if the handler performs async work.
-   */
-  invokeSync: <I, O>(
-    op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-  ) => { data?: O; error?: Error };
 }
 
 /**
@@ -76,6 +74,7 @@ export interface OperationService {
  * });
  * ```
  */
+// TODO(dmaretskyi): Rename Operation.Invoker
 export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
 
 //
@@ -94,7 +93,7 @@ export class Service extends Context.Tag('@dxos/operation/Service')<Service, Ope
 export const invoke = <I, O>(
   op: Operation.Definition<I, O>,
   ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-): Effect.Effect<O, Error, Service> =>
+): Effect.Effect<O, NoHandlerError, Service> =>
   Effect.flatMap(Service, (ops) => ops.invoke(op, ...(args as [I, InvokeOptions?])));
 
 /**

@@ -67,6 +67,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

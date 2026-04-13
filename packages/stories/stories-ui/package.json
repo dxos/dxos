@@ -51,6 +51,7 @@
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

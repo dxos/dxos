@@ -9,7 +9,6 @@ import { SaveConfig, Storage } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 
 import { Select } from '../components';
-
 import { getTarget } from './VaultSelector';
 
 const edgeServers = [

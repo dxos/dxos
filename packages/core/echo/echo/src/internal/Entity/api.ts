@@ -7,7 +7,6 @@ import { type DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';
-
 import { type InternalObjectProps, ObjectDatabaseId } from './model';
 import { getObjectDXN } from './util';
 

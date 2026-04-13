@@ -12,7 +12,6 @@ import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-them
 import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
 import { translations } from '../translations';
-
 import { MessageRoot } from './Message';
 
 const DefaultStory = () => {

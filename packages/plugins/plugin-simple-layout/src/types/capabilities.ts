@@ -7,7 +7,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Label } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type DrawerState = 'closed' | 'open' | 'expanded';
 
@@ -26,7 +26,7 @@ export type SimpleLayoutState = {
   dialogOverlayClasses?: string;
   dialogOverlayStyle?: Record<string, any>;
   /** Data to be passed to the dialog Surface. */
-  dialogContent?: any;
+  dialogContent?: { component: string; props?: any } | null;
 
   popoverOpen?: boolean;
   popoverSide?: 'top' | 'right' | 'bottom' | 'left';
@@ -35,7 +35,7 @@ export type SimpleLayoutState = {
   popoverAnchorId?: string;
   popoverKind?: 'base' | 'card';
   popoverTitle?: Label;
-  popoverContent?: any;
+  popoverContent?: { component: string; props?: any } | { subject: any } | null;
 
   /** Bottom drawer state. */
   drawerState: DrawerState;

@@ -10,7 +10,6 @@ import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/rea
 
 import { FILTER } from '../constants';
 import { Todo, TodoList } from '../types';
-
 import { Header } from './Header';
 import { TodoContainer } from './TodoContainer';
 import { TodoFooter } from './TodoFooter';
@@ -61,8 +60,8 @@ export const Todos = () => {
       todoRefs.map(async (ref) => {
         const todo = await ref.load();
         if (todo.completed !== checked) {
-          Obj.change(todo, (t) => {
-            t.completed = checked;
+          Obj.change(todo, (todo) => {
+            todo.completed = checked;
           });
         }
       }),

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as Create } from './create';
-import { default as Read } from './read';
-import { default as Update } from './update';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const MarkdownFunctions = {
-  Create,
-  Read,
-  Update,
-};
+export * from './definitions';
+
+export const MarkdownHandlers = OperationHandlerSet.lazy(
+  () => import('./create'),
+  () => import('./read'),
+  () => import('./update'),
+);

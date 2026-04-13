@@ -6,12 +6,14 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
+import { meta } from '#meta';
+
 import { type CallManager, type CallState, type MediaState } from '../calls';
-import { meta } from '../meta';
-import { type Channel, type ThreadSettingsProps, type ThreadState, type ViewStore } from '../types';
+import { type Channel, type ThreadState, type ViewStore } from '../types';
+import * as Settings from './Settings';
 
 export namespace ThreadCapabilities {
-  export const Settings = Capability.make<Atom.Writable<ThreadSettingsProps>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
   export const CallManager = Capability.make<CallManager>(`${meta.id}.capability.call-manager`);
 
   // TODO(burdon): Better way to define specific extensions for meeting companions.

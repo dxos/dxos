@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Filter, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
@@ -27,8 +27,9 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using client = await new Client({ services }).initialize();
     await client.halo.createIdentity();
     await client.addTypes([TestSchema.Expando]);
-    client.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
-    await client.spaces.default.db.flush();
+    const space = await client.spaces.create();
+    space.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
+    await space.db.flush();
   });
 
   test('two clients share coordinator', async () => {
@@ -41,17 +42,8 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client2 = await new Client({ services: services2 }).initialize();
-    await client2.spaces.waitUntilReady();
 
     expect(client2.halo.identity.get()).toEqual(identity);
-    await client2.spaces.default.db.query(Filter.everything()).run();
-
-    // TODO(dmaretskyi): tried doing DB write -> flush -> query here but flush doesnt work
-    // const object = client1.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
-    // await client1.spaces.default.db.flush();
-    // const objects = await client2.spaces.default.db.query(Filter.type(TestSchema.Expando, { name: 'Test' })).run();
-    // expect(objects).toHaveLength(1);
-    // expect(objects[0]).toEqual(object);
   });
 
   // Flaky.
@@ -66,14 +58,11 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client2 = await new Client({ services: services2 }).initialize();
-    await client2.spaces.waitUntilReady();
     expect(client2.halo.identity.get()).toEqual(identity);
 
     await client1.destroy();
 
     expect(client2.halo.identity.get()).toEqual(identity);
-    const objects = await client2.spaces.default.db.query(Filter.everything()).run();
-    expect(objects).toHaveLength(1);
     log.break();
   });
 
@@ -88,7 +77,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client2 = await new Client({ services: services2 }).initialize();
-    await client2.spaces.waitUntilReady();
 
     // Set up identity subscription before leader change.
     const updatedDisplayName = 'updated-name';

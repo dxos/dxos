@@ -87,7 +87,7 @@ export class IndexQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
-  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
       this._queryIndex(query, QueryReactivity.ONE_SHOT, resolve, reject);

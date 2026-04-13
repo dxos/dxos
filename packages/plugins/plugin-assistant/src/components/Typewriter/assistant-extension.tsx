@@ -8,7 +8,7 @@ import { EditorView, type Tooltip, showTooltip } from '@codemirror/view';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
-import React from 'react';
+import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { unwrapExit } from '@dxos/effect';
@@ -54,8 +54,7 @@ const assistantState = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) =
             const dom = document.createElement('div');
             dom.classList.add('cm-tooltip-assistant');
             const root = createRoot(dom);
-
-            root.render(React.createElement(AssistantToolbar, { view, runtime, from, to }));
+            root.render(createElement(AssistantToolbar, { view, runtime, from, to }));
 
             return {
               dom,

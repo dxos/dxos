@@ -10,7 +10,6 @@ import { log } from '@dxos/log';
 import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from '../defs';
-
 import { getEdgeAuthHeader } from './edge-auth-header';
 import { MOBILE_OAUTH_ORIGIN } from './mobile-deep-link';
 import { type OAuthInitiator, createFetchOAuthInitiator } from './oauth-flow';
@@ -102,8 +101,8 @@ export const performMobileOAuthFlow = ({
     }
 
     // Update the access token with the received value.
-    Obj.change(accessToken, (t) => {
-      t.token = accessTokenValue;
+    Obj.change(accessToken, (accessToken) => {
+      accessToken.token = accessTokenValue;
     });
 
     log.info('Mobile OAuth flow completed successfully');

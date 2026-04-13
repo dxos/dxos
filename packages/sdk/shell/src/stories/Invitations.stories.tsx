@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -19,7 +19,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { IdentityListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { translations } from '../translations';
-
 import { SpaceListItem } from './SpaceListItem';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
@@ -69,17 +68,15 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           {/* <Tooltip content='Create Space'> */}
           <IconButton
             icon='ph--plus-circle--regular'
-            size={6}
             label='Create Space'
             iconOnly
-            onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
+            onClick={() => client.spaces.create({ name: random.commerce.productName() })}
             data-testid='invitations.create-space'
           />
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
           <IconButton
             icon='ph--sign-in--fill'
-            size={6}
             label='Join Space'
             iconOnly
             onClick={() => setPanel('join')}
@@ -141,10 +138,9 @@ const Invitations = () => {
       {/* <Tooltip content='Create Identity'> */}
       <IconButton
         icon='ph--plus--regular'
-        size={6}
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
+        onClick={() => client.halo.createIdentity({ displayName: random.person.firstName() })}
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />
@@ -152,7 +148,6 @@ const Invitations = () => {
       <Tooltip content='Join Existing Identity'> */}
       <IconButton
         icon='ph--qr-code--fill'
-        size={6}
         label='Join Existing Identity'
         iconOnly
         onClick={() => setPanel('identity')}
@@ -163,7 +158,6 @@ const Invitations = () => {
       <Tooltip content='Devices'> */}
       <IconButton
         icon='ph--laptop--fill'
-        size={6}
         label='Devices'
         iconOnly
         onClick={() => setPanel('devices')}
@@ -174,7 +168,6 @@ const Invitations = () => {
       <Tooltip content='List Spaces'> */}
       <IconButton
         icon='ph--planet--fill'
-        size={6}
         label='List Spaces'
         iconOnly
         onClick={() => setPanel(undefined)}
@@ -185,7 +178,6 @@ const Invitations = () => {
       {/* <ToolTip content='Toggle Network'> */}
       <IconButton
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
-        size={6}
         label='Toggle Network'
         iconOnly
         onClick={() =>

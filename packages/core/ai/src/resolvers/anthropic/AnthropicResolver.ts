@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -23,14 +23,10 @@ export const make = () =>
         const thinkingEnabled = options?.thinking ?? true;
         const thinking = thinkingEnabled
           ? ({
-              // TODO(dmaretskyi): Switch to adaptive thinking.
-              budget_tokens: 1024,
-              type: 'enabled',
+              type: 'adaptive' as any,
             } as const)
           : undefined;
         switch (model) {
-          case '@anthropic/claude-3-5-haiku-latest':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-latest' }).pipe(Layer.provide(clientLayer));
           case '@anthropic/claude-3-5-haiku-20241022':
             return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022' }).pipe(
               Layer.provide(clientLayer),

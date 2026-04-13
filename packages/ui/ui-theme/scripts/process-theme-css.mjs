@@ -13,7 +13,7 @@ import postcssNesting from 'postcss-nesting';
 // Do NOT run tailwindcss() here - @apply is processed at Vite runtime with content paths.
 const processor = postcss([postcssImport(), postcssNesting()]);
 
-const inputFile = 'src/theme.css';
+const inputFile = 'src/main.css';
 const outputFiles = ['dist/plugin/node-esm/theme.css', 'dist/plugin/node-cjs/theme.css'];
 
 async function processCSS() {

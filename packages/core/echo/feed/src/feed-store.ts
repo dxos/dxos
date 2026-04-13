@@ -673,6 +673,54 @@ export class FeedStore {
         `;
       }
     }).pipe(Effect.withSpan('FeedStore.setPosition'));
+
+  /**
+   * Gets all feeds and their blocks for a space, organized by feed ID and namespace.
+   * Used for space archive export.
+   */
+  getAllFeedsForSpace = (opts: {
+    spaceId: SpaceId;
+  }): Effect.Effect<
+    Array<{
+      feedId: string;
+      feedNamespace: string;
+      blocks: Block[];
+    }>,
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+
+      const feeds = yield* sql<{ feedId: string; feedNamespace: string }>`
+        SELECT DISTINCT feedId, feedNamespace FROM feeds WHERE spaceId = ${opts.spaceId}
+      `;
+
+      const result: Array<{ feedId: string; feedNamespace: string; blocks: Block[] }> = [];
+
+      for (const feed of feeds) {
+        const blocks = yield* sql<Block>`
+          SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+          FROM blocks
+          JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE feeds.spaceId = ${opts.spaceId}
+            AND feeds.feedId = ${feed.feedId}
+            AND feeds.feedNamespace = ${feed.feedNamespace}
+          ORDER BY blocks.sequence ASC
+        `;
+
+        result.push({
+          feedId: feed.feedId,
+          feedNamespace: feed.feedNamespace,
+          blocks: blocks.map((row) => ({
+            ...row,
+            data: new Uint8Array(row.data),
+          })),
+        });
+      }
+
+      return result;
+    }).pipe(Effect.withSpan('FeedStore.getAllFeedsForSpace'));
 }
 
 const encodeCursor = (token: string, insertionId: number) => FeedCursor.make(`${token}|${insertionId}`);

@@ -13,11 +13,11 @@ import {
   IconButton,
   type IconButtonProps,
   ScrollArea,
-  type ScrollAreaRootProps,
   type ThemedClassName,
+  useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import {
   type FormHandler,
@@ -27,27 +27,11 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
   FormFieldSet as NaturalFormFieldSet,
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
-
-// New features/polish
-// [x] Unify readonly/inline modes.
-// [x] Refs
-//   [x] Single-select (fix popover)
-//   [x] Multi-select (array)
-// [ ] auto save doesn't work for combobox + select due to only firing on blur (workaround is to use onValuesChanged).
-// [ ] Don't call save/autoSave if value hasn't changed.
-// [ ] Fix onCancel (restore values).
-// [ ] Fix useSchema Type.AnyObj cast.
-// [ ] TableCellEditor (handleEnter/ModalController).
-// [ ] Use FormFieldWrapper uniformly
-// [ ] Inline tables.
-// [ ] Defer query until popover.
-// [ ] Omit id from sub properties.
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
@@ -75,7 +59,10 @@ type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection'>;
+} & Pick<
+  NaturalFormFieldSetProps<T>,
+  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap'
+>;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
@@ -177,29 +164,15 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = PropsWithChildren<ScrollAreaRootProps>;
+type FormViewportProps = {};
 
-const FormViewport = ({
-  children,
-  classNames,
-  margin = true,
-  padding = true,
-  thin = true,
-  ...props
-}: FormViewportProps) => {
+const FormViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root
-      orientation='vertical'
-      classNames={classNames}
-      margin={margin}
-      padding={padding}
-      thin={thin}
-      {...props}
-    >
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 FormViewport.displayName = FORM_VIEWPORT_NAME;
 
@@ -211,17 +184,22 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const FormContent = ({ classNames, children }: FormContentProps) => {
+const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
-  const ref = useRef<HTMLDivElement>(null);
-  useKeyHandler(ref.current, form);
+  const localRef = useRef<HTMLDivElement>(null);
+  const mergedRef = useMergeRefs([forwardedRef, localRef]);
+  useKeyHandler(localRef, form);
 
   return (
-    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
+    <div
+      {...composableProps(props, { role: 'form', classNames: 'flex flex-col w-full pb-form-gap' })}
+      data-testid={testId}
+      ref={mergedRef}
+    >
       {children}
     </div>
   );
-};
+});
 
 FormContent.displayName = FORM_CONTENT_NAME;
 
@@ -260,17 +238,16 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   if (readonly || layout === 'static') {
     return null;
   }
-
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-form-padding', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
           iconEnd
-          label={t('cancel button label')}
+          label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
@@ -282,7 +259,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
           disabled={!canSave}
           icon='ph--check--regular'
           iconEnd
-          label={t('save button label')}
+          label={t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
         />
@@ -321,7 +298,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
         variant='primary'
         disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
-        label={label ?? t('save button label')}
+        label={label ?? t('save-button.label')}
         onClick={onSave}
         data-testid='save-button'
       />

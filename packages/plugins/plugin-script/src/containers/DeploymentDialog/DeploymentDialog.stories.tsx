@@ -14,7 +14,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { DeploymentDialog } from './DeploymentDialog';
 
 const DeploymentDialogStory = () => {
@@ -36,7 +35,9 @@ const DeploymentDialogStory = () => {
   );
   return (
     <Dialog.Root defaultOpen={true}>
-      <DeploymentDialog accessToken={accessToken} scriptTemplates={scriptTemplates} />
+      <Dialog.Overlay>
+        <DeploymentDialog accessToken={accessToken} scriptTemplates={scriptTemplates} />
+      </Dialog.Overlay>
     </Dialog.Root>
   );
 };

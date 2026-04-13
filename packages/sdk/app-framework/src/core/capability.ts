@@ -62,6 +62,16 @@ export const waitFor = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Erro
 export const atom = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Atom.Atom<T[]>, never, Service> =>
   Effect.map(Service, (manager) => manager.atom(interfaceDef));
 
+/**
+ * Get capabilities grouped by the module that contributed them.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns An Atom containing a record from module ID to capability implementations.
+ */
+export const atomByModule = <T>(
+  interfaceDef: InterfaceDef<T>,
+): Effect.Effect<Atom.Atom<Record<string, T[]>>, never, Service> =>
+  Effect.map(Service, (manager) => manager.atomByModule(interfaceDef));
+
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
 /**
@@ -120,6 +130,7 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 /**
  * Helper to define the implementation of a capability.
  */
+// TODO(dmaretskyi): Make the return type non-generic so capabilities are non-discernable.
 export const contributes = <I extends InterfaceDef<any>>(
   interfaceDef: I,
   implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
@@ -164,7 +175,7 @@ export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
 ): LazyCapability<T, R> => {
   const lazyFn: LazyCapability<T, R> = (props: T) =>
     Effect.gen(function* () {
-      const { default: getCapability } = yield* Effect.tryPromise(() => c());
+      const { default: getCapability } = yield* Effect.promise(() => c());
       const result = yield* getCapability(props);
       const normalized = result == null ? [] : Array.isArray(result) ? Array.from(result) : [result];
       return normalized as NormalizeReturn<R>;

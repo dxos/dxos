@@ -13,16 +13,16 @@ import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { OperationHandlerSet } from '@dxos/operation';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { ResearchGraph } from '../../blueprints';
-
 import { default as entityExtraction } from './entity-extraction';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [entityExtraction],
+  operationHandlers: OperationHandlerSet.make(entityExtraction),
   types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph.ResearchGraph],
 });
 

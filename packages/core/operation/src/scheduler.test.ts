@@ -5,38 +5,36 @@
 import { it } from '@effect/vitest';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
+import * as Operation from './Operation';
+import * as OperationInvoker from './OperationInvoker';
 import * as Scheduler from './scheduler';
+
+const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
 //
 // Test Operations for Scheduler
 //
 
 const CountOp = Operation.make({
-  schema: {
-    input: Schema.Struct({ id: Schema.String }),
-    output: Schema.Void,
-  },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.Void,
   meta: { key: 'test.count' },
 });
 
 const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 
 const TriggerWithFollowup = Operation.make({
-  schema: {
-    input: Schema.Struct({ id: Schema.String }),
-    output: Schema.Struct({ triggered: Schema.Boolean }),
-  },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.Struct({ triggered: Schema.Boolean }),
   meta: { key: 'test.trigger-with-followup' },
 });
 
@@ -188,25 +186,21 @@ describe('Scheduler', () => {
       Effect.gen(function* () {
         const followupExecuted: string[] = [];
 
-        const countHandler = {
-          operation: CountOp,
-          handler: (input: { id: string }) =>
-            Effect.sync(() => {
-              followupExecuted.push(input.id);
-              return undefined;
-            }),
-        };
+        const countHandler = Operation.withHandler(CountOp, (input) =>
+          Effect.sync(() => {
+            followupExecuted.push(input.id);
+            return undefined;
+          }),
+        );
 
-        const triggerHandler = {
-          operation: TriggerWithFollowup,
-          handler: (input: { id: string }) =>
-            Effect.gen(function* () {
-              yield* Operation.schedule(CountOp, { id: `followup-${input.id}` });
-              return { triggered: true };
-            }),
-        };
+        const triggerHandler = Operation.withHandler(TriggerWithFollowup, (input) =>
+          Effect.gen(function* () {
+            yield* Operation.schedule(CountOp, { id: `followup-${input.id}` });
+            return { triggered: true };
+          }),
+        );
 
-        const invoker = OperationInvoker.make(() => Effect.succeed([countHandler, triggerHandler]));
+        const invoker = OperationInvoker.make(() => Effect.succeed([countHandler, triggerHandler]), testRuntime);
 
         // Invoke the trigger operation.
         const result = yield* invoker.invoke(TriggerWithFollowup, { id: 'test' });
@@ -224,25 +218,21 @@ describe('Scheduler', () => {
       Effect.gen(function* () {
         const deferred = yield* Deferred.make<void>();
 
-        const slowHandler = {
-          operation: CountOp,
-          handler: () =>
-            Effect.gen(function* () {
-              yield* Deferred.await(deferred);
-              return undefined;
-            }),
-        };
+        const slowHandler = Operation.withHandler(CountOp, () =>
+          Effect.gen(function* () {
+            yield* Deferred.await(deferred);
+            return undefined;
+          }),
+        );
 
-        const triggerHandler = {
-          operation: TriggerWithFollowup,
-          handler: (input: { id: string }) =>
-            Effect.gen(function* () {
-              yield* Operation.schedule(CountOp, { id: input.id });
-              return { triggered: true };
-            }),
-        };
+        const triggerHandler = Operation.withHandler(TriggerWithFollowup, (input) =>
+          Effect.gen(function* () {
+            yield* Operation.schedule(CountOp, { id: input.id });
+            return { triggered: true };
+          }),
+        );
 
-        const invoker = OperationInvoker.make(() => Effect.succeed([slowHandler, triggerHandler]));
+        const invoker = OperationInvoker.make(() => Effect.succeed([slowHandler, triggerHandler]), testRuntime);
 
         // Trigger a followup.
         yield* invoker.invoke(TriggerWithFollowup, { id: 'slow' });
@@ -263,27 +253,22 @@ describe('Scheduler', () => {
         const followupDeferred = yield* Deferred.make<void>();
         const followupCompleted = yield* Deferred.make<void>();
 
-        const countHandler = {
-          operation: CountOp,
-          handler: () =>
-            Effect.gen(function* () {
-              yield* Deferred.await(followupDeferred);
-              yield* Deferred.succeed(followupCompleted, undefined);
-              return undefined;
-            }),
-        };
+        const countHandler = Operation.withHandler(CountOp, () =>
+          Effect.gen(function* () {
+            yield* Deferred.await(followupDeferred);
+            yield* Deferred.succeed(followupCompleted, undefined);
+            return undefined;
+          }),
+        );
 
-        const triggerHandler = {
-          operation: TriggerWithFollowup,
-          handler: () =>
-            Effect.gen(function* () {
-              yield* Operation.schedule(CountOp, { id: 'child' });
-              // Return immediately, before the followup completes.
-              return { triggered: true };
-            }),
-        };
+        const triggerHandler = Operation.withHandler(TriggerWithFollowup, () =>
+          Effect.gen(function* () {
+            yield* Operation.schedule(CountOp, { id: 'child' });
+            return { triggered: true };
+          }),
+        );
 
-        const invoker = OperationInvoker.make(() => Effect.succeed([countHandler, triggerHandler]));
+        const invoker = OperationInvoker.make(() => Effect.succeed([countHandler, triggerHandler]), testRuntime);
 
         // Trigger and wait for the main operation to complete.
         const result = yield* invoker.invoke(TriggerWithFollowup, { id: 'parent' });
@@ -308,35 +293,30 @@ describe('Scheduler', () => {
       Effect.gen(function* () {
         const followupsExecuted: string[] = [];
 
-        const countHandler = {
-          operation: CountOp,
-          handler: (input: { id: string }) =>
-            Effect.sync(() => {
-              followupsExecuted.push(input.id);
-              return undefined;
-            }),
-        };
+        const countHandler = Operation.withHandler(CountOp, (input) =>
+          Effect.sync(() => {
+            followupsExecuted.push(input.id);
+            return undefined;
+          }),
+        );
 
-        const sideEffectWithFollowup = {
-          operation: SideEffect,
-          handler: () =>
-            Effect.gen(function* () {
-              yield* Operation.schedule(CountOp, { id: 'from-side-effect' });
-              return undefined;
-            }),
-        };
+        const sideEffectWithFollowup = Operation.withHandler(SideEffect, () =>
+          Effect.gen(function* () {
+            yield* Operation.schedule(CountOp, { id: 'from-side-effect' });
+            return undefined;
+          }),
+        );
 
-        const triggerHandler = {
-          operation: TriggerWithFollowup,
-          handler: (input: { id: string }) =>
-            Effect.gen(function* () {
-              yield* Operation.schedule(CountOp, { id: `from-trigger-${input.id}` });
-              return { triggered: true };
-            }),
-        };
+        const triggerHandler = Operation.withHandler(TriggerWithFollowup, (input) =>
+          Effect.gen(function* () {
+            yield* Operation.schedule(CountOp, { id: `from-trigger-${input.id}` });
+            return { triggered: true };
+          }),
+        );
 
-        const invoker = OperationInvoker.make(() =>
-          Effect.succeed([countHandler, sideEffectWithFollowup, triggerHandler]),
+        const invoker = OperationInvoker.make(
+          () => Effect.succeed([countHandler, sideEffectWithFollowup, triggerHandler]),
+          testRuntime,
         );
 
         // Invoke both operations.

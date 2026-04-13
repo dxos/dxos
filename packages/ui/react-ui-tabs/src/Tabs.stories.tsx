@@ -5,66 +5,73 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
-import { Dialog, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { random } from '@dxos/random';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
-import { Tabs as NaturalTabs } from './Tabs';
+import { Tabs, TabsRootProps } from './Tabs';
 
-faker.seed(1234);
+random.seed(1234);
 
-export const DefaultStory = () => {
+const DefaultStory = ({ orientation }: TabsRootProps) => {
   return (
-    <Dialog.Root open>
-      <Dialog.Overlay blockAlign='start'>
-        <Dialog.Content size='xl'>
-          <NaturalTabs.Root orientation='vertical' defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
-            <NaturalTabs.Viewport>
-              <NaturalTabs.Tablist>
-                {Object.entries(content).map(([id, { title }]) => {
-                  return (
-                    <NaturalTabs.Tab key={id} value={id}>
-                      {title}
-                    </NaturalTabs.Tab>
-                  );
-                })}
-              </NaturalTabs.Tablist>
-              {Object.entries(content).map(([id, { panel }]) => {
-                return (
-                  <NaturalTabs.Tabpanel key={id} value={id} classNames='m-1'>
-                    <NaturalTabs.BackButton density='fine'>
-                      <Icon icon='ph--arrow-left--bold' size={4} />
-                      <span>Back to tab list</span>
-                    </NaturalTabs.BackButton>
-                    <p className='px-1'>{panel}</p>
-                  </NaturalTabs.Tabpanel>
-                );
-              })}
-            </NaturalTabs.Viewport>
-          </NaturalTabs.Root>
-        </Dialog.Content>
-      </Dialog.Overlay>
-    </Dialog.Root>
+    <Tabs.Root orientation={orientation} defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
+      <Tabs.Viewport
+        classNames={mx(
+          'w-full overflow-hidden grid',
+          orientation === 'vertical' && 'grid-cols-[minmax(min-content,1fr)_3fr]',
+        )}
+      >
+        <Tabs.Tablist>
+          {Object.entries(content).map(([id, { title }]) => (
+            <Tabs.Tab key={id} value={id}>
+              {title}
+            </Tabs.Tab>
+          ))}
+        </Tabs.Tablist>
+        <div className='dx-container'>
+          {Object.entries(content).map(([id, { panel }]) => (
+            <Tabs.Panel key={id} value={id}>
+              <p className='px-1'>{panel}</p>
+            </Tabs.Panel>
+          ))}
+        </div>
+      </Tabs.Viewport>
+    </Tabs.Root>
   );
 };
 
 const content = [...Array(24)].reduce((acc: { [key: string]: { title: string; panel: string } }, _, index) => {
   acc[`t${index}`] = {
-    title: faker.commerce.productName(),
-    panel: faker.lorem.paragraphs(5),
+    title: random.commerce.productName(),
+    panel: random.lorem.paragraphs(5),
   };
   return acc;
 }, {});
 
 const meta = {
   title: 'ui/react-ui-tabs/Tabs',
-  component: NaturalTabs.Root,
+  component: Tabs.Root,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+// TODO(burdon): Scrolling.
+export const Horizontal: Story = {
+  args: {
+    orientation: 'horizontal',
+  },
+};
+
+export const Vertical: Story = {
+  args: {
+    orientation: 'vertical',
+  },
+};

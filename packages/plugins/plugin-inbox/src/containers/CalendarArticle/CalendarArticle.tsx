@@ -2,83 +2,133 @@
 // Copyright 2023 DXOS.org
 //
 
+import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { AttentionOperation } from '@dxos/plugin-attention/operations';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { linkedSegment } from '@dxos/react-ui-attention';
+import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { EventList } from '../../components';
-import { meta } from '../../meta';
-import { type Calendar } from '../../types';
+import { EventStack, type EventStackActionHandler } from '#components';
+import { meta } from '#meta';
+import { type Calendar } from '#types';
+
+import { NewCalendar } from './NewCalendar';
 
 const byDate =
   (direction = -1) =>
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentProps<Calendar.Calendar>) => {
+export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
+
+export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const id = Obj.getDXN(calendar).toString();
-  const { singleSelect } = useSelectionActions([id]);
-  const selected = useSelected(id, 'single');
+  const layout = useLayout();
+  const id = attendableId ?? Obj.getDXN(calendar).toString();
+  const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
-
-  const objects = useQuery(
+  const events = useQuery(
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
   ).toSorted(byDate());
 
-  const handleSelect = useCallback(
-    (event: Event.Event) => {
-      singleSelect(event.id);
-      void invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${COMPANION_PREFIX}event`,
-      });
+  // TODO(burdon): Actual test should be if we have synced; not number of messages.
+  const isEmpty = events.length === 0;
+
+  const handleDateSelect = useCallback(
+    ({ date }: { date: Date }) => {
+      const match = events.find((event) => isSameDay(new Date(event.startDate), date));
+      if (match) {
+        void invokePromise(AttentionOperation.Select, {
+          contextId: id,
+          selection: { mode: 'single', id: match.id },
+        });
+      }
     },
-    [singleSelect, invokePromise, id],
+    [events, id, invokePromise],
   );
 
-  // TODO(burdon): Create story.
-  return (
-    <Panel.Root role={role} classNames='@container'>
-      <Panel.Content asChild>
-        <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
-          <div role='none' className='invisible @2xl:visible'>
-            <NaturalCalendar.Root>
-              <Panel.Toolbar asChild>
-                <NaturalCalendar.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <NaturalCalendar.Grid />
-              </Panel.Content>
-            </NaturalCalendar.Root>
-          </div>
+  const handleAction = useCallback<EventStackActionHandler>(
+    (action) => {
+      switch (action.type) {
+        case 'current': {
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: action.eventId },
+          });
 
-          <Panel.Root>
+          const companion = linkedSegment('event');
+          if (layout.mode === 'simple') {
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companion,
+              state: 'expanded',
+            });
+          } else if (layout.mode === 'multi') {
+            const event = events.find((entry) => entry.id === action.eventId);
+            if (event) {
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getObjectPathFromObject(event)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+            }
+          } else {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
+          }
+          break;
+        }
+      }
+    },
+    [events, id, invokePromise, layout.mode],
+  );
+
+  return (
+    <div role={role} className='@container dx-container overflow-hidden'>
+      <div role='none' className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
+        <Panel.Root className='hidden @3xl:block'>
+          <NaturalCalendar.Root>
             <Panel.Toolbar asChild>
-              <Toolbar.Root>
-                <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
-              </Toolbar.Root>
+              <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <EventList events={objects} selected={selected} onSelect={handleSelect} />
+              <NaturalCalendar.Grid
+                dates={events.map((event) => new Date(event.startDate))}
+                onSelect={handleDateSelect}
+              />
             </Panel.Content>
-          </Panel.Root>
-        </div>
-      </Panel.Content>
-    </Panel.Root>
+          </NaturalCalendar.Root>
+        </Panel.Root>
+
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            {isEmpty ? (
+              <NewCalendar calendar={calendar} />
+            ) : (
+              <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
+            )}
+          </Panel.Content>
+        </Panel.Root>
+      </div>
+    </div>
   );
 };

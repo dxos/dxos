@@ -12,9 +12,10 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { useInputSurfaceLookup } from '../../hooks';
-import { meta } from '../../meta';
-import { SpaceForm, SpaceOperation } from '../../types';
+import { useInputSurfaceLookup } from '#hooks';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceForm } from '#types';
 
 export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
 
@@ -47,26 +48,28 @@ export const CreateSpaceDialog = () => {
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <Form.Root
-        testId='create-space-form'
-        autoFocus
-        schema={SpaceForm}
-        defaultValues={initialValues}
-        fieldProvider={inputSurfaceLookup}
-        onSave={handleCreateSpace}
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Submit />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
+      <Dialog.Body>
+        <Form.Root
+          testId='create-space-form'
+          autoFocus
+          schema={SpaceForm}
+          defaultValues={initialValues}
+          fieldProvider={inputSurfaceLookup}
+          onSave={handleCreateSpace}
+        >
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+              <Form.Submit />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

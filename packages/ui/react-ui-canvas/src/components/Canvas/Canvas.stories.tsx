@@ -11,7 +11,6 @@ import { useCanvasContext, useDrag, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
-
 import { Canvas } from './Canvas';
 
 const size = 128;
@@ -32,7 +31,7 @@ const DefaultStory = (props: GridProps) => {
 
 const TwoCanvases = (props: GridProps) => {
   return (
-    <div className='grid grid-cols-2 gap-2 w-full h-full'>
+    <div className='grid grid-cols-2 gap-2 h-full w-full'>
       <div className='h-full relative'>
         <Canvas>
           <Grid {...props} />

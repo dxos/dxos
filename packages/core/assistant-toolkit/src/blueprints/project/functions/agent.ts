@@ -3,70 +3,64 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiContextService, AiConversation, type ContextBinding } from '@dxos/assistant';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { AiConversation, functionInvocationServiceFromOperations, ToolExecutionServices } from '@dxos/assistant';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type Message } from '@dxos/types';
+import { Operation } from '@dxos/operation';
 
-import { Project } from '../../../types';
+import { Agent } from '../../../types';
+import { AgentWorker } from './definitions';
 
-export default defineFunction({
-  key: 'org.dxos.function.project.agent',
-  name: 'Project Agent',
-  description: 'Agentic worker that drives the project autonomously.',
-  inputSchema: Schema.Struct({
-    project: Schema.suspend(() => Ref.Ref(Project.Project)),
-    prompt: Schema.optional(Schema.String),
-    event: Schema.optional(TriggerEvent.TriggerEvent),
-  }),
-  outputSchema: Schema.Void,
-  services: [AiContextService],
-  handler: Effect.fnUntraced(
-    function* ({ data }) {
-      const project = yield* Database.load(data.project);
-      invariant(Obj.instanceOf(Project.Project, project));
-      invariant(project.chat, 'Project has no chat.');
+export default AgentWorker.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ agent: agentRef, prompt, event }) {
+        const agent = yield* Database.load(agentRef);
+        invariant(Obj.instanceOf(Agent.Agent, agent));
+        invariant(agent.chat, 'Agent has no chat.');
 
-      const chatQueue = yield* project.chat.pipe(
-        Database.load,
-        Effect.flatMap((chat) => Database.load(chat.queue)),
-      );
-      invariant(chatQueue, 'Project chat queue not found.');
-      const conversation = yield* acquireReleaseResource(
-        () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
-      );
+        const chatFeed = yield* agent.chat.pipe(
+          Database.load,
+          Effect.flatMap((chat) => Database.load(chat.feed)),
+        );
+        invariant(chatFeed, 'Agent chat feed not found.');
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
 
-      const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
-      if (iniativesInContext.length !== 1) {
-        throw new Error('There should be exactly one project in context. Got: ' + iniativesInContext.length);
-      }
+        const agentsInContext = conversation.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
+        if (agentsInContext.length !== 1) {
+          throw new Error('There should be exactly one agent in context. Got: ' + agentsInContext.length);
+        }
 
-      if (!data.prompt && !data.event) {
-        throw new Error('Either prompt or event must be provided.');
-      }
+        if (!prompt && !event) {
+          throw new Error('Either prompt or event must be provided.');
+        }
 
-      let input = '';
-      if (data.prompt) {
-        input += `${data.prompt}\n\n`;
-      }
-      if (data.event) {
-        input += `<event>\n${JSON.stringify(data.event, null, 2)}\n</event>\n\n`;
-      }
+        let input = '';
+        if (prompt) {
+          input += `${prompt}\n\n`;
+        }
+        if (event) {
+          input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
+        }
 
-      yield* conversation
-        .createRequest({
-          prompt: input,
-        })
-        .pipe(Effect.retry({ times: 2 }));
-    },
-    Effect.scoped,
-    Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
-    AiContextService.fixFunctionHandlerType,
-  ) as any,
-});
+        yield* conversation
+          .createRequest({
+            prompt: input,
+          })
+          .pipe(Effect.retry({ times: 2 }));
+      },
+      Effect.scoped,
+      Effect.provide(
+        Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+          Layer.provideMerge(functionInvocationServiceFromOperations),
+        ),
+      ),
+    ),
+  ),
+  Operation.opaqueHandler,
+);

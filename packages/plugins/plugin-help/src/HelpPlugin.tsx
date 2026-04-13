@@ -5,16 +5,17 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, HelpState, OperationResolver, ReactRoot, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, HelpState, OperationHandler, ReactRoot, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { type Step } from '#types';
+
 import { translations } from './translations';
-import { type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
 export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

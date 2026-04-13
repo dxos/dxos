@@ -9,11 +9,14 @@ import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 
-import { type ObservabilitySettingsProps } from '../containers';
-import { meta } from '../meta';
+import { meta } from '#meta';
+
+import * as Settings from './Settings';
 
 export namespace ObservabilityCapabilities {
-  export const Settings = Capability.make<Atom.Writable<ObservabilitySettingsProps>>(`${meta.id}.capability.settings`);
+  export const Namespace = Capability.make<string>(`${meta.id}.capability.namespace`);
+
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
 
   export const StateSchema = Schema.mutable(
     Schema.Struct({

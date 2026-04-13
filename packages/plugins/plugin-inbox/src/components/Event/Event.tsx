@@ -3,17 +3,17 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/react-client/echo';
-import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Menu } from '@dxos/react-ui-menu';
+import { Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { DateComponent } from '../DateComponent';
-
 import { EventAttendee } from './EventAttendee';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
@@ -48,18 +48,20 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps & ComponentPropsWithoutRef<typeof Menu.Root>>;
+type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onNoteCreate'> & Pick<MenuRootProps, 'alwaysActive'>;
 
-const EventToolbar = ({ classNames, onNoteCreate, ...props }: EventToolbarProps) => {
-  const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
-  const actions = useEventToolbarActions({ onNoteCreate });
+const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
+  ({ alwaysActive, onNoteCreate, ...props }, forwardedRef) => {
+    const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
+    const menuActions = useEventToolbarActions({ onNoteCreate });
 
-  return (
-    <Menu.Root {...props} {...actions} attendableId={attendableId}>
-      <Menu.Toolbar classNames={classNames} />
-    </Menu.Root>
-  );
-};
+    return (
+      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      </Menu.Root>
+    );
+  },
+);
 
 EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
@@ -69,15 +71,15 @@ EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
 const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
-type EventViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type EventViewportProps = {};
 
-const EventViewport = ({ classNames, children, ...props }: EventViewportProps) => {
+const EventViewport = composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...props} className={mx(classNames)}>
-      {children}
-    </div>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
-};
+});
 
 EventViewport.displayName = EVENT_VIEWPORT_NAME;
 
@@ -103,7 +105,7 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
           <Icon icon='ph--check--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event untitled label')}</h2>
+          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
         </div>
       </div>
 

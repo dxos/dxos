@@ -4,6 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredential } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -16,7 +17,6 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
-
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
@@ -60,7 +60,7 @@ describe('space/control-pipeline', () => {
     expect(admittedFeeds).toEqual([]);
 
     await controlPipeline.setWriteFeed(genesisFeed);
-    await controlPipeline.start();
+    await controlPipeline.start(Context.default());
 
     onTestFinished(() => controlPipeline.stop());
 

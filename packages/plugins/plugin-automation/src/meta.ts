@@ -12,6 +12,6 @@ export const meta: Plugin.Meta = {
     Workflow automation engine that triggers custom actions based on object events and conditions.
     Create automated pipelines that respond to changes and streamline repetitive tasks.
   `,
-  icon: 'ph--robot--regular',
+  icon: 'ph--atom--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-automation',
 };

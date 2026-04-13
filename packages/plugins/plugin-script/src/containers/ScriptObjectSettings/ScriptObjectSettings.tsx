@@ -10,16 +10,17 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ScriptObjectSettingsProps = {
   object: Script.Script;
@@ -38,7 +39,7 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const blueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
 
   const [creating, setCreating] = useState(false);
@@ -63,14 +64,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (t) => {
-          t.content = instructions;
+        Obj.change(text, (text) => {
+          text.content = instructions;
         });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (b) => {
-              b.tools = [...(b.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (existingBlueprint) => {
+              existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }
         }
@@ -95,18 +96,18 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   return (
     <div className='flex flex-col gap-4 my-form-padding'>
       <div>
-        <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
+        <h2>{t('blueprint-editor.label', { default: 'Blueprint' })}</h2>
         <p className='text-description text-sm'>
-          {t('blueprint editor description', {
+          {t('blueprint-editor.description', {
             default: 'Create a blueprint that exposes this script as a tool.',
           })}
         </p>
       </div>
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('blueprint instructions label', { default: 'Instructions' })}</Input.Label>
+          <Input.Label>{t('blueprint-instructions.label', { default: 'Instructions' })}</Input.Label>
           <Input.TextArea
-            placeholder={t('blueprint instructions placeholder', {
+            placeholder={t('blueprint-instructions.placeholder', {
               default: 'Describe how this tool should be used.',
             })}
             rows={6}
@@ -131,7 +132,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
 
   const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   const functionUrl =
@@ -149,41 +150,44 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   );
 
   const handleBindingBlur = useCallback(() => {
-    Obj.change(fn, (f) => {
-      f.binding = binding;
-    });
+    if (fn) {
+      Obj.change(fn, (fn) => {
+        fn.binding = binding;
+      });
+    }
   }, [fn, binding]);
 
-  if (!fn || !functionUrl) {
+  if (!fn) {
     return null;
   }
 
-  // TODO(burdon): Use form.
   return (
-    <div role='form' className='flex flex-col gap-2 my-form-padding'>
-      <h2>{t('remote function settings heading')}</h2>
-      <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('function url label')}</Input.Label>
-          <div role='none' className='flex gap-1'>
-            <Input.TextInput
-              disabled
-              value={functionUrl}
-              onChange={(event) => {
-                Obj.change(fn, (f) => {
-                  f.name = event.target.value;
-                });
-              }}
-            />
-            <Clipboard.IconButton value={functionUrl} />
+    <div className='flex flex-col gap-2'>
+      <h2>{t('remote-function-settings.heading')}</h2>
+      {functionUrl && (
+        <Input.Root>
+          <div role='none' className='flex flex-col gap-1'>
+            <Input.Label>{t('function-url.label')}</Input.Label>
+            <div role='none' className='flex gap-1'>
+              <Input.TextInput
+                disabled
+                value={functionUrl}
+                onChange={(event) => {
+                  Obj.change(fn, (fn) => {
+                    fn.name = event.target.value;
+                  });
+                }}
+              />
+              <Clipboard.IconButton value={functionUrl} />
+            </div>
           </div>
-        </div>
-      </Input.Root>
+        </Input.Root>
+      )}
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('function binding label')}</Input.Label>
+          <Input.Label>{t('function-binding.label')}</Input.Label>
           <Input.TextInput
-            placeholder={t('function binding placeholder')}
+            placeholder={t('function-binding.placeholder')}
             value={binding}
             onChange={handleBindingChange}
             onBlur={handleBindingBlur}
@@ -256,8 +260,8 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, (obj) => {
-            Obj.getMeta(obj).keys.push({ source: 'github.com', id: gistId });
+          Obj.change(object, (object) => {
+            Obj.getMeta(object).keys.push({ source: 'github.com', id: gistId });
           });
         }
       }
@@ -269,13 +273,13 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   return (
     <div className='flex flex-col gap-4 my-form-padding'>
       <div>
-        <h2>{t('script publish settings label')}</h2>
-        <p className='text-description text-sm'>{t('script publish settings description')}</p>
+        <h2>{t('script-publish-settings.label')}</h2>
+        <p className='text-description text-sm'>{t('script-publish-settings.description')}</p>
       </div>
       {!githubToken && (
         <div className='flex flex-col gap-2'>
-          <span>{t('no github token label')}</span>
-          <Button onClick={handleOpenTokenManager}>{t('open token manager label')}</Button>
+          <span>{t('no-github-token.label')}</span>
+          <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
         </div>
       )}
       {githubToken && (

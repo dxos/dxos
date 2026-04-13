@@ -12,7 +12,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { TestBuilder, type TestPeer } from '../testing';
-
 import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationsHandler } from './invitations-handler';
 import { SpaceInvitationProtocol } from './space-invitation-protocol';
@@ -95,7 +94,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await acceptInvitation(guest, invitation);
 
         await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
-        await guest.peer.networkManager.close();
+        await guest.peer.networkManager.close(Context.default());
         await host.sink.waitFor(Invitation.State.CONNECTING);
 
         await sleep(10);
@@ -254,9 +253,9 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       const peer = testBuilder.createPeer();
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
-      await peer.echoHost.addReplicator(peer.meshEchoReplicator);
+      await peer.echoHost.addReplicator(Context.default(), peer.meshEchoReplicator);
       if (spaceKey == null) {
-        const space = await peer.dataSpaceManager.createSpace();
+        const space = await peer.dataSpaceManager.createSpace(new Context());
         spaceKey = space.key;
       }
       const invitationHandler = new InvitationsHandler(peer.networkManager, undefined, {
@@ -359,7 +358,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createInvitation = async (setup: PeerSetup, options?: Partial<Invitation>): Promise<Invitation> => {
-      const observable = await setup.peer.invitationsManager.createInvitation({
+      const observable = await setup.peer.invitationsManager.createInvitation(setup.ctx, {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         authMethod: Invitation.AuthMethod.SHARED_SECRET,

@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
@@ -44,7 +45,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
   }
 
   async createAgent(): Promise<void> {
-    return (await this._agentManagerProvider()).createAgent();
+    return (await this._agentManagerProvider()).createAgent(Context.default());
   }
 
   queryAgentStatus(): Stream<QueryAgentStatusResponse> {

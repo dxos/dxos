@@ -5,15 +5,17 @@
 import { useEffect, useMemo } from 'react';
 
 import { Obj, Query, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { messageValence } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
@@ -30,7 +32,7 @@ import { type ScriptToolbarStateStore } from './useToolbarState';
 export type CreateDeployOptions = {
   state: ScriptToolbarStateStore;
   script: Script.Script;
-  fn: Function.Function;
+  fn: Operation.PersistentOperation;
   space?: Space;
   existingFunctionId?: string;
   client: Client;
@@ -42,7 +44,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
-    label: value.error ?? ['no error label', { ns: meta.id }],
+    label: value.error ?? ['no-error.label', { ns: meta.id }],
     icon: 'ph--warning-circle--regular',
     hidden: !value.error,
     classNames: value.error && messageValence('error'),
@@ -62,14 +64,14 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 
       if (!result.success) {
         log.catch(result.error);
-        state.set('error', t('upload failed label'));
+        state.set('error', t('upload-failed.label'));
       }
 
       state.set('deploying', false);
     },
     {
       type: 'deploy',
-      label: [value.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
+      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: meta.id }],
       icon: value.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: value.deploying,
       classNames: value.deploying ? '[&_svg]:animate-spin' : '',
@@ -85,7 +87,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'copy',
-      label: ['copy link label', { ns: meta.id }],
+      label: ['copy-link.label', { ns: meta.id }],
       icon: 'ph--link--regular',
       disabled: !value.functionUrl,
     },
@@ -126,7 +128,7 @@ export const useDeployState = ({ state, script }: { state: ScriptToolbarStateSto
 export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
   const space = getSpace(script);
-  const [fn] = useQuery(space?.db, Query.type(Function.Function, { source: Ref.make(script) }));
+  const [fn] = useQuery(space?.db, Query.type(Operation.PersistentOperation, { source: Ref.make(script) }));
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(Obj.getMeta(fn)), [fn]);
   return { client, space, fn, existingFunctionId };
 };
