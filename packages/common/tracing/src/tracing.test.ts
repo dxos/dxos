@@ -368,4 +368,32 @@ describe('lifecycle span', () => {
 
     await resource.close();
   });
+
+  test('lifecycle span records error and ends when _close throws', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    const closeError = new Error('close failed');
+
+    @trace.resource({ lifecycle: true })
+    class FailingCloseResource extends Resource {
+      protected override async _open(_ctx: Context) {}
+
+      protected override async _close(_ctx: Context) {
+        throw closeError;
+      }
+    }
+
+    const resource = new FailingCloseResource();
+    await resource.open();
+
+    const lifecycleSpan = spans.find((span) => span.options.name === 'FailingCloseResource.lifecycle');
+    expect(lifecycleSpan).toBeDefined();
+    expect(lifecycleSpan!.ended).toBe(false);
+
+    await expect(resource.close()).rejects.toThrow('close failed');
+
+    expect(lifecycleSpan!.error).toBe(closeError);
+    expect(lifecycleSpan!.ended).toBe(true);
+  });
 });

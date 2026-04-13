@@ -629,4 +629,83 @@ describe('Protobuf service', () => {
     expect(received.traceparent).toEqual(traceContext.traceparent);
     expect(received.tracestate).toEqual(traceContext.tracestate);
   });
+
+  test('handler receives no ctx when caller sends no trace context', async ({ expect }) => {
+    const [alicePort, bobPort] = createLinkedPorts();
+    let receivedOptions: RequestOptions | undefined;
+
+    const server = createProtoRpcPeer({
+      exposed: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      handlers: {
+        TestService: {
+          testCall: async (req: any, options?: RequestOptions) => {
+            receivedOptions = options;
+            return { data: 'responseData' };
+          },
+          voidCall: async () => {},
+        },
+      },
+      port: alicePort,
+    });
+
+    const client = createProtoRpcPeer({
+      requested: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      port: bobPort,
+    });
+
+    await Promise.all([server.open(), client.open()]);
+
+    await client.rpc.TestService.testCall({ data: 'requestData' });
+
+    expect(receivedOptions).toBeUndefined();
+  });
+
+  test('W3C trace context propagates on streaming RPC', async ({ expect }) => {
+    const traceContext = {
+      traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+    };
+
+    const [alicePort, bobPort] = createLinkedPorts();
+    let receivedCtx: Context | undefined;
+
+    const server = createProtoRpcPeer({
+      exposed: {
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+      },
+      handlers: {
+        TestStreamService: {
+          testCall: (_req: any, options?: RequestOptions) => {
+            receivedCtx = options?.ctx;
+            return new Stream<{ data: string }>(({ next, close }) => {
+              next({ data: 'streamData' });
+              close();
+            });
+          },
+        },
+      },
+      port: alicePort,
+    });
+
+    const callerCtx = new Context({ attributes: { [TRACE_SPAN_ATTRIBUTE]: traceContext } });
+
+    const client = createProtoRpcPeer({
+      requested: {
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+      },
+      port: bobPort,
+    });
+
+    await Promise.all([server.open(), client.open()]);
+
+    const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' }, { ctx: callerCtx });
+    await Stream.consumeData(stream);
+
+    expect(receivedCtx).toBeInstanceOf(Context);
+    const received = receivedCtx!.getAttribute(TRACE_SPAN_ATTRIBUTE);
+    expect(received.traceparent).toEqual(traceContext.traceparent);
+  });
 });

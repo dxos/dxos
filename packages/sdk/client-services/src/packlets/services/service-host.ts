@@ -342,7 +342,7 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      (params) => this._createIdentity(params),
+      (params, ctx) => this._createIdentity(params, ctx),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
 
@@ -457,8 +457,8 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions) {
-    const identity = await this._serviceContext.createIdentity(params);
+  private async _createIdentity(params: CreateIdentityOptions, ctx?: Context) {
+    const identity = await this._serviceContext.createIdentity(params, ctx);
     await this._serviceContext.initialized.wait();
     return identity;
   }

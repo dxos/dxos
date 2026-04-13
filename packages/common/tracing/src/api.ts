@@ -91,13 +91,18 @@ const resource =
 
       proto.close = async function (ctx?: Context): Promise<any> {
         const self = this as any;
-        const result = await originalClose.call(this, ctx);
         const remoteSpan: RemoteSpan | undefined = self[LIFECYCLE_SPAN];
-        if (remoteSpan) {
-          remoteSpan.end();
-          self[LIFECYCLE_SPAN] = undefined;
+        try {
+          return await originalClose.call(this, ctx);
+        } catch (err) {
+          remoteSpan?.setError?.(err);
+          throw err;
+        } finally {
+          if (remoteSpan) {
+            remoteSpan.end();
+            self[LIFECYCLE_SPAN] = undefined;
+          }
         }
-        return result;
       };
     }
 

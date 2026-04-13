@@ -50,7 +50,7 @@ export class ContextRpcCodec {
    */
   static encode(ctx: Context): TraceContextData | undefined {
     const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
-    if (traceCtx == null || typeof traceCtx?.traceparent !== 'string') {
+    if (traceCtx == null || typeof traceCtx.traceparent !== 'string') {
       return undefined;
     }
     return traceCtx as TraceContextData;

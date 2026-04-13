@@ -28,14 +28,15 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     private readonly _identityManager: IdentityManager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
     private readonly _keyring: Keyring,
-    private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
+    private readonly _createIdentity: (params: CreateIdentityOptions, ctx?: Context) => Promise<Identity>,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {
     super();
   }
 
-  async createIdentity(request: CreateIdentityRequest): Promise<IdentityProto> {
-    await this._createIdentity({ profile: request.profile, deviceProfile: request.deviceProfile });
+  async createIdentity(request: CreateIdentityRequest, options?: RequestOptions): Promise<IdentityProto> {
+    const ctx = options?.ctx ?? Context.default();
+    await this._createIdentity({ profile: request.profile, deviceProfile: request.deviceProfile }, ctx);
     return this._getIdentity()!;
   }
 

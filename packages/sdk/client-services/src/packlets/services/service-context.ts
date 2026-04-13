@@ -321,8 +321,8 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(params: CreateIdentityOptions = {}) {
-    const ctx = this._ctx;
+  async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context) {
+    ctx ??= this._ctx;
     const identity = await this.identityManager.createIdentity(params, ctx);
     await this._setNetworkIdentity({ identity });
     await identity.joinNetwork(ctx);

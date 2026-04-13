@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
-import { ContextRpcCodec } from '@dxos/context';
+import { type Context, ContextRpcCodec } from '@dxos/context';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
@@ -511,15 +511,18 @@ export class RpcPeer {
   }
 
   private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
-    const handlerOptions: RequestOptions = { ...this._params.handlerRpcOptions };
+    let traceCtx: Context | undefined;
     if (req.traceContext) {
       try {
-        handlerOptions.ctx = ContextRpcCodec.decode(req.traceContext);
+        traceCtx = ContextRpcCodec.decode(req.traceContext);
       } catch (err) {
         log.warn('failed to decode trace context', { traceContext: req.traceContext, err });
       }
     }
-    return Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined;
+    if (!traceCtx && !this._params.handlerRpcOptions) {
+      return undefined;
+    }
+    return { ...this._params.handlerRpcOptions, ...(traceCtx ? { ctx: traceCtx } : {}) };
   }
 
   private async _callHandler(req: Request): Promise<Response> {
