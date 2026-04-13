@@ -27,6 +27,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -104,7 +105,15 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     () =>
       spec && [
         createBasicExtensions({ placeholder: t('agent.spec.placeholder') }),
-        createThemeExtensions({ syntaxHighlighting: true }),
+        createThemeExtensions({
+          syntaxHighlighting: true,
+          slots: {
+            ...documentSlots,
+            scroller: {
+              className: 'min-h-[2lh]',
+            },
+          },
+        }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(spec, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),

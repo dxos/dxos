@@ -183,7 +183,7 @@ export type ThemeExtensionsOptions = {
     editor?: {
       className?: string;
     };
-    scroll?: {
+    scroller?: {
       // NOTE: Do not apply vertical padding to scroll container.
       className?: string;
     };

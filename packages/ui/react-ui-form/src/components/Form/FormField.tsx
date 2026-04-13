@@ -123,6 +123,7 @@ export const FormField = (props: FormFieldProps) => {
   const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
+  console.log('===', name, title, type);
   const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),

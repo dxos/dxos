@@ -56,9 +56,56 @@ export const FormFieldSet = ({
 }: FormFieldSetProps<any>) => {
   const values = useFormValues(FORM_FIELDSET_NAME, path);
 
+  const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
+
+  if ((readonly || layout === 'static') && values == null) {
+    return null;
+  }
+
+  return (
+    <>
+      {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
+      {properties.map((property) => {
+        const name = property.name.toString();
+        console.log('=', property);
+        return (
+          <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
+            <FormField
+              type={property.type}
+              name={name}
+              path={[...(path ?? []), name]}
+              readonly={readonly}
+              layout={layout}
+              projection={projection}
+              {...props}
+            />
+          </FormFieldErrorBoundary>
+        );
+      })}
+    </>
+  );
+};
+
+FormFieldSet.displayName = FORM_FIELDSET_NAME;
+
+type UseFormFieldSetPropertiesParams = Pick<FormFieldSetProps<any>, 'schema' | 'exclude' | 'projection' | 'sort'> & {
+  values: AnyProperties | undefined;
+  sort?: string[];
+};
+
+/**
+ * Resolves ordered schema properties for a field set (projection order, exclude, or sort).
+ */
+const useFormFieldSetProperties = ({
+  schema,
+  exclude,
+  projection,
+  values,
+  sort,
+}: UseFormFieldSetPropertiesParams): SchemaProperty[] => {
   // TODO(burdon): Updates on every value change.
   //  Remove values dep if can remove from getSchemaProperties.
-  const properties = useMemo(() => {
+  return useMemo(() => {
     if (!schema) {
       return [];
     }
@@ -79,7 +126,7 @@ export const FormFieldSet = ({
       // Add properties in projection field order.
       for (const fieldProjection of fieldProjections) {
         const fieldPath = String(fieldProjection.field.path);
-        const prop = visibleProps.find((p) => p.name === fieldPath);
+        const prop = visibleProps.find((prop) => prop.name === fieldPath);
         if (prop) {
           orderedProps.push(prop);
         }
@@ -97,32 +144,4 @@ export const FormFieldSet = ({
       ? [...filteredProps].sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
       : filteredProps;
   }, [schema, values, exclude, sort, projection]);
-
-  if ((readonly || layout === 'static') && values == null) {
-    return null;
-  }
-
-  return (
-    <>
-      {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
-      {properties.map((property) => {
-        const name = property.name.toString();
-        return (
-          <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
-            <FormField
-              type={property.type}
-              name={name}
-              path={[...(path ?? []), name]}
-              readonly={readonly}
-              layout={layout}
-              projection={projection}
-              {...props}
-            />
-          </FormFieldErrorBoundary>
-        );
-      })}
-    </>
-  );
 };
-
-FormFieldSet.displayName = FORM_FIELDSET_NAME;
