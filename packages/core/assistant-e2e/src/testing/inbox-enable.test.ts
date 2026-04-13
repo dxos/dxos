@@ -17,6 +17,7 @@ describe('InboxBlueprintEnable', () => {
     'enables the inbox blueprint and queries emails',
     agentTest(
       Prompt.make({
+        key: 'dxos.org/prompt/test/inbox-blueprint-enable-read-email',
         instructions: trim`
           The database starts empty.
 

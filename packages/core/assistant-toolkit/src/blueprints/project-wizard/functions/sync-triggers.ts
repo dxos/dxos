@@ -5,12 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { Agent } from '../../../types';
+import { AgentPrompts } from '../../project';
+import { AgentPrompt } from '../../../functions/agent/definitions';
 import { SyncTriggers } from './definitions';
 
 export default SyncTriggers.pipe(
@@ -59,6 +62,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
 
     // Lazy import to avoid circular dependency issues.
     const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../project'));
+    const prompt = yield* getProcessEventPrompt();
 
     for (const subscription of agent.subscriptions) {
       const targetOption = yield* Database.loadOption(subscription);
@@ -84,56 +88,97 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         continue;
       }
 
-      yield* Database.add(
-        Trigger.make({
-          [Obj.Parent]: agent,
-          [Obj.Meta]: {
-            keys: [
-              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
-            ],
-          },
-          enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queueDxn.toString(),
-          },
-          function: Ref.make(Operation.serialize(agent.useQualifyingAgent ? Qualifier : AgentWorker)),
-          input: {
-            agent: Ref.make(agent),
-            event: '{{event}}',
-          },
-          concurrency: agent.useQualifyingAgent ? 5 : undefined,
-        }),
-      );
+      if (agent.useQualifyingAgent) {
+        yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: agent,
+            [Obj.Meta]: {
+              keys: [
+                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+                { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+              ],
+            },
+            enabled: true,
+            spec: {
+              kind: 'queue',
+              queue: queueDxn.toString(),
+            },
+            function: Ref.make(Operation.serialize(Qualifier)),
+            input: {
+              agent: Ref.make(agent),
+              event: '{{event}}',
+            },
+            concurrency: 5,
+          }),
+        );
+      } else {
+        yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: agent,
+            [Obj.Meta]: {
+              keys: [
+                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+                { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+              ],
+            },
+            enabled: true,
+            spec: {
+              kind: 'queue',
+              queue: queueDxn.toString(),
+            },
+            function: Ref.make(Operation.serialize(AgentPrompt)),
+            input: {
+              prompt: Ref.make(prompt),
+              input: '{{event}}',
+            },
+          }),
+        );
+      }
     }
 
     if (agent.useQualifyingAgent && agent.queue) {
-      yield* Database.add(
-        Trigger.make({
-          [Obj.Parent]: agent,
-          [Obj.Meta]: {
-            keys: [
-              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              {
-                source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                id: Obj.getDXN(agent)?.toString() ?? '',
-              },
-            ],
-          },
-          function: Ref.make(Operation.serialize(AgentWorker)),
-          enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: agent.queue.dxn.toString(),
-          },
-          input: {
-            agent: Ref.make(agent),
-            event: '{{event}}',
-          },
-        }),
-      );
+      const agentDxn = Obj.getDXN(agent);
+      if (agentDxn) {
+        yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: agent,
+            [Obj.Meta]: {
+              keys: [
+                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+                {
+                  source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
+                  id: agentDxn.toString(),
+                },
+              ],
+            },
+            function: Ref.make(Operation.serialize(AgentWorker)),
+            enabled: true,
+            spec: {
+              kind: 'queue',
+              queue: agent.queue.dxn.toString(),
+            },
+            input: {
+              agent: Ref.make(agent),
+              event: '{{event}}',
+            },
+          }),
+        );
+      }
     }
 
     yield* Database.flush();
   });
+
+/**
+ * Finds or creates the process-event prompt for agent triggers.
+ */
+const getProcessEventPrompt = Effect.fnUntraced(function* () {
+  const existing = yield* Database.runQuery(
+    Filter.type(Prompt.Prompt, { key: AgentPrompts.processEvent.key }),
+  );
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  return yield* Database.add(Obj.clone(AgentPrompts.processEvent));
+});

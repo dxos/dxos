@@ -166,7 +166,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
             const blueprints = objects
               .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
               .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Prompt.make({ instructions: '', blueprints }));
+            cell.prompt = Ref.make(Prompt.make({ key: 'notebook-instructions', instructions: '', blueprints }));
           }
           break;
         }

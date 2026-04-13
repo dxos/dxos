@@ -17,6 +17,7 @@ describe('Database', () => {
     'create and query',
     agentTest(
       Prompt.make({
+        key: 'dxos.org/prompt/test/database-create-organization-query',
         instructions: trim`
           Create a new organization called "Cyberdyne Systems".
           Query the database to confirm that the organization is created and the query tool is working.

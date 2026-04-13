@@ -17,6 +17,7 @@ describe('Smoke', () => {
     'succeeds',
     agentTest(
       Prompt.make({
+        key: 'dxos.org/prompt/test/smoke-succeed',
         instructions: trim`
           Do nothing and succeed.
         `,
@@ -32,6 +33,7 @@ describe('Smoke', () => {
         expect: 'failure',
       },
       Prompt.make({
+        key: 'dxos.org/prompt/test/smoke-fail',
         instructions: trim`
           Do nothing and fail.
         `,

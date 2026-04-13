@@ -92,18 +92,21 @@ const meta = {
               );
               space.db.add(
                 Prompt.make({
+                  key: 'dxos.org/prompt/test/summarize',
                   name: 'Summarize',
                   instructions: 'Create a new markdown document that is a summary of the selected object.',
                 }),
               );
               space.db.add(
                 Prompt.make({
+                  key: 'dxos.org/prompt/test/analyze',
                   name: 'Analyze',
                   instructions: 'Analyze the selected content.',
                 }),
               );
               space.db.add(
                 Prompt.make({
+                  key: 'dxos.org/prompt/test/translate',
                   name: 'Translate',
                   instructions: 'Translate the selected content to Spanish.',
                 }),

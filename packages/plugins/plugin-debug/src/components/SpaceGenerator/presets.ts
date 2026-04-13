@@ -163,6 +163,7 @@ export const generator = () => ({
 
           const researchPrompt = space.db.add(
             Prompt.make({
+              key: 'dxos.org/prompt/space-generator/research',
               name: 'Research',
               description: 'Research organization',
               input: Schema.Struct({

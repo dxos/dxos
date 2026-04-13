@@ -18,6 +18,7 @@ describe('Web', () => {
     'search the web',
     agentTest(
       Prompt.make({
+        key: 'dxos.org/prompt/test/web-search-richest-people',
         instructions: trim`
           Search 5 richest people in the world and create Person objects in the database.
 

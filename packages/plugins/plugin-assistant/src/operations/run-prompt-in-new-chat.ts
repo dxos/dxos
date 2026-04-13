@@ -65,6 +65,7 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
             typeof prompt === 'string'
               ? Ref.make(
                   Prompt.make({
+                    key: 'dxos.org/prompt/ad-hoc',
                     instructions: prompt,
                     blueprints: [],
                     context: [],

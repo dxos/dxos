@@ -4,3 +4,4 @@
 
 export { default as AgentBlueprint } from './blueprint';
 export { AgentWorker, Qualifier, GetContext, AddArtifact, AgentBlueprintHandlers } from './functions';
+export * as AgentPrompts from './prompts';

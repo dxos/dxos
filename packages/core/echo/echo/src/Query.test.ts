@@ -20,6 +20,22 @@ import { TestSchema } from './testing';
 
 describe('query api', () => {
   describe('Query', () => {
+    test('Query.from(obj) is alias for Query.id(obj.id)', () => {
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const queryFromObj = Query.from(fred);
+      const queryFromId = Query.id(fred.id);
+
+      Schema.validateSync(QueryAST.Query)(queryFromObj.ast);
+      expect(queryFromObj.ast).toEqual(queryFromId.ast);
+      expect(queryFromObj.ast).toMatchObject({
+        type: 'select',
+        filter: {
+          type: 'object',
+          id: [fred.id],
+        },
+      });
+    });
+
     test('get all people', () => {
       const getAllPeople = Query.type(TestSchema.Person);
 
