@@ -13,6 +13,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
 import { matchNoteToCards } from './match-cards';
+import { seedSoftwareTeamFixture } from './seed-fixture';
 import { Demo } from '#types';
 
 /** Delay before running aiMatch on a newly-injected Granola note. Tuned so the viewer sees the note land before matches appear. */
@@ -309,6 +310,21 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
     [emit],
   );
 
+  const handleSeed = useCallback(async () => {
+    if (!db) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await seedSoftwareTeamFixture(db);
+      if (result.alreadySeeded) {
+        log.info('demo: fixture already present — skipping');
+      }
+    } finally {
+      setBusy(false);
+    }
+  }, [db]);
+
   const handleReset = useCallback(async () => {
     if (!db) {
       return;
@@ -360,7 +376,13 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
         <ScrollArea.Root orientation='vertical' padding>
           <ScrollArea.Viewport>
             <div className='flex flex-col gap-2 p-2'>
-              <div className='text-xs text-subdued uppercase tracking-wider pt-2 pb-1'>Inject event</div>
+              <div className='text-xs text-subdued uppercase tracking-wider pt-2 pb-1'>Setup</div>
+              <Button disabled={busy} onClick={handleSeed}>
+                <Icon icon='ph--seedling--regular' size={4} />
+                <span>Seed Widgets-team board ({cards.length} existing cards)</span>
+              </Button>
+
+              <div className='text-xs text-subdued uppercase tracking-wider pt-4 pb-1'>Inject event</div>
               <Button disabled={busy} onClick={handleGranolaNote}>
                 <Icon icon='ph--notebook--regular' size={4} />
                 <span>Simulate Granola note arriving</span>
