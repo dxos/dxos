@@ -570,6 +570,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-demo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },

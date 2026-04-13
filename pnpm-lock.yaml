@@ -2401,6 +2401,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../../plugins/plugin-deck
+      '@dxos/plugin-demo':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-demo
       '@dxos/plugin-excalidraw':
         specifier: workspace:*
         version: link:../../plugins/plugin-excalidraw
@@ -8879,6 +8882,55 @@ importers:
       vite:
         specifier: '>=7.1.11'
         version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-demo:
+    dependencies:
+      '@dxos/ai-match':
+        specifier: workspace:*
+        version: link:../../common/ai-match
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
+      '@dxos/plugin-granola':
+        specifier: workspace:*
+        version: link:../plugin-granola
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/plugin-trello':
+        specifier: workspace:*
+        version: link:../plugin-trello
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
 
   packages/plugins/plugin-excalidraw:
     dependencies:

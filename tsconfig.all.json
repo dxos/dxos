@@ -328,6 +328,9 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-demo/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {

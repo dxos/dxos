@@ -107,13 +107,25 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-connections"
+    },
+    {
+      "path": "../../plugins/plugin-crypto"
+    },
+    {
       "path": "../../plugins/plugin-daily-summary"
+    },
+    {
+      "path": "../../plugins/plugin-dealflow"
     },
     {
       "path": "../../plugins/plugin-debug"
     },
     {
       "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-demo"
     },
     {
       "path": "../../plugins/plugin-excalidraw"
@@ -128,6 +140,12 @@
       "path": "../../plugins/plugin-files"
     },
     {
+      "path": "../../plugins/plugin-github"
+    },
+    {
+      "path": "../../plugins/plugin-granola"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -135,6 +153,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-inspector"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -188,6 +209,9 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-research"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
@@ -204,6 +228,9 @@
     },
     {
       "path": "../../plugins/plugin-sketch"
+    },
+    {
+      "path": "../../plugins/plugin-slack"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -240,6 +267,9 @@
     },
     {
       "path": "../../plugins/plugin-transcription"
+    },
+    {
+      "path": "../../plugins/plugin-trello"
     },
     {
       "path": "../../plugins/plugin-voxel"

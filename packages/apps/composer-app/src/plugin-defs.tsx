@@ -17,12 +17,17 @@ import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ConnectionsPlugin } from '@dxos/plugin-connections';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
+import { CryptoPlugin } from '@dxos/plugin-crypto';
+import { DealFlowPlugin } from '@dxos/plugin-dealflow';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
+import { DemoPlugin } from '@dxos/plugin-demo';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
+import { GitHubPlugin } from '@dxos/plugin-github';
+import { GranolaPlugin } from '@dxos/plugin-granola';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -62,6 +67,8 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { TrelloPlugin } from '@dxos/plugin-trello';
+import { ResearchPlugin } from '@dxos/plugin-research';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { YouTubePlugin } from '@dxos/plugin-youtube';
@@ -199,11 +206,16 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     ConnectionsPlugin(),
+    CryptoPlugin(),
     DailySummaryPlugin(),
+    DealFlowPlugin(),
     DebugPlugin({ logBuffer }),
+    DemoPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
+    GitHubPlugin(),
+    GranolaPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -254,6 +266,8 @@ export const getPlugins = ({
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),
+    TrelloPlugin(),
+    ResearchPlugin(),
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
