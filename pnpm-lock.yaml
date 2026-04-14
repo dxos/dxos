@@ -8900,6 +8900,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-github':
         specifier: workspace:*
         version: link:../plugin-github

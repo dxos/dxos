@@ -9,10 +9,11 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { ReactSurface } from '#capabilities';
+import { ExposeGlobals, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { Demo } from '#types';
 
@@ -46,5 +47,9 @@ export const DemoPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: ExposeGlobals,
+  }),
   Plugin.make,
 );
