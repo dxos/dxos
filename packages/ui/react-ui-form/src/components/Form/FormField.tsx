@@ -91,7 +91,7 @@ export type FormFieldProps = {
     | 'createInitialValuePath'
     | 'createFieldMap'
     | 'db'
-    | 'schemaHook'
+    | 'useSchema'
     | 'getOptions'
     | 'onCreate'
   >;
