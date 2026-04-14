@@ -15,7 +15,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { createScript } from '#testing';
@@ -43,6 +43,7 @@ const meta = {
   title: 'plugins/plugin-script/containers/ScriptProperties',
   render: DefaultStory,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

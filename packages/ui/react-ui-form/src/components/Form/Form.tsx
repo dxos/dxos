@@ -33,6 +33,8 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 
+// TODO(burdon): Move styles to form.ts.
+
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
@@ -283,8 +285,8 @@ type FormSectionProps = ThemedClassName<{ label: string; description?: string }>
 const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, label, description, ...props }, forwardedRef) => {
     return (
-      <div {...composableProps(props, { classNames: 'flex flex-col' })} ref={forwardedRef}>
-        <h2>{label}</h2>
+      <div {...composableProps(props, { classNames: 'flex flex-col pt-3 first:pt-0' })} ref={forwardedRef}>
+        <h2 className='text-lg'>{label}</h2>
         {description && <p className='text-description'>{description}</p>}
       </div>
     );

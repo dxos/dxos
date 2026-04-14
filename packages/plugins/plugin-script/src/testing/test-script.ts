@@ -12,7 +12,7 @@ import { type Space } from '@dxos/react-client/echo';
  */
 export const createScript = (space: Space): Script.Script => {
   const script = Script.make({
-    name: 'Story script',
+    name: 'Test',
     source: 'export default () => 42;',
   });
 
@@ -20,8 +20,8 @@ export const createScript = (space: Space): Script.Script => {
   space.db.add(
     Obj.make(Operation.PersistentOperation, {
       key: 'org.dxos.script.story-fn',
-      name: 'Story script',
-      version: '0.0.0',
+      name: 'Test',
+      version: '0.1.0',
       source: Ref.make(script),
     }),
   );
