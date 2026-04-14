@@ -197,7 +197,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-3' } } }),
+      createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-3' } } }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),

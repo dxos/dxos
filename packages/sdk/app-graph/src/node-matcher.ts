@@ -127,7 +127,7 @@ export const whenEchoType =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'object-settings',
+ *   id: 'object-properties',
  *   match: NodeMatcher.whenEchoObject,
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown

@@ -179,6 +179,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     AiService.AiService,
                     OperationRegistry.Service,
                     Blueprint.RegistryService,
+                    CredentialsService,
                   ),
                 );
               }),

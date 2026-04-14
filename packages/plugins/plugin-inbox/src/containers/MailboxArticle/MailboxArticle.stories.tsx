@@ -6,10 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -21,6 +25,20 @@ import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
+
+// No-op handlers for deck operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
+  AppPlugin.addOperationHandlerModule({
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Operation.withHandler(DeckOperation.ChangeCompanion, () => Effect.void)),
+        ),
+      ),
+  }),
+  Plugin.make,
+);
 
 type DefaultStoryProps = {
   count?: number;
@@ -58,6 +76,7 @@ const meta = {
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),
+        MockDeckOperationsPlugin(),
       ],
     })),
   ],

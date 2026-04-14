@@ -62,12 +62,22 @@ export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' |
  */
 export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
   const properties = SchemaAST.getPropertySignatures(ast);
-  return properties.map((prop) => ({
-    ...getBaseType(prop),
-    name: prop.name,
-    isOptional: prop.isOptional,
-    isReadonly: prop.isReadonly,
-  }));
+  return properties.map((prop) => {
+    const { type, refinements } = getBaseType(prop);
+    // Merge PropertySignature-level annotations (e.g., title, description set via .annotations())
+    // onto the unwrapped base type so downstream consumers see them.
+    const mergedType =
+      prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
+        ? ({ ...type, annotations: { ...type.annotations, ...prop.annotations } } as SchemaAST.AST)
+        : type;
+    return {
+      type: mergedType,
+      refinements,
+      name: prop.name,
+      isOptional: prop.isOptional,
+      isReadonly: prop.isReadonly,
+    };
+  });
 };
 
 //

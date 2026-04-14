@@ -133,7 +133,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
         createThemeExtensions({
           themeMode,
           slots: {
-            scroll: { className: scrollable ? '' : '!overflow-hidden' },
+            scroller: { className: scrollable ? '' : '!overflow-hidden' },
           },
         }),
         outliner({ showSelected }),

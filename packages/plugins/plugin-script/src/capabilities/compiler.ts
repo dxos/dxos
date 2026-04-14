@@ -26,11 +26,16 @@ const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 
 export default Capability.makeModule(() =>
   Effect.gen(function* () {
-    yield* Effect.tryPromise(() => initializeBundler({ wasmUrl }));
+    yield* Effect.tryPromise({
+      try: () => initializeBundler({ wasmUrl }),
+      catch: (error) => new Error(`Failed to initialize bundler: ${error}`),
+    });
 
     const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
 
     const compiler = new Compiler({
+      target: ts.ScriptTarget.ES2022,
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
       skipLibCheck: true,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
       allowImportingTsExtensions: true,
@@ -40,12 +45,14 @@ export default Capability.makeModule(() =>
       paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
     });
 
-    yield* Effect.tryPromise(() =>
-      compiler.initialize(trim`
-      declare module 'https://*';
-      ${NO_TYPES ? '' : 'declare module "*";'}
-    `),
-    );
+    yield* Effect.tryPromise({
+      try: () =>
+        compiler.initialize(trim`
+        declare module 'https://*';
+        ${NO_TYPES ? '' : 'declare module "*";'}
+      `),
+      catch: (error) => new Error(`Failed to initialize compiler: ${error}`),
+    });
     if (!NO_TYPES) {
       for (const mod of runtimeModules) {
         compiler.setFile(`/src/${mod.filename}`, mod.content);

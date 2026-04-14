@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
@@ -16,6 +16,7 @@ import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
@@ -27,17 +28,18 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-export type AgentSettingsProps = AppSurface.ObjectSettingsProps<Agent.Agent>;
+export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>;
 
-export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
+export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
-  const { invokePromise } = useOperationInvoker();
 
+  // TODO(burdon): Factor out.
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(agent)!.spaceId);
     await runtime.runPromise(Agent.resetChatHistory(agent));
@@ -59,9 +61,12 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     const db = Obj.getDatabase(agent);
     if (!db) return;
     return Obj.subscribe(agent, () => {
-      queueMicrotask(() => invokePromise(SyncTriggers, { agent: Ref.make(agent) }).catch((err) => log.catch(err)));
+      queueMicrotask(() => {
+        const runtime = computeRuntime.getRuntime(db.spaceId);
+        runtime.runPromise(Operation.invoke(SyncTriggers, { agent: Ref.make(agent) })).catch((err) => log.catch(err));
+      });
     });
-  }, [agent, invokePromise]);
+  }, [agent, computeRuntime]);
 
   const db = Obj.getDatabase(agent);
   const feedFilter = useMemo(() => {
@@ -104,7 +109,15 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     () =>
       spec && [
         createBasicExtensions({ placeholder: t('agent.spec.placeholder') }),
-        createThemeExtensions({ syntaxHighlighting: true }),
+        createThemeExtensions({
+          syntaxHighlighting: true,
+          slots: {
+            ...documentSlots,
+            scroller: {
+              className: 'min-h-[2lh]',
+            },
+          },
+        }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(spec, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),

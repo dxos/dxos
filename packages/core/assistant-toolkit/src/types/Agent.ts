@@ -27,8 +27,15 @@ import * as Plan from './Plan';
  */
 export const Agent = Schema.Struct({
   name: Schema.optional(Schema.String),
+
+  /**
+   * Instructions for the agent.
+   */
+  // TODO(burdon): Rename instructions.
   spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
+
   artifacts: Schema.Array(
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
@@ -53,11 +60,11 @@ export const Agent = Schema.Struct({
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 
-  // TODO(burdon): Rename?
+  // TODO(burdon): Rename. Explain what a "qualifying agent" is.
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
-    title: 'Use qualifying agent on subscriptions',
+    title: 'Use qualifying agent',
     description:
-      'If enabled, the qualifying agent will be used to determine if the event is relevant to the agent. Related events will be added to the input queue of the agent. It is recommended to enable this.',
+      'The qualifying agent determines if the event is relevant to the agent. Related events will be added to the input queue of the agent. It is recommended to enable this.',
   }),
 }).pipe(
   Type.object({

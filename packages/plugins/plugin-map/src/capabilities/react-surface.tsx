@@ -50,10 +50,10 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.object-settings',
-        role: 'object-settings',
+        id: 'surface.object-properties',
+        role: 'object-properties',
         position: 'hoist',
-        filter: AppSurface.objectSettings(Map.Map),
+        filter: AppSurface.objectProperties(Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({

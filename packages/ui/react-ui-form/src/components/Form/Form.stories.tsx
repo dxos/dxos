@@ -42,7 +42,7 @@ const Person = Schema.Struct({
         title: 'State',
         description: 'State code',
       }),
-      zip: Schema.Number,
+      zip: Schema.Number.annotations({ title: 'ZIP Code' }),
     }).annotations({ title: 'Address' }),
   ),
   employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
