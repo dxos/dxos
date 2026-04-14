@@ -6,11 +6,11 @@ import React from 'react';
 
 import * as Channel from '../../types/Channel';
 
-export type ChannelSettingsProps = {
+export type ChannelPropertiesProps = {
   subject: Channel.YouTubeChannel;
 };
 
-export const ChannelSettings = ({ subject: channel }: ChannelSettingsProps) => {
+export const ChannelProperties = ({ subject: channel }: ChannelPropertiesProps) => {
   return (
     <div className='flex flex-col gap-4 p-4'>
       <h3 className='text-md font-medium'>Channel Settings</h3>

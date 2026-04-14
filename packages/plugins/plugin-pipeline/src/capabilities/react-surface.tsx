@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
-import { PipelineContainer, PipelineObjectSettings } from '#containers';
+import { PipelineContainer, PipelineProperties } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -46,10 +46,10 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Pipeline.Pipeline),
-        component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,
+        id: 'object-properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Pipeline.Pipeline),
+        component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
       }),
     ]),
   ),

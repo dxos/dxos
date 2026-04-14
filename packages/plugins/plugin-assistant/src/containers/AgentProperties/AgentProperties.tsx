@@ -28,16 +28,18 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-export type AgentSettingsProps = AppSurface.ObjectSettingsProps<Agent.Agent>;
+export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>;
 
-export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
+export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 
+  // TODO(burdon): Factor out.
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(agent)!.spaceId);
     await runtime.runPromise(Agent.resetChatHistory(agent));
@@ -107,7 +109,15 @@ export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
     () =>
       spec && [
         createBasicExtensions({ placeholder: t('agent.spec.placeholder') }),
-        createThemeExtensions({ syntaxHighlighting: true }),
+        createThemeExtensions({
+          syntaxHighlighting: true,
+          slots: {
+            ...documentSlots,
+            scroller: {
+              className: 'min-h-[2lh]',
+            },
+          },
+        }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(spec, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),

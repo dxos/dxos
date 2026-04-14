@@ -177,7 +177,7 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatStream',
+  title: 'plugins/plugin-assistant/components/MarkdownStream',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

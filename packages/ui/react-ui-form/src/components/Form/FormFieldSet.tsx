@@ -56,47 +56,7 @@ export const FormFieldSet = ({
 }: FormFieldSetProps<any>) => {
   const values = useFormValues(FORM_FIELDSET_NAME, path);
 
-  // TODO(burdon): Updates on every value change.
-  //  Remove values dep if can remove from getSchemaProperties.
-  const properties = useMemo(() => {
-    if (!schema) {
-      return [];
-    }
-
-    // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
-    const schemaProps = getFormProperties(schema.ast);
-    const filteredProps = exclude ? exclude(schemaProps) : schemaProps;
-
-    // Use projection-based field management when view and projection are available.
-    if (projection) {
-      const fieldProjections = projection.getFieldProjections();
-      const hiddenProperties = new Set(projection.getHiddenProperties());
-
-      // Filter properties to only include visible ones and order by projection.
-      const visibleProps = filteredProps.filter((prop) => !hiddenProperties.has(prop.name.toString()));
-      const orderedProps: SchemaProperty[] = [];
-
-      // Add properties in projection field order.
-      for (const fieldProjection of fieldProjections) {
-        const fieldPath = String(fieldProjection.field.path);
-        const prop = visibleProps.find((p) => p.name === fieldPath);
-        if (prop) {
-          orderedProps.push(prop);
-        }
-      }
-
-      // Add any remaining properties not in projection.
-      const projectionPaths = new Set(fieldProjections.map((projection) => String(projection.field.path)));
-      const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name.toString()));
-      orderedProps.push(...remainingProps);
-      return orderedProps;
-    }
-
-    // Fallback to legacy filter/sort behavior.
-    return sort
-      ? [...filteredProps].sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
-      : filteredProps;
-  }, [schema, values, exclude, sort, projection]);
+  const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
 
   if ((readonly || layout === 'static') && values == null) {
     return null;
@@ -126,3 +86,61 @@ export const FormFieldSet = ({
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
+
+type UseFormFieldSetPropertiesParams = Pick<FormFieldSetProps<any>, 'schema' | 'exclude' | 'projection' | 'sort'> & {
+  values: AnyProperties | undefined;
+  sort?: string[];
+};
+
+/**
+ * Resolves ordered schema properties for a field set (projection order, exclude, or sort).
+ */
+const useFormFieldSetProperties = ({
+  schema,
+  exclude,
+  projection,
+  values,
+  sort,
+}: UseFormFieldSetPropertiesParams): SchemaProperty[] => {
+  // TODO(burdon): Updates on every value change.
+  //  Remove values dep if can remove from getSchemaProperties.
+  return useMemo(() => {
+    if (!schema) {
+      return [];
+    }
+
+    // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
+    const schemaProps = getFormProperties(schema.ast);
+    const filteredProps = exclude ? exclude(schemaProps) : schemaProps;
+
+    // Use projection-based field management when view and projection are available.
+    if (projection) {
+      const fieldProjections = projection.getFieldProjections();
+      const hiddenProperties = new Set(projection.getHiddenProperties());
+
+      // Filter properties to only include visible ones and order by projection.
+      const visibleProps = filteredProps.filter((prop) => !hiddenProperties.has(prop.name.toString()));
+      const orderedProps: SchemaProperty[] = [];
+
+      // Add properties in projection field order.
+      for (const fieldProjection of fieldProjections) {
+        const fieldPath = String(fieldProjection.field.path);
+        const prop = visibleProps.find((prop) => prop.name === fieldPath);
+        if (prop) {
+          orderedProps.push(prop);
+        }
+      }
+
+      // Add any remaining properties not in projection.
+      const projectionPaths = new Set(fieldProjections.map((projection) => String(projection.field.path)));
+      const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name.toString()));
+      orderedProps.push(...remainingProps);
+      return orderedProps;
+    }
+
+    // Fallback to legacy filter/sort behavior.
+    return sort
+      ? [...filteredProps].sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
+      : filteredProps;
+  }, [schema, values, exclude, sort, projection]);
+};

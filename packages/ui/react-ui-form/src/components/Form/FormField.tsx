@@ -115,7 +115,7 @@ export const FormField = (props: FormFieldProps) => {
     createFieldMap,
     db,
     schemaHook,
-    getOptions: getRefOptions,
+    getOptions,
     onCreate,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -177,7 +177,7 @@ export const FormField = (props: FormFieldProps) => {
   // Select field.
   //
 
-  const options = getOptions(type);
+  const options = getSelectOptions(type);
   if (options) {
     // Resolve labels from projection metadata when available.
     const fieldProjections = projection?.getFieldProjections();
@@ -215,7 +215,7 @@ export const FormField = (props: FormFieldProps) => {
         createFieldMap={isCreateTarget ? createFieldMap : undefined}
         db={db}
         schemaHook={schemaHook}
-        getOptions={getRefOptions}
+        getOptions={getOptions}
         onCreate={onCreate}
       />
     );
@@ -248,7 +248,7 @@ export const FormField = (props: FormFieldProps) => {
           createInitialValuePath={createInitialValuePath}
           db={db}
           schemaHook={schemaHook}
-          getOptions={getRefOptions}
+          getOptions={getOptions}
           onCreate={onCreate}
         />
       );
@@ -295,7 +295,7 @@ const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldCompo
   }
 };
 
-const getOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
+const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
   if (isLiteralUnion(ast)) {
     return ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
   }

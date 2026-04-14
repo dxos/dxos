@@ -204,8 +204,15 @@ const useMarkdownStreamTextEditor = (
       initialValue: content,
       selection: EditorSelection.cursor(content?.length ?? 0),
       extensions: [
-        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: documentSlots }),
-        createBasicExtensions({ lineWrapping: true, readOnly: true }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: documentSlots,
+        }),
+        createBasicExtensions({
+          lineWrapping: true,
+          readOnly: true,
+        }),
         !debug && [
           extendedMarkdown({ registry }),
           decorateMarkdown({

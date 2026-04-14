@@ -19,7 +19,13 @@ import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
-export type MessageArticleProps = AppSurface.ObjectArticleProps<MessageType.Message, { mailbox?: Mailbox.Mailbox }>;
+export type MessageArticleProps = AppSurface.ObjectArticleProps<
+  MessageType.Message,
+  {
+    mailbox?: Mailbox.Mailbox;
+  }
+>;
+
 export const MessageArticle = ({
   role,
   subject: message,

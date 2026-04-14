@@ -96,7 +96,7 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
           return;
         }
 
-        const tile = viewport.querySelector<HTMLElement>(`[data-mosaic-tile-id="${CSS.escape(id)}"]`);
+        const tile = viewport.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
         if (!tile) {
           return;
         }

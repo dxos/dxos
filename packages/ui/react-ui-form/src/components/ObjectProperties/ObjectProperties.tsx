@@ -10,19 +10,19 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta as pluginMeta } from '#meta';
+import { translationKey } from '../../translations';
+import { Form, type FormFieldMap, omitId } from '../Form';
 
-export type BaseObjectSettingsProps = PropsWithChildren<{
+export type ObjectPropertiesProps = PropsWithChildren<{
   object: Obj.Unknown;
 }>;
 
 // TODO(wittjosiah): Reconcile w/ ObjectForm.
-export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsProps>(
+export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
   ({ children, object, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
 
@@ -101,14 +101,14 @@ export const BaseObjectSettings = composable<HTMLDivElement, BaseObjectSettingsP
         defaultValues={values as any}
         createTypename={Type.getTypename(Tag.Tag)}
         createOptionIcon='ph--plus--regular'
-        createOptionLabel={['add-tag.label', { ns: pluginMeta.id }]}
+        createOptionLabel={['add-tag.label', { ns: translationKey }]}
         createInitialValuePath='label'
         createFieldMap={createFieldMap}
         db={db}
         onValuesChanged={handleChange}
         onCreate={handleCreate}
       >
-        <Form.Viewport {...composableProps(props)}>
+        <Form.Viewport {...composableProps(props)} ref={forwardedRef}>
           <Form.Content>
             <Form.FieldSet />
             {children}

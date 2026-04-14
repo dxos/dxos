@@ -9,18 +9,13 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ReasoningWidget } from './ReasoningWidget';
 
-export type ReasoningWidgetStoryProps = {
+export type DefaultStoryProps = {
   text: string;
-  /** Passed through to the widget constructor for stable block identity (streaming). */
-  pos?: string | number;
 };
 
-/**
- * Mounts the CodeMirror {@link ReasoningWidget} DOM in a React host so Storybook can theme it.
- */
-const ReasoningWidgetDemo = ({ text, pos }: ReasoningWidgetStoryProps) => {
+// TODO(burdon): Generalize factory for DOM widgets.
+const DefaultStory = ({ text }: DefaultStoryProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const host = hostRef.current;
     if (!host) {
@@ -28,28 +23,27 @@ const ReasoningWidgetDemo = ({ text, pos }: ReasoningWidgetStoryProps) => {
     }
 
     host.replaceChildren();
-    const widget = new ReasoningWidget(text, pos);
+    const widget = new ReasoningWidget(text, 0);
     const dom = widget.toDOM();
     host.appendChild(dom);
     widget.updateDOM(dom);
-
     return () => {
       widget.destroy(dom);
       host.replaceChildren();
     };
-  }, [text, pos]);
+  }, [text]);
 
-  return <div ref={hostRef} className='w-[min(28rem,100vw)]' />;
+  return <div ref={hostRef} />;
 };
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatThread/widgets/ReasoningWidget',
-  component: ReasoningWidgetDemo,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  component: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
-} satisfies Meta<typeof ReasoningWidgetDemo>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

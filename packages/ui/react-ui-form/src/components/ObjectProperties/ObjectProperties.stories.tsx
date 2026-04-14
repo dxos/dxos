@@ -12,7 +12,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
-import { BaseObjectSettings } from './BaseObjectSettings';
+import { ObjectProperties } from './ObjectProperties';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
@@ -31,15 +31,15 @@ const DefaultStory = () => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
-        <BaseObjectSettings object={object} />
+        <ObjectProperties object={object} />
       </Panel.Content>
     </Panel.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-space/components/BaseObjectSettings',
-  component: BaseObjectSettings as any,
+  title: 'ui/react-ui-form/ObjectProperties',
+  component: ObjectProperties as any,
   render: DefaultStory,
   decorators: [
     withTheme(),
