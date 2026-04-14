@@ -288,6 +288,7 @@ const FormSection = composable<HTMLDivElement, FormSectionProps>(
       <div {...composableProps(props, { classNames: 'flex flex-col pt-3 first:pt-0' })} ref={forwardedRef}>
         <h2 className='text-lg'>{label}</h2>
         {description && <p className='text-description'>{description}</p>}
+        {children}
       </div>
     );
   },

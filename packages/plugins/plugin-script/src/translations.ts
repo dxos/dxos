@@ -65,6 +65,7 @@ export const translations = [
         'blueprint-instructions.label': 'Instructions',
         'blueprint-instructions.placeholder': 'Describe how this tool should be used.',
         'create-blueprint.label': 'Create blueprint',
+        'update-blueprint.label': 'Update blueprint',
         'editor-input-mode.label': 'Editor input mode',
         'editor-input-mode.description': 'Choose the keybinding style for the script editor.',
         'select-editor-input-mode.placeholder': 'Select editor input mode…',

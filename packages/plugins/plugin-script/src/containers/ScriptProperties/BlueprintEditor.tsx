@@ -93,7 +93,7 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
 
       <div role='none' className='pt-2'>
         <Button disabled={(!existingBlueprint && !fn?.key) || creating} onClick={handleSave}>
-          {t('create-blueprint.label')}
+          {t(existingBlueprint ? 'update-blueprint.label' : 'create-blueprint.label')}
         </Button>
       </div>
     </div>
