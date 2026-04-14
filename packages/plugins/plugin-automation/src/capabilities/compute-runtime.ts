@@ -217,7 +217,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ),
           Layer.provideMerge(
             FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-              Layer.provideMerge(genericToolkitProvider),
               Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
               Layer.provideMerge(
                 RemoteFunctionExecutionService.fromClient(
@@ -225,19 +224,20 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                   client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                 ),
               ),
-              Layer.provideMerge(aiServiceLayer),
-              Layer.provideMerge(CredentialsService.layerFromDatabase()),
-              Layer.provideMerge(ClientService.fromClient(client)),
-              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
-              Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
-              Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
             ),
           ),
+          Layer.provideMerge(genericToolkitProvider),
+          Layer.provideMerge(aiServiceLayer),
+          Layer.provideMerge(CredentialsService.layerFromDatabase()),
+          Layer.provideMerge(ClientService.fromClient(client)),
+          Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+          Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+          Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
         );
       }),
     );
 
-    const runtime = ManagedRuntime.make(layer);
+    const runtime = ManagedRuntime.make(layer as Layer.Layer<AutomationCapabilities.ComputeServices, never, never>);
     this.#runtimes.set(spaceId, runtime);
     return runtime;
   }
