@@ -14,8 +14,10 @@
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { GitHub } from '@dxos/plugin-github/types';
 import { Granola } from '@dxos/plugin-granola/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { Trello } from '@dxos/plugin-trello/types';
 
 import { bootstrapFromEnv } from './containers/DemoPanel/bootstrap-from-env';
 import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
@@ -42,12 +44,42 @@ const resolveSpace = (): AnySpace | undefined => {
   return all.find((space) => String(space.state?.get?.()).includes('READY')) ?? all[0];
 };
 
+const DEMO_SCHEMAS = [
+  Demo.DemoController,
+  Demo.DemoEvent,
+  Demo.DemoMatch,
+  Demo.DemoNudge,
+  Granola.GranolaSyncRecord,
+  Granola.GranolaAccount,
+  Markdown.Document,
+  Trello.TrelloBoard,
+  Trello.TrelloCard,
+  GitHub.GitHubAccount,
+  GitHub.GitHubRepo,
+  GitHub.GitHubPullRequest,
+] as const;
+
+let schemasRegistered = false;
+
 const ensureReady = async (): Promise<AnySpace> => {
   const space = resolveSpace();
   if (!space) {
     throw new Error('DXOS client not ready yet. Wait a second after page load, or create a space.');
   }
   await space.waitUntilReady();
+  if (!schemasRegistered) {
+    const registry = space.db?.graph?.schemaRegistry ?? space.db?.schemaRegistry;
+    if (registry?.register) {
+      try {
+        await registry.register(DEMO_SCHEMAS as any);
+        schemasRegistered = true;
+        log.info('demo: registered schemas', { count: DEMO_SCHEMAS.length });
+      } catch (err) {
+        log.info('demo: schema registration failed (may already be registered)', { error: String(err) });
+        schemasRegistered = true; // don't retry
+      }
+    }
+  }
   return space;
 };
 
