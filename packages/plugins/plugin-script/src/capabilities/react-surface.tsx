@@ -55,11 +55,6 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const compiler = useCompiler();
           const settings = useAtomCapability(ScriptCapabilities.Settings);
-          // TODO(wittjosiah): Why? The editor should be allow to render even if the environment is not ready.
-          if (!compiler?.environment) {
-            return null;
-          }
-
           return (
             <ScriptContainer
               role={role}
