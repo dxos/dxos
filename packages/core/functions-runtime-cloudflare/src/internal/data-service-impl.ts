@@ -32,7 +32,7 @@ export class DataServiceImpl implements DataServiceProto {
   constructor(
     private _executionContext: EdgeFunctionEnv.TraceContext,
     private _dataService: EdgeFunctionEnv.DataService,
-  ) { }
+  ) {}
 
   subscribe({ subscriptionId, spaceId }: { subscriptionId: string; spaceId: string }): Stream<BatchedDocumentUpdates> {
     return new Stream(({ next }) => {
