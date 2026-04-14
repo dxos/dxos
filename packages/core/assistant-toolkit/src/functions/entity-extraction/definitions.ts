@@ -8,7 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Database, Obj } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
 import { Trace } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 export const EntityExtraction = Operation.make({
@@ -39,5 +39,6 @@ export const EntityExtraction = Operation.make({
     TracingService,
     QueueService,
     Trace.TraceService,
+    OperationRegistry.Service,
   ],
 });

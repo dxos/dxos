@@ -13,9 +13,9 @@ import { GenericToolkit } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, TracingService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { OperationHandlerSet } from '@dxos/operation';
 
 import { default as fetchMessages } from './fetch-messages';
 
@@ -41,7 +41,7 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* (_) {
-        const messages = yield* Operation.invoke(fetchMessages, {
+        const messages = yield* FunctionInvocationService.invokeFunction(fetchMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
           last: '7d',

@@ -11,7 +11,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, DXN, Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
@@ -49,7 +49,7 @@ describe('GenerateSummary', () => {
     'creates a Markdown document with summary content',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* FunctionInvocationService.invokeFunction(GenerateSummary, {
+        const result = yield* Operation.invoke(GenerateSummary, {
           lookbackHours: 24,
         });
 
@@ -73,7 +73,7 @@ describe('GenerateSummary', () => {
     'creates a "Summaries" collection if none exists',
     Effect.fnUntraced(
       function* (_) {
-        yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
+        yield* Operation.invoke(GenerateSummary, {});
 
         const collections = yield* Database.runQuery(Query.type(Collection.Collection, { name: 'Summaries' }));
         expect(collections.length).toBe(1);
@@ -89,8 +89,8 @@ describe('GenerateSummary', () => {
     'reuses existing "Summaries" collection on subsequent calls',
     Effect.fnUntraced(
       function* (_) {
-        yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
-        yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
+        yield* Operation.invoke(GenerateSummary, {});
+        yield* Operation.invoke(GenerateSummary, {});
 
         const collections = yield* Database.runQuery(Query.type(Collection.Collection, { name: 'Summaries' }));
         expect(collections.length).toBe(1);
@@ -107,7 +107,7 @@ describe('GenerateSummary', () => {
     Effect.fnUntraced(
       function* (_) {
         const previousSummary = 'Yesterday was productive. 10 objects edited.';
-        const result = yield* FunctionInvocationService.invokeFunction(GenerateSummary, {
+        const result = yield* Operation.invoke(GenerateSummary, {
           previousSummary,
           lookbackHours: 24,
         });
@@ -127,7 +127,7 @@ describe('GenerateSummary', () => {
     'names document with today date',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
+        const result = yield* Operation.invoke(GenerateSummary, {});
         const today = new Date().toISOString().slice(0, 10);
         expect(result.date).toBe(today);
 
