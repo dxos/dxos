@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation } from '@dxos/assistant';
-import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
+import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
