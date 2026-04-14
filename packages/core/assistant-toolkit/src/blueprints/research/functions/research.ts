@@ -106,6 +106,7 @@ export default Research.pipe(
       ),
     ),
   ),
+  Operation.opaqueHandler,
 );
 
 // TODO(burdon): Factor out.

@@ -16,7 +16,6 @@ import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Trace, TracingService } from '@dxos/functions';
-import { ProcessManager } from '@dxos/functions-runtime';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { log } from '@dxos/log';
@@ -82,14 +81,37 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(
         Layer.mergeAll(ToolExecutionServices, AiService.model('@anthropic/claude-3-5-sonnet-20241022')).pipe(
-          Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
-          Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
-          Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-          Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+          Layer.provideMerge(
+            Layer.effect(
+              Operation.Service,
+              Effect.gen(function* () {
+                const resolved = yield* MarkdownHandlers.handlers;
+                return {
+                  invoke: (op: any, ...args: any[]) => {
+                    const handler = resolved.find((h: any) => h.meta.key === op.meta.key);
+                    if (!handler) {
+                      return Effect.die(`No handler found: ${op.meta.key}`);
+                    }
+                    const result = handler.handler(args[0]);
+                    return Effect.isEffect(result) ? (result as Effect.Effect<unknown>) : Effect.succeed(result);
+                  },
+                  schedule: () => Effect.void,
+                  invokePromise: async () => ({ error: new Error('Not implemented') }),
+                } as Operation.OperationService;
+              }),
+            ),
+          ),
           Layer.provideMerge(OperationRegistry.layer),
-          Layer.provideMerge(OperationHandlerSet.provide(MarkdownHandlers)),
-          Layer.provideMerge(TracingService.layerNoop),
-          Layer.provideMerge(Trace.writerLayerNoop),
+          Layer.provideMerge(
+            Layer.mergeAll(
+              GenericToolkit.providerEmpty,
+              AiServiceTestingPreset('direct'),
+              TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] }),
+              OperationHandlerSet.provide(MarkdownHandlers),
+              TracingService.layerNoop,
+              Trace.writerLayerNoop,
+            ),
+          ),
         ),
       ),
       TestHelpers.provideTestContext,

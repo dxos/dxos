@@ -16,7 +16,7 @@ import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
 import { CredentialsService, type QueueService, Trace, TracingService } from '@dxos/functions';
-import { Operation, type OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 export type AiChatServices =
   | AiService.AiService
@@ -24,6 +24,7 @@ export type AiChatServices =
   | Database.Service
   | Feed.FeedService
   | Operation.Service
+  | OperationRegistry.Service
   | QueueService
   | TracingService
   | Trace.TraceService;
@@ -78,6 +79,8 @@ export const chatLayer = ({
   );
 
   return operationServiceLayer.pipe(
+    Layer.provideMerge(OperationRegistry.layer),
+    Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
