@@ -68,7 +68,7 @@ export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
     // onto the unwrapped base type so downstream consumers see them.
     const mergedType =
       prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
-        ? { ...type, annotations: { ...type.annotations, ...prop.annotations } }
+        ? ({ ...type, annotations: { ...type.annotations, ...prop.annotations } } as SchemaAST.AST)
         : type;
     return {
       type: mergedType,
