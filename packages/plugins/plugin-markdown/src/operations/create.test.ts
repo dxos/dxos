@@ -13,9 +13,9 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { DXN, Database, Feed, Obj, Query } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 
@@ -49,10 +49,10 @@ describe('create', () => {
       function* (_) {
         const name = 'BlueYard';
         const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* FunctionInvocationService.invokeFunction(Create, {
+        const result = yield* Operation.invoke(Create, {
           name,
           content,
-        });
+        }).pipe(Effect.orDie);
 
         const doc = yield* Database.resolve(DXN.parse(result.id), Markdown.Document);
         expect(doc.name).toBe(name);

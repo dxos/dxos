@@ -11,9 +11,8 @@ import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
-import { OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { ResearchGraph } from '../../blueprints';
@@ -58,9 +57,9 @@ describe('Entity extraction', () => {
           }),
         );
         yield* Database.flush();
-        const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
+        const result = yield* Operation.invoke(entityExtraction, {
           source: email,
-        });
+        }).pipe(Effect.orDie);
         expect(result.entities).toHaveLength(2);
         for (const entity of result.entities ?? []) {
           expect(Obj.getMeta(entity)?.tags).toContain('important');
