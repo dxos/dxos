@@ -30,13 +30,17 @@ import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import {
   CredentialsService,
+  FunctionInvocationService,
   feedServiceFromQueueServiceLayer,
   QueueService,
   ServiceNotAvailableError,
 } from '@dxos/functions';
 import {
   FeedTraceSink,
+  FunctionImplementationResolver,
+  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   ProcessManager,
+  RemoteFunctionExecutionService,
   ServiceResolver,
   TracingServiceExt,
   TriggerDispatcher,
@@ -44,7 +48,7 @@ import {
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
@@ -197,13 +201,38 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ),
           Layer.provideMerge(feedServiceFromQueueServiceLayer),
           Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
-          Layer.provideMerge(genericToolkitProvider),
-          Layer.provideMerge(aiServiceLayer),
-          Layer.provideMerge(CredentialsService.layerFromDatabase()),
-          Layer.provideMerge(ClientService.fromClient(client)),
-          Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
-          Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
-          Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
+          Layer.provideMerge(
+            Layer.effect(
+              Operation.Service,
+              Effect.gen(function* () {
+                const fis = yield* FunctionInvocationService;
+                return {
+                  invoke: (op: any, ...args: any[]) => (fis.invokeFunction as any)(op, args[0]),
+                  schedule: (op: any, ...args: any[]) =>
+                    (fis.invokeFunction as any)(op, args[0]).pipe(Effect.fork, Effect.asVoid),
+                  invokePromise: async () => ({ error: new Error('Not implemented') }),
+                } as unknown as Operation.OperationService;
+              }),
+            ),
+          ),
+          Layer.provideMerge(
+            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+              Layer.provideMerge(genericToolkitProvider),
+              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
+              Layer.provideMerge(
+                RemoteFunctionExecutionService.fromClient(
+                  client,
+                  client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
+                ),
+              ),
+              Layer.provideMerge(aiServiceLayer),
+              Layer.provideMerge(CredentialsService.layerFromDatabase()),
+              Layer.provideMerge(ClientService.fromClient(client)),
+              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+              Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+              Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
+            ),
+          ),
         );
       }),
     );
