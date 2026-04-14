@@ -103,9 +103,19 @@ const main = async (): Promise<void> => {
   }
   const auth = { key, token };
 
-  console.log(`Board: ${boardId}`);
+  // The short ID from the board URL (e.g. "EBTRKWwy") is accepted by GET
+  // endpoints but POST /lists and POST /cards demand the canonical long ID.
+  // Resolve once up front.
+  const board = await trelloRequest<{ id: string; name: string }>(
+    'GET',
+    `/boards/${boardId}`,
+    { fields: 'id,name' },
+    auth,
+  );
+  console.log(`Board: "${board.name}"  (short=${boardId}  id=${board.id})`);
+  const canonicalBoardId = board.id;
 
-  const existingLists = await trelloRequest<TrelloList[]>('GET', `/boards/${boardId}/lists`, { fields: 'id,name,closed' }, auth);
+  const existingLists = await trelloRequest<TrelloList[]>('GET', `/boards/${canonicalBoardId}/lists`, { fields: 'id,name,closed' }, auth);
   const listByName = new Map<string, TrelloList>(existingLists.filter((list) => !list.closed).map((list) => [list.name, list]));
 
   for (const name of LIST_NAMES) {
@@ -113,14 +123,14 @@ const main = async (): Promise<void> => {
       console.log(`  · list "${name}" already exists`);
       continue;
     }
-    const created = await trelloRequest<TrelloList>('POST', '/lists', { idBoard: boardId, name, pos: 'bottom' }, auth);
+    const created = await trelloRequest<TrelloList>('POST', '/lists', { idBoard: canonicalBoardId, name, pos: 'bottom' }, auth);
     listByName.set(name, created);
     console.log(`  + created list "${name}"`);
   }
 
   const existingCards = await trelloRequest<TrelloCard[]>(
     'GET',
-    `/boards/${boardId}/cards`,
+    `/boards/${canonicalBoardId}/cards`,
     { fields: 'id,name,desc,idList' },
     auth,
   );
