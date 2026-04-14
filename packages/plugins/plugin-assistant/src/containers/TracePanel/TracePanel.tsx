@@ -119,6 +119,14 @@ const getExecutionGraph = (
                 }
                 break;
               }
+              case 'status': {
+                builder.addStatusMessage(
+                  event.id,
+                  event.meta.conversationId ?? 'unknown_conversation',
+                  event.data.block.status,
+                  event.timestamp,
+                );
+              }
               case 'toolCall': {
                 builder.addToolCall(
                   `${event.data.block.toolCallId}:call`,
@@ -231,6 +239,16 @@ class GraphBuilder {
     });
   }
 
+  addStatusMessage(id: string, coversationId: string, status: string, ts: number) {
+    this.#addCommit({
+      id,
+      branch: coversationId,
+      parents: this.#defaultParents(coversationId),
+      icon: 'ph--check--regular',
+      level: LogLevel.INFO,
+      message: status,
+    });
+  }
   addToolCall(id: string, coversationId: string, toolName: string, ts: number) {
     this.#addCommit({
       id,
