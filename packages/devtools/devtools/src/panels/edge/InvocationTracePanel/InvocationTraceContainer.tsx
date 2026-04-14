@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { KeyboardEvent, type FC, useCallback, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Database, Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -17,7 +17,7 @@ import { type SerializedError } from '@dxos/protocols';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
@@ -173,7 +173,6 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     return (
       <div {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
         <PanelContainer
-          classNames='overflow-hidden'
           toolbar={
             showSpaceSelector ? (
               <Toolbar.Root classNames='border-b border-subdued-separator'>
@@ -182,53 +181,11 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             ) : undefined
           }
         >
-          <div className={mx('h-full min-h-0 overflow-hidden', gridLayout)}>
-            {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
-            <div className='min-h-0 min-w-0 overflow-auto'>
-              <table className='table-fixed min-w-full text-xs border-collapse'>
-                <thead className='sticky top-0 z-10 bg-background'>
-                  <tr>
-                    <th>ID</th>
-                    <th>Target</th>
-                    <th>Started</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                    <th>Queue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows
-                    .toSorted((a, b) => b.time.getTime() - a.time.getTime())
-                    .slice(0, 50)
-                    .map((row) => (
-                      <tr
-                        key={row.id}
-                        role='button'
-                        tabIndex={0}
-                        aria-selected={selectedId === row.id}
-                        onClick={() => handleRowClick(row)}
-                        onKeyDown={(e: KeyboardEvent<HTMLTableRowElement>) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleRowClick(row);
-                          }
-                        }}
-                        className='cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent'
-                      >
-                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
-                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>
-                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>
-                          {row.time.toLocaleString()}
-                        </td>
-                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.duration}</td>
-                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.status}</td>
-                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.queue}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+          <div className='relative flex-1 min-h-0'>
+            <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
+              <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
+              {selectedInvocation && <Selected span={selectedInvocation} />}
             </div>
-            {selectedInvocation && <Selected span={selectedInvocation} />}
           </div>
         </PanelContainer>
       </div>
@@ -253,7 +210,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
-    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] h-full min-h-0 overflow-hidden border-separator'>
+    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator'>
       <Tabs.Root
         classNames='grid grid-rows-[min-content_1fr] min-h-0 [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'
         orientation='horizontal'
