@@ -21,6 +21,7 @@ export default AgentRules.pipe(
 
         Notable blueprints (query to get their keys):
 
+        - Blueprint Manger - allows agent to self-enable blueprints (always include this one).
         - Database -- CRUD on objects in the ECHO database.
         - Markdown -- Create and edit markdown documents.
         - Websearch -- Search the web for information.
