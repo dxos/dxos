@@ -15,7 +15,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN, SpaceId } from '@dxos/keys';
-import { dbg, LogLevel } from '@dxos/log';
+import { LogLevel } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
