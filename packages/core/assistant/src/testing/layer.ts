@@ -118,8 +118,33 @@ export const AssistantTestLayer = ({
   types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed);
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
+  const TestOperationService = Layer.effect(
+    Operation.Service,
+    Effect.gen(function* () {
+      const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+      return {
+        invoke: (op: any, ...args: any[]) =>
+          Effect.gen(function* () {
+            const resolved = yield* handlers.handlers;
+            const handler = resolved.find((h: any) => h.meta.key === op.meta.key);
+            if (!handler) {
+              return yield* Effect.die(`No handler found for operation: ${op.meta.key}`);
+            }
+            const result = handler.handler(args[0]);
+            if (Effect.isEffect(result)) {
+              return yield* result as Effect.Effect<unknown>;
+            }
+            return result;
+          }),
+        schedule: () => Effect.void,
+        invokePromise: async () => ({ error: new Error('Not implemented in test') }),
+      } as Operation.OperationService;
+    }),
+  );
+
   return Layer.empty.pipe(
     Layer.provideMerge(ToolExecutionServices),
+    Layer.provideMerge(TestOperationService),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
