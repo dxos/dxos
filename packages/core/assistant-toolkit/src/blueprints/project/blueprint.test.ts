@@ -34,23 +34,21 @@ import { AgentWorker, AgentBlueprintHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TYPES = [
-  Agent.Agent,
-  Plan.Plan,
-  Chat.CompanionTo,
-  Chat.Chat,
-  SpaceProperties,
-  Blueprint.Blueprint,
-  Trigger.Trigger,
-  Text.Text,
-  Markdown.Document,
-  Collection.Collection,
-];
-
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
   operationHandlers: OperationHandlerSet.merge(AgentBlueprintHandlers, MarkdownHandlers, PlanningHandlers),
-  types: TYPES,
+  types: [
+    Agent.Agent,
+    Plan.Plan,
+    Chat.CompanionTo,
+    Chat.Chat,
+    SpaceProperties,
+    Blueprint.Blueprint,
+    Trigger.Trigger,
+    Text.Text,
+    Markdown.Document,
+    Collection.Collection,
+  ],
   tracing: 'pretty',
 });
 
@@ -60,13 +58,6 @@ const SYSTEM = trim`
   If you do not have tools to complete the task, inform the user.
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
-
-const AddArtifactTestLayer = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(AgentBlueprintHandlers, MarkdownHandlers),
-  types: TYPES,
-  tracing: 'pretty',
-});
 
 describe('Agent', () => {
   const blueprint = AgentBlueprintDef.make();
@@ -112,7 +103,7 @@ describe('Agent', () => {
         const artifactData = yield* agent.artifacts[0].data.pipe(Database.load);
         expect(Obj.instanceOf(Markdown.Document, artifactData)).toBe(true);
       },
-      Effect.provide(AddArtifactTestLayer),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
