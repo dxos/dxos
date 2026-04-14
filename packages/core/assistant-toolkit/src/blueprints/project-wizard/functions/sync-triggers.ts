@@ -52,7 +52,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     );
 
     // Remove all existing triggers — they will be recreated with the current config.
-    // This ensures operation and concurrency stay in sync when useQualifyingAgent is toggled.
+    // This ensures operation and concurrency stay in sync when filterEvents is toggled.
     for (const trigger of triggers) {
       yield* Database.remove(trigger);
     }
@@ -98,17 +98,17 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             kind: 'queue',
             queue: queueDxn.toString(),
           },
-          function: Ref.make(Operation.serialize(agent.useQualifyingAgent ? Qualifier : AgentWorker)),
+          function: Ref.make(Operation.serialize(agent.filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',
           },
-          concurrency: agent.useQualifyingAgent ? 5 : undefined,
+          concurrency: agent.filterEvents ? 5 : undefined,
         }),
       );
     }
 
-    if (agent.useQualifyingAgent && agent.queue) {
+    if (agent.filterEvents && agent.queue) {
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,

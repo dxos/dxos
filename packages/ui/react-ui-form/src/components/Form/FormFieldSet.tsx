@@ -55,9 +55,7 @@ export const FormFieldSet = ({
   ...props
 }: FormFieldSetProps<any>) => {
   const values = useFormValues(FORM_FIELDSET_NAME, path);
-
   const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
-
   if ((readonly || layout === 'static') && values == null) {
     return null;
   }
