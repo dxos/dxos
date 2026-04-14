@@ -38,6 +38,20 @@ Slack and GitHub credentials are stored as-is in localStorage for now — the
 corresponding plugins read them directly. Migration to AccessToken is tracked
 in `plans/adopt-access-token-for-sync-plugins.md`.
 
+## Populate your Trello board with the fixture
+
+Mirrors the in-Composer Widgets-team fixture onto your real Trello board so
+`aiMatch` has the same cards to link against. Uses the Trello REST API — no
+browser automation. Idempotent.
+
+```bash
+pnpm --filter @dxos/demo-setup populate-trello
+```
+
+Ensures four lists (Backlog / In Progress / Review / Done) and eight cards
+exist on `TRELLO_BOARD_ID` from `.env.demo`. Re-running is safe — matches by
+name, updates descriptions if they drifted.
+
 ## Between takes
 
 To start the next take from a clean identity:
