@@ -258,16 +258,17 @@ const Publishing = ({ subject: object }: ScriptSubjectProps) => {
 
   return (
     <div role='none' className='flex flex-col gap-4 my-form-padding'>
-      <div role='none'>
-        <h2>{t('script-publish-settings.label')}</h2>
-        <p className='text-description text-sm'>{t('script-publish-settings.description')}</p>
-      </div>
+      <Form.Section label={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
+
       {!githubToken && (
-        <div role='none' className='flex flex-col gap-2'>
-          <span>{t('no-github-token.label')}</span>
-          <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
+        <div role='none' className='flex flex-col'>
+          <Input.Root>
+            <Input.Label>{t('no-github-token.label')}</Input.Label>
+            <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
+          </Input.Root>
         </div>
       )}
+
       {githubToken && (
         <div role='none' className='flex justify-end gap-2'>
           {gistUrl && <Clipboard.IconButton value={gistUrl} />}
