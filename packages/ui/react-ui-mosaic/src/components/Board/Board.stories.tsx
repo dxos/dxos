@@ -12,7 +12,7 @@ import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
@@ -166,9 +166,8 @@ const useTestBoardModel = (): TestBoardModelResult => {
 const DefaultStory = ({ debug = false }: DefaultStoryProps) => {
   const { model, eventHandler } = useTestBoardModel();
   const columns = useAtomValue(model.columns);
-
   if (columns.length === 0) {
-    return <></>;
+    return <Loading />;
   }
 
   return (

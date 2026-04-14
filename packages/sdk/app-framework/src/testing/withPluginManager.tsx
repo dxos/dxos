@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { raise } from '@dxos/debug';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
+import { Loading } from '@dxos/react-ui/testing';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../common';
@@ -75,7 +76,6 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
-
       const capability = Capability.contributes(Capabilities.ReactRoot, {
         id: storyId,
         root: () => <Story />,
@@ -101,7 +101,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
     // Avoid mounting useApp with a stale manager from the previous story.
     if (!managerState || managerState.storyId !== storyId) {
-      return <></>;
+      return <Loading />;
     }
 
     return <WithPluginManagerApp {...managerState} />;
@@ -115,7 +115,6 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
   }, [fireEvents, pluginManager, storyId]);
 
   const App = useApp({ pluginManager, setupEvents });
-
   return <App />;
 };
 
