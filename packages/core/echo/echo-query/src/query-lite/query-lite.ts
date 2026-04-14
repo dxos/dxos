@@ -414,6 +414,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  /** Creates a select query that matches a single object by id. */
   static id(objectId: ObjectId): Query$.Any {
     return new QueryClass({
       type: 'select',

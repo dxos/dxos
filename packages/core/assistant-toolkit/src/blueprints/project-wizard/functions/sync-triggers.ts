@@ -11,9 +11,9 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
+import { AgentPrompt } from '../../../functions/agent/definitions';
 import { Agent } from '../../../types';
 import { AgentPrompts } from '../../project';
-import { AgentPrompt } from '../../../functions/agent/definitions';
 import { SyncTriggers } from './definitions';
 
 export default SyncTriggers.pipe(
@@ -173,9 +173,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
  * Finds or creates the process-event prompt for agent triggers.
  */
 const getProcessEventPrompt = Effect.fnUntraced(function* () {
-  const existing = yield* Database.runQuery(
-    Filter.type(Prompt.Prompt, { key: AgentPrompts.processEvent.key }),
-  );
+  const existing = yield* Database.runQuery(Filter.type(Prompt.Prompt, { key: AgentPrompts.processEvent.key }));
   if (existing.length > 0) {
     return existing[0];
   }
