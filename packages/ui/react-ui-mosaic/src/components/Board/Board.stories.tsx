@@ -163,10 +163,10 @@ const useTestBoardModel = (): TestBoardModelResult => {
   return { model, eventHandler };
 };
 
-const DefaultStory = ({ debug = false }: DefaultStoryProps) => {
+const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryProps) => {
   const { model, eventHandler } = useTestBoardModel();
   const columns = useAtomValue(model.columns);
-  if (columns.length === 0) {
+  if (columnsProp > 0 && columns.length === 0) {
     return <Loading />;
   }
 

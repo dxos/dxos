@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { Tag } from '@dxos/echo';
+import { Filter, Tag } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -16,7 +17,7 @@ import { ObjectProperties } from './ObjectProperties';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const object = useMemo(() => space?.db.add(Pipeline.make()), [space]);
+  const [object] = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   if (!object) {
     return <Loading />;
   }
@@ -42,6 +43,7 @@ const meta = {
       createSpace: true,
       types: [Pipeline.Pipeline, Tag.Tag],
       onCreateSpace: async ({ space }) => {
+        space.db.add(Pipeline.make());
         space.db.add(Tag.make({ label: 'Tag 1' }));
         space.db.add(Tag.make({ label: 'Tag 2' }));
         space.db.add(Tag.make({ label: 'Tag 3' }));

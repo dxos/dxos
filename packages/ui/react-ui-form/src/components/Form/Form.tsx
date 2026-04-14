@@ -285,7 +285,10 @@ type FormSectionProps = ThemedClassName<{ label: string; description?: string }>
 const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, label, description, ...props }, forwardedRef) => {
     return (
-      <div {...composableProps(props, { classNames: 'flex flex-col pt-3 first:pt-0' })} ref={forwardedRef}>
+      <div
+        {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
+        ref={forwardedRef}
+      >
         <h2 className='text-lg'>{label}</h2>
         {description && <p className='text-description'>{description}</p>}
         {children}
