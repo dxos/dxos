@@ -55,7 +55,7 @@ const handlers = OperationHandlerSet.make(
   Failing.pipe(
     Operation.withHandler(
       Effect.fn(function* () {
-        return yield* Effect.die('Failed');
+        return yield* Effect.die('Test Error');
       }),
     ),
   ),
@@ -373,7 +373,7 @@ describe('ProcessOperationInvoker', () => {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
-      expect(output).toEqual(Exit.die('Failed'));
+      expect(output).toEqual(Exit.die('Test Error'));
     }, Effect.provide(TestLayer)),
   );
 });
