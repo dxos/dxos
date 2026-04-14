@@ -31,7 +31,6 @@ import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import {
   Trace,
   type CredentialsService,
-  type FunctionInvocationService,
   type QueueService,
   type TracingService,
 } from '@dxos/functions';
@@ -50,7 +49,6 @@ export type AiChatServices =
   | CredentialsService
   | Database.Service
   | QueueService
-  | FunctionInvocationService
   | AiService.AiService
   | ToolExecutionService
   | ToolResolverService

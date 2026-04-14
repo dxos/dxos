@@ -17,7 +17,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -213,7 +213,6 @@ export default Commentary.pipe(
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
-          FunctionInvocationService.layerNotAvailable,
           Trace.writerLayerNoop,
         ),
       ),

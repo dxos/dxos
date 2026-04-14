@@ -19,7 +19,7 @@ import {
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
 import { Operation } from '@dxos/operation';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
@@ -93,7 +93,6 @@ const handler: Operation.WithHandler<typeof SummarizeMailbox> = SummarizeMailbox
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
-          FunctionInvocationService.layerNotAvailable,
           Trace.writerLayerNoop,
         ),
       ),

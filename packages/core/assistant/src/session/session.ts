@@ -26,7 +26,7 @@ import {
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
@@ -41,7 +41,6 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | FunctionInvocationService
   | Trace.TraceService
   /**
    * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().

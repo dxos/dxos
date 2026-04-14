@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
+import { FunctionInvocationService } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -36,7 +37,7 @@ export const formatSystemPrompt = ({
           Effect.gen(function* () {
             return trim`
             <blueprint>
-              ${yield* Template.processTemplate(template)}
+              ${yield* Template.processTemplate(template).pipe(Effect.provide(FunctionInvocationService.layerNotAvailable))}
             </blueprint>
           `;
           }),
