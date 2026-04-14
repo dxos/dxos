@@ -284,7 +284,7 @@ const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, label, description, ...props }, forwardedRef) => {
     return (
       <div {...composableProps(props, { classNames: 'flex flex-col' })} ref={forwardedRef}>
-        <h2 className=''>{label}</h2>
+        <h2>{label}</h2>
         {description && <p className='text-description'>{description}</p>}
       </div>
     );

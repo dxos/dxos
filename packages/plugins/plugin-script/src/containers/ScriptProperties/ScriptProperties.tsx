@@ -18,6 +18,7 @@ import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -35,6 +36,71 @@ export const ScriptProperties = (props: ScriptPropertiesProps) => {
       <BlueprintEditor subject={subject} />
       <Publishing subject={subject} />
     </>
+  );
+};
+
+const Binding = ({ subject: object }: ScriptSubjectProps) => {
+  const { t } = useTranslation(meta.id);
+  const client = useClient();
+  const db = Obj.getDatabase(object);
+
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
+  const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
+  const functionUrl =
+    functionId &&
+    getInvocationUrl(functionId, client.config.values.runtime?.services?.edge?.url ?? '', {
+      spaceId: db?.spaceId,
+    });
+
+  const [binding, setBinding] = useControlledState(fn?.binding ?? '');
+  const handleBindingChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => setBinding(event.target.value),
+    [setBinding],
+  );
+
+  const handleBindingBlur = useCallback(() => {
+    if (fn) {
+      Obj.change(fn, (fn) => {
+        fn.binding = binding;
+      });
+    }
+  }, [fn, binding]);
+
+  if (!fn) {
+    return null;
+  }
+
+  // TODO(burdon): Form section.
+  return (
+    <div role='none' className='flex flex-col gap-2'>
+      <Form.Section label={t('remote-function-settings.heading')} />
+
+      {functionUrl && (
+        <Input.Root>
+          <Input.Label>{t('function-url.label')}</Input.Label>
+          <Input.TextInput
+            disabled
+            value={functionUrl}
+            onChange={(event) => {
+              Obj.change(fn, (fn) => {
+                fn.name = event.target.value;
+              });
+            }}
+          />
+          <Clipboard.IconButton value={functionUrl} />
+        </Input.Root>
+      )}
+
+      <Input.Root>
+        <Input.Label>{t('function-binding.label')}</Input.Label>
+        <Input.TextInput
+          placeholder={t('function-binding.placeholder')}
+          value={binding}
+          onChange={handleBindingChange}
+          onBlur={handleBindingBlur}
+        />
+      </Input.Root>
+    </div>
   );
 };
 
@@ -95,10 +161,7 @@ const BlueprintEditor = ({ subject: object }: ScriptSubjectProps) => {
 
   return (
     <div role='none' className='flex flex-col gap-4 my-form-padding'>
-      <div role='none'>
-        <h2>{t('blueprint-editor.label')}</h2>
-        <p className='text-description text-sm'>{t('blueprint-editor.description')}</p>
-      </div>
+      <Form.Section label={t('blueprint-editor.label')} description={t('blueprint-editor.description')} />
 
       <Input.Root>
         <Input.Label>{t('blueprint-instructions.label')}</Input.Label>
@@ -116,73 +179,6 @@ const BlueprintEditor = ({ subject: object }: ScriptSubjectProps) => {
           {t('create-blueprint.label')}
         </Button>
       </div>
-    </div>
-  );
-};
-
-const Binding = ({ subject: object }: ScriptSubjectProps) => {
-  const { t } = useTranslation(meta.id);
-  const client = useClient();
-  const db = Obj.getDatabase(object);
-
-  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
-  const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
-  const functionUrl =
-    functionId &&
-    getInvocationUrl(functionId, client.config.values.runtime?.services?.edge?.url ?? '', {
-      spaceId: db?.spaceId,
-    });
-
-  const [binding, setBinding] = useControlledState(fn?.binding ?? '');
-  const handleBindingChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setBinding(event.target.value),
-    [setBinding],
-  );
-
-  const handleBindingBlur = useCallback(() => {
-    if (fn) {
-      Obj.change(fn, (fn) => {
-        fn.binding = binding;
-      });
-    }
-  }, [fn, binding]);
-
-  if (!fn) {
-    return null;
-  }
-
-  // TODO(burdon): Form section.
-  return (
-    <div role='none' className='flex flex-col gap-2'>
-      <Input.Root>
-        <Input.Label>{t('remote-function-settings.heading')}</Input.Label>
-      </Input.Root>
-
-      {functionUrl && (
-        <Input.Root>
-          <Input.Label>{t('function-url.label')}</Input.Label>
-          <Input.TextInput
-            disabled
-            value={functionUrl}
-            onChange={(event) => {
-              Obj.change(fn, (fn) => {
-                fn.name = event.target.value;
-              });
-            }}
-          />
-          <Clipboard.IconButton value={functionUrl} />
-        </Input.Root>
-      )}
-
-      <Input.Root>
-        <Input.Label>{t('function-binding.label')}</Input.Label>
-        <Input.TextInput
-          placeholder={t('function-binding.placeholder')}
-          value={binding}
-          onChange={handleBindingChange}
-          onBlur={handleBindingBlur}
-        />
-      </Input.Root>
     </div>
   );
 };
