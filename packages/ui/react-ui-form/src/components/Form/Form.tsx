@@ -281,7 +281,6 @@ const FORM_SECTION_NAME = 'Form.Section';
 
 type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
 
-// TODO(burdon): Use consistently.
 const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, label, description, ...props }, forwardedRef) => {
     return (
