@@ -36,12 +36,27 @@ export type InvocationTraceContainerProps = {
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
+  /** Overrides hook-provided spans (for testing/storybook). */
+  invocationSpans?: InvocationSpan[];
 };
 
 export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTraceContainerProps>(
-  ({ classNames, db, queueDxn, detailAxis = 'inline', showSpaceSelector = false, target, ...props }, forwardedRef) => {
+  (
+    {
+      classNames,
+      db,
+      queueDxn,
+      detailAxis = 'inline',
+      showSpaceSelector = false,
+      target,
+      invocationSpans: invocationSpansProp,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const resolver = useFunctionNameResolver({ db });
-    const invocationSpans = useInvocationSpans({ queueDxn, target });
+    const hookSpans = useInvocationSpans({ queueDxn, target });
+    const invocationSpans = invocationSpansProp ?? hookSpans;
 
     const [selectedId, setSelectedId] = useState<string>();
     const selectedInvocation = useMemo(() => {
@@ -139,13 +154,13 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       if (selectedInvocation) {
         switch (detailAxis) {
           case 'inline':
-            return 'grid grid-cols-[1fr_30rem]';
+            return 'grid grid-cols-[minmax(0,1fr)_30rem] grid-rows-[minmax(0,1fr)]';
           case 'block':
-            return 'grid grid-rows-[1fr_2fr]';
+            return 'grid grid-rows-[minmax(0,1fr)_minmax(0,2fr)]';
         }
       }
 
-      return 'grid grid-cols-1';
+      return 'grid grid-cols-1 grid-rows-[minmax(0,1fr)]';
     }, [selectedInvocation, detailAxis]);
 
     const features: Partial<TableFeatures> = useMemo(
@@ -158,6 +173,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     return (
       <div {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
         <PanelContainer
+          classNames='overflow-hidden'
           toolbar={
             showSpaceSelector ? (
               <Toolbar.Root classNames='border-b border-subdued-separator'>
@@ -166,9 +182,9 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             ) : undefined
           }
         >
-          <div className={mx('h-full', gridLayout)}>
+          <div className={mx('h-full min-h-0 overflow-hidden', gridLayout)}>
             {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
-            <div className='overflow-auto'>
+            <div className='min-h-0 min-w-0 overflow-auto'>
               <table className='table-fixed min-w-full text-xs border-collapse'>
                 <thead className='sticky top-0 z-10 bg-background'>
                   <tr>
@@ -237,7 +253,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
-    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] h-full min-h-0 border-separator'>
+    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] h-full min-h-0 overflow-hidden border-separator'>
       <Tabs.Root
         classNames='grid grid-rows-[min-content_1fr] min-h-0 [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'
         orientation='horizontal'
