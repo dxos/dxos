@@ -808,7 +808,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  */
 export const fromJSON: (
   json: unknown,
-  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database },
+  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database; parent?: Unknown },
 ) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**

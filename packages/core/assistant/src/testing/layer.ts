@@ -179,6 +179,7 @@ export const AssistantTestLayer = ({
               OperationRegistry.Service,
               Blueprint.RegistryService,
               FunctionInvocationService,
+              QueueService,
             ),
           );
         }),
