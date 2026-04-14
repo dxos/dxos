@@ -32,7 +32,7 @@ export class DataServiceImpl implements DataServiceProto {
   constructor(
     private _executionContext: EdgeFunctionEnv.TraceContext,
     private _dataService: EdgeFunctionEnv.DataService,
-  ) {}
+  ) { }
 
   subscribe({ subscriptionId, spaceId }: { subscriptionId: string; spaceId: string }): Stream<BatchedDocumentUpdates> {
     return new Stream(({ next }) => {
@@ -80,7 +80,8 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   async createDocument({ spaceId, initialValue }: CreateDocumentRequest): Promise<CreateDocumentResponse> {
-    using response = await this._dataService.createDocument(this._executionContext, { spaceId, initialValue });
+    invariant(SpaceId.isValid(spaceId));
+    using response = await this._dataService.createDocument(this._executionContext, spaceId, initialValue);
     return { documentId: response.documentId };
   }
 
