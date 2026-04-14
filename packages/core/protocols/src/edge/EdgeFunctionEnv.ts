@@ -79,7 +79,11 @@ export interface DataService {
   getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
   execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
-  createDocument(ctx: TraceContext, spaceId: SpaceId, initialValue?: Record<string, any>): Promise<RpcResult<CreateDocumentResponse>>;
+  createDocument(
+    ctx: TraceContext,
+    spaceId: SpaceId,
+    initialValue?: Record<string, any>,
+  ): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
   changeDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
