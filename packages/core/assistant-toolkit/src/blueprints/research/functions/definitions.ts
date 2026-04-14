@@ -53,7 +53,7 @@ export const Research = Operation.make({
       description: 'Structured objects created during the research process.',
     }),
   }),
-  services: [AiService.AiService, Database.Service, TracingService],
+  services: [AiService.AiService, Database.Service, TracingService, OperationRegistry.Service],
 });
 
 export const DocumentCreate = Operation.make({
