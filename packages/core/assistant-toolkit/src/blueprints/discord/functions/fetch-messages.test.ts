@@ -13,13 +13,18 @@ import { GenericToolkit } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { OperationHandlerSet } from '@dxos/operation';
+import { CredentialsService, TracingService } from '@dxos/functions';
+import { ProcessManager } from '@dxos/functions-runtime';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { default as fetchMessages } from './fetch-messages';
 
 const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), ToolExecutionServices).pipe(
+  Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+  Layer.provideMerge(OperationRegistry.layer),
+  Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.make(fetchMessages))),
   Layer.provideMerge(
     Layer.mergeAll(
       GenericToolkit.providerEmpty,
@@ -27,9 +32,7 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), 
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
-      FunctionInvocationServiceLayerTest({ functions: OperationHandlerSet.make(fetchMessages) }).pipe(
-        Layer.provideMerge(TracingService.layerNoop),
-      ),
+      TracingService.layerNoop,
     ),
   ),
 );
@@ -41,11 +44,11 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* (_) {
-        const messages = yield* FunctionInvocationService.invokeFunction(fetchMessages, {
+        const messages = yield* Operation.invoke(fetchMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
           last: '7d',
-        });
+        }).pipe(Effect.orDie);
         console.log(messages);
       },
       Effect.provide(TestLayer),

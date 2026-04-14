@@ -13,7 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { CredentialsService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation } from '@dxos/operation';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -229,7 +229,6 @@ const ServiceLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
-      FunctionInvocationService.layerNotAvailable,
     ),
   ),
   Layer.provideMerge(

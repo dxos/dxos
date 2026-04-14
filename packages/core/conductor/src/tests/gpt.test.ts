@@ -16,7 +16,6 @@ import { Feed } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace, TracingService } from '@dxos/functions';
-import { FunctionInvocationService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
@@ -33,7 +32,6 @@ const TestLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
-      FunctionInvocationService.layerNotAvailable,
     ),
   ),
   Layer.provideMerge(

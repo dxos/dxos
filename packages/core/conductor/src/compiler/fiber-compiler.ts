@@ -13,13 +13,11 @@ import { Database, Feed } from '@dxos/echo';
 import {
   ComputeEventLogger,
   CredentialsService,
-  FunctionInvocationService,
   QueueService,
   Trace,
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';
-import { type FunctionServices } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
@@ -367,7 +365,6 @@ export class GraphExecutor {
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
-        Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
         Layer.succeed(Operation.Service, yield* Operation.Service),
         Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),

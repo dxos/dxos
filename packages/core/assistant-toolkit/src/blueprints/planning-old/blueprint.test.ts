@@ -16,8 +16,9 @@ import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Trace, TracingService } from '@dxos/functions';
-import { FunctionImplementationResolver } from '@dxos/functions-runtime';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { ProcessManager } from '@dxos/functions-runtime';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -105,12 +106,11 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           ToolExecutionServices,
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
-          Layer.provideMerge(
-            FunctionInvocationServiceLayerTest({ functions: TaskHandlers }).pipe(
-              Layer.provideMerge(Layer.mergeAll(TracingService.layerNoop, Trace.writerLayerNoop)),
-            ),
-          ),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TaskHandlers })),
+          Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+          Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+          Layer.provideMerge(OperationRegistry.layer),
+          Layer.provideMerge(OperationHandlerSet.provide(TaskHandlers)),
+          Layer.provideMerge(Layer.mergeAll(TracingService.layerNoop, Trace.writerLayerNoop)),
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
         ),

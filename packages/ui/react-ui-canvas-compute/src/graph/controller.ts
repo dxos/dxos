@@ -31,7 +31,6 @@ import {
   ComputeEventLogger,
   type ComputeEventPayload,
   type CredentialsService,
-  type FunctionInvocationService,
   type QueueService,
   Trace,
   TracingService,
@@ -91,7 +90,6 @@ export type ComputeServices =
   | Feed.FeedService
   | QueueService
   | CredentialsService
-  | FunctionInvocationService
   | Operation.Service;
 
 /**

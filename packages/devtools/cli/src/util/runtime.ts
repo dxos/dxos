@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -14,21 +15,15 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import { CredentialsService, type FunctionInvocationService, type QueueService, Trace, TracingService } from '@dxos/functions';
-import {
-  FunctionImplementationResolver,
-  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
-  RemoteFunctionExecutionService,
-} from '@dxos/functions-runtime';
-import { type OperationHandlerSet } from '@dxos/operation';
+import { CredentialsService, type QueueService, Trace, TracingService } from '@dxos/functions';
+import { Operation, type OperationHandlerSet } from '@dxos/operation';
 
-// TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
   | Feed.FeedService
-  | FunctionInvocationService
+  | Operation.Service
   | QueueService
   | TracingService
   | Trace.TraceService;
@@ -60,9 +55,29 @@ export const chatLayer = ({
     Match.exhaustive,
   );
 
-  return FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId)),
+  const operationServiceLayer = Layer.effect(
+    Operation.Service,
+    Effect.gen(function* () {
+      const handlers = yield* functions.handlers;
+      return {
+        invoke: (op: any, ...args: any[]) => {
+          const handler = handlers.find((h: any) => h.meta.key === op.meta.key);
+          if (!handler) {
+            return Effect.die(`No handler found for operation: ${op.meta.key}`);
+          }
+          const result = handler.handler(args[0]);
+          if (Effect.isEffect(result)) {
+            return result as Effect.Effect<unknown>;
+          }
+          return Effect.promise(() => Promise.resolve(result));
+        },
+        schedule: () => Effect.void,
+        invokePromise: async () => ({ error: new Error('Not implemented') }),
+      } as Operation.OperationService;
+    }),
+  );
+
+  return operationServiceLayer.pipe(
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
