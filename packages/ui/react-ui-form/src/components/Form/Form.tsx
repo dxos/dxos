@@ -272,6 +272,28 @@ const FormActions = ({ classNames }: FormActionsProps) => {
 FormActions.displayName = FORM_ACTIONS_NAME;
 
 //
+// Section
+//
+
+const FORM_SECTION_NAME = 'Form.Section';
+
+type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
+
+// TODO(burdon): Use consistently.
+const FormSection = composable<HTMLDivElement, FormSectionProps>(
+  ({ children, label, description, ...props }, forwardedRef) => {
+    return (
+      <div {...composableProps(props, { classNames: 'flex flex-col' })} ref={forwardedRef}>
+        <h2 className=''>{label}</h2>
+        {description && <p className='text-description'>{description}</p>}
+      </div>
+    );
+  },
+);
+
+FormSection.displayName = FORM_SECTION_NAME;
+
+//
 // Submit
 //
 

@@ -3,9 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { type Obj, Tag } from '@dxos/echo';
+import { Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -16,14 +16,7 @@ import { ObjectProperties } from './ObjectProperties';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const [object, setObject] = useState<Obj.Unknown>();
-  useEffect(() => {
-    if (space && !object) {
-      const object = space.db.add(Pipeline.make());
-      setObject(object);
-    }
-  }, [space, object]);
-
+  const object = useMemo(() => space?.db.add(Pipeline.make()), [space]);
   if (!object) {
     return <Loading />;
   }

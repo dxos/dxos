@@ -17862,6 +17862,9 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop-hitbox':
         specifier: 'catalog:'
         version: 1.1.0
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

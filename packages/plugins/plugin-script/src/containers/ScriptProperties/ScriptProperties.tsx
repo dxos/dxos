@@ -8,6 +8,7 @@ import React, { type ChangeEvent, useCallback, useState } from 'react';
 import { ToolId } from '@dxos/ai';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
@@ -22,21 +23,22 @@ import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export type ScriptPropertiesProps = {
-  object: Script.Script;
-};
+export type ScriptPropertiesProps = AppSurface.ObjectPropertiesProps<Script.Script>;
 
-export const ScriptProperties = ({ object }: ScriptPropertiesProps) => {
+type ScriptSubjectProps = Pick<ScriptPropertiesProps, 'subject'>;
+
+export const ScriptProperties = (props: ScriptPropertiesProps) => {
+  const { subject } = props;
   return (
     <>
-      <Binding object={object} />
-      <BlueprintEditor object={object} />
-      <Publishing object={object} />
+      <Binding subject={subject} />
+      <BlueprintEditor subject={subject} />
+      <Publishing subject={subject} />
     </>
   );
 };
 
-const BlueprintEditor = ({ object }: ScriptPropertiesProps) => {
+const BlueprintEditor = ({ subject: object }: ScriptSubjectProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(object);
   const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
@@ -80,9 +82,7 @@ const BlueprintEditor = ({ object }: ScriptPropertiesProps) => {
           Blueprint.make({
             key: blueprintKey,
             name: object.name ?? 'Script',
-            instructions: Template.make({
-              source: instructions,
-            }),
+            instructions: Template.make({ source: instructions }),
             tools: [ToolId.make(fn.key)],
           }),
         );
@@ -94,46 +94,38 @@ const BlueprintEditor = ({ object }: ScriptPropertiesProps) => {
   }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
 
   return (
-    <div className='flex flex-col gap-4 my-form-padding'>
-      <div>
-        <h2>{t('blueprint-editor.label', { default: 'Blueprint' })}</h2>
-        <p className='text-description text-sm'>
-          {t('blueprint-editor.description', {
-            default: 'Create a blueprint that exposes this script as a tool.',
-          })}
-        </p>
+    <div role='none' className='flex flex-col gap-4 my-form-padding'>
+      <div role='none'>
+        <h2>{t('blueprint-editor.label')}</h2>
+        <p className='text-description text-sm'>{t('blueprint-editor.description')}</p>
       </div>
+
       <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('blueprint-instructions.label', { default: 'Instructions' })}</Input.Label>
-          <Input.TextArea
-            placeholder={t('blueprint-instructions.placeholder', {
-              default: 'Describe how this tool should be used.',
-            })}
-            rows={6}
-            value={instructions}
-            onChange={(event) => setInstructions(event.target.value)}
-            classNames='resize-y'
-          />
-        </div>
+        <Input.Label>{t('blueprint-instructions.label')}</Input.Label>
+        <Input.TextArea
+          placeholder={t('blueprint-instructions.placeholder')}
+          rows={6}
+          value={instructions}
+          onChange={(event) => setInstructions(event.target.value)}
+          classNames='resize-y'
+        />
       </Input.Root>
-      <div className='flex justify-end gap-2'>
+
+      <div role='none' className='flex justify-end gap-2'>
         <Button disabled={(!existingBlueprint && !fn?.key) || creating} onClick={handleSave}>
-          {t(creating ? 'creating label' : 'create blueprint label', {
-            default: creating ? 'Creating…' : 'Create blueprint',
-          })}
+          {t('create-blueprint.label')}
         </Button>
       </div>
     </div>
   );
 };
 
-const Binding = ({ object }: ScriptPropertiesProps) => {
+const Binding = ({ subject: object }: ScriptSubjectProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
 
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   const functionUrl =
     functionId &&
@@ -143,9 +135,7 @@ const Binding = ({ object }: ScriptPropertiesProps) => {
 
   const [binding, setBinding] = useControlledState(fn?.binding ?? '');
   const handleBindingChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setBinding(event.target.value);
-    },
+    (event: ChangeEvent<HTMLInputElement>) => setBinding(event.target.value),
     [setBinding],
   );
 
@@ -161,48 +151,48 @@ const Binding = ({ object }: ScriptPropertiesProps) => {
     return null;
   }
 
+  // TODO(burdon): Form section.
   return (
-    <div className='flex flex-col gap-2'>
-      <h2>{t('remote-function-settings.heading')}</h2>
+    <div role='none' className='flex flex-col gap-2'>
+      <Input.Root>
+        <Input.Label>{t('remote-function-settings.heading')}</Input.Label>
+      </Input.Root>
+
       {functionUrl && (
         <Input.Root>
-          <div role='none' className='flex flex-col gap-1'>
-            <Input.Label>{t('function-url.label')}</Input.Label>
-            <div role='none' className='flex gap-1'>
-              <Input.TextInput
-                disabled
-                value={functionUrl}
-                onChange={(event) => {
-                  Obj.change(fn, (fn) => {
-                    fn.name = event.target.value;
-                  });
-                }}
-              />
-              <Clipboard.IconButton value={functionUrl} />
-            </div>
-          </div>
+          <Input.Label>{t('function-url.label')}</Input.Label>
+          <Input.TextInput
+            disabled
+            value={functionUrl}
+            onChange={(event) => {
+              Obj.change(fn, (fn) => {
+                fn.name = event.target.value;
+              });
+            }}
+          />
+          <Clipboard.IconButton value={functionUrl} />
         </Input.Root>
       )}
+
       <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('function-binding.label')}</Input.Label>
-          <Input.TextInput
-            placeholder={t('function-binding.placeholder')}
-            value={binding}
-            onChange={handleBindingChange}
-            onBlur={handleBindingBlur}
-          />
-        </div>
+        <Input.Label>{t('function-binding.label')}</Input.Label>
+        <Input.TextInput
+          placeholder={t('function-binding.placeholder')}
+          value={binding}
+          onChange={handleBindingChange}
+          onBlur={handleBindingBlur}
+        />
       </Input.Root>
     </div>
   );
 };
 
 // TODO(burdon): Move to separate tab?
-const Publishing = ({ object }: ScriptPropertiesProps) => {
+const Publishing = ({ subject: object }: ScriptSubjectProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(object);
+
   const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
   const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
@@ -271,22 +261,22 @@ const Publishing = ({ object }: ScriptPropertiesProps) => {
   }, [object, githubToken]);
 
   return (
-    <div className='flex flex-col gap-4 my-form-padding'>
-      <div>
+    <div role='none' className='flex flex-col gap-4 my-form-padding'>
+      <div role='none'>
         <h2>{t('script-publish-settings.label')}</h2>
         <p className='text-description text-sm'>{t('script-publish-settings.description')}</p>
       </div>
       {!githubToken && (
-        <div className='flex flex-col gap-2'>
+        <div role='none' className='flex flex-col gap-2'>
           <span>{t('no-github-token.label')}</span>
           <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
         </div>
       )}
       {githubToken && (
-        <div className='flex justify-end gap-2'>
+        <div role='none' className='flex justify-end gap-2'>
           {gistUrl && <Clipboard.IconButton value={gistUrl} />}
           <Button disabled={publishing} onClick={handlePublish}>
-            {t(publishing ? 'publishing label' : 'publish label')}
+            {t('publish.label')}
           </Button>
         </div>
       )}
