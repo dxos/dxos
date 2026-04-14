@@ -5,3 +5,4 @@
 export * from './useSlackApi';
 export * from './useSlackMessages';
 export * from './useSpaceContext';
+export * from './useUrlEnricher';

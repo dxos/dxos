@@ -93,7 +93,7 @@ const main = async (): Promise<void> => {
 const navigateAndInject = async (context: BrowserContext, composerUrl: string): Promise<void> => {
   const page = context.pages()[0] ?? (await context.newPage());
   console.log(`Navigating to ${composerUrl}…`);
-  await page.goto(composerUrl, { waitUntil: 'domcontentloaded' });
+  await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: BOOTSTRAP_TIMEOUT_MS });
   console.log('Waiting for Composer to boot (up to 60 s)…');
   await page.waitForLoadState('networkidle', { timeout: BOOTSTRAP_TIMEOUT_MS }).catch(() => undefined);
 

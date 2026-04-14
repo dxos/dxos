@@ -30,7 +30,7 @@ type AgentResponse = {
 export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
   const {
     messages, users, polling, error: slackError, botUserId, pendingMentions,
-    startPolling, stopPolling, fetchMessages, trackThread,
+    startPolling, stopPolling, fetchMessages, fetchThread, trackThread,
     checkThreadReplies, clearPendingMentions, postMessage,
   } = useSlackMessages(settings.botToken, settings.monitoredChannels ?? []);
 
@@ -96,7 +96,18 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
       const userName = users.get(lastMsg.user)?.realName ?? users.get(lastMsg.user)?.name ?? lastMsg.user;
       const channelName = lastMsg.channelName;
 
-      const spaceContext = await searchContext(latestText);
+      // Build workspace search query from recent thread context so pronoun
+      // follow-ups ("what did we decide on it?") still resolve to the original subject.
+      // Include the last few user + assistant turns, not just the latest message.
+      const recentContextText = threadMessages
+        .slice(-6)
+        .map((msg) => (botUserId && msg.user === botUserId
+          ? msg.text
+          : (botUserId ? msg.text.replace(new RegExp(`<@${botUserId}>`, 'g'), '') : msg.text)))
+        .join(' ');
+      const searchQuery = threadMessages.length > 1 ? recentContextText : latestText;
+
+      const spaceContext = await searchContext(searchQuery);
       const contextHits = spaceContext ? (spaceContext.match(/^\d+\./gm)?.length ?? 0) : 0;
 
       log.info('slack: workspace search complete', { contextHits });
@@ -211,8 +222,22 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
       );
 
       try {
-        await respondToMessage(message.ts, message.channelId, message.ts, [message]);
-        trackThread(message.ts, message.channelId);
+        // If the @mention is inside an existing thread, pull in the full
+        // thread history so pronouns and follow-ups resolve correctly.
+        const rootTs = message.threadTs ?? message.ts;
+        let contextMessages: SlackMessage[] = [message];
+        if (message.threadTs) {
+          try {
+            const thread = await fetchThread(message.channelId, message.threadTs);
+            if (thread.length > 0) {
+              contextMessages = thread;
+            }
+          } catch {
+            // Fall back to single message if thread fetch fails.
+          }
+        }
+        await respondToMessage(message.ts, message.channelId, rootTs, contextMessages);
+        trackThread(rootTs, message.channelId);
         setTimeout(() => void fetchMessages(), 2000);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';

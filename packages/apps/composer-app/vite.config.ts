@@ -306,6 +306,44 @@ export default defineConfig((env) => ({
       },
     },
 
+    // Generic URL fetch proxy (dev only). Lets the browser pull public HTML pages
+    // without CORS. Intentionally dumb — no allowlist, dev-mode convenience.
+    // In production this would need an allowlist or a separate edge function.
+    {
+      name: 'url-fetch-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/fetch', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const target = url.searchParams.get('url');
+          if (!target || !/^https?:\/\//i.test(target)) {
+            res.statusCode = 400;
+            res.end('missing or invalid url param');
+            return;
+          }
+          try {
+            const response = await globalThis.fetch(target, {
+              method: 'GET',
+              redirect: 'follow',
+              headers: {
+                // Identify ourselves; some servers block unknown UAs.
+                'user-agent': 'Mozilla/5.0 (compatible; ComposerBot/1.0)',
+                accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5',
+              },
+            });
+            const contentType = response.headers.get('content-type') ?? 'text/plain';
+            res.setHeader('content-type', contentType);
+            res.statusCode = response.status;
+            // Cap at 1MB to avoid runaway responses.
+            const text = (await response.text()).slice(0, 1_000_000);
+            res.end(text);
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
+
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',

@@ -1170,6 +1170,11 @@
         },
         {
           "type": "json",
+          "path": "tools/demo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/dx-build/package.json",
           "jsonpath": "$.version"
         },
