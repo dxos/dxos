@@ -2,6 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DiagnosticsPanel } from './DiagnosticsPanel';
-
-export default DiagnosticsPanel;
+export { DiagnosticsPanel as default } from './DiagnosticsPanel';

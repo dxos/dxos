@@ -48,14 +48,14 @@ See [Surfaces API](../../../sdk/app-toolkit/docs/surfaces-api.md) for more detai
 
 [`src/capabilities/react-surface.tsx`](../src/capabilities/react-surface.tsx) registers six surfaces:
 
-| Surface          | Role                             | Filter                                                           | Component                 |
-| ---------------- | -------------------------------- | ---------------------------------------------------------------- | ------------------------- |
-| Article          | `article`, `section`             | `objectArticle(ExemplarItem)`                                    | `ExemplarArticle`         |
-| Object properties | `object-properties`             | `objectProperties(ExemplarItem)`                                 | `ExemplarProperties`      |
-| Plugin settings  | `article`                        | `settingsArticle(meta.id)`                                       | `ExemplarSettings`        |
-| Status indicator | `status-indicator`               | _(none)_                                                         | `ExemplarStatusIndicator` |
-| Companion        | `article`                        | `and(literalArticle('related'), companionArticle(ExemplarItem))` | `ExemplarCompanionPanel`  |
-| Deck companion   | `deck-companion--exemplar-panel` | `literalSection('exemplar-panel')`                               | `ExemplarDeckCompanion`   |
+| Surface           | Role                             | Filter                                                           | Component                 |
+| ----------------- | -------------------------------- | ---------------------------------------------------------------- | ------------------------- |
+| Article           | `article`, `section`             | `objectArticle(ExemplarItem)`                                    | `ExemplarArticle`         |
+| Object properties | `object-properties`              | `objectProperties(ExemplarItem)`                                 | `ExemplarProperties`      |
+| Plugin settings   | `article`                        | `settingsArticle(meta.id)`                                       | `ExemplarSettings`        |
+| Status indicator  | `status-indicator`               | _(none)_                                                         | `ExemplarStatusIndicator` |
+| Companion         | `article`                        | `and(literalArticle('related'), companionArticle(ExemplarItem))` | `ExemplarCompanionPanel`  |
+| Deck companion    | `deck-companion--exemplar-panel` | `literalSection('exemplar-panel')`                               | `ExemplarDeckCompanion`   |
 
 ## App Graph
 

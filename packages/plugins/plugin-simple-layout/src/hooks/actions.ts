@@ -57,8 +57,8 @@ export const createCompanionActions = (
       id: `${idPrefix}-companion-${companion.id}`,
       type: Node.ActionType,
       properties: {
-        icon: companion - properties.icon ?? 'ph--placeholder--regular',
-        label: companion - properties.label,
+        icon: companion.properties.icon ?? 'ph--placeholder--regular',
+        label: companion.properties.label,
         iconOnly: true,
         ...(selectedVariant !== undefined && {
           variant: selectedVariant === companionVariant ? 'primary' : 'ghost',

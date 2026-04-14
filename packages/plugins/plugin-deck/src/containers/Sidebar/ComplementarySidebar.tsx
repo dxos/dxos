@@ -100,8 +100,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             {companions.map((companion) => (
               <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
                 <IconButton
-                  label={toLocalizedString(companion - properties.label, t)}
-                  icon={companion - properties.icon}
+                  label={toLocalizedString(companion.properties.label, t)}
+                  icon={companion.properties.icon}
                   iconOnly
                   tooltipSide='left'
                   data-value={getLinkedVariant(companion.id)}
@@ -178,8 +178,8 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       <Panel.Toolbar asChild size='lg'>
         <Toolbar.Root classNames='bg-modal-surface border-b border-subdued-separator'>
           <IconButton
-            label={toLocalizedString(companion - properties.label, t)}
-            icon={companion - properties.icon}
+            label={toLocalizedString(companion.properties.label, t)}
+            icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
             data-value={getLinkedVariant(companion.id)}
@@ -187,7 +187,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
             variant='default'
           />
           <div role='none' className='px-1'>
-            {toLocalizedString(companion - properties.label, t)}
+            {toLocalizedString(companion.properties.label, t)}
           </div>
         </Toolbar.Root>
       </Panel.Toolbar>
