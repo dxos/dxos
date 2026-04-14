@@ -70,14 +70,20 @@ const ensureReady = async (): Promise<AnySpace> => {
   if (!schemasRegistered) {
     const registry = space.db?.graph?.schemaRegistry ?? space.db?.schemaRegistry;
     if (registry?.register) {
-      try {
-        await registry.register(DEMO_SCHEMAS as any);
-        schemasRegistered = true;
-        log.info('demo: registered schemas', { count: DEMO_SCHEMAS.length });
-      } catch (err) {
-        log.info('demo: schema registration failed (may already be registered)', { error: String(err) });
-        schemasRegistered = true; // don't retry
+      // Register one-at-a-time so a single "already registered" conflict
+      // doesn't abort the whole batch.
+      let added = 0;
+      let skipped = 0;
+      for (const schema of DEMO_SCHEMAS) {
+        try {
+          await registry.register([schema] as any);
+          added += 1;
+        } catch {
+          skipped += 1;
+        }
       }
+      schemasRegistered = true;
+      log.info('demo: schema registration', { added, skipped, total: DEMO_SCHEMAS.length });
     }
   }
   return space;
@@ -117,6 +123,7 @@ const api = {
       injectPrMerged: 'Fire a synthetic PR merge → triggers Slack nudge.',
       injectSlackMessage: 'Fire a fake Slack message.',
       pollGithub: 'Poll the real GitHub repo once.',
+      status: 'Dump counts + content of events, matches, nudges, cards, PRs.',
       reset: 'Clear all demo events/matches/nudges.',
     };
   },
@@ -199,6 +206,41 @@ const api = {
       throw new Error('GITHUB_PAT and GITHUB_REPO must be set in localStorage.');
     }
     return pollMergedPullRequests(space.db, { pat, repo });
+  },
+
+  /** Dump a snapshot of what the demo has written so far: events / matches / nudges / cards. */
+  async status() {
+    const space = await ensureReady();
+    const [events, matches, nudges, cards, pullRequests] = await Promise.all([
+      space.db.query(Filter.type(Demo.DemoEvent)).run(),
+      space.db.query(Filter.type(Demo.DemoMatch)).run(),
+      space.db.query(Filter.type(Demo.DemoNudge)).run(),
+      space.db.query(Filter.type(Trello.TrelloCard)).run(),
+      space.db.query(Filter.type(GitHub.GitHubPullRequest)).run(),
+    ]);
+    return {
+      events: events.length,
+      matches: matches.map((match: any) => ({
+        document: match.document?.target?.name,
+        card: match.card?.target?.name,
+        confidence: match.confidence,
+        source: match.source,
+        reasoning: match.reasoning,
+      })),
+      nudges: nudges.map((nudge: any) => ({
+        channel: nudge.channel,
+        mention: nudge.mention,
+        text: nudge.text?.slice(0, 200),
+        card: nudge.card?.target?.name,
+      })),
+      cards: cards.map((card: any) => ({ name: card.name, list: card.listName })),
+      pullRequests: pullRequests.map((pr: any) => ({
+        number: pr.number,
+        title: pr.title,
+        state: pr.state,
+        merged: Boolean(pr.mergedAt),
+      })),
+    };
   },
 
   async reset() {
