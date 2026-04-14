@@ -102,6 +102,47 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
+  test('getParent returns Feed object for appended items', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'parent-test' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+
+      const parent = Obj.getParent(alice);
+      expect(parent).toBeDefined();
+      expect(parent).toBe(feed);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('getParent returns Feed object for queried items', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'parent-query-test' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      yield* Feed.append(feed, [alice, bob]);
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(2);
+      for (const item of results) {
+        const parent = Obj.getParent(item);
+        expect(parent).toBeDefined();
+        expect(parent).toBe(feed);
+      }
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
   // TODO(wittjosiah): Implement when queue retention is supported.
   test.todo('setRetention configures feed retention policy');
 });
