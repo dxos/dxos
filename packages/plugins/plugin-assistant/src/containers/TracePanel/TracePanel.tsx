@@ -15,7 +15,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN, SpaceId } from '@dxos/keys';
-import { LogLevel } from '@dxos/log';
+import { dbg, LogLevel } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -80,7 +80,9 @@ const getExecutionGraph = (
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
       return AtomQuery.make(
         space.db,
-        feeds.length > 0 ? Query.type(Trace.Message).from(feeds[0]) : Query.select(Filter.nothing()),
+        feeds.length > 0
+          ? Query.type(Trace.Message).from(feeds[0])
+          : (Query.select(Filter.nothing()) as Query.Query<never>),
       );
     }),
     (_) => Atom.make((get) => get(get(_))),
@@ -106,6 +108,7 @@ const getExecutionGraph = (
                   builder.addUserMessage(
                     event.id,
                     event.meta.conversationId ?? 'unknown_conversation',
+                    event.meta.pid ?? crypto.randomUUID(),
                     event.data.block.text,
                     event.timestamp,
                   );
@@ -113,6 +116,7 @@ const getExecutionGraph = (
                   builder.addAssistantMessage(
                     event.id,
                     event.meta.conversationId ?? 'unknown_conversation',
+                    event.meta.pid ?? crypto.randomUUID(),
                     event.data.block.text,
                     event.timestamp,
                   );
@@ -123,14 +127,17 @@ const getExecutionGraph = (
                 builder.addStatusMessage(
                   event.id,
                   event.meta.conversationId ?? 'unknown_conversation',
-                  event.data.block.status,
+                  event.meta.pid ?? crypto.randomUUID(),
+                  event.data.block.statusText,
                   event.timestamp,
                 );
+                break;
               }
               case 'toolCall': {
                 builder.addToolCall(
                   `${event.data.block.toolCallId}:call`,
                   event.meta.conversationId ?? 'unknown_conversation',
+                  event.meta.pid ?? crypto.randomUUID(),
                   event.data.block.name,
                   event.timestamp,
                 );
@@ -140,6 +147,7 @@ const getExecutionGraph = (
                 builder.addToolResult(
                   `${event.data.block.toolCallId}:result`,
                   event.meta.conversationId ?? 'unknown_conversation',
+                  event.meta.pid ?? crypto.randomUUID(),
                   event.data.block.error,
                   event.timestamp,
                 );
@@ -150,20 +158,28 @@ const getExecutionGraph = (
 
           // Process operation trace events.
           if (Trace.isOfType(Trace.OperationStart, event)) {
-            builder.addOperationStart(
-              `${event.id}:${event.data.key}:start`,
-              event.data.name ?? event.data.key,
-              event.timestamp,
-            );
+            if (!event.meta.conversationId) {
+              // Operations inside conversations will be handled by tool call events.
+              builder.addOperationStart(
+                `${event.id}:${event.data.key}:start`,
+                event.meta.pid ?? crypto.randomUUID(),
+                event.data.name ?? event.data.key,
+                event.timestamp,
+              );
+            }
           }
           if (Trace.isOfType(Trace.OperationEnd, event)) {
-            builder.addOperationEnd(
-              `${event.id}:${event.data.key}:end`,
-              event.data.name ?? event.data.key,
-              event.data.outcome,
-              event.data.error,
-              event.timestamp,
-            );
+            if (!event.meta.conversationId) {
+              // Operations inside conversations will be handled by tool call events.
+              builder.addOperationEnd(
+                `${event.id}:${event.data.key}:end`,
+                event.meta.pid ?? crypto.randomUUID(),
+                event.data.name ?? event.data.key,
+                event.data.outcome,
+                event.data.error,
+                event.timestamp,
+              );
+            }
           }
         }
 
@@ -197,15 +213,27 @@ class GraphBuilder {
   #commits: Commit[] = [];
   #branches = new Set<string>();
   #lastCommitByBranch = new Map<string, string>();
+  #operationPidToStartCommitId = new Map<string, string>();
 
-  #addCommit(commit: Commit) {
+  #addCommit(commit: Commit, opts?: { replaceCommit?: string }) {
     this.#branches.add(commit.branch);
-    this.#commits.push(commit);
-    this.#lastCommitByBranch.set(commit.branch, commit.id);
+    if (opts?.replaceCommit) {
+      const commitIdx = this.#commits.findIndex((commit) => commit.id === opts.replaceCommit);
+      if (commitIdx !== -1) {
+        this.#commits[commitIdx] = commit;
+      }
+    } else {
+      this.#commits.push(commit);
+      this.#lastCommitByBranch.set(commit.branch, commit.id);
+    }
   }
 
-  #defaultParents(branch: string) {
-    return this.#lastCommitByBranch.get(branch) ? [this.#lastCommitByBranch.get(branch)!] : [];
+  #defaultParents(branch: string, opts?: { branchForFirst?: string }) {
+    return this.#lastCommitByBranch.get(branch)
+      ? [this.#lastCommitByBranch.get(branch)!]
+      : opts?.branchForFirst
+        ? [opts.branchForFirst]
+        : [];
   }
 
   build() {
@@ -215,11 +243,11 @@ class GraphBuilder {
     };
   }
 
-  addUserMessage(id: string, coversationId: string, text: string, ts: number) {
+  addUserMessage(id: string, coversationId: string, pid: string, text: string, ts: number) {
     this.#addCommit({
       id,
       branch: coversationId,
-      parents: this.#defaultParents(coversationId),
+      parents: this.#defaultParents(coversationId, { branchForFirst: this.#operationPidToStartCommitId.get(pid) }),
       icon: 'ph--paper-plane-right--regular',
       level: LogLevel.VERBOSE,
       message: text.slice(0, 100),
@@ -227,11 +255,11 @@ class GraphBuilder {
     });
   }
 
-  addAssistantMessage(id: string, coversationId: string, text: string, ts: number) {
+  addAssistantMessage(id: string, coversationId: string, pid: string, text: string, ts: number) {
     this.#addCommit({
       id,
       branch: coversationId,
-      parents: this.#defaultParents(coversationId),
+      parents: this.#defaultParents(coversationId, { branchForFirst: this.#operationPidToStartCommitId.get(pid) }),
       icon: 'ph--drone--regular',
       level: LogLevel.VERBOSE,
       message: text.slice(0, 100),
@@ -239,21 +267,22 @@ class GraphBuilder {
     });
   }
 
-  addStatusMessage(id: string, coversationId: string, status: string, ts: number) {
+  addStatusMessage(id: string, coversationId: string, pid: string, status: string, ts: number) {
     this.#addCommit({
       id,
       branch: coversationId,
-      parents: this.#defaultParents(coversationId),
-      icon: 'ph--check--regular',
+      parents: this.#defaultParents(coversationId, { branchForFirst: this.#operationPidToStartCommitId.get(pid) }),
+      icon: 'ph--dot-outline--regular',
       level: LogLevel.INFO,
       message: status,
+      timestamp: new Date(ts),
     });
   }
-  addToolCall(id: string, coversationId: string, toolName: string, ts: number) {
+  addToolCall(id: string, coversationId: string, pid: string, toolName: string, ts: number) {
     this.#addCommit({
       id,
       branch: coversationId,
-      parents: this.#defaultParents(coversationId),
+      parents: this.#defaultParents(coversationId, { branchForFirst: this.#operationPidToStartCommitId.get(pid) }),
       icon: 'ph--wrench--regular',
       level: LogLevel.INFO,
       message: toolName,
@@ -261,11 +290,11 @@ class GraphBuilder {
     });
   }
 
-  addToolResult(id: string, coversationId: string, error: string | undefined, ts: number) {
+  addToolResult(id: string, coversationId: string, pid: string, error: string | undefined, ts: number) {
     this.#addCommit({
       id,
       branch: coversationId,
-      parents: this.#defaultParents(coversationId),
+      parents: this.#defaultParents(coversationId, { branchForFirst: this.#operationPidToStartCommitId.get(pid) }),
       icon: error ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
       level: error ? LogLevel.ERROR : LogLevel.INFO,
       message: error ? `Error: ${error}` : 'Success',
@@ -285,7 +314,8 @@ class GraphBuilder {
     });
   }
 
-  addOperationStart(id: string, operationName: string, ts: number) {
+  addOperationStart(id: string, pid: string, operationName: string, ts: number) {
+    this.#operationPidToStartCommitId.set(pid, id);
     this.#addCommit({
       id,
       branch: OPERATIONS_BRANCH,
@@ -299,21 +329,29 @@ class GraphBuilder {
 
   addOperationEnd(
     id: string,
+    pid: string,
     operationName: string,
     outcome: 'success' | 'failure',
     error: string | undefined,
     ts: number,
   ) {
     const isError = outcome === 'failure';
-    this.#addCommit({
-      id,
-      branch: OPERATIONS_BRANCH,
-      parents: this.#defaultParents(OPERATIONS_BRANCH),
-      icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
-      level: isError ? LogLevel.ERROR : LogLevel.INFO,
-      message: isError ? `${operationName}: ${error ?? 'Failed'}` : operationName,
-      timestamp: new Date(ts),
-    });
+    const startCommitId = this.#operationPidToStartCommitId.get(pid);
+    const hasChildren = this.#commits.some((commit) => commit.parents?.includes(startCommitId!));
+    this.#addCommit(
+      {
+        id,
+        branch: OPERATIONS_BRANCH,
+        parents: this.#defaultParents(OPERATIONS_BRANCH),
+        icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
+        level: isError ? LogLevel.ERROR : LogLevel.INFO,
+        message: isError ? `${operationName}: ${error ?? 'Failed'}` : operationName,
+        timestamp: new Date(ts),
+      },
+      {
+        replaceCommit: hasChildren ? undefined : this.#operationPidToStartCommitId.get(pid),
+      },
+    );
   }
 }
 
