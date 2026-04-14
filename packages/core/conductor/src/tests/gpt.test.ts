@@ -16,7 +16,9 @@ import { Feed } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -24,7 +26,16 @@ import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag } from '../types';
 
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service not available in test.'),
+        schedule: () => Effect.die('Operation.Service not available in test.'),
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as any),
+      FunctionInvocationService.layerNotAvailable,
+    ),
+  ),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

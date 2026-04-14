@@ -14,7 +14,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { OperationHandlerSet } from '@dxos/operation';
 
 import { default as fetchMessages } from './fetch-messages';
@@ -27,7 +27,7 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0'), 
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
-      FunctionInvocationServiceLayerTestMocked({ functions: OperationHandlerSet.make(fetchMessages) }).pipe(
+      FunctionInvocationServiceLayerTest({ functions: OperationHandlerSet.make(fetchMessages) }).pipe(
         Layer.provideMerge(TracingService.layerNoop),
       ),
     ),

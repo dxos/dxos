@@ -36,6 +36,7 @@ import {
   Trace,
   TracingService,
 } from '@dxos/functions';
+import type { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -90,7 +91,8 @@ export type ComputeServices =
   | Feed.FeedService
   | QueueService
   | CredentialsService
-  | FunctionInvocationService;
+  | FunctionInvocationService
+  | Operation.Service;
 
 /**
  * Nodes that will automatically trigger the execution of the graph on startup.

@@ -17,7 +17,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Trace, TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
-import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -106,7 +106,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
-            FunctionInvocationServiceLayerTestMocked({ functions: TaskHandlers }).pipe(
+            FunctionInvocationServiceLayerTest({ functions: TaskHandlers }).pipe(
               Layer.provideMerge(Layer.mergeAll(TracingService.layerNoop, Trace.writerLayerNoop)),
             ),
           ),

@@ -3,6 +3,7 @@
 //
 
 import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
@@ -15,6 +16,7 @@ import {
   QueueService,
   TracingService,
 } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
@@ -31,6 +33,7 @@ const SERVICES = {
   eventLogger: ComputeEventLogger,
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
+  operationService: Operation.Service,
   queues: QueueService,
   feeds: Feed.FeedService,
   tracing: TracingService,
@@ -119,6 +122,22 @@ export class ServiceContainer {
       this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
     );
 
-    return Layer.mergeAll(ai, credentials, database, queues, feeds, tracing, eventLogger, functionCallService) as any;
+    const operationService = Layer.succeed(Operation.Service, {
+      invoke: () => Effect.die('Operation.Service not available.'),
+      schedule: () => Effect.die('Operation.Service not available.'),
+      invokePromise: async () => ({ error: new Error('Not available') }),
+    } as any);
+
+    return Layer.mergeAll(
+      ai,
+      credentials,
+      database,
+      queues,
+      feeds,
+      tracing,
+      eventLogger,
+      functionCallService,
+      operationService,
+    ) as any;
   }
 }

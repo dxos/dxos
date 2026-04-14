@@ -11,7 +11,9 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ComputeEventLogger, CredentialsService, Trace, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
@@ -31,7 +33,16 @@ import {
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service not available in test.'),
+        schedule: () => Effect.die('Operation.Service not available in test.'),
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as any),
+      FunctionInvocationService.layerNotAvailable,
+    ),
+  ),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

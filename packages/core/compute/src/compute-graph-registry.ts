@@ -7,7 +7,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { type FunctionInvocationService } from '@dxos/functions';
+import type { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
@@ -22,7 +22,7 @@ export type ComputeGraphPlugin = {
 };
 
 export type FunctionsRuntimeProvider = {
-  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>;
+  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<Operation.Service, never>;
 };
 
 export type ComputeGraphOptions = {

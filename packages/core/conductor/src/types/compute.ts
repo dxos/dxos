@@ -8,6 +8,7 @@ import type * as Scope from 'effect/Scope';
 
 import { type ComputeEventLogger } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
+import type { Operation } from '@dxos/operation';
 import { mapValues } from '@dxos/util';
 
 import { type ComputeNode, type ComputeNodeMeta } from './graph';
@@ -97,7 +98,7 @@ export const ValueBag = Object.freeze({
 // Functions
 //
 
-export type ComputeRequirements = FunctionServices | ComputeEventLogger | Scope.Scope;
+export type ComputeRequirements = FunctionServices | ComputeEventLogger | Scope.Scope | Operation.Service;
 
 /**
  * For results of compute functions.
