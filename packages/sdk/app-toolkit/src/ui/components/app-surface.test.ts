@@ -310,9 +310,9 @@ describe('AppSurface', () => {
     });
   });
 
-  describe('objectSettings', () => {
+  describe('objectProperties', () => {
     test('matches', ({ expect }) => {
-      const filter = AppSurface.objectSettings(TypeA);
+      const filter = AppSurface.objectProperties(TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter({ subject: objectA })).toBe(true);
     });

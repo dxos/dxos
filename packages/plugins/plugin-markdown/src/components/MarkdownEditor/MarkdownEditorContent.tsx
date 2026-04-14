@@ -52,6 +52,7 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
 
+// TODO(burdon): Move controller to Root.
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
   (
     {

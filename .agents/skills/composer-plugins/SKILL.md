@@ -11,15 +11,19 @@ Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand e
 
 ## Specification
 
-Each plugin should have a `PLUGIN.mdl` specification written in the MDL language defined by `plugin-spec` (see `packages/plugins/plugin-spec/docs/` and `src/extension/mdl.grammar` for syntax).
+Each plugin MUST have a `PLUGIN.mdl` specification written in the MDL language defined by `plugin-spec` (see `packages/plugins/plugin-spec/docs/` and `src/extension/mdl.grammar` for syntax).
+
+**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `docs/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use `packages/plugins/plugin-spec/docs/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
 
 The specification is the source of truth for what the plugin does. It must be:
 
-- **Created early** — draft the spec before or alongside initial implementation.
+- **Created first** — this is the first file written for any new plugin, before any code.
 - **Kept up-to-date** — when features are discussed, added, or changed, update the spec first.
 - **Used for testing** — derive user feature tests and acceptance criteria from the spec's `feat`, `req`, and `test` blocks.
+- **Reviewed before implementation** — the user must approve the PLUGIN.mdl before code is written.
 
-When the user discusses new features or changes, update `PLUGIN.mdl` to reflect the agreed requirements before implementing. Tests should verify the behaviors described in the spec.
+When the user discusses new features or changes, update `PLUGIN.mdl` to reflect the agreed requirements before implementing.
+Tests should verify the behaviors described in the spec.
 
 ## Workflow
 
@@ -43,7 +47,9 @@ When asked to create a new plugin, start with a minimal skeleton before adding f
 12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
 13. `src/components/` — empty barrel, ready for primitives.
 
-Build and lint the skeleton before adding features. Add capabilities incrementally as needed (operations, blueprints, settings, etc.).
+Build and lint the skeleton before adding features.
+Add capabilities incrementally as needed (operations, blueprints, settings, etc.).
+Register the plugin with `composer-app`.
 
 ## Directory Structure
 
@@ -147,8 +153,8 @@ See: `plugin-chess/src/ChessPlugin.tsx`
 ## React Surface
 
 Surfaces are contributed via `Capability.contributes(Capabilities.ReactSurface, [...])` with `Surface.create()`.
-Common roles: `article`, `section`, `card--content`, `object-settings`, `form-input`, `dialog`.
-Common filters: `AppSurface.objectArticle(Type)`, `AppSurface.objectCard(Type)`, `AppSurface.objectSettings(Type)`.
+Common roles: `article`, `section`, `card--content`, `object-properties`, `form-input`, `dialog`.
+Common filters: `AppSurface.objectArticle(Type)`, `AppSurface.objectCard(Type)`, `AppSurface.objectProperties(Type)`.
 
 See: `plugin-chess/src/capabilities/react-surface.tsx`
 

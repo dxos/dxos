@@ -224,7 +224,7 @@ class GraphBuilder {
       id,
       branch: coversationId,
       parents: this.#defaultParents(coversationId),
-      icon: 'ph--robot--regular',
+      icon: 'ph--drone--regular',
       level: LogLevel.VERBOSE,
       message: text.slice(0, 100),
       timestamp: new Date(ts),

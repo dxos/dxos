@@ -31,12 +31,12 @@ describe('Obj.updateFrom (database)', () => {
     const stored = db.add(Obj.make(TestSchema.Expando, { label: 'v1', note: 'keep' }));
     const registryCopy = Obj.clone(Obj.make(TestSchema.Expando, { label: 'v1', note: 'keep' }), { deep: true });
 
-    Obj.change(stored, (mutable) => {
-      mutable.label = 'drifted';
+    Obj.change(stored, (stored) => {
+      stored.label = 'drifted';
     });
 
-    Obj.change(stored, (mutable) => {
-      expect(Obj.updateFrom(mutable, registryCopy)).toBe(true);
+    Obj.change(stored, (stored) => {
+      expect(Obj.updateFrom(stored, registryCopy)).toBe(true);
     });
 
     expect(stored.label).toBe('v1');

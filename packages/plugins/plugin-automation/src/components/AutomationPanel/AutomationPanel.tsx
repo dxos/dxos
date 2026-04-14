@@ -77,8 +77,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Obj.change(selected, (mutable) => {
-        Object.assign(mutable, trigger);
+      Obj.change(selected, (selected) => {
+        Object.assign(selected, trigger);
       });
     } else {
       space.db.add(Trigger.make(trigger));
@@ -99,8 +99,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (obj) => {
-      Obj.deleteKeys(obj, KEY_QUEUE_CURSOR);
+    Obj.change(trigger, (trigger) => {
+      Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
@@ -123,32 +123,34 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   return (
     <Settings.Panel>
-      {filteredTriggers.length > 0 && (
-        <List.Root<Trigger.Trigger>
-          items={filteredTriggers}
-          isItem={Schema.is(Trigger.Trigger)}
-          getId={(field) => field.id}
-        >
-          {({ items: filteredTriggers }) => (
-            <div role='list' className='flex flex-col w-full'>
-              {filteredTriggers?.map((trigger) => (
-                <TriggerListItem
-                  key={trigger.id}
-                  trigger={trigger}
-                  functions={functions}
-                  onSelect={handleSelect}
-                  onDelete={handleDelete}
-                  onResetCursor={handleResetCursor}
-                  onForceRun={handleForceRunTrigger}
-                />
-              ))}
-            </div>
-          )}
-        </List.Root>
-      )}
+      <Clipboard.Provider>
+        {filteredTriggers.length > 0 && (
+          <List.Root<Trigger.Trigger>
+            items={filteredTriggers}
+            isItem={Schema.is(Trigger.Trigger)}
+            getId={(field) => field.id}
+          >
+            {({ items: filteredTriggers }) => (
+              <div role='list' className='flex flex-col w-full'>
+                {filteredTriggers?.map((trigger) => (
+                  <TriggerListItem
+                    key={trigger.id}
+                    trigger={trigger}
+                    functions={functions}
+                    onSelect={handleSelect}
+                    onDelete={handleDelete}
+                    onResetCursor={handleResetCursor}
+                    onForceRun={handleForceRunTrigger}
+                  />
+                ))}
+              </div>
+            )}
+          </List.Root>
+        )}
 
-      {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
-      <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
+        {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
+        <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
+      </Clipboard.Provider>
     </Settings.Panel>
   );
 };

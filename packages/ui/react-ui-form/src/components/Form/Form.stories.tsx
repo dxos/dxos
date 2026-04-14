@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
@@ -42,7 +42,7 @@ const Person = Schema.Struct({
         title: 'State',
         description: 'State code',
       }),
-      zip: Schema.Number,
+      zip: Schema.Number.annotations({ title: 'ZIP Code' }),
     }).annotations({ title: 'Address' }),
   ),
   employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
@@ -97,7 +97,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   }, []);
 
   if (!space) {
-    return <></>;
+    return <Loading />;
   }
 
   return (
@@ -114,6 +114,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport>
             <Form.Content>
+              <Form.Section label='Section' description='This is a section' />
               <Form.FieldSet />
               <Form.Actions />
             </Form.Content>

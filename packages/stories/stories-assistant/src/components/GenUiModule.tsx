@@ -144,11 +144,10 @@ const buildGenUiSystemPrompt = (): string => {
       on:click='org.dxos.plugin.layout.operation.add-toast({"id":"t1","title":"Done!"})'
 
     Supported tags:
-${componentCatalog}
+    ${componentCatalog}
 
     Available operations (use the key as-is in on:* attributes):
-
-${operationCatalog}
+    ${operationCatalog}
 
     Operation argument reference:
     - add-toast: {"id":"<unique>", "title":"<text>", "description":"<text>", "icon":"<phosphor-id>", "duration":<ms>}

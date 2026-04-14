@@ -42,7 +42,7 @@ const DefaultStory = () => {
 
   const handleChange: TemplateChangeCallback = useCallback(
     (mutate) => {
-      Obj.change(blueprint, (obj) => mutate(obj.instructions));
+      Obj.change(blueprint, (blueprint) => mutate(blueprint.instructions));
     },
     [blueprint],
   );

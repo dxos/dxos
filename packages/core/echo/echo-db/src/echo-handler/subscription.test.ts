@@ -29,13 +29,13 @@ describe('create subscription', () => {
 
     const counter = createUpdateCounter(task);
 
-    Obj.change(task, (obj) => {
-      obj.title = 'Test title';
+    Obj.change(task, (task) => {
+      task.title = 'Test title';
     });
     expect(counter.value).to.equal(2);
 
-    Obj.change(task, (obj) => {
-      obj.title = 'Test title revision';
+    Obj.change(task, (task) => {
+      task.title = 'Test title revision';
     });
     expect(counter.value).to.equal(3);
   });
@@ -54,8 +54,8 @@ describe('create subscription', () => {
     expect(actions).to.deep.equal(['update']);
 
     actions.push('before');
-    Obj.change(task, (obj) => {
-      obj.title = 'Test title';
+    Obj.change(task, (task) => {
+      task.title = 'Test title';
     });
     actions.push('after');
 
@@ -78,8 +78,8 @@ describe('create subscription', () => {
     });
     selection.update([task]);
 
-    Obj.change(task, (obj) => {
-      obj.title = 'Test title';
+    Obj.change(task, (task) => {
+      task.title = 'Test title';
     });
     expect(await title.wait()).to.equal('Test title');
   });
@@ -97,8 +97,8 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    Obj.change(task, (obj) => {
-      obj.nested.title = 'New title';
+    Obj.change(task, (task) => {
+      task.nested.title = 'New title';
     });
     expect(counter.value).to.equal(2);
   });
@@ -113,8 +113,8 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    Obj.change(task, (obj) => {
-      obj.nested.deep_nested.title = 'New title';
+    Obj.change(task, (task) => {
+      task.nested.deep_nested.title = 'New title';
     });
     expect(counter.value).to.equal(2);
   });
@@ -127,8 +127,8 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    Obj.change(task, (obj) => {
-      obj.array[0] = 'New value';
+    Obj.change(task, (task) => {
+      task.array[0] = 'New value';
     });
     expect(counter.value).to.equal(2);
   });
@@ -141,8 +141,8 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    Obj.change(task, (obj) => {
-      obj.array[0].title = 'New value';
+    Obj.change(task, (task) => {
+      task.array[0].title = 'New value';
     });
     expect(counter.value).to.equal(2);
   });
@@ -156,8 +156,8 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    Obj.change(task, (obj) => {
-      obj.array[0].nested_array[0].title = 'New value';
+    Obj.change(task, (task) => {
+      task.array[0].nested_array[0].title = 'New value';
     });
     expect(counter.value).to.equal(2);
   });

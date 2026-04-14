@@ -15,14 +15,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { ScriptPluginSettings } from '#components';
-import {
-  DeploymentDialog,
-  NotebookContainer,
-  ScriptContainer,
-  ScriptObjectSettings,
-  ScriptProperties,
-  TestContainer,
-} from '#containers';
+import { DeploymentDialog, NotebookContainer, ScriptContainer, ScriptProperties, TestContainer } from '#containers';
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
 import { Notebook, ScriptCapabilities, type Settings } from '#types';
@@ -94,19 +87,11 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
-      // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
       Surface.create({
-        id: 'companion.base-settings',
-        role: 'base-object-settings',
-        filter: AppSurface.objectSection(Script.Script),
-        component: ({ data }) => <ScriptProperties object={data.subject} />,
-      }),
-      Surface.create({
-        id: 'companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Script.Script),
-        component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
+        id: 'properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Script.Script),
+        component: ({ data, role }) => <ScriptProperties role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion.execute',
@@ -123,7 +108,7 @@ export default Capability.makeModule(() =>
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           return (
             <Panel.Root role={role}>
-              <Panel.Content asChild>
+              <Panel.Content>
                 <InvocationTraceContainer
                   db={space?.db}
                   queueDxn={queueDxn}

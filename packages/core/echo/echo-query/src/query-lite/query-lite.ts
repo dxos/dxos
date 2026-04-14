@@ -244,14 +244,29 @@ class FilterClass implements Filter$.Any {
   }
 
   static updated(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
-    return FilterClass.#timeRangeFilter('updatedAt', range);
+    return FilterClass._timeRangeFilter('updatedAt', range);
   }
 
   static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
-    return FilterClass.#timeRangeFilter('createdAt', range);
+    return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static #timeRangeFilter(
+  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+    const items = Array.isArray(parents) ? parents : [parents];
+    const dxns = items.map((item) => {
+      if (isDxnLike(item)) {
+        return item.toString();
+      }
+      throw new TypeError('childOf requires DXN values in query-lite');
+    });
+    return new FilterClass({
+      type: 'child-of',
+      parents: dxns,
+      transitive: options?.transitive ?? true,
+    });
+  }
+
+  private static _timeRangeFilter(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
   ): Filter$.Any {
@@ -574,6 +589,16 @@ const makeTypeDxn = (typename: string) => {
   return `dxn:type:${typename}`;
 };
 
+const isDxnLike = (value: unknown): value is DXN => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    value.toString().startsWith('dxn:')
+  );
+};
+
 const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
 
 const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
@@ -612,6 +637,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.text(${JSON.stringify(filter.text)})`;
     case 'tag':
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'not':

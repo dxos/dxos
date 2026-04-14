@@ -33,6 +33,8 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 
+// TODO(burdon): Move styles to form.ts.
+
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
@@ -238,6 +240,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   if (readonly || layout === 'static') {
     return null;
   }
+
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
@@ -269,6 +272,31 @@ const FormActions = ({ classNames }: FormActionsProps) => {
 };
 
 FormActions.displayName = FORM_ACTIONS_NAME;
+
+//
+// Section
+//
+
+const FORM_SECTION_NAME = 'Form.Section';
+
+type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
+
+const FormSection = composable<HTMLDivElement, FormSectionProps>(
+  ({ children, label, description, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
+        ref={forwardedRef}
+      >
+        <h2 className='text-lg'>{label}</h2>
+        {description && <p className='text-description'>{description}</p>}
+        {children}
+      </div>
+    );
+  },
+);
+
+FormSection.displayName = FORM_SECTION_NAME;
 
 //
 // Submit
@@ -317,6 +345,7 @@ export const Form = {
   Root: FormRoot,
   Viewport: FormViewport,
   Content: FormContent,
+  Section: FormSection,
   FieldSet: FormFieldSet,
   Label: FormFieldLabel,
   Actions: FormActions,
@@ -329,6 +358,7 @@ export type {
   FormRootProps,
   FormViewportProps,
   FormContentProps,
+  FormSectionProps,
   FormFieldSetProps,
   FormFieldLabelProps,
   FormActionsProps,

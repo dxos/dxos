@@ -121,8 +121,8 @@ export default Capability.makeModule(() =>
               return ToolResult.Error(error.message);
             }
 
-            Obj.change(game, (obj) => {
-              obj.pgn = chess.pgn();
+            Obj.change(game, (game) => {
+              game.pgn = chess.pgn();
             });
             return ToolResult.Success(game.pgn);
           },

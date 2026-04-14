@@ -64,10 +64,10 @@ const DefaultStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(pipeline, (obj) => {
-      obj.columns.push({
+    Obj.change(pipeline, (pipeline) => {
+      pipeline.columns.push({
         name: 'New Contacts',
-        view: Ref.make(view) as (typeof obj.columns)[number]['view'],
+        view: Ref.make(view) as (typeof pipeline.columns)[number]['view'],
         order: [],
       });
     });
@@ -108,10 +108,10 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(pipeline, (obj) => {
-      obj.columns.push({
+    Obj.change(pipeline, (pipeline) => {
+      pipeline.columns.push({
         name: 'New Contacts',
-        view: Ref.make(view) as (typeof obj.columns)[number]['view'],
+        view: Ref.make(view) as (typeof pipeline.columns)[number]['view'],
         order: [],
       });
     });
@@ -131,8 +131,8 @@ const MutationsStory = () => {
       if (p < 0.4) {
         // Append to the name
         const contactToAdjust = random.helpers.arrayElement(contacts);
-        Obj.change(contactToAdjust, (obj) => {
-          obj.fullName = (obj.fullName ?? '') + ' X';
+        Obj.change(contactToAdjust, (contactToAdjust) => {
+          contactToAdjust.fullName = (contactToAdjust.fullName ?? '') + ' X';
         });
         return;
       } else if (p < 0.7 && contacts.length > 1) {

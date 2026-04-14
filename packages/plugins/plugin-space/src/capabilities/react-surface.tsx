@@ -101,7 +101,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'companion.object-settings',
+        id: 'companion.object-properties',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('settings'), AppSurface.companionArticle()),
         component: ({ ref, data, role }) => <ObjectDetails role={role} subject={data.companionTo} ref={ref} />,
@@ -268,8 +268,8 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'object-settings',
-        role: 'object-settings',
+        id: 'object-properties',
+        role: 'object-properties',
         filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
           if (!Obj.isObject(data.subject)) {
             return false;

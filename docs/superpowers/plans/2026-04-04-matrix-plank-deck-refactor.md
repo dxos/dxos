@@ -569,7 +569,7 @@ const SurfaceStory = ({ Tile }: DefaultStoryProps) => {
   }, [items, index]);
 
   return (
-    <Mosaic.Root classNames='dx-container'>
+    <Mosaic.Root>
       <Matrix.Root Tile={Tile} items={items} ref={controller}>
         <Panel.Root>
           <Panel.Toolbar asChild>

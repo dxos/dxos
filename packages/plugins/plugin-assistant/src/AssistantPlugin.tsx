@@ -7,10 +7,10 @@ import * as Option from 'effect/Option';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Memory, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Agent, AgentBlueprint, Chat, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
@@ -120,19 +120,15 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Project.Project),
+        id: Type.getTypename(Agent.Agent),
         metadata: {
-          icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
+          icon: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = yield* Project.makeInitialized(
-                {
-                  name: 'New Project',
-                  spec: 'Not specified yet',
-                },
-                ProjectBlueprint.make(),
-              ).pipe(withComputeRuntime(options.db.spaceId));
+              const object = yield* Agent.makeInitialized({ name: '', spec: '' }, AgentBlueprint.make()).pipe(
+                withComputeRuntime(options.db.spaceId),
+              );
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
@@ -150,10 +146,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
+      Feed.Feed,
       HasSubject.HasSubject,
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,
-      Project.Project,
+      Agent.Agent,
       Plan.Plan,
       Sequence,
       Memory.Memory,

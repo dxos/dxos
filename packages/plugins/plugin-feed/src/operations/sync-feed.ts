@@ -68,20 +68,20 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;
         if (newestGuid) {
-          Obj.change(subscriptionFeed, (obj) => {
-            obj.cursor = newestGuid;
+          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+            subscriptionFeed.cursor = newestGuid;
           });
         }
 
         // Update feed metadata from channel if not already set.
         if (feedMeta.name && !subscriptionFeed.name) {
-          Obj.change(subscriptionFeed, (obj) => {
-            obj.name = feedMeta.name;
+          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+            subscriptionFeed.name = feedMeta.name;
           });
         }
         if (feedMeta.description && !subscriptionFeed.description) {
-          Obj.change(subscriptionFeed, (obj) => {
-            obj.description = feedMeta.description;
+          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+            subscriptionFeed.description = feedMeta.description;
           });
         }
       }).pipe(

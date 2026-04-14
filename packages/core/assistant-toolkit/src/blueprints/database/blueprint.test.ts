@@ -284,7 +284,7 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
         const tagDxn = Obj.getDXN(tag).toString();
-        Entity.change(org, (obj) => Entity.addTag(obj, tagDxn));
+        Entity.change(org, (org) => Entity.addTag(org, tagDxn));
         expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
@@ -451,5 +451,40 @@ describe('Database Blueprint', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+  );
+
+  it.effect(
+    'query: in param scopes to feed children (agent uses Query tool)',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed1 = Feed.make({ name: 'inbox-1' });
+        yield* Database.add(feed1);
+        yield* Feed.append(feed1, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Alpha',
+            description: 'Mock email in-param-token-a1b2c3.',
+          }),
+        ]);
+
+        const feed2 = Feed.make({ name: 'inbox-2' });
+        yield* Database.add(feed2);
+        yield* Feed.append(feed2, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Beta',
+            description: 'Mock email in-param-token-d4e5f6.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const agent = yield* AgentService.createSession({
+          blueprints: [DatabaseBlueprint.make()],
+        });
+        yield* agent.submitPrompt('Query for organizations in "inbox-1" feed.');
+        yield* agent.waitForCompletion();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
   );
 });

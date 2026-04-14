@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/ui';
@@ -15,11 +15,10 @@ import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
-  EditorMenuProvider,
+  type EditorRootProps,
   type EditorToolbarState,
-  type UseEditorMenu,
-  useEditorMenu,
-  useEditorToolbar,
+  createEditorController,
+  useEditorContext,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -49,34 +48,34 @@ import {
 type MarkdownEditorContextValue = {
   id: string;
   attendableId?: string;
-  setEditorView: (view: EditorView) => void;
-  extensions: Extension[];
   previewBlocks: PreviewBlock[];
-  toolbarState: Atom.Writable<EditorToolbarState>;
-  popoverMenu: Omit<UseEditorMenu, 'extension'>;
-} & (Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
-  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
+} & Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
+  Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>;
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
 
+/**
+ * Props to spread onto `Editor.Root` from `MarkdownEditorProvider`'s render callback.
+ */
+export type MarkdownEditorEditorRootProps = Omit<EditorRootProps, 'children'>;
+
 //
-// MarkdownEditor.Root
+// MarkdownEditorProvider
 //
 
-type MarkdownEditorRootProps = PropsWithChildren<
-  {
-    object?: DocumentType;
-    extensions?: Extension[];
-  } & Pick<
-    MarkdownEditorContextValue,
-    'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
-  > &
-    Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
->;
+export type MarkdownEditorProviderProps = {
+  object?: DocumentType;
+  extensions?: Extension[];
+  children: (editorRootProps: MarkdownEditorEditorRootProps) => ReactNode;
+} & Pick<
+  MarkdownEditorContextValue,
+  'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
+> &
+  Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
+  Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>;
 
-const MarkdownEditorRoot = ({
+export const MarkdownEditorProvider = ({
   children,
   id,
   attendableId,
@@ -90,10 +89,10 @@ const MarkdownEditorRoot = ({
   slashCommandGroups,
   onLinkQuery,
   onSelectObject,
-  ...props
-}: MarkdownEditorRootProps) => {
-  const [editorView, setEditorView] = useState<EditorView>();
-
+  onAction,
+  onFileUpload,
+  onViewModeChange,
+}: MarkdownEditorProviderProps) => {
   // Preview blocks.
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
@@ -109,14 +108,10 @@ const MarkdownEditorRoot = ({
     [object],
   );
 
-  // Toolbar state.
-  const toolbarState = useEditorToolbar({ viewMode });
+  // Context menu options (Editor.Root calls useEditorMenu with these props).
+  const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
 
-  // Context menu.
-  const menuOptions = useEditorMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
-  const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
-
-  // Extensions.
+  // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
     object,
@@ -130,33 +125,46 @@ const MarkdownEditorRoot = ({
   });
 
   const extensions = useMemo(
-    () => [coreExtensions, menuExtension, extensionsProp].filter(isNonNullable),
-    [coreExtensions, menuExtension, extensionsProp],
+    () => [coreExtensions, extensionsProp].filter(isNonNullable).flat(),
+    [coreExtensions, extensionsProp],
+  );
+
+  const editorRootProps = useMemo<MarkdownEditorEditorRootProps>(
+    () => ({
+      extensions,
+      viewMode,
+      getMenu: menuOptions.getMenu,
+      trigger: menuOptions.trigger,
+      placeholder: menuOptions.placeholder,
+      ...(menuOptions.filter !== undefined ? { filter: menuOptions.filter } : {}),
+      ...(menuOptions.triggerKey !== undefined ? { triggerKey: menuOptions.triggerKey } : {}),
+    }),
+    [extensions, viewMode, menuOptions],
+  );
+
+  const markdownContextValue = useMemo<MarkdownEditorContextValue>(
+    () => ({
+      id,
+      attendableId,
+      compact,
+      viewMode,
+      previewBlocks,
+      onAction,
+      onFileUpload,
+      onViewModeChange,
+    }),
+    [id, attendableId, compact, viewMode, previewBlocks, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
-    <MarkdownEditorContextProvider
-      id={id}
-      attendableId={attendableId}
-      compact={compact}
-      editorView={editorView}
-      setEditorView={setEditorView}
-      extensions={extensions}
-      previewBlocks={previewBlocks}
-      toolbarState={toolbarState}
-      popoverMenu={menuProps}
-      viewMode={viewMode}
-      {...props}
-    >
-      {children}
-    </MarkdownEditorContextProvider>
+    <MarkdownEditorContextProvider {...markdownContextValue}>{children(editorRootProps)}</MarkdownEditorContextProvider>
   );
 };
 
-MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
+MarkdownEditorProvider.displayName = 'MarkdownEditor.Provider';
 
 //
-// MarkdownEditor.Main
+// MarkdownEditor.Content
 //
 
 const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
@@ -164,31 +172,29 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
-  const {
-    id,
-    attendableId,
-    compact,
-    editorView,
-    setEditorView,
-    viewMode,
-    toolbarState,
-    extensions,
-    popoverMenu: { groupsRef, ...menuProps },
-  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+  const { id, attendableId, compact, viewMode, onFileUpload } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+
+  const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+
+  const handleRef = useCallback(
+    (view: EditorView | null) => {
+      setController(createEditorController(view));
+    },
+    [setController],
+  );
 
   return (
-    <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
-      <NaturalMarkdownEditorContent
-        {...composableProps(props)}
-        id={id}
-        attendableId={attendableId}
-        compact={compact}
-        viewMode={viewMode}
-        toolbarState={toolbarState}
-        extensions={extensions}
-        ref={setEditorView}
-      />
-    </EditorMenuProvider>
+    <NaturalMarkdownEditorContent
+      {...composableProps(props)}
+      id={id}
+      attendableId={attendableId}
+      compact={compact}
+      viewMode={viewMode}
+      toolbarState={state as Atom.Writable<EditorToolbarState>}
+      extensions={extensions}
+      onFileUpload={onFileUpload}
+      ref={handleRef}
+    />
   );
 });
 
@@ -205,15 +211,17 @@ type MarkdownEditorToolbarProps = ThemedClassName<
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { id, attendableId, editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
+  const { id, attendableId, onAction, onFileUpload, onViewModeChange } =
     useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
+
+  const { controller, state } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return (
     <NaturalMarkdownToolbar
       {...props}
       id={attendableId ?? id}
-      editorView={editorView}
-      state={toolbarState}
+      editorView={controller?.view ?? undefined}
+      state={state}
       onAction={onAction}
       onFileUpload={onFileUpload}
       onViewModeChange={onViewModeChange}
@@ -258,16 +266,14 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
 // MarkdownEditor
 //
 
+/** @private */
 export const MarkdownEditor = {
-  Root: MarkdownEditorRoot,
   Content: MarkdownEditorContent,
   Toolbar: MarkdownEditorToolbar,
   Blocks: MarkdownEditorBlocks,
 };
 
-export type {
-  MarkdownEditorRootProps,
-  MarkdownEditorContentProps,
-  MarkdownEditorToolbarProps,
-  MarkdownEditorBlocksProps,
-};
+export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+
+/** @deprecated Use `MarkdownEditorProviderProps`. */
+export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

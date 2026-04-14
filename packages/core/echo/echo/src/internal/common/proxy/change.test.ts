@@ -59,8 +59,8 @@ describe('Obj.change enforcement', () => {
     test('getMeta returns mutable ObjectMeta inside change callback', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (mutableObj) => {
-        const meta = Obj.getMeta(mutableObj);
+      Obj.change(obj, (obj) => {
+        const meta = Obj.getMeta(obj);
 
         // These should compile without errors because meta is ObjectMeta (mutable).
         meta.keys = [];
@@ -76,9 +76,9 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
       // These should compile without errors inside change callback.
-      Obj.change(obj, (mutableObj) => {
-        Obj.addTag(mutableObj, 'my-tag');
-        Obj.setValue(mutableObj, ['name'], 'Updated');
+      Obj.change(obj, (obj) => {
+        Obj.addTag(obj, 'my-tag');
+        Obj.setValue(obj, ['name'], 'Updated');
       });
 
       expect(obj.name).toBe('Updated');
@@ -310,8 +310,8 @@ describe('Obj.change enforcement', () => {
         obj.name = 'Jane';
 
         // Nested change should work (already in change context).
-        Obj.change(obj, (p2) => {
-          p2.age = 30;
+        Obj.change(obj, (obj) => {
+          obj.age = 30;
         });
       });
 
@@ -455,8 +455,8 @@ describe('Obj.change enforcement', () => {
         [Relation.Target]: target,
       });
 
-      Relation.change(rel, (obj) => {
-        const meta = Relation.getMeta(obj);
+      Relation.change(rel, (rel) => {
+        const meta = Relation.getMeta(rel);
         meta.tags = ['rel-tag'];
         meta.keys.push({ source: 'rel-source', id: 'rel-key' });
       });
@@ -473,14 +473,14 @@ describe('Obj.change enforcement', () => {
         [Relation.Target]: target,
       });
 
-      Relation.change(rel, (obj) => {
-        Relation.addTag(obj, 'important');
+      Relation.change(rel, (rel) => {
+        Relation.addTag(rel, 'important');
       });
 
       expect(Relation.getMeta(rel).tags).toContain('important');
 
-      Relation.change(rel, (obj) => {
-        Relation.removeTag(obj, 'important');
+      Relation.change(rel, (rel) => {
+        Relation.removeTag(rel, 'important');
       });
 
       expect(Relation.getMeta(rel).tags).not.toContain('important');

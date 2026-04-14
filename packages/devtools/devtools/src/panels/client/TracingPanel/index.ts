@@ -2,6 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-import { TracingPanel } from './TracingPanel';
-
-export default TracingPanel;
+export { TracingPanel as default } from './TracingPanel';

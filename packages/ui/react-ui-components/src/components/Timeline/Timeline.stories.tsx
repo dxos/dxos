@@ -9,7 +9,7 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { LogLevel, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Panel, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
@@ -34,7 +34,7 @@ enum IconType {
   // Interactions.
   USER = 'ph--user--regular',
   USER_INTERACTION = 'ph--user-sound--regular',
-  AGENT = 'ph--robot--regular',
+  AGENT = 'ph--drone--regular',
   THINK = 'ph--brain--regular',
   LINK = 'ph--link--regular',
   TOOL = 'ph--wrench--regular',
@@ -250,7 +250,7 @@ export const ExecutionGraph: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
   render: () => {
     const slice = 0;
-    const space = useSpace();
+    const [space] = useSpaces();
     const queue = useMemo(() => space?.queues.create(), [space]);
     useAsyncEffect(async () => {
       const objects = await Promise.all(research.map((obj) => Obj.fromJSON(obj)));

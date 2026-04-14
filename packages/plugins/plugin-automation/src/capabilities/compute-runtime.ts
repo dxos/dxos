@@ -175,9 +175,11 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     Database.Service,
                     GenericToolkit.GenericToolkitProvider,
                     Feed.FeedService,
+                    QueueService,
                     AiService.AiService,
                     OperationRegistry.Service,
                     Blueprint.RegistryService,
+                    CredentialsService,
                   ),
                 );
               }),
@@ -234,8 +236,8 @@ const TracingServiceLive = Layer.unwrapEffect(
     // TODO(burdon): Check ref target has loaded?
     if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (obj) => {
-        obj.invocationTraceQueue = Ref.fromDXN(queue.dxn);
+      Obj.change(properties, (properties) => {
+        properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
       });
     }
 

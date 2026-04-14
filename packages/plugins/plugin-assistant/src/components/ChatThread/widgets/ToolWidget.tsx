@@ -110,6 +110,11 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
 
+  // Clamp selected to avoid out-of-bounds after items shrink.
+  useEffect(() => {
+    setSelected((prev) => Math.min(prev, Math.max(0, items.length - 1)));
+  }, [items.length]);
+
   useEffect(() => {
     onChangeOpen?.(open);
     if (open) {
@@ -122,21 +127,29 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   }, []);
 
   return (
-    <TogglePanel.Root classNames='w-full rounded-xs border border-subdued-separator' open={open} onChangeOpen={setOpen}>
+    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
       <TogglePanel.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
-      <TogglePanel.Content classNames='grid grid-cols-[32px_1fr]'>
-        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json.Data
-          data={items[selected]?.content}
-          classNames='p-1 text-xs bg-transparent'
-          replacer={{
-            maxDepth: 3,
-            maxArrayLen: 10,
-            maxStringLen: 128,
-          }}
-        />
+      <TogglePanel.Content>
+        <TogglePanel.Viewport classNames='grid grid-cols-[32px_1fr]'>
+          <NumericTabs
+            ref={tabsRef}
+            classNames='p-1'
+            length={items.length}
+            selected={selected}
+            onSelect={handleSelect}
+          />
+          <Json.Data
+            data={items[selected]?.content}
+            classNames='p-1 text-xs bg-transparent'
+            replacer={{
+              maxDepth: 3,
+              maxArrayLen: 10,
+              maxStringLen: 128,
+            }}
+          />
+        </TogglePanel.Viewport>
       </TogglePanel.Content>
     </TogglePanel.Root>
   );

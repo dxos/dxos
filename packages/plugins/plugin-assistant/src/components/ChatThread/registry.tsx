@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import React from 'react';
+
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
 import { type BlockRenderer, type MessageThreadContext } from './sync';
+import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
   FallbackWidget,
   PromptWidget,
@@ -17,6 +20,7 @@ import {
   StatsWidget,
   SummaryWidget,
   ToolWidget,
+  StatusWidget,
 } from './widgets';
 
 /**
@@ -72,6 +76,14 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new StatsWidget(text) : null;
     },
   },
+  status: {
+    block: true,
+    streaming: true,
+    factory: ({ children, range }) => {
+      const text = getXmlTextChild(children);
+      return text ? new StatusWidget(text, range.from) : null;
+    },
+  },
 
   //
   // React Widgets (portaled outside of the editor)
@@ -83,9 +95,12 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   toolCall: {
     block: true,
-    Component: ToolWidget,
+    Component: (props) => (
+      <div role='none' className='py-2'>
+        <ToolWidget {...props} />
+      </div>
+    ),
   },
-
   toolResult: {
     block: true,
     Component: FallbackWidget,
@@ -159,22 +174,18 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
     }
 
     case 'toolCall': {
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
-        blocks: [block],
-      });
+      applyToolBlockToWidgetState(context, block);
       return `<toolCall id="${block.toolCallId}" />`;
     }
 
     case 'toolResult': {
       // TODO(dmaretskyi): the parameter could be undefined, perhaps tool blocks are not arriving in order.
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
-        blocks: [...blocks, block],
-      }));
+      applyToolBlockToWidgetState(context, block);
       break;
     }
 
     case 'stats': {
-      return renderXMLBlock('stats', { content: ContentBlock.createStatsMessage(block) });
+      return '';
     }
 
     case 'reasoning': {
@@ -189,6 +200,10 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       return renderXMLBlock('summary', { content: block.content, pending: block.pending });
     }
 
+    case 'status': {
+      return renderXMLBlock('status', { content: block.statusText, pending: block.pending });
+    }
+
     default: {
       // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
@@ -196,9 +211,24 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
   }
 };
 
+/**
+ * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
+ */
+const escapeXmlTextContent = (raw: string): string =>
+  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Strip actual list-marker prefixes without removing meaningful leading content.
+ */
+const stripBulletLikeLinePrefixes = (raw: string): string =>
+  raw
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*(?:[-*+•]|\d+[.)]\s)/, ''))
+    .join('\n');
+
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
   // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
-  const content = (opts.content ?? '').replace(/\n\n/g, ' ').trim();
+  const content = escapeXmlTextContent(stripBulletLikeLinePrefixes((opts.content ?? '').replace(/\n\n/g, ' ').trim()));
 
   if (opts.pending) {
     return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}`;

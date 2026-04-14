@@ -22,6 +22,10 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
     return false;
   }
 
+  if (!Obj.getDatabase(subject) || !Obj.getTypename(subject)) {
+    return false;
+  }
+
   const schema = Obj.getSchema(subject);
   return !(schema != null && Option.getOrElse(Annotation.SystemTypeAnnotation.get(schema), () => false));
 };

@@ -15,13 +15,13 @@ import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
-  CalendarSettings,
+  CalendarProperties,
   DraftMessageArticle,
   DraftsArticle,
   EventArticle,
   EventCard,
   MailboxArticle,
-  MailboxSettings,
+  MailboxProperties,
   MessageArticle,
   MessageCard,
   RelatedToContact,
@@ -151,16 +151,16 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
-        id: 'mailbox.companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Mailbox.Mailbox),
-        component: ({ data }) => <MailboxSettings subject={data.subject} />,
+        id: 'mailbox-properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Mailbox.Mailbox),
+        component: ({ data }) => <MailboxProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'calendar.companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Calendar.Calendar),
-        component: ({ data }) => <CalendarSettings subject={data.subject} />,
+        id: 'calendar-properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Calendar.Calendar),
+        component: ({ data }) => <CalendarProperties subject={data.subject} />,
       }),
 
       // TODO(card-cleanup): Remove.

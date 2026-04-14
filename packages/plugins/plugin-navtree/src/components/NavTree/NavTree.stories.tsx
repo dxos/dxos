@@ -44,7 +44,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
     <div className='flex p-1 items-center border-b border-separator'>
       <IconButton
         density='coarse'
-        icon='ph--atom--regular'
+        icon='ph--circle--regular'
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
