@@ -11,12 +11,19 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { NoHandlerError, Operation } from '@dxos/operation';
 
 import { ValueBag } from './compute';
 
+const OperationServiceLayerTest = Layer.succeed(Operation.Service, {
+  invoke: (op: Operation.Definition.Any) => Effect.fail(new NoHandlerError(op.meta.key)),
+  schedule: () => Effect.void,
+  invokePromise: async () => ({ error: new Error('Not implemented in test') }),
+} as Operation.OperationService);
+
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(OperationServiceLayerTest),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

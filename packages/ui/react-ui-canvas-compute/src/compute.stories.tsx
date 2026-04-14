@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,7 +14,7 @@ import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { CredentialsService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
+import { Operation, OperationHandlerSet, NoHandlerError } from '@dxos/operation';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
@@ -220,8 +221,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const OperationServiceLayerTest = Layer.effect(
+  Operation.Service,
+  Effect.gen(function* () {
+    return {
+      invoke: (op: Operation.Definition.Any) => Effect.fail(new NoHandlerError(op.meta.key)),
+      schedule: () => Effect.void,
+      invokePromise: async () => ({ error: new Error('Not implemented in test runtime') }),
+    } satisfies Operation.OperationService;
+  }),
+);
+
 const ServiceLayer = Layer.empty.pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(OperationServiceLayerTest),
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),

@@ -15,9 +15,10 @@ import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolv
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ComputeEventLogger, FunctionInvocationService, QueueService, Trace, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, QueueService, Trace, TracingService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 import { ValueBag, defineComputeNode } from '../../types';
@@ -156,7 +157,11 @@ export const gptNode = defineComputeNode({
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       TracingService.layerNoop,
-      FunctionInvocationService.layerNotAvailable,
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service is not available.'),
+        schedule: () => Effect.die('Operation.Service is not available.'),
+        invokePromise: () => Promise.resolve({ error: new Error('Operation.Service is not available.') }),
+      } as Operation.OperationService),
       Layer.succeed(Trace.TraceService, trace),
     );
 

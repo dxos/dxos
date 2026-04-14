@@ -13,13 +13,12 @@ import { Database, Feed } from '@dxos/echo';
 import {
   ComputeEventLogger,
   CredentialsService,
-  FunctionInvocationService,
   QueueService,
   Trace,
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';
-import { type FunctionServices } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -343,7 +342,7 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-      const layer: Layer.Layer<FunctionServices> = yield* this._createServiceLayer();
+      const layer = yield* this._createServiceLayer();
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
@@ -366,7 +365,7 @@ export class GraphExecutor {
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
-        Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
+        Layer.succeed(Operation.Service, yield* Operation.Service),
         Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
       );

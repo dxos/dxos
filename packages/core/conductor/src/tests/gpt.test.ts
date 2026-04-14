@@ -16,15 +16,22 @@ import { Feed } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { NoHandlerError, Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag } from '../types';
 
+const OperationServiceLayerTest = Layer.succeed(Operation.Service, {
+  invoke: (op: Operation.Definition.Any) => Effect.fail(new NoHandlerError(op.meta.key)),
+  schedule: () => Effect.void,
+  invokePromise: async () => ({ error: new Error('Not implemented in test') }),
+} as Operation.OperationService);
+
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(OperationServiceLayerTest),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

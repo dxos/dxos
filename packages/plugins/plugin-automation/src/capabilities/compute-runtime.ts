@@ -22,7 +22,6 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
@@ -36,10 +35,7 @@ import {
 } from '@dxos/functions';
 import {
   FeedTraceSink,
-  FunctionImplementationResolver,
-  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   ProcessManager,
-  RemoteFunctionExecutionService,
   ServiceResolver,
   TracingServiceExt,
   TriggerDispatcher,
@@ -200,24 +196,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ),
           Layer.provideMerge(feedServiceFromQueueServiceLayer),
           Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
-          Layer.provideMerge(
-            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-              Layer.provideMerge(genericToolkitProvider),
-              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
-              Layer.provideMerge(
-                RemoteFunctionExecutionService.fromClient(
-                  client,
-                  client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                ),
-              ),
-              Layer.provideMerge(aiServiceLayer),
-              Layer.provideMerge(CredentialsService.layerFromDatabase()),
-              Layer.provideMerge(ClientService.fromClient(client)),
-              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
-              Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
-              Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
-            ),
-          ),
+          Layer.provideMerge(genericToolkitProvider),
+          Layer.provideMerge(aiServiceLayer),
+          Layer.provideMerge(CredentialsService.layerFromDatabase()),
+          Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+          Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+          Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
         );
       }),
     );

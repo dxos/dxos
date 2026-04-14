@@ -11,7 +11,8 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ComputeEventLogger, CredentialsService, Trace, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { NoHandlerError, Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
@@ -30,8 +31,14 @@ import {
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
+const OperationServiceLayerTest = Layer.succeed(Operation.Service, {
+  invoke: (op: Operation.Definition.Any) => Effect.fail(new NoHandlerError(op.meta.key)),
+  schedule: () => Effect.void,
+  invokePromise: async () => ({ error: new Error('Not implemented in test') }),
+} as Operation.OperationService);
+
 const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(OperationServiceLayerTest),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),
