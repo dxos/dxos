@@ -19,11 +19,11 @@ import { meta } from '#meta';
 import { ExemplarOperation } from '#operations';
 import type { ExemplarItem } from '#types';
 
-export type ExemplarObjectSettingsProps = {
+export type ExemplarPropertiesProps = {
   subject: ExemplarItem.ExemplarItem;
 };
 
-export const ExemplarObjectSettings = ({ subject }: ExemplarObjectSettingsProps) => {
+export const ExemplarProperties = ({ subject }: ExemplarPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -40,4 +40,4 @@ export const ExemplarObjectSettings = ({ subject }: ExemplarObjectSettingsProps)
   );
 };
 
-export default ExemplarObjectSettings;
+export default ExemplarProperties;

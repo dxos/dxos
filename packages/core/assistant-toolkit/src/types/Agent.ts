@@ -53,7 +53,7 @@ export const Agent = Schema.Struct({
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 
-  // TODO(burdon): Rename?
+  // TODO(burdon): Rename. Explain what a "qualifying agent" is.
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent on subscriptions',
     description:

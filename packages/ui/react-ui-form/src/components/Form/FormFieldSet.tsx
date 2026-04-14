@@ -67,7 +67,6 @@ export const FormFieldSet = ({
       {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
       {properties.map((property) => {
         const name = property.name.toString();
-        console.log('=', property);
         return (
           <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
             <FormField

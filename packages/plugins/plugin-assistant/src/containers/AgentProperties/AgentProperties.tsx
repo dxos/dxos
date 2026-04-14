@@ -33,9 +33,9 @@ import {
 
 import { meta } from '#meta';
 
-export type AgentSettingsProps = AppSurface.ObjectSettingsProps<Agent.Agent>;
+export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>;
 
-export const AgentSettings = ({ subject: agent }: AgentSettingsProps) => {
+export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 

@@ -51,7 +51,7 @@ See [Surfaces API](../../../sdk/app-toolkit/docs/surfaces-api.md) for more detai
 | Surface          | Role                             | Filter                                                           | Component                 |
 | ---------------- | -------------------------------- | ---------------------------------------------------------------- | ------------------------- |
 | Article          | `article`, `section`             | `objectArticle(ExemplarItem)`                                    | `ExemplarArticle`         |
-| Object settings  | `object-settings`                | `objectSettings(ExemplarItem)`                                   | `ExemplarObjectSettings`  |
+| Object properties | `object-properties`             | `objectProperties(ExemplarItem)`                                 | `ExemplarProperties`      |
 | Plugin settings  | `article`                        | `settingsArticle(meta.id)`                                       | `ExemplarSettings`        |
 | Status indicator | `status-indicator`               | _(none)_                                                         | `ExemplarStatusIndicator` |
 | Companion        | `article`                        | `and(literalArticle('related'), companionArticle(ExemplarItem))` | `ExemplarCompanionPanel`  |

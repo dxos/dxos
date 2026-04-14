@@ -12,9 +12,11 @@ import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui'
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox } from '#types';
+import { Calendar } from '#types';
 
-export const MailboxSettings = ({ subject }: AppSurface.ObjectSettingsProps<Mailbox.Mailbox>) => {
+export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
+
+export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
@@ -22,15 +24,13 @@ export const MailboxSettings = ({ subject }: AppSurface.ObjectSettingsProps<Mail
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
     subject,
-    functionKey: 'org.dxos.function.inbox.google-mail-sync',
-    input: { restrictedMode: true },
+    functionKey: 'org.dxos.function.inbox.google-calendar-sync',
   });
 
   const handleViewTrigger = useCallback(() => {
     if (!db) {
       return;
     }
-
     void invokePromise(LayoutOperation.Open, {
       subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
       workspace: getSpacePath(db.spaceId),
@@ -39,7 +39,7 @@ export const MailboxSettings = ({ subject }: AppSurface.ObjectSettingsProps<Mail
 
   return (
     <div className='flex flex-col gap-4'>
-      <h2>{t('mailbox-sync.label')}</h2>
+      <h2>{t('calendar-sync.label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>
           <Button onClick={handleToggleSync} disabled={pending}>

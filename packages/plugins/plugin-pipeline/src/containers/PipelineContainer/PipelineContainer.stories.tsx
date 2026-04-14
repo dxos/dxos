@@ -26,7 +26,7 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '../../translations';
-import PipelineObjectSettings from '../PipelineObjectSettings';
+import PipelineProperties from '../PipelineProperties';
 import { PipelineContainer } from './PipelineContainer';
 
 random.seed(0);
@@ -43,7 +43,7 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
       <PipelineContainer role='article' subject={pipeline} attendableId='test' />
-      <PipelineObjectSettings pipeline={pipeline} classNames='border-s border-separator' />
+      <PipelineProperties pipeline={pipeline} classNames='border-s border-separator' />
     </div>
   );
 };

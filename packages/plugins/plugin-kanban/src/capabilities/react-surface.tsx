@@ -28,10 +28,10 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'object-settings',
-        role: 'object-settings',
+        id: 'object-properties',
+        role: 'object-properties',
         position: 'hoist',
-        filter: AppSurface.objectSettings(Kanban.Kanban),
+        filter: AppSurface.objectProperties(Kanban.Kanban),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({

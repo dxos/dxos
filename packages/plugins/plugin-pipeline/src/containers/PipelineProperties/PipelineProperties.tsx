@@ -25,14 +25,14 @@ const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
-export type PipelineObjectSettingsProps = ThemedClassName<{
+export type PipelinePropertiesProps = ThemedClassName<{
   pipeline: Pipeline.Pipeline;
 }>;
 
 /**
  * Supports editing the pipeline view.
  */
-export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectSettingsProps) => {
+export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(pipeline);
   const [expandedId, setExpandedId] = useState<string>();

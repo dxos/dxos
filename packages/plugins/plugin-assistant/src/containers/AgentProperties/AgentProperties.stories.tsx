@@ -14,13 +14,14 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { translations } from '../../translations';
-import { AgentSettings } from './AgentSettings';
+import { AgentProperties } from './AgentProperties';
 
 type DefaultStoryProps = {};
 
@@ -31,11 +32,16 @@ const DefaultStory = (_: DefaultStoryProps) => {
     return <Loading />;
   }
 
-  return <AgentSettings role='article' subject={agent} />;
+  return (
+    <div role='none' className='flex flex-col'>
+      <ObjectProperties object={agent} />
+      <AgentProperties role='article' subject={agent} />;
+    </div>
+  );
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/AgentSettings',
+  title: 'plugins/plugin-assistant/containers/AgentProperties',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
