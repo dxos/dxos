@@ -19,6 +19,7 @@ import {
   AiContextService,
   AiConversation,
   AiConversationService,
+  functionInvocationServiceFromOperations,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
@@ -190,7 +191,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               TracingServiceLive,
               FeedTraceSink.layerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              ToolExecutionServices,
+              ToolExecutionServices.pipe(Layer.provide(functionInvocationServiceFromOperations)),
               KeyValueStore.layerMemory,
             ),
           ),
