@@ -12,7 +12,7 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -39,7 +39,7 @@ describe('Blueprint Manager', () => {
     'query-blueprints: returns all registered blueprints',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* FunctionInvocationService.invokeFunction(QueryBlueprints, {});
+        const result = yield* Operation.invoke(QueryBlueprints, {});
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
         expect(keys).toContain('org.dxos.blueprint.database');
@@ -56,7 +56,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: enables blueprints with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
+        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
           keys: ['org.dxos.blueprint.database'],
         });
         expect(enabled).toHaveLength(1);
@@ -77,7 +77,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: rejects blueprints without agentCanEnable',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
+        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
           keys: ['org.dxos.blueprint.research'],
         });
         expect(enabled).toHaveLength(0);
@@ -98,7 +98,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: mixed keys enables only allowed ones',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
+        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
           keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.markdown', 'org.dxos.blueprint.research'],
         });
         expect(enabled).toHaveLength(2);
@@ -118,7 +118,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: unknown keys are rejected with reason',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
+        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
           keys: ['org.dxos.blueprint.nonexistent'],
         });
         expect(enabled).toHaveLength(0);

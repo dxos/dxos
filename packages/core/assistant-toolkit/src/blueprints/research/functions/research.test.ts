@@ -12,7 +12,7 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { OperationHandlerSet } from '@dxos/operation';
@@ -67,7 +67,7 @@ describe('Research', () => {
           }),
         );
         yield* Database.flush();
-        const result = yield* FunctionInvocationService.invokeFunction(research, {
+        const result = yield* Operation.invoke(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
 

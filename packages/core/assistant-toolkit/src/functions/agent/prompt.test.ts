@@ -10,7 +10,8 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService, QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
 import { OperationHandlerSet } from '@dxos/operation';
 import { Text } from '@dxos/schema';
@@ -63,7 +64,7 @@ describe('Agent prompt', () => {
 
         yield* Database.flush();
 
-        const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, {
+        const result = yield* Operation.invoke(AgentPrompt, {
           prompt: Ref.make(prompt),
           input: {},
           chat: Ref.make(chat),
