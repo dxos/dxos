@@ -64,7 +64,7 @@ export const Agent = Schema.Struct({
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent',
     description:
-      'If enabled, the qualifying agent will be used to determine if the event is relevant to the agent. Related events will be added to the input queue of the agent. It is recommended to enable this.',
+      'The qualifying agent determines if the event is relevant to the agent. Related events will be added to the input queue of the agent. It is recommended to enable this.',
   }),
 }).pipe(
   Type.object({
