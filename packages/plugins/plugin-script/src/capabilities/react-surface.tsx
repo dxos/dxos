@@ -91,7 +91,7 @@ export default Capability.makeModule(() =>
         id: 'properties',
         role: 'object-properties',
         filter: AppSurface.objectProperties(Script.Script),
-        component: ({ data }) => <ScriptProperties object={data.subject} />,
+        component: ({ data, role }) => <ScriptProperties role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion.execute',

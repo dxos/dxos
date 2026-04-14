@@ -17,14 +17,15 @@ import { isNonNullable } from '@dxos/util';
 import { translationKey } from '../../translations';
 import { Form, type FormFieldMap, omitId } from '../Form';
 
-export type ObjectPropertiesProps = PropsWithChildren<{
-  object: Obj.Unknown;
-}>;
+export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
 
 // TODO(wittjosiah): Reconcile w/ ObjectForm.
 export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
   ({ children, object, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
+    const meta = Obj.getMeta(object);
+    const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
+    const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
     const formSchema = useMemo(() => {
       return Function.pipe(
@@ -34,16 +35,6 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         Option.getOrUndefined,
       );
     }, [object]);
-
-    const meta = Obj.getMeta(object);
-    const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
-    const values = useMemo(
-      () => ({
-        tags,
-        ...object,
-      }),
-      [object, tags],
-    );
 
     const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
       invariant(db);
