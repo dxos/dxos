@@ -33,10 +33,9 @@ const DefaultStory = (_: DefaultStoryProps) => {
   }
 
   return (
-    <div role='none' className='flex flex-col'>
-      <ObjectProperties object={agent} />
-      <AgentProperties role='article' subject={agent} />;
-    </div>
+    <ObjectProperties object={agent}>
+      <AgentProperties role='object-properties' subject={agent} />
+    </ObjectProperties>
   );
 };
 

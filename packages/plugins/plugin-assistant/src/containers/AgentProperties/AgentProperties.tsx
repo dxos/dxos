@@ -37,8 +37,9 @@ export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>
 
 export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 
+  // TODO(burdon): Factor out.
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   const handleResetHistory = useCallback(async () => {
     const runtime = computeRuntime.getRuntime(Obj.getDatabase(agent)!.spaceId);
     await runtime.runPromise(Agent.resetChatHistory(agent));
