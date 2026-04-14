@@ -9,7 +9,9 @@ import * as Option from 'effect/Option';
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
-import { FunctionInvocationService } from '@dxos/functions';
+import * as Layer from 'effect/Layer';
+
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -37,7 +39,10 @@ export const formatSystemPrompt = ({
           Effect.gen(function* () {
             return trim`
             <blueprint>
-              ${yield* Template.processTemplate(template).pipe(Effect.provide(FunctionInvocationService.layerNotAvailable))}
+              ${yield* Template.processTemplate(template).pipe(Effect.provide(Layer.mergeAll(
+                  Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.die('Not available.') }),
+                  Layer.succeed(Operation.Service, { invoke: () => Effect.die('Not available.'), schedule: () => Effect.die('Not available.'), invokePromise: async () => ({ error: new Error('Not available.') }) } as any),
+                )))}
             </blueprint>
           `;
           }),

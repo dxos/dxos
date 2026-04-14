@@ -26,7 +26,6 @@ import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
 import {
   CredentialsService,
-  FunctionInvocationService,
   QueueService,
   type ServiceCredential,
   ServiceNotAvailableError,
@@ -41,7 +40,7 @@ import {
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
@@ -98,8 +97,7 @@ export type AssistantTestServices =
   | Trace.TraceSink
   // Deprecated
   | ToolExecutionService
-  | ToolResolverService
-  | FunctionInvocationService;
+  | ToolResolverService;
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
@@ -121,6 +119,7 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    Layer.provideMerge(ToolExecutionServices),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
@@ -178,18 +177,12 @@ export const AssistantTestLayer = ({
               AiService.AiService,
               OperationRegistry.Service,
               Blueprint.RegistryService,
-              FunctionInvocationService,
             ),
           );
         }),
       ),
     ),
-    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model), ToolExecutionServices)),
-    Layer.provideMerge(
-      FunctionInvocationServiceLayerTest({
-        functions: operationHandlersSet,
-      }),
-    ),
+    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model))),
     Layer.provideMerge(
       Layer.mergeAll(
         TestAiService({ preset: aiServicePreset, disableMemoization: disableLlmMemoization }),

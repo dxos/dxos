@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, functionInvocationServiceFromOperations, ToolExecutionServices } from '@dxos/assistant';
+import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -55,11 +55,7 @@ export default AgentWorker.pipe(
           .pipe(Effect.retry({ times: 2 }));
       },
       Effect.scoped,
-      Effect.provide(
-        Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
-          Layer.provideMerge(functionInvocationServiceFromOperations),
-        ),
-      ),
+      Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices)),
     ),
   ),
   Operation.opaqueHandler,

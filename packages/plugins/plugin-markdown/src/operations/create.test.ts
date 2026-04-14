@@ -13,7 +13,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { DXN, Database, Feed, Obj, Query } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -49,7 +49,7 @@ describe('create', () => {
       function* (_) {
         const name = 'BlueYard';
         const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* FunctionInvocationService.invokeFunction(Create, {
+        const result = yield* Operation.invoke(Create, {
           name,
           content,
         });

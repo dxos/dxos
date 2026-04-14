@@ -16,7 +16,6 @@ import { AiService, ConsolePrinter, GenericToolkit, ModelName } from '@dxos/ai';
 import {
   AiConversation,
   GenerationObserver,
-  functionInvocationServiceFromOperations,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -143,12 +142,7 @@ export default AgentPrompt.pipe(
         );
       },
       Effect.scoped,
-      Effect.provide(
-        Layer.empty.pipe(
-          Layer.provideMerge(functionInvocationServiceFromOperations),
-          Layer.provideMerge(TracingService.layerNoop),
-        ),
-      ),
+      Effect.provide(TracingService.layerNoop),
     ),
   ),
   Operation.opaqueHandler,
