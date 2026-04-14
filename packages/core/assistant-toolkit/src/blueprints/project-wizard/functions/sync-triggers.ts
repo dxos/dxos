@@ -84,6 +84,8 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         continue;
       }
 
+      const filterEvents = filterEvents ?? true;
+
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
@@ -98,17 +100,17 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             kind: 'queue',
             queue: queueDxn.toString(),
           },
-          function: Ref.make(Operation.serialize(agent.filterEvents ? Qualifier : AgentWorker)),
+          function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',
           },
-          concurrency: agent.filterEvents ? 5 : undefined,
+          concurrency: filterEvents ? 5 : undefined,
         }),
       );
     }
 
-    if (agent.filterEvents && agent.queue) {
+    if (filterEvents && agent.queue) {
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
