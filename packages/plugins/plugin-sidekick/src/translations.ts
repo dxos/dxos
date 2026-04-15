@@ -5,19 +5,19 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Sidekick } from '#types';
+import { Profile, Properties } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Sidekick.Profile.typename]: {
+      [Profile.Profile.typename]: {
         'typename.label': 'Profile',
         'typename.label_zero': 'Profiles',
         'typename.label_one': 'Profile',
         'typename.label_other': 'Profiles',
         'object-name.placeholder': 'New profile',
       },
-      [Sidekick.Properties.typename]: {
+      [Properties.Properties.typename]: {
         'typename.label': 'Sidekick Properties',
       },
       [meta.id]: {

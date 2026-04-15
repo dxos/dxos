@@ -7,13 +7,13 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { Sidekick } from '#types';
+import { Profile, Properties } from '#types';
 
 import { translations } from './translations';
 
 export const SidekickPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addSchemaModule({ schema: [Sidekick.Profile, Sidekick.Properties] }),
+  AppPlugin.addSchemaModule({ schema: [Profile.Profile, Properties.Properties] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

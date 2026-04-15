@@ -28,22 +28,7 @@ export const Profile = Schema.Struct({
 
 export interface Profile extends Schema.Schema.Type<typeof Profile> {}
 
-export const Properties = Schema.Struct({
-  journalEnabled: Schema.optional(Schema.Boolean),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.sidekick.properties',
-    version: '0.1.0',
-  }),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--brain--regular',
-    hue: 'violet',
-  }),
-);
-
-export interface Properties extends Schema.Schema.Type<typeof Properties> {}
-
-export const makeProfile = (props: { subject: Ref.Ref<Obj.Unknown>; document: Ref.Ref<Obj.Unknown> }) =>
+export const make = (props: { subject: Ref.Ref<Obj.Unknown>; document: Ref.Ref<Obj.Unknown> }) =>
   Obj.make(Profile, {
     subject: props.subject,
     document: props.document,
