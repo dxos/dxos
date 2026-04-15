@@ -25,15 +25,20 @@ export type DevServerHandle = {
   readonly logFile?: string;
 };
 
-/** Ping `url` with a short timeout; resolve true iff it returns any response. */
-export const isUp = async (url: string = DEFAULT_URL, timeoutMs = 2_000): Promise<boolean> => {
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
-    // Any response at all (including 404) means the port is live.
-    return response.status > 0;
-  } catch {
-    return false;
+/** Ping `url` with a generous timeout; resolve true iff it returns any response. Forces IPv4 to avoid ::1/127.0.0.1 mismatches. */
+export const isUp = async (url: string = DEFAULT_URL, timeoutMs = 10_000): Promise<boolean> => {
+  const v4Url = url.replace('localhost', '127.0.0.1');
+  for (const target of [v4Url, url]) {
+    try {
+      const response = await fetch(target, { signal: AbortSignal.timeout(timeoutMs) });
+      if (response.status > 0) {
+        return true;
+      }
+    } catch {
+      // try next
+    }
   }
+  return false;
 };
 
 /** Wait until `isUp(url)` returns true, or throw after `timeoutMs`. */
