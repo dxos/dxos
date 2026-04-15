@@ -306,6 +306,43 @@ export default defineConfig((env) => ({
       },
     },
 
+    // GitHub REST proxy (dev only). Forwards /api/github/* → api.github.com/*
+    // so plugin-demo's PR poller can call the GitHub API without CORS issues.
+    {
+      name: 'github-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/github', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const targetPath = url.pathname.replace('/api/github', '');
+          const targetUrl = `https://api.github.com${targetPath}${url.search}`;
+          try {
+            const headers: Record<string, string> = {};
+            for (const [key, value] of Object.entries(req.headers)) {
+              if (typeof value === 'string' && (key === 'authorization' || key === 'accept' || key === 'user-agent')) {
+                headers[key] = value;
+              }
+            }
+            if (!headers['user-agent']) {
+              headers['user-agent'] = 'dxos-composer-demo';
+            }
+            const response = await globalThis.fetch(targetUrl, {
+              method: req.method ?? 'GET',
+              headers,
+            });
+            const contentType = response.headers.get('content-type');
+            if (contentType) {
+              res.setHeader('content-type', contentType);
+            }
+            res.statusCode = response.status;
+            res.end(await response.text());
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
+
     // Generic URL fetch proxy (dev only). Lets the browser pull public HTML pages
     // without CORS. Intentionally dumb — no allowlist, dev-mode convenience.
     // In production this would need an allowlist or a separate edge function.
