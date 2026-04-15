@@ -80,7 +80,12 @@ export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> =
  */
 export const objectFromJSON = async (
   jsonData: unknown,
-  { refResolver, dxn, database }: { refResolver?: RefResolver; dxn?: DXN; database?: Database.Database } = {},
+  {
+    refResolver,
+    dxn,
+    database,
+    parent,
+  }: { refResolver?: RefResolver; dxn?: DXN; database?: Database.Database; parent?: Obj.Unknown } = {},
 ): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
@@ -138,7 +143,9 @@ export const objectFromJSON = async (
 
   if (jsonData[ATTR_PARENT]) {
     const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    const parent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    defineHiddenProperty(obj, ParentId, resolvedParent);
+  } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);
   }
 

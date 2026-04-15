@@ -23,7 +23,7 @@ import {
   ChatContainer,
   ChatDialog,
   AgentArticle,
-  AgentSettings,
+  AgentProperties,
   PromptArticle,
   PromptList,
   TracePanel,
@@ -64,10 +64,10 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'agent.companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Agent.Agent),
-        component: ({ data }) => <AgentSettings subject={data.subject} />,
+        id: 'agent-properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Agent.Agent),
+        component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion-chat',

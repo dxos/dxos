@@ -75,7 +75,6 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
     // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
       const pluginManager = setupPluginManager(options);
-
       const capability = Capability.contributes(Capabilities.ReactRoot, {
         id: storyId,
         root: () => <Story />,
@@ -115,7 +114,6 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
   }, [fireEvents, pluginManager, storyId]);
 
   const App = useApp({ pluginManager, setupEvents });
-
   return <App />;
 };
 

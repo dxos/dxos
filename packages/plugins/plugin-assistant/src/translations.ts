@@ -159,7 +159,7 @@ export const translations = [
         'artifacts.label': 'Artifacts',
         'input-queue.label': 'Inputs',
 
-        // AgentSettings.
+        // AgentProperties.
         'instructions.label': 'Instructions',
         'agent.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
