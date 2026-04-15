@@ -594,10 +594,11 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }
     log('lifecycle: failed', { cause: Cause.pretty(cause) });
     this.#finished = true;
-    return this.#cleanup().pipe(
-      Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.failCause(cause))),
-      Effect.tap(() => this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void),
-    );
+    return Effect.gen(this, function* () {
+      this.#setStatus(Process.State.FAILED, Exit.failCause(cause));
+      yield* this.#cleanup();
+      yield* this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void;
+    });
   }
 
   #cleanup(): Effect.Effect<void> {

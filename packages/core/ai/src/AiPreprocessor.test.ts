@@ -37,7 +37,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
   );
 
   it.effect(
-    'should handle multiple tool results at the start of a message',
+    'drops tool results at the start of a message when there is no matching tool call',
     Effect.fn(function* ({ expect }) {
       const message = makeMessage('tool', [
         {
@@ -57,69 +57,52 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       ]);
 
       const input = yield* AiPreprocessor.preprocessPrompt([message]);
-      expect(input.content).toHaveLength(1);
-
-      // First message should be tool results.
-      expect(input.content[0].role).toBe('tool');
-      const toolMessage = input.content[0] as Prompt.ToolMessage;
-      expect(toolMessage.content).toHaveLength(2);
-      expect(toolMessage.content[0]).toEqual(
-        Prompt.makePart('tool-result', {
-          id: 'call_1',
-          name: 'calculator',
-          result: 'Result of tool 1',
-          isFailure: false,
-          providerExecuted: false,
-        }),
-      );
-      expect(toolMessage.content[1]).toEqual(
-        Prompt.makePart('tool-result', {
-          id: 'call_2',
-          name: 'calculator',
-          result: 'Result of tool 2',
-          isFailure: false,
-          providerExecuted: false,
-        }),
-      );
+      expect(input.content).toHaveLength(0);
     }),
   );
 
   it.effect(
     'should handle assistant message with tool calls',
     Effect.fn(function* ({ expect }) {
-      const message = makeMessage('assistant', [
-        {
-          _tag: 'text',
-          text: 'I need to calculate something.',
-        },
-        {
-          _tag: 'toolCall',
-          toolCallId: 'call_1',
-          name: 'calculator',
-          input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
-          providerExecuted: true,
-        },
-        {
-          _tag: 'text',
-          text: 'Let me process that for you.',
-        },
-      ]);
+      const messages = [
+        makeMessage('assistant', [
+          {
+            _tag: 'text',
+            text: 'I need to calculate something.',
+          },
+          {
+            _tag: 'toolCall',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
+            providerExecuted: false,
+          },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            result: JSON.stringify('Result of tool 1'),
+            providerExecuted: false,
+          },
+        ]),
+      ];
 
-      const input = yield* AiPreprocessor.preprocessPrompt([message]);
-      expect(input.content).toHaveLength(1);
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
+      expect(input.content).toHaveLength(2);
 
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
-      expect(assistantMessage.content).toHaveLength(3);
+      expect(assistantMessage.content).toHaveLength(2);
       expect(assistantMessage.content[0]).toEqual(Prompt.makePart('text', { text: 'I need to calculate something.' }));
       expect(assistantMessage.content[1]).toEqual(
         Prompt.makePart('tool-call', {
           id: 'call_1',
           name: 'calculator',
           params: { operation: 'add', a: 2, b: 2 },
-          providerExecuted: true,
+          providerExecuted: false,
         }),
       );
-      expect(assistantMessage.content[2]).toEqual(Prompt.makePart('text', { text: 'Let me process that for you.' }));
     }),
   );
 
@@ -365,9 +348,16 @@ describe('AiPreprocessor.preprocessPrompt', () => {
   );
 
   it.effect(
-    'handles provider-executed tool results',
+    'handles provider-executed tool calls and matching tool results in the assistant message',
     Effect.fn(function* ({ expect }) {
       const message = makeMessage('assistant', [
+        {
+          _tag: 'toolCall',
+          toolCallId: 'call_1',
+          name: 'test',
+          input: '{}',
+          providerExecuted: true,
+        },
         {
           _tag: 'toolResult',
           toolCallId: 'call_1',
@@ -381,6 +371,12 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       expect(result.content).toHaveLength(1);
       expect(result.content[0].role).toBe('assistant');
       expect(result.content[0].content).toEqual([
+        Prompt.makePart('tool-call', {
+          id: 'call_1',
+          name: 'test',
+          params: {},
+          providerExecuted: true,
+        }),
         Prompt.makePart('tool-result', {
           id: 'call_1',
           name: 'test',
@@ -497,6 +493,68 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       const input = yield* AiPreprocessor.preprocessPrompt(messages);
       expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool', 'assistant']);
       expect(input.content[1].content.length).toEqual(2);
+    }),
+  );
+
+  it.effect(
+    'drops duplicate tool results for the same tool call id',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            result: JSON.stringify('first'),
+            providerExecuted: false,
+          },
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            result: JSON.stringify('second'),
+            providerExecuted: false,
+          },
+        ]),
+      ];
+
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
+      const toolMsg = input.content[1] as Prompt.ToolMessage;
+      expect(toolMsg.content).toHaveLength(1);
+      expect(toolMsg.content[0]).toEqual(
+        Prompt.makePart('tool-result', {
+          id: 'call_1',
+          name: 'calculator',
+          result: 'first',
+          isFailure: false,
+          providerExecuted: false,
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'drops providerExecuted tool calls without results',
+    Effect.fn(function* ({ expect }) {
+      const message = makeMessage('assistant', [
+        { _tag: 'text', text: 'I need to calculate something.' },
+        { _tag: 'toolCall', toolCallId: 'call_1', name: 'web_search', input: '{}', providerExecuted: true },
+        { _tag: 'text', text: 'Let me process that for you.' },
+      ]);
+
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
+      expect(input.content).toHaveLength(1);
+      expect(input.content).toEqual([
+        Prompt.makeMessage('assistant', {
+          content: [
+            Prompt.makePart('text', { text: 'I need to calculate something.' }),
+            Prompt.makePart('text', { text: 'Let me process that for you.' }),
+          ],
+        }),
+      ]);
     }),
   );
 });
