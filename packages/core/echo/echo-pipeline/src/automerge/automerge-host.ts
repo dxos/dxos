@@ -105,7 +105,7 @@ const OPTIMIZED_SHARE_POLICY = true;
 /**
  * Abstracts over the AutomergeRepo.
  */
-@trace.resource()
+@trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;

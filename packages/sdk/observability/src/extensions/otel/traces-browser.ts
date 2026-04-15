@@ -93,6 +93,7 @@ export class OtelTraces {
           '@opentelemetry/instrumentation-fetch': { enabled: false, ignoreUrls: [/api\.ipdata\.co/] },
           '@opentelemetry/instrumentation-document-load': { enabled: false },
           '@opentelemetry/instrumentation-xml-http-request': { enabled: false },
+          '@opentelemetry/instrumentation-user-interaction': { enabled: false },
         }),
       ],
     });

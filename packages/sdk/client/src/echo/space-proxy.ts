@@ -295,6 +295,17 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   /**
+   * Called by SpaceList before open() to ensure this._ctx carries the parent trace context
+   * before initialization has run.
+   * @internal Package-private.
+   */
+  _setParentCtx(parentCtx: Context): void {
+    if (!this._initialized && !this._initializing) {
+      this._ctx = new Context({ parent: parentCtx });
+    }
+  }
+
+  /**
    * Called by SpaceList to notify that a reconnection is starting.
    * The space will ignore state updates until the backend reaches READY again.
    * @internal Package-private.

@@ -196,7 +196,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._streamSubscriptions.add(() => spacesStream.close());
   }
 
-  private _openSpaceAsync(spaceProxy: Space): void {
+  private _openSpaceAsync(spaceProxy: SpaceProxy): void {
+    spaceProxy._setParentCtx(this._ctx);
     void spaceProxy.open().catch((err) => log.catch(err));
   }
 

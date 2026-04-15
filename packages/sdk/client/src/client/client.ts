@@ -375,7 +375,7 @@ export class Client {
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
-    await this._open();
+    await this._open(this._ctx);
     invariant(this._runtime, 'Client runtime initialization failed.');
 
     // TODO(dmaretskyi): Refactor devtools init.
@@ -389,7 +389,8 @@ export class Client {
     return this;
   }
 
-  private async _open(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
     const { SpaceList } = await import('../echo/space-list');
@@ -412,7 +413,7 @@ export class Client {
       }
       if (!this._resetting) {
         await this._close();
-        await this._open();
+        await this._open(this._ctx);
         this.reloaded.emit();
       }
     });
@@ -435,7 +436,7 @@ export class Client {
       queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
     });
     log('client._open: opening echo client...');
-    await this._echoClient.open(this._ctx);
+    await this._echoClient.open(ctx);
     log('client._open: echo client opened');
 
     const mesh = new MeshProxy(this._services, this._instanceId);
@@ -454,7 +455,7 @@ export class Client {
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     log('client._open: subscribing to system status...');
-    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx: this._ctx });
+    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx });
     this._statusStream.subscribe(
       async ({ status }) => {
         log('client._open: status received', { status });
@@ -483,7 +484,7 @@ export class Client {
     log('client._open: status trigger resolved');
 
     log('client._open: opening runtime...');
-    await this._runtime.open(this._ctx);
+    await this._runtime.open(ctx);
     log('client._open: runtime opened');
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.

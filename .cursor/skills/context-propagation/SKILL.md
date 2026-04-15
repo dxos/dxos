@@ -244,6 +244,26 @@ Callback / detached async work:
 | Promise.all fan-out                      | Same `ctx` for all branches |
 | No caller ctx available                  | Lifecycle `this._ctx`       |
 
+## No Orphaned Internal Spans
+
+**Every `@trace.span()` method that runs inside a service or resource MUST have a parent span.** An orphaned root span (one with no `parentSpanID`) means the trace context chain is broken — the span is disconnected from the trace tree and provides no useful correlation.
+
+Allowed root spans (no parent):
+- **Public API entry points** — `Client.initialize()`, `HaloProxy.createIdentity()`, `SpaceList.create()` — these are user-initiated actions that start a new trace.
+- **Stream/subscription callbacks** using `this._ctx` from a `@trace.resource({ lifecycle: true })` class — the lifecycle span IS the root, and the callback span is its child.
+
+Disallowed orphaned spans:
+- Any `@trace.span()` method inside a `Resource` subclass that has no parent. Fix: add `lifecycle: true` to the class's `@trace.resource()` so `this._ctx` carries the lifecycle span's trace context.
+- Any `@trace.span()` method called from an RPC handler that ignores `options.ctx`. Fix: read `options?.ctx ?? Context.default()` and forward it.
+- Any intermediate method that creates `Context.default()` instead of forwarding the caller's `ctx`.
+
+When adding a new `@trace.span()` to an internal method, verify that at least one of these is true:
+1. The method accepts `ctx: Context` as its first parameter and the caller forwards a traced context.
+2. The method runs inside a `@trace.resource({ lifecycle: true })` class and uses `this._ctx` (which carries the lifecycle span).
+3. The method is an RPC handler that reads `options.ctx`.
+
+If none of these hold, the span will be orphaned. Either fix the call chain or don't add `@trace.span()`.
+
 ## Common Mistakes
 
 - **Breaking the chain with `Context.default()` in an intermediate method** — if a method calls `child(Context.default())` where `child` has `@trace.span()`, the span is an orphaned root. The intermediate method must accept `ctx` from its caller and forward it.

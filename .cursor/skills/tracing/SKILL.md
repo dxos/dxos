@@ -182,6 +182,8 @@ Rules:
 
 Method decorator. Creates a span for the method's execution duration.
 
+**No orphaned internal spans.** Every `@trace.span()` on an internal method must have a parent — either from an incoming `ctx` parameter, from `this._ctx` on a `lifecycle: true` resource, or from `options.ctx` in an RPC handler. If the method has no way to receive a parent trace context, don't add `@trace.span()` to it. See the [context-propagation](../context-propagation/SKILL.md) skill for the full rule.
+
 ```typescript
 @trace.resource()
 class DataSpace {

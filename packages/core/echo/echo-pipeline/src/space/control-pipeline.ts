@@ -182,7 +182,7 @@ export class ControlPipeline {
     }
   }
 
-  @trace.span()
+  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private async _processMessage(ctx: Context, msg: FeedMessageBlock): Promise<void> {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {
