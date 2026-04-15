@@ -343,6 +343,47 @@ export default defineConfig((env) => ({
       },
     },
 
+    // Slack Web API proxy (dev only). Forwards /api/slack/* → slack.com/api/*.
+    // Slack doesn't allow browser Authorization headers, so posts from Composer
+    // (e.g. plugin-demo's Slack nudge) have to go through a proxy.
+    {
+      name: 'slack-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/slack', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const targetPath = url.pathname.replace('/api/slack', '');
+          const targetUrl = `https://slack.com/api${targetPath}${url.search}`;
+          try {
+            const headers: Record<string, string> = {};
+            for (const [key, value] of Object.entries(req.headers)) {
+              if (typeof value === 'string' && (key === 'authorization' || key === 'content-type')) {
+                headers[key] = value;
+              }
+            }
+            const chunks: Buffer[] = [];
+            for await (const chunk of req as any) {
+              chunks.push(Buffer.from(chunk));
+            }
+            const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+            const response = await globalThis.fetch(targetUrl, {
+              method: req.method ?? 'GET',
+              headers,
+              body,
+            });
+            const contentType = response.headers.get('content-type');
+            if (contentType) {
+              res.setHeader('content-type', contentType);
+            }
+            res.statusCode = response.status;
+            res.end(await response.text());
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
+
     // Generic URL fetch proxy (dev only). Lets the browser pull public HTML pages
     // without CORS. Intentionally dumb — no allowlist, dev-mode convenience.
     // In production this would need an allowlist or a separate edge function.

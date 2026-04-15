@@ -40,7 +40,9 @@ export const readSlackPostConfig = (): SlackPostConfig | undefined => {
 
 /** Post a nudge to Slack. Resolves on success; throws on failure (bad token, channel, network). */
 export const postNudgeToSlack = async (config: SlackPostConfig, text: string): Promise<void> => {
-  const response = await fetch('https://slack.com/api/chat.postMessage', {
+  // Go via composer-app's /api/slack dev proxy — Slack's Web API rejects
+  // browser Authorization headers on direct cross-origin POSTs.
+  const response = await fetch('/api/slack/chat.postMessage', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
