@@ -15,11 +15,13 @@
   "bin": {
     "demo-populate-trello": "./populate-trello.ts",
     "demo-reset": "./reset.ts",
+    "demo-run": "./run.ts",
     "demo-setup": "./setup.ts"
   },
   "scripts": {
     "populate-trello": "tsx populate-trello.ts",
     "reset": "tsx reset.ts",
+    "run": "tsx run.ts",
     "setup": "tsx setup.ts"
   },
   "dependencies": {

@@ -18,7 +18,6 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { ConnectionsPlugin } from '@dxos/plugin-connections';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { CryptoPlugin } from '@dxos/plugin-crypto';
-import { DealFlowPlugin } from '@dxos/plugin-dealflow';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DemoPlugin } from '@dxos/plugin-demo';
@@ -208,7 +207,6 @@ export const getPlugins = ({
     ConnectionsPlugin(),
     CryptoPlugin(),
     DailySummaryPlugin(),
-    DealFlowPlugin(),
     DebugPlugin({ logBuffer }),
     DemoPlugin(),
     isLabs && ExcalidrawPlugin(),

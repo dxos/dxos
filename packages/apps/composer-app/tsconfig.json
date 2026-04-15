@@ -116,9 +116,6 @@
       "path": "../../plugins/plugin-daily-summary"
     },
     {
-      "path": "../../plugins/plugin-dealflow"
-    },
-    {
       "path": "../../plugins/plugin-debug"
     },
     {

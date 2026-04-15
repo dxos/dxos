@@ -46,7 +46,6 @@
     "@dxos/plugin-connections": "workspace:*",
     "@dxos/plugin-crypto": "workspace:*",
     "@dxos/plugin-daily-summary": "workspace:*",
-    "@dxos/plugin-dealflow": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-demo": "workspace:*",

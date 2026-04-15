@@ -25,29 +25,15 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import dotenv from 'dotenv';
-import { type BrowserContext, chromium, type Page } from 'playwright';
+import { type BrowserContext, chromium } from 'playwright';
+
+import { collectLocalStorageValues, writeLocalStorage } from './lib/localstorage';
 
 const DEMO_DIR = dirname(fileURLToPath(import.meta.url));
 const USER_DATA_DIR = resolve(DEMO_DIR, 'playwright-user-data');
 const ENV_PATH = resolve(DEMO_DIR, '.env.demo');
 const DEFAULT_COMPOSER_URL = 'http://localhost:5173';
 const BOOTSTRAP_TIMEOUT_MS = 60_000;
-
-const LOCAL_STORAGE_KEYS = [
-  'ANTHROPIC_API_KEY',
-  'TRELLO_API_KEY',
-  'TRELLO_API_TOKEN',
-  'TRELLO_BOARD_ID',
-  'GRANOLA_API_KEY',
-  'SLACK_BOT_TOKEN',
-  'SLACK_CHANNELS',
-  'SLACK_NUDGE_CHANNEL',
-  'GITHUB_PAT',
-  'GITHUB_REPO',
-  'DEMO_PERSONA_NAME',
-  'DEMO_PERSONA_EMAIL',
-  'DEMO_ORG_NAME',
-] as const;
 
 const main = async (): Promise<void> => {
   if (!existsSync(ENV_PATH)) {
@@ -97,14 +83,7 @@ const navigateAndInject = async (context: BrowserContext, composerUrl: string): 
   console.log('Waiting for Composer to boot (up to 60 s)…');
   await page.waitForLoadState('networkidle', { timeout: BOOTSTRAP_TIMEOUT_MS }).catch(() => undefined);
 
-  const values = LOCAL_STORAGE_KEYS.reduce<Record<string, string>>((accumulator, key) => {
-    const value = process.env[key];
-    if (value && value.length > 0) {
-      accumulator[key] = value;
-    }
-    return accumulator;
-  }, {});
-
+  const values = collectLocalStorageValues(process.env);
   if (Object.keys(values).length === 0) {
     console.warn('No credentials found in .env.demo. Skipping localStorage injection.');
     return;
@@ -117,14 +96,6 @@ const navigateAndInject = async (context: BrowserContext, composerUrl: string): 
   }
   await page.reload({ waitUntil: 'domcontentloaded' });
   console.log('Reloaded with credentials in place.');
-};
-
-const writeLocalStorage = async (page: Page, values: Record<string, string>): Promise<void> => {
-  await page.evaluate((entries) => {
-    for (const [key, value] of Object.entries(entries)) {
-      globalThis.localStorage.setItem(key, value);
-    }
-  }, values);
 };
 
 const printInstructions = (composerUrl: string): void => {

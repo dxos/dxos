@@ -16,6 +16,7 @@ import { bootstrapFromEnv, type BootstrapResult } from './bootstrap-from-env';
 import { matchNoteToCards } from './match-cards';
 import { pollMergedPullRequests } from './pr-poller';
 import { seedSoftwareTeamFixture } from './seed-fixture';
+import { postNudgeToSlack, readSlackPostConfig } from './slack-post';
 import { Demo } from '#types';
 
 const PR_POLL_INTERVAL_MS = 15_000;
@@ -241,6 +242,39 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
 
     return () => clearTimeout(timer);
   }, [db, events, cards, matches]);
+
+  // Live-Slack poster: when DEMO_LIVE_SLACK=true, post each unposted nudge to
+  // real Slack and flip `posted` on success. Runs after the nudge emitter so
+  // both steps are visible in the panel.
+  const postedNudgeIds = useRef(new Set<string>());
+  useEffect(() => {
+    const config = readSlackPostConfig();
+    if (!config) {
+      return;
+    }
+    const pending = nudges.filter(
+      (nudge) => !nudge.posted && !postedNudgeIds.current.has(nudge.id),
+    );
+    if (pending.length === 0) {
+      return;
+    }
+    for (const nudge of pending) {
+      postedNudgeIds.current.add(nudge.id);
+    }
+    void (async () => {
+      for (const nudge of pending) {
+        try {
+          await postNudgeToSlack(config, nudge.text);
+          Obj.change(nudge, (mutable) => {
+            mutable.posted = true;
+          });
+          log.info('demo: nudge posted to slack', { id: nudge.id, channel: config.channel });
+        } catch (err) {
+          log.warn('demo: slack post failed', { id: nudge.id, error: String(err) });
+        }
+      }
+    })();
+  }, [nudges]);
 
   // PR poller: when GITHUB_PAT + GITHUB_REPO are in localStorage, poll for
   // newly-merged PRs every 15s. The poller upserts GitHubPullRequest objects
