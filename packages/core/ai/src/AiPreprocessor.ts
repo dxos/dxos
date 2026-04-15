@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Prompt from '@effect/ai/Prompt';
-import { Match } from 'effect';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -13,7 +12,7 @@ import { flow } from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
