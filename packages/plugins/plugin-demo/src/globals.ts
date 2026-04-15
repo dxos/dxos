@@ -125,6 +125,7 @@ const api = {
       injectPrMerged: 'Fire a synthetic PR merge → triggers Slack nudge.',
       injectSlackMessage: 'Fire a fake Slack message.',
       pollGithub: 'Poll the real GitHub repo once.',
+      replayMerge: 'Re-fire a pr-merged event for a PR that merged before the observer started.',
       whichSpace: 'Show the space id the demo is writing into.',
       status: 'Dump counts + content of events, matches, nudges, cards, PRs.',
       reset: 'Clear all demo events/matches/nudges.',
@@ -210,6 +211,56 @@ const api = {
       throw new Error('GITHUB_PAT and GITHUB_REPO must be set in localStorage.');
     }
     return pollMergedPullRequests(space.db, { pat, repo });
+  },
+
+  /**
+   * Re-fire a pr-merged DemoEvent for an already-merged PR. Use this for
+   * rehearsal when you don't want to open a fresh PR on GitHub just to
+   * trigger the nudge loop.
+   */
+  async replayMerge(prNumber: number) {
+    const space = await ensureReady();
+    const pat = globalThis.localStorage?.getItem('GITHUB_PAT') ?? '';
+    const repo = globalThis.localStorage?.getItem('GITHUB_REPO') ?? '';
+    if (!pat || !repo) {
+      throw new Error('GITHUB_PAT and GITHUB_REPO must be set in localStorage.');
+    }
+    const response = await fetch(`/api/github/repos/${repo}/pulls/${prNumber}`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: 'application/vnd.github.v3+json' },
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub ${response.status}: ${await response.text()}`);
+    }
+    const pr = (await response.json()) as {
+      number: number;
+      title: string;
+      body?: string;
+      html_url: string;
+      merged_at?: string;
+      user?: { login: string };
+    };
+    const title = pr.title;
+    const body = (pr.body ?? '').slice(0, 4000);
+    const keywords = [...`${title}\n${body}`.toLowerCase().matchAll(/[a-z][a-z0-9-]{3,}/g)]
+      .map((match) => match[0])
+      .filter((token, index, array) => array.indexOf(token) === index)
+      .slice(0, 10);
+    space.db.add(
+      Demo.makeEvent({
+        kind: 'pr-merged',
+        label: `[replay] GitHub PR #${pr.number} merged: ${title}`,
+        payload: {
+          number: pr.number,
+          repo,
+          title,
+          author: pr.user?.login,
+          url: pr.html_url,
+          mergedAt: pr.merged_at ?? new Date().toISOString(),
+          relatedKeywords: keywords,
+        },
+      }),
+    );
+    return { number: pr.number, title, keywords };
   },
 
   /** Return the space ID the demo is operating against. Useful when Composer is showing a different space. */
