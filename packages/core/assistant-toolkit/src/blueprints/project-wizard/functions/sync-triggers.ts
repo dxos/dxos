@@ -84,7 +84,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         continue;
       }
 
-      const filterEvents = filterEvents ?? true;
+      const filterEvents = agent.filterEvents ?? true;
 
       yield* Database.add(
         Trigger.make({
@@ -110,7 +110,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       );
     }
 
-    if (filterEvents && agent.queue) {
+    if ((agent.filterEvents ?? true) && agent.queue) {
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
