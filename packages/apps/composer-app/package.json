@@ -75,6 +75,7 @@
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
+    "@dxos/plugin-sidekick": "workspace:*",
     "@dxos/plugin-simple-layout": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

@@ -45,6 +45,7 @@ import { PwaPlugin } from '@dxos/plugin-pwa';
 import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
+import { SidekickPlugin } from '@dxos/plugin-sidekick';
 import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
@@ -150,6 +151,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
+      SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
@@ -229,6 +231,7 @@ export const getPlugins = ({
     RuntimePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
+    isLabs && SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
