@@ -113,6 +113,17 @@ const main = async (): Promise<void> => {
   mkdirSync(USER_DATA_DIR, { recursive: true });
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
+  // Chromium leaves stale SingletonLock / SingletonCookie / SingletonSocket
+  // files behind when it's killed (SIGINT mid-run, system restart, etc.), and
+  // will refuse to launch against that profile until they're cleaned up.
+  for (const lock of ['SingletonLock', 'SingletonCookie', 'SingletonSocket']) {
+    try {
+      rmSync(resolve(USER_DATA_DIR, lock), { force: true });
+    } catch {
+      // best-effort
+    }
+  }
+
   // ---- Pre-flight ----------------------------------------------------------
   console.log('\nPre-flight:');
   const checks = await runPreflight(process.env);
