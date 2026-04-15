@@ -15,9 +15,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -42,13 +39,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-query"
-    },
-    {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -69,13 +60,7 @@
       "path": "../react-ui-components"
     },
     {
-      "path": "../react-ui-editor"
-    },
-    {
       "path": "../react-ui-list"
-    },
-    {
-      "path": "../react-ui-mosaic"
     },
     {
       "path": "../react-ui-pickers"
@@ -84,16 +69,10 @@
       "path": "../react-ui-search"
     },
     {
-      "path": "../react-ui-stack"
-    },
-    {
       "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-types"
     }
   ]
 }
