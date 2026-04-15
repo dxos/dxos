@@ -319,6 +319,9 @@
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-dealflow/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
     },
     {

@@ -8,3 +8,7 @@ playwright-user-data/
 screenshots/
 recordings/
 logs/
+
+# Root .gitignore hides every `lib/` for build outputs. Our lib/ is source.
+!lib/
+!lib/**
