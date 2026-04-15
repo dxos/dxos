@@ -36,10 +36,12 @@ const DefaultStory = () => {
         fieldMap={{ options: SelectOptionField }}
         onSave={(values) => setValues(values)}
       >
-        <Form.Content>
-          <Form.FieldSet />
-          <Form.Actions />
-        </Form.Content>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Actions />
+          </Form.Content>
+        </Form.Viewport>
       </Form.Root>
     </TestLayout>
   );

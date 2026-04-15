@@ -11,6 +11,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -197,7 +198,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-3' } } }),
+      createThemeExtensions({ themeMode, slots: compactSlots }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
@@ -211,9 +212,9 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   return (
     <div
       role='none'
-      ref={parentRef}
       className={mx('flex overflow-hidden', classNames)}
       data-popover-collision-boundary={true}
+      ref={parentRef}
     />
   );
 };
