@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { Sidekick } from './schema';
+export * as Sidekick from './schema';
