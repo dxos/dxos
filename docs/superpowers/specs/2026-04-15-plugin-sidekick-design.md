@@ -63,6 +63,7 @@ You are {{userName}}'s personal sidekick agent.
 All operations are pre-existing. The Sidekick Blueprint composes these blueprints:
 
 ### Database Blueprint (`org.dxos.blueprint.database`)
+
 - `Query` — find Person objects, tags, documents in space.
 - `Load` — read object content by reference.
 - `ObjectCreate` — create new objects.
@@ -73,20 +74,24 @@ All operations are pre-existing. The Sidekick Blueprint composes these blueprint
 - `ContextAdd` / `ContextRemove` — manage chat context.
 
 ### Agent Blueprint (`org.dxos.blueprint.agent`)
+
 - `AddArtifact` — register managed documents as agent artifacts.
 
 ### Markdown Blueprint (`org.dxos.blueprint.markdown`)
+
 - `Create` — create profile and journal documents.
 - `Open` — read document content.
 - `Update` — edit documents with structured changes.
 
 ### Inbox Blueprint (`org.dxos.blueprint.inbox`)
+
 - `ReadEmail` — read mailbox contents.
 - `ClassifyEmail` — tag/classify incoming email.
 - `SummarizeMailbox` — generate email summaries.
 - `DraftEmail` — create draft email responses.
 
 ### Inbox Send Blueprint (`org.dxos.blueprint.inbox-send`)
+
 - `GmailSend` — send emails (gated by user permission).
 
 ## Migration Strategy

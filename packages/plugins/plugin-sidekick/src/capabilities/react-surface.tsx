@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';

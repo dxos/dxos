@@ -42,10 +42,7 @@ export namespace Sidekick {
 
   export type Properties = Schema.Schema.Type<typeof Properties>;
 
-  export const makeProfile = (props: {
-    subject: Ref.Ref<Obj.Unknown>;
-    document: Ref.Ref<Obj.Unknown>;
-  }) =>
+  export const makeProfile = (props: { subject: Ref.Ref<Obj.Unknown>; document: Ref.Ref<Obj.Unknown> }) =>
     Obj.make(Profile, {
       subject: props.subject,
       document: props.document,

@@ -55,6 +55,7 @@ packages/plugins/plugin-sidekick/
 ### Task 1: Package scaffold (package.json, moon.yml, README)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/package.json`
 - Create: `packages/plugins/plugin-sidekick/moon.yml`
 - Create: `packages/plugins/plugin-sidekick/README.md`
@@ -101,15 +102,10 @@ packages/plugins/plugin-sidekick/
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
+      "types": ["dist/types/src/types/index.d.ts"]
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -186,6 +182,7 @@ git commit -m "feat(plugin-sidekick): add package scaffold"
 ### Task 2: Types (Profile, SidekickProperties)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/types/schema.ts`
 - Create: `packages/plugins/plugin-sidekick/src/types/index.ts`
 
@@ -238,10 +235,7 @@ export namespace Sidekick {
 
   export type Properties = Schema.Schema.Type<typeof Properties>;
 
-  export const makeProfile = (props: {
-    subject: Ref.Ref<Obj.Unknown>;
-    document: Ref.Ref<Obj.Unknown>;
-  }) =>
+  export const makeProfile = (props: { subject: Ref.Ref<Obj.Unknown>; document: Ref.Ref<Obj.Unknown> }) =>
     Obj.make(Profile, {
       subject: props.subject,
       document: props.document,
@@ -284,6 +278,7 @@ git commit -m "feat(plugin-sidekick): add Profile and Properties types"
 ### Task 3: Meta, translations, and index
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/meta.ts`
 - Create: `packages/plugins/plugin-sidekick/src/translations.ts`
 - Create: `packages/plugins/plugin-sidekick/src/index.ts`
@@ -385,10 +380,12 @@ git commit -m "feat(plugin-sidekick): add meta, translations, and index"
 ### Task 4: Sidekick Blueprint
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/blueprints/sidekick-blueprint.ts`
 - Create: `packages/plugins/plugin-sidekick/src/blueprints/index.ts`
 
 Reference files for patterns:
+
 - `packages/plugins/plugin-chess/src/blueprints/chess-blueprint.ts`
 - `packages/core/assistant-toolkit/src/blueprints/database/blueprint.ts`
 - `docs/superpowers/specs/2026-04-15-plugin-sidekick-design.md` (instruction template)
@@ -507,6 +504,7 @@ git commit -m "feat(plugin-sidekick): add Sidekick blueprint with instruction te
 ### Task 5: Capabilities (blueprint-definition, react-surface)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/capabilities/blueprint-definition.ts`
 - Create: `packages/plugins/plugin-sidekick/src/capabilities/react-surface.tsx`
 - Create: `packages/plugins/plugin-sidekick/src/capabilities/index.ts`
@@ -604,6 +602,7 @@ git commit -m "feat(plugin-sidekick): add blueprint-definition and react-surface
 ### Task 6: Dashboard components (primitives)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/components/DayAhead.tsx`
 - Create: `packages/plugins/plugin-sidekick/src/components/ActionItems.tsx`
 - Create: `packages/plugins/plugin-sidekick/src/components/ProfileGrid.tsx`
@@ -884,6 +883,7 @@ git commit -m "feat(plugin-sidekick): add dashboard primitive components"
 ### Task 7: SidekickArticle container
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/containers/SidekickArticle/SidekickArticle.tsx`
 - Create: `packages/plugins/plugin-sidekick/src/containers/SidekickArticle/index.ts`
 - Create: `packages/plugins/plugin-sidekick/src/containers/index.ts`
@@ -984,6 +984,7 @@ git commit -m "feat(plugin-sidekick): add SidekickArticle dashboard container"
 ### Task 8: SidekickPlugin definition
 
 **Files:**
+
 - Create: `packages/plugins/plugin-sidekick/src/SidekickPlugin.tsx`
 
 Reference: `packages/plugins/plugin-chess/src/ChessPlugin.tsx`
@@ -1035,6 +1036,7 @@ git commit -m "feat(plugin-sidekick): add SidekickPlugin definition"
 ### Task 9: Register plugin in composer-app
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 
 - [ ] **Step 1: Add import**

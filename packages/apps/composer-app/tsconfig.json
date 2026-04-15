@@ -203,6 +203,9 @@
       "path": "../../plugins/plugin-sheet"
     },
     {
+      "path": "../../plugins/plugin-sidekick"
+    },
+    {
       "path": "../../plugins/plugin-simple-layout"
     },
     {

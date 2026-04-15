@@ -30,12 +30,7 @@ export const ActionItems = ({ items, onToggle, classNames }: ActionItemsProps) =
       <ul className='space-y-1'>
         {items.map((item) => (
           <li key={item.id} className='flex items-center gap-2 text-sm'>
-            <input
-              type='checkbox'
-              checked={item.completed}
-              onChange={() => onToggle?.(item)}
-              className='shrink-0'
-            />
+            <input type='checkbox' checked={item.completed} onChange={() => onToggle?.(item)} className='shrink-0' />
             <span className={item.completed ? 'line-through text-description' : ''}>{item.text}</span>
           </li>
         ))}
