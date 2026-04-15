@@ -227,6 +227,28 @@ const main = async (): Promise<void> => {
       console.log('  [browser crashed]');
     });
 
+    // Track Vite's "Outdated Optimize Dep" 504s — they fire when Vite is
+    // mid-rebuilding its dep cache. Modules serve 504 during that window;
+    // Vite emits a full-reload event once it's done, but the initial page
+    // load already broke because __DEMO__'s module couldn't load. We watch
+    // for 504s and reload once they stop flooding in.
+    let sawOutdatedDep = false;
+    page.on('response', (response) => {
+      if (response.status() === 504) {
+        sawOutdatedDep = true;
+      }
+    });
+    const recoverFromViteReoptimize = async (label: string): Promise<void> => {
+      if (!sawOutdatedDep) {
+        return;
+      }
+      console.log(`  ⚠ Vite re-optimized deps during ${label}; pausing 4s then reloading once to pick up fresh modules`);
+      await page.waitForTimeout(4_000);
+      sawOutdatedDep = false;
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
+      await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
+    };
+
     await step('1. inject .env.demo into localStorage', async () => {
       await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
       await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
@@ -242,6 +264,7 @@ const main = async (): Promise<void> => {
       }
       await page.reload({ waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
       await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
+      await recoverFromViteReoptimize('step 1');
       await takeScreenshot(page, '01-injected');
     });
 
@@ -259,7 +282,14 @@ const main = async (): Promise<void> => {
     await step('3. wait for __DEMO__ + a ready space', async () => {
       const deadline = Date.now() + READINESS_TIMEOUT_MS;
       let lastReason = 'unknown';
+      let lastRecoveryAt = 0;
       while (Date.now() < deadline) {
+        // If Vite re-optimizes mid-readiness-wait, __DEMO__'s module won't
+        // load. Recover at most every 15s.
+        if (sawOutdatedDep && Date.now() - lastRecoveryAt > 15_000) {
+          lastRecoveryAt = Date.now();
+          await recoverFromViteReoptimize('step 3');
+        }
         const state = await page.evaluate(() => {
           const api = (globalThis as any).__DEMO__;
           const client = (globalThis as any).__DXOS__?.client;
