@@ -316,12 +316,14 @@ export class DataSpace {
 
   /**
    * Initialize the data pipeline in a separate task.
+   * @param callerCtx - Trace context from the caller (e.g., activate or createSpace) for span parenting.
    */
-  initializeDataPipelineAsync(): void {
+  initializeDataPipelineAsync(callerCtx?: Context): void {
+    const traceCtx = callerCtx ?? this._ctx;
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
-        await this.initializeDataPipeline(this._ctx);
+        await this.initializeDataPipeline(traceCtx);
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
@@ -600,7 +602,7 @@ export class DataSpace {
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
     await this._open(ctx);
-    this.initializeDataPipelineAsync();
+    this.initializeDataPipelineAsync(ctx);
   }
 
   @synchronized

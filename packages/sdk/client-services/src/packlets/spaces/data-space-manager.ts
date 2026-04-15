@@ -390,7 +390,7 @@ export class DataSpaceManager extends Resource {
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
     await this._metadataStore.addSpace(metadata);
-    space.initializeDataPipelineAsync();
+    space.initializeDataPipelineAsync(ctx);
 
     this.updated.emit();
     return space;

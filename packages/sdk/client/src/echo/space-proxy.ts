@@ -417,7 +417,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeDb(_ctx: Context): Promise<void> {
+  private async _initializeDb(ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
     {
@@ -427,7 +427,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       } else {
         log.warn('no automerge root found for space', { spaceId: this.id });
       }
-      await this._db.open();
+      await this._db.open(ctx);
     }
 
     log('ready');

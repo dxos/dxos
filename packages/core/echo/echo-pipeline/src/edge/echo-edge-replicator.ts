@@ -135,6 +135,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     }
   }
 
+  @trace.span({ showInBrowserTimeline: true, op: 'replication' })
   private async _openConnection(ctx: Context, spaceId: SpaceId, reconnects: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));

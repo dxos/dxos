@@ -62,10 +62,15 @@ export class OtelTraces {
           : otelContext.active();
 
         const span = tracer.startSpan(options.name, options, parentCtx);
-        const spanCtx = trace.setSpan(parentCtx, span);
 
-        const carrier: Record<string, string> = {};
-        propagation.inject(spanCtx, carrier);
+        const sc = span.spanContext();
+        const spanContext =
+          sc && sc.traceId && sc.spanId
+            ? {
+                traceparent: `00-${sc.traceId}-${sc.spanId}-${(sc.traceFlags ?? 0).toString(16).padStart(2, '0')}`,
+                tracestate: sc.traceState?.serialize(),
+              }
+            : undefined;
 
         return {
           end: () => span.end(),
@@ -75,9 +80,7 @@ export class OtelTraces {
             }
             span.setStatus({ code: SpanStatusCode.ERROR, message: err instanceof Error ? err.message : String(err) });
           },
-          spanContext: carrier.traceparent
-            ? { traceparent: carrier.traceparent, tracestate: carrier.tracestate }
-            : undefined,
+          spanContext,
         };
       },
     };
