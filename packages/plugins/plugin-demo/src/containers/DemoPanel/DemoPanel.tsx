@@ -473,7 +473,7 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
                 <span>Bootstrap from .env.demo (seed + wire credentials)</span>
               </Button>
               <Button disabled={busy} onClick={handleSeed}>
-                <Icon icon='ph--seedling--regular' size={4} />
+                <Icon icon='ph--plant--regular' size={4} />
                 <span>Seed Widgets-team board only ({cards.length} existing cards)</span>
               </Button>
               {lastBootstrap && (
