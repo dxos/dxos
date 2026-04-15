@@ -251,6 +251,7 @@ const main = async (): Promise<void> => {
           const all = typeof client.spaces?.get === 'function' ? client.spaces.get() : [];
           return Array.isArray(all) && all.length > 0;
         },
+        undefined,
         { timeout: PAGE_TIMEOUT_MS, polling: 500 },
       );
       await takeScreenshot(page, '03-demo-ready');
