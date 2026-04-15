@@ -25,75 +25,21 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Types
 
-All types are pre-existing in the DXOS ecosystem. Listed here for reference
-and to document how the Sidekick uses each one.
+Existing types used by this plugin (defined elsewhere):
 
-```mdl
-type Agent
-  desc: The sidekick agent instance. From @dxos/assistant-toolkit.
-  fields:
-    name?: string
-    spec: Ref<Text>               # instruction template
-    plan: Ref<Plan>               # task tracking
-    artifacts: Artifact[]         # managed documents (profiles, journal)
-    queue?: Ref<Queue>            # incoming event queue
-    chat?: Ref<Chat>              # primary interaction channel
-    subscriptions: Ref<Unknown>[] # objects the agent monitors
-    filterEvents?: boolean
-```
+| Type  | Source | Typename | Role in Sidekick |
+|------|--------|----------|-----------------|
+| `Agent`   | `@dxos/assistant-toolkit` | `org.dxos.type.agent` | The sidekick instance (spec, chat, queue, artifacts) |
+| `Person` | `@dxos/types` | `org.dxos.type.person` | People the agent tracks and profiles |
+| `Journal` | `plugin-outliner` | `org.dxos.type.journal` | Daily journal (date-indexed entries) |
+| `JournalEntry` | `plugin-outliner` | `org.dxos.type.journalEntry` | Per-day entry with markdown task lists |
+| `Chat` | `@dxos/assistant-toolkit` | `org.dxos.type.assistant.chat` | Primary interaction channel |
+| `Text` | `@dxos/echo` | (system) | Profile documents, agent instructions |
+| `Feed` | `@dxos/echo` | `org.dxos.type.feed` | Backing store for Chat messages |
+| `Tag` | (system) | (system) | Person categorization (friend, colleague, customer, investor, family) |
+| `Message` | `@dxos/echo` | (system) | Chat messages including voice-transcribed input |
 
-```mdl
-type Person
-  desc: A contact the agent tracks. From @dxos/types.
-  fields:
-    fullName?: string
-    preferredName?: string
-    nickname?: string
-    image?: string
-    organization?: Ref<Organization>
-    jobTitle?: string
-    department?: string
-    notes?: string
-    emails?: ContactField[]       # {label, value}
-    identities?: ContactField[]
-    phoneNumbers?: ContactField[]
-    addresses?: ContactField[]
-    urls?: ContactField[]
-    birthday?: string             # ISO8601
-    location?: GeoPoint
-```
-
-```mdl
-type Journal
-  desc: Daily journal tracking decisions, conversations, and actions. From plugin-outliner.
-  fields:
-    id: string
-    name?: string
-    entries: Record<string, Ref<JournalEntry>>  # keyed by ISO date
-```
-
-```mdl
-type JournalEntry
-  desc: A single day's journal entry with markdown content.
-  fields:
-    id: string
-    date: string                  # ISO date
-    content: Ref<Text>            # markdown with task lists
-```
-
-```mdl
-type Chat
-  desc: Conversation channel backed by a Feed. From @dxos/assistant-toolkit.
-  fields:
-    name?: string
-    feed: Ref<Feed>
-```
-
-```mdl
-type Tag
-  desc: System tag for categorizing objects. Applied to Person objects.
-  literals: friend | colleague | customer | investor | family
-```
+New types defined by this plugin:
 
 ```mdl
 type SidekickProperties
@@ -152,11 +98,11 @@ component SidekickArticle
     │ └─────────────────────────────────────┘ │
     ├─────────────────────────────────────────┤
     │ People                                  │
-    │ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
-    │ │ Alice   │ │ Bob     │ │ Carol   │   │
-    │ │colleague│ │investor │ │ friend  │   │
-    │ │ ★ 3 new │ │         │ │ ★ 1 new │   │
-    │ └─────────┘ └─────────┘ └─────────┘   │
+    │ ┌─────────┐ ┌─────────┐ ┌─────────┐     │
+    │ │ Alice   │ │ Bob     │ │ Carol   │     │
+    │ │colleague│ │investor │ │ friend  │     │
+    │ │ ★ 3 new │ │         │ │ ★ 1 new │     │
+    │ └─────────┘ └─────────┘ └─────────┘     │
     ├─────────────────────────────────────────┤
     │ Your Profile                            │
     │ ┌─────────────────────────────────────┐ │
@@ -165,8 +111,8 @@ component SidekickArticle
     ├─────────────────────────────────────────┤
     │ Permissions                             │
     │ ┌─────────────────────────────────────┐ │
-    │ │ Auto-respond: [Alice ✓] [Bob ✗]    │ │
-    │ │ Draft-only:   [Carol ✓]            │ │
+    │ │ Auto-respond: [Alice ✓] [Bob ✗]     │ │
+    │ │ Draft-only:   [Carol ✓]             │ │
     │ └─────────────────────────────────────┘ │
     └─────────────────────────────────────────┘
 ```
