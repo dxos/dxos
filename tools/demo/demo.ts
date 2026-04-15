@@ -45,6 +45,7 @@ const SCREENSHOT_DIR = resolve(DEMO_DIR, 'screenshots');
 const ENV_PATH = resolve(DEMO_DIR, '.env.demo');
 const DEFAULT_COMPOSER_URL = 'http://localhost:5173';
 const PAGE_TIMEOUT_MS = 90_000;
+const READINESS_TIMEOUT_MS = 180_000;
 const NUDGE_WAIT_MS = 45_000;
 
 type Args = {
@@ -235,26 +236,35 @@ const main = async (): Promise<void> => {
     }
 
     await step('3. wait for __DEMO__ + a ready space', async () => {
-      await page.waitForFunction(
-        () => {
+      const deadline = Date.now() + READINESS_TIMEOUT_MS;
+      let lastReason = 'unknown';
+      while (Date.now() < deadline) {
+        const state = await page.evaluate(() => {
           const api = (globalThis as any).__DEMO__;
-          if (!api || typeof api.status !== 'function') {
-            return false;
-          }
           const client = (globalThis as any).__DXOS__?.client;
-          if (!client) {
-            return false;
-          }
-          if (client.spaces?.default) {
-            return true;
-          }
-          const all = typeof client.spaces?.get === 'function' ? client.spaces.get() : [];
-          return Array.isArray(all) && all.length > 0;
-        },
-        undefined,
-        { timeout: PAGE_TIMEOUT_MS, polling: 500 },
-      );
-      await takeScreenshot(page, '03-demo-ready');
+          const spaces = client?.spaces?.get?.() ?? [];
+          return {
+            hasDemo: Boolean(api && typeof api.status === 'function'),
+            hasClient: Boolean(client),
+            spaceCount: Array.isArray(spaces) ? spaces.length : 0,
+            spaceStates: Array.isArray(spaces)
+              ? spaces.map((space: any) => String(space?.state?.get?.() ?? '?'))
+              : [],
+          };
+        });
+        if (state.hasDemo && state.hasClient && state.spaceCount > 0) {
+          console.log(`   · ready (spaces=${state.spaceCount}, states=[${state.spaceStates.join(',')}])`);
+          await takeScreenshot(page, '03-demo-ready');
+          return;
+        }
+        lastReason = !state.hasDemo
+          ? 'window.__DEMO__ missing'
+          : !state.hasClient
+            ? 'window.__DXOS__.client missing'
+            : `no spaces yet (found ${state.spaceCount})`;
+        await page.waitForTimeout(1_000);
+      }
+      throw new Error(`step 3 never satisfied — ${lastReason}. Open DevTools in the Chromium window and check Console for errors.`);
     });
 
     await step('4. bootstrap (schemas + fixtures + real Trello/Granola)', async () => {
