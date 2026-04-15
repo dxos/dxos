@@ -587,7 +587,11 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
       }
     }
     if (filtered.length > 0) {
-      result.push(Prompt.makeMessage('assistant', { content: filtered }));
+      result.push(
+        message.options !== undefined
+          ? Prompt.makeMessage('assistant', { content: filtered, options: message.options })
+          : Prompt.makeMessage('assistant', { content: filtered }),
+      );
     }
   }
   return Prompt.fromMessages(result);
