@@ -218,7 +218,7 @@ const main = async (): Promise<void> => {
       if (seeded.length > 0) {
         console.log(`   · seeded plugin settings: ${seeded.join(', ')}`);
       }
-      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
       await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
       await takeScreenshot(page, '01-injected');
     });
