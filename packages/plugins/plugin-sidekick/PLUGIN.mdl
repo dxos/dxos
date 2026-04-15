@@ -14,41 +14,51 @@ agent-aware. Interaction is primarily via Chat with voice input support.
 The following extension dialects are used in this document.
 Each extension is defined in the Appendix or resolved via its URI.
 
-| Term        | URI                            |
-|-------------|--------------------------------|
-| `type`      | `org.dxos.mdl.type@1.0`       |
-| `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
-| `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
-| `service`   | `org.dxos.mdl.service@1.0`    |
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+| `service`   | `org.dxos.mdl.service@1.0`   |
 
 ## Types
 
 Existing types used by this plugin (defined elsewhere):
 
-| Type  | Source | Typename | Role in Sidekick |
-|------|--------|----------|-----------------|
-| `Agent`   | `@dxos/assistant-toolkit` | `org.dxos.type.agent` | The sidekick instance (spec, chat, queue, artifacts) |
-| `Person` | `@dxos/types` | `org.dxos.type.person` | People the agent tracks and profiles |
-| `Journal` | `plugin-outliner` | `org.dxos.type.journal` | Daily journal (date-indexed entries) |
-| `JournalEntry` | `plugin-outliner` | `org.dxos.type.journalEntry` | Per-day entry with markdown task lists |
-| `Chat` | `@dxos/assistant-toolkit` | `org.dxos.type.assistant.chat` | Primary interaction channel |
-| `Text` | `@dxos/echo` | (system) | Profile documents, agent instructions |
-| `Feed` | `@dxos/echo` | `org.dxos.type.feed` | Backing store for Chat messages |
-| `Tag` | (system) | (system) | Person categorization (friend, colleague, customer, investor, family) |
-| `Message` | `@dxos/echo` | (system) | Chat messages including voice-transcribed input |
+| Type           | Source                    | Typename                       | Role in Sidekick                                                      |
+| -------------- | ------------------------- | ------------------------------ | --------------------------------------------------------------------- |
+| `Agent`        | `@dxos/assistant-toolkit` | `org.dxos.type.agent`          | The sidekick instance (spec, chat, queue, artifacts)                  |
+| `Chat`         | `@dxos/assistant-toolkit` | `org.dxos.type.assistant.chat` | Primary interaction channel                                           |
+| `Journal`      | `plugin-outliner`         | `org.dxos.type.journal`        | Daily journal (date-indexed entries)                                  |
+| `JournalEntry` | `plugin-outliner`         | `org.dxos.type.journalEntry`   | Per-day entry with markdown task lists                                |
+| `Feed`         | `@dxos/echo`              | `org.dxos.type.feed`           | Backing store for Chat messages                                       |
+| `Person`       | `@dxos/types`             | `org.dxos.type.person`         | People the agent tracks and profiles                                  |
+| `Text`         | `@dxos/echo`              | (system)                       | Profile documents, agent instructions                                 |
+| `Message`      | `@dxos/echo`              | (system)                       | Chat messages including voice-transcribed input                       |
+| `Tag`          | (system)                  | (system)                       | Person categorization (friend, colleague, customer, investor, family) |
 
 New types defined by this plugin:
 
 ```mdl
-type SidekickProperties
-  desc: Optional per-agent configuration stored alongside AgentProperties.
+type Profile
+  desc: Agent-managed profile linking to an underlying object (e.g., Person) with metadata.
   fields:
-    autoRespondContacts: Ref<Person>[]   # contacts the agent can auto-respond to
-    draftOnlyContacts: Ref<Person>[]     # contacts requiring draft review
-    researchEnabled?: boolean            # allow background web research
-    journalEnabled?: boolean             # auto-create daily journal entries
+    subject: Ref<Unknown>             # the underlying object (Person, etc.)
+    document: Ref<Text>               # the profile markdown document
+    autoRespond?: boolean             # allow agent to auto-respond on behalf of user
+    createDraft?: boolean             # agent creates draft messages for review
+    researchEnabled?: boolean         # allow background web research on this subject
+    lastUpdated?: string              # ISO8601 timestamp of last profile update
+```
+
+```mdl
+type SidekickProperties
+  desc: Per-agent configuration stored alongside AgentProperties.
+  fields:
+    profiles: Record<string, Profile> # keyed by subject DXN
+    journalEnabled?: boolean          # auto-create daily journal entries
 ```
 
 ## Components
@@ -65,15 +75,14 @@ component SidekickArticle
   state:
     todayEntry?: JournalEntry
     actionItems: TaskItem[]
-    persons: Person[]
-    userProfile?: Text
-    permissions: SidekickProperties
+    profiles: Profile[]
+    userProfile?: Profile
+    properties: SidekickProperties
   slots:
     header?: ReactNode
   actions:
-    toggleAutoRespond(person: Person)
-    toggleDraftOnly(person: Person)
-    openPersonProfile(person: Person)
+    updateProfile(profile: Profile)
+    openProfile(profile: Profile)
     openUserProfile()
     refreshDayAhead()
   emits:
@@ -139,12 +148,12 @@ component ActionItems
 ```
 
 ```mdl
-component PeopleGrid
-  desc: Grid of Person cards with tag badges and notification counts.
+component ProfileGrid
+  desc: Grid of Profile cards showing subject name, tags, and notification counts.
   props:
-    persons: Person[]
+    profiles: Profile[]
   actions:
-    openProfile(person: Person)
+    openProfile(profile: Profile)
   emits:
     onNavigate(target: DXN)
 ```
@@ -153,7 +162,7 @@ component PeopleGrid
 component ProfileSummary
   desc: Excerpt from the user's profile document showing current goals.
   props:
-    profile?: Text
+    profile?: Profile
   actions:
     openFull()
   emits:
@@ -162,15 +171,13 @@ component ProfileSummary
 
 ```mdl
 component Permissions
-  desc: Toggles for per-contact agent communication permissions.
+  desc: Per-profile permission toggles for agent communication behavior.
   props:
-    properties: SidekickProperties
-    persons: Person[]
+    profiles: Profile[]
   actions:
-    toggleAutoRespond(person: Person)
-    toggleDraftOnly(person: Person)
+    updateProfile(profile: Profile)   # toggle autoRespond, createDraft, researchEnabled
   emits:
-    onChange(properties: SidekickProperties)
+    onChange(profile: Profile)
 ```
 
 ## Services
@@ -366,6 +373,7 @@ test T-7: Voice input tolerance
 ## Phased Rollout
 
 ### Phase 1 — Core Functionality
+
 - Plugin skeleton (meta, translations, blueprint registration).
 - Sidekick Blueprint composing database, agent, markdown, inbox blueprints.
 - Agent creation with instruction template, chat, journal, artifacts.
@@ -376,6 +384,7 @@ test T-7: Voice input tolerance
 - Voice input via Chat companion.
 
 ### Phase 2 — Communication and Monitoring
+
 - Email monitoring and draft generation (F-7).
 - Permission system for auto-respond vs draft-only per contact (F-5.6).
 - Background research on persons via research blueprint.
@@ -383,6 +392,7 @@ test T-7: Voice input tolerance
 - Proactive suggestions based on email/calendar context.
 
 ### Phase 3 — Future Research
+
 - Local ML transcription via plugin-transformer.
 - Calendar integration for day-ahead enrichment.
 - Multi-space person deduplication.
