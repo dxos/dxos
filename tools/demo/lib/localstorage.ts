@@ -20,6 +20,10 @@ export const LOCAL_STORAGE_KEYS = [
   'DEMO_PERSONA_EMAIL',
   'DEMO_ORG_NAME',
   'DEMO_LIVE_SLACK',
+  'DEMO_NUDGE_MENTION_ID',
+  'DEMO_NUDGE_MENTION_NAME',
+  'DEMO_PR_AUTHOR_ID',
+  'DEMO_PR_AUTHOR_NAME',
 ] as const;
 
 export const collectLocalStorageValues = (env: NodeJS.ProcessEnv): Record<string, string> => {

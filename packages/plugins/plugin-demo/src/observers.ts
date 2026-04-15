@@ -200,16 +200,34 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
       .sort((first, second) => (second.createdAt ?? '').localeCompare(first.createdAt ?? ''))[0];
     const meetingContext = linkedMatch?.document?.target?.name;
 
+    // Prefer a Slack user-id ping (<@U…>) so the mention actually notifies.
+    // Fall back to plain @name for preview-only rendering.
+    const mentionId = globalThis.localStorage?.getItem('DEMO_NUDGE_MENTION_ID') ?? '';
+    const mentionName = globalThis.localStorage?.getItem('DEMO_NUDGE_MENTION_NAME') ?? 'you';
+    const mention = mentionId ? `<@${mentionId}>` : `@${mentionName}`;
+
     const lines: string[] = [];
     lines.push(
-      `Hey @alice — the fix you ${meetingContext ? `discussed in "${meetingContext}"` : 'have been tracking'} just shipped.`,
+      `Hey ${mention} — the fix you ${meetingContext ? `discussed in "${meetingContext}"` : 'have been tracking'} just shipped.`,
     );
     lines.push('');
     if (payload.title) {
       lines.push(`• **PR ${payload.number ? `#${payload.number} ` : ''}**${payload.title}`);
     }
-    if (payload.author) {
-      lines.push(`• author: @${payload.author}`);
+    // Author override: narrative may need "someone else on your team" even
+    // when the real GitHub PR was opened by the demo runner. Falls back to
+    // the real PR login if neither override is set.
+    const authorOverrideId = globalThis.localStorage?.getItem('DEMO_PR_AUTHOR_ID') ?? '';
+    const authorOverrideName = globalThis.localStorage?.getItem('DEMO_PR_AUTHOR_NAME') ?? '';
+    const authorLabel = authorOverrideId
+      ? `<@${authorOverrideId}>`
+      : authorOverrideName
+        ? authorOverrideName
+        : payload.author
+          ? `@${payload.author}`
+          : undefined;
+    if (authorLabel) {
+      lines.push(`• author: ${authorLabel}`);
     }
     lines.push('');
     lines.push(
