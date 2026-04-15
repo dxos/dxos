@@ -10,7 +10,7 @@ import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContextService, AiConversationService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
@@ -34,12 +34,21 @@ const TestLayer = AssistantTestLayer({
 
 const provideTestLayers = Effect.provide(AiConversationService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
 
+/**
+ * Gets the conversation DXN for passing to Operation.invoke options.
+ */
+const getConversationDxn = Effect.gen(function* () {
+  const conversation = yield* AiConversationService;
+  return Obj.getDXN(conversation.feed).toString() as DXN.String;
+});
+
 describe('Blueprint Manager', () => {
   it.effect(
     'query-blueprints: returns all registered blueprints',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* Operation.invoke(QueryBlueprints, {});
+        const conversation = yield* getConversationDxn;
+        const result = yield* Operation.invoke(QueryBlueprints, {}, { conversation });
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
         expect(keys).toContain('org.dxos.blueprint.database');
@@ -56,9 +65,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: enables blueprints with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.database'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.database'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(1);
         expect(enabled[0].key).toBe('org.dxos.blueprint.database');
         expect(rejected).toHaveLength(0);
@@ -77,9 +89,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: rejects blueprints without agentCanEnable',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.research'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.research'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(0);
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.research');
@@ -98,9 +113,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: mixed keys enables only allowed ones',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.markdown', 'org.dxos.blueprint.research'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.markdown', 'org.dxos.blueprint.research'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(2);
         const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => bp.key);
         expect(enabledKeys).toContain('org.dxos.blueprint.database');
@@ -118,9 +136,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: unknown keys are rejected with reason',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* Operation.invoke(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.nonexistent'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.nonexistent'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(0);
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.nonexistent');
