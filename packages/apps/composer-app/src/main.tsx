@@ -283,6 +283,11 @@ const main = async () => {
       cacheEnabled: true,
       safeMode,
       debounce: 1_000,
+      // Vite cold-start with all plugins loaded routinely exceeds the 30 s
+      // default on slower machines or after a bundle invalidation; the
+      // framework then shows a ResetDialog that blocks the app. Bump
+      // generously for dev.
+      timeout: 180_000,
     });
 
     return <App />;
