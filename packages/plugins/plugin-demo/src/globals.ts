@@ -125,6 +125,7 @@ const api = {
       injectPrMerged: 'Fire a synthetic PR merge → triggers Slack nudge.',
       injectSlackMessage: 'Fire a fake Slack message.',
       pollGithub: 'Poll the real GitHub repo once.',
+      whichSpace: 'Show the space id the demo is writing into.',
       status: 'Dump counts + content of events, matches, nudges, cards, PRs.',
       reset: 'Clear all demo events/matches/nudges.',
     };
@@ -132,7 +133,8 @@ const api = {
 
   async bootstrap() {
     const space = await ensureReady();
-    return bootstrapFromEnv(space.db);
+    const result = await bootstrapFromEnv(space.db);
+    return { spaceId: (space as any).id, ...result };
   },
 
   async seed() {
@@ -210,6 +212,12 @@ const api = {
     return pollMergedPullRequests(space.db, { pat, repo });
   },
 
+  /** Return the space ID the demo is operating against. Useful when Composer is showing a different space. */
+  async whichSpace() {
+    const space = await ensureReady();
+    return { spaceId: (space as any).id, name: (space as any).properties?.name };
+  },
+
   /** Dump a snapshot of what the demo has written so far: events / matches / nudges / cards. */
   async status() {
     const space = await ensureReady();
@@ -221,6 +229,7 @@ const api = {
       space.db.query(Filter.type(GitHub.GitHubPullRequest)).run(),
     ]);
     return {
+      spaceId: (space as any).id,
       events: events.length,
       matches: matches.map((match: any) => ({
         document: match.document?.target?.name,
