@@ -13,7 +13,7 @@ import { flow } from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
@@ -90,6 +90,7 @@ export const preprocessPrompt: (
     Effect.map(Prompt.fromMessages),
     Effect.map(fixMissingToolResults),
     Effect.map(fixDuplicateToolResults),
+    Effect.map(removeUnsatisfiedServerToolCalls),
     Effect.map(system ? Prompt.setSystem(system) : Function.identity),
     Effect.map(setCacheControl(cacheControl)),
   );
@@ -468,8 +469,11 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
 };
 
 /**
- * Removes tool-result parts that reference no prior tool-call id, and drops duplicate
- * tool results for the same id (keeps the first in conversation order).
+ * Removes tool-result parts that reference no tool-call id (in prior messages or the same
+ * message), and drops duplicate tool results for the same id (keeps the first in conversation order).
+ *
+ * Tool-call ids in the current message are collected up front so a `tool-result` is still kept
+ * when it appears before its matching `tool-call` in the part list (e.g. provider web_search blocks).
  */
 const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
   const seenToolCallIds = new Set<string>();
@@ -483,18 +487,7 @@ const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       return part;
     }
     if (part.type === 'tool-result') {
-      if (!seenToolCallIds.has(part.id) || seenToolResultIds.has(part.id)) {
-        return undefined;
-      }
-      seenToolResultIds.add(part.id);
-      return part;
-    }
-    return part;
-  };
-
-  const processToolPart = (part: Prompt.ToolMessagePart): Prompt.ToolMessagePart | undefined => {
-    if (part.type === 'tool-result') {
-      if (!seenToolCallIds.has(part.id) || seenToolResultIds.has(part.id)) {
+      if (!part.providerExecuted && (!seenToolCallIds.has(part.id) || seenToolResultIds.has(part.id))) {
         return undefined;
       }
       seenToolResultIds.add(part.id);
@@ -547,9 +540,9 @@ const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
       case 'tool': {
         const filtered: Prompt.ToolMessagePart[] = [];
         for (const part of message.content) {
-          const next = processToolPart(part);
+          const next = processUserOrAssistantPart(part);
           if (next !== undefined) {
-            filtered.push(next);
+            filtered.push(next as any);
           }
         }
         if (filtered.length > 0) {
@@ -560,6 +553,44 @@ const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
     }
   }
 
+  return Prompt.fromMessages(result);
+};
+
+const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  const seeToolResultIds = new Set<string>();
+
+  //1. Scan all assistant message and collect all tool-result ids that are not provider-executed.
+  for (const message of prompt.content) {
+    if (message.role !== 'assistant') {
+      continue;
+    }
+    for (const part of message.content) {
+      if (part.type === 'tool-result' && !part.providerExecuted) {
+        seeToolResultIds.add(part.id);
+      }
+    }
+  }
+
+  const result: Prompt.Message[] = [];
+  for (const message of prompt.content) {
+    if (message.role !== 'assistant') {
+      result.push(message);
+      continue;
+    }
+    const filtered: Prompt.AssistantMessagePart[] = [];
+    for (const part of message.content) {
+      if (part.type === 'tool-call' && part.providerExecuted) {
+        if (seeToolResultIds.has(part.id)) {
+          filtered.push(part);
+        }
+      } else {
+        filtered.push(part);
+      }
+    }
+    if (filtered.length > 0) {
+      result.push(Prompt.makeMessage('assistant', { content: filtered }));
+    }
+  }
   return Prompt.fromMessages(result);
 };
 
