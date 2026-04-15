@@ -32,6 +32,7 @@ import dotenv from 'dotenv';
 import { type BrowserContext, chromium, type Page } from 'playwright';
 
 import { collectLocalStorageValues, writeLocalStorage } from './lib/localstorage';
+import { seedPluginSettings } from './lib/plugin-settings';
 import { moveCardToList } from './lib/trello';
 
 const DEMO_DIR = dirname(fileURLToPath(import.meta.url));
@@ -81,6 +82,10 @@ const main = async (): Promise<void> => {
         throw new Error('No credentials in .env.demo');
       }
       await writeLocalStorage(page, values);
+      const seeded = await seedPluginSettings(page, process.env);
+      if (seeded.length > 0) {
+        console.log(`   · seeded plugin-settings: ${seeded.join(', ')}`);
+      }
       await page.reload({ waitUntil: 'domcontentloaded' });
       await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
       await screenshot(page, '01-injected');

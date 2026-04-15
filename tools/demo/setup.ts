@@ -28,6 +28,7 @@ import dotenv from 'dotenv';
 import { type BrowserContext, chromium } from 'playwright';
 
 import { collectLocalStorageValues, writeLocalStorage } from './lib/localstorage';
+import { seedPluginSettings } from './lib/plugin-settings';
 
 const DEMO_DIR = dirname(fileURLToPath(import.meta.url));
 const USER_DATA_DIR = resolve(DEMO_DIR, 'playwright-user-data');
@@ -93,6 +94,10 @@ const navigateAndInject = async (context: BrowserContext, composerUrl: string): 
   console.log(`Wrote ${Object.keys(values).length} credential(s) to localStorage:`);
   for (const key of Object.keys(values)) {
     console.log(`  ${key}=${'*'.repeat(Math.min(8, values[key].length))}`);
+  }
+  const seeded = await seedPluginSettings(page, process.env);
+  if (seeded.length > 0) {
+    console.log(`Seeded plugin-settings: ${seeded.join(', ')}`);
   }
   await page.reload({ waitUntil: 'domcontentloaded' });
   console.log('Reloaded with credentials in place.');
