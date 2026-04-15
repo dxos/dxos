@@ -33,6 +33,12 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
 
 export const compactSlots: ThemeExtensionsOptions['slots'] = {
   content: {
-    className: 'mx-2! w-full',
+    className: 'p-2!',
+  },
+};
+
+export const mobileSlots: ThemeExtensionsOptions['slots'] = {
+  content: {
+    className: 'mx-2!',
   },
 };
