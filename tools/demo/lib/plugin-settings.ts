@@ -2,56 +2,100 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Page } from 'playwright';
-
 /**
  * Seed plugin-settings atoms from .env.demo credentials.
  *
- * Plugins like `@dxos/plugin-slack` persist settings as one JSON blob under
- * a localStorage key matching their plugin id (via `@effect-atom` +
- * `@effect/platform/BrowserKeyValueStore`). To let the demo come up fully
- * configured, we write those blobs directly before the app mounts.
+ * Plugins like `@dxos/plugin-slack` persist their settings as one JSON blob
+ * under a localStorage key matching their plugin id. To bring Composer up
+ * fully configured we write those blobs directly before the app mounts.
  *
- * Only seeds a slot if its localStorage key is empty — doesn't stomp on
- * values the user may have set through the UI.
+ * Data-driven: add new providers to SEEDERS rather than new branches to the
+ * function body. Each seeder declares its localStorage key, a preview
+ * predicate (so we don't clobber a user-configured value), and a builder
+ * that turns `process.env` into the settings JSON.
+ */
+
+import type { Page } from 'playwright';
+
+export type PluginSeeder = {
+  /** Short display name for the seeder; shown in the "seeded: X, Y" log line. */
+  readonly name: string;
+  /** localStorage key the plugin reads its settings from. */
+  readonly key: string;
+  /**
+   * Build the settings object from env. Return undefined to skip this seeder
+   * (e.g. no credentials in env).
+   */
+  readonly build: (env: NodeJS.ProcessEnv) => Record<string, unknown> | undefined;
+  /**
+   * Return true if the existing value already contains non-stub credentials
+   * and this seeder should not overwrite it.
+   */
+  readonly hasCreds?: (existing: Record<string, unknown>) => boolean;
+};
+
+const split = (value: string | undefined, separator = ','): string[] =>
+  (value ?? '')
+    .split(separator)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+
+export const SEEDERS: readonly PluginSeeder[] = [
+  {
+    name: 'slack',
+    key: 'org.dxos.plugin.slack',
+    hasCreds: (existing) => typeof existing.botToken === 'string' && existing.botToken.length > 0,
+    build: (env) => {
+      const botToken = env.SLACK_BOT_TOKEN;
+      if (!botToken) {
+        return undefined;
+      }
+      return {
+        botToken,
+        monitoredChannels: split(env.SLACK_CHANNELS),
+        respondToMentions: true,
+        respondToDMs: true,
+      };
+    },
+  },
+];
+
+/**
+ * Apply all seeders. Returns the list of seeder names that actually wrote a
+ * value (i.e. had credentials AND the slot was empty / stub).
  */
 export const seedPluginSettings = async (page: Page, env: NodeJS.ProcessEnv): Promise<string[]> => {
   const seeded: string[] = [];
-
-  const slackToken = env.SLACK_BOT_TOKEN;
-  if (slackToken) {
-    const channels = (env.SLACK_CHANNELS ?? '')
-      .split(',')
-      .map((channel) => channel.trim())
-      .filter((channel) => channel.length > 0);
-    const settings = {
-      botToken: slackToken,
-      monitoredChannels: channels,
-      respondToMentions: true,
-      respondToDMs: true,
-    };
+  for (const seeder of SEEDERS) {
+    const settings = seeder.build(env);
+    if (!settings) {
+      continue;
+    }
     const applied = await page.evaluate(
-      ({ key, value }) => {
+      ({ key, value, hasCredsSrc }: { key: string; value: Record<string, unknown>; hasCredsSrc: string | null }) => {
         const existing = globalThis.localStorage.getItem(key);
-        if (existing) {
+        if (existing && hasCredsSrc) {
           try {
-            const parsed = JSON.parse(existing);
-            if (parsed && typeof parsed === 'object' && typeof parsed.botToken === 'string' && parsed.botToken.length > 0) {
-              return false;
+            const parsed = JSON.parse(existing) as Record<string, unknown>;
+            if (parsed && typeof parsed === 'object') {
+              // eslint-disable-next-line @typescript-eslint/no-implied-eval
+              const hasCreds = new Function('existing', `return (${hasCredsSrc})(existing);`);
+              if (hasCreds(parsed)) {
+                return false;
+              }
             }
           } catch {
-            // Fall through — malformed existing value, overwrite.
+            // Malformed — fall through and overwrite.
           }
         }
         globalThis.localStorage.setItem(key, JSON.stringify(value));
         return true;
       },
-      { key: 'org.dxos.plugin.slack', value: settings },
+      { key: seeder.key, value: settings, hasCredsSrc: seeder.hasCreds?.toString() ?? null },
     );
     if (applied) {
-      seeded.push('slack');
+      seeded.push(seeder.name);
     }
   }
-
   return seeded;
 };

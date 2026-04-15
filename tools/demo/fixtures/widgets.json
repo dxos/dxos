@@ -1,0 +1,53 @@
+{
+  "id": "widgets",
+  "boardName": "Widgets Team",
+  "description": "Software engineering team running a normal sprint. Eight cards across Backlog / In Progress / Review / Done.",
+  "lists": ["Backlog", "In Progress", "Review", "Done"],
+  "cards": [
+    {
+      "name": "Color picker redesign",
+      "desc": "Rework the color picker for accessibility. Current UX is confusing for colorblind users. Ship an HSL split with a live preview swatch.",
+      "list": "In Progress"
+    },
+    {
+      "name": "Widget dragging bug",
+      "desc": "Drop targets flicker on slow machines. Needs a repro + fix. Likely a mousemove throttle issue.",
+      "list": "In Progress"
+    },
+    {
+      "name": "Auth provider migration",
+      "desc": "Migrate from the legacy auth provider to the new OIDC-compliant service. Parked until next sprint.",
+      "list": "In Progress"
+    },
+    {
+      "name": "Dark mode",
+      "desc": "Full dark theme pass across the app. Blocked on design.",
+      "list": "Backlog"
+    },
+    {
+      "name": "i18n pass",
+      "desc": "Localize the UI for FR / DE / JA. Need to switch date formats + pluralization.",
+      "list": "Backlog"
+    },
+    {
+      "name": "Perf regression investigation",
+      "desc": "Users on older Macs report lag after 0.42. Suspected culprit: virtualization threshold on the card list.",
+      "list": "Backlog"
+    },
+    {
+      "name": "Search refactor",
+      "desc": "Unify the board-search and global-search code paths behind a shared query builder.",
+      "list": "Review"
+    },
+    {
+      "name": "Onboarding redesign",
+      "desc": "New three-step onboarding that skips sample-data creation for returning users.",
+      "list": "Done"
+    }
+  ],
+  "drift": {
+    "card": "Onboarding redesign",
+    "from": "Done",
+    "to": "In Progress"
+  }
+}

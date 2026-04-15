@@ -13,12 +13,14 @@
   "author": "info@dxos.org",
   "type": "module",
   "bin": {
+    "demo": "./demo.ts",
     "demo-populate-trello": "./populate-trello.ts",
     "demo-reset": "./reset.ts",
     "demo-run": "./run.ts",
     "demo-setup": "./setup.ts"
   },
   "scripts": {
+    "start": "tsx demo.ts",
     "populate-trello": "tsx populate-trello.ts",
     "reset": "tsx reset.ts",
     "run": "tsx run.ts",

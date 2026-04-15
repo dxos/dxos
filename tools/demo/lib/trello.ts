@@ -39,6 +39,110 @@ export const resolveBoardId = async (shortId: string, auth: TrelloAuth): Promise
   return board.id;
 };
 
+export type PopulateSpec = {
+  readonly boardId: string;
+  readonly lists: readonly string[];
+  readonly cards: readonly { readonly name: string; readonly desc: string; readonly list: string }[];
+};
+
+export type PopulateResult = {
+  readonly boardName: string;
+  readonly canonicalBoardId: string;
+  readonly listsCreated: readonly string[];
+  readonly cardsCreated: readonly string[];
+  readonly cardsUpdated: readonly string[];
+  readonly cardsUnchanged: readonly string[];
+};
+
+/**
+ * Idempotently populate a Trello board from a spec. Ensures every list in
+ * `spec.lists` exists, then upserts every card in `spec.cards` into the list
+ * named by `card.list`. Matches existing items by name (case-sensitive) so
+ * re-running against the same board is a no-op.
+ */
+export const populateTrelloBoard = async (spec: PopulateSpec, auth: TrelloAuth): Promise<PopulateResult> => {
+  const board = await trelloRequest<{ id: string; name: string }>(
+    'GET',
+    `/boards/${spec.boardId}`,
+    { fields: 'id,name' },
+    auth,
+  );
+  const canonicalBoardId = board.id;
+
+  const existingLists = await trelloRequest<TrelloList[]>(
+    'GET',
+    `/boards/${canonicalBoardId}/lists`,
+    { fields: 'id,name,closed' },
+    auth,
+  );
+  const listByName = new Map<string, TrelloList>(
+    existingLists.filter((list) => !list.closed).map((list) => [list.name, list]),
+  );
+  const listsCreated: string[] = [];
+  for (const name of spec.lists) {
+    if (listByName.has(name)) {
+      continue;
+    }
+    const created = await trelloRequest<TrelloList>(
+      'POST',
+      '/lists',
+      { idBoard: canonicalBoardId, name, pos: 'bottom' },
+      auth,
+    );
+    listByName.set(name, created);
+    listsCreated.push(name);
+  }
+
+  const existingCards = await trelloRequest<TrelloCard[]>(
+    'GET',
+    `/boards/${canonicalBoardId}/cards`,
+    { fields: 'id,name,desc,idList' },
+    auth,
+  );
+  const cardByName = new Map<string, TrelloCard>(existingCards.map((card) => [card.name, card]));
+
+  const cardsCreated: string[] = [];
+  const cardsUpdated: string[] = [];
+  const cardsUnchanged: string[] = [];
+  for (const card of spec.cards) {
+    const targetList = listByName.get(card.list);
+    if (!targetList) {
+      continue;
+    }
+    const existing = cardByName.get(card.name);
+    if (!existing) {
+      await trelloRequest<TrelloCard>(
+        'POST',
+        '/cards',
+        { idList: targetList.id, name: card.name, desc: card.desc, pos: 'bottom' },
+        auth,
+      );
+      cardsCreated.push(card.name);
+      continue;
+    }
+    if (existing.desc === card.desc && existing.idList === targetList.id) {
+      cardsUnchanged.push(card.name);
+      continue;
+    }
+    await trelloRequest<TrelloCard>(
+      'PUT',
+      `/cards/${existing.id}`,
+      { desc: card.desc, idList: targetList.id },
+      auth,
+    );
+    cardsUpdated.push(card.name);
+  }
+
+  return {
+    boardName: board.name,
+    canonicalBoardId,
+    listsCreated,
+    cardsCreated,
+    cardsUpdated,
+    cardsUnchanged,
+  };
+};
+
 /** Move a card (by name, case-insensitive) to a list (by name). Returns the card id, or undefined if not found. */
 export const moveCardToList = async (
   boardId: string,
