@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
@@ -19,10 +20,9 @@ export type PermissionEntry = {
 export type PermissionsProps = {
   entries: PermissionEntry[];
   onUpdate?: (profileId: string, field: 'autoRespond' | 'createDraft' | 'researchEnabled', value: boolean) => void;
-  classNames?: string;
 };
 
-export const Permissions = ({ entries, onUpdate, classNames }: PermissionsProps) => {
+export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
   const { t } = useTranslation(meta.id);
 
   if (entries.length === 0) {
@@ -30,7 +30,7 @@ export const Permissions = ({ entries, onUpdate, classNames }: PermissionsProps)
   }
 
   return (
-    <div className={classNames}>
+    <Form.Section label={t('permissions.title')}>
       <table className='w-full text-sm'>
         <thead>
           <tr className='text-left text-description'>
@@ -69,6 +69,6 @@ export const Permissions = ({ entries, onUpdate, classNames }: PermissionsProps)
           ))}
         </tbody>
       </table>
-    </div>
+    </Form.Section>
   );
 };
