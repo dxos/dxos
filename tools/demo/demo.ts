@@ -44,12 +44,13 @@ const USER_DATA_DIR = resolve(DEMO_DIR, 'playwright-user-data');
 const SCREENSHOT_DIR = resolve(DEMO_DIR, 'screenshots');
 const ENV_PATH = resolve(DEMO_DIR, '.env.demo');
 const DEFAULT_COMPOSER_URL = 'http://localhost:5173';
-const PAGE_TIMEOUT_MS = 90_000;
-const READINESS_TIMEOUT_MS = 180_000;
+const PAGE_TIMEOUT_MS = 120_000;
+const READINESS_TIMEOUT_MS = 300_000;
 const NUDGE_WAIT_MS = 45_000;
 
 type Args = {
   readonly fresh: boolean;
+  readonly keep: boolean;
   readonly dry: boolean;
   readonly setupOnly: boolean;
   readonly populate: boolean;
@@ -62,6 +63,7 @@ const parseArgs = (argv: readonly string[]): Args => {
   const set = new Set(argv);
   return {
     fresh: set.has('--fresh'),
+    keep: set.has('--keep'),
     dry: set.has('--dry'),
     setupOnly: set.has('--setup-only'),
     populate: set.has('--populate'),
@@ -75,7 +77,8 @@ const printHelp = (): void => {
   console.log(`
 Usage: pnpm demo [flags]
 
-  --fresh         Wipe Playwright identity + start fresh
+  --keep          Reuse the existing Playwright profile (default: fresh each run)
+  --fresh         Force wipe (redundant; fresh is default, use --keep to opt out)
   --dry           Rehearsal mode: no Slack posts, no Trello card moves
   --setup-only    Load credentials + open windows; skip the orchestration
   --populate      Force re-populate the Trello fixture (even if cards exist)
@@ -106,10 +109,13 @@ const main = async (): Promise<void> => {
   }
   dotenv.config({ path: ENV_PATH });
 
-  // `--fresh` wipes the persistent browser profile so the next run looks like a new laptop.
-  if (args.fresh && existsSync(USER_DATA_DIR)) {
+  // Fresh profile every run by default — Chromium's "corrupted profile" prompt
+  // fires when an earlier instance didn't exit cleanly, and each run inherits
+  // a little more cruft than the last. Opt into persistence with --keep.
+  const freshProfile = args.fresh || !args.keep;
+  if (freshProfile && existsSync(USER_DATA_DIR)) {
     rmSync(USER_DATA_DIR, { recursive: true, force: true });
-    console.log('Wiped Playwright profile.');
+    console.log('Fresh Playwright profile (use --keep to reuse).');
   }
   mkdirSync(USER_DATA_DIR, { recursive: true });
   mkdirSync(SCREENSHOT_DIR, { recursive: true });
@@ -205,6 +211,21 @@ const main = async (): Promise<void> => {
 
   try {
     const page = context.pages()[0] ?? (await context.newPage());
+
+    // Pipe Chromium console / page errors to our terminal so failures in
+    // the browser are visible in the same log stream as the orchestrator.
+    page.on('console', (msg) => {
+      const type = msg.type();
+      if (type === 'error' || type === 'warning') {
+        console.log(`  [browser ${type}] ${msg.text()}`);
+      }
+    });
+    page.on('pageerror', (err) => {
+      console.log(`  [browser pageerror] ${err.message}`);
+    });
+    page.on('crash', () => {
+      console.log('  [browser crashed]');
+    });
 
     await step('1. inject .env.demo into localStorage', async () => {
       await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
