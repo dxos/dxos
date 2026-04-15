@@ -22,6 +22,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { bootstrapFromEnv } from './containers/DemoPanel/bootstrap-from-env';
 import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
 import { seedSoftwareTeamFixture } from './containers/DemoPanel/seed-fixture';
+import { startObservers } from './observers';
 import { Demo } from './types';
 
 type AnySpace = {
@@ -86,6 +87,7 @@ const ensureReady = async (): Promise<AnySpace> => {
       log.info('demo: schema registration', { added, skipped, total: DEMO_SCHEMAS.length });
     }
   }
+  startObservers(space.db);
   return space;
 };
 

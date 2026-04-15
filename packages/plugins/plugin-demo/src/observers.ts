@@ -1,0 +1,250 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+/**
+ * Module-level observers that run regardless of which UI surface is open.
+ *
+ * Previously all of this behavior lived inside DemoPanel.tsx as React
+ * useEffect hooks, which meant NOTHING happened unless the user had opened a
+ * Demo Controls article. That was a surprise footgun for the orchestrator:
+ * it could succeed setup and bootstrap, but the 15-second PR poll never
+ * started because no panel was mounted.
+ *
+ * `startObservers(db)` is called once on first `ensureReady()` in globals.ts
+ * and spins up three lightweight pollers:
+ *
+ *   1. GitHub PR poll (15 s) — calls `pollMergedPullRequests` when
+ *      GITHUB_PAT and GITHUB_REPO are set.
+ *   2. Event observer (2 s) — scans for unhandled DemoEvents and handles
+ *      granola-note (→ aiMatch + write DemoMatch) and pr-merged
+ *      (→ find matching card, write DemoNudge).
+ *   3. Nudge poster (2 s) — when DEMO_LIVE_SLACK=true, posts each unposted
+ *      DemoNudge via chat.postMessage and flips `posted=true`.
+ *
+ * The panel's useEffect observers are kept for now; both paths are idempotent
+ * (they each claim events via a handled-ids set plus Obj.change(handled)),
+ * but the panel ones should be dropped once this path is proven out.
+ */
+
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
+import { GitHub } from '@dxos/plugin-github/types';
+import { Granola } from '@dxos/plugin-granola/types';
+import { Trello } from '@dxos/plugin-trello/types';
+
+import { matchNoteToCards } from './containers/DemoPanel/match-cards';
+import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
+import { postNudgeToSlack, readSlackPostConfig } from './containers/DemoPanel/slack-post';
+import { Demo } from './types';
+
+const PR_POLL_INTERVAL_MS = 15_000;
+const EVENT_POLL_INTERVAL_MS = 2_000;
+const MATCH_DELAY_MS = 800;
+const NUDGE_DELAY_MS = 600;
+
+let started = false;
+
+/** Spin up the three pollers. Idempotent — subsequent calls are a no-op. */
+export const startObservers = (db: Database.Database): void => {
+  if (started) {
+    return;
+  }
+  started = true;
+  log.info('demo: starting module-level observers');
+
+  startGithubPoller(db);
+  startEventObserver(db);
+  startNudgePoster(db);
+};
+
+// -- 1. GitHub PR poller -------------------------------------------------------
+
+const startGithubPoller = (db: Database.Database): void => {
+  const tick = async () => {
+    const pat = globalThis.localStorage?.getItem('GITHUB_PAT') ?? '';
+    const repo = globalThis.localStorage?.getItem('GITHUB_REPO') ?? '';
+    if (!pat || !repo) {
+      return;
+    }
+    try {
+      await pollMergedPullRequests(db, { pat, repo });
+    } catch (err) {
+      log.info('demo: pr-poller tick failed', { error: String(err) });
+    }
+  };
+  void tick();
+  setInterval(tick, PR_POLL_INTERVAL_MS);
+};
+
+// -- 2. DemoEvent observer -----------------------------------------------------
+
+const processedGranolaEvents = new Set<string>();
+const processedPrEvents = new Set<string>();
+
+const startEventObserver = (db: Database.Database): void => {
+  setInterval(async () => {
+    try {
+      const events = await db.query(Filter.type(Demo.DemoEvent)).run();
+      for (const event of events) {
+        if (event.handled) {
+          continue;
+        }
+        if (event.kind === 'granola-note' && !processedGranolaEvents.has(event.id)) {
+          processedGranolaEvents.add(event.id);
+          void handleGranolaNote(db, event);
+        } else if (event.kind === 'pr-merged' && !processedPrEvents.has(event.id)) {
+          processedPrEvents.add(event.id);
+          void handlePrMerged(db, event);
+        }
+      }
+    } catch (err) {
+      log.info('demo: event observer tick failed', { error: String(err) });
+    }
+  }, EVENT_POLL_INTERVAL_MS);
+};
+
+const handleGranolaNote = async (db: Database.Database, event: Demo.DemoEvent): Promise<void> => {
+  await new Promise((resolveFn) => setTimeout(resolveFn, MATCH_DELAY_MS));
+  try {
+    const payload = event.payload ? (JSON.parse(event.payload) as { granolaId?: string }) : {};
+    const granolaId = payload.granolaId;
+    const records = await db.query(Filter.type(Granola.GranolaSyncRecord)).run();
+    const record = records.find((candidate) => candidate.granolaId === granolaId);
+    if (!record) {
+      log.info('demo: granola event has no sync record yet', { granolaId });
+      return;
+    }
+    const document = record.document?.target;
+    const cards = await db.query(Filter.type(Trello.TrelloCard)).run();
+    const cardMatches = await matchNoteToCards({ record, document, cards });
+    if (document) {
+      for (const match of cardMatches) {
+        const card = cards.find((candidate) => candidate.id === match.cardId);
+        if (!card) {
+          continue;
+        }
+        db.add(
+          Obj.make(Demo.DemoMatch, {
+            document: Ref.make(document),
+            card: Ref.make(card),
+            confidence: match.confidence,
+            reasoning: match.reasoning,
+            source: match.source,
+            createdAt: new Date().toISOString(),
+          }),
+        );
+      }
+    }
+    Obj.change(event, (mutable) => {
+      mutable.handled = true;
+    });
+    log.info('demo: wrote matches', { granolaId, matches: cardMatches.length });
+  } catch (err) {
+    log.warn('demo: match loop failed', { error: String(err) });
+  }
+};
+
+type PrPayload = {
+  number?: number;
+  repo?: string;
+  title?: string;
+  author?: string;
+  url?: string;
+  mergedAt?: string;
+  relatedKeywords?: readonly string[];
+};
+
+const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Promise<void> => {
+  await new Promise((resolveFn) => setTimeout(resolveFn, NUDGE_DELAY_MS));
+  try {
+    const payload: PrPayload = event.payload ? JSON.parse(event.payload) : {};
+    const keywords = (payload.relatedKeywords ?? []).map((keyword) => keyword.toLowerCase());
+    const cards = await db.query(Filter.type(Trello.TrelloCard)).run();
+    const relevantCard = cards.find((card) => {
+      if (card.closed) {
+        return false;
+      }
+      const haystack = `${card.name ?? ''} ${card.description ?? ''}`.toLowerCase();
+      return keywords.some((keyword) => haystack.includes(keyword));
+    });
+    if (!relevantCard) {
+      log.info('demo: pr-merged had no matching card', { keywords });
+      Obj.change(event, (mutable) => {
+        mutable.handled = true;
+      });
+      return;
+    }
+    const matches = await db.query(Filter.type(Demo.DemoMatch)).run();
+    const linkedMatch = matches
+      .filter((match) => match.card?.target?.id === relevantCard.id)
+      .sort((first, second) => (second.createdAt ?? '').localeCompare(first.createdAt ?? ''))[0];
+    const meetingContext = linkedMatch?.document?.target?.name;
+
+    const lines: string[] = [];
+    lines.push(
+      `Hey @alice — the fix you ${meetingContext ? `discussed in "${meetingContext}"` : 'have been tracking'} just shipped.`,
+    );
+    lines.push('');
+    if (payload.title) {
+      lines.push(`• **PR ${payload.number ? `#${payload.number} ` : ''}**${payload.title}`);
+    }
+    if (payload.author) {
+      lines.push(`• author: @${payload.author}`);
+    }
+    lines.push('');
+    lines.push(
+      `The card "${relevantCard.name}" is still in "${relevantCard.listName ?? 'your board'}" — want me to move it to Done?`,
+    );
+
+    db.add(
+      Obj.make(Demo.DemoNudge, {
+        channel: 'widgets-eng',
+        mention: 'alice',
+        text: lines.join('\n'),
+        card: Ref.make(relevantCard),
+        emittedAt: new Date().toISOString(),
+        posted: false,
+      }),
+    );
+    Obj.change(event, (mutable) => {
+      mutable.handled = true;
+    });
+    log.info('demo: nudge emitted', { cardId: relevantCard.id, pr: payload.number });
+  } catch (err) {
+    log.warn('demo: nudge loop failed', { error: String(err) });
+  }
+};
+
+// -- 3. Slack poster -----------------------------------------------------------
+
+const postedNudgeIds = new Set<string>();
+
+const startNudgePoster = (db: Database.Database): void => {
+  setInterval(async () => {
+    const config = readSlackPostConfig();
+    if (!config) {
+      return;
+    }
+    try {
+      const nudges = await db.query(Filter.type(Demo.DemoNudge)).run();
+      for (const nudge of nudges) {
+        if (nudge.posted || postedNudgeIds.has(nudge.id)) {
+          continue;
+        }
+        postedNudgeIds.add(nudge.id);
+        try {
+          await postNudgeToSlack(config, nudge.text);
+          Obj.change(nudge, (mutable) => {
+            mutable.posted = true;
+          });
+          log.info('demo: nudge posted to slack', { id: nudge.id, channel: config.channel });
+        } catch (err) {
+          log.warn('demo: slack post failed', { id: nudge.id, error: String(err) });
+        }
+      }
+    } catch (err) {
+      log.info('demo: nudge poster tick failed', { error: String(err) });
+    }
+  }, EVENT_POLL_INTERVAL_MS);
+};
