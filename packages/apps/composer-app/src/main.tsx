@@ -130,8 +130,8 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
   }
 
-  // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config, isTauri, logBuffer);
+  // Await observability so TRACE_PROCESSOR.tracingBackend is set before traced code runs.
+  const observability = await initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 

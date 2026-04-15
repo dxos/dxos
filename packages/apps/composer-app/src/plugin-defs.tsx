@@ -76,7 +76,7 @@ export type State = {
   appKey: string;
   config: Config;
   services: ClientServicesProvider;
-  observability: Promise<Observability.Observability>;
+  observability: Observability.Observability;
   logBuffer: LogBuffer;
 };
 

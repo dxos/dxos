@@ -173,6 +173,7 @@ caller
 ```
 
 Rules:
+
 - Requires the class to `extend Resource`. Throws at decoration time otherwise.
 - When `_open` throws, the lifecycle span records the error and ends immediately.
 - Double `open()` calls do not start a second lifecycle span.

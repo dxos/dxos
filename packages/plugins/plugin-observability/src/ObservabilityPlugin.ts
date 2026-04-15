@@ -24,21 +24,17 @@ import { translations } from './translations';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
-  observability: () => Promise<Observability.Observability>;
+  observability: () => Observability.Observability;
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ namespace, observability }) => ({
+  Plugin.addModule(({ observability }) => ({
     id: 'observability',
     activatesOn: ActivationEvents.Startup,
-    activate: () =>
-      Effect.gen(function* () {
-        const obs = yield* Effect.tryPromise(() => observability());
-        return Capability.contributes(ObservabilityCapabilities.Observability, obs);
-      }),
+    activate: () => Effect.sync(() => Capability.contributes(ObservabilityCapabilities.Observability, observability())),
   })),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
@@ -63,11 +59,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       ObservabilityEvents.StateReady,
       ClientReadyEvent,
     ),
-    activate: () =>
-      Effect.gen(function* () {
-        const obs = yield* Effect.tryPromise(() => observability());
-        return yield* ClientReady({ namespace, observability: obs });
-      }),
+    activate: () => ClientReady({ namespace, observability: observability() }),
   })),
   Plugin.make,
 );

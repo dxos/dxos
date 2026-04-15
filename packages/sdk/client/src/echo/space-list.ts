@@ -322,10 +322,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
-    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey(
-      { spaceKey },
-      { ctx },
-    );
+    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey }, { ctx });
     return this._findProxy(response.space);
   }
 

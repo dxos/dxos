@@ -560,10 +560,7 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services.SystemService.updateStatus(
-      { status: SystemStatus.ACTIVE },
-      { ctx: this._ctx },
-    );
+    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE }, { ctx: this._ctx });
   }
 
   /**

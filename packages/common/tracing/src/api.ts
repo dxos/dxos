@@ -30,9 +30,7 @@ const resource =
   (options?: ResourceOptions) =>
   <T extends { new (...args: any[]): {} }>(constructor: T) => {
     if (options?.lifecycle && !(constructor.prototype instanceof Resource)) {
-      throw new Error(
-        `@trace.resource({ lifecycle: true }) requires ${constructor.name} to extend Resource`,
-      );
+      throw new Error(`@trace.resource({ lifecycle: true }) requires ${constructor.name} to extend Resource`);
     }
 
     const klass = (() =>
@@ -74,9 +72,7 @@ const resource =
         let openCtx = ctx;
         if (remoteSpan?.spanContext != null) {
           const traceAttrs = { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext };
-          openCtx = ctx
-            ? ctx.derive({ attributes: traceAttrs })
-            : new Context({ attributes: traceAttrs });
+          openCtx = ctx ? ctx.derive({ attributes: traceAttrs }) : new Context({ attributes: traceAttrs });
         }
 
         try {
