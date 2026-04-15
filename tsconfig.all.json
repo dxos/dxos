@@ -403,6 +403,9 @@
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sidekick/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
     },
     {

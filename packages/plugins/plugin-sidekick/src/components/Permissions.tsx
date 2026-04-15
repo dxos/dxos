@@ -4,6 +4,10 @@
 
 import React from 'react';
 
+import { useTranslation } from '@dxos/react-ui';
+
+import { meta } from '#meta';
+
 export type PermissionEntry = {
   profileId: string;
   name: string;
@@ -19,6 +23,8 @@ export type PermissionsProps = {
 };
 
 export const Permissions = ({ entries, onUpdate, classNames }: PermissionsProps) => {
+  const { t } = useTranslation(meta.id);
+
   if (entries.length === 0) {
     return null;
   }
@@ -28,10 +34,10 @@ export const Permissions = ({ entries, onUpdate, classNames }: PermissionsProps)
       <table className='w-full text-sm'>
         <thead>
           <tr className='text-left text-description'>
-            <th className='pb-1 font-normal'>Contact</th>
-            <th className='pb-1 font-normal text-center'>Auto-respond</th>
-            <th className='pb-1 font-normal text-center'>Draft</th>
-            <th className='pb-1 font-normal text-center'>Research</th>
+            <th className='pb-1 font-normal'>{t('contact.label')}</th>
+            <th className='pb-1 font-normal text-center'>{t('auto-respond.label')}</th>
+            <th className='pb-1 font-normal text-center'>{t('create-draft.label')}</th>
+            <th className='pb-1 font-normal text-center'>{t('research.label')}</th>
           </tr>
         </thead>
         <tbody>

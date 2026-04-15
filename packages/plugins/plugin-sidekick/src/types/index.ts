@@ -3,4 +3,4 @@
 //
 
 export * as Profile from './Profile';
-export * as Properties from './Properties';
+export * as Sidekick from './Sidekick';

@@ -2,46 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { ActionItems, DayAhead, Permissions, ProfileGrid, ProfileSummary } from '#components';
 import { meta } from '#meta';
+import { type Sidekick } from '#types';
 
-export type SidekickArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
+export type SidekickArticleProps = AppSurface.ObjectArticleProps<Sidekick.Profile>;
 
-export const SidekickArticle = ({ role, subject: _agent, attendableId: _attendableId }: SidekickArticleProps) => {
+export const SidekickArticle = ({ role, subject: _sidekick, attendableId: _attendableId }: SidekickArticleProps) => {
   const { t } = useTranslation(meta.id);
-
-  const sections = useMemo(
-    () => [
-      { key: 'day-ahead', title: t('day-ahead.title') },
-      { key: 'action-items', title: t('action-items.title') },
-      { key: 'profiles', title: t('profiles.title') },
-      { key: 'user-profile', title: t('user-profile.title') },
-      { key: 'permissions', title: t('permissions.title') },
-    ],
-    [t],
-  );
 
   return (
     <Panel.Root role={role} className='dx-document overflow-y-auto'>
       <Panel.Content>
-        <h1 className='text-lg font-semibold mb-4'>{t('dashboard.title')}</h1>
+        <Form.Section label={t('day-ahead.title')}>
+          <DayAhead />
+        </Form.Section>
 
-        {sections.map((section) => (
-          <div key={section.key} className='mb-6'>
-            <h2 className='text-sm font-medium text-description mb-2'>{section.title}</h2>
-            {section.key === 'day-ahead' && <DayAhead />}
-            {section.key === 'action-items' && <ActionItems items={[]} />}
-            {section.key === 'profiles' && <ProfileGrid profiles={[]} />}
-            {section.key === 'user-profile' && <ProfileSummary />}
-            {section.key === 'permissions' && <Permissions entries={[]} />}
-          </div>
-        ))}
+        <Form.Section label={t('action-items.title')}>
+          <ActionItems items={[]} />
+        </Form.Section>
+
+        <Form.Section label={t('profiles.title')}>
+          <ProfileGrid profiles={[]} />
+        </Form.Section>
+
+        <Form.Section label={t('user-profile.title')}>
+          <ProfileSummary />
+        </Form.Section>
+
+        <Form.Section label={t('permissions.title')}>
+          <Permissions entries={[]} />
+        </Form.Section>
       </Panel.Content>
     </Panel.Root>
   );

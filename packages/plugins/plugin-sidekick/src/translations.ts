@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Profile, Properties } from '#types';
+import { Profile, Sidekick } from '#types';
 
 export const translations = [
   {
@@ -17,8 +17,12 @@ export const translations = [
         'typename.label_other': 'Profiles',
         'object-name.placeholder': 'New profile',
       },
-      [Properties.Properties.typename]: {
-        'typename.label': 'Sidekick Properties',
+      [Sidekick.Profile.typename]: {
+        'typename.label': 'Sidekick',
+        'typename.label_zero': 'Sidekicks',
+        'typename.label_one': 'Sidekick',
+        'typename.label_other': 'Sidekicks',
+        'object-name.placeholder': 'New sidekick',
       },
       [meta.id]: {
         'plugin.name': 'Sidekick',
@@ -28,12 +32,14 @@ export const translations = [
         'profiles.title': 'People',
         'user-profile.title': 'Your Profile',
         'permissions.title': 'Permissions',
+        'contact.label': 'Contact',
         'auto-respond.label': 'Auto-respond',
         'create-draft.label': 'Create draft',
         'research.label': 'Research',
         'no-entry.label': 'No journal entry for today.',
         'no-profiles.label': 'No profiles yet.',
         'no-action-items.label': 'No action items.',
+        'no-user-profile.label': 'No user profile yet.',
       },
     },
   },

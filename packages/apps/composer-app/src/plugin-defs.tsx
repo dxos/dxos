@@ -231,7 +231,7 @@ export const getPlugins = ({
     RuntimePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
-    isLabs && SidekickPlugin(),
+    SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),

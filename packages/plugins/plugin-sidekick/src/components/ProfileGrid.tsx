@@ -4,6 +4,10 @@
 
 import React from 'react';
 
+import { useTranslation } from '@dxos/react-ui';
+
+import { meta } from '#meta';
+
 export type ProfileCardData = {
   id: string;
   name: string;
@@ -18,10 +22,12 @@ export type ProfileGridProps = {
 };
 
 export const ProfileGrid = ({ profiles, onSelect, classNames }: ProfileGridProps) => {
+  const { t } = useTranslation(meta.id);
+
   if (profiles.length === 0) {
     return (
       <div className={classNames}>
-        <p className='text-sm text-description italic'>No profiles yet.</p>
+        <p className='text-sm text-description italic'>{t('no-profiles.label')}</p>
       </div>
     );
   }

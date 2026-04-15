@@ -8,7 +8,8 @@ import React, { lazy } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Agent } from '@dxos/assistant-toolkit';
+
+import { Sidekick } from '#types';
 
 const SidekickArticle = lazy(() => import('#containers'));
 
@@ -19,7 +20,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'sidekick-dashboard',
         role: 'article',
-        filter: AppSurface.objectArticle(Agent.Agent),
+        filter: AppSurface.objectArticle(Sidekick.Profile),
         component: ({ data, role }) => (
           <SidekickArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

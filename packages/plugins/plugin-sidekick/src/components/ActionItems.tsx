@@ -4,6 +4,10 @@
 
 import React from 'react';
 
+import { useTranslation } from '@dxos/react-ui';
+
+import { meta } from '#meta';
+
 export type ActionItem = {
   id: string;
   text: string;
@@ -17,10 +21,12 @@ export type ActionItemsProps = {
 };
 
 export const ActionItems = ({ items, onToggle, classNames }: ActionItemsProps) => {
+  const { t } = useTranslation(meta.id);
+
   if (items.length === 0) {
     return (
       <div className={classNames}>
-        <p className='text-sm text-description italic'>No action items.</p>
+        <p className='text-sm text-description italic'>{t('no-action-items.label')}</p>
       </div>
     );
   }
