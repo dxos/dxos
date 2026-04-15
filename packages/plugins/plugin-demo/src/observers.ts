@@ -161,13 +161,32 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
     const payload: PrPayload = event.payload ? JSON.parse(event.payload) : {};
     const keywords = (payload.relatedKeywords ?? []).map((keyword) => keyword.toLowerCase());
     const cards = await db.query(Filter.type(Trello.TrelloCard)).run();
-    const relevantCard = cards.find((card) => {
-      if (card.closed) {
-        return false;
-      }
-      const haystack = `${card.name ?? ''} ${card.description ?? ''}`.toLowerCase();
-      return keywords.some((keyword) => haystack.includes(keyword));
-    });
+
+    // Score each non-closed card by how many PR keywords appear as whole words
+    // in its name or description. Whole-word matching (via \b regex) prevents
+    // e.g. "work" from matching "rework", or "pass" matching "password".
+    // Card name matches count double — the title is the primary signal.
+    const scored = cards
+      .filter((card) => !card.closed)
+      .map((card) => {
+        const name = (card.name ?? '').toLowerCase();
+        const desc = (card.description ?? '').toLowerCase();
+        let score = 0;
+        for (const keyword of keywords) {
+          const rx = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+          if (rx.test(name)) {
+            score += 2;
+          }
+          if (rx.test(desc)) {
+            score += 1;
+          }
+        }
+        return { card, score };
+      })
+      .filter((entry) => entry.score > 0)
+      .sort((first, second) => second.score - first.score);
+
+    const relevantCard = scored[0]?.card;
     if (!relevantCard) {
       log.info('demo: pr-merged had no matching card', { keywords });
       Obj.change(event, (mutable) => {
