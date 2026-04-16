@@ -14,7 +14,8 @@ onconnect = async (event) => {
   const { ObservabilityProvider } = await import('@dxos/observability');
   const { initializeObservability, setupConfig } = await import('./config');
 
-  // Don't block on observability setup.
+  // Don't block on observability setup; the buffering backend in TRACE_PROCESSOR
+  // captures early spans and replays them once the real OTEL backend registers.
   void setupConfig()
     .then(async (config) => {
       const observability = await initializeObservability(config, false);

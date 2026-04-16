@@ -105,7 +105,7 @@ const OPTIMIZED_SHARE_POLICY = true;
 /**
  * Abstracts over the AutomergeRepo.
  */
-@trace.resource()
+@trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
@@ -555,7 +555,7 @@ export class AutomergeHost extends Resource {
   /**
    * Flush documents to disk.
    */
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
