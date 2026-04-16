@@ -31,7 +31,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ namespace, observability }) => ({
+  Plugin.addModule(({ observability }) => ({
     id: 'observability',
     activatesOn: ActivationEvents.Startup,
     activate: () =>

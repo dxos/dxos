@@ -19,7 +19,7 @@ import {
   type EditorStateStore,
   type EditorViewMode,
   type ThemeExtensionsOptions,
-  compactSlots,
+  mobileSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -110,7 +110,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           }),
           createThemeExtensions({
             themeMode,
-            slots: slots ?? (compact ? compactSlots : documentSlots),
+            slots: slots ?? (compact ? mobileSlots : documentSlots),
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),

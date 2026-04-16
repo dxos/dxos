@@ -70,9 +70,7 @@ const DefaultStory = () => {
 
   return (
     <TestLayout json={json}>
-      <div role='none' className='col-span-full'>
-        <FieldEditor {...props} />
-      </div>
+      <FieldEditor {...props} />
     </TestLayout>
   );
 };

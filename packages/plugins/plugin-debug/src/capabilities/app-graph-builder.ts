@@ -111,15 +111,6 @@ export default Capability.makeModule(
                           icon: 'ph--chart-line--regular',
                         },
                       }),
-                      Node.make({
-                        id: Devtools.Client.Tracing,
-                        data: Devtools.Client.Tracing,
-                        type: DEVTOOLS_TYPE,
-                        properties: {
-                          label: ['tracing.label', { ns: meta.id }],
-                          icon: 'ph--fire--regular',
-                        },
-                      }),
                     ],
                   }),
                   Node.make({
