@@ -25,9 +25,10 @@ import {
   withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -41,6 +42,9 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
+  | Database.Service
+  | Operation.Service
+  | OperationRegistry.Service
   | Trace.TraceService
   /**
    * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().

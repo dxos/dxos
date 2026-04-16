@@ -7,13 +7,13 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
+import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import { ObjectVersion } from '@dxos/echo-db';
-import * as Layer from 'effect/Layer';
-
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { type FunctionNotFoundError, type TracingService } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Operation, type OperationRegistry } from '@dxos/operation';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -29,7 +29,14 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<
+  AiSessionRunProps<any>,
+  'system' | 'blueprints' | 'objects'
+>): Effect.Effect<
+  string,
+  FunctionNotFoundError | ObjectNotFoundError,
+  Database.Service | OperationRegistry.Service | Operation.Service | TracingService
+> =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
       blueprints,
@@ -39,10 +46,7 @@ export const formatSystemPrompt = ({
           Effect.gen(function* () {
             return trim`
             <blueprint>
-              ${yield* Template.processTemplate(template).pipe(Effect.provide(Layer.mergeAll(
-                  Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.die('Not available.') }),
-                  Layer.succeed(Operation.Service, { invoke: () => Effect.die('Not available.'), schedule: () => Effect.die('Not available.'), invokePromise: async () => ({ error: new Error('Not available.') }) } as any),
-                )))}
+              ${yield* Template.processTemplate(template)}
             </blueprint>
           `;
           }),
