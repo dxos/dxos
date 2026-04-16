@@ -4,7 +4,6 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import { Context } from 'effect';
 import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -25,10 +24,10 @@ import { trim } from '@dxos/util';
 
 import { AiConversation } from '../conversation';
 import {
-  functionInvocationServiceFromOperations,
-  getOperationFromTool,
-  makeToolExecutionService,
-  makeToolResolverFromOperations,
+    functionInvocationServiceFromOperations,
+    getOperationFromTool,
+    makeToolExecutionService,
+    makeToolResolverFromOperations,
 } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 

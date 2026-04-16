@@ -4,11 +4,9 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import { T } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 import { AgentService } from '@dxos/assistant';
 import {
-  Agent,
   AgentHandlers,
   AgentPrompt,
   DatabaseBlueprint,
@@ -17,10 +15,9 @@ import {
   WebSearchHandlers,
   WebSearchToolkitGeneric,
 } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
+import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { failUndefined } from '@dxos/debug';
-import { Database, Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/functions';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
