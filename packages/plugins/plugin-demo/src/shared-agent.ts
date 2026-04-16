@@ -198,9 +198,11 @@ const toolTrelloMoveCard = async (
   Obj.change(match, (mutable) => {
     mutable.listName = listName;
   });
-  // Push to real Trello if credentials available.
+  // Push to real Trello if credentials available and the card has a real
+  // Trello ID (not a fixture placeholder like "demo-card-dragging-bug").
   const auth = readTrelloAuth();
-  if (auth && match.trelloCardId) {
+  const hasRealTrelloId = match.trelloCardId && !match.trelloCardId.startsWith('demo-');
+  if (auth && hasRealTrelloId) {
     try {
       const lists = await fetchTrelloLists(auth.boardId, auth);
       const target = lists.find(
