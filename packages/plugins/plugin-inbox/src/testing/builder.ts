@@ -255,7 +255,7 @@ export class Builder {
 
       const enrichedText = words.join(' ');
       // First block plain text (links stripped), second block enriched text (links intact).
-      text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
+      text = enrichedText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
       blocks = [
         { _tag: 'text', text },
         { _tag: 'text', text: enrichedText },
