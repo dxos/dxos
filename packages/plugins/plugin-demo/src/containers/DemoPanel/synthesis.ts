@@ -23,7 +23,7 @@
  */
 
 import { Chat as AssistantChat } from '@dxos/assistant-toolkit';
-import { type Database, Feed, Filter, Obj } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { GitHub } from '@dxos/plugin-github/types';
 import { Granola } from '@dxos/plugin-granola/types';
@@ -154,9 +154,12 @@ Be specific. Cite names, PR numbers, card titles. If a section has nothing,
 write "_Nothing this week._" rather than padding. Total length: 200-300 words.
 `.trim();
 
+const AGENT_CHAT_NAME = 'Composer agent';
+
 /**
- * Append an assistant message to the first Chat's Feed so it appears in the
- * chat pane. Returns the chat it was written to.
+ * Append an assistant message to the dedicated "Composer agent" Chat so it
+ * appears in the chat pane and doesn't get mixed into Slack mirror chats.
+ * Creates the Chat lazily the first time.
  */
 const appendAssistantMessage = async (
   db: Database.Database,
@@ -164,11 +167,14 @@ const appendAssistantMessage = async (
   text: string,
 ): Promise<AssistantChat.Chat | undefined> => {
   const chats = await db.query(Filter.type(AssistantChat.Chat)).run();
-  if (chats.length === 0) {
-    log.info('demo: synthesis — no chat in space to append to');
-    return undefined;
+  let chat = chats.find((candidate) => candidate.name === AGENT_CHAT_NAME);
+  if (!chat) {
+    const feed = db.add(Feed.make());
+    chat = AssistantChat.make({ name: AGENT_CHAT_NAME, feed: Ref.make(feed) });
+    Obj.setParent(feed, chat);
+    db.add(chat);
+    await addToDemoCollection(db, chat);
   }
-  const chat = chats[0];
   const feedTarget = chat.feed?.target;
   if (!feedTarget) {
     return undefined;

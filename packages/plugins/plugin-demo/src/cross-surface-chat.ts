@@ -143,29 +143,30 @@ const mirrorSlackToComposer = async (
   space: SpaceLike,
   config: ChatLinkConfig,
 ): Promise<void> => {
+  // MVP: one Chat per Slack channel, not per thread. Grouping by
+  // thread_ts created a new Chat for every un-threaded message, which
+  // flooded the sidebar. For replies we still pass the parent ts to
+  // postMessage so Slack keeps them in the thread, but the linked Chat
+  // is channel-scoped.
   for (const channelId of config.channels) {
     const messages = await fetchHistory(config.botToken, channelId);
-    const grouped = new Map<string, SlackMessage[]>();
-    for (const msg of messages) {
-      if (msg.subtype) {
-        continue;
-      }
-      const key = msg.thread_ts ?? msg.ts;
-      const bucket = grouped.get(key) ?? [];
-      bucket.push(msg);
-      grouped.set(key, bucket);
+    const keepers = messages.filter((msg) => !msg.subtype);
+    if (keepers.length === 0) {
+      continue;
     }
-    for (const [threadTs, bucket] of grouped.entries()) {
-      const link = await ensureLink(db, channelId, threadTs);
-      if (!link) {
-        continue;
-      }
-      const chat = link.chat?.target;
-      if (!chat) {
-        continue;
-      }
-      await appendNewSlackMessages(space, chat, bucket, channelId);
+    // Use the earliest message's thread_ts (or ts) as the canonical key so
+    // postMessage still threads replies correctly. Same channel always
+    // resolves to the same link.
+    const firstTs = keepers[0].thread_ts ?? keepers[0].ts;
+    const link = await ensureLink(db, channelId, firstTs);
+    if (!link) {
+      continue;
     }
+    const chat = link.chat?.target;
+    if (!chat) {
+      continue;
+    }
+    await appendNewSlackMessages(space, chat, keepers, channelId);
   }
 };
 
@@ -185,7 +186,10 @@ const ensureLink = async (
   threadTs: string,
 ): Promise<Demo.SlackChatLink | undefined> => {
   const links = await db.query(Filter.type(Demo.SlackChatLink)).run();
-  const existing = links.find((entry) => entry.channelId === channelId && entry.threadTs === threadTs);
+  // Dedupe by channelId only — one Chat per Slack channel in the MVP. Keeps
+  // the threadTs for the first-ever message so reply postMessage can thread
+  // correctly, but doesn't create a second link if a new thread appears.
+  const existing = links.find((entry) => entry.channelId === channelId);
   if (existing) {
     return existing;
   }
