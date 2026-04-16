@@ -34,7 +34,7 @@ import { Message } from '@dxos/types';
 
 import { Demo } from './types';
 
-const ANTHROPIC_URL = '/api/anthropic/v1/messages';
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const SLACK_API = 'https://slack.com/api';
 const TRELLO_BASE = 'https://api.trello.com/1';
 const MODEL = 'claude-sonnet-4-5';
@@ -426,6 +426,7 @@ const callAnthropicWithTools = async (
     for (const toolUse of toolUses) {
       log.info('shared-agent: tool call', { tool: toolUse.name, input: toolUse.input });
       const result = await executeTool(ctx, toolUse.name!, toolUse.input ?? {});
+      log.info('shared-agent: tool result', { tool: toolUse.name, result: result.slice(0, 200) });
       toolResults.push({
         type: 'tool_result',
         tool_use_id: toolUse.id,

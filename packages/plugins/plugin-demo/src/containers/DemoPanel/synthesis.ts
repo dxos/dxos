@@ -34,7 +34,7 @@ import { Message } from '@dxos/types';
 import { Demo } from '../../types';
 import { addToDemoCollection } from './collection';
 
-const ANTHROPIC_URL = '/api/anthropic/v1/messages';
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-4-5';
 
 type SpaceLike = { queues: { get: (dxn: any) => any } };
