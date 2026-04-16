@@ -70,11 +70,13 @@ export const ensureDevServer = async (url: string = DEFAULT_URL): Promise<DevSer
   // DEMO_DIR = tools/demo/lib/, so three levels up → repo root.
   const repoRoot = resolve(DEMO_DIR, '..', '..', '..');
   const moonBin = resolve(repoRoot, 'node_modules', '.bin', 'moon');
+  // CI must NOT be set — moon's CI mode filters out the serve task.
+  const { CI: _, ...envWithoutCi } = globalThis.process.env;
   const process = spawn(moonBin, ['run', 'composer-app:serve', '--quiet'], {
     cwd: repoRoot,
     detached: false,
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...globalThis.process.env, CI: 'true' },
+    env: envWithoutCi,
   });
   process.stdout?.pipe(out);
   process.stderr?.pipe(out);
