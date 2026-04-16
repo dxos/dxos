@@ -8888,9 +8888,15 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/assistant-toolkit
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8918,6 +8924,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       effect:
         specifier: 3.20.0
         version: 3.20.0

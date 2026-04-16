@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { Chat as AssistantChat } from '@dxos/assistant-toolkit';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Trello } from '@dxos/plugin-trello/types';
 
@@ -134,6 +135,35 @@ export const DemoNudge = Schema.Struct({
 );
 
 export interface DemoNudge extends Schema.Schema.Type<typeof DemoNudge> {}
+
+/**
+ * Edge object linking a Slack thread (or channel root) to an assistant Chat,
+ * so that messages flowing in either surface can be mirrored to the other.
+ * One link per (channelId, threadTs) tuple — the Slack-mirror observer creates
+ * it lazily on the first DM that arrives in a thread.
+ */
+export const SlackChatLink = Schema.Struct({
+  chat: Ref.Ref(AssistantChat.Chat).pipe(FormInputAnnotation.set(false)),
+  channelId: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** Slack ts of the thread root, or the message ts itself for non-threaded DMs. */
+  threadTs: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** Resolved channel name for display, when known. */
+  channelName: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+  /** ISO timestamp the link was created. */
+  createdAt: Schema.String.pipe(FormInputAnnotation.set(false)),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.slackChatLink',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['channelName']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--link-simple--regular',
+    hue: 'sky',
+  }),
+);
+
+export interface SlackChatLink extends Schema.Schema.Type<typeof SlackChatLink> {}
 
 /** Input schema for creating a DemoController. */
 export const CreateDemoControllerSchema = Schema.Struct({

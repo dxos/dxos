@@ -37,6 +37,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { matchNoteToCards } from './containers/DemoPanel/match-cards';
 import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
 import { postNudgeToSlack, readSlackPostConfig } from './containers/DemoPanel/slack-post';
+import { startCrossSurfaceChat } from './cross-surface-chat';
 import { startReplyWatcher } from './reply-watcher';
 import { Demo } from './types';
 
@@ -47,8 +48,8 @@ const NUDGE_DELAY_MS = 600;
 
 let started = false;
 
-/** Spin up the three pollers. Idempotent — subsequent calls are a no-op. */
-export const startObservers = (db: Database.Database): void => {
+/** Spin up the pollers. Idempotent — subsequent calls are a no-op. */
+export const startObservers = (db: Database.Database, space?: { queues: { get: (dxn: any) => any } }): void => {
   if (started) {
     return;
   }
@@ -59,6 +60,9 @@ export const startObservers = (db: Database.Database): void => {
   startEventObserver(db);
   startNudgePoster(db);
   startReplyWatcher(db);
+  if (space) {
+    startCrossSurfaceChat(db, space);
+  }
 };
 
 // -- 1. GitHub PR poller -------------------------------------------------------

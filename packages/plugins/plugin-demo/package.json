@@ -55,7 +55,9 @@
     "@dxos/ai-match": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -65,6 +67,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-trello": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/types": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

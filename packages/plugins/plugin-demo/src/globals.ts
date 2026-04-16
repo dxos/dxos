@@ -29,6 +29,7 @@ type AnySpace = {
   state?: { get?: () => unknown };
   waitUntilReady: () => Promise<void>;
   db: any;
+  queues: { get: (dxn: any) => any };
 };
 
 const resolveSpace = (): AnySpace | undefined => {
@@ -50,6 +51,7 @@ const DEMO_SCHEMAS = [
   Demo.DemoEvent,
   Demo.DemoMatch,
   Demo.DemoNudge,
+  Demo.SlackChatLink,
   Granola.GranolaSyncRecord,
   Granola.GranolaAccount,
   Markdown.Document,
@@ -87,7 +89,7 @@ const ensureReady = async (): Promise<AnySpace> => {
       log.info('demo: schema registration', { added, skipped, total: DEMO_SCHEMAS.length });
     }
   }
-  startObservers(space.db);
+  startObservers(space.db, space);
   return space;
 };
 
