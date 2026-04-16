@@ -43,9 +43,9 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
 
     created,
     sender,
+    threadId: message.threadId,
 
     properties: {
-      threadId: message.threadId,
       snippet: message.snippet,
       subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
       labels: message.labelIds,

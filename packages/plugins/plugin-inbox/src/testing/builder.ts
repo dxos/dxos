@@ -36,11 +36,32 @@ export type BuilderOptions = {
   messages?: DateRange;
 };
 
-export type LinkedMessageOptions = {
-  /** Number of paragraphs to generate per message. Defaults to 3. */
-  paragraphs?: number;
+export type MessageLinkOptions = {
+  /** Space to which linked Person objects will be added. */
+  space: Space;
   /** Maximum number of linked Person objects to splice into the text. Defaults to 5. */
-  links?: number;
+  max?: number;
+};
+
+export type MessageOptions = {
+  /** Number of paragraphs to generate per message. Defaults to a random value between 1 and 4. */
+  paragraphs?: number;
+  /**
+   * If provided, markdown links to newly-created Person objects are injected into
+   * the message text. In this mode the message contains two text blocks: the first
+   * with link syntax stripped, the second with links intact.
+   */
+  links?: MessageLinkOptions;
+  /** Thread ID to assign to the message's `threadId`. */
+  threadId?: string;
+};
+
+export type MessagesOptions = MessageOptions & {
+  /**
+   * If set, generates a pool of N thread IDs and randomly assigns each message to one.
+   * Overrides any `threadId` supplied in the base options.
+   */
+  threads?: number;
 };
 
 export type BuildResult = {
@@ -206,66 +227,24 @@ export class Builder {
   //
 
   /**
-   * Creates a single plain-text Message at a random time within the message range.
+   * Creates a single Message at a random time within the message range.
+   * If `options.links` is provided, the message body will include markdown links
+   * to newly-created Person objects, and the message will contain two text blocks
+   * (first with link syntax stripped, second with links intact).
    */
-  createMessage(): this {
+  createMessage({ paragraphs, links, threadId }: MessageOptions = {}): this {
     const created = this._nextMessageTime();
-    const paragraphCount = random.number.int({ min: 1, max: 4 });
-    const text = random.helpers
+    const paragraphCount = paragraphs ?? random.number.int({ min: 1, max: 4 });
+
+    let text = random.helpers
       .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphCount })
       .join('\n\n');
 
-    this._messages.push(
-      Message.make({
-        created: created.toISOString(),
-        sender: this._randomActor(),
-        blocks: [{ _tag: 'text', text }],
-        properties: {
-          subject:
-            random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
-          snippet: text.slice(0, 120),
-          labels: random.helpers.randomSubset(Object.keys(LABELS), {
-            min: 0,
-            max: Math.min(3, Object.keys(LABELS).length),
-          }),
-        },
-      }),
-    );
-
-    return this;
-  }
-
-  /**
-   * Creates multiple plain-text Messages, each at a random time within the message range.
-   */
-  createMessages(count: number): this {
-    for (let index = 0; index < count; index++) {
-      this.createMessage();
-    }
-    return this;
-  }
-
-  //
-  // Linked message factory
-  //
-
-  /**
-   * Creates a single Message whose body contains markdown links to Person objects
-   * added to the given Space database. The message has two content blocks:
-   * a plain-text block (links stripped) and an enriched block (links intact).
-   */
-  createLinkedMessage(space: Space, { paragraphs = 3, links = 5 }: LinkedMessageOptions = {}): this {
-    const created = this._nextMessageTime();
-
-    let text = random.helpers
-      .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphs })
-      .join('\n\n');
-
-    let enrichedText = text;
-    const words = text.split(' ');
-
-    if (links > 0) {
-      const linkCount = Math.floor(Math.random() * links) + 1;
+    let blocks: { _tag: 'text'; text: string }[];
+    if (links) {
+      const { space, max = 5 } = links;
+      const words = text.split(' ');
+      const linkCount = Math.floor(Math.random() * max) + 1;
       for (let index = 0; index < linkCount; index++) {
         const fullName = random.person.fullName();
         const obj = space.db.add(Person.make({ fullName }));
@@ -273,21 +252,24 @@ export class Builder {
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
       }
-    }
 
-    // First block: plain text with link syntax stripped, keeping the label.
-    enrichedText = words.join(' ');
-    text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
+      const enrichedText = words.join(' ');
+      // First block plain text (links stripped), second block enriched text (links intact).
+      text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
+      blocks = [
+        { _tag: 'text', text },
+        { _tag: 'text', text: enrichedText },
+      ];
+    } else {
+      blocks = [{ _tag: 'text', text }];
+    }
 
     this._messages.push(
       Message.make({
         created: created.toISOString(),
         sender: this._randomActor(),
-        // First block plain text (links stripped), second block enriched text (links intact).
-        blocks: [
-          { _tag: 'text', text },
-          { _tag: 'text', text: enrichedText },
-        ],
+        blocks,
+        ...(threadId && { threadId }),
         properties: {
           subject:
             random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
@@ -304,12 +286,18 @@ export class Builder {
   }
 
   /**
-   * Creates multiple linked Messages, each at a random time within the message range.
+   * Creates multiple Messages, each at a random time within the message range.
+   * When `options.threads` is set, a pool of thread IDs is generated and each message
+   * is randomly assigned to one of them.
    */
-  createLinkedMessages(count: number, space: Space, options?: LinkedMessageOptions): this {
+  createMessages(count: number, options?: MessagesOptions): this {
+    const { threads, ...messageOptions } = options ?? {};
+    const threadIds = threads && threads > 0 ? Array.from({ length: threads }, () => random.string.uuid()) : undefined;
     for (let index = 0; index < count; index++) {
-      this.createLinkedMessage(space, options);
+      const threadId = threadIds ? random.helpers.arrayElement(threadIds) : messageOptions.threadId;
+      this.createMessage({ ...messageOptions, threadId });
     }
+
     return this;
   }
 

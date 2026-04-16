@@ -29,10 +29,14 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
 
 export type MessageStackProps = {
   id: string;
-  messages: Message.Message[];
-  currentId?: string;
+  messages?: Message.Message[];
   labels?: MailboxType.Labels;
-  ignoreAttention?: boolean;
+  currentId?: string;
+  /**
+   * When true, messages are grouped by `threadId` and only the most recent message
+   * in each thread is displayed. Messages without a threadId form singleton threads.
+   */
+  threads?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
@@ -40,17 +44,38 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentId, onAction, ...props }, forwardedRef) => {
+  ({ messages, labels, currentId, threads, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+    const displayedMessages = useMemo(() => {
+      if (!threads) {
+        return messages;
+      }
+
+      const groups = new Map<string, Message.Message>();
+      for (const message of messages ?? []) {
+        const key = message.threadId ?? message.id;
+        const existing = groups.get(key);
+        if (!existing || message.created > existing.created) {
+          groups.set(key, message);
+        }
+      }
+
+      return Array.from(groups.values());
+    }, [messages, threads]);
+
     const items = useMemo(
-      () => messages.map((message) => ({ message, labels, onAction })),
-      [messages, labels, onAction],
+      () => displayedMessages?.map((message) => ({ message, labels, onAction })),
+      [displayedMessages, labels, onAction],
     );
 
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
         if (id) {
-          onAction?.({ type: 'current', messageId: id });
+          onAction?.({
+            type: 'current',
+            messageId: id,
+          });
         }
       },
       [onAction],

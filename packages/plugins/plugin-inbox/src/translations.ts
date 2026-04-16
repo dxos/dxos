@@ -128,6 +128,10 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
+
+        'settings.title': 'Inbox settings',
+        'settings.threads.label': 'Group by thread',
+        'settings.threads.description': 'Group messages by thread and show only the most recent message per thread.',
       },
     },
   },

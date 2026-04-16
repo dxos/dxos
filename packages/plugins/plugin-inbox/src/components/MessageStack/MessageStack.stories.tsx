@@ -21,15 +21,22 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { Builder, LABELS, initializeMailbox } from '#testing';
+import { Builder, LABELS, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { MessageStack as MessageStackComponent } from './MessageStack';
+import { MessageStack, MessageStackProps } from './MessageStack';
 
-const DefaultStory = () => {
-  const [messages] = useState(() => new Builder().createMessages(100).build().messages);
-  return <MessageStackComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
+const DefaultStory = ({
+  count = 0,
+  options,
+  ...props
+}: MessageStackProps & { count?: number; options?: MessagesOptions }) => {
+  const [messages] = useState(() =>
+    count ? new Builder().createMessages(count, options).build().messages : undefined,
+  );
+
+  return <MessageStack {...props} messages={messages} />;
 };
 
 const CompanionStory = () => {
@@ -65,23 +72,45 @@ const CompanionStory = () => {
 
 const meta = {
   title: 'plugins/plugin-inbox/components/MessageStack',
-  component: MessageStackComponent as any,
+  component: MessageStack,
   render: DefaultStory,
-  decorators: [withLayout({ layout: 'column' }), withAttention(), withMosaic()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof MessageStack>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme()],
+  args: {
+    id: 'story',
+  },
 };
 
-export const WithCompanion: Story = {
+export const WithMessages: Story = {
+  args: {
+    id: 'story',
+    labels: LABELS,
+    count: 100,
+  },
+};
+
+export const WithThreads: Story = {
+  args: {
+    id: 'story',
+    labels: LABELS,
+    threads: true,
+    count: 100,
+    options: {
+      threads: 10,
+    },
+  },
+};
+
+export const WithCompanion = {
   render: CompanionStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -98,7 +127,6 @@ export const WithCompanion: Story = {
               log.info('mailbox', { id: mailbox.id });
             }),
         }),
-
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),

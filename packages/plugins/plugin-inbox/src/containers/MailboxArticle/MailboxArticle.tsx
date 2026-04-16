@@ -5,7 +5,7 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
@@ -24,7 +24,7 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
-import { type Mailbox } from '#types';
+import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -41,6 +41,7 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const settings = useAtomCapability(InboxCapabilities.Settings);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const db = Obj.getDatabase(mailbox);
 
@@ -130,6 +131,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     (action) => {
       switch (action.type) {
         case 'current': {
+          // TODO(burdon): Handle threads.
           const message = sortedMessages.find((message) => message.id === action.messageId);
           void invokePromise(AttentionOperation.Select, {
             contextId: id,
@@ -236,6 +238,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             messages={messagesWithTags}
             currentId={currentId}
             labels={mergedLabels}
+            threads={settings.threads}
             onAction={handleAction}
           />
         )}
