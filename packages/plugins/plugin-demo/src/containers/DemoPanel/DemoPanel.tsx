@@ -448,6 +448,27 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
 
   const recent = [...events].sort((a, b) => (b.emittedAt ?? '').localeCompare(a.emittedAt ?? '')).slice(0, 20);
 
+  // Live network indicator — flips to OFFLINE when the user yanks Wi-Fi.
+  // Lets the demo viewer *see* that we really are disconnected when the
+  // local-first beat happens. navigator.onLine is sometimes laggy on macOS,
+  // so we listen to both events.
+  const [online, setOnline] = useState(() =>
+    typeof globalThis.navigator === 'undefined' ? true : globalThis.navigator.onLine,
+  );
+  useEffect(() => {
+    if (typeof globalThis.window === 'undefined') {
+      return;
+    }
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    globalThis.window.addEventListener('online', goOnline);
+    globalThis.window.addEventListener('offline', goOffline);
+    return () => {
+      globalThis.window.removeEventListener('online', goOnline);
+      globalThis.window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
@@ -467,6 +488,18 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
         <ScrollArea.Root orientation='vertical' padding>
           <ScrollArea.Viewport>
             <div className='flex flex-col gap-2 p-2'>
+              {!online && (
+                <div className='flex gap-2 items-center border border-warning rounded p-3 text-sm bg-warning/10'>
+                  <Icon icon='ph--wifi-slash--fill' size={5} />
+                  <div className='flex-1'>
+                    <div className='font-medium'>Offline — operating from local ECHO</div>
+                    <div className='text-xs text-subdued'>
+                      No network. Reads, writes, and queries continue from the local replica.
+                      Mirrors will resume when you reconnect.
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className='text-xs text-subdued uppercase tracking-wider pt-2 pb-1'>Setup</div>
               <Button disabled={busy} onClick={handleBootstrap}>
                 <Icon icon='ph--rocket-launch--regular' size={4} />
