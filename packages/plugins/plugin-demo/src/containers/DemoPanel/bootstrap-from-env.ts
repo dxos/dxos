@@ -7,6 +7,7 @@ import { log } from '@dxos/log';
 import { Granola } from '@dxos/plugin-granola/types';
 import { Trello } from '@dxos/plugin-trello/types';
 
+import { addToDemoCollection, ensureDemoCollection } from './collection';
 import { seedSoftwareTeamFixture } from './seed-fixture';
 
 /**
@@ -61,6 +62,10 @@ export type BootstrapResult = {
 export const bootstrapFromEnv = async (db: Database.Database): Promise<BootstrapResult> => {
   const result: BootstrapResult = { created: [], skipped: [], errors: [] };
 
+  // Ensure the demo collection exists up-front so everything subsequent
+  // lands in it and shows up in the Composer sidebar.
+  await ensureDemoCollection(db);
+
   // Always seed the sample board first so match targets exist.
   try {
     const seeded = await seedSoftwareTeamFixture(db);
@@ -89,7 +94,10 @@ export const bootstrapFromEnv = async (db: Database.Database): Promise<Bootstrap
         });
         result.skipped.push(`Trello board ${trelloBoardId} (updated credentials)`);
       } else {
-        db.add(Trello.makeBoard({ trelloBoardId, apiKey: trelloApiKey, apiToken: trelloApiToken }));
+        const board = db.add(
+          Trello.makeBoard({ trelloBoardId, apiKey: trelloApiKey, apiToken: trelloApiToken }),
+        );
+        await addToDemoCollection(db, board);
         result.created.push(`Trello board ${trelloBoardId}`);
       }
     } catch (err) {
@@ -110,7 +118,8 @@ export const bootstrapFromEnv = async (db: Database.Database): Promise<Bootstrap
         });
         result.skipped.push('Granola account (updated credentials)');
       } else {
-        db.add(Granola.makeAccount({ apiKey: granolaApiKey }));
+        const account = db.add(Granola.makeAccount({ apiKey: granolaApiKey }));
+        await addToDemoCollection(db, account);
         result.created.push('Granola account');
       }
     } catch (err) {

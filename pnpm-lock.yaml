@@ -8897,6 +8897,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

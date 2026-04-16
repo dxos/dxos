@@ -6,6 +6,8 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Trello } from '@dxos/plugin-trello/types';
 
+import { addToDemoCollection } from './collection';
+
 const BOARD_ID = 'demo-widgets-board';
 const LISTS = ['Backlog', 'In Progress', 'Review', 'Done'] as const;
 
@@ -100,9 +102,10 @@ export const seedSoftwareTeamFixture = async (db: Database.Database): Promise<Se
       url: 'https://trello.com/b/widgets-demo',
     }),
   );
+  await addToDemoCollection(db, board);
 
   const cards: Trello.TrelloCard[] = [];
-  CARDS.forEach((spec, index) => {
+  for (const [index, spec] of CARDS.entries()) {
     const card = db.add(
       Obj.make(Trello.TrelloCard, {
         name: spec.name,
@@ -117,7 +120,8 @@ export const seedSoftwareTeamFixture = async (db: Database.Database): Promise<Se
       }),
     );
     cards.push(card);
-  });
+    await addToDemoCollection(db, card);
+  }
 
   log.info('demo: fixture seeded', { board: board.name, cards: cards.length });
   return { board, cards, alreadySeeded: false };

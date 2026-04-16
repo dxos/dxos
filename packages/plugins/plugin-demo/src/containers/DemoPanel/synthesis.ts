@@ -32,6 +32,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { Message } from '@dxos/types';
 
 import { Demo } from '../../types';
+import { addToDemoCollection } from './collection';
 
 const ANTHROPIC_URL = '/api/anthropic/v1/messages';
 const MODEL = 'claude-sonnet-4-5';
@@ -229,6 +230,7 @@ export const generateFridayUpdate = async (
     content: doc,
   });
   db.add(document);
+  await addToDemoCollection(db, document);
   await appendAssistantMessage(
     db,
     space,

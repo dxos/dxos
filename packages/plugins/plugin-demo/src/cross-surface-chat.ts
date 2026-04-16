@@ -29,6 +29,7 @@ import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
+import { addToDemoCollection } from './containers/DemoPanel/collection';
 import { Demo } from './types';
 
 const POLL_INTERVAL_MS = 4_000;
@@ -195,6 +196,7 @@ const ensureLink = async (
   });
   Obj.setParent(feed, chat);
   db.add(chat);
+  await addToDemoCollection(db, chat);
   const link = Obj.make(Demo.SlackChatLink, {
     chat: Ref.make(chat),
     channelId,

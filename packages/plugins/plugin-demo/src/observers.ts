@@ -34,6 +34,7 @@ import { GitHub } from '@dxos/plugin-github/types';
 import { Granola } from '@dxos/plugin-granola/types';
 import { Trello } from '@dxos/plugin-trello/types';
 
+import { addToDemoCollection } from './containers/DemoPanel/collection';
 import { matchNoteToCards } from './containers/DemoPanel/match-cards';
 import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
 import { postNudgeToSlack, readSlackPostConfig } from './containers/DemoPanel/slack-post';
@@ -131,7 +132,7 @@ const handleGranolaNote = async (db: Database.Database, event: Demo.DemoEvent): 
         if (!card) {
           continue;
         }
-        db.add(
+        const matchObj = db.add(
           Obj.make(Demo.DemoMatch, {
             document: Ref.make(document),
             card: Ref.make(card),
@@ -141,6 +142,7 @@ const handleGranolaNote = async (db: Database.Database, event: Demo.DemoEvent): 
             createdAt: new Date().toISOString(),
           }),
         );
+        await addToDemoCollection(db, matchObj);
       }
     }
     Obj.change(event, (mutable) => {
@@ -222,7 +224,7 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
     const sourceLabel = choice.source === 'ai' ? 'why I matched it' : 'why I matched it (heuristic)';
     lines.push(`> _${sourceLabel}:_ ${choice.reasoning}`);
 
-    db.add(
+    const nudge = db.add(
       Obj.make(Demo.DemoNudge, {
         channel: 'widgets-eng',
         mention: 'alice',
@@ -234,6 +236,7 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
         reasoningSource: choice.source,
       }),
     );
+    await addToDemoCollection(db, nudge);
     Obj.change(event, (mutable) => {
       mutable.handled = true;
     });
