@@ -188,9 +188,21 @@ const toolTrelloMoveCard = async (
   listName: string,
 ): Promise<string> => {
   const cards = await db.query(Filter.type(Trello.TrelloCard)).run();
-  const match = cards.find(
-    (card) => (card.name ?? '').toLowerCase() === cardName.toLowerCase(),
-  ) ?? cards.find((card) => (card.name ?? '').toLowerCase().includes(cardName.toLowerCase()));
+  // Fuzzy name match — exact first, then substring.
+  const fuzzyFind = (name: string) =>
+    cards.find((card) => (card.name ?? '').toLowerCase() === name.toLowerCase()) ??
+    cards.find((card) => (card.name ?? '').toLowerCase().includes(name.toLowerCase()));
+  // Prefer cards with real Trello IDs (synced) over fixture cards (demo-*).
+  const hasRealId = (card: Trello.TrelloCard) =>
+    card.trelloCardId && !card.trelloCardId.startsWith('demo-') && card.trelloCardId.length > 10;
+  const realMatch = cards
+    .filter((card) => hasRealId(card) && (card.name ?? '').toLowerCase().includes(cardName.toLowerCase()))
+    .sort((a, b) => {
+      const aExact = (a.name ?? '').toLowerCase() === cardName.toLowerCase() ? 0 : 1;
+      const bExact = (b.name ?? '').toLowerCase() === cardName.toLowerCase() ? 0 : 1;
+      return aExact - bExact;
+    })[0];
+  const match = realMatch ?? fuzzyFind(cardName);
   if (!match) {
     return `No card found matching "${cardName}".`;
   }
@@ -207,12 +219,13 @@ const toolTrelloMoveCard = async (
         (list) => list.name.toLowerCase() === listName.toLowerCase(),
       );
       if (target) {
-        // Resolve the REAL Trello card ID by searching the board's cards
-        // by name. Fixture cards have fake IDs so we can't rely on
-        // match.trelloCardId.
-        const realCardId = await findRealTrelloCardId(auth, match.name ?? cardName);
-        if (realCardId) {
-          const url = new URL(`${TRELLO_BASE}/cards/${realCardId}`);
+        // Use the ECHO card's trelloCardId if it's a real synced ID,
+        // otherwise look up the real card by name on the board.
+        const cardId = hasRealId(match)
+          ? match.trelloCardId
+          : await findRealTrelloCardId(auth, match.name ?? cardName);
+        if (cardId) {
+          const url = new URL(`${TRELLO_BASE}/cards/${cardId}`);
           url.searchParams.set('key', auth.key);
           url.searchParams.set('token', auth.token);
           url.searchParams.set('idList', target.id);
@@ -220,12 +233,12 @@ const toolTrelloMoveCard = async (
           if (response.ok) {
             Obj.change(match, (mutable) => {
               mutable.trelloListId = target.id;
-              mutable.trelloCardId = realCardId;
+              mutable.trelloCardId = cardId;
             });
             return `Moved "${match.name}" to ${listName} on Trello.`;
           }
         }
-        return `Moved "${match.name}" to ${listName} (local; couldn't find real Trello card).`;
+        return `Moved "${match.name}" to ${listName} (local; couldn't resolve Trello card ID).`;
       }
     } catch (err) {
       return `Moved locally; Trello API threw: ${String(err)}`;
