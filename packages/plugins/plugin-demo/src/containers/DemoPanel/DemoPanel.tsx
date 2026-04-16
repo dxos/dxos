@@ -521,21 +521,59 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
                   {[...nudges]
                     .sort((first, second) => (second.emittedAt ?? '').localeCompare(first.emittedAt ?? ''))
                     .slice(0, 5)
-                    .map((nudge) => (
-                      <div
-                        key={nudge.id}
-                        className='border border-separator rounded p-3 text-sm bg-base'
-                      >
-                        <div className='flex gap-2 items-center text-xs text-subdued mb-2'>
-                          <Icon icon='ph--hash--regular' size={4} />
-                          <span>#{nudge.channel}</span>
-                          {!nudge.posted && (
-                            <span className='ml-auto italic'>preview · not posted to real Slack</span>
+                    .map((nudge) => {
+                      const linkedCardId = nudge.card?.target?.id;
+                      const onPickCard = (event: React.ChangeEvent<HTMLSelectElement>) => {
+                        const nextCardId = event.target.value;
+                        if (!nextCardId || nextCardId === linkedCardId) {
+                          return;
+                        }
+                        const nextCard = cards.find((candidate) => candidate.id === nextCardId);
+                        if (!nextCard) {
+                          return;
+                        }
+                        Obj.change(nudge, (mutable) => {
+                          mutable.card = Ref.make(nextCard);
+                          mutable.reasoning = `User corrected: linked to "${nextCard.name}".`;
+                          mutable.reasoningSource = 'user';
+                          mutable.text = nudge.text + `\n\n> _user-corrected:_ this nudge now refers to **${nextCard.name}**.`;
+                        });
+                        log.info('demo: nudge re-linked by user', { nudgeId: nudge.id, cardId: nextCardId });
+                      };
+                      return (
+                        <div
+                          key={nudge.id}
+                          className='border border-separator rounded p-3 text-sm bg-base'
+                        >
+                          <div className='flex gap-2 items-center text-xs text-subdued mb-2'>
+                            <Icon icon='ph--hash--regular' size={4} />
+                            <span>#{nudge.channel}</span>
+                            {!nudge.posted && (
+                              <span className='ml-auto italic'>preview · not posted to real Slack</span>
+                            )}
+                          </div>
+                          <div className='whitespace-pre-wrap leading-relaxed'>{nudge.text}</div>
+                          {cards.length > 1 && (
+                            <div className='flex gap-2 items-center mt-3 pt-3 border-t border-separator'>
+                              <span className='text-xs text-subdued'>Wrong card?</span>
+                              <select
+                                className='text-xs bg-input border border-separator rounded px-2 py-1 flex-1'
+                                value={linkedCardId ?? ''}
+                                onChange={onPickCard}
+                              >
+                                {cards
+                                  .filter((card) => !card.closed)
+                                  .map((card) => (
+                                    <option key={card.id} value={card.id}>
+                                      {card.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
                           )}
                         </div>
-                        <div className='whitespace-pre-wrap leading-relaxed'>{nudge.text}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </>
               )}
 
