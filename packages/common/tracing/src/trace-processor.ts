@@ -65,7 +65,11 @@ export class TraceProcessor {
   /**
    * Tracing backend. Initially a buffering backend that records spans;
    * once the observability package sets a real backend, the buffer is drained
-   * and a translating wrapper is installed that resolves stale buffered parent IDs.
+   * and a thin translating wrapper is installed that resolves stale buffered
+   * parent IDs still held by in-flight {@link Context} objects.
+   *
+   * The wrapper only allocates when a `buffered-*` parent is actually encountered;
+   * the common path is a single `startsWith` check and direct passthrough.
    */
   get tracingBackend(): TracingBackend {
     return this.#activeBackend;
@@ -80,14 +84,14 @@ export class TraceProcessor {
     const idMap = this.#bufferingBackend.drain(backend);
     this.#activeBackend = {
       startSpan: (options: StartSpanOptions): RemoteSpan => {
-        // In-flight Context objects may still carry synthetic `buffered-*` traceparents
-        // from spans created before the real backend registered. Translate them to real
-        // OTEL IDs using the map built during drain so parent-child links are preserved.
-        let parentContext = options.parentContext;
-        if (parentContext?.traceparent.startsWith(BUFFERED_PREFIX)) {
-          parentContext = idMap.get(parentContext.traceparent) ?? undefined;
+        const parent = options.parentContext;
+        if (parent?.traceparent.startsWith(BUFFERED_PREFIX)) {
+          const translated = idMap.get(parent.traceparent);
+          if (translated) {
+            return backend.startSpan({ ...options, parentContext: translated });
+          }
         }
-        return backend.startSpan({ ...options, parentContext });
+        return backend.startSpan(options);
       },
     };
   }
