@@ -5,8 +5,7 @@
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/functions';
 import { Process } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
-import { dbg, log, LogLevel } from '@dxos/log';
+import { LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
 /**
@@ -120,8 +119,6 @@ export const buildExecutionGraph = ({
       ...event,
     })),
   );
-
-  dbg(events);
 
   builder.addBranch(MAIN_BRANCH);
 
@@ -309,7 +306,7 @@ export const buildExecutionGraph = ({
     }
   }
 
-  return dbg(builder.build());
+  return builder.build();
 };
 
 type Falsy = false | null | undefined;
