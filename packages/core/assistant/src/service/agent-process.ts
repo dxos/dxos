@@ -24,10 +24,10 @@ import { trim } from '@dxos/util';
 
 import { AiConversation } from '../conversation';
 import {
-    functionInvocationServiceFromOperations,
-    getOperationFromTool,
-    makeToolExecutionService,
-    makeToolResolverFromOperations,
+  functionInvocationServiceFromOperations,
+  getOperationFromTool,
+  makeToolExecutionService,
+  makeToolResolverFromOperations,
 } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 
