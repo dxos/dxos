@@ -38,8 +38,15 @@ export const readSlackPostConfig = (): SlackPostConfig | undefined => {
   return { botToken, channel };
 };
 
-/** Post a nudge to Slack. Resolves on success; throws on failure (bad token, channel, network). */
-export const postNudgeToSlack = async (config: SlackPostConfig, text: string): Promise<void> => {
+export type SlackPostResult = {
+  /** Slack message timestamp — used as a cursor for polling replies. */
+  readonly ts: string;
+  /** Channel id the message was posted to (Slack normalizes name → id server-side). */
+  readonly channel: string;
+};
+
+/** Post a nudge to Slack. Resolves with the ts on success; throws on failure. */
+export const postNudgeToSlack = async (config: SlackPostConfig, text: string): Promise<SlackPostResult> => {
   // Go via composer-app's /api/slack dev proxy — Slack's Web API rejects
   // browser Authorization headers on direct cross-origin POSTs.
   const response = await fetch('/api/slack/chat.postMessage', {
@@ -50,8 +57,9 @@ export const postNudgeToSlack = async (config: SlackPostConfig, text: string): P
     },
     body: JSON.stringify({ channel: config.channel, text }),
   });
-  const body = (await response.json()) as { ok: boolean; error?: string };
-  if (!body.ok) {
+  const body = (await response.json()) as { ok: boolean; error?: string; ts?: string; channel?: string };
+  if (!body.ok || !body.ts || !body.channel) {
     throw new Error(`Slack chat.postMessage failed: ${body.error ?? response.status}`);
   }
+  return { ts: body.ts, channel: body.channel };
 };

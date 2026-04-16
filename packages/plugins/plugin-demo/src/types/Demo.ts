@@ -115,6 +115,12 @@ export const DemoNudge = Schema.Struct({
   emittedAt: Schema.String.pipe(FormInputAnnotation.set(false)),
   /** Did we post this to a real Slack workspace, or is it preview-only? */
   posted: Schema.optional(Schema.Boolean.pipe(FormInputAnnotation.set(false))),
+  /** Slack ts of the posted message, used to poll for replies. */
+  postedTs: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+  /** Set once the user responded (affirmative or negative) and the follow-up action was taken. */
+  resolved: Schema.optional(Schema.Boolean.pipe(FormInputAnnotation.set(false))),
+  /** If the user said yes, the target list the card was moved to. */
+  resolvedList: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.demoNudge',

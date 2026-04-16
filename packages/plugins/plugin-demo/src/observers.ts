@@ -36,6 +36,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { matchNoteToCards } from './containers/DemoPanel/match-cards';
 import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
 import { postNudgeToSlack, readSlackPostConfig } from './containers/DemoPanel/slack-post';
+import { startReplyWatcher } from './reply-watcher';
 import { Demo } from './types';
 
 const PR_POLL_INTERVAL_MS = 15_000;
@@ -56,6 +57,7 @@ export const startObservers = (db: Database.Database): void => {
   startGithubPoller(db);
   startEventObserver(db);
   startNudgePoster(db);
+  startReplyWatcher(db);
 };
 
 // -- 1. GitHub PR poller -------------------------------------------------------
@@ -271,11 +273,12 @@ const startNudgePoster = (db: Database.Database): void => {
         }
         postedNudgeIds.add(nudge.id);
         try {
-          await postNudgeToSlack(config, nudge.text);
+          const result = await postNudgeToSlack(config, nudge.text);
           Obj.change(nudge, (mutable) => {
             mutable.posted = true;
+            mutable.postedTs = result.ts;
           });
-          log.info('demo: nudge posted to slack', { id: nudge.id, channel: config.channel });
+          log.info('demo: nudge posted to slack', { id: nudge.id, channel: config.channel, ts: result.ts });
         } catch (err) {
           log.warn('demo: slack post failed', { id: nudge.id, error: String(err) });
         }
