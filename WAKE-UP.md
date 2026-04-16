@@ -6,11 +6,14 @@ Run this from the worktree root:
 pnpm record
 ```
 
-That's it. The script does three things:
+That's it. The script does four things:
 
-1. Makes sure vite is live on `http://localhost:5173` (already warm right now).
-2. Starts a macOS `screencapture` recording to `tools/demo/recordings/`.
-3. Runs the demo bootstrap (opens Chromium, seeds fixtures, lays out windows).
+1. Kills any stale vite/Chromium processes from previous sessions.
+2. Starts a fresh vite dev server and **waits until `__DEMO__` actually loads** (not just HTTP 200 — catches the vite dep-reoptimization window).
+3. Pauses and tells you to start your screen recording (Cmd-Shift-5). Hit Return when ready.
+4. Launches Chromium, bootstraps fixtures, lays out windows.
+
+**Why you start the recording instead of the script:** macOS requires Screen Recording permission per-app, and Terminal doesn't always have it granted. QuickTime/Cmd-Shift-5 prompts you once and then it just works. Cleaner than fighting TCC.
 
 Then you walk through the 4-act v2 script:
 
@@ -25,9 +28,9 @@ When you're done, close the Chromium window or hit Ctrl+C in the terminal — th
 
 ## If anything goes wrong
 
-- Vite acts up → `pkill -f vite && pnpm record` (script re-starts vite cleanly)
-- Profile feels stale → `rm -rf tools/demo/playwright-user-data && pnpm record`
-- `page.goto` timeout → demo.ts now retries internally; just re-run `pnpm record`
+- Anything weird → just re-run `pnpm record`. The script kills stale processes and starts fresh every time.
+- Vite fails to boot → check the log path it prints. Usually it means moon can't find a dep; `pnpm install` then retry.
+- `page.goto` timeout → demo.ts now retries internally; just re-run `pnpm record`.
 
 ## What shipped last night
 
