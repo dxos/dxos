@@ -21,6 +21,18 @@ set -e
 cd "$(dirname "$0")"
 REPO_ROOT="$(cd ../.. && pwd)"
 
+# Refuse to run if another morning.sh is already in flight — stacking them
+# was the root cause of an earlier hang where five script instances all
+# shared the same port.
+OTHER_RUNS=$(pgrep -f "tools/demo/morning.sh" | grep -v "^$$\$" | wc -l | xargs)
+if [ "$OTHER_RUNS" -gt 1 ]; then
+  echo "✗ Another morning.sh is already running (PIDs:"
+  pgrep -f "tools/demo/morning.sh" | grep -v "^$$\$" | tr '\n' ' '
+  echo ")"
+  echo "  Kill it first:  pkill -9 -f morning.sh"
+  exit 1
+fi
+
 # --- 1. Kill anything stale -------------------------------------------------
 
 echo "▶ Cleaning up stale processes…"
