@@ -27,6 +27,7 @@
  * but the panel ones should be dropped once this path is proven out.
  */
 
+import { aiMatch } from '@dxos/ai-match';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { GitHub } from '@dxos/plugin-github/types';
@@ -161,36 +162,10 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
   await new Promise((resolveFn) => setTimeout(resolveFn, NUDGE_DELAY_MS));
   try {
     const payload: PrPayload = event.payload ? JSON.parse(event.payload) : {};
-    const keywords = (payload.relatedKeywords ?? []).map((keyword) => keyword.toLowerCase());
-    const cards = await db.query(Filter.type(Trello.TrelloCard)).run();
-
-    // Score each non-closed card by how many PR keywords appear as whole words
-    // in its name or description. Whole-word matching (via \b regex) prevents
-    // e.g. "work" from matching "rework", or "pass" matching "password".
-    // Card name matches count double — the title is the primary signal.
-    const scored = cards
-      .filter((card) => !card.closed)
-      .map((card) => {
-        const name = (card.name ?? '').toLowerCase();
-        const desc = (card.description ?? '').toLowerCase();
-        let score = 0;
-        for (const keyword of keywords) {
-          const rx = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
-          if (rx.test(name)) {
-            score += 2;
-          }
-          if (rx.test(desc)) {
-            score += 1;
-          }
-        }
-        return { card, score };
-      })
-      .filter((entry) => entry.score > 0)
-      .sort((first, second) => second.score - first.score);
-
-    const relevantCard = scored[0]?.card;
+    const cards = (await db.query(Filter.type(Trello.TrelloCard)).run()).filter((card) => !card.closed);
+    const relevantCard = await chooseCardForPr(payload, cards);
     if (!relevantCard) {
-      log.info('demo: pr-merged had no matching card', { keywords });
+      log.info('demo: pr-merged had no matching card', { keywords: payload.relatedKeywords });
       Obj.change(event, (mutable) => {
         mutable.handled = true;
       });
@@ -253,6 +228,82 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
   } catch (err) {
     log.warn('demo: nudge loop failed', { error: String(err) });
   }
+};
+
+/**
+ * Pick the single card most relevant to a merged PR. Uses @dxos/ai-match
+ * (semantic, Claude) when an Anthropic key is available; falls back to a
+ * whole-word keyword scorer otherwise. Returns undefined if no card is a
+ * plausible match.
+ */
+const chooseCardForPr = async (
+  payload: PrPayload,
+  cards: readonly Trello.TrelloCard[],
+): Promise<Trello.TrelloCard | undefined> => {
+  if (cards.length === 0) {
+    return undefined;
+  }
+  const hasAiKey = Boolean(globalThis.localStorage?.getItem('ANTHROPIC_API_KEY'));
+  if (hasAiKey) {
+    try {
+      const results = await aiMatch<PrPayload, Trello.TrelloCard>({
+        source: [payload],
+        target: cards,
+        summarizeSource: (pr) => ({
+          title: pr.title ?? '',
+          repo: pr.repo ?? '',
+          keywords: (pr.relatedKeywords ?? []).join(', '),
+        }),
+        summarizeTarget: (card) => ({
+          name: card.name,
+          list: card.listName ?? '',
+          description: (card.description ?? '').slice(0, 400),
+        }),
+        sourceId: (pr) => String(pr.number ?? 'pr'),
+        targetId: (card) => card.id,
+        task:
+          "Match a merged software engineering pull request to the one Trello card it most likely closes. A match means the PR shipped the feature / fix the card tracks. Prefer exact topic alignment (e.g. 'dark mode PR' → 'Dark mode card') over loose keyword overlap.",
+      });
+      const best = results.find((result) => result.confidence !== 'low');
+      if (best) {
+        log.info('demo: pr→card match via aiMatch', { card: best.target.name, confidence: best.confidence });
+        return best.target;
+      }
+    } catch (err) {
+      log.info('demo: aiMatch failed, falling back to word scorer', { error: String(err) });
+    }
+  }
+  return chooseCardByWordScore(payload, cards);
+};
+
+/** Whole-word keyword scorer used as the offline fallback for card matching. */
+const chooseCardByWordScore = (
+  payload: PrPayload,
+  cards: readonly Trello.TrelloCard[],
+): Trello.TrelloCard | undefined => {
+  const keywords = (payload.relatedKeywords ?? []).map((keyword) => keyword.toLowerCase());
+  if (keywords.length === 0) {
+    return undefined;
+  }
+  const scored = cards
+    .map((card) => {
+      const name = (card.name ?? '').toLowerCase();
+      const desc = (card.description ?? '').toLowerCase();
+      let score = 0;
+      for (const keyword of keywords) {
+        const rx = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+        if (rx.test(name)) {
+          score += 2;
+        }
+        if (rx.test(desc)) {
+          score += 1;
+        }
+      }
+      return { card, score };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((first, second) => second.score - first.score);
+  return scored[0]?.card;
 };
 
 // -- 3. Slack poster -----------------------------------------------------------
