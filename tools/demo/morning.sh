@@ -65,6 +65,12 @@ if ! pnpm exec tsx "$DEMO_DIR/lib/wait-for-demo.ts"; then
   exit 1
 fi
 
+# Even after __DEMO__ loads, vite may still be optimizing dependent modules
+# in the background. Give it a moment to finish before the persistent
+# Chromium tries to load the full app.
+echo "▶ Letting vite settle (30s)…"
+sleep 30
+
 # --- 3. Show the pre-record banner -----------------------------------------
 
 cat <<'BANNER'

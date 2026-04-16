@@ -259,33 +259,32 @@ const main = async (): Promise<void> => {
       }
     };
 
-    // Bullet-proof page.goto: retry with short timeouts through the vite dep
-    // re-optimization window. A single 120s goto throws if vite decides to
-    // re-optimize deps mid-load (very common on first run). Many small gotos
-    // absorb the hit.
+    // Bullet-proof page.goto: retry with moderate timeouts through the vite
+    // dep re-optimization window. A single long goto throws if vite decides
+    // to re-optimize deps mid-load (very common on first headed run even
+    // when a prior headless check succeeded). Multiple medium gotos with
+    // progress logging absorb the hit AND tell us what's happening.
     const gotoWithRetry = async (label: string): Promise<void> => {
-      const deadline = Date.now() + 300_000; // 5 min cap.
+      const deadline = Date.now() + 600_000; // 10 min cap.
       let lastError: unknown;
       let attempt = 0;
       while (Date.now() < deadline) {
         attempt += 1;
+        console.log(`   · ${label}: attempt ${attempt}…`);
         try {
-          await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 });
-          await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
-          // Check that the page at least has a <body>. If vite served an error
-          // page this will still succeed but __DEMO__ won't be there yet — that
-          // is handled in step 3.
+          await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+          await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => undefined);
           const hasBody = await page
             .evaluate(() => Boolean(globalThis.document?.body))
             .catch(() => false);
           if (hasBody) {
-            if (attempt > 1) {
-              console.log(`   · ${label}: loaded on attempt ${attempt}`);
-            }
+            console.log(`   · ${label}: loaded on attempt ${attempt}`);
             return;
           }
+          console.log(`   · ${label}: attempt ${attempt} loaded but no body`);
         } catch (err) {
           lastError = err;
+          console.log(`   · ${label}: attempt ${attempt} failed: ${(err as Error).message.split('\n')[0]}`);
         }
         await page.waitForTimeout(2_000);
       }
