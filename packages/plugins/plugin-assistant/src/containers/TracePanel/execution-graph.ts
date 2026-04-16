@@ -41,6 +41,8 @@ export const buildExecutionGraph = ({
 
   dbg(events);
 
+  builder.addBranch(MAIN_BRANCH);
+
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
       builder.addAgentRequestBegin(event.id, event.meta, event.timestamp);
@@ -151,7 +153,7 @@ class GraphBuilder {
   #agentPidToConversationId = new Map<string, string>();
 
   #addCommit(commit: Commit, opts?: { replaceCommit?: string }) {
-    this.#branches.add(commit.branch);
+    this.addBranch(commit.branch);
     if (opts?.replaceCommit) {
       const commitIdx = this.#commits.findIndex((commit) => commit.id === opts.replaceCommit);
       if (commitIdx !== -1) {
@@ -179,6 +181,10 @@ class GraphBuilder {
       : opts?.parentForFirstOnBranch
         ? [opts.parentForFirstOnBranch]
         : [];
+  }
+
+  addBranch(branch: string) {
+    this.#branches.add(branch);
   }
 
   build() {
@@ -238,6 +244,9 @@ class GraphBuilder {
   }
 
   addUserMessage(id: string, conversationId: string, pid: string, text: string, ts: number) {
+    if (conversationId && pid) {
+      this.#agentPidToConversationId.set(pid, conversationId);
+    }
     this.#addCommit({
       id,
       branch: conversationId,
@@ -369,7 +378,10 @@ class GraphBuilder {
       {
         id,
         branch: parentConversation ?? meta.parentPid ?? MAIN_BRANCH,
-        parents: this.#defaultParents(MAIN_BRANCH),
+        parents: [
+          ...this.#defaultParents(MAIN_BRANCH),
+          ...this.#defaultParents(parentConversation ?? crypto.randomUUID()),
+        ],
         icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
         level: isError ? LogLevel.ERROR : LogLevel.INFO,
         message: isError ? `${operationName}: ${error ?? 'Failed'}` : operationName,
