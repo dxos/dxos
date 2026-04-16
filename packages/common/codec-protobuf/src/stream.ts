@@ -188,12 +188,13 @@ export class Stream<T> {
    */
   private _buffer: T[] | null = [];
 
-  constructor(producer: Producer<T>) {
+  constructor(producer: Producer<T>, parentCtx?: Context) {
     this._readyPromise = new Promise((resolve) => {
       this._resolveReadyPromise = resolve;
     });
 
     this._ctx = new Context({
+      parent: parentCtx,
       onError: (err) => {
         if (this._isClosed) {
           return;

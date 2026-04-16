@@ -57,7 +57,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
 
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
-  const enabledRef = yield* Ref.make(!cachedDisabled);
+  const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);
+  const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
   const endpoint = isNode()
@@ -82,7 +83,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
+      'service.instance.id': crypto.randomUUID(),
       'deployment.environment': environment,
+      'dxos.process.type': detectProcessType(),
     }),
   );
 
@@ -114,9 +117,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       })
     : undefined;
 
-  return {
+  const extension: Extension = {
     initialize: () =>
       Effect.sync(() => {
+        if (disabled) {
+          return;
+        }
+
         if (logs) {
           log.runtimeConfig.processors.push(logs.logProcessor);
         }
@@ -164,7 +171,44 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       traces ? ({ kind: 'traces', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
     ].filter(isNonNullable),
   };
+
+  return extension;
 });
+
+/**
+ * Synchronous best-effort check for observability opt-out.
+ * Prevents telemetry from being emitted before the async storage check completes.
+ */
+const isObservabilityDisabledSync = (serviceName: string): boolean => {
+  if (isNode()) {
+    return process.env.DX_DISABLE_OBSERVABILITY === 'true';
+  }
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(`${serviceName}/observability-disabled`) === 'true';
+    }
+  } catch {
+    // localStorage not available (e.g., in workers).
+  }
+  return false;
+};
+
+/** Best-effort detection of the JavaScript execution context type. */
+const detectProcessType = (): string => {
+  if (isNode()) {
+    return 'node';
+  }
+  if (typeof window !== 'undefined') {
+    return 'browser';
+  }
+  if (typeof (globalThis as any).ServiceWorkerGlobalScope !== 'undefined') {
+    return 'service-worker';
+  }
+  if (typeof (globalThis as any).SharedWorkerGlobalScope !== 'undefined') {
+    return 'shared-worker';
+  }
+  return 'dedicated-worker';
+};
 
 const parseHeaders = (unparsedHeaders: string): Record<string, string> => {
   return unparsedHeaders.split(';').reduce((acc: Record<string, string>, header) => {
