@@ -10,7 +10,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { Demo } from '../../types';
 import { addToDemoCollection, ensureDemoCollection } from './collection';
 import { seedSoftwareTeamFixture } from './seed-fixture';
-import { generateMorningBriefing } from './synthesis';
+import { generateFridayUpdate, generateMorningBriefing } from './synthesis';
 
 /**
  * Keys Playwright (or the user) sets in localStorage before running the
@@ -172,11 +172,25 @@ export const bootstrapFromEnv = async (
       } else {
         result.skipped.push('Morning briefing (already present for today)');
       }
+      // Auto-generate a weekly update too so the sidebar has the Act-4
+      // synthesis moment ready without clicking a possibly-unrendered panel.
+      const existingWeekly = (await db.query(Filter.type(Obj.Unknown as any)).run()).find(
+        (candidate: any) =>
+          typeof candidate?.name === 'string' &&
+          candidate.name.includes('Weekly update') &&
+          candidate.name.includes(today),
+      );
+      if (!existingWeekly) {
+        await generateFridayUpdate(db, space);
+        result.created.push('Weekly update (today)');
+      } else {
+        result.skipped.push('Weekly update (already present for today)');
+      }
     } catch (err) {
-      result.errors.push(`morning briefing: ${String(err)}`);
+      result.errors.push(`synthesis: ${String(err)}`);
     }
   } else {
-    result.skipped.push(`Morning briefing (${anthropicKey ? 'no space' : 'no ANTHROPIC_API_KEY'})`);
+    result.skipped.push(`Synthesis (${anthropicKey ? 'no space' : 'no ANTHROPIC_API_KEY'})`);
   }
 
   log.info('demo: bootstrap complete', result);
