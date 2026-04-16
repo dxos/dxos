@@ -171,8 +171,8 @@ const mirrorSlackToComposer = async (
       continue;
     }
     await appendNewSlackMessages(space, chat, keepers, channelId);
-    // After mirroring, check for un-responded @mentions and answer them.
-    await respondToMentions(config, space, chat, keepers, channelId, link.threadTs);
+    // Agent responses are handled by shared-agent.ts, which watches the
+    // feed and runs Claude with real tools. This module only mirrors.
   }
 };
 

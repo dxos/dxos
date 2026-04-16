@@ -40,6 +40,7 @@ import { pollMergedPullRequests } from './containers/DemoPanel/pr-poller';
 import { postNudgeToSlack, readSlackPostConfig } from './containers/DemoPanel/slack-post';
 import { startCrossSurfaceChat } from './cross-surface-chat';
 import { startReplyWatcher } from './reply-watcher';
+import { startSharedAgent } from './shared-agent';
 import { Demo } from './types';
 
 const PR_POLL_INTERVAL_MS = 15_000;
@@ -63,6 +64,7 @@ export const startObservers = (db: Database.Database, space?: { queues: { get: (
   startReplyWatcher(db);
   if (space) {
     startCrossSurfaceChat(db, space);
+    startSharedAgent(db, space);
   }
 };
 

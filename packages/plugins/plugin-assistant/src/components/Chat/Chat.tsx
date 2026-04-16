@@ -125,7 +125,26 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
           const text = ev.text.trim();
           if (!streaming && text.length) {
             lastPrompt.current = ev.text;
-            void processor.request({ message: text });
+            // Cross-surface demo hook: if this chat is managed by the demo's
+            // shared-agent (name starts with "Slack #" or equals "Composer
+            // agent"), skip the built-in processor and append the user
+            // message directly to the feed. The shared-agent observer will
+            // pick it up and respond with real tool calls.
+            const chatName = (chat as any)?.name ?? '';
+            const isSharedAgent =
+              globalThis.localStorage?.getItem('DEMO_SHARED_AGENT_ACTIVE') === 'true' &&
+              (chatName.startsWith('Slack #') || chatName === 'Composer agent');
+            if (isSharedAgent && queue) {
+              void (queue as any).append([
+                Obj.make(Message.Message, {
+                  created: new Date().toISOString(),
+                  sender: { role: 'user' },
+                  blocks: [{ _tag: 'text', text }],
+                }),
+              ]);
+            } else {
+              void processor.request({ message: text });
+            }
           }
           break;
         }

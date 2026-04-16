@@ -20,11 +20,11 @@
     "demo-setup": "./setup.ts"
   },
   "scripts": {
-    "start": "tsx demo.ts",
     "populate-trello": "tsx populate-trello.ts",
     "reset": "tsx reset.ts",
     "run": "tsx run.ts",
-    "setup": "tsx setup.ts"
+    "setup": "tsx setup.ts",
+    "start": "tsx demo.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

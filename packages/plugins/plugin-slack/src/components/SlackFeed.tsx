@@ -251,7 +251,15 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
   );
 
   // Auto-respond to @mentions.
+  // Gated by DEMO_SHARED_AGENT_ACTIVE — when the cross-surface shared-agent
+  // observer is running, we let it handle all responses so we don't double-reply.
   useEffect(() => {
+    if (globalThis.localStorage?.getItem('DEMO_SHARED_AGENT_ACTIVE') === 'true') {
+      if (pendingMentions.length > 0) {
+        clearPendingMentions();
+      }
+      return;
+    }
     if (pendingMentions.length === 0) {
       return;
     }
