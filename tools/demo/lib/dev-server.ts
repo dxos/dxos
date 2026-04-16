@@ -69,7 +69,8 @@ export const ensureDevServer = async (url: string = DEFAULT_URL): Promise<DevSer
   // Run from repo root so moon resolves the task correctly.
   // DEMO_DIR = tools/demo/lib/, so three levels up → repo root.
   const repoRoot = resolve(DEMO_DIR, '..', '..', '..');
-  const process = spawn('moon', ['run', 'composer-app:serve'], {
+  const moonBin = resolve(repoRoot, 'node_modules', '.bin', 'moon');
+  const process = spawn(moonBin, ['run', 'composer-app:serve', '--quiet'], {
     cwd: repoRoot,
     detached: false,
     stdio: ['ignore', 'pipe', 'pipe'],
