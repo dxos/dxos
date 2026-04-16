@@ -12,7 +12,7 @@ import { type Database, type Feed } from '@dxos/echo';
 import type { CredentialsService, Process, QueueService, TracingService } from '@dxos/functions';
 import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
-import type { Operation } from '@dxos/operation';
+import type { Operation, OperationRegistry } from '@dxos/operation';
 
 import { meta } from '#meta';
 
@@ -33,6 +33,7 @@ export namespace AutomationCapabilities {
     | Process.ProcessMonitorService
     | TracingService // TODO(dmaretskyi): Probably should not be provided here.
     | Operation.Service
+    | OperationRegistry.Service
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService;

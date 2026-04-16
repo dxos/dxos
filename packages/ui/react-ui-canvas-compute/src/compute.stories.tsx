@@ -15,7 +15,7 @@ import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '
 import { Feed } from '@dxos/echo';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -229,6 +229,7 @@ const ServiceLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
     ),
   ),
   Layer.provideMerge(
