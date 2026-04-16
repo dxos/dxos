@@ -198,35 +198,65 @@ const toolTrelloMoveCard = async (
   Obj.change(match, (mutable) => {
     mutable.listName = listName;
   });
-  // Push to real Trello if credentials available and the card has a real
-  // Trello ID (not a fixture placeholder like "demo-card-dragging-bug").
+  // Push to real Trello board.
   const auth = readTrelloAuth();
-  const hasRealTrelloId = match.trelloCardId && !match.trelloCardId.startsWith('demo-');
-  if (auth && hasRealTrelloId) {
+  if (auth) {
     try {
       const lists = await fetchTrelloLists(auth.boardId, auth);
       const target = lists.find(
         (list) => list.name.toLowerCase() === listName.toLowerCase(),
       );
       if (target) {
-        const url = new URL(`${TRELLO_BASE}/cards/${match.trelloCardId}`);
-        url.searchParams.set('key', auth.key);
-        url.searchParams.set('token', auth.token);
-        url.searchParams.set('idList', target.id);
-        const response = await fetch(url.toString(), { method: 'PUT' });
-        if (!response.ok) {
-          return `Moved locally but Trello API failed (${response.status}).`;
+        // Resolve the REAL Trello card ID by searching the board's cards
+        // by name. Fixture cards have fake IDs so we can't rely on
+        // match.trelloCardId.
+        const realCardId = await findRealTrelloCardId(auth, match.name ?? cardName);
+        if (realCardId) {
+          const url = new URL(`${TRELLO_BASE}/cards/${realCardId}`);
+          url.searchParams.set('key', auth.key);
+          url.searchParams.set('token', auth.token);
+          url.searchParams.set('idList', target.id);
+          const response = await fetch(url.toString(), { method: 'PUT' });
+          if (response.ok) {
+            Obj.change(match, (mutable) => {
+              mutable.trelloListId = target.id;
+              mutable.trelloCardId = realCardId;
+            });
+            return `Moved "${match.name}" to ${listName} on Trello.`;
+          }
         }
-        Obj.change(match, (mutable) => {
-          mutable.trelloListId = target.id;
-        });
-        return `Moved "${match.name}" to ${listName}.`;
+        return `Moved "${match.name}" to ${listName} (local; couldn't find real Trello card).`;
       }
     } catch (err) {
       return `Moved locally; Trello API threw: ${String(err)}`;
     }
   }
-  return `Moved "${match.name}" to ${listName} (local-only; Trello creds not configured).`;
+  return `Moved "${match.name}" to ${listName} (local-only; no Trello creds).`;
+};
+
+/** Look up a card by name on the real Trello board. Returns the real Trello card ID or undefined. */
+const findRealTrelloCardId = async (
+  auth: { key: string; token: string; boardId: string },
+  cardName: string,
+): Promise<string | undefined> => {
+  try {
+    const url = new URL(`${TRELLO_BASE}/boards/${auth.boardId}/cards`);
+    url.searchParams.set('key', auth.key);
+    url.searchParams.set('token', auth.token);
+    url.searchParams.set('fields', 'id,name');
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      return undefined;
+    }
+    const cards = (await response.json()) as { id: string; name: string }[];
+    const exact = cards.find((card) => card.name.toLowerCase() === cardName.toLowerCase());
+    if (exact) {
+      return exact.id;
+    }
+    return cards.find((card) => card.name.toLowerCase().includes(cardName.toLowerCase()))?.id;
+  } catch {
+    return undefined;
+  }
 };
 
 const toolTrelloCreateCard = async (
