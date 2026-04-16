@@ -14,7 +14,7 @@ import { type TraceContextData } from '@dxos/context';
  */
 export type RemoteSpan = {
   /** Signal that the span has ended. Must be called exactly once. */
-  end: () => void;
+  end: (endTime?: number) => void;
 
   /** Record an error on the span (e.g., OTEL `span.recordException` + `setStatus`). */
   setError?: (err: unknown) => void;
@@ -47,6 +47,13 @@ export type StartSpanOptions = {
    * parent-child relationships. When `undefined`, the backend creates a root span.
    */
   parentContext?: TraceContextData;
+
+  /**
+   * Epoch-millisecond timestamp for the span start.
+   * Used by the buffering backend to preserve original timing when replaying spans.
+   * When `undefined`, the backend uses the current time.
+   */
+  startTime?: number;
 };
 
 /**

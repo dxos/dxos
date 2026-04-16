@@ -24,7 +24,7 @@ import { translations } from './translations';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
-  observability: () => Observability.Observability;
+  observability: () => Promise<Observability.Observability>;
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
@@ -34,7 +34,11 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ observability }) => ({
     id: 'observability',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.sync(() => Capability.contributes(ObservabilityCapabilities.Observability, observability())),
+    activate: () =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return Capability.contributes(ObservabilityCapabilities.Observability, obs);
+      }),
   })),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
@@ -59,7 +63,11 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       ObservabilityEvents.StateReady,
       ClientReadyEvent,
     ),
-    activate: () => ClientReady({ namespace, observability: observability() }),
+    activate: () =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return yield* ClientReady({ namespace, observability: obs });
+      }),
   })),
   Plugin.make,
 );

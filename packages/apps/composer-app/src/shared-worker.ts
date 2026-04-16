@@ -14,17 +14,17 @@ onconnect = async (event) => {
   const { ObservabilityProvider } = await import('@dxos/observability');
   const { initializeObservability, setupConfig } = await import('./config');
 
-  // Await observability so TRACE_PROCESSOR.tracingBackend is set before traced code runs.
-  // In workers PostHog returns a stub synchronously, so this is fast (~1-5ms for setupConfig).
-  const config = await setupConfig();
-  const observability = await initializeObservability(config, false);
-
-  void (async () => {
-    const host = await getWorkerServiceHost();
-    await observability
-      .addDataProvider(ObservabilityProvider.Client.identityProvider(host.services))
-      .pipe(Effect.runPromise);
-  })().catch((err) => log.catch(err));
+  // Don't block on observability setup; the buffering backend in TRACE_PROCESSOR
+  // captures early spans and replays them once the real OTEL backend registers.
+  void setupConfig()
+    .then(async (config) => {
+      const observability = await initializeObservability(config, false);
+      const host = await getWorkerServiceHost();
+      await observability
+        .addDataProvider(ObservabilityProvider.Client.identityProvider(host.services))
+        .pipe(Effect.runPromise);
+    })
+    .catch((err) => log.catch(err));
 
   await onconnect(event);
 };

@@ -8,12 +8,13 @@ import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions, TimeAware } from './api';
+import { BUFFERED_PREFIX, BufferingTracingBackend } from './buffering-backend';
 import { DiagnosticsManager } from './diagnostic';
 import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
 import { RemoteMetrics } from './remote/metrics';
 import { getTracingContext } from './symbols';
-import type { TracingBackend } from './tracing-types';
+import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types';
 import { WeakRef } from './weak-ref';
 
 export type Diagnostics = {
@@ -58,8 +59,38 @@ export class TraceProcessor {
   public readonly diagnosticsChannel = new DiagnosticsChannel();
   public readonly remoteMetrics = new RemoteMetrics();
 
-  /** Tracing backend registered by the observability package. */
-  public tracingBackend?: TracingBackend;
+  readonly #bufferingBackend = new BufferingTracingBackend();
+  #activeBackend: TracingBackend = this.#bufferingBackend;
+
+  /**
+   * Tracing backend. Initially a buffering backend that records spans;
+   * once the observability package sets a real backend, the buffer is drained
+   * and a translating wrapper is installed that resolves stale buffered parent IDs.
+   */
+  get tracingBackend(): TracingBackend {
+    return this.#activeBackend;
+  }
+
+  set tracingBackend(backend: TracingBackend | undefined) {
+    if (!backend || backend === this.#bufferingBackend) {
+      this.#bufferingBackend.clear();
+      this.#activeBackend = this.#bufferingBackend;
+      return;
+    }
+    const idMap = this.#bufferingBackend.drain(backend);
+    this.#activeBackend = {
+      startSpan: (options: StartSpanOptions): RemoteSpan => {
+        // In-flight Context objects may still carry synthetic `buffered-*` traceparents
+        // from spans created before the real backend registered. Translate them to real
+        // OTEL IDs using the map built during drain so parent-child links are preserved.
+        let parentContext = options.parentContext;
+        if (parentContext?.traceparent.startsWith(BUFFERED_PREFIX)) {
+          parentContext = idMap.get(parentContext.traceparent) ?? undefined;
+        }
+        return backend.startSpan({ ...options, parentContext });
+      },
+    };
+  }
 
   readonly resources = new Map<number, ResourceEntry>();
   readonly resourceInstanceIndex = new WeakMap<any, ResourceEntry>();

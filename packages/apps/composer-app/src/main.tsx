@@ -130,8 +130,9 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
   }
 
-  // Await observability so TRACE_PROCESSOR.tracingBackend is set before traced code runs.
-  const observability = await initializeObservability(config, isTauri, logBuffer);
+  // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
+  // early spans and replays them once the real OTEL backend registers.
+  const observability = initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 

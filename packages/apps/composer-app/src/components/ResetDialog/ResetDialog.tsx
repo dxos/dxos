@@ -48,7 +48,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logBuffer: LogBuffer;
-  observability?: Observability.Observability;
+  observability?: Promise<Observability.Observability>;
   needRefresh?: boolean;
   onRefresh?: () => void;
   onReset?: () => Promise<void>;
@@ -57,7 +57,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 export const ResetDialog = ({
   error: propsError,
   logBuffer,
-  observability,
+  observability: observabilityProp,
   needRefresh,
   defaultOpen,
   open,
@@ -94,15 +94,16 @@ export const ResetDialog = ({
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {
-      if (!observability) {
+      if (!observabilityProp) {
         return;
       }
 
+      const observability = await observabilityProp;
       observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
-    [observability],
+    [observabilityProp],
   );
 
   const handleRefresh = useCallback(() => {
@@ -196,7 +197,7 @@ export const ResetDialog = ({
             )}
 
             <div role='none' className='flex-grow' />
-            {observability &&
+            {observabilityProp &&
               isNotMobile &&
               (feedbackSent ? (
                 <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
