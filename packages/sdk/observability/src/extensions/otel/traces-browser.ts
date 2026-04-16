@@ -110,11 +110,7 @@ export class OtelTraces {
             })
           : otelContext.active();
 
-        const span = tracer.startSpan(
-          options.name,
-          { ...options, startTime: options.startTime ? new Date(options.startTime) : undefined },
-          parentCtx,
-        );
+        const span = tracer.startSpan(options.name, options, parentCtx);
 
         const sc = span.spanContext();
         const spanContext =
@@ -126,7 +122,7 @@ export class OtelTraces {
             : undefined;
 
         return {
-          end: (endTime?: number) => span.end(endTime ? new Date(endTime) : undefined),
+          end: (endTime?: number) => span.end(endTime),
           setError: (err: unknown) => {
             if (err instanceof Error) {
               span.recordException(err);
