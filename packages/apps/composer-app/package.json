@@ -60,6 +60,7 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-inspector": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
+    "@dxos/plugin-linear": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-map-solid": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

@@ -32,6 +32,7 @@ import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { InspectorPlugin } from '@dxos/plugin-inspector';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { LinearPlugin } from '@dxos/plugin-linear';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -265,6 +266,7 @@ export const getPlugins = ({
     TokenManagerPlugin(),
     TranscriptionPlugin(),
     TrelloPlugin(),
+    LinearPlugin(),
     ResearchPlugin(),
     VoxelPlugin(),
     WelcomePlugin(),

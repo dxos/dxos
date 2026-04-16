@@ -158,6 +158,9 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-linear"
+    },
+    {
       "path": "../../plugins/plugin-map"
     },
     {

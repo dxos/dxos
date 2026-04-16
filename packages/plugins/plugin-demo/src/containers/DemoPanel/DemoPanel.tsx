@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Granola } from '@dxos/plugin-granola/types';
@@ -17,6 +18,7 @@ import { matchNoteToCards } from './match-cards';
 import { pollMergedPullRequests } from './pr-poller';
 import { seedSoftwareTeamFixture } from './seed-fixture';
 import { postNudgeToSlack, readSlackPostConfig } from './slack-post';
+import { generateFridayUpdate, generateMorningBriefing } from './synthesis';
 import { Demo } from '#types';
 
 const PR_POLL_INTERVAL_MS = 15_000;
@@ -448,6 +450,35 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
 
   const recent = [...events].sort((a, b) => (b.emittedAt ?? '').localeCompare(a.emittedAt ?? '')).slice(0, 20);
 
+  const space = getSpace(controller);
+  const [synthBusy, setSynthBusy] = useState<'briefing' | 'friday' | undefined>(undefined);
+  const handleMorningBriefing = useCallback(async () => {
+    if (!db || !space) {
+      return;
+    }
+    setSynthBusy('briefing');
+    try {
+      await generateMorningBriefing(db, space);
+    } catch (err) {
+      log.warn('demo: morning briefing failed', { error: String(err) });
+    } finally {
+      setSynthBusy(undefined);
+    }
+  }, [db, space]);
+  const handleFridayUpdate = useCallback(async () => {
+    if (!db || !space) {
+      return;
+    }
+    setSynthBusy('friday');
+    try {
+      await generateFridayUpdate(db, space);
+    } catch (err) {
+      log.warn('demo: friday update failed', { error: String(err) });
+    } finally {
+      setSynthBusy(undefined);
+    }
+  }, [db, space]);
+
   // Live network indicator — flips to OFFLINE when the user yanks Wi-Fi.
   // Lets the demo viewer *see* that we really are disconnected when the
   // local-first beat happens. navigator.onLine is sometimes laggy on macOS,
@@ -500,7 +531,16 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
                   </div>
                 </div>
               )}
-              <div className='text-xs text-subdued uppercase tracking-wider pt-2 pb-1'>Setup</div>
+              <div className='text-xs text-subdued uppercase tracking-wider pt-2 pb-1'>Synthesis</div>
+              <Button disabled={busy || synthBusy !== undefined} onClick={handleMorningBriefing}>
+                <Icon icon='ph--sun--regular' size={4} />
+                <span>{synthBusy === 'briefing' ? 'Generating…' : 'Morning briefing'}</span>
+              </Button>
+              <Button disabled={busy || synthBusy !== undefined} onClick={handleFridayUpdate}>
+                <Icon icon='ph--file-text--regular' size={4} />
+                <span>{synthBusy === 'friday' ? 'Drafting…' : 'Draft weekly update'}</span>
+              </Button>
+              <div className='text-xs text-subdued uppercase tracking-wider pt-4 pb-1'>Setup</div>
               <Button disabled={busy} onClick={handleBootstrap}>
                 <Icon icon='ph--rocket-launch--regular' size={4} />
                 <span>Bootstrap from .env.demo (seed + wire credentials)</span>
