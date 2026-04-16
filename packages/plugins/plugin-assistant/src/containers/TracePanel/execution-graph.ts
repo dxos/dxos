@@ -80,7 +80,7 @@ const ICONS = {
 const tagPid = (pid: string) => `pid:${pid}`;
 const tagParentPid = (parentPid: string) => `parent-pid:${parentPid}`;
 const tagConversation = (conversationId: string) => `conversation:${conversationId}`;
-const tagOperationBegin = (operationKey: string) => `operation-begin:${operationKey}`;
+const tagOperationBegin = (pid: string) => `operation-begin:${pid}`;
 
 const getTags = (meta: Trace.Meta) => {
   const tags: string[] = [];
@@ -249,7 +249,7 @@ export const buildExecutionGraph = ({
               fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
             },
           ]),
-          tags: [...getTags(event.meta), tagOperationBegin(event.data.key)],
+          tags: [...getTags(event.meta), tagOperationBegin(event.meta.pid ?? 'unknown')],
           timestamp: new Date(event.timestamp),
           icon: ICONS.operationStart.icon,
           level: ICONS.operationStart.level,
@@ -279,10 +279,11 @@ export const buildExecutionGraph = ({
           },
           {
             replace:
-              children.length > 1 // 1 is the operation begin commit.
+              // TODO(dmaretskyi): Deduping events in subbranches brekas graph.
+              !event.meta.parentPid && children.length > 1 // 1 is the operation begin commit.
                 ? undefined
                 : {
-                    tags: [tagOperationBegin(event.data.key)],
+                    tags: [tagOperationBegin(event.meta.pid ?? 'unknown')],
                   },
           },
         );
