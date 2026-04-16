@@ -2386,6 +2386,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../../plugins/plugin-deck
+      '@dxos/plugin-discord':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-discord
       '@dxos/plugin-excalidraw':
         specifier: workspace:*
         version: link:../../plugins/plugin-excalidraw
