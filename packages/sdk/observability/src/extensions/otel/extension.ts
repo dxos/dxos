@@ -15,11 +15,8 @@ import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
-import { storeObservabilityDisabled } from '../../storage';
+import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
-import { OtelLogs } from './logs';
-import { OtelMetrics } from './metrics';
-import { OtelTraces } from './traces';
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -55,7 +52,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
-  const disabled = isObservabilityDisabledSync(serviceName);
+  const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
+  const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
+  const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
+
+  const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
+  const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);
   const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
