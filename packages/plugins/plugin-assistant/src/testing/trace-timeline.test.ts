@@ -4,17 +4,30 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { T } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 import { AgentService } from '@dxos/assistant';
-import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
+import {
+  Agent,
+  AgentHandlers,
+  AgentPrompt,
+  DatabaseBlueprint,
+  DatabaseHandlers,
+  WebSearchBlueprint,
+  WebSearchHandlers,
+  WebSearchToolkitGeneric,
+} from '@dxos/assistant-toolkit';
 import { AssistantTestLayer, AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/blueprints';
-import { Database, Feed, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Blueprint, Prompt } from '@dxos/blueprints';
+import { failUndefined } from '@dxos/debug';
+import { Database, Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace } from '@dxos/functions';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { Reply, Trace, Trigger } from '@dxos/functions';
+import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
+import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 import { Organization, Person } from '@dxos/types';
 
@@ -30,9 +43,10 @@ const queryTraceMessages = Effect.gen(function* () {
 });
 
 const TestLayer = AssistantTestLayerWithTriggers({
-  operationHandlers: DatabaseHandlers,
   types: [Organization.Organization, Person.Person],
-  blueprints: [DatabaseBlueprint.make()],
+  blueprints: [DatabaseBlueprint.make(), WebSearchBlueprint.make()],
+  operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers],
+  toolkits: [WebSearchToolkitGeneric],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
 });
@@ -179,6 +193,72 @@ describe('Trace timeline', () => {
         TestHelpers.provideTestContext,
       ),
       { timeout: 180_000 },
+    );
+  });
+
+  describe('Triggers', () => {
+    it.effect.only(
+      'prompt trigger',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const feed = yield* Database.add(Feed.make());
+          yield* Feed.append(feed, [
+            Obj.make(Organization.Organization, {
+              name: 'DXOS',
+            }),
+          ]);
+          const prompt = yield* Database.add(
+            Prompt.make({
+              name: 'Research',
+              instructions: 'Research the given topic, or object.',
+              blueprints: [Ref.make(yield* Blueprint.upsert(WebSearchBlueprint.key))],
+            }),
+          );
+          yield* Database.add(
+            Trigger.make({
+              function: Ref.make(Operation.serialize(AgentPrompt)),
+              enabled: true,
+              spec: {
+                kind: 'queue',
+                queue: Feed.getQueueDxn(feed)?.toString() ?? failedInvariant('No queue DXN found'),
+              },
+              input: {
+                prompt: Ref.make(prompt),
+                input: '{{event.item}}',
+              },
+            }),
+          );
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher
+            .invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true })
+            .pipe(Effect.flatMap(Effect.forEach((result) => result.result)));
+
+          const messages = yield* queryTraceMessages;
+          const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+          const graph = renderTimelineAscii(commits, branches);
+          expect(`\n${graph}\n`).toMatchInlineSnapshot(`
+            "
+            ●     [play] Agent
+            ├──●  [user] Research the given topic, or object.<input>{"name":"DXOS","id":"01JGFJJZ00G0WKQSJGMAKCNT8F"}</input>
+            │  ●  [wrench] AnthropicWebSearch
+            │  ●  [wrench] AnthropicWebSearch
+            │  ●  [check-circle] AnthropicWebSearch - Success
+            │  ●  [check-circle] AnthropicWebSearch - Success
+            │  ●  [wrench] AnthropicWebSearch
+            │  ●  [wrench] AnthropicWebSearch
+            │  ●  [check-circle] AnthropicWebSearch - Success
+            │  ●  [check-circle] AnthropicWebSearch - Success
+            │  ●  [wrench] complete_job
+            │  ●  [check-circle] complete_job - Success
+            ◆──╯  [check-circle] Agent
+            "
+          `);
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: 120_000 },
     );
   });
 });

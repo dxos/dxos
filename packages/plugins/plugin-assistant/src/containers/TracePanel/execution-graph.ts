@@ -104,7 +104,7 @@ export interface BuildExecutionGraphParams {
 export const buildExecutionGraph = ({
   traceMessages,
   activeProcesses = [],
-  eventLimit = 100,
+  eventLimit = 500,
 }: BuildExecutionGraphParams): { branches: string[]; commits: Commit[] } => {
   const builder = new GraphBuilder();
 
@@ -166,21 +166,22 @@ export const buildExecutionGraph = ({
               message: trimText(event.data.block.text),
             });
           } else {
-            builder.addCommit({
-              id: event.id,
-              branch: event.meta.pid ?? MAIN_BRANCH,
-              parents: builder.computeParents([
-                {
-                  branch: event.meta.pid ?? MAIN_BRANCH,
-                  fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
-                },
-              ]),
-              tags: getTags(event.meta),
-              timestamp: new Date(event.timestamp),
-              icon: ICONS.assistantMessage.icon,
-              level: ICONS.assistantMessage.level,
-              message: trimText(event.data.block.text),
-            });
+            // Ignoring agent text.
+            // builder.addCommit({
+            //   id: event.id,
+            //   branch: event.meta.pid ?? MAIN_BRANCH,
+            //   parents: builder.computeParents([
+            //     {
+            //       branch: event.meta.pid ?? MAIN_BRANCH,
+            //       fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+            //     },
+            //   ]),
+            //   tags: getTags(event.meta),
+            //   timestamp: new Date(event.timestamp),
+            //   icon: ICONS.assistantMessage.icon,
+            //   level: ICONS.assistantMessage.level,
+            //   message: trimText(event.data.block.text),
+            // });
           }
           break;
         }
@@ -269,6 +270,7 @@ export const buildExecutionGraph = ({
               branch: event.meta.parentPid ?? MAIN_BRANCH,
               fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
             },
+            { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
           ]),
           tags: getTags(event.meta),
           timestamp: new Date(event.timestamp),
