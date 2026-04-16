@@ -88,6 +88,8 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
         if (id) {
+          // TODO(burdon): ThreadTile.
+          console.log('?????', id, currentId);
           onAction?.({
             type: 'current',
             messageId: id,
@@ -261,9 +263,13 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
     setCurrentId(threadId);
   }, [threadId, setCurrentId]);
 
-  const handleHeaderClick = useCallback(() => {
-    onAction?.({ type: 'current-thread', threadId, messageId: latest.id });
-  }, [threadId, latest.id, onAction]);
+  const handleThreadClick = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onAction?.({ type: 'current-thread', threadId, messageId: latest.id });
+    },
+    [threadId, latest.id, onAction],
+  );
 
   const handleMessageClick = useCallback(
     (event: MouseEvent, messageId: string) => {
@@ -275,8 +281,8 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={threadId} data={data} location={location}>
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth onClick={handleHeaderClick}>
+      <Focus.Item asChild current={current}>
+        <Card.Root ref={forwardedRef} fullWidth onClick={handleThreadClick}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
