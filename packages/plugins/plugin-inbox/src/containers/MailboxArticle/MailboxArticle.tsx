@@ -128,8 +128,28 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
+        case 'current-thread': {
+          const message = sortedMessages.find((message) => message.id === action.messageId);
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: message?.id },
+          });
+
+          const companion = linkedSegment('message');
+          if (layout.mode === 'simple') {
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companion,
+              state: 'expanded',
+            });
+          } else if (message) {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
+          }
+          break;
+        }
+
         case 'current': {
-          // TODO(burdon): Handle threads.
           const message = sortedMessages.find((message) => message.id === action.messageId);
           void invokePromise(AttentionOperation.Select, {
             contextId: id,

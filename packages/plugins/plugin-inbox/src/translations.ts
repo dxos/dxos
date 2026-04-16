@@ -131,7 +131,7 @@ export const translations = [
 
         'settings.title': 'Inbox settings',
         'settings.threads.label': 'Group by thread',
-        'settings.threads.description': 'Group messages by thread and show only the most recent message per thread.',
+        'settings.threads.description': 'Group messages and responses that belong to the same conversation.',
       },
     },
   },
