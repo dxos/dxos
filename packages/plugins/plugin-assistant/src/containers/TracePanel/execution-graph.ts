@@ -17,7 +17,7 @@ const MAIN_BRANCH = 'main';
 const ICONS = {
   agentRequestBegin: {
     icon: 'ph--atom--regular',
-    level: LogLevel.INFO,
+    level: LogLevel.VERBOSE,
   },
   agentRequestEnd: {
     icon: 'ph--check-circle--regular',
@@ -33,18 +33,18 @@ const ICONS = {
   },
   statusMessage: {
     icon: 'ph--dot-outline--regular',
-    level: LogLevel.INFO,
+    level: LogLevel.VERBOSE,
   },
   toolCall: {
     icon: 'ph--wrench--regular',
-    level: LogLevel.INFO,
+    level: LogLevel.VERBOSE,
   },
   toolResult: {
-    icon: 'ph--check-circle--regular',
+    icon: 'ph--wrench--regular',
     level: LogLevel.INFO,
   },
   toolResultError: {
-    icon: 'ph--x-circle--regular',
+    icon: 'ph--wrench--regular',
     level: LogLevel.ERROR,
   },
   toolResultSuccess: {
@@ -57,7 +57,7 @@ const ICONS = {
   },
   operationStart: {
     icon: 'ph--play--regular',
-    level: LogLevel.INFO,
+    level: LogLevel.VERBOSE,
   },
   operationEnd: {
     icon: 'ph--check-circle--regular',
@@ -71,11 +71,16 @@ const ICONS = {
     icon: 'ph--check-circle--regular',
     level: LogLevel.INFO,
   },
+  agentRequestRunning: {
+    icon: 'ph--spinner-gap--regular',
+    level: LogLevel.INFO,
+  },
 } as const;
 
 const tagPid = (pid: string) => `pid:${pid}`;
 const tagParentPid = (parentPid: string) => `parent-pid:${parentPid}`;
 const tagConversation = (conversationId: string) => `conversation:${conversationId}`;
+const tagOperationBegin = (operationKey: string) => `operation-begin:${operationKey}`;
 
 const getTags = (meta: Trace.Meta) => {
   const tags: string[] = [];
@@ -234,6 +239,7 @@ export const buildExecutionGraph = ({
       }
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
       if (!event.meta.conversationId) {
+        // Ignoring tool calls.
         builder.addCommit({
           id: `${event.id}:${event.data.key}:start`,
           branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -243,7 +249,7 @@ export const buildExecutionGraph = ({
               fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
             },
           ]),
-          tags: getTags(event.meta),
+          tags: [...getTags(event.meta), tagOperationBegin(event.data.key)],
           timestamp: new Date(event.timestamp),
           icon: ICONS.operationStart.icon,
           level: ICONS.operationStart.level,
@@ -252,22 +258,34 @@ export const buildExecutionGraph = ({
       }
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
       if (!event.meta.conversationId) {
-        builder.addCommit({
-          id: `${event.id}:${event.data.key}:end`,
-          branch: event.meta.parentPid ?? MAIN_BRANCH,
-          parents: builder.computeParents([
-            {
-              branch: event.meta.parentPid ?? MAIN_BRANCH,
-              fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
-            },
-            { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
-          ]),
-          tags: getTags(event.meta),
-          timestamp: new Date(event.timestamp),
-          icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
-          level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-          message: event.data.name ?? event.data.key,
-        });
+        // Ignoring tool calls.
+        const children = builder.findCommits({ tags: [event.meta.pid && tagPid(event.meta.pid)] });
+        builder.addCommit(
+          {
+            id: `${event.id}:${event.data.key}:end`,
+            branch: event.meta.parentPid ?? MAIN_BRANCH,
+            parents: builder.computeParents([
+              {
+                branch: event.meta.parentPid ?? MAIN_BRANCH,
+                fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
+              },
+              { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
+            ]),
+            tags: getTags(event.meta),
+            timestamp: new Date(event.timestamp),
+            icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
+            level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
+            message: event.data.name ?? event.data.key,
+          },
+          {
+            replace:
+              children.length > 1 // 1 is the operation begin commit.
+                ? undefined
+                : {
+                    tags: [tagOperationBegin(event.data.key)],
+                  },
+          },
+        );
       }
     }
   }
@@ -282,8 +300,8 @@ export const buildExecutionGraph = ({
         id: `running:${process.pid}`,
         branch: process.pid,
         parents: builder.computeParents([{ branch: process.pid }]),
-        icon: 'ph--spinner-gap--regular',
-        level: LogLevel.INFO,
+        icon: ICONS.agentRequestRunning.icon,
+        level: ICONS.agentRequestRunning.level,
         message: 'Generating...',
         timestamp: new Date(),
       });

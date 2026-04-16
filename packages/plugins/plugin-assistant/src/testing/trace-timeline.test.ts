@@ -22,7 +22,7 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { failUndefined } from '@dxos/debug';
 import { Database, Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Reply, Trace, Trigger } from '@dxos/functions';
+import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/functions';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -45,14 +45,14 @@ const queryTraceMessages = Effect.gen(function* () {
 const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
   blueprints: [DatabaseBlueprint.make(), WebSearchBlueprint.make()],
-  operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers],
+  operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
   toolkits: [WebSearchToolkitGeneric],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
 });
 
 describe('Trace timeline', () => {
-  describe('database blueprint — create objects', () => {
+  describe('Agent', () => {
     it.effect(
       'create objects via AgentService',
       Effect.fnUntraced(
@@ -92,9 +92,7 @@ describe('Trace timeline', () => {
       ),
       { timeout: 120_000 },
     );
-  });
 
-  describe('prompt with agent', () => {
     it.effect(
       'invoke prompt and query schema',
       Effect.fnUntraced(
@@ -126,9 +124,7 @@ describe('Trace timeline', () => {
       ),
       { timeout: 120_000 },
     );
-  });
 
-  describe('multi-turn conversation', () => {
     it.effect(
       'sequential prompts in a session',
       Effect.fnUntraced(
@@ -226,6 +222,33 @@ describe('Trace timeline', () => {
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] complete_job - Success
             ◆──╯  [check-circle] Agent
+            "
+          `);
+        },
+        Effect.provide(TestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: 120_000 },
+    );
+  });
+
+  describe('Operations', () => {
+    it.effect(
+      'operation',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          yield* Operation.invoke(Reply, { data: 'test-1' });
+          yield* Operation.invoke(Reply, { data: 'test-2' });
+          yield* Operation.invoke(Reply, { data: 'test-3' });
+
+          const messages = yield* queryTraceMessages;
+          const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+          const graph = renderTimelineAscii(commits, branches);
+          expect(`\n${graph}\n`).toMatchInlineSnapshot(`
+            "
+            ●  [check-circle] Reply
+            ●  [check-circle] Reply
+            ●  [check-circle] Reply
             "
           `);
         },
