@@ -197,7 +197,7 @@ const main = async (): Promise<void> => {
   const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
     headless: false,
     viewport: { width: 1440, height: 900 },
-    args: ['--disable-features=IsolateOrigins,site-per-process'],
+    args: ['--disable-features=IsolateOrigins,site-per-process', '--remote-debugging-port=9222'],
   });
 
   const cleanup = async (): Promise<void> => {

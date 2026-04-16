@@ -535,7 +535,7 @@ const handleChat = async (
       });
       await fetch(`${SLACK_API}/chat.postMessage`, { method: 'POST', body });
     }
-    log.info('shared-agent: responded', { chatId: chat.id, replyChars: reply.length });
+    log.info('shared-agent: responded', { chatId: chat.id, replyChars: reply.length, reply: reply.slice(0, 300) });
   } catch (err) {
     handledMessageIds.delete(last.id);
     log.warn('shared-agent: reply failed', { error: String(err) });

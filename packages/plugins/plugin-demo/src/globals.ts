@@ -140,6 +140,39 @@ const api = {
     return { spaceId: (space as any).id, ...result };
   },
 
+  /** Read the last assistant response from the shared-agent's chat feed. */
+  async lastResponse() {
+    const space = await ensureReady();
+    const links = await space.db.query(Filter.type(Demo.SlackChatLink)).run();
+    if (links.length === 0) {
+      return '(no SlackChatLink)';
+    }
+    const chat = links[0].chat?.target;
+    if (!chat?.feed?.target) {
+      return '(no feed)';
+    }
+    const { Feed: F } = await import('@dxos/echo');
+    const queueDxn = F.getQueueDxn(chat.feed.target);
+    if (!queueDxn) {
+      return '(no queue dxn)';
+    }
+    const queue = space.queues.get(queueDxn);
+    if (!queue) {
+      return '(no queue)';
+    }
+    const messages = await queue.queryObjects();
+    const assistantMsgs = messages.filter((msg: any) => msg.sender?.role === 'assistant');
+    if (assistantMsgs.length === 0) {
+      return '(no assistant messages)';
+    }
+    const last = assistantMsgs[assistantMsgs.length - 1];
+    const text = (last.blocks ?? [])
+      .filter((b: any) => b._tag === 'text')
+      .map((b: any) => b.text)
+      .join('\n');
+    return text || '(empty)';
+  },
+
   async seed() {
     const space = await ensureReady();
     return seedSoftwareTeamFixture(space.db);
