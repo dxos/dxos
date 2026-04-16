@@ -104,7 +104,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return [...new Set(this._objectDocumentHandles.values())];
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
     if (this._spaceRootDocHandle != null) {
       return;

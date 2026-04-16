@@ -6,13 +6,14 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getParentId, useNode } from '@dxos/plugin-graph';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
+import { InboxSettings } from '#components';
 import {
   CalendarArticle,
   CalendarProperties,
@@ -28,7 +29,8 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
 } from '#containers';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { meta } from '#meta';
+import { Calendar, DraftMessage, Mailbox, type Settings } from '#types';
 
 import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
 import { getDraftsId } from '../paths';
@@ -36,6 +38,15 @@ import { getDraftsId } from '../paths';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'plugin-settings',
+        role: 'article',
+        filter: AppSurface.settingsArticle(meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return <InboxSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
       Surface.create({
         id: 'drafts',
         role: ['article'],
