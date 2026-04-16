@@ -136,7 +136,7 @@ const api = {
 
   async bootstrap() {
     const space = await ensureReady();
-    const result = await bootstrapFromEnv(space.db);
+    const result = await bootstrapFromEnv(space.db, space);
     return { spaceId: (space as any).id, ...result };
   },
 

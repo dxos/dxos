@@ -392,7 +392,7 @@ export const DemoPanel = ({ role, subject: controller }: DemoPanelProps) => {
     }
     setBusy(true);
     try {
-      const result = await bootstrapFromEnv(db);
+      const result = await bootstrapFromEnv(db, space ?? undefined);
       setLastBootstrap(result);
       (globalThis as any).__dxosDemoReady = true;
       if (typeof globalThis.document !== 'undefined') {

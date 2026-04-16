@@ -201,7 +201,7 @@ const appendAssistantMessage = async (
 export const generateMorningBriefing = async (
   db: Database.Database,
   space: SpaceLike,
-): Promise<string> => {
+): Promise<Markdown.Document> => {
   const apiKey = readApiKey();
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY not set in localStorage');
@@ -212,9 +212,19 @@ export const generateMorningBriefing = async (
     MORNING_BRIEFING_SYSTEM,
     `Here is what happened across the team's work tools overnight:\n\n${context}\n\nWrite the briefing paragraph.`,
   );
+  // Emit as a Markdown.Document so it renders properly in the deck.
+  // Markdown.Document's article surface is the reliable render path.
+  const document = Markdown.make({
+    name: `☀️ Morning briefing — ${new Date().toISOString().slice(0, 10)}`,
+    content: `# Morning briefing\n\n_Generated ${new Date().toLocaleString()}_\n\n${briefing}\n`,
+  });
+  db.add(document);
+  await addToDemoCollection(db, document);
+  // Also append to the dedicated Composer agent chat for the phone-to-home
+  // story beat.
   await appendAssistantMessage(db, space, `☀️ **Morning briefing**\n\n${briefing}`);
   log.info('demo: morning briefing generated', { chars: briefing.length });
-  return briefing;
+  return document;
 };
 
 export const generateFridayUpdate = async (

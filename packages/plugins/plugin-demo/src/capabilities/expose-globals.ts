@@ -69,7 +69,7 @@ export default Capability.makeModule(() =>
       /** Seed fixture + wire TrelloBoard/GranolaAccount from localStorage credentials. */
       async bootstrap() {
         const space = await ensureReady();
-        return bootstrapFromEnv(space.db);
+        return bootstrapFromEnv(space.db, space);
       },
 
       /** Just seed the Widgets-team fixture (without wiring real credentials). */

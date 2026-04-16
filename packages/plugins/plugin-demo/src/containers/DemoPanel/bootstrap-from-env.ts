@@ -10,6 +10,7 @@ import { Trello } from '@dxos/plugin-trello/types';
 import { Demo } from '../../types';
 import { addToDemoCollection, ensureDemoCollection } from './collection';
 import { seedSoftwareTeamFixture } from './seed-fixture';
+import { generateMorningBriefing } from './synthesis';
 
 /**
  * Keys Playwright (or the user) sets in localStorage before running the
@@ -60,7 +61,12 @@ export type BootstrapResult = {
  * Idempotent: if an object already exists with matching credentials, this
  * is a no-op for that slot.
  */
-export const bootstrapFromEnv = async (db: Database.Database): Promise<BootstrapResult> => {
+type SpaceLike = { queues: { get: (dxn: any) => any } };
+
+export const bootstrapFromEnv = async (
+  db: Database.Database,
+  space?: SpaceLike,
+): Promise<BootstrapResult> => {
   const result: BootstrapResult = { created: [], skipped: [], errors: [] };
 
   // Ensure the demo collection exists up-front so everything subsequent
@@ -145,6 +151,32 @@ export const bootstrapFromEnv = async (db: Database.Database): Promise<Bootstrap
     }
   } else {
     result.skipped.push('Granola (no credentials in localStorage)');
+  }
+
+  // Auto-generate a morning briefing Markdown document so the sidebar has
+  // an inviting '☀️ Morning briefing — <date>' entry ready to click. Keeps
+  // at most one per calendar day to stay idempotent.
+  const anthropicKey = readLocalStorage(BOOTSTRAP_KEYS.anthropicApiKey);
+  if (space && anthropicKey) {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const existing = (await db.query(Filter.type(Obj.Unknown as any)).run()).find(
+        (candidate: any) =>
+          typeof candidate?.name === 'string' &&
+          candidate.name.includes('Morning briefing') &&
+          candidate.name.includes(today),
+      );
+      if (!existing) {
+        await generateMorningBriefing(db, space);
+        result.created.push('Morning briefing (today)');
+      } else {
+        result.skipped.push('Morning briefing (already present for today)');
+      }
+    } catch (err) {
+      result.errors.push(`morning briefing: ${String(err)}`);
+    }
+  } else {
+    result.skipped.push(`Morning briefing (${anthropicKey ? 'no space' : 'no ANTHROPIC_API_KEY'})`);
   }
 
   log.info('demo: bootstrap complete', result);
