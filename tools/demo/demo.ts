@@ -242,16 +242,58 @@ const main = async (): Promise<void> => {
       if (!sawOutdatedDep) {
         return;
       }
-      console.log(`  ⚠ Vite re-optimized deps during ${label}; pausing 4s then reloading once to pick up fresh modules`);
+      console.log(`  ⚠ Vite re-optimized deps during ${label}; pausing 4s then reloading with retry`);
       await page.waitForTimeout(4_000);
       sawOutdatedDep = false;
-      await page.reload({ waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
-      await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
+      // Retry-based goto absorbs the case where the reload races a second
+      // re-optimization cascade.
+      const deadline = Date.now() + 180_000;
+      while (Date.now() < deadline) {
+        try {
+          await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+          await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
+          return;
+        } catch {
+          await page.waitForTimeout(2_000);
+        }
+      }
+    };
+
+    // Bullet-proof page.goto: retry with short timeouts through the vite dep
+    // re-optimization window. A single 120s goto throws if vite decides to
+    // re-optimize deps mid-load (very common on first run). Many small gotos
+    // absorb the hit.
+    const gotoWithRetry = async (label: string): Promise<void> => {
+      const deadline = Date.now() + 300_000; // 5 min cap.
+      let lastError: unknown;
+      let attempt = 0;
+      while (Date.now() < deadline) {
+        attempt += 1;
+        try {
+          await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+          await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
+          // Check that the page at least has a <body>. If vite served an error
+          // page this will still succeed but __DEMO__ won't be there yet — that
+          // is handled in step 3.
+          const hasBody = await page
+            .evaluate(() => Boolean(globalThis.document?.body))
+            .catch(() => false);
+          if (hasBody) {
+            if (attempt > 1) {
+              console.log(`   · ${label}: loaded on attempt ${attempt}`);
+            }
+            return;
+          }
+        } catch (err) {
+          lastError = err;
+        }
+        await page.waitForTimeout(2_000);
+      }
+      throw lastError ?? new Error(`${label}: page.goto never settled`);
     };
 
     await step('1. inject .env.demo into localStorage', async () => {
-      await page.goto(composerUrl, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
-      await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
+      await gotoWithRetry('initial goto');
       const values = collectLocalStorageValues(process.env);
       // `--dry` rehearsal: never let the panel fire real Slack posts.
       if (args.dry) {
@@ -262,8 +304,9 @@ const main = async (): Promise<void> => {
       if (seeded.length > 0) {
         console.log(`   · seeded plugin settings: ${seeded.join(', ')}`);
       }
-      await page.reload({ waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS });
-      await page.waitForLoadState('networkidle', { timeout: PAGE_TIMEOUT_MS }).catch(() => undefined);
+      // Use goto-with-retry instead of page.reload since the same dep
+      // re-optimization window can also kill a reload.
+      await gotoWithRetry('post-localStorage reload');
       await recoverFromViteReoptimize('step 1');
       await takeScreenshot(page, '01-injected');
     });
