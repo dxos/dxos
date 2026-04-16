@@ -1209,7 +1209,7 @@ export namespace ProcessOperationInvoker {
     invokeFiber: <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
+      options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
     ) => Effect.Effect<OperationFiber<O>>;
 
     /**

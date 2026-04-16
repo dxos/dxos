@@ -15,17 +15,17 @@ const COL_WIDTH = 3;
  *
  * Commits must be ordered chronologically (oldest first, newest last). Parents must refer to older commits.
  */
-export const renderTimelineAscii = (commits: Commit[]): string => {
+export const renderTimelineAscii = (commits: Commit[], branches: string[]): string => {
   if (commits.length === 0) {
     return '';
   }
 
-  const laneById = assignLanesByBranch(commits);
+  const laneById = assignLanes(commits, branches);
   const lanes = commits.map((commit) => laneById.get(commit.id)!);
   const maxLane = Math.max(...lanes);
 
   if (maxLane === 0) {
-    return commits.map((commit) => `${NODE}  ${commit.message}`).join('\n');
+    return commits.map((commit) => `${NODE}  ${formatLabel(commit)}`).join('\n');
   }
 
   const active = computeActiveColumns(commits, lanes, laneById);
@@ -36,7 +36,7 @@ export const renderTimelineAscii = (commits: Commit[]): string => {
 
   const maxGraphWidth = Math.max(...graphParts.map((part) => part.length));
   return commits
-    .map((commit, row) => `${graphParts[row]!.padEnd(maxGraphWidth)}  ${commit.message}`)
+    .map((commit, row) => `${graphParts[row]!.padEnd(maxGraphWidth)}  ${formatLabel(commit)}`)
     .join('\n');
 };
 
@@ -107,17 +107,23 @@ const renderRow = (
   return chars.join('').trimEnd();
 };
 
-const assignLanesByBranch = (commits: Commit[]): Map<string, number> => {
+const formatLabel = (commit: Commit): string => {
+  const icon = commit.icon
+    ?.replace(/^ph--/, '')
+    .replace(/--regular$/, '')
+    .replace(/--bold$/, '')
+    .replace(/--fill$/, '');
+  return icon ? `[${icon}] ${commit.message}` : commit.message;
+};
+
+const assignLanes = (commits: Commit[], branches: string[]): Map<string, number> => {
   const branchOrder = new Map<string, number>();
-  let next = 0;
-  for (const commit of commits) {
-    if (!branchOrder.has(commit.branch)) {
-      branchOrder.set(commit.branch, next++);
-    }
+  for (let idx = 0; idx < branches.length; idx++) {
+    branchOrder.set(branches[idx]!, idx);
   }
   const laneById = new Map<string, number>();
   for (const commit of commits) {
-    laneById.set(commit.id, branchOrder.get(commit.branch)!);
+    laneById.set(commit.id, branchOrder.get(commit.branch) ?? 0);
   }
   return laneById;
 };

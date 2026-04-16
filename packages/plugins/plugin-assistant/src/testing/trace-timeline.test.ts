@@ -14,6 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Trace } from '@dxos/functions';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
+import { dbg } from '@dxos/log';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 import { Organization, Person } from '@dxos/types';
 
@@ -27,11 +28,6 @@ const queryTraceMessages = Effect.gen(function* () {
   const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
   return yield* Database.runQuery(Query.select(Filter.type(Trace.Message)).from(feed));
 });
-
-const renderTraceGraph = (traceMessages: Trace.Message[]) => {
-  const { commits } = buildExecutionGraph({ traceMessages });
-  return renderTimelineAscii(commits);
-};
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DatabaseHandlers,
@@ -57,30 +53,27 @@ describe('Trace timeline', () => {
           yield* agent.waitForCompletion();
 
           const messages = yield* queryTraceMessages;
-          const graph = renderTraceGraph(messages);
+          dbg(messages.flatMap(({ meta, events }) => events.map((event) => ({ ...meta, ...event }))));
+          const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+          dbg(branches);
+          const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     Create an organization called "Cyberdyne Systems".
-            ●     Let me first check the available schemas to find the right type for an organization.
-            ●     list-schemas
-            │  ●  List schemas
-            ●  │  Success
-            ●  │  I found the \`org.dxos.type.organization\` schema. Let me create the organization now.
-            ●  │  create-object
-            │  ●  Create object
-            ●  │  Success
-            ●  │  add-to-context
-            │  ●  Add to context
-            ●  │  Success
-            ●  │  I've created the **Cyberdyne Systems** organization and added it to the chat context. The organizati
-            ●  │  Create a person named "John Connor".
-            ●  │  create-object
-            │  ●  Create object
-            ●  │  Success
-            ●  │  add-to-context
-            │  ●  Add to context
-            ●     Success
-            ●     I've created **John Connor** as a person and added him to the chat context. You can add more details
+            ●     [play] Agent processing request...
+            ├──●  [paper-plane-right] Create an organization called "Cyberdyne Systems".
+            │  ●  [drone] Let me first check the available schemas to find the right type for an organization.
+            │  ●  [check-circle] list-schemas - Success
+            │  ●  [drone] I found the \`org.dxos.type.organization\` schema. Let me create the organization now.
+            │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
+            │  ●  [drone] I've created the **Cyberdyne Systems** organization and added it to the conversation context. It's b
+            ◆──╯  [check-circle] Agent completed request
+            ●  │  [play] Agent processing request...
+            │  ●  [paper-plane-right] Create a person named "John Connor".
+            │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
+            │  ●  [drone] I've created **John Connor** as a person and added him to the conversation context. Would you like t
+            ◆──╯  [check-circle] Agent completed request
             "
           `);
         },
@@ -105,24 +98,18 @@ describe('Trace timeline', () => {
           yield* agent.waitForCompletion();
 
           const messages = yield* queryTraceMessages;
-          const graph = renderTraceGraph(messages);
+          const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+          const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     Search for all organizations. How many are there?
-            ●     list-schemas
-            ●     query
-            │  ●  Query
-            │  ●  List schemas
-            ●  │  Success
-            ●  │  Success
-            ●  │  Now let me do a precise type-based query to make sure I get all organizations:
-            ●  │  query
-            │  ●  Query
-            ●     Success
-            ●     There are **2 organizations** in the space:
-
-            1. **Acme Corp**
-            2. **Globex Industries**
+            ●     [play] Agent processing request...
+            ├──●  [paper-plane-right] Search for all organizations. How many are there?
+            │  ●  [check-circle] list-schemas - Success
+            │  ●  [check-circle] query - Success
+            │  ●  [drone] Now let me do a precise type-based query to make sure I get the full count:
+            │  ●  [check-circle] query - Success
+            │  ●  [drone] There are **2 organizations** in the space:
+            ◆──╯  [check-circle] Agent completed request
             "
           `);
         },
@@ -151,40 +138,27 @@ describe('Trace timeline', () => {
           yield* agent.waitForCompletion();
 
           const messages = yield* queryTraceMessages;
-          const graph = renderTraceGraph(messages);
+          const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+          const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     List all available schemas. Tell me what typenames are available.
-            ●     list-schemas
-            │  ●  List schemas
-            ●  │  Success
-            ●  │  Here are all the available schemas and their typenames:
-
-            | # | Typename | Description |
-            |---|-------
-            ●  │  Create an organization called "DXOS" and a person named "Alice".
-            ●  │  create-object
-            ●  │  create-object
-            │  ●  Create object
-            │  ●  Create object
-            ●  │  Success
-            ●  │  Success
-            ●  │  Done! I've created both:
-
-            1. **Organization** — "DXOS" (\`dxn:echo:BDJXMULPW5FB55UZ7KP5HLDHVTXUTHE2U:
-            ●  │  Search for all organizations and persons.
-            ●  │  query
-            ●  │  query
-            │  ●  Query
-            │  ●  Query
-            ●     Success
-            ●     Success
-            ●     Here are the results:
-
-            ### Organizations (1)
-            | Name | DXN |
-            |------|-----|
-            | DXOS | \`dxn:echo:...01J
+            ●     [play] Agent processing request...
+            ├──●  [paper-plane-right] List all available schemas. Tell me what typenames are available.
+            │  ●  [check-circle] list-schemas - Success
+            │  ●  [drone] Here are all the available schemas and their typenames:
+            ◆──╯  [check-circle] Agent completed request
+            ●  │  [play] Agent processing request...
+            │  ●  [paper-plane-right] Create an organization called "DXOS" and a person named "Alice".
+            │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] create-object - Success
+            │  ●  [drone] Done! I've created both:
+            ◆──╯  [check-circle] Agent completed request
+            ●  │  [play] Agent processing request...
+            │  ●  [paper-plane-right] Search for all organizations and persons.
+            │  ●  [check-circle] query - Success
+            │  ●  [check-circle] query - Success
+            │  ●  [drone] Here are the results:
+            ◆──╯  [check-circle] Agent completed request
             "
           `);
         },

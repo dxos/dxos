@@ -4,6 +4,7 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
+import { Context } from 'effect';
 import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -16,7 +17,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -29,6 +30,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '../functions';
+import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
@@ -112,6 +114,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               );
 
               log('begin request', { prompt });
+              yield* Trace.write(AgentRequestBegin, {});
               yield* conversation.createRequest({
                 prompt,
                 // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
@@ -119,6 +122,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 system: options.systemPrompt,
               });
               log('end request');
+              yield* Trace.write(AgentRequestEnd, {});
               yield* AgentEventsKey.set(inputQueue);
               if (inputQueue.length > 0) {
                 ctx.setAlarm();
@@ -278,6 +282,9 @@ const ToolExecutionService = ({
             const fiber = yield* operationInvoker.invokeFiber(operationDef, input, {
               environment: {
                 conversation: Obj.getDXN(feed).toString(),
+              },
+              traceMeta: {
+                conversationId: feed.id,
               },
             });
             toolCallManager.beginCall(fiber.pid);

@@ -14,7 +14,7 @@ describe('renderTimelineAscii', () => {
       { id: 'c2', branch: 'main', message: 'second', parents: ['c1'] },
       { id: 'c3', branch: 'main', message: 'third', parents: ['c2'] },
     ];
-    expect(`\n${renderTimelineAscii(commits)}\n`).toMatchInlineSnapshot(`
+    expect(`\n${renderTimelineAscii(commits, ['main'])}\n`).toMatchInlineSnapshot(`
       "
       ●  first
       ●  second
@@ -36,7 +36,7 @@ describe('renderTimelineAscii', () => {
         parents: ['f2', 'b'],
       },
     ];
-    expect(`\n${renderTimelineAscii(commits)}\n`).toMatchInlineSnapshot(`
+    expect(`\n${renderTimelineAscii(commits, ['main', 'feature'])}\n`).toMatchInlineSnapshot(`
       "
       ●     baseline on main
       ├──●  start feature
@@ -59,7 +59,7 @@ describe('renderTimelineAscii', () => {
       { id: 'b3', branch: 'beta', message: 'beta done', parents: ['b2'] },
       { id: 'mb', branch: 'main', message: 'merge beta', parents: ['b3', 'ma'] },
     ];
-    expect(`\n${renderTimelineAscii(commits)}\n`).toMatchInlineSnapshot(`
+    expect(`\n${renderTimelineAscii(commits, ['main', 'alpha', 'beta'])}\n`).toMatchInlineSnapshot(`
       "
       ●        baseline
       ├──●     alpha start
