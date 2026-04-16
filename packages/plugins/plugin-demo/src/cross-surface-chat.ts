@@ -52,6 +52,10 @@ type ChatLinkConfig = {
 type SpaceLike = { queues: { get: (dxn: any) => any } };
 
 let started = false;
+let cachedBotUserId: string | undefined;
+// Slack ts values we've already responded to — avoid double-replying on
+// subsequent poll ticks.
+const respondedTs = new Set<string>();
 
 export const startCrossSurfaceChat = (db: Database.Database, space: SpaceLike): void => {
   if (started) {
@@ -167,7 +171,155 @@ const mirrorSlackToComposer = async (
       continue;
     }
     await appendNewSlackMessages(space, chat, keepers, channelId);
+    // After mirroring, check for un-responded @mentions and answer them.
+    await respondToMentions(config, space, chat, keepers, channelId, link.threadTs);
   }
+};
+
+// -- Shared-memory @mention responder ---------------------------------------
+
+/**
+ * When a user @mentions the bot in a Slack channel we mirror, read the
+ * linked Composer chat's history, call Claude with that as context, append
+ * the assistant reply to the chat feed, and post it back to Slack as a
+ * threaded reply. Makes Slack a view onto the canonical Composer conversation.
+ */
+const respondToMentions = async (
+  config: ChatLinkConfig,
+  space: SpaceLike,
+  chat: AssistantChat.Chat,
+  bucket: SlackMessage[],
+  channelId: string,
+  threadTs: string,
+): Promise<void> => {
+  const apiKey = globalThis.localStorage?.getItem('ANTHROPIC_API_KEY');
+  if (!apiKey) {
+    return;
+  }
+  const botUserId = await getBotUserId(config.botToken);
+  if (!botUserId) {
+    return;
+  }
+  const mentions = bucket.filter(
+    (msg) =>
+      !msg.bot_id &&
+      typeof msg.text === 'string' &&
+      msg.text.includes(`<@${botUserId}>`) &&
+      !respondedTs.has(msg.ts),
+  );
+  if (mentions.length === 0) {
+    return;
+  }
+  const feedTarget = chat.feed?.target;
+  if (!feedTarget) {
+    return;
+  }
+  const queueDxn = Feed.getQueueDxn(feedTarget);
+  if (!queueDxn) {
+    return;
+  }
+  const queue = space.queues.get(queueDxn);
+  if (!queue) {
+    return;
+  }
+  for (const mention of mentions) {
+    respondedTs.add(mention.ts);
+    try {
+      const history = ((await queue.queryObjects?.()) ?? []) as Message.Message[];
+      const context = history
+        .slice(-15)
+        .map((msg) => {
+          const role = msg.sender?.role === 'assistant' ? 'composerclaw' : 'user';
+          const textBlock = (msg.blocks ?? []).find((b: any) => b._tag === 'text') as
+            | { _tag: 'text'; text: string }
+            | undefined;
+          const text = textBlock?.text ?? '';
+          return `${role}: ${text}`;
+        })
+        .join('\n');
+      const userAsk = mention.text!.replace(new RegExp(`<@${botUserId}>`, 'g'), '').trim();
+      const reply = await callClaudeWithContext(apiKey, userAsk, context);
+      // Append as assistant to the chat feed so it shows up in Composer too.
+      await queue.append([
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks: [{ _tag: 'text', text: reply }],
+          properties: { slackTs: mention.ts + '-reply', slackChannelId: channelId },
+        }),
+      ]);
+      // Post the reply to Slack as a threaded reply to the mention.
+      const postBody = new URLSearchParams({
+        token: config.botToken,
+        channel: channelId,
+        text: reply,
+        thread_ts: mention.thread_ts ?? mention.ts,
+      });
+      await fetch(`${SLACK_API}/chat.postMessage`, { method: 'POST', body: postBody });
+      log.info('demo: responded to mention', { ts: mention.ts, channelId });
+    } catch (err) {
+      log.warn('demo: failed to respond to mention', { error: String(err) });
+    }
+  }
+  void threadTs; // reserved for future thread-scoped responses
+};
+
+const getBotUserId = async (token: string): Promise<string | undefined> => {
+  if (cachedBotUserId) {
+    return cachedBotUserId;
+  }
+  try {
+    const body = new URLSearchParams({ token });
+    const response = await fetch(`${SLACK_API}/auth.test`, { method: 'POST', body });
+    const data = (await response.json()) as { ok: boolean; user_id?: string };
+    if (data.ok && data.user_id) {
+      cachedBotUserId = data.user_id;
+      return cachedBotUserId;
+    }
+  } catch {
+    // swallow
+  }
+  return undefined;
+};
+
+const callClaudeWithContext = async (
+  apiKey: string,
+  userAsk: string,
+  context: string,
+): Promise<string> => {
+  const system = [
+    'You are composerclaw, the widgets team assistant.',
+    'A user is asking you a question in Slack that refers back to a conversation',
+    'they have been having with you in Composer. Use the Composer conversation',
+    'below as authoritative context. Answer in 2-4 sentences, concrete and specific.',
+    'Do not greet, do not sign off.',
+    '',
+    'Composer conversation so far:',
+    context || '(empty — no prior conversation)',
+  ].join('\n');
+  const response = await fetch('/api/anthropic/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 500,
+      system,
+      messages: [{ role: 'user', content: userAsk }],
+    }),
+  });
+  const data = (await response.json()) as {
+    content?: { type: string; text: string }[];
+    error?: { message: string };
+  };
+  if (!response.ok) {
+    throw new Error(data.error?.message ?? `anthropic ${response.status}`);
+  }
+  return ((data.content ?? []).filter((b) => b.type === 'text').map((b) => b.text).join('\n')).trim();
 };
 
 const fetchHistory = async (token: string, channelId: string): Promise<SlackMessage[]> => {
