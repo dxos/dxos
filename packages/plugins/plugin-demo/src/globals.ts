@@ -145,6 +145,40 @@ const api = {
     return seedSoftwareTeamFixture(space.db);
   },
 
+  /** Send a message to the shared-agent's canonical chat. The shared-agent
+   *  observer will see the user message, call Claude with tools, and respond.
+   *  Usage:  await __DEMO__.chat("move the color picker to done")
+   */
+  async chat(text: string) {
+    const space = await ensureReady();
+    const links = await space.db.query(Filter.type(Demo.SlackChatLink)).run();
+    if (links.length === 0) {
+      return { error: 'No SlackChatLink — post something in #widgets-eng first so the mirror creates one.' };
+    }
+    const chat = links[0].chat?.target;
+    if (!chat?.feed?.target) {
+      return { error: 'SlackChatLink has no chat with feed.' };
+    }
+    const { Feed: F } = await import('@dxos/echo');
+    const { Message: M } = await import('@dxos/types');
+    const queueDxn = F.getQueueDxn(chat.feed.target);
+    if (!queueDxn) {
+      return { error: 'No queue DXN.' };
+    }
+    const queue = space.queues.get(queueDxn);
+    if (!queue) {
+      return { error: 'No queue.' };
+    }
+    await queue.append([
+      Obj.make(M.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [{ _tag: 'text', text }],
+      }),
+    ]);
+    return { ok: true, chatName: chat.name, chatId: chat.id };
+  },
+
   async injectGranolaNote() {
     const space = await ensureReady();
     const fixture = GRANOLA_FIXTURES[fixtureIndex % GRANOLA_FIXTURES.length];
