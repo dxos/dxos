@@ -67,7 +67,8 @@ export const ensureDevServer = async (url: string = DEFAULT_URL): Promise<DevSer
   const out = createWriteStream(logFile, { flags: 'a' });
 
   // Run from repo root so moon resolves the task correctly.
-  const repoRoot = resolve(DEMO_DIR, '..', '..');
+  // DEMO_DIR = tools/demo/lib/, so three levels up → repo root.
+  const repoRoot = resolve(DEMO_DIR, '..', '..', '..');
   const process = spawn('moon', ['run', 'composer-app:serve'], {
     cwd: repoRoot,
     detached: false,
