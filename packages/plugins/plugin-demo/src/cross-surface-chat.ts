@@ -78,7 +78,9 @@ const tick = async (db: Database.Database, space: SpaceLike): Promise<void> => {
     }
     const config: ChatLinkConfig = { botToken: raw.botToken, channels };
     await mirrorSlackToComposer(db, space, config);
-    await mirrorComposerToSlack(db, space, config);
+    // Composer→Slack direction is handled by the shared-agent (which posts
+    // responses to Slack when the source message had a slackTs). The old
+    // mirrorComposerToSlack was flooding Slack with every message.
   } catch (err) {
     log.info('demo: cross-surface tick failed', { error: String(err) });
   }
