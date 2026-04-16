@@ -11,8 +11,8 @@ import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, DXN, Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 

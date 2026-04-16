@@ -54,7 +54,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
               const output = yield* invokeOperation(resolved, input);
               return output as O;
-            }            ).pipe(
+            }).pipe(
               Effect.provideService(AiService.AiService, ai),
               Effect.provideService(CredentialsService, credentials),
               Effect.provideService(Database.Service, database),

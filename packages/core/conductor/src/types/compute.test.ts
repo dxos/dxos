@@ -12,7 +12,7 @@ import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { ValueBag } from './compute';
 
@@ -24,6 +24,7 @@ const TestLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
     ),
   ),
   Layer.provideMerge(

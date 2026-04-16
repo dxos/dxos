@@ -35,8 +35,8 @@ import {
   Trace,
   TracingService,
 } from '@dxos/functions';
-import type { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
+import type { Operation } from '@dxos/operation';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
 

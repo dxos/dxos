@@ -10,7 +10,7 @@ import type { AiService } from '@dxos/ai';
 import type { Database, Feed } from '@dxos/echo';
 import { type ComputeEventLogger } from '@dxos/functions';
 import type { CredentialsService, QueueService, Trace, TracingService } from '@dxos/functions';
-import type { Operation } from '@dxos/operation';
+import type { Operation, OperationRegistry } from '@dxos/operation';
 import { mapValues } from '@dxos/util';
 
 import { type ComputeNode, type ComputeNodeMeta } from './graph';
@@ -110,7 +110,8 @@ export type ComputeRequirements =
   | TracingService
   | ComputeEventLogger
   | Scope.Scope
-  | Operation.Service;
+  | Operation.Service
+  | OperationRegistry.Service;
 
 /**
  * For results of compute functions.

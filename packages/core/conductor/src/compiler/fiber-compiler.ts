@@ -18,8 +18,8 @@ import {
   TracingService,
   createDefectLogger,
 } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
@@ -366,6 +366,7 @@ export class GraphExecutor {
         Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(Operation.Service, yield* Operation.Service),
+        Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
         Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
       );

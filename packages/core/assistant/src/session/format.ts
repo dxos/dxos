@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { type Database, Obj } from '@dxos/echo';
-import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import { ObjectVersion } from '@dxos/echo-db';
+import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import { type FunctionNotFoundError, type TracingService } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,10 +29,7 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<
-  AiSessionRunProps<any>,
-  'system' | 'blueprints' | 'objects'
->): Effect.Effect<
+}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
   FunctionNotFoundError | ObjectNotFoundError,
   Database.Service | OperationRegistry.Service | Operation.Service | TracingService

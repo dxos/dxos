@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import type * as ConfigError from 'effect/ConfigError';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import type * as Option from 'effect/Option';

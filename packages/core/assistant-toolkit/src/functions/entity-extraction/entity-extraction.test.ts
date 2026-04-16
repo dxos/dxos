@@ -11,8 +11,8 @@ import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { OperationHandlerSet } from '@dxos/operation';
 import { Message, Organization, Person } from '@dxos/types';
 

@@ -40,9 +40,7 @@ export const processTemplate = (
         if (input.kind === 'function') {
           const fn = yield* OperationRegistry.resolve(input.function!).pipe(
             Effect.flatten,
-            Effect.catchTag('NoSuchElementException', () =>
-              Effect.fail(new FunctionNotFoundError(input.function!)),
-            ),
+            Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(input.function!))),
           );
           const result = yield* Operation.invoke(fn, {} as any).pipe(Effect.orDie);
           return [input.name, result] as const;

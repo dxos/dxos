@@ -10,8 +10,8 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Operation } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

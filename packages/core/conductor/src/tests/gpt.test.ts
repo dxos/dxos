@@ -17,8 +17,8 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -32,6 +32,7 @@ const TestLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
     ),
   ),
   Layer.provideMerge(

@@ -16,7 +16,7 @@ import {
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
@@ -34,6 +34,7 @@ const SERVICES = {
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
+  operationRegistryService: OperationRegistry.Service,
   queues: QueueService,
   feeds: Feed.FeedService,
   tracing: TracingService,
@@ -128,6 +129,10 @@ export class ServiceContainer {
       invokePromise: async () => ({ error: new Error('Not available') }),
     } as any);
 
+    const operationRegistryService = Layer.succeed(OperationRegistry.Service, {
+      resolve: () => Effect.succeed(undefined),
+    } as any);
+
     return Layer.mergeAll(
       ai,
       credentials,
@@ -138,6 +143,7 @@ export class ServiceContainer {
       eventLogger,
       functionCallService,
       operationService,
+      operationRegistryService,
     ) as any;
   }
 }
