@@ -6,7 +6,7 @@ import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } 
 import { Trace } from '@dxos/functions';
 import { Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
-import { LogLevel } from '@dxos/log';
+import { dbg, log, LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
 /**
@@ -38,6 +38,8 @@ export const buildExecutionGraph = ({
       ...event,
     })),
   );
+
+  dbg(events);
 
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
@@ -135,7 +137,7 @@ export const buildExecutionGraph = ({
     }
   }
 
-  return builder.build();
+  return dbg(builder.build());
 };
 
 class GraphBuilder {
@@ -144,6 +146,9 @@ class GraphBuilder {
   #lastCommitByBranch = new Map<string, string>();
   #operationPidToStartCommitId = new Map<string, string>();
   #toolCallIdToStartCommitId = new Map<string, string>();
+  #conversationIdToAgentBeginCommitId = new Map<string, string>();
+  #conversationIdToAgentEndCommitId = new Map<string, string>();
+  #agentPidToConversationId = new Map<string, string>();
 
   #addCommit(commit: Commit, opts?: { replaceCommit?: string }) {
     this.#branches.add(commit.branch);
@@ -156,6 +161,13 @@ class GraphBuilder {
     }
     this.#commits.push(commit);
     this.#lastCommitByBranch.set(commit.branch, commit.id);
+  }
+
+  #removeCommit(id: string) {
+    const commitIdx = this.#commits.findIndex((commit) => commit.id === id);
+    if (commitIdx !== -1) {
+      this.#commits.splice(commitIdx, 1);
+    }
   }
 
   /**
@@ -180,11 +192,20 @@ class GraphBuilder {
     if (meta.pid) {
       this.#operationPidToStartCommitId.set(meta.pid, id);
     }
+    if (meta.conversationId && meta.pid) {
+      this.#agentPidToConversationId.set(meta.pid, meta.conversationId);
+    }
+    if (meta.conversationId) {
+      if (this.#conversationIdToAgentBeginCommitId.has(meta.conversationId)) {
+        return; // Only one visible begin commit per agent.
+      }
+      this.#conversationIdToAgentBeginCommitId.set(meta.conversationId, id);
+    }
     this.#addCommit({
       id,
       branch: meta.parentPid ?? MAIN_BRANCH,
       parents: this.#defaultParents(MAIN_BRANCH),
-      icon: 'ph--play--regular',
+      icon: 'ph--atom--regular',
       level: LogLevel.INFO,
       message: 'Agent processing request...',
       timestamp: new Date(ts),
@@ -194,6 +215,13 @@ class GraphBuilder {
   addAgentRequestEnd(id: string, meta: Trace.Meta, ts: number) {
     if (meta.pid) {
       this.#operationPidToStartCommitId.delete(meta.pid);
+    }
+    if (meta.conversationId) {
+      if (this.#conversationIdToAgentEndCommitId.has(meta.conversationId)) {
+        this.#removeCommit(this.#conversationIdToAgentEndCommitId.get(meta.conversationId)!);
+        this.#conversationIdToAgentEndCommitId.delete(meta.conversationId);
+      }
+      this.#conversationIdToAgentEndCommitId.set(meta.conversationId, id);
     }
     this.#addCommit({
       id,
@@ -293,8 +321,11 @@ class GraphBuilder {
   }
 
   addRunningAgent(pid: string, conversationId: string, ts: number) {
+    if (this.#conversationIdToAgentEndCommitId.has(conversationId)) {
+      this.#removeCommit(this.#conversationIdToAgentEndCommitId.get(conversationId)!);
+    }
     this.#addCommit({
-      id: pid,
+      id: `agent-running:${pid}`,
       branch: conversationId,
       parents: this.#defaultParents(conversationId),
       icon: 'ph--spinner-gap--regular',
@@ -305,12 +336,14 @@ class GraphBuilder {
   }
 
   addOperationStart(id: string, operationName: string, meta: Trace.Meta, ts: number) {
+    log.info('addOperationStart', { id, operationName, meta, ts });
     if (meta.pid) {
       this.#operationPidToStartCommitId.set(meta.pid, id);
     }
+    const parentConversation = meta.parentPid && this.#agentPidToConversationId.get(meta.parentPid);
     this.#addCommit({
       id,
-      branch: meta.conversationId ?? meta.pid ?? MAIN_BRANCH,
+      branch: parentConversation ?? meta.parentPid ?? MAIN_BRANCH,
       parents: this.#defaultParents(MAIN_BRANCH),
       icon: 'ph--play--regular',
       level: LogLevel.INFO,
@@ -327,13 +360,15 @@ class GraphBuilder {
     meta: Trace.Meta,
     ts: number,
   ) {
+    log.info('addOperationEnd', { id, operationName, outcome, error, meta, ts });
     const isError = outcome === 'failure';
     const startCommitId = meta.pid && this.#operationPidToStartCommitId.get(meta.pid);
     const hasChildren = this.#commits.some((commit) => commit.parents?.includes(startCommitId!));
+    const parentConversation = meta.parentPid && this.#agentPidToConversationId.get(meta.parentPid);
     this.#addCommit(
       {
         id,
-        branch: meta.conversationId ?? meta.pid ?? MAIN_BRANCH,
+        branch: parentConversation ?? meta.parentPid ?? MAIN_BRANCH,
         parents: this.#defaultParents(MAIN_BRANCH),
         icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
         level: isError ? LogLevel.ERROR : LogLevel.INFO,
