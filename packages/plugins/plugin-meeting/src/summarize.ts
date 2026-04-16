@@ -15,10 +15,11 @@ import {
   ToolResolverService,
 } from '@dxos/ai';
 import { type AiAssistantError, AiSession } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -61,6 +62,13 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       ToolExecutionService.layerEmpty,
       TracingService.layerNoop,
       Trace.writerLayerNoop,
+      Database.notAvailable,
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Not available.'),
+        schedule: () => Effect.die('Not available.'),
+        invokePromise: async () => ({ error: new Error('Not available.') }),
+      } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
     ),
   ),
 );

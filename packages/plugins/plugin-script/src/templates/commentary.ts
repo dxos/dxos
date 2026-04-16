@@ -19,7 +19,7 @@ import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -214,6 +214,13 @@ export default Commentary.pipe(
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
           Trace.writerLayerNoop,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
         ),
       ),
     ),

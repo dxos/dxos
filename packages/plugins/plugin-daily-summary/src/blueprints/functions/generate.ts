@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -110,6 +110,13 @@ export default GenerateSummary.pipe(
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
         ),
       ),
     ),
