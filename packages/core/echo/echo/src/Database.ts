@@ -308,6 +308,18 @@ export const runQueryFirst: {
   );
 
 /**
+ * Persists schemas in the database so they replicate to other clients.
+ * @see {@link SchemaRegistry.SchemaRegistry.register}
+ */
+export const registerSchema = (
+  input: SchemaRegistry.RegisterSchemaInput[],
+): Effect.Effect<Type.RuntimeType[], never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
+    Effect.withSpan('Database.registerSchema'),
+  );
+
+/**
  * Creates a schema query result that can be subscribed to.
  */
 // TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.

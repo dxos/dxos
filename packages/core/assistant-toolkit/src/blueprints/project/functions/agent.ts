@@ -17,46 +17,45 @@ import { AgentWorker } from './definitions';
 
 export default AgentWorker.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(
-      function* ({ agent: agentRef, prompt, event }) {
-        const agent = yield* Database.load(agentRef);
-        invariant(Obj.instanceOf(Agent.Agent, agent));
-        invariant(agent.chat, 'Agent has no chat.');
+    Effect.fnUntraced(function* ({ agent: agentRef, prompt, event }) {
+      const agent = yield* Database.load(agentRef);
+      invariant(Obj.instanceOf(Agent.Agent, agent));
+      invariant(agent.chat, 'Agent has no chat.');
 
-        const chatFeed = yield* agent.chat.pipe(
-          Database.load,
-          Effect.flatMap((chat) => Database.load(chat.feed)),
+      const chatFeed = yield* agent.chat.pipe(
+        Database.load,
+        Effect.flatMap((chat) => Database.load(chat.feed)),
+      );
+      invariant(chatFeed, 'Agent chat feed not found.');
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
+
+      const agentsInContext = conversation.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
+      if (agentsInContext.length !== 1) {
+        throw new Error('There should be exactly one agent in context. Got: ' + agentsInContext.length);
+      }
+
+      if (!prompt && !event) {
+        throw new Error('Either prompt or event must be provided.');
+      }
+
+      let input = '';
+      if (prompt) {
+        input += `${prompt}\n\n`;
+      }
+      if (event) {
+        input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
+      }
+
+      yield* conversation
+        .createRequest({
+          prompt: input,
+        })
+        .pipe(
+          Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices)),
+          Effect.retry({ times: 2 }),
         );
-        invariant(chatFeed, 'Agent chat feed not found.');
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
-
-        const agentsInContext = conversation.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
-        if (agentsInContext.length !== 1) {
-          throw new Error('There should be exactly one agent in context. Got: ' + agentsInContext.length);
-        }
-
-        if (!prompt && !event) {
-          throw new Error('Either prompt or event must be provided.');
-        }
-
-        let input = '';
-        if (prompt) {
-          input += `${prompt}\n\n`;
-        }
-        if (event) {
-          input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
-        }
-
-        yield* conversation
-          .createRequest({
-            prompt: input,
-          })
-          .pipe(Effect.retry({ times: 2 }));
-      },
-      Effect.scoped,
-      Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices)),
-    ),
+    }, Effect.scoped),
   ),
   Operation.opaqueHandler,
 );

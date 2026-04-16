@@ -47,6 +47,7 @@ export const Agent = Schema.Struct({
   /**
    * Incoming queue that the agent processes.
    */
+  // TODO(burdon): Rename to Feed?
   // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
   queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
 
@@ -60,11 +61,14 @@ export const Agent = Schema.Struct({
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 
-  // TODO(burdon): Rename. Explain what a "qualifying agent" is.
-  useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
-    title: 'Use qualifying agent',
-    description:
-      'The qualifying agent determines if the event is relevant to the agent. Related events will be added to the input queue of the agent. It is recommended to enable this.',
+  /**
+   * Allow the agent to filter events.
+   * Related events will be added to the input queue of the agent.
+   * It is recommended to enable this.
+   */
+  filterEvents: Schema.optional(Schema.Boolean).annotations({
+    title: 'Filter events',
+    description: 'Allow the agent to filter events.',
   }),
 }).pipe(
   Type.object({
@@ -104,7 +108,7 @@ export const makeInitialized = (
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
-      useQualifyingAgent: props.useQualifyingAgent ?? true,
+      filterEvents: props.filterEvents ?? true,
     });
     yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
