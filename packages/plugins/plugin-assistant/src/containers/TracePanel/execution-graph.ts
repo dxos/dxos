@@ -165,23 +165,6 @@ export const buildExecutionGraph = ({
               level: ICONS.userMessage.level,
               message: trimText(event.data.block.text),
             });
-          } else {
-            // Ignoring agent text.
-            // builder.addCommit({
-            //   id: event.id,
-            //   branch: event.meta.pid ?? MAIN_BRANCH,
-            //   parents: builder.computeParents([
-            //     {
-            //       branch: event.meta.pid ?? MAIN_BRANCH,
-            //       fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
-            //     },
-            //   ]),
-            //   tags: getTags(event.meta),
-            //   timestamp: new Date(event.timestamp),
-            //   icon: ICONS.assistantMessage.icon,
-            //   level: ICONS.assistantMessage.level,
-            //   message: trimText(event.data.block.text),
-            // });
           }
           break;
         }
@@ -222,23 +205,30 @@ export const buildExecutionGraph = ({
           break;
         }
         case 'toolResult': {
-          builder.addCommit({
-            id: `${event.data.block.toolCallId}:result`,
-            branch: event.meta.pid ?? MAIN_BRANCH,
-            parents: builder.computeParents([
-              {
-                branch: event.meta.pid ?? MAIN_BRANCH,
-                fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+          builder.addCommit(
+            {
+              id: `${event.data.block.toolCallId}:result`,
+              branch: event.meta.pid ?? MAIN_BRANCH,
+              parents: builder.computeParents([
+                {
+                  branch: event.meta.pid ?? MAIN_BRANCH,
+                  fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+                },
+              ]),
+              tags: getTags(event.meta),
+              timestamp: new Date(event.timestamp),
+              icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
+              level: event.data.block.error ? ICONS.toolResultError.level : ICONS.toolResultSuccess.level,
+              message: event.data.block.error
+                ? `${event.data.block.name} - Error: ${trimText(event.data.block.error)}`
+                : `${event.data.block.name} - Success`,
+            },
+            {
+              replace: {
+                id: [`${event.data.block.toolCallId}:call`],
               },
-            ]),
-            tags: getTags(event.meta),
-            timestamp: new Date(event.timestamp),
-            icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
-            level: event.data.block.error ? ICONS.toolResultError.level : ICONS.toolResultSuccess.level,
-            message: event.data.block.error
-              ? `${event.data.block.name} - Error: ${trimText(event.data.block.error)}`
-              : `${event.data.block.name} - Success`,
-          });
+            },
+          );
           break;
         }
       }

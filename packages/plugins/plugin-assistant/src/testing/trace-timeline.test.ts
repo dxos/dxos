@@ -75,23 +75,14 @@ describe('Trace timeline', () => {
             "
             ●     [atom] Agent processing request...
             ├──●  [user] Create an organization called "Cyberdyne Systems".
-            │  ●  [drone] Let me first check the available schemas to find the right type for an organization.
-            │  ●  [wrench] list-schemas
             │  ●  [check-circle] list-schemas - Success
-            │  ●  [drone] I found the \`org.dxos.type.organization\` schema. Let me create the organization now.
-            │  ●  [wrench] create-object
             │  ●  [check-circle] create-object - Success
-            │  ●  [wrench] add-to-context
             │  ●  [check-circle] add-to-context - Success
-            │  ●  [drone] I've created the **Cyberdyne Systems** organization and added it to the conversation context. It's b
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
-            │  ●  [wrench] create-object
             │  ●  [check-circle] create-object - Success
-            │  ●  [wrench] add-to-context
             │  ●  [check-circle] add-to-context - Success
-            │  ●  [drone] I've created **John Connor** as a person and added him to the conversation context. Would you like t
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -123,14 +114,9 @@ describe('Trace timeline', () => {
             "
             ●     [atom] Agent processing request...
             ├──●  [user] Search for all organizations. How many are there?
-            │  ●  [wrench] list-schemas
-            │  ●  [wrench] query
-            │  ●  [check-circle] query - Success
             │  ●  [check-circle] list-schemas - Success
-            │  ●  [drone] Now let me do a precise type-based query to make sure I get the full count:
-            │  ●  [wrench] query
             │  ●  [check-circle] query - Success
-            │  ●  [drone] There are **2 organizations** in the space:
+            │  ●  [check-circle] query - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -166,25 +152,17 @@ describe('Trace timeline', () => {
             "
             ●     [atom] Agent processing request...
             ├──●  [user] List all available schemas. Tell me what typenames are available.
-            │  ●  [wrench] list-schemas
             │  ●  [check-circle] list-schemas - Success
-            │  ●  [drone] Here are all the available schemas and their typenames:
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create an organization called "DXOS" and a person named "Alice".
-            │  ●  [wrench] create-object
-            │  ●  [wrench] create-object
             │  ●  [check-circle] create-object - Success
             │  ●  [check-circle] create-object - Success
-            │  ●  [drone] Done! I've created both:
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Search for all organizations and persons.
-            │  ●  [wrench] query
-            │  ●  [wrench] query
             │  ●  [check-circle] query - Success
             │  ●  [check-circle] query - Success
-            │  ●  [drone] Here are the results:
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -197,7 +175,7 @@ describe('Trace timeline', () => {
   });
 
   describe('Triggers', () => {
-    it.effect.only(
+    it.effect(
       'prompt trigger',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -240,16 +218,12 @@ describe('Trace timeline', () => {
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
             ●     [play] Agent
-            ├──●  [user] Research the given topic, or object.<input>{"name":"DXOS","id":"01JGFJJZ00G0WKQSJGMAKCNT8F"}</input>
-            │  ●  [wrench] AnthropicWebSearch
-            │  ●  [wrench] AnthropicWebSearch
+            ├──●  [user] Research the given topic, or object.<input>{"name":"DXOS","id":"01JGFJJZ00G0WKQSJGMAKCNTNS"}</input>
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [wrench] AnthropicWebSearch
-            │  ●  [wrench] AnthropicWebSearch
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [wrench] complete_job
+            │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] complete_job - Success
             ◆──╯  [check-circle] Agent
             "
