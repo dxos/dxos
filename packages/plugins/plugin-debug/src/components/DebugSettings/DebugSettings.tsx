@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -11,6 +11,7 @@ import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -117,6 +118,24 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
     [onSettingsChange],
   );
 
+  const traceAll = useMemo(
+    () => settings.traceAll ?? (typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true'),
+    [settings.traceAll],
+  );
+
+  const handleTraceAllChange = useCallback(
+    (checked: boolean) => {
+      const value = !!checked;
+      localStorage.setItem(TRACE_ALL_KEY, String(value));
+      onSettingsChange?.((s) => ({ ...s, traceAll: value }));
+    },
+    [onSettingsChange],
+  );
+
+  const handleOpenTracingPanel = useCallback(() => {
+    window.open('about:blank', '_blank');
+  }, []);
+
   const handleStorageAdapterChange = useCallback(
     (value: string) => {
       if (confirm(t('settings.storage-adapter.changed-alert.message'))) {
@@ -139,6 +158,20 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
             disabled={!onSettingsChange}
             checked={settings.wireframe}
             onCheckedChange={handleWireframeChange}
+          />
+        </SettingsForm.Item>
+        <SettingsForm.Item title={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
+          <Input.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+        </SettingsForm.Item>
+        <SettingsForm.Item
+          title={t('settings.tracing-panel.label')}
+          description={t('settings.tracing-panel.description')}
+        >
+          <IconButton
+            icon='ph--arrow-square-out--regular'
+            iconOnly
+            label={t('settings.tracing-panel.label')}
+            onClick={handleOpenTracingPanel}
           />
         </SettingsForm.Item>
         <SettingsForm.Item
