@@ -5,7 +5,7 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
@@ -24,7 +24,7 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
-import { type Mailbox } from '#types';
+import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -41,11 +41,10 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const settings = useAtomCapability(InboxCapabilities.Settings);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const db = Obj.getDatabase(mailbox);
-
-  // TODO(burdon): Review.
   const currentId = useSelected(id, 'single');
+  const db = Obj.getDatabase(mailbox);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
@@ -77,6 +76,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
+
+  const layout = useLayout();
+  const filterEditorRef = useRef<EditorController>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
@@ -122,13 +125,30 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     return () => clearTimeout(t);
   }, [sortedMessages]);
 
-  const layout = useLayout();
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
-
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
+        case 'current-thread': {
+          const message = sortedMessages.find((message) => message.id === action.messageId);
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: message?.id },
+          });
+
+          const companion = linkedSegment('message');
+          if (layout.mode === 'simple') {
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companion,
+              state: 'expanded',
+            });
+          } else if (message) {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
+          }
+          break;
+        }
+
         case 'current': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           void invokePromise(AttentionOperation.Select, {
@@ -201,25 +221,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             <Panel.Toolbar asChild>
               <Menu.Toolbar>
                 <QueryEditor
-                  ref={filterEditorRef}
                   classNames='grow min-w-0 ps-1'
                   db={db}
                   tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
+                  ref={filterEditorRef}
                 />
                 <IconButton
-                  ref={filterSaveButtonRef}
                   disabled={!filter}
-                  label={t('mailbox-toolbar-save-button.label')}
                   icon='ph--folder-plus--regular'
                   iconOnly
+                  label={t('mailbox-toolbar-save-button.label')}
                   onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                  ref={filterSaveButtonRef}
                 />
                 <IconButton
-                  label={t('mailbox-toolbar-clear-button.label')}
                   icon='ph--x--regular'
                   iconOnly
+                  label={t('mailbox-toolbar-clear-button.label')}
                   onClick={() => handleClear()}
                 />
               </Menu.Toolbar>
@@ -236,6 +256,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             messages={messagesWithTags}
             currentId={currentId}
             labels={mergedLabels}
+            threads={settings.threads}
             onAction={handleAction}
           />
         )}
