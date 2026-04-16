@@ -23,6 +23,7 @@ import {
   type AdmissionResponse,
   type SpaceAdmissionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { trace } from '@dxos/tracing';
 
 import { type InvitationProtocol } from './invitation-protocol';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
@@ -41,6 +42,7 @@ export type EdgeInvitationConfig = {
   retryJitter?: number;
 };
 
+@trace.resource()
 export class EdgeInvitationHandler implements FlowLockHolder {
   private _flowLock: MutexGuard | undefined;
 
@@ -113,6 +115,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     scheduleMicroTask(ctx, tryHandleInvitation);
   }
 
+  @trace.span({ op: 'invitation.edge' })
   private async _handleSpaceInvitationFlow(
     ctx: Context,
     guardedState: GuardedInvitationState,

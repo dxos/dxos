@@ -11,6 +11,32 @@ import type { RemoteSpan } from './tracing-types';
 
 const LIFECYCLE_SPAN = Symbol('dxos.tracing.lifecycle-span');
 
+/**
+ * Reads `@trace.info({ spanAttribute: true })` properties from the instance
+ * and writes them into the span attributes map.
+ */
+const collectSpanAttributes = (instance: any, spanAttributes: Record<string, any>) => {
+  const proto = Object.getPrototypeOf(instance);
+  if (!proto) {
+    return;
+  }
+  const tracingContext = getTracingContext(proto);
+  for (const [key, { options }] of Object.entries(tracingContext.infoProperties)) {
+    if (!options.spanAttribute) {
+      continue;
+    }
+    try {
+      const value = typeof instance[key] === 'function' ? instance[key]() : instance[key];
+      if (value != null) {
+        const resolved = options.enum ? options.enum[value] : String(value);
+        spanAttributes[`ctx.${key}`] = resolved;
+      }
+    } catch {
+      // Skip properties that throw (e.g. uninitialized).
+    }
+  }
+};
+
 export type ResourceOptions = {
   annotation?: symbol;
   /**
@@ -131,6 +157,9 @@ export type InfoOptions = {
    * Default: 0 - objects will be stringified with toString.
    */
   depth?: number | null;
+
+  /** When true, the property value is also set as an OTEL span attribute on every span created by this resource. */
+  spanAttribute?: boolean;
 };
 
 /**
@@ -177,6 +206,7 @@ const span =
       if (resourceEntry) {
         spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
       }
+      collectSpanAttributes(this, spanAttributes);
       if (attributes) {
         for (const [key, value] of Object.entries(attributes)) {
           spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
@@ -255,6 +285,7 @@ const spanStart = (params: ManualSpanParams) => {
   if (resourceEntry) {
     spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
   }
+  collectSpanAttributes(params.instance, spanAttributes);
   if (params.attributes) {
     for (const [key, value] of Object.entries(params.attributes)) {
       spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
