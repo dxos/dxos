@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test } from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/assistant';
@@ -50,7 +50,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
 
 describe('Trace timeline', () => {
   describe('Agent', () => {
-    test.effect(
+    it.effect(
       'create objects via AgentService',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -88,7 +88,7 @@ describe('Trace timeline', () => {
       { timeout: 120_000 },
     );
 
-    test.effect(
+    it.effect(
       'invoke prompt and query schema',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -120,7 +120,7 @@ describe('Trace timeline', () => {
       { timeout: 120_000 },
     );
 
-    test.effect(
+    it.effect(
       'sequential prompts in a session',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -166,7 +166,7 @@ describe('Trace timeline', () => {
   });
 
   describe('Triggers', () => {
-    test.effect(
+    it.effect(
       'prompt trigger',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -227,7 +227,7 @@ describe('Trace timeline', () => {
   });
 
   describe('Operations', () => {
-    test.effect(
+    it.effect(
       'operation',
       Effect.fnUntraced(
         function* ({ expect }) {
