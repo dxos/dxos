@@ -122,6 +122,10 @@ export const DemoNudge = Schema.Struct({
   resolved: Schema.optional(Schema.Boolean.pipe(FormInputAnnotation.set(false))),
   /** If the user said yes, the target list the card was moved to. */
   resolvedList: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+  /** One-sentence "why" the agent picked this card — surfaced in the nudge UI. */
+  reasoning: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
+  /** 'ai' | 'heuristic' — which scorer produced the reasoning. */
+  reasoningSource: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.demoNudge',

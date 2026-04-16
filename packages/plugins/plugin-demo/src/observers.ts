@@ -167,14 +167,15 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
   try {
     const payload: PrPayload = event.payload ? JSON.parse(event.payload) : {};
     const cards = (await db.query(Filter.type(Trello.TrelloCard)).run()).filter((card) => !card.closed);
-    const relevantCard = await chooseCardForPr(payload, cards);
-    if (!relevantCard) {
+    const choice = await chooseCardForPr(payload, cards);
+    if (!choice) {
       log.info('demo: pr-merged had no matching card', { keywords: payload.relatedKeywords });
       Obj.change(event, (mutable) => {
         mutable.handled = true;
       });
       return;
     }
+    const relevantCard = choice.card;
     const matches = await db.query(Filter.type(Demo.DemoMatch)).run();
     const linkedMatch = matches
       .filter((match) => match.card?.target?.id === relevantCard.id)
@@ -214,6 +215,12 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
     lines.push(
       `The card "${relevantCard.name}" is still in "${relevantCard.listName ?? 'your board'}" — want me to move it to Done?`,
     );
+    // Explainability — surface the agent's "why" so the recipient sees the
+    // reasoning behind the suggestion (focus-group ask: explainability over
+    // observability).
+    lines.push('');
+    const sourceLabel = choice.source === 'ai' ? 'why I matched it' : 'why I matched it (heuristic)';
+    lines.push(`> _${sourceLabel}:_ ${choice.reasoning}`);
 
     db.add(
       Obj.make(Demo.DemoNudge, {
@@ -223,6 +230,8 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
         card: Ref.make(relevantCard),
         emittedAt: new Date().toISOString(),
         posted: false,
+        reasoning: choice.reasoning,
+        reasoningSource: choice.source,
       }),
     );
     Obj.change(event, (mutable) => {
@@ -234,16 +243,23 @@ const handlePrMerged = async (db: Database.Database, event: Demo.DemoEvent): Pro
   }
 };
 
+type CardChoice = {
+  card: Trello.TrelloCard;
+  reasoning: string;
+  source: 'ai' | 'heuristic';
+  confidence?: string;
+};
+
 /**
  * Pick the single card most relevant to a merged PR. Uses @dxos/ai-match
  * (semantic, Claude) when an Anthropic key is available; falls back to a
- * whole-word keyword scorer otherwise. Returns undefined if no card is a
- * plausible match.
+ * whole-word keyword scorer otherwise. Returns the chosen card together
+ * with a one-sentence "why" so callers can surface it as an explanation.
  */
 const chooseCardForPr = async (
   payload: PrPayload,
   cards: readonly Trello.TrelloCard[],
-): Promise<Trello.TrelloCard | undefined> => {
+): Promise<CardChoice | undefined> => {
   if (cards.length === 0) {
     return undefined;
   }
@@ -271,7 +287,7 @@ const chooseCardForPr = async (
       const best = results.find((result) => result.confidence !== 'low');
       if (best) {
         log.info('demo: pr→card match via aiMatch', { card: best.target.name, confidence: best.confidence });
-        return best.target;
+        return { card: best.target, reasoning: best.reasoning, source: 'ai', confidence: best.confidence };
       }
     } catch (err) {
       log.info('demo: aiMatch failed, falling back to word scorer', { error: String(err) });
@@ -284,7 +300,7 @@ const chooseCardForPr = async (
 const chooseCardByWordScore = (
   payload: PrPayload,
   cards: readonly Trello.TrelloCard[],
-): Trello.TrelloCard | undefined => {
+): CardChoice | undefined => {
   const keywords = (payload.relatedKeywords ?? []).map((keyword) => keyword.toLowerCase());
   if (keywords.length === 0) {
     return undefined;
@@ -293,21 +309,32 @@ const chooseCardByWordScore = (
     .map((card) => {
       const name = (card.name ?? '').toLowerCase();
       const desc = (card.description ?? '').toLowerCase();
+      const matched: string[] = [];
       let score = 0;
       for (const keyword of keywords) {
         const rx = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
         if (rx.test(name)) {
           score += 2;
-        }
-        if (rx.test(desc)) {
+          matched.push(keyword);
+        } else if (rx.test(desc)) {
           score += 1;
+          matched.push(keyword);
         }
       }
-      return { card, score };
+      return { card, score, matched };
     })
     .filter((entry) => entry.score > 0)
     .sort((first, second) => second.score - first.score);
-  return scored[0]?.card;
+  const best = scored[0];
+  if (!best) {
+    return undefined;
+  }
+  const matchedList = best.matched.length > 0 ? best.matched.join(', ') : 'related keywords';
+  return {
+    card: best.card,
+    reasoning: `PR keywords (${matchedList}) appear in card "${best.card.name}".`,
+    source: 'heuristic',
+  };
 };
 
 // -- 3. Slack poster -----------------------------------------------------------
