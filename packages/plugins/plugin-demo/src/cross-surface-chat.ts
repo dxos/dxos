@@ -62,11 +62,16 @@ export const startCrossSurfaceChat = (db: Database.Database, space: SpaceLike): 
 };
 
 const tick = async (db: Database.Database, space: SpaceLike): Promise<void> => {
-  const config = readConfig();
-  if (!config) {
+  const raw = readConfig();
+  if (!raw) {
     return;
   }
   try {
+    const channels = await resolveChannelNames(raw.botToken, raw.rawChannels);
+    if (channels.length === 0) {
+      return;
+    }
+    const config: ChatLinkConfig = { botToken: raw.botToken, channels };
     await mirrorSlackToComposer(db, space, config);
     await mirrorComposerToSlack(db, space, config);
   } catch (err) {
@@ -74,7 +79,36 @@ const tick = async (db: Database.Database, space: SpaceLike): Promise<void> => {
   }
 };
 
-const readConfig = (): ChatLinkConfig | undefined => {
+const looksLikeId = (value: string): boolean => /^[CDG][A-Z0-9]+$/.test(value);
+const resolvedNameCache: Record<string, string> = {};
+
+const resolveChannelNames = async (token: string, entries: string[]): Promise<string[]> => {
+  const unresolved = entries.filter((entry) => !looksLikeId(entry) && !resolvedNameCache[entry]);
+  if (unresolved.length > 0) {
+    try {
+      const body = new URLSearchParams({
+        token,
+        exclude_archived: 'true',
+        limit: '1000',
+        types: 'public_channel,private_channel',
+      });
+      const response = await fetch(`${SLACK_API}/conversations.list`, { method: 'POST', body });
+      const data = (await response.json()) as { ok: boolean; channels?: { id: string; name: string }[] };
+      if (data.ok) {
+        for (const channel of data.channels ?? []) {
+          resolvedNameCache[channel.name] = channel.id;
+        }
+      }
+    } catch {
+      // leave cache empty
+    }
+  }
+  return entries
+    .map((entry) => (looksLikeId(entry) ? entry : resolvedNameCache[entry]))
+    .filter((entry): entry is string => !!entry);
+};
+
+const readConfig = (): { botToken: string; rawChannels: string[] } | undefined => {
   if (typeof globalThis.localStorage === 'undefined') {
     return undefined;
   }
@@ -85,18 +119,20 @@ const readConfig = (): ChatLinkConfig | undefined => {
   if (!botToken) {
     return undefined;
   }
-  // Comma-separated. Names allowed — plugin-slack will resolve to IDs the
-  // first time it queries conversations.list, but for the mirror we want IDs
-  // to keep things simple. Filter to id-shaped entries.
-  const raw = globalThis.localStorage.getItem('DEMO_CHAT_CHANNELS') ?? '';
-  const channels = raw
+  // Fall back to SLACK_CHANNELS if DEMO_CHAT_CHANNELS not set.
+  const raw =
+    globalThis.localStorage.getItem('DEMO_CHAT_CHANNELS') ??
+    globalThis.localStorage.getItem('SLACK_NUDGE_CHANNEL') ??
+    globalThis.localStorage.getItem('SLACK_CHANNELS')?.split(',')[0]?.trim() ??
+    '';
+  const rawChannels = raw
     .split(',')
     .map((entry) => entry.trim())
-    .filter((entry) => /^[CDG][A-Z0-9]+$/.test(entry));
-  if (channels.length === 0) {
+    .filter(Boolean);
+  if (rawChannels.length === 0) {
     return undefined;
   }
-  return { botToken, channels };
+  return { botToken, rawChannels };
 };
 
 // -- Slack → Composer ---------------------------------------------------------
