@@ -7,6 +7,7 @@ import { log } from '@dxos/log';
 import { Granola } from '@dxos/plugin-granola/types';
 import { Trello } from '@dxos/plugin-trello/types';
 
+import { Demo } from '../../types';
 import { addToDemoCollection, ensureDemoCollection } from './collection';
 import { seedSoftwareTeamFixture } from './seed-fixture';
 
@@ -65,6 +66,23 @@ export const bootstrapFromEnv = async (db: Database.Database): Promise<Bootstrap
   // Ensure the demo collection exists up-front so everything subsequent
   // lands in it and shows up in the Composer sidebar.
   await ensureDemoCollection(db);
+
+  // Ensure a DemoController exists so the audience has a 'Demo Controls'
+  // article in the sidebar. Without this the Morning Briefing / weekly
+  // update / wrong-card correction buttons never render because their
+  // surface is only activated on an open DemoController.
+  try {
+    const existingControllers = await db.query(Filter.type(Demo.DemoController)).run();
+    if (existingControllers.length === 0) {
+      const controller = db.add(Demo.makeController({ name: 'Demo Controls' }));
+      await addToDemoCollection(db, controller);
+      result.created.push('Demo Controls');
+    } else {
+      result.skipped.push('Demo Controls (already present)');
+    }
+  } catch (err) {
+    result.errors.push(`demo controller: ${String(err)}`);
+  }
 
   // Always seed the sample board first so match targets exist.
   try {
