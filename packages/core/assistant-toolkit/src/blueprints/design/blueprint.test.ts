@@ -7,12 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiConversation, AiConversationService, GenerationObserver } from '@dxos/assistant';
+import { AiConversationService, GenerationObserver } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
-import { Database, Feed } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
