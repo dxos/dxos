@@ -99,4 +99,3 @@ const useActiveProcesses = (id?: SpaceId) => {
   const runtime = useComputeRuntimeService(Process.ProcessMonitorService, id);
   return useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
 };
-

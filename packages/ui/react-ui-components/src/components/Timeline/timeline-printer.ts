@@ -30,14 +30,10 @@ export const renderTimelineAscii = (commits: Commit[], branches: string[]): stri
 
   const active = computeActiveColumns(commits, lanes, laneById);
 
-  const graphParts = commits.map((commit, row) =>
-    renderRow(commit, lanes[row]!, maxLane, active[row]!, laneById),
-  );
+  const graphParts = commits.map((commit, row) => renderRow(commit, lanes[row]!, maxLane, active[row]!, laneById));
 
   const maxGraphWidth = Math.max(...graphParts.map((part) => part.length));
-  return commits
-    .map((commit, row) => `${graphParts[row]!.padEnd(maxGraphWidth)}  ${formatLabel(commit)}`)
-    .join('\n');
+  return commits.map((commit, row) => `${graphParts[row]!.padEnd(maxGraphWidth)}  ${formatLabel(commit)}`).join('\n');
 };
 
 const renderRow = (
@@ -145,11 +141,7 @@ const isForkCommit = (commit: Commit, laneById: Map<string, number>, lane: numbe
  * merge rows referencing parents on that lane) AND the row's own commit
  * is not on that column.
  */
-const computeActiveColumns = (
-  commits: Commit[],
-  lanes: number[],
-  laneById: Map<string, number>,
-): boolean[][] => {
+const computeActiveColumns = (commits: Commit[], lanes: number[], laneById: Map<string, number>): boolean[][] => {
   const rows = commits.length;
   const cols = Math.max(...lanes, 0) + 1;
   const rowIndicesByCol: number[][] = Array.from({ length: cols }, () => []);
