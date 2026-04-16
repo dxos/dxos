@@ -14,6 +14,83 @@ import { type Commit } from '@dxos/react-ui-components';
  */
 const MAIN_BRANCH = 'main';
 
+const ICONS = {
+  agentRequestBegin: {
+    icon: 'ph--atom--regular',
+    level: LogLevel.INFO,
+  },
+  agentRequestEnd: {
+    icon: 'ph--check-circle--regular',
+    level: LogLevel.INFO,
+  },
+  userMessage: {
+    icon: 'ph--user--regular',
+    level: LogLevel.VERBOSE,
+  },
+  assistantMessage: {
+    icon: 'ph--drone--regular',
+    level: LogLevel.VERBOSE,
+  },
+  statusMessage: {
+    icon: 'ph--dot-outline--regular',
+    level: LogLevel.INFO,
+  },
+  toolCall: {
+    icon: 'ph--wrench--regular',
+    level: LogLevel.INFO,
+  },
+  toolResult: {
+    icon: 'ph--check-circle--regular',
+    level: LogLevel.INFO,
+  },
+  toolResultError: {
+    icon: 'ph--x-circle--regular',
+    level: LogLevel.ERROR,
+  },
+  toolResultSuccess: {
+    icon: 'ph--check-circle--regular',
+    level: LogLevel.INFO,
+  },
+  runningAgent: {
+    icon: 'ph--spinner-gap--regular',
+    level: LogLevel.INFO,
+  },
+  operationStart: {
+    icon: 'ph--play--regular',
+    level: LogLevel.INFO,
+  },
+  operationEnd: {
+    icon: 'ph--check-circle--regular',
+    level: LogLevel.INFO,
+  },
+  operationEndError: {
+    icon: 'ph--x-circle--regular',
+    level: LogLevel.ERROR,
+  },
+  operationEndSuccess: {
+    icon: 'ph--check-circle--regular',
+    level: LogLevel.INFO,
+  },
+} as const;
+
+const tagPid = (pid: string) => `pid:${pid}`;
+const tagParentPid = (parentPid: string) => `parent-pid:${parentPid}`;
+const tagConversation = (conversationId: string) => `conversation:${conversationId}`;
+
+const getTags = (meta: Trace.Meta) => {
+  const tags: string[] = [];
+  if (meta.pid) {
+    tags.push(tagPid(meta.pid));
+  }
+  if (meta.parentPid) {
+    tags.push(tagParentPid(meta.parentPid));
+  }
+  if (meta.conversationId) {
+    tags.push(tagConversation(meta.conversationId));
+  }
+  return tags;
+};
+
 export interface BuildExecutionGraphParams {
   traceMessages: Trace.Message[];
   activeProcesses?: readonly Process.Info[];
@@ -45,83 +122,160 @@ export const buildExecutionGraph = ({
 
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
-      builder.addAgentRequestBegin(event.id, event.meta, event.timestamp);
+      builder.addCommit({
+        id: event.id,
+        branch: event.meta.parentPid ?? MAIN_BRANCH,
+        parents: builder.computeParents([{ branch: event.meta.parentPid ?? MAIN_BRANCH }]),
+        tags: getTags(event.meta),
+        timestamp: new Date(event.timestamp),
+        icon: ICONS.agentRequestBegin.icon,
+        level: ICONS.agentRequestBegin.level,
+        message: 'Agent processing request...',
+      });
     } else if (Trace.isOfType(AgentRequestEnd, event)) {
-      builder.addAgentRequestEnd(event.id, event.meta, event.timestamp);
+      builder.addCommit({
+        id: event.id,
+        branch: event.meta.parentPid ?? MAIN_BRANCH,
+        parents: builder.computeParents([
+          { branch: event.meta.parentPid ?? MAIN_BRANCH },
+          { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
+        ]),
+        tags: getTags(event.meta),
+        timestamp: new Date(event.timestamp),
+        icon: ICONS.agentRequestEnd.icon,
+        level: ICONS.agentRequestEnd.level,
+        message: 'Agent completed request',
+      });
     } else if (Trace.isOfType(CompleteBlock, event)) {
       switch (event.data.block._tag) {
         case 'text': {
           if (event.data.role === 'user') {
-            builder.addUserMessage(
-              event.id,
-              event.meta.conversationId ?? 'unknown_conversation',
-              event.meta.pid ?? crypto.randomUUID(),
-              event.data.block.text,
-              event.timestamp,
-            );
+            builder.addCommit({
+              id: event.id,
+              branch: event.meta.pid ?? MAIN_BRANCH,
+              parents: builder.computeParents([
+                {
+                  branch: event.meta.pid ?? MAIN_BRANCH,
+                  fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+                },
+              ]),
+              tags: getTags(event.meta),
+              timestamp: new Date(event.timestamp),
+              icon: ICONS.userMessage.icon,
+              level: ICONS.userMessage.level,
+              message: trimText(event.data.block.text),
+            });
           } else {
-            builder.addAssistantMessage(
-              event.id,
-              event.meta.conversationId ?? 'unknown_conversation',
-              event.meta.pid ?? crypto.randomUUID(),
-              event.data.block.text,
-              event.timestamp,
-            );
+            builder.addCommit({
+              id: event.id,
+              branch: event.meta.pid ?? MAIN_BRANCH,
+              parents: builder.computeParents([
+                {
+                  branch: event.meta.pid ?? MAIN_BRANCH,
+                  fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+                },
+              ]),
+              tags: getTags(event.meta),
+              timestamp: new Date(event.timestamp),
+              icon: ICONS.assistantMessage.icon,
+              level: ICONS.assistantMessage.level,
+              message: trimText(event.data.block.text),
+            });
           }
           break;
         }
         case 'status': {
-          builder.addStatusMessage(
-            event.id,
-            event.meta.conversationId ?? 'unknown_conversation',
-            event.meta.pid ?? crypto.randomUUID(),
-            event.data.block.statusText,
-            event.timestamp,
-          );
+          builder.addCommit({
+            id: event.id,
+            branch: event.meta.pid ?? MAIN_BRANCH,
+            parents: builder.computeParents([
+              {
+                branch: event.meta.pid ?? MAIN_BRANCH,
+                fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+              },
+            ]),
+            tags: getTags(event.meta),
+            timestamp: new Date(event.timestamp),
+            icon: ICONS.statusMessage.icon,
+            level: ICONS.statusMessage.level,
+            message: trimText(event.data.block.statusText),
+          });
           break;
         }
         case 'toolCall': {
-          builder.addToolCall(
-            `${event.data.block.toolCallId}:call`,
-            event.meta.conversationId ?? 'unknown_conversation',
-            event.meta.pid ?? crypto.randomUUID(),
-            event.data.block.name,
-            event.data.block.toolCallId,
-            event.timestamp,
-          );
+          builder.addCommit({
+            id: `${event.data.block.toolCallId}:call`,
+            branch: event.meta.pid ?? MAIN_BRANCH,
+            parents: builder.computeParents([
+              {
+                branch: event.meta.pid ?? MAIN_BRANCH,
+                fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+              },
+            ]),
+            tags: getTags(event.meta),
+            timestamp: new Date(event.timestamp),
+            icon: ICONS.toolCall.icon,
+            level: ICONS.toolCall.level,
+            message: event.data.block.name,
+          });
           break;
         }
         case 'toolResult': {
-          builder.addToolResult(
-            `${event.data.block.toolCallId}:result`,
-            event.meta.conversationId ?? 'unknown_conversation',
-            event.data.block.name,
-            event.data.block.error,
-            event.data.block.toolCallId,
-            event.timestamp,
-          );
+          builder.addCommit({
+            id: `${event.data.block.toolCallId}:result`,
+            branch: event.meta.pid ?? MAIN_BRANCH,
+            parents: builder.computeParents([
+              {
+                branch: event.meta.pid ?? MAIN_BRANCH,
+                fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
+              },
+            ]),
+            tags: getTags(event.meta),
+            timestamp: new Date(event.timestamp),
+            icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
+            level: event.data.block.error ? ICONS.toolResultError.level : ICONS.toolResultSuccess.level,
+            message: event.data.block.error
+              ? `${event.data.block.name} - Error: ${trimText(event.data.block.error)}`
+              : `${event.data.block.name} - Success`,
+          });
           break;
         }
       }
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
       if (!event.meta.conversationId) {
-        builder.addOperationStart(
-          `${event.id}:${event.data.key}:start`,
-          event.data.name ?? event.data.key,
-          event.meta,
-          event.timestamp,
-        );
+        builder.addCommit({
+          id: `${event.id}:${event.data.key}:start`,
+          branch: event.meta.parentPid ?? MAIN_BRANCH,
+          parents: builder.computeParents([
+            {
+              branch: event.meta.parentPid ?? MAIN_BRANCH,
+              fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
+            },
+          ]),
+          tags: getTags(event.meta),
+          timestamp: new Date(event.timestamp),
+          icon: ICONS.operationStart.icon,
+          level: ICONS.operationStart.level,
+          message: event.data.name ?? event.data.key,
+        });
       }
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
       if (!event.meta.conversationId) {
-        builder.addOperationEnd(
-          `${event.id}:${event.data.key}:end`,
-          event.data.name ?? event.data.key,
-          event.data.outcome as 'success' | 'failure',
-          event.data.error,
-          event.meta,
-          event.timestamp,
-        );
+        builder.addCommit({
+          id: `${event.id}:${event.data.key}:end`,
+          branch: event.meta.parentPid ?? MAIN_BRANCH,
+          parents: builder.computeParents([
+            {
+              branch: event.meta.parentPid ?? MAIN_BRANCH,
+              fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
+            },
+          ]),
+          tags: getTags(event.meta),
+          timestamp: new Date(event.timestamp),
+          icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
+          level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
+          message: event.data.name ?? event.data.key,
+        });
       }
     }
   }
@@ -132,55 +286,120 @@ export const buildExecutionGraph = ({
       process.params.target &&
       (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
     ) {
-      const conversationId = DXN.parse(process.params.target).asEchoDXN()?.echoId;
-      if (conversationId) {
-        builder.addRunningAgent(process.pid, conversationId, Date.now());
-      }
+      builder.addCommit({
+        id: `running:${process.pid}`,
+        branch: process.pid,
+        parents: builder.computeParents([{ branch: process.pid }]),
+        icon: 'ph--spinner-gap--regular',
+        level: LogLevel.INFO,
+        message: 'Generating...',
+        timestamp: new Date(),
+      });
     }
   }
 
   return dbg(builder.build());
 };
 
+type Falsy = false | null | undefined;
+type MaybeFalsy<T> = T | Falsy;
+
+type CommitSelector = { id?: MaybeFalsy<string>[]; tags?: MaybeFalsy<string>[] };
+
 class GraphBuilder {
   #commits: Commit[] = [];
   #branches = new Set<string>();
-  #lastCommitByBranch = new Map<string, string>();
-  #operationPidToStartCommitId = new Map<string, string>();
-  #toolCallIdToStartCommitId = new Map<string, string>();
-  #conversationIdToAgentBeginCommitId = new Map<string, string>();
-  #conversationIdToAgentEndCommitId = new Map<string, string>();
-  #agentPidToConversationId = new Map<string, string>();
 
-  #addCommit(commit: Commit, opts?: { replaceCommit?: string }) {
+  findCommits(selector: CommitSelector) {
+    return this.#commits.filter((commit) => {
+      if (selector.id && selector.id.includes(commit.id)) {
+        return true;
+      }
+      if (selector.tags && selector.tags.some((tag) => tag && commit.tags?.includes(tag))) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  addCommit(
+    commit: Commit,
+    opts?: {
+      ifMissing?: CommitSelector;
+      /**
+       * Replace in-place the last commit that matches the selector.
+       */
+      replace?: CommitSelector;
+    },
+  ) {
+    if (opts?.ifMissing) {
+      const commits = this.findCommits(opts.ifMissing);
+      if (commits.length > 0) {
+        return;
+      }
+    }
     this.addBranch(commit.branch);
-    if (opts?.replaceCommit) {
-      const commitIdx = this.#commits.findIndex((commit) => commit.id === opts.replaceCommit);
-      if (commitIdx !== -1) {
-        this.#commits[commitIdx] = commit;
+    if (opts?.replace) {
+      const commits = this.findCommits(opts.replace);
+      if (commits.length > 0) {
+        this.#commits[this.#commits.indexOf(commits.at(-1)!)] = commit;
         return;
       }
     }
     this.#commits.push(commit);
-    this.#lastCommitByBranch.set(commit.branch, commit.id);
   }
 
-  #removeCommit(id: string) {
-    const commitIdx = this.#commits.findIndex((commit) => commit.id === id);
-    if (commitIdx !== -1) {
-      this.#commits.splice(commitIdx, 1);
+  removeCommit(selector: CommitSelector) {
+    const commits = this.findCommits(selector);
+    for (const commit of commits) {
+      this.#commits.splice(this.#commits.indexOf(commit), 1);
     }
   }
 
   /**
-   * @param parentForFirstOnBranch - The parent commit ID for the first commit on the branch.
+   * Computes parents based on a list of specs.
    */
-  #defaultParents(branch: string, opts?: { parentForFirstOnBranch?: string }) {
-    return this.#lastCommitByBranch.get(branch)
-      ? [this.#lastCommitByBranch.get(branch)!]
-      : opts?.parentForFirstOnBranch
-        ? [opts.parentForFirstOnBranch]
-        : [];
+  computeParents(
+    specs: (
+      | {
+          /**
+           * Parent commits selector.
+           */
+          commit?: CommitSelector;
+        }
+      | {
+          /**
+           * Last commit on this branch as parent.
+           */
+          branch?: string;
+
+          /**
+           * Fallback if branch has no commits.
+           */
+          fallback?: CommitSelector;
+        }
+    )[],
+  ): string[] {
+    return specs.flatMap((spec) => {
+      if ('commit' in spec && spec.commit) {
+        return this.findCommits(spec.commit)
+          .slice(-1)
+          .map((commit) => commit.id);
+      }
+      if ('branch' in spec && spec.branch) {
+        const lastCommit = this.#commits.findLast((commit) => commit.branch === spec.branch);
+        if (lastCommit) {
+          return [lastCommit.id];
+        } else if (spec.fallback) {
+          return this.findCommits(spec.fallback)
+            .slice(-1)
+            .map((commit) => commit.id);
+        } else {
+          return [];
+        }
+      }
+      return [];
+    });
   }
 
   addBranch(branch: string) {
@@ -192,205 +411,6 @@ class GraphBuilder {
       commits: this.#commits,
       branches: [...this.#branches],
     };
-  }
-
-  addAgentRequestBegin(id: string, meta: Trace.Meta, ts: number) {
-    if (meta.pid) {
-      this.#operationPidToStartCommitId.set(meta.pid, id);
-    }
-    if (meta.conversationId && meta.pid) {
-      this.#agentPidToConversationId.set(meta.pid, meta.conversationId);
-    }
-    if (meta.conversationId) {
-      if (this.#conversationIdToAgentBeginCommitId.has(meta.conversationId)) {
-        return; // Only one visible begin commit per agent.
-      }
-      this.#conversationIdToAgentBeginCommitId.set(meta.conversationId, id);
-    }
-    this.#addCommit({
-      id,
-      branch: meta.parentPid ?? MAIN_BRANCH,
-      parents: this.#defaultParents(MAIN_BRANCH),
-      icon: 'ph--atom--regular',
-      level: LogLevel.INFO,
-      message: 'Agent processing request...',
-      timestamp: new Date(ts),
-    });
-  }
-
-  addAgentRequestEnd(id: string, meta: Trace.Meta, ts: number) {
-    if (meta.pid) {
-      this.#operationPidToStartCommitId.delete(meta.pid);
-    }
-    if (meta.conversationId) {
-      if (this.#conversationIdToAgentEndCommitId.has(meta.conversationId)) {
-        this.#removeCommit(this.#conversationIdToAgentEndCommitId.get(meta.conversationId)!);
-        this.#conversationIdToAgentEndCommitId.delete(meta.conversationId);
-      }
-      this.#conversationIdToAgentEndCommitId.set(meta.conversationId, id);
-    }
-    this.#addCommit({
-      id,
-      branch: meta.parentPid ?? MAIN_BRANCH,
-      parents: [
-        ...this.#defaultParents(MAIN_BRANCH),
-        ...this.#defaultParents(meta.conversationId ?? crypto.randomUUID()),
-      ],
-      icon: 'ph--check-circle--regular',
-      level: LogLevel.INFO,
-      message: 'Agent completed request',
-      timestamp: new Date(ts),
-    });
-  }
-
-  addUserMessage(id: string, conversationId: string, pid: string, text: string, ts: number) {
-    if (conversationId && pid) {
-      this.#agentPidToConversationId.set(pid, conversationId);
-    }
-    this.#addCommit({
-      id,
-      branch: conversationId,
-      parents: this.#defaultParents(conversationId, {
-        parentForFirstOnBranch: this.#operationPidToStartCommitId.get(pid) ?? 'main',
-      }),
-      icon: 'ph--paper-plane-right--regular',
-      level: LogLevel.VERBOSE,
-      message: trimText(text),
-      timestamp: new Date(ts),
-    });
-  }
-
-  addAssistantMessage(id: string, conversationId: string, pid: string, text: string, ts: number) {
-    this.#addCommit({
-      id,
-      branch: conversationId,
-      parents: this.#defaultParents(conversationId, {
-        parentForFirstOnBranch: this.#operationPidToStartCommitId.get(pid),
-      }),
-      icon: 'ph--drone--regular',
-      level: LogLevel.VERBOSE,
-      message: trimText(text),
-      timestamp: new Date(ts),
-    });
-  }
-
-  addStatusMessage(id: string, conversationId: string, pid: string, status: string, ts: number) {
-    this.#addCommit({
-      id,
-      branch: conversationId,
-      parents: this.#defaultParents(conversationId, {
-        parentForFirstOnBranch: this.#operationPidToStartCommitId.get(pid),
-      }),
-      icon: 'ph--dot-outline--regular',
-      level: LogLevel.INFO,
-      message: trimText(status),
-      timestamp: new Date(ts),
-    });
-  }
-
-  addToolCall(id: string, conversationId: string, pid: string, toolName: string, toolCallId: string, ts: number) {
-    this.#toolCallIdToStartCommitId.set(toolCallId, id);
-    this.#addCommit({
-      id,
-      branch: conversationId,
-      parents: this.#defaultParents(conversationId, {
-        parentForFirstOnBranch: this.#operationPidToStartCommitId.get(pid),
-      }),
-      icon: 'ph--wrench--regular',
-      level: LogLevel.INFO,
-      message: toolName,
-      timestamp: new Date(ts),
-    });
-  }
-
-  addToolResult(
-    id: string,
-    conversationId: string,
-    toolName: string,
-    error: string | undefined,
-    toolCallId: string,
-    ts: number,
-  ) {
-    const startCommitId = toolCallId && this.#toolCallIdToStartCommitId.get(toolCallId);
-    const hasChildren = this.#commits.some((commit) => commit.parents?.includes(startCommitId!));
-    this.#addCommit(
-      {
-        id,
-        branch: conversationId,
-        parents: this.#defaultParents(conversationId, {
-          parentForFirstOnBranch: startCommitId,
-        }),
-        icon: error ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
-        level: error ? LogLevel.ERROR : LogLevel.INFO,
-        message: error ? `${toolName} - Error: ${trimText(error)}` : `${toolName} - Success`,
-        timestamp: new Date(ts),
-      },
-      { replaceCommit: hasChildren ? undefined : startCommitId },
-    );
-  }
-
-  addRunningAgent(pid: string, conversationId: string, ts: number) {
-    if (this.#conversationIdToAgentEndCommitId.has(conversationId)) {
-      this.#removeCommit(this.#conversationIdToAgentEndCommitId.get(conversationId)!);
-    }
-    this.#addCommit({
-      id: `agent-running:${pid}`,
-      branch: conversationId,
-      parents: this.#defaultParents(conversationId),
-      icon: 'ph--spinner-gap--regular',
-      level: LogLevel.INFO,
-      message: 'Generating...',
-      timestamp: new Date(ts),
-    });
-  }
-
-  addOperationStart(id: string, operationName: string, meta: Trace.Meta, ts: number) {
-    log.info('addOperationStart', { id, operationName, meta, ts });
-    if (meta.pid) {
-      this.#operationPidToStartCommitId.set(meta.pid, id);
-    }
-    const parentConversation = meta.parentPid && this.#agentPidToConversationId.get(meta.parentPid);
-    this.#addCommit({
-      id,
-      branch: parentConversation ?? meta.parentPid ?? MAIN_BRANCH,
-      parents: this.#defaultParents(MAIN_BRANCH),
-      icon: 'ph--play--regular',
-      level: LogLevel.INFO,
-      message: operationName,
-      timestamp: new Date(ts),
-    });
-  }
-
-  addOperationEnd(
-    id: string,
-    operationName: string,
-    outcome: 'success' | 'failure',
-    error: string | undefined,
-    meta: Trace.Meta,
-    ts: number,
-  ) {
-    log.info('addOperationEnd', { id, operationName, outcome, error, meta, ts });
-    const isError = outcome === 'failure';
-    const startCommitId = meta.pid && this.#operationPidToStartCommitId.get(meta.pid);
-    const hasChildren = this.#commits.some((commit) => commit.parents?.includes(startCommitId!));
-    const parentConversation = meta.parentPid && this.#agentPidToConversationId.get(meta.parentPid);
-    this.#addCommit(
-      {
-        id,
-        branch: parentConversation ?? meta.parentPid ?? MAIN_BRANCH,
-        parents: [
-          ...this.#defaultParents(MAIN_BRANCH),
-          ...this.#defaultParents(parentConversation ?? crypto.randomUUID()),
-        ],
-        icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
-        level: isError ? LogLevel.ERROR : LogLevel.INFO,
-        message: isError ? `${operationName}: ${error ?? 'Failed'}` : operationName,
-        timestamp: new Date(ts),
-      },
-      {
-        replaceCommit: hasChildren ? undefined : meta.pid && this.#operationPidToStartCommitId.get(meta.pid),
-      },
-    );
   }
 }
 
