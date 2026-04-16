@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/assistant';
@@ -50,7 +50,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
 
 describe('Trace timeline', () => {
   describe('Agent', () => {
-    it.effect(
+    test.effect(
       'create objects via AgentService',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -74,12 +74,10 @@ describe('Trace timeline', () => {
             ├──●  [user] Create an organization called "Cyberdyne Systems".
             │  ●  [check-circle] list-schemas - Success
             │  ●  [check-circle] create-object - Success
-            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
             │  ●  [check-circle] create-object - Success
-            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -90,7 +88,7 @@ describe('Trace timeline', () => {
       { timeout: 120_000 },
     );
 
-    it.effect(
+    test.effect(
       'invoke prompt and query schema',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -122,7 +120,7 @@ describe('Trace timeline', () => {
       { timeout: 120_000 },
     );
 
-    it.effect(
+    test.effect(
       'sequential prompts in a session',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -168,7 +166,7 @@ describe('Trace timeline', () => {
   });
 
   describe('Triggers', () => {
-    it.effect(
+    test.effect(
       'prompt trigger',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -211,8 +209,7 @@ describe('Trace timeline', () => {
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
             ●     [play] Agent
-            ├──●  [user] Research the given topic, or object.<input>{"name":"DXOS","id":"01JGFJJZ00G0WKQSJGMAKCNTNS"}</input>
-            │  ●  [check-circle] AnthropicWebSearch - Success
+            ├──●  [user] Research the given topic, or object.
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
@@ -230,7 +227,7 @@ describe('Trace timeline', () => {
   });
 
   describe('Operations', () => {
-    it.effect(
+    test.effect(
       'operation',
       Effect.fnUntraced(
         function* ({ expect }) {

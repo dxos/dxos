@@ -71,8 +71,8 @@ export default AgentPrompt.pipe(
         const promptInstructions = yield* Database.load(prompt.instructions.source);
         let promptText = Template.process(promptInstructions.content, input);
 
-        if (input) {
-          promptText += `<input>${JSON.stringify(input)}</input>\n${promptText}`;
+        if (input !== undefined) {
+          promptText += `\n<input>${JSON.stringify(input)}</input>`;
         }
 
         let systemText = trim`

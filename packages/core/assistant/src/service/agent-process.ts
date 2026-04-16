@@ -114,14 +114,15 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('begin request', { prompt });
               yield* Trace.write(AgentRequestBegin, {});
-              yield* conversation.createRequest({
-                prompt,
-                // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
-                // toolkit: AsynchronousExectionToolkit,
-                system: options.systemPrompt,
-              });
+              yield* conversation
+                .createRequest({
+                  prompt,
+                  // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
+                  // toolkit: AsynchronousExectionToolkit,
+                  system: options.systemPrompt,
+                })
+                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
               log('end request');
-              yield* Trace.write(AgentRequestEnd, {});
               yield* AgentEventsKey.set(inputQueue);
               if (inputQueue.length > 0) {
                 ctx.setAlarm();
