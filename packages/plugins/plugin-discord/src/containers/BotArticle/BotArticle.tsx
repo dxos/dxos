@@ -29,25 +29,6 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
     }
   }, [bot.inviteUrl]);
 
-  const handleSetApplicationId = useCallback(
-    (value: string) => {
-      Obj.change(bot, (bot) => {
-        bot.applicationId = value;
-        if (value) {
-          const params = new URLSearchParams({
-            client_id: value,
-            scope: 'bot applications.commands',
-            permissions: '3072',
-          });
-          bot.inviteUrl = `https://discord.com/oauth2/authorize?${params.toString()}`;
-        } else {
-          bot.inviteUrl = undefined;
-        }
-      });
-    },
-    [bot],
-  );
-
   const handleSetToken = useCallback(
     (value: string) => {
       Obj.change(bot, (bot) => {
@@ -80,18 +61,6 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
       </Panel.Toolbar>
       <Panel.Content>
         <div className='flex flex-col gap-4 p-4'>
-          {/* Application ID. */}
-          <div className='flex flex-col gap-1'>
-            <label className='text-xs text-neutral-500'>{t('application-id.label')}</label>
-            <input
-              type='text'
-              className='border rounded px-2 py-1 text-sm bg-transparent'
-              value={bot.applicationId ?? ''}
-              onChange={(event) => handleSetApplicationId(event.target.value)}
-              placeholder='Discord Application ID'
-            />
-          </div>
-
           {/* Bot Token. */}
           <div className='flex flex-col gap-1'>
             <label className='text-xs text-neutral-500'>{t('bot-token.label')}</label>

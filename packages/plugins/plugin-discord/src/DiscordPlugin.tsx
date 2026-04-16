@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { DiscordBlueprint } from '#blueprints';
-import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
+import { BlueprintDefinition, DiscordSettings, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { Discord } from '#types';
+import { Discord, DiscordEvents } from '#types';
 
 import { translations } from './translations';
 
@@ -45,5 +45,10 @@ export const DiscordPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Discord.Bot] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activatesAfter: [DiscordEvents.SettingsReady],
+    activate: DiscordSettings,
+  }),
   Plugin.make,
 );
