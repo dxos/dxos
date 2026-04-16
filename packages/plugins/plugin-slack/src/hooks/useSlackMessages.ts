@@ -63,12 +63,40 @@ export const useSlackMessages = (
   const botUserIdRef = useRef(botUserId);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelNamesRef = useRef<Record<string, string>>({});
+  // Map from human-friendly name → channel id, populated lazily when settings
+  // include names instead of IDs (common first-run state before the demo
+  // orchestrator resolved them).
+  const nameToIdRef = useRef<Record<string, string>>({});
   const trackedThreadsRef = useRef<Map<string, string>>(new Map());
   const lastReplyTsRef = useRef<Map<string, string>>(new Map());
   // Track all message timestamps we've seen to detect new ones.
   const seenMessagesRef = useRef<Set<string>>(new Set());
   // First poll flag — don't auto-respond to existing messages on startup.
   const firstPollDoneRef = useRef(false);
+
+  // Channel "IDs" coming from settings might actually be names. Slack rejects
+  // names on conversations.history with channel_not_found, so normalize here.
+  const normalizeChannelIds = useCallback(async (token: string, channels: string[]): Promise<string[]> => {
+    // Real Slack channel IDs begin with uppercase C / D / G and have no
+    // dashes. Everything else we try to resolve via conversations.list, once.
+    const looksLikeId = (value: string): boolean => /^[CDG][A-Z0-9]+$/.test(value);
+    const unresolved = channels.filter((channel) => !looksLikeId(channel) && !nameToIdRef.current[channel]);
+    if (unresolved.length > 0) {
+      try {
+        const data = await callSlackApi(token, 'conversations.list', {
+          exclude_archived: 'true',
+          limit: '1000',
+          types: 'public_channel,private_channel',
+        });
+        for (const entry of (data.channels ?? []) as { id: string; name: string }[]) {
+          nameToIdRef.current[entry.name] = entry.id;
+        }
+      } catch {
+        // leave map empty; we'll just pass the name through and the API will 404 again
+      }
+    }
+    return channels.map((channel) => (looksLikeId(channel) ? channel : nameToIdRef.current[channel] ?? channel));
+  }, []);
 
   useEffect(() => { botTokenRef.current = botToken; }, [botToken]);
   useEffect(() => { channelIdsRef.current = channelIds; }, [channelIds]);
@@ -164,12 +192,16 @@ export const useSlackMessages = (
 
   const fetchMessages = useCallback(async () => {
     const token = botTokenRef.current;
-    const channels = channelIdsRef.current;
+    const rawChannels = channelIdsRef.current;
     const currentBotId = botUserIdRef.current;
 
-    if (!token || channels.length === 0) {
+    if (!token || rawChannels.length === 0) {
       return;
     }
+
+    // Resolve any name-shaped entries to real channel IDs before hitting
+    // conversations.history (which 404s on names).
+    const channels = await normalizeChannelIds(token, rawChannels);
 
     // Resolve bot user ID on first fetch.
     if (!currentBotId) {
@@ -242,7 +274,7 @@ export const useSlackMessages = (
         .sort((first, second) => Number(first.ts) - Number(second.ts))
         .slice(-100);
     });
-  }, [resolveChannelName, resolveUserName]);
+  }, [normalizeChannelIds, resolveChannelName, resolveUserName]);
 
   const startPolling = useCallback(() => {
     if (intervalRef.current) {
