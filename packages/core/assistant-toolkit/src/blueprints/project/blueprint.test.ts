@@ -62,7 +62,7 @@ const SYSTEM = trim`
 describe('Agent', () => {
   const blueprint = AgentBlueprintDef.make();
 
-  it.scoped.only(
+  it.scoped(
     'agent adds artifact to agent',
     Effect.fnUntraced(
       function* (_) {
