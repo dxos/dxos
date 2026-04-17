@@ -178,6 +178,40 @@ const api = {
     return seedSoftwareTeamFixture(space.db);
   },
 
+  /** Clear all messages from the shared-agent's chat feed for a fresh demo run. */
+  async clearChat() {
+    const space = await ensureReady();
+    const links = await space.db.query(Filter.type(Demo.SlackChatLink)).run();
+    if (links.length === 0) {
+      return { cleared: 0 };
+    }
+    const chat = links[0].chat?.target;
+    if (!chat?.feed?.target) {
+      return { cleared: 0 };
+    }
+    const { Feed: F } = await import('@dxos/echo');
+    const { Message: M } = await import('@dxos/types');
+    const queueDxn = F.getQueueDxn(chat.feed.target);
+    if (!queueDxn) {
+      return { cleared: 0 };
+    }
+    const queue = space.queues.get(queueDxn);
+    if (!queue) {
+      return { cleared: 0 };
+    }
+    const messages = await queue.queryObjects();
+    let cleared = 0;
+    for (const msg of messages) {
+      try {
+        space.db.remove(msg);
+        cleared++;
+      } catch {
+        // some messages may not be removable
+      }
+    }
+    return { cleared };
+  },
+
   /** Send a message to the shared-agent's canonical chat. The shared-agent
    *  observer will see the user message, call Claude with tools, and respond.
    *  Usage:  await __DEMO__.chat("move the color picker to done")

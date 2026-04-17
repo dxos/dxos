@@ -136,6 +136,12 @@ async function main() {
     process.exit(1);
   }
 
+  // Clear stale messages from previous test runs
+  beat('Clearing chat feed for fresh demo');
+  const cleared = await page.evaluate(() => (globalThis as any).__DEMO__.clearChat());
+  console.log('  Cleared:', cleared?.cleared ?? 0, 'messages');
+  await pause(2000);
+
   let lastResp = '';
   const botId = await getBotId(page);
 

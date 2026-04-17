@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Composer Agent — Focus Group Brief</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #fafaf7;
+      --panel: #ffffff;
+      --ink: #111;
+      --muted: #666;
+      --rule: #e5e2da;
+      --accent: #5c3bff;
+      --stretch: #c97500;
+    }
+    html { color-scheme: light; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.55 -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      padding: 48px 24px 96px;
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 40px;
+    }
+    header .eyebrow {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    header h1 {
+      font-size: 34px;
+      line-height: 1.15;
+      margin: 0 0 12px;
+      font-weight: 600;
+    }
+    header p.lede {
+      font-size: 18px;
+      color: #333;
+      margin: 0;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 36px 0 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 20px 0 8px;
+      color: #222;
+    }
+    p, li {
+      color: #222;
+    }
+    ul, ol {
+      padding-left: 24px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    blockquote {
+      background: var(--panel);
+      border-left: 3px solid var(--accent);
+      margin: 16px 0;
+      padding: 12px 16px;
+      color: #333;
+      font-size: 15px;
+    }
+    code {
+      font-family: 'SF Mono', ui-monospace, 'Menlo', Consolas, monospace;
+      background: #eeece6;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.92em;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 1px 8px;
+      border-radius: 10px;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    .tag.core {
+      background: var(--accent);
+      color: white;
+    }
+    .tag.stretch {
+      background: var(--stretch);
+      color: white;
+    }
+    .beat {
+      background: var(--panel);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 16px 18px;
+      margin: 12px 0;
+    }
+    .beat h3 {
+      margin-top: 0;
+    }
+    .beat .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    table.scale {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    table.scale th, table.scale td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+    }
+    table.scale th {
+      background: var(--panel);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    table.scale td.axis {
+      font-weight: 600;
+      width: 30%;
+    }
+    table.scale td.scale-hint {
+      color: var(--muted);
+      width: 40%;
+    }
+    table.scale td.rating {
+      width: 30%;
+      font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+      letter-spacing: 0.5em;
+    }
+    .questions li {
+      margin-bottom: 10px;
+    }
+    .footnote {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+    }
+    .pill-legend {
+      margin: 8px 0 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Composer — Focus Group Brief · Draft, 2026-04-15</div>
+    <h1>Composer Agent</h1>
+    <p class="lede">A local-first workspace where AI agents read your real data — meetings, tasks, PRs, chat — and act across them. We want your gut reaction.</p>
+  </header>
+
+  <h2>What we're asking of you</h2>
+  <p>
+    Watch a 3-minute demo video of a workspace that connects to your real tools (Trello, Granola, Slack, GitHub) and lets an AI agent reason across them. After watching, fill out the rating matrix and the five open-ended questions at the bottom. It should take you 10&nbsp;minutes total.
+  </p>
+  <p>
+    Be direct. If something looks staged or gimmicky, say so. We'd rather hear "I didn't believe the Slack message was real" than polite applause.
+  </p>
+
+  <h2>Our thesis</h2>
+  <p>
+    Most AI agent tools today are cloud-hosted, stateless rule engines dressed up with an LLM. They fire webhooks, post messages, and forget everything between invocations. Composer takes a different shape:
+  </p>
+  <ul>
+    <li><strong>Local-first.</strong> Your data graph (ECHO) runs on your laptop. Works offline, syncs when you're online, lives across your devices without a central server you have to trust.</li>
+    <li><strong>Transparent agent.</strong> Every model call, tool call, and reasoning step is visible in real time in an Inspector panel. No black box.</li>
+    <li><strong>Memory across your real data.</strong> The agent doesn't just process one webhook — it cross-references meeting notes, task status, PR history, and chat context when composing a response.</li>
+    <li><strong>Plugins are source.</strong> Each connector is ~300 lines of TypeScript. You can read, modify, and write your own without leaving the repo.</li>
+  </ul>
+  <p>
+    Think of it as: what if Zapier, a notebook app, and an AI agent framework were the same thing, and all ran on your laptop?
+  </p>
+
+  <h2>The demo you're about to see</h2>
+  <p class="pill-legend"><span class="tag core">CORE</span> = will ship in the video.  <span class="tag stretch">STRETCH</span> = additions we may include depending on time.</p>
+
+  <div class="beat">
+    <h3>Cold open — "the system is doing something" (0:00–0:10) <span class="tag core">CORE</span></h3>
+    <div class="meta">No voiceover. Ambient.</div>
+    <p>
+      Split screen. Granola meeting note on the left. Trello board on the right. Slack at the top. A card slides from one column to another — nobody clicked. Smash cut to title card: <em>Composer Agent.</em>
+    </p>
+    <p>
+      <strong>What we're testing:</strong> do you lean in?
+    </p>
+  </div>
+
+  <div class="beat">
+    <h3>Act 1 — Connect (0:10–0:40) <span class="tag core">CORE</span></h3>
+    <div class="meta">Voiceover begins.</div>
+    <p>
+      A terminal flashes a pre-flight table: Anthropic ✓, Trello ✓, Slack ✓, GitHub ✓, Granola ✓. Composer opens beside the viewer's real Chrome tabs (Trello board, GitHub PRs) and their Slack desktop app. Nothing is faked — these are the presenter's actual accounts.
+    </p>
+    <p>
+      <strong>Line we'd use:</strong> <em>"One command and Composer is wired into every tool this team uses. The plugins are three hundred lines each."</em>
+    </p>
+  </div>
+
+  <div class="beat">
+    <h3>Act 2 — Understand (0:40–1:40) <span class="tag core">CORE</span></h3>
+    <div class="meta">The agent's memory layer in action.</div>
+    <p>
+      A new Granola note appears — "Sprint Planning — Widgets team." Inspector panel on the right lights up with live model calls:
+    </p>
+    <ul>
+      <li>"Reading 3 Granola notes"</li>
+      <li>"Scanning 8 Trello cards"</li>
+      <li>"Claude matched 'Widget dragging bug' with high confidence — the meeting discussed drop-target flicker"</li>
+    </ul>
+    <p>
+      The matched card grows a pill on it: 📝 <em>linked to 1 meeting</em>.
+    </p>
+    <p>
+      <strong>Line:</strong> <em>"Claude read the meeting body. Every reasoning step is a row in the Inspector. Click any row to see the full tool call."</em>
+    </p>
+    <p>
+      <strong>What we're testing:</strong> is the Inspector panel clear and compelling, or just more noise?
+    </p>
+  </div>
+
+  <div class="beat">
+    <h3>Act 3 — Act (1:40–2:40) <span class="tag core">CORE</span></h3>
+    <div class="meta">The proactive nudge loop closes.</div>
+    <p>
+      The presenter switches to Chrome and merges a real pull request on a real GitHub repo. The screen counts to 15. Slack pings at the top of the screen. The bot sent the presenter a direct message:
+    </p>
+    <blockquote>
+      Hey <strong>@you</strong> — the fix you discussed in "Sprint Planning — Widgets team" just shipped.<br>
+      • PR&nbsp;#83 Widget dragging bug — <em>merged by a teammate</em><br>
+      The card "Widget dragging bug" is still in "In Progress" — want me to move it to Done?
+    </blockquote>
+    <p>
+      The presenter replies "yes" in Slack. Back in Composer, the Trello card animates from <em>In Progress</em> to <em>Done</em>. The Trello tab in Chrome mirrors.
+    </p>
+    <p>
+      <strong>Line:</strong> <em>"This is where it stops being 'PR merged → send a notification' and becomes an agent with memory. Three contexts — the meeting, the PR, the card state — composed into one specific question."</em>
+    </p>
+  </div>
+
+  <div class="beat">
+    <h3>Act 4 — Meta (2:40–3:00) <span class="tag core">CORE</span></h3>
+    <p>
+      Code editor: the <code>observers.ts</code> file scrolls past. Under 250 lines. GitHub: three extracted open-source primitives — <code>@dxos/ai-match</code>, <code>@dxos/sync-engine</code>, <code>@dxos/react-url-enricher</code>.
+    </p>
+    <p>
+      <strong>Closing line:</strong> <em>"Composer is the IDE for connected data and agents. Running on your laptop. Local-first. The code is open."</em>
+    </p>
+  </div>
+
+  <div class="beat">
+    <h3>Possible additions <span class="tag stretch">STRETCH</span></h3>
+    <ul>
+      <li><strong>Local-first proof.</strong> Mid-demo, toggle Wi-Fi off. Keep working in Composer. Toggle Wi-Fi on. Show the ECHO sync indicator catch up.</li>
+      <li><strong>Multi-device.</strong> iPhone next to the laptop. Both show the same space. Card move on laptop reflects on phone within a second.</li>
+      <li><strong>Compose a new plugin on camera.</strong> Start from a template, connect to Linear in under 3 minutes.</li>
+      <li><strong>Inspector deep-dive.</strong> Click a reasoning step, show the full Claude message + tool result payload.</li>
+    </ul>
+  </div>
+
+  <h2>Rating matrix</h2>
+  <p>
+    For each axis, pick 1–5 (1 = not at all, 5 = very much). Write your score on the dotted line.
+  </p>
+  <table class="scale">
+    <thead>
+      <tr><th>Axis</th><th>What we mean</th><th>Your score</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="axis">Credibility</td>
+        <td class="scale-hint">Did the demo feel real, or did it feel staged?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">Clarity</td>
+        <td class="scale-hint">Could you explain what Composer does to a friend after watching?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">Differentiation</td>
+        <td class="scale-hint">Does this feel distinct from Zapier / Notion AI / Cursor / Claude Code?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">Trust</td>
+        <td class="scale-hint">Would you point this at your real work tools tomorrow?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">Inspector payoff</td>
+        <td class="scale-hint">Did the real-time reasoning panel make the AI feel safer / more debuggable?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">Wow factor</td>
+        <td class="scale-hint">How likely are you to share this video with a colleague?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">"I want to try this"</td>
+        <td class="scale-hint">Would you download it and run <code>pnpm demo</code> tonight?</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+      <tr>
+        <td class="axis">Length</td>
+        <td class="scale-hint">Was 3 minutes too short, too long, or about right? (3 = right)</td>
+        <td class="rating">. . . . .</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Open-ended questions</h2>
+  <ol class="questions">
+    <li>What single moment made you lean in the most?</li>
+    <li>What single moment made you check out?</li>
+    <li>If you had to pick one phrase to describe what you just saw to someone who's never heard of DXOS or Composer, what is it?</li>
+    <li>What part did you <em>not</em> believe was real? Call out the specific second.</li>
+    <li>What would you want it to do that it didn't? (This is the most useful question for us — be specific.)</li>
+    <li>Is the "local-first" framing a hook that matters to you, or a footnote? Why?</li>
+  </ol>
+
+  <h2>What this is, and what it isn't</h2>
+  <ul>
+    <li><strong>It isn't a product announcement.</strong> This is an open-source developer tool, shipping as a Show&nbsp;HN draft. No pricing, no waitlist.</li>
+    <li><strong>It isn't a demo of finished software.</strong> The workspace runs in dev mode; you'll see a few "taking a long time to activate" warnings in the console during the recording. We're leaving those in — it's an honest look at the real thing, not a marketing reel.</li>
+    <li><strong>It <em>is</em> a test of whether the story lands.</strong> Local-first + transparent agent + memory across real tools is the thesis. If you don't feel it after three minutes, we need to recut.</li>
+  </ul>
+
+  <div class="footnote">
+    Return your scores and answers to the organizer by the agreed deadline. If you'd like access to the code or a longer walkthrough, mention it in your response.
+  </div>
+</main>
+</body>
+</html>
