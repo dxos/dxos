@@ -351,7 +351,7 @@ export type ChildOfOptions = {
  * With transitive=true (default), also matches grandchildren and beyond.
  */
 export const childOf = (
-  parents: Obj.Unknown | Ref.Unknown | (Obj.Unknown | Ref.Unknown)[],
+  parents: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
   options?: ChildOfOptions,
 ): Any => {
   const items = Array.isArray(parents) ? parents : [parents];
