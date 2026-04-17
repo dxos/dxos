@@ -21,7 +21,6 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/functions';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
-import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { Operation } from '@dxos/operation';
