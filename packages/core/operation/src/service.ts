@@ -94,7 +94,9 @@ export const invoke = <I, O>(
   op: Operation.Definition<I, O>,
   ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
 ): Effect.Effect<O, NoHandlerError, Service> =>
-  Effect.flatMap(Service, (ops) => ops.invoke(op, ...(args as [I, InvokeOptions?])));
+  Effect.flatMap(Service, (ops) => ops.invoke(op, ...(args as [I, InvokeOptions?]))).pipe(
+    Effect.withSpan('Operation.invoke'),
+  );
 
 /**
  * Schedule an operation to run as a followup.
@@ -109,4 +111,5 @@ export const invoke = <I, O>(
 export const schedule = <I, O>(
   op: Operation.Definition<I, O>,
   ...args: void extends I ? [input?: I] : [input: I]
-): Effect.Effect<void, never, Service> => Effect.flatMap(Service, (ops) => ops.schedule(op, args[0] as I));
+): Effect.Effect<void, never, Service> =>
+  Effect.flatMap(Service, (ops) => ops.schedule(op, args[0] as I)).pipe(Effect.withSpan('Operation.schedule'));

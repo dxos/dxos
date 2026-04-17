@@ -33,10 +33,7 @@ export namespace AutomationCapabilities {
     | Process.ProcessMonitorService
     | TracingService // TODO(dmaretskyi): Probably should not be provided here.
     | Operation.Service
-    | OperationRegistry.Service
-    // TODO(dmaretskyi): Those should be provided at AI-chat call site.
-    | ToolResolverService
-    | ToolExecutionService;
+    | OperationRegistry.Service;
 
   export type ComputeRuntime = ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>;
   export interface ComputeRuntimeProvider {

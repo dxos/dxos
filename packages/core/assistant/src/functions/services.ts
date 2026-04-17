@@ -15,7 +15,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Ref } from '@dxos/echo';
+import { Ref, type DXN, type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
@@ -95,11 +95,9 @@ export const makeToolExecutionService = <E, R>(opts: {
     }),
   );
 
-export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
-  ToolExecutionService,
-  never,
-  Operation.Service | GenericToolkit.GenericToolkitProvider
-> => {
+export const makeToolExecutionServiceFromOperationInvoker = (opts?: {
+  conversation?: DXN.String;
+}): Layer.Layer<ToolExecutionService, never, Operation.Service | GenericToolkit.GenericToolkitProvider> => {
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       const operationInvoker = yield* Operation.Service;
@@ -109,7 +107,11 @@ export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
 
-            return yield* operationInvoker.invoke(operationDef, input).pipe(Effect.orDie);
+            return yield* operationInvoker
+              .invoke(operationDef, input, {
+                conversation: opts?.conversation,
+              })
+              .pipe(Effect.orDie);
           }),
       });
     }),
@@ -120,6 +122,12 @@ export const ToolExecutionServices = Layer.mergeAll(
   makeToolResolverFromOperations(),
   makeToolExecutionServiceFromOperationInvoker(),
 );
+
+export const ToolExecutionServicesWithConversationContext = (opts?: { conversation: DXN.String }) =>
+  Layer.mergeAll(
+    makeToolResolverFromOperations(),
+    makeToolExecutionServiceFromOperationInvoker({ conversation: opts?.conversation }),
+  );
 
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,

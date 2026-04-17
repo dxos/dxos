@@ -183,6 +183,7 @@ export class AiConversation extends Resource {
           Layer.succeed(AiConversationService, this),
         ),
       ),
+      Effect.withSpan('AiConversation.createRequest'),
     );
   }
 }

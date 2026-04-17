@@ -30,7 +30,7 @@ import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
-import { ProcessNotFoundError } from '../errors';
+import { ProcessNotFoundError, ServiceNotAvailableError } from '../errors';
 import * as StorageService from './StorageService';
 
 export interface Status {
@@ -933,6 +933,14 @@ export class ProcessManagerImpl implements Manager {
         serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
           Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
           Effect.provideService(Scope.Scope, scope),
+          Effect.catchTag('ServiceNotAvailable', (err) =>
+            Effect.die(
+              new ServiceNotAvailableError({
+                message: err.message,
+                context: { ...err.context, process: definition.key, processName: params.name },
+              }),
+            ),
+          ),
           Effect.orDie,
         );
       }

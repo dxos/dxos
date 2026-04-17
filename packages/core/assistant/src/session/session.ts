@@ -196,7 +196,7 @@ export class AiSession {
       }
 
       yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
-    });
+    }).pipe(Effect.withSpan('AiSession.begin'));
 
   /**
    * Execute a single turn: one LLM generation followed by tool execution.
@@ -277,7 +277,7 @@ export class AiSession {
       }
 
       return { messages, done: false };
-    });
+    }).pipe(Effect.withSpan('AiSession.runAgentTurn'));
 
   runTools = <Tools extends Record<string, Tool.Any>>({ toolkit }: { toolkit?: Toolkit.WithHandler<Tools> }) =>
     Effect.gen(this, function* () {
@@ -309,7 +309,7 @@ export class AiSession {
       );
 
       this._toolCalls += toolResults.length;
-    });
+    }).pipe(Effect.withSpan('AiSession.runTools'));
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */

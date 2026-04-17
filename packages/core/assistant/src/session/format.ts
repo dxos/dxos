@@ -71,7 +71,7 @@ export const formatSystemPrompt = ({
       Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );
-  });
+  }).pipe(Effect.withSpan('formatSystemPrompt'));
 
 /**
  * Formats the user prompt.
@@ -117,7 +117,7 @@ export const formatUserPrompt = ({
       sender: { role: 'user' },
       blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
-  });
+  }).pipe(Effect.withSpan('formatUserPrompt'));
 
 const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();

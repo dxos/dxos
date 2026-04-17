@@ -207,7 +207,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                 TracingServiceLive,
                 FeedTraceSink.layerLive,
                 TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-                ToolExecutionServices,
                 KeyValueStore.layerMemory,
               ),
             ),

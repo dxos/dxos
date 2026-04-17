@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
+import { AiConversation, ToolExecutionServices, ToolExecutionServicesWithConversationContext } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -18,13 +18,16 @@ import { AgentWorker } from './definitions';
 export default AgentWorker.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, prompt, event }) {
-      const agent = yield* Database.load(agentRef);
+      const agent = yield* Database.load(agentRef).pipe(
+        Effect.catchTag('ObjectNotFoundError', () => Effect.die(new Error('Unable to load agent object.'))),
+      );
       invariant(Obj.instanceOf(Agent.Agent, agent));
       invariant(agent.chat, 'Agent has no chat.');
 
       const chatFeed = yield* agent.chat.pipe(
         Database.load,
         Effect.flatMap((chat) => Database.load(chat.feed)),
+        Effect.catchTag('ObjectNotFoundError', () => Effect.die(new Error('Unable to load agent chat feed object.'))),
       );
       invariant(chatFeed, 'Agent chat feed not found.');
       const runtime = yield* Effect.runtime<Feed.FeedService>();
@@ -52,7 +55,12 @@ export default AgentWorker.pipe(
           prompt: input,
         })
         .pipe(
-          Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices)),
+          Effect.provide(
+            Layer.mergeAll(
+              AiService.model('@anthropic/claude-opus-4-6'),
+              ToolExecutionServicesWithConversationContext({ conversation: Obj.getDXN(chatFeed).toString() }),
+            ),
+          ),
           Effect.retry({ times: 2 }),
         );
     }, Effect.scoped),
