@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiConversationService } from '@dxos/assistant';
+import { AiConversationService, ToolExecutionServices } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -20,10 +20,15 @@ import { type TestStep, runSteps } from '../testing';
 import PlanningOldBlueprint from './blueprint';
 import { TaskHandlers } from './functions';
 
-const TestLayer = AssistantTestLayer({
-  operationHandlers: TaskHandlers,
-  types: [Text.Text, Markdown.Document, Blueprint.Blueprint],
-});
+const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(ToolExecutionServices),
+  Layer.provideMerge(
+    AssistantTestLayer({
+      operationHandlers: TaskHandlers,
+      types: [Text.Text, Markdown.Document, Blueprint.Blueprint],
+    }),
+  ),
+);
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   const blueprint = PlanningOldBlueprint.make();

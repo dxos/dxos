@@ -177,15 +177,17 @@ describe('Blueprint Manager', () => {
           }),
         );
 
-        yield* conversation.createRequest({
-          system: trim`
+        yield* conversation
+          .createRequest({
+            system: trim`
             You can call blueprint manager tools. When asked to refresh or sync blueprints from the registry,
             call the refresh blueprints tool once and then stop.
           `,
-          prompt: trim`
+            prompt: trim`
             Refresh blueprints from the registry so database copies match the built-in definitions.
           `,
-        });
+          })
+          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
 
         expect(stored.name).toBe(originalName);
       },

@@ -1290,22 +1290,23 @@ export namespace ProcessOperationInvoker {
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
 
+        log.info('spawing process', { opKey: op.meta.key, ...options });
         const handle = yield* opts.manager.spawn(executable, {
           ...options,
           parentProcessId: opts.parentProcessId,
           name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         });
-        log.info('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
+        log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
 
         yield* handle.submitInput(input);
-        log.info('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
+        log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
         const fiber = yield* fiberFromProcess(handle);
         fiberCache.set(handle.pid, fiber);
         return fiber;
       }).pipe(
         Effect.onInterrupt(() =>
           Effect.sync(() => {
-            log.info('operation interrupted', { opKey: op.meta.key });
+            log('operation interrupted', { opKey: op.meta.key });
           }),
         ),
       );
@@ -1330,6 +1331,7 @@ export namespace ProcessOperationInvoker {
       const input = args[0] as I;
       const options = args[1] as Operation.InvokeOptions | undefined;
       const traceMeta = options?.tracing as Trace.Meta | undefined;
+      log.info('invoking operation', { opKey: op.meta.key, ...options });
       return Effect.gen(function* () {
         const fiber = yield* invokeFiber(op, input, {
           traceMeta,

@@ -6,11 +6,10 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { ConsolePrinter } from '@dxos/ai';
-import { AiConversationService, GenerationObserver } from '@dxos/assistant';
+import { AgentService, AiConversationService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -23,6 +22,7 @@ import DesignBlueprint from './blueprint';
 const TestLayer = AssistantTestLayer({
   operationHandlers: MarkdownHandlers,
   types: [Text.Text, Markdown.Document, Blueprint.Blueprint],
+  blueprints: [DesignBlueprint.make()],
 });
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
@@ -30,16 +30,9 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
     'design blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        const conversation = yield* AiConversationService;
-
-        const blueprint = DesignBlueprint.make();
-        yield* Database.add(blueprint);
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(blueprint)],
-          }),
-        );
+        const agent = yield* AgentService.createSession({
+          blueprints: [DesignBlueprint.make()],
+        });
 
         const artifact = yield* Database.add(Markdown.make({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
@@ -58,7 +51,8 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
             Let's capture the key design decisions in our spec in ${Obj.getDXN(artifact)}
           `;
 
-          yield* conversation.createRequest({ prompt, observer });
+          yield* agent.submitPrompt(prompt);
+          yield* agent.waitForCompletion();
           log.info('spec', { doc: artifact });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
@@ -70,12 +64,13 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
             Adjust the spec to reflect this.
           `;
 
-          yield* conversation.createRequest({ observer, prompt });
+          yield* agent.submitPrompt(prompt);
+          yield* agent.waitForCompletion();
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
         }
       },
-      Effect.provide(AiConversationService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),

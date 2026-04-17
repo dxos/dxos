@@ -46,7 +46,6 @@ import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
-import { ToolExecutionServices } from '../functions';
 import { AgentService } from '../service';
 import { CompleteBlock } from '../tracing';
 
@@ -98,10 +97,7 @@ export type AssistantTestServices =
   | TracingService
   | Trace.TraceService
   | Trace.TraceSink
-  | FeedTraceSink.FeedTraceSink
-  // Deprecated
-  | ToolExecutionService
-  | ToolResolverService;
+  | FeedTraceSink.FeedTraceSink;
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
@@ -123,7 +119,6 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
-    Layer.provideMerge(ToolExecutionServices),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),

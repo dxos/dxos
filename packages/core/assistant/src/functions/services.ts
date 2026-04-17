@@ -95,9 +95,11 @@ export const makeToolExecutionService = <E, R>(opts: {
     }),
   );
 
-export const makeToolExecutionServiceFromOperationInvoker = (opts?: {
-  conversation?: DXN.String;
-}): Layer.Layer<ToolExecutionService, never, Operation.Service | GenericToolkit.GenericToolkitProvider> => {
+export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
+  ToolExecutionService,
+  never,
+  Operation.Service | GenericToolkit.GenericToolkitProvider
+> => {
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       const operationInvoker = yield* Operation.Service;
@@ -107,11 +109,7 @@ export const makeToolExecutionServiceFromOperationInvoker = (opts?: {
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
 
-            return yield* operationInvoker
-              .invoke(operationDef, input, {
-                conversation: opts?.conversation,
-              })
-              .pipe(Effect.orDie);
+            return yield* operationInvoker.invoke(operationDef, input).pipe(Effect.orDie);
           }),
       });
     }),

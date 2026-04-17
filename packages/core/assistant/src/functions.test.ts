@@ -3,12 +3,13 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import { Layer } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
+import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -49,11 +50,16 @@ const blueprint = Blueprint.make({
   tools: Blueprint.toolDefinitions({ operations: [ReadName] }),
 });
 
-const TestLayer = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
-  operationHandlers: Handlers,
-  types: [Organization.Organization],
-});
+const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(ToolExecutionServices),
+  Layer.provideMerge(
+    AssistantTestLayer({
+      aiServicePreset: 'edge-remote',
+      operationHandlers: Handlers,
+      types: [Organization.Organization],
+    }),
+  ),
+);
 
 describe('Research', () => {
   it.effect(

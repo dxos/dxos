@@ -55,11 +55,7 @@ export default AgentWorker.pipe(
           prompt: input,
         })
         .pipe(
-          Effect.provide(
-            Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
-              Layer.provideMerge(Operation.withInvocationOptions({ conversation: Obj.getDXN(chatFeed).toString() })),
-            ),
-          ),
+          Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices)),
           Effect.retry({ times: 2 }),
         );
     }, Effect.scoped),

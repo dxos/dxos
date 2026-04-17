@@ -23,8 +23,10 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
+import { Operation, type OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
+import { ToolExecutionServices } from '../functions';
 import {
   AiSession,
   type AiSessionRunError,
@@ -107,6 +109,18 @@ export class AiConversation extends Resource {
   }
 
   /**
+   * Not provided by default, since users might want to override them.
+   */
+  makeToolExecutionServices(): Layer.Layer<
+    ToolExecutionService | ToolResolverService,
+    never,
+    GenericToolkit.GenericToolkitProvider | Operation.Service | OperationRegistry.Service
+  > {
+    return ToolExecutionServices.pipe(
+      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() })),
+    );
+  }
+  /**
    * Creates a new cancelable request effect.
    */
   public createRequest<Tools extends Record<string, Tool.Any> = {}>(
@@ -181,6 +195,7 @@ export class AiConversation extends Resource {
             binder: this.context,
           }),
           Layer.succeed(AiConversationService, this),
+          Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() }),
         ),
       ),
       Effect.withSpan('AiConversation.createRequest'),
