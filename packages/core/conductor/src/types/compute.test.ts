@@ -18,12 +18,7 @@ import { ValueBag } from './compute';
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer(),
-      CredentialsService.configuredLayer([]),
-      Feed.notAvailable,
-    ),
+    Layer.mergeAll(TestAiService(), TestDatabaseLayer(), CredentialsService.configuredLayer([]), Feed.notAvailable),
   ),
 );
 

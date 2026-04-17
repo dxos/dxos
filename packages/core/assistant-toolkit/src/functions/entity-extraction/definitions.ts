@@ -32,11 +32,5 @@ export const EntityExtraction = Operation.make({
       }),
     ),
   }),
-  services: [
-    AiService.AiService,
-    Database.Service,
-    FunctionInvocationService,
-    QueueService,
-    Trace.TraceService,
-  ],
+  services: [AiService.AiService, Database.Service, FunctionInvocationService, QueueService, Trace.TraceService],
 });

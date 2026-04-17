@@ -923,7 +923,6 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-
   attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const handle = this.#handles.get(id);

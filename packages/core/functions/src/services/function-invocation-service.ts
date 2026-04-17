@@ -12,10 +12,7 @@ import type { FunctionNotFoundError } from '../errors';
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,
   {
-    invokeFunction<I, O>(
-      functionDef: Operation.Definition<I, O, any>,
-      input: I,
-    ): Effect.Effect<O>;
+    invokeFunction<I, O>(functionDef: Operation.Definition<I, O, any>, input: I): Effect.Effect<O>;
 
     resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError>;
   }

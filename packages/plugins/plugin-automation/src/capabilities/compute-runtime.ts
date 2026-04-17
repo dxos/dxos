@@ -225,4 +225,3 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     return runtime;
   }
 }
-

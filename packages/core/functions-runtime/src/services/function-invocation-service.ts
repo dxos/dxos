@@ -24,10 +24,7 @@ export const FunctionInvocationServiceLayer = Layer.effect(
     const remoteExecutionService = yield* RemoteFunctionExecutionService;
 
     return {
-      invokeFunction: <I, O>(
-        functionDef: Operation.Definition<I, O, any>,
-        input: I,
-      ): Effect.Effect<O> =>
+      invokeFunction: <I, O>(functionDef: Operation.Definition<I, O, any>, input: I): Effect.Effect<O> =>
         Effect.gen(function* () {
           if (functionDef.meta?.deployedId) {
             return yield* remoteExecutionService.callFunction<I, O>(

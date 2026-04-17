@@ -240,9 +240,7 @@ const runPrompt = Effect.fn(function* ({
 }) {
   const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(
-    Effect.exit,
-  );
+  const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

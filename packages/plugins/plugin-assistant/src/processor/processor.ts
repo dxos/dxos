@@ -28,12 +28,7 @@ import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import {
-  Trace,
-  type CredentialsService,
-  type FunctionInvocationService,
-  type QueueService,
-} from '@dxos/functions';
+import { Trace, type CredentialsService, type FunctionInvocationService, type QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
