@@ -11,6 +11,9 @@ import type { RemoteSpan } from './tracing-types';
 
 const LIFECYCLE_SPAN = Symbol('dxos.tracing.lifecycle-span');
 
+/** localStorage key that switches the browser OTEL sampler from 30% to 100%. */
+export const TRACE_ALL_KEY = 'dxos.debug.traceAll';
+
 /**
  * Reads `@trace.info({ spanAttribute: true })` properties from the instance
  * and writes them into the span attributes map.
