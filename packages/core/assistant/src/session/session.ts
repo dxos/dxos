@@ -26,7 +26,7 @@ import {
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
@@ -42,12 +42,7 @@ export type AiSessionRunRequirements =
   | ToolExecutionService
   | ToolResolverService
   | FunctionInvocationService
-  | Trace.TraceService
-  /**
-   * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().
-   *   New code should use Trace.TraceService instead.
-   */
-  | TracingService;
+  | Trace.TraceService;
 
 export type AiSessionOptions = {
   /**
@@ -284,15 +279,7 @@ export class AiSession {
         if (!toolkit) {
           throw new Error('No toolkit provided');
         }
-        return callTool(toolkit, block).pipe(
-          Effect.provide(
-            TracingService.layerSubframe((context) => ({
-              ...context,
-              parentMessage: message.id,
-              toolCallId: block.toolCallId,
-            })),
-          ),
-        );
+        return callTool(toolkit, block);
       });
 
       // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.

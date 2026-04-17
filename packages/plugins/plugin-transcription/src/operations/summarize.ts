@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
@@ -52,7 +52,6 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
           AiService.model('@anthropic/claude-sonnet-4-0'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
           FunctionInvocationService.layerNotAvailable,
           Trace.writerLayerNoop,
         ),

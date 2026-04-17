@@ -16,7 +16,6 @@ import {
   FunctionInvocationService,
   QueueService,
   Trace,
-  TracingService,
   createDefectLogger,
 } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
@@ -367,7 +366,6 @@ export class GraphExecutor {
         Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
-        Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
       );
     });

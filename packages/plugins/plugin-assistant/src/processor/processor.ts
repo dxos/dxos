@@ -33,7 +33,6 @@ import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
-  type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -54,7 +53,6 @@ export type AiChatServices =
   | AiService.AiService
   | ToolExecutionService
   | ToolResolverService
-  | TracingService
   | Trace.TraceService;
 
 export type AiChatProcessorOptions = {

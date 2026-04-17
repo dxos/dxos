@@ -24,7 +24,7 @@ import {
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -50,7 +50,7 @@ export default AgentPrompt.pipe(
 
         yield* Database.flush();
         const prompt = yield* Database.load(data.prompt);
-        yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
+        yield* Trace.emitStatus(`Running ${prompt.id}`);
 
         log.info('starting agent', { prompt: prompt.id, input });
 
@@ -150,7 +150,7 @@ export default AgentPrompt.pipe(
       Effect.provide(
         Layer.empty.pipe(
           Layer.provideMerge(functionInvocationServiceFromOperations),
-          Layer.provideMerge(TracingService.layerNoop),
+          Layer.provideMerge(Trace.writerLayerNoop),
         ),
       ),
     ),

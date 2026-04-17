@@ -17,7 +17,7 @@ import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } f
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, Trace } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -54,7 +54,7 @@ export default Research.pipe(
         }
 
         yield* Database.flush();
-        yield* TracingService.emitStatus({ message: 'Starting research...' });
+        yield* Trace.emitStatus('Starting research...');
 
         const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
 

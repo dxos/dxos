@@ -24,7 +24,7 @@ import * as Struct from 'effect/Struct';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { Process, QueueService, TracingService, Trigger, type TriggerEvent } from '@dxos/functions';
+import { Process, QueueService, Trigger, type TriggerEvent } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -94,7 +94,6 @@ type TriggerDispatcherServices =
   | Registry.AtomRegistry
   | ProcessManager.ProcessManagerService
   | TriggerStateStore
-  | TracingService
   | QueueService
   | Database.Service;
 

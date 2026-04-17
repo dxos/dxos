@@ -206,3 +206,20 @@ export const OperationEnd = EventType('operation.end', {
   }),
   isEphemeral: false,
 });
+
+/**
+ * Human-readable status update emitted by an agent or operation.
+ */
+export const StatusUpdate = EventType('status.update', {
+  schema: Schema.Struct({
+    /** Human-readable status message. */
+    message: Schema.String,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Emit the current human-readable execution status to the trace.
+ */
+export const emitStatus: (message: string) => Effect.Effect<void, never, TraceService> = (message) =>
+  write(StatusUpdate, { message });
