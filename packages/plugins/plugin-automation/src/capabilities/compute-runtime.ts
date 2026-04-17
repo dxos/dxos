@@ -187,7 +187,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
           ),
           Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
-          Layer.provideMerge(OperationRegistry.layer),
           Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
@@ -199,6 +198,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               KeyValueStore.layerMemory,
             ),
           ),
+          Layer.provideMerge(OperationRegistry.layer),
           Layer.provideMerge(feedServiceFromQueueServiceLayer),
           Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
           Layer.provideMerge(
@@ -237,7 +237,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       }),
     );
 
-    const runtime = ManagedRuntime.make(layer as Layer.Layer<AutomationCapabilities.ComputeServices, never, never>);
+    const runtime = ManagedRuntime.make(layer);
     this.#runtimes.set(spaceId, runtime);
     return runtime;
   }
