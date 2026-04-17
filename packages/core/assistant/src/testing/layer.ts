@@ -21,7 +21,7 @@ import {
 } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Database, DXN, Feed, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
 import {
@@ -31,8 +31,10 @@ import {
   ServiceNotAvailableError,
   Trace,
   TracingService,
+  Trigger,
 } from '@dxos/functions';
 import {
+  FeedTraceSink,
   Process,
   ProcessManager,
   ServiceResolver,
@@ -56,11 +58,12 @@ interface TestLayerOptions {
   types?: Type.AnyEntity[];
   blueprints?: Blueprint.Blueprint[];
   credentials?: ServiceCredential[];
-  /*
+  /**
    * Tracing configuration.
+   * - `'feed'` persists trace events to a FeedTraceSink (queryable from the database).
    * @default 'noop'
    */
-  tracing?: 'noop' | 'console' | 'pretty';
+  tracing?: 'noop' | 'console' | 'pretty' | 'feed';
 
   disableLlmMemoization?: boolean;
 
@@ -95,6 +98,7 @@ export type AssistantTestServices =
   | TracingService
   | Trace.TraceService
   | Trace.TraceSink
+  | FeedTraceSink.FeedTraceSink
   // Deprecated
   | ToolExecutionService
   | ToolResolverService;
@@ -115,7 +119,7 @@ export const AssistantTestLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed);
+  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
@@ -185,6 +189,15 @@ export const AssistantTestLayer = ({
     ),
     Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model))),
     Layer.provideMerge(
+      Match.value(tracing).pipe(
+        Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
+        Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
+        Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
+        Match.when('feed', () => FeedTraceSink.layerLive),
+        Match.exhaustive,
+      ) as Layer.Layer<Trace.TraceSink | FeedTraceSink.FeedTraceSink>,
+    ),
+    Layer.provideMerge(
       Layer.mergeAll(
         TestAiService({ preset: aiServicePreset, disableMemoization: disableLlmMemoization }),
         TestDatabaseLayer({
@@ -200,12 +213,7 @@ export const AssistantTestLayer = ({
               toolkit: (toolkits.length > 0 ? GenericToolkit.merge(...toolkits) : GenericToolkit.empty).toolkit as any,
             }),
           ),
-          Match.exhaustive,
-        ),
-        Match.value(tracing).pipe(
-          Match.when('noop', () => Trace.layerNoop),
-          Match.when('console', () => Trace.layerConsole),
-          Match.when('pretty', () => TraceSinkPretty()),
+          Match.when('feed', () => TracingService.layerNoop),
           Match.exhaustive,
         ),
       ),

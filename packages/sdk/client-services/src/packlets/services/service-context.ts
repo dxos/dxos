@@ -74,7 +74,7 @@ export type ServiceContextRuntimeProps = Pick<
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 // TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
 @safeInstanceof('dxos.client-services.ServiceContext')
-@Trace.resource()
+@Trace.resource({ lifecycle: true })
 export class ServiceContext extends Resource {
   private readonly _edgeIdentityUpdateMutex = new Mutex();
 
@@ -224,7 +224,7 @@ export class ServiceContext extends Resource {
     }
   }
 
-  @Trace.span()
+  @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     await this._checkStorageVersion();
 
@@ -240,11 +240,11 @@ export class ServiceContext extends Resource {
     log('network identity set');
 
     log('opening edge connection...');
-    await this._edgeConnection?.open();
+    await this._edgeConnection?.open(ctx);
     log('edge connection opened');
 
     log('opening signal manager...');
-    await this.signalManager.open();
+    await this.signalManager.open(ctx);
     log('signal manager opened');
 
     log('opening network manager...');
@@ -287,7 +287,7 @@ export class ServiceContext extends Resource {
     }
 
     log('opening feed syncer...');
-    await this._feedSyncer?.open();
+    await this._feedSyncer?.open(ctx);
     log('feed syncer opened');
 
     log('loading persistent invitations...');
@@ -321,8 +321,8 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(params: CreateIdentityOptions = {}) {
-    const ctx = Context.default();
+  async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context) {
+    ctx ??= this._ctx;
     const identity = await this.identityManager.createIdentity(params, ctx);
     await this._setNetworkIdentity({ identity });
     await identity.joinNetwork(ctx);

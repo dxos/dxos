@@ -64,6 +64,7 @@ export type InvitationConnectionProps = {
  *  TODO: the flow logic should either be contained in invitations-handler or in extensions, not be split across
  *  TODO: potentially re-evaluate host-side API to allow multiple concurrent connection, so that mutex can be removed
  */
+@_trace.resource()
 export class InvitationsHandler {
   /**
    * @internal
@@ -87,6 +88,20 @@ export class InvitationsHandler {
       type: invitation.type,
     });
     metrics.increment('dxos.invitation.host');
+
+    const hostSpanId = `invitation-host-${invitation.invitationId}`;
+    _trace.spanStart({
+      id: hostSpanId,
+      instance: this,
+      methodName: 'handleInvitationFlow',
+      parentCtx: ctx,
+      op: 'invitation.host',
+      attributes: {
+        'ctx.dxos.invitation.id': invitation.invitationId,
+        'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
+      },
+    });
+    ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
@@ -231,6 +246,20 @@ export class InvitationsHandler {
       type: invitation.type,
     });
     const { timeout = INVITATION_TIMEOUT } = invitation;
+
+    const guestSpanId = `invitation-guest-${invitation.invitationId}`;
+    _trace.spanStart({
+      id: guestSpanId,
+      instance: this,
+      methodName: 'acceptInvitation',
+      parentCtx: ctx,
+      op: 'invitation.guest',
+      attributes: {
+        'ctx.dxos.invitation.id': invitation.invitationId,
+        'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
+      },
+    });
+    ctx.onDispose(() => _trace.spanEnd(guestSpanId));
 
     if (deviceProfile) {
       invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');

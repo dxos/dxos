@@ -6,6 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
@@ -120,7 +121,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  async syncQueue(request: SyncQueueRequest): Promise<void> {
-    await this.#syncQueue?.(Context.default(), request);
+  async syncQueue(request: SyncQueueRequest, options?: RequestOptions): Promise<void> {
+    await this.#syncQueue?.(options?.ctx ?? Context.default(), request);
   }
 }
