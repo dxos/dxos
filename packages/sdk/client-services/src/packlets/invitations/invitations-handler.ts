@@ -374,7 +374,7 @@ export class InvitationsHandler {
               admitted = true;
 
               // 4. Record credential in our HALO.
-              const result = await protocol.accept(admissionResponse, admissionRequest);
+              const result = await protocol.accept(ctx, admissionResponse, admissionRequest);
 
               // 5. Success.
               log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
@@ -418,8 +418,8 @@ export class InvitationsHandler {
     };
 
     const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionProps?.edgeInvitations, this._edgeClient, {
-      onInvitationSuccess: async (admissionResponse, admissionRequest) => {
-        const result = await protocol.accept(admissionResponse, admissionRequest);
+      onInvitationSuccess: async (edgeCtx, admissionResponse, admissionRequest) => {
+        const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },
