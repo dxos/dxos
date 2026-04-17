@@ -5,7 +5,6 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import type { AiService } from '@dxos/ai';
 import { Context as DxosContext } from '@dxos/context';
 import { FunctionInvocationService, type InvocationServices } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
