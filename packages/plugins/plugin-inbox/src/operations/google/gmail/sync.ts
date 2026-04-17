@@ -67,7 +67,6 @@ export default GoogleMailSync.pipe(
 
         const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
         const lastMessage = objects.at(-1);
-
         const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
         const existingGmailIds = new Set(
           recentMessages.flatMap((msg) => {
