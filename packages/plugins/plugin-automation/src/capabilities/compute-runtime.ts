@@ -19,7 +19,6 @@ import {
   AiContextService,
   AiConversation,
   AiConversationService,
-  ToolExecutionServices,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';

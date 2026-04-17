@@ -4,7 +4,7 @@
 
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { type AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { AgentService } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';

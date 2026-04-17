@@ -1,8 +1,12 @@
-import { Predicate } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Predicate from 'effect/Predicate';
 import * as Tracer from 'effect/Tracer';
 
 const runInTask = Symbol('runInTask');

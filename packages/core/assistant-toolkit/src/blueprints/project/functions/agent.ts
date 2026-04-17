@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, ToolExecutionServices, ToolExecutionServicesWithConversationContext } from '@dxos/assistant';
+import { AiConversation, ToolExecutionServicesWithConversationContext } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
