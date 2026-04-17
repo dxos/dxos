@@ -14,7 +14,7 @@ import { normalizeText, parseFromHeader } from '../util';
 const getPart = (message: GoogleMail.Message, part: string) =>
   message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;
 
-/** Decodes common HTML entities in Gmail snippet/header text (e.g. &#39; → '). */
+/** Decodes common HTML entities in Gmail snippet/header text (e.g., `&#39;` → `'`). */
 const decodeHtmlEntities = (text: string | undefined): string | undefined => {
   if (text === undefined) {
     return undefined;
