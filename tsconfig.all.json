@@ -328,6 +328,9 @@
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-github/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
