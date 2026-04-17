@@ -4,7 +4,7 @@
 
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { type AiService } from '@dxos/ai';
+import { type AiService, type GenericToolkit } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { AgentService } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
@@ -33,7 +33,8 @@ export namespace AutomationCapabilities {
     | Process.ProcessMonitorService
     | TracingService // TODO(dmaretskyi): Probably should not be provided here.
     | Operation.Service
-    | OperationRegistry.Service;
+    | OperationRegistry.Service
+    | GenericToolkit.GenericToolkitProvider;
 
   export type ComputeRuntime = ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>;
   export interface ComputeRuntimeProvider {

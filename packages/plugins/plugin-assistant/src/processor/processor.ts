@@ -8,14 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import {
-  type AiService,
-  DEFAULT_EDGE_MODEL,
-  type ModelName,
-  type ModelRegistry,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
+import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
   AiContextService,
   type AiConversation,
@@ -23,6 +16,7 @@ import {
   formatSystemPrompt,
   AgentService,
   PartialBlock,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
@@ -45,8 +39,6 @@ export type AiChatServices =
   | Database.Service
   | QueueService
   | AiService.AiService
-  | ToolExecutionService
-  | ToolResolverService
   | TracingService
   | Trace.TraceService;
 
@@ -144,7 +136,7 @@ export class AiChatProcessor {
   }
 
   async getTools(): Promise<Record<string, any>> {
-    return this._runtime.runPromise(this._conversation.getTools());
+    return this._runtime.runPromise(Effect.provide(this._conversation.getTools(), ToolExecutionServices));
   }
 
   async getSystemPrompt(): Promise<string> {
