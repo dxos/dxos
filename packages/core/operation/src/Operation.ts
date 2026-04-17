@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Layer } from 'effect';
+import * as Layer from 'effect/Layer';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Pipeable from 'effect/Pipeable';
