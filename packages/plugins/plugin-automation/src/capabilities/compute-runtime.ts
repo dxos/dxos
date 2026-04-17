@@ -23,9 +23,8 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import {
