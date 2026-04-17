@@ -1210,6 +1210,7 @@ export namespace ProcessOperationInvoker {
     poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
   }
 
+  // TODO(dmaretskyi): Can we move this into the core invoker?
   export interface ProcessOperationInvoker {
     /**
      * Invoke an operation and return a fiber that can be used to await the result.

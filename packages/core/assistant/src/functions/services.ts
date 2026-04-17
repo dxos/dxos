@@ -123,12 +123,6 @@ export const ToolExecutionServices = Layer.mergeAll(
   makeToolExecutionServiceFromOperationInvoker(),
 );
 
-export const ToolExecutionServicesWithConversationContext = (opts?: { conversation: DXN.String }) =>
-  Layer.mergeAll(
-    makeToolResolverFromOperations(),
-    makeToolExecutionServiceFromOperationInvoker({ conversation: opts?.conversation }),
-  );
-
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
   { definition: Operation.Definition.Any }

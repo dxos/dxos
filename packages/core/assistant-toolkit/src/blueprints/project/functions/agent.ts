@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, ToolExecutionServicesWithConversationContext } from '@dxos/assistant';
+import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -56,9 +56,8 @@ export default AgentWorker.pipe(
         })
         .pipe(
           Effect.provide(
-            Layer.mergeAll(
-              AiService.model('@anthropic/claude-opus-4-6'),
-              ToolExecutionServicesWithConversationContext({ conversation: Obj.getDXN(chatFeed).toString() }),
+            Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+              Layer.provideMerge(Operation.withInvocationOptions({ conversation: Obj.getDXN(chatFeed).toString() })),
             ),
           ),
           Effect.retry({ times: 2 }),
