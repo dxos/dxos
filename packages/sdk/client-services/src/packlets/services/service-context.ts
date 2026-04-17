@@ -398,7 +398,7 @@ export class ServiceContext extends Resource {
       edgeFeatures: this._edgeFeatures,
     });
     log('_initialize: opening DataSpaceManager...');
-    await this.dataSpaceManager.open();
+    await this.dataSpaceManager.open(ctx);
     log('_initialize: DataSpaceManager opened');
 
     this.edgeAgentManager = new EdgeAgentManager(
@@ -408,7 +408,7 @@ export class ServiceContext extends Resource {
       identity,
     );
     log('_initialize: opening EdgeAgentManager...');
-    await this.edgeAgentManager.open();
+    await this.edgeAgentManager.open(ctx);
     log('_initialize: EdgeAgentManager opened');
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
