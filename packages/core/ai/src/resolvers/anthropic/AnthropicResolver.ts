@@ -26,33 +26,40 @@ export const make = () =>
               type: 'adaptive' as any,
             } as const)
           : undefined;
+        const max_tokens = 4096;
         switch (model) {
           case '@anthropic/claude-3-5-haiku-20241022':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022' }).pipe(
+            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
           case '@anthropic/claude-3-5-sonnet-20241022':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-sonnet-20241022' }).pipe(
+            return AnthropicLanguageModel.layer({ model: 'claude-3-5-sonnet-20241022', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
           case '@anthropic/claude-haiku-4-5':
-            return AnthropicLanguageModel.layer({ model: 'claude-haiku-4-5' }).pipe(Layer.provide(clientLayer));
+            return AnthropicLanguageModel.layer({ model: 'claude-haiku-4-5', config: { max_tokens } }).pipe(
+              Layer.provide(clientLayer),
+            );
           case '@anthropic/claude-opus-4-0':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-0', config: { thinking } }).pipe(
+            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-0', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
           case '@anthropic/claude-opus-4-5':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-5', config: { thinking } }).pipe(
+            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-5', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
           case '@anthropic/claude-opus-4-6':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-6', config: { thinking } }).pipe(
+            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-6', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
           case '@anthropic/claude-sonnet-4-0':
-            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-0' }).pipe(Layer.provide(clientLayer));
+            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-0', config: { max_tokens } }).pipe(
+              Layer.provide(clientLayer),
+            );
           case '@anthropic/claude-sonnet-4-5':
-            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-5' }).pipe(Layer.provide(clientLayer));
+            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-5', config: { max_tokens } }).pipe(
+              Layer.provide(clientLayer),
+            );
           default:
             return Layer.fail(new AiModelNotAvailableError(model));
         }
