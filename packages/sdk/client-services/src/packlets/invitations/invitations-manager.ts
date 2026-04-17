@@ -125,7 +125,7 @@ export class InvitationsManager {
     }
   }
 
-  acceptInvitation(_ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
+  acceptInvitation(ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -138,7 +138,7 @@ export class InvitationsManager {
       invitation,
       stream,
       otpEnteredTrigger,
-    } = this._createObservableAcceptingInvitation(handler, options);
+    } = this._createObservableAcceptingInvitation(ctx, handler, options);
     this._invitationsHandler.acceptInvitation(
       invitationCtx,
       stream,
@@ -281,6 +281,7 @@ export class InvitationsManager {
   }
 
   private _createObservableAcceptingInvitation(
+    parentCtx: Context,
     handler: InvitationProtocol,
     initialState: Invitation,
   ): {
@@ -291,7 +292,8 @@ export class InvitationsManager {
   } {
     const otpEnteredTrigger = new Trigger<string>();
     const stream = new PushStream<Invitation>();
-    const ctx = new Context({
+    // Derive from caller ctx so `TRACE_SPAN_ATTRIBUTE` propagates via the parent chain.
+    const ctx = parentCtx.derive({
       onError: (err) => {
         if (err instanceof TimeoutError) {
           log('timeout', { ...handler.toJSON() });

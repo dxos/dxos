@@ -26,7 +26,7 @@ import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
-import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_ALL_KEY, type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
 
@@ -56,7 +56,7 @@ export class OtelTraces {
   constructor(private readonly options: OtelOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
-    const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem('dxos.debug.traceAll') === 'true';
+    const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
     const tracerProvider = new WebTracerProvider({
       resource: this.options.resource,

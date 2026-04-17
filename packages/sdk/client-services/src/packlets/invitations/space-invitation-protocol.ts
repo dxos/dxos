@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
@@ -170,7 +170,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
+  async accept(ctx: Context, response: AdmissionResponse): Promise<Partial<Invitation>> {
     invariant(response.space);
     const { credential, controlTimeframe, dataTimeframe } = response.space;
     const assertion = getCredentialAssertion(credential);
@@ -182,7 +182,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
 
     // Create local space.
-    await this._spaceManager.acceptSpace(Context.default(), {
+    await this._spaceManager.acceptSpace(ctx, {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,
