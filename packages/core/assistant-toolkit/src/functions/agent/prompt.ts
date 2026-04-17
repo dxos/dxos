@@ -69,7 +69,11 @@ export default AgentPrompt.pipe(
         );
 
         const promptInstructions = yield* Database.load(prompt.instructions.source);
-        const promptText = Template.process(promptInstructions.content, input);
+        let promptText = Template.process(promptInstructions.content, input);
+
+        if (input !== undefined) {
+          promptText += `\n<input>${JSON.stringify(input)}</input>`;
+        }
 
         let systemText = trim`
           You are an agent running in the non-interactive mode.

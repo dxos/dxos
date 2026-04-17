@@ -30,7 +30,7 @@ import { type FlowLockHolder, type GuardedInvitationState } from './invitation-s
 import { tryAcquireBeforeContextDisposed } from './utils';
 
 export interface EdgeInvitationHandlerCallbacks {
-  onInvitationSuccess(response: AdmissionResponse, request: AdmissionRequest): Promise<void>;
+  onInvitationSuccess(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<void>;
 }
 
 export const MAX_RETRIES_PER_INVITATION = 5;
@@ -135,7 +135,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       });
 
       const admissionResponse = await this._mapToAdmissionResponse(response);
-      await this._callbacks.onInvitationSuccess(admissionResponse, { space: admissionRequest });
+      await this._callbacks.onInvitationSuccess(ctx, admissionResponse, { space: admissionRequest });
     } catch (error) {
       guardedState.set(this, Invitation.State.ERROR);
       throw error;

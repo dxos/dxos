@@ -16,7 +16,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -29,6 +29,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '../functions';
+import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
@@ -112,12 +113,15 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               );
 
               log('begin request', { prompt });
-              yield* conversation.createRequest({
-                prompt,
-                // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
-                // toolkit: AsynchronousExectionToolkit,
-                system: options.systemPrompt,
-              });
+              yield* Trace.write(AgentRequestBegin, {});
+              yield* conversation
+                .createRequest({
+                  prompt,
+                  // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
+                  // toolkit: AsynchronousExectionToolkit,
+                  system: options.systemPrompt,
+                })
+                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
               log('end request');
               yield* AgentEventsKey.set(inputQueue);
               if (inputQueue.length > 0) {
@@ -278,6 +282,9 @@ const ToolExecutionService = ({
             const fiber = yield* operationInvoker.invokeFiber(operationDef, input, {
               environment: {
                 conversation: Obj.getDXN(feed).toString(),
+              },
+              traceMeta: {
+                conversationId: feed.id,
               },
             });
             toolCallManager.beginCall(fiber.pid);
