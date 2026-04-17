@@ -10,7 +10,6 @@ import { AiService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -74,7 +73,6 @@ export default EntityExtraction.pipe(
         Layer.mergeAll(
           AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
           ToolExecutionServices,
-          FunctionInvocationService.layerNotAvailable,
         ).pipe(Layer.provide(GenericToolkit.providerEmpty)),
       ),
     ),

@@ -138,7 +138,7 @@ export type CreateSpaceOptions = {
 };
 
 @trackLeaks('open', 'close')
-@trace.resource()
+@trace.resource({ lifecycle: true })
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
@@ -221,7 +221,8 @@ export class DataSpaceManager extends Resource {
   }
 
   @synchronized
-  protected override async _open(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  protected override async _open(ctx: Context): Promise<void> {
     log('open');
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
@@ -230,7 +231,7 @@ export class DataSpaceManager extends Resource {
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(this._ctx, spaceMetadata);
+        const space = await this._constructSpace(ctx, spaceMetadata);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -243,7 +244,7 @@ export class DataSpaceManager extends Resource {
     // Auto-activate spaces that were previously active (used in dedicated worker mode after leader changeover).
     for (const space of spacesToActivate) {
       log('auto-activating space', { spaceKey: space.key });
-      space.activate(this._ctx).catch((err) => {
+      space.activate(ctx).catch((err) => {
         log.error('Error auto-activating space', { spaceKey: space.key, err });
       });
     }
@@ -390,7 +391,11 @@ export class DataSpaceManager extends Resource {
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
     await this._metadataStore.addSpace(metadata);
-    space.initializeDataPipelineAsync(ctx);
+    // Use DSM lifecycle ctx: the invitation accept flow disposes `ctx` as soon as
+    // `acceptSpace` returns (guardedState.complete -> ctx.dispose). Detached data-pipeline
+    // initialization must outlive the invitation flow, and its span must be parented to a
+    // long-lived context.
+    space.initializeDataPipelineAsync(this._ctx);
 
     this.updated.emit();
     return space;
@@ -578,7 +583,8 @@ export class DataSpaceManager extends Resource {
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
-        await this._echoEdgeReplicator?.connectToSpace(ctx, dataSpace.id);
+        // Use lifecycle ctx: the caller ctx from _constructSpace may be disposed by the time postOpen fires.
+        await this._echoEdgeReplicator?.connectToSpace(this._ctx, dataSpace.id);
       } else if (this._echoEdgeReplicator) {
         log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }

@@ -18,6 +18,8 @@
  *   - Fetch bot config from the space via EDGE (eliminating env-var configuration).
  */
 
+// TODO(burdon): Integrate with EDGE webhook gateway. Figure out how to test locally.
+
 export interface Env {
   /** Discord application public key for verifying interaction signatures. */
   DISCORD_PUBLIC_KEY: string;
@@ -50,12 +52,11 @@ const EPHEMERAL_FLAG = 1 << 6;
 const verifyDiscordSignature = async (request: Request, publicKey: string): Promise<boolean> => {
   const signature = request.headers.get('x-signature-ed25519');
   const timestamp = request.headers.get('x-signature-timestamp');
-  const body = await request.clone().text();
-
   if (!signature || !timestamp) {
     return false;
   }
 
+  const body = await request.clone().text();
   const key = await crypto.subtle.importKey(
     'raw',
     hexToUint8Array(publicKey),
@@ -105,7 +106,6 @@ const errorResponse = (content: string): Response => ephemeralResponse(`Error: $
  */
 const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
   const spaceKey = interaction.data?.options?.find((option: any) => option.name === 'space-key')?.value;
-
   if (!spaceKey) {
     return errorResponse('Missing space-key argument.');
   }
@@ -160,9 +160,8 @@ const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
       return errorResponse('Failed to fetch thread messages.');
     }
 
-    const messages: any[] = await messagesResponse.json();
-
     // Format as Markdown (messages come newest-first, reverse for chronological order).
+    const messages: any[] = await messagesResponse.json();
     const reversed = [...messages].reverse();
     const markdown = reversed
       .map((msg) => {
@@ -212,9 +211,8 @@ export default {
       return new Response('Invalid signature', { status: 401 });
     }
 
-    const interaction = (await request.json()) as any;
-
     // Handle Discord ping (required for interaction URL verification).
+    const interaction = (await request.json()) as any;
     if (interaction.type === InteractionType.PING) {
       return Response.json({ type: InteractionResponseType.PONG });
     }
@@ -222,7 +220,6 @@ export default {
     // Handle slash commands.
     if (interaction.type === InteractionType.APPLICATION_COMMAND) {
       const commandName = interaction.data?.name;
-
       switch (commandName) {
         case 'connect':
           return handleConnect(interaction, env);

@@ -196,11 +196,12 @@ export class SpaceProxy implements Space, CustomInspectable {
     };
   }
 
+  @trace.info({ spanAttribute: true })
   get id(): SpaceId {
     return this._data.id as SpaceId;
   }
 
-  @trace.info()
+  @trace.info({ spanAttribute: true })
   get key() {
     return this._data.spaceKey;
   }

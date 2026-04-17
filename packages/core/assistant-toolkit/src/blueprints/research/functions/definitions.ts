@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { TracingService } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 export const Research = Operation.make({
@@ -53,7 +53,7 @@ export const Research = Operation.make({
       description: 'Structured objects created during the research process.',
     }),
   }),
-  services: [AiService.AiService, Database.Service, TracingService, FunctionInvocationService],
+  services: [AiService.AiService, Database.Service, TracingService, OperationRegistry.Service],
 });
 
 export const DocumentCreate = Operation.make({

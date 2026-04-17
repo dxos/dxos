@@ -48,6 +48,7 @@ export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
 
+  @trace.info({ spanAttribute: true })
   private readonly _spaceKey: PublicKey;
   private readonly _metadata: MetadataStore;
   private _targetTimeframe?: Timeframe;

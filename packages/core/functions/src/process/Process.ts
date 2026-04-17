@@ -262,7 +262,9 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               });
 
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
-              const output = yield* opHandler.handler(input).pipe(Effect.orDie) as Effect.Effect<
+              const output = yield* opHandler
+                .handler(input)
+                .pipe(Effect.orDie, Effect.withSpan(op.meta.key)) as Effect.Effect<
                 Operation.Definition.Output<Op>,
                 never,
                 never

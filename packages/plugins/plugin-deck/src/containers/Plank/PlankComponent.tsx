@@ -11,7 +11,7 @@ import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
+import { StackItem, StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';
@@ -21,6 +21,10 @@ import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 import { PlankRootProps, usePlankContext } from './PlankRoot';
+
+// NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
+export const DEFAULT_SIZE = 48 satisfies StackItemSize;
+export const DEFAULT_COMPANION_SIZE = 35 satisfies StackItemSize;
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;
@@ -40,25 +44,28 @@ export const PlankComponent = memo(
 
     const canResize = layoutMode === 'multi';
     const { findFirstFocusable } = useFocusFinders();
+    const isCompanion = companioned === 'companion';
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
-    const orderId = companioned === 'companion' ? primary?.id : id;
+    const orderId = isCompanion ? primary?.id : id;
     const index = orderId && active ? active.findIndex((entryId) => entryId === orderId) : -1;
     const length = active?.length ?? 1;
     const isOrdered = !!active && index >= 0;
     const canIncrementStart = isOrdered && index > 0;
     const canIncrementEnd = isOrdered && index < length - 1;
-
     const rootElement = useRef<HTMLDivElement | null>(null);
-
     const variant = node?.type === PLANK_COMPANION_TYPE ? getLinkedVariant(id) : undefined;
-    const sizeKey = id.split('+')[0];
-    const size = plankSizing?.[sizeKey] as number | undefined;
 
+    // Sizing.
+    const sizeAttrs = useMainSize();
+    const sizeKey = id.split('+')[0];
+    const size = isCompanion
+      ? DEFAULT_COMPANION_SIZE
+      : ((plankSizing?.[sizeKey] as number | undefined) ?? DEFAULT_SIZE);
     const handleSizeChange = useCallback(
       debounce((nextSize: number) => {
         onResize?.(sizeKey, nextSize);
       }, 200),
-      [onResize, sizeKey],
+      [sizeKey, onResize],
     );
 
     // TODO(thure): Tabster's focus group should handle moving focus to Main, but something is blocking it.
@@ -85,7 +92,6 @@ export const PlankComponent = memo(
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
       (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
-    const sizeAttrs = useMainSize();
 
     const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
@@ -104,8 +110,9 @@ export const PlankComponent = memo(
     // TODO(wittjosiah): Change prop to accept a component.
     const placeholder = useMemo(() => <PlankLoading />, []);
 
+    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
-    const className = mx(
+    const classNames = [
       'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-coarse',
       isSolo && 'absolute inset-0',
       isSolo && mainIntrinsicSize,
@@ -113,14 +120,12 @@ export const PlankComponent = memo(
       part.startsWith('solo') && 'grid',
       part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-w-0',
       fullscreen && 'grid-rows-1',
-      part === 'multi' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
+      part === 'multi' && (isCompanion ? 'border-separator! border-e' : 'border-separator! border-x'),
       part === 'solo-companion' && 'border-separator! border-s',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
         'mx-(--main-spacing) border-separator! border rounded-sm overflow-hidden',
-    );
-
-    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
+    ];
 
     return (
       <Root
@@ -130,15 +135,15 @@ export const PlankComponent = memo(
         tabIndex={0}
         {...(part.startsWith('solo')
           ? ({
-              className,
+              className: mx(classNames),
               ...sizeAttrs,
             } as any)
           : {
               role: 'article',
-              classNames: className,
+              item: { id },
+              classNames,
               order,
               size,
-              item: { id },
               onSizeChange: handleSizeChange,
             })}
         {...(isAttendable ? attentionAttrs : {})}

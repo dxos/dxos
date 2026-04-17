@@ -16,7 +16,6 @@ import { AiService, ConsolePrinter, GenericToolkit, ModelName } from '@dxos/ai';
 import {
   AiConversation,
   GenerationObserver,
-  functionInvocationServiceFromOperations,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -69,7 +68,11 @@ export default AgentPrompt.pipe(
         );
 
         const promptInstructions = yield* Database.load(prompt.instructions.source);
-        const promptText = Template.process(promptInstructions.content, input);
+        let promptText = Template.process(promptInstructions.content, input);
+
+        if (input !== undefined) {
+          promptText += `\n<input>${JSON.stringify(input)}</input>`;
+        }
 
         let systemText = trim`
           You are an agent running in the non-interactive mode.
@@ -143,12 +146,7 @@ export default AgentPrompt.pipe(
         );
       },
       Effect.scoped,
-      Effect.provide(
-        Layer.empty.pipe(
-          Layer.provideMerge(functionInvocationServiceFromOperations),
-          Layer.provideMerge(TracingService.layerNoop),
-        ),
-      ),
+      Effect.provide(TracingService.layerNoop),
     ),
   ),
   Operation.opaqueHandler,

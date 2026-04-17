@@ -75,6 +75,7 @@ export class DiscordBot {
               if (!channel?.isTextBased()) {
                 return '';
               }
+
               const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
               const messagesConcatenated = res
                 .filter((msg) => msg.content.trim().length > 0)

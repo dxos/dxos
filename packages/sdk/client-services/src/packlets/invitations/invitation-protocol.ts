@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -71,6 +72,9 @@ export interface InvitationProtocol {
 
   /**
    * Redeem the admission credential.
+   * @param ctx - Caller context used for tracing and cancellation. Forwarded to downstream
+   *   internal methods (e.g. `DataSpaceManager.acceptSpace`) so their spans become children of
+   *   the invitation flow span.
    */
-  accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>>;
+  accept(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>>;
 }

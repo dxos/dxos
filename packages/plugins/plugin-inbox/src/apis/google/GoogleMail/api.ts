@@ -95,7 +95,11 @@ export const sendMessage = Effect.fn('sendMessage')(function* (
   return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify(message) }).pipe(
     Effect.flatMap(
       decodeAndHandleErrors(
-        Schema.Struct({ id: Schema.String, threadId: Schema.String, labelIds: Schema.Array(Schema.String) }),
+        Schema.Struct({
+          id: Schema.String,
+          threadId: Schema.String,
+          labelIds: Schema.Array(Schema.String),
+        }),
       ),
     ),
   );

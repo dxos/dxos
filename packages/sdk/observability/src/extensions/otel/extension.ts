@@ -83,7 +83,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
-      'service.instance.id': crypto.randomUUID(),
+      'session.id': crypto.randomUUID(),
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
     }),
