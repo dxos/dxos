@@ -38,8 +38,7 @@ export default Query.pipe(
       }
 
       if (parents && parents.length > 0) {
-        const parentDxns = parents.map((ref) => ref.dxn);
-        query = query.select(Filter.childOf(parentDxns));
+        query = query.select(Filter.childOf(parents));
       }
 
       query = query.limit(limit);
