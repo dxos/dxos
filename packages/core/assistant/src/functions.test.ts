@@ -3,7 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Layer } from 'effect';
+import * as Layer from 'effect/Layer';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 

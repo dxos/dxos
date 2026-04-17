@@ -4,9 +4,8 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AgentService, AiConversationService } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj } from '@dxos/echo';

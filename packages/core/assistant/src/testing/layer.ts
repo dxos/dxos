@@ -11,14 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import {
-  AiService,
-  ConsolePrinter,
-  GenericToolkit,
-  type ModelName,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
+import { AiService, ConsolePrinter, GenericToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';

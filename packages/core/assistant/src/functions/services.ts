@@ -15,7 +15,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Ref, type DXN } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
