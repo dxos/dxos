@@ -139,10 +139,12 @@ To invoke an operation directly, use **`Operation.invoke`** from `@dxos/operatio
 import { Operation } from '@dxos/operation';
 import { Create } from './definitions';
 
-const result = yield* Operation.invoke(Create, {
-  name: 'My Doc',
-  content: 'Hello world.',
-});
+const result =
+  yield *
+  Operation.invoke(Create, {
+    name: 'My Doc',
+    content: 'Hello world.',
+  });
 ```
 
 Inside another operation's handler, the same API applies (`yield* Operation.invoke(...)`, `yield* Operation.schedule(...)`); see the operations skill section **Invoking Operations**.
