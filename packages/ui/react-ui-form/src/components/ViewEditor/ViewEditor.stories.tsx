@@ -146,20 +146,18 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
   return (
     <TestLayout json={json}>
-      <div role='none' className='col-span-full'>
-        <ViewEditor
-          ref={projectionRef}
-          schema={schema}
-          view={view}
-          registry={space?.db.schemaRegistry}
-          mode={props.mode}
-          readonly={props.readonly}
-          types={types}
-          tags={tags}
-          onQueryChanged={updateViewQuery}
-          onDelete={handleDelete}
-        />
-      </div>
+      <ViewEditor
+        ref={projectionRef}
+        schema={schema}
+        view={view}
+        registry={space?.db.schemaRegistry}
+        mode={props.mode}
+        readonly={props.readonly}
+        types={types}
+        tags={tags}
+        onQueryChanged={updateViewQuery}
+        onDelete={handleDelete}
+      />
     </TestLayout>
   );
 };

@@ -37,6 +37,15 @@ export const storeObservabilityDisabled = async (namespace: string, value: boole
   } catch (err) {
     log.catch('Failed to store observability disabled', err);
   }
+  // Mirror to localStorage so the synchronous opt-out check in the OTEL extension picks it up
+  // without waiting for an async IndexedDB read.
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(`${namespace}/${OBSERVABILITY_DISABLED_KEY}`, String(value));
+    }
+  } catch {
+    // localStorage not available (e.g., in workers).
+  }
 };
 
 /**

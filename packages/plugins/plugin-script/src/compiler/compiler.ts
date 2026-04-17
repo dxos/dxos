@@ -14,8 +14,12 @@ import { invariant } from '@dxos/invariant';
 
 const GLOBALS = 'globals.d.ts';
 
-/** TS version hosted on playgroundcdn.typescriptlang.org used to fetch lib .d.ts files. */
-const CDN_TS_VERSION = '5.7.2';
+/** TS version hosted on playgroundcdn.typescriptlang.org used to fetch lib .d.ts files.
+ * Pinned to 5.6.3 because 5.7+ removed lib.es2022.sharedmemory.d.ts from the CDN.
+ * The remaining 404s (lib.core.d.ts, lib.core.es6/7.d.ts, lib.es7.d.ts) are phantom
+ * entries in @typescript/vfs's hardcoded file list and are harmlessly caught.
+ */
+const CDN_TS_VERSION = '5.6.3';
 
 const defaultOptions: ts.CompilerOptions = {
   lib: ['DOM', 'es2022'],

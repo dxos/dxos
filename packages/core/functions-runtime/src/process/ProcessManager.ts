@@ -594,10 +594,11 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }
     log('lifecycle: failed', { cause: Cause.pretty(cause) });
     this.#finished = true;
-    return this.#cleanup().pipe(
-      Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.failCause(cause))),
-      Effect.tap(() => this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void),
-    );
+    return Effect.gen(this, function* () {
+      this.#setStatus(Process.State.FAILED, Exit.failCause(cause));
+      yield* this.#cleanup();
+      yield* this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void;
+    });
   }
 
   #cleanup(): Effect.Effect<void> {
@@ -1208,7 +1209,7 @@ export namespace ProcessOperationInvoker {
     invokeFiber: <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
+      options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
     ) => Effect.Effect<OperationFiber<O>>;
 
     /**
@@ -1275,7 +1276,7 @@ export namespace ProcessOperationInvoker {
     const invokeFiber = <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
+      options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
     ): Effect.Effect<OperationFiber<O>> =>
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
@@ -1319,10 +1320,10 @@ export namespace ProcessOperationInvoker {
     ): Effect.Effect<O> => {
       const input = args[0] as I;
       const options = args[1] as Operation.InvokeOptions | undefined;
-      const tracing = options?.tracing as TracingOptions | undefined;
+      const traceMeta = options?.tracing as Trace.Meta | undefined;
       return Effect.gen(function* () {
         const fiber = yield* invokeFiber(op, input, {
-          tracing,
+          traceMeta,
           environment: {
             ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
             ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),

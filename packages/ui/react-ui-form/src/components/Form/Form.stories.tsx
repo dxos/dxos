@@ -72,8 +72,8 @@ const Person = Schema.Struct({
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
 type DefaultStoryProps<T extends AnyProperties> = {
+  schema?: Schema.Schema<T>;
   debug?: boolean;
-  schema: Schema.Schema<T>;
 } & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
@@ -102,7 +102,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   return (
     <Tooltip.Provider>
-      <TestLayout json={{ values, schema: schema.ast }}>
+      <TestLayout json={{ values, schema: schema?.ast }}>
         <Form.Root
           debug={debug}
           schema={schema}
@@ -129,7 +129,6 @@ const meta = {
   title: 'ui/react-ui-form/Form',
   component: Form.Root,
   render: DefaultStory,
-
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -186,16 +185,5 @@ export const Static: Story<ExcludeId<typeof Person>> = {
 };
 
 export const Empty: Story<ExcludeId<typeof Person>> = {
-  render: () => (
-    <TestLayout>
-      <Form.Root>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Actions />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </TestLayout>
-  ),
+  args: {},
 };

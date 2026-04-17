@@ -91,7 +91,7 @@ export type FormFieldProps = {
     | 'createInitialValuePath'
     | 'createFieldMap'
     | 'db'
-    | 'schemaHook'
+    | 'useSchema'
     | 'getOptions'
     | 'onCreate'
   >;
@@ -114,7 +114,7 @@ export const FormField = (props: FormFieldProps) => {
     createInitialValuePath,
     createFieldMap,
     db,
-    schemaHook,
+    useSchema: schemaHook,
     getOptions,
     onCreate,
   } = props;
@@ -214,7 +214,7 @@ export const FormField = (props: FormFieldProps) => {
         createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
         createFieldMap={isCreateTarget ? createFieldMap : undefined}
         db={db}
-        schemaHook={schemaHook}
+        useSchema={schemaHook}
         getOptions={getOptions}
         onCreate={onCreate}
       />
@@ -247,7 +247,7 @@ export const FormField = (props: FormFieldProps) => {
           createOptionIcon={createOptionIcon}
           createInitialValuePath={createInitialValuePath}
           db={db}
-          schemaHook={schemaHook}
+          useSchema={schemaHook}
           getOptions={getOptions}
           onCreate={onCreate}
         />

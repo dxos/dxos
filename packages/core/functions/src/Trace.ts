@@ -78,6 +78,7 @@ export const Meta = Schema.Struct({
   pid: Schema.optional(Schema.String), // NOTE: Not Process.ID to avoid circular dependency.
   parentPid: Schema.optional(Schema.String),
   processName: Schema.optional(Schema.String),
+
   /**
    * ID of the conversation feed object if present.
    */
@@ -87,6 +88,11 @@ export const Meta = Schema.Struct({
    * ID of the trigger object if invocation resulted from a trigger.
    */
   triggerId: Schema.optional(Obj.ID),
+
+  /**
+   * ID of the tool call that created the current process.
+   */
+  toolCallId: Schema.optional(Schema.String),
 });
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
 
