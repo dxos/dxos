@@ -333,16 +333,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const manager = yield* ProcessManager.ProcessManagerService;
         const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
         const handle = yield* manager.spawn(executable, {
-          tracing: {
-            invocationPayload: {
-              trigger: {
-                id: trigger.id,
-                kind: trigger.spec!.kind,
-              },
-              data: event,
-            },
-            invocationTarget: trigger.function?.dxn,
-          },
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
         });
 

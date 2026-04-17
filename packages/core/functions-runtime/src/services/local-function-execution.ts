@@ -16,7 +16,6 @@ import {
   FunctionError,
   FunctionInvocationService,
   FunctionNotFoundError,
-  type InvocationServices,
   QueueService,
   Trace,
 } from '@dxos/functions';
@@ -30,7 +29,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
     invokeFunction<I, O>(
       functionDef: Operation.Definition<I, O>,
       input: I,
-    ): Effect.Effect<O, never, InvocationServices>;
+    ): Effect.Effect<O>;
     resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError>;
   }
 >() {
@@ -48,7 +47,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
         invokeFunction: <I, O>(
           functionDef: Operation.Definition<I, O>,
           input: I,
-        ): Effect.Effect<O, never, InvocationServices> =>
+        ): Effect.Effect<O> =>
           Effect.flatMap(Effect.context<never>(), (callerContext) =>
             Effect.gen(function* () {
               const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
