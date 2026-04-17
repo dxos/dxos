@@ -15,7 +15,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -85,7 +85,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({
               functions: MarkdownHandlers,
-            }).pipe(Layer.provideMerge(TracingService.layerNoop)),
+            }),
           ),
           Layer.provideMerge(Trace.writerLayerNoop),
         ),

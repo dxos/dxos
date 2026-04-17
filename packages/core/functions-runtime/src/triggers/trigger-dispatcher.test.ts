@@ -21,7 +21,6 @@ import {
   Reply,
   ServiceResolver,
   Trace,
-  TracingService,
   Trigger,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -50,7 +49,6 @@ const TestLayer = Layer.mergeAll(
   ),
   Layer.provideMerge(KeyValueStore.layerMemory),
   Layer.provideMerge(OperationHandlerSet.provide(ExampleHandlers)),
-  Layer.provideMerge(TracingService.layerNoop),
   Layer.provideMerge(Registry.layer),
   Layer.provideMerge(Trace.layerNoop),
 );

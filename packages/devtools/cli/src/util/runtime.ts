@@ -19,7 +19,6 @@ import {
   type FunctionInvocationService,
   type QueueService,
   Trace,
-  TracingService,
 } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
@@ -36,7 +35,6 @@ export type AiChatServices =
   | Feed.FeedService
   | FunctionInvocationService
   | QueueService
-  | TracingService
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
@@ -72,7 +70,6 @@ export const chatLayer = ({
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
-    Layer.provideMerge(TracingService.layerNoop),
     Layer.provideMerge(Trace.writerLayerNoop),
     Layer.provideMerge(Feed.notAvailable),
   );

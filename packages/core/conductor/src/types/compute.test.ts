@@ -10,7 +10,7 @@ import { describe } from 'vitest';
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, TracingService } from '@dxos/functions';
+import { CredentialsService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { ValueBag } from './compute';
@@ -23,7 +23,6 @@ const TestLayer = Layer.empty.pipe(
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
       Feed.notAvailable,
-      TracingService.layerNoop,
     ),
   ),
 );

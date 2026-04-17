@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { CredentialsService, TracingService } from '@dxos/functions';
+import { CredentialsService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -227,7 +227,6 @@ const ServiceLayer = Layer.empty.pipe(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
       Feed.notAvailable,
     ),
   ),

@@ -14,7 +14,7 @@ import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -239,17 +239,9 @@ const runPrompt = Effect.fn(function* ({
   onResult: (result: string) => void;
 }) {
   const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
-  const tracer = yield* TracingService;
-  const trace = yield* tracer.traceInvocationStart({
-    target: undefined,
-    payload: {
-      data: {},
-    },
-  });
 
   // Invoke the function.
   const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(
-    Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );
 
@@ -262,11 +254,5 @@ const runPrompt = Effect.fn(function* ({
     onSuccess: (result: any) => {
       onResult(result.note);
     },
-  });
-
-  yield* tracer.traceInvocationEnd({
-    trace,
-    // TODO(dmaretskyi): Might miss errors.
-    exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
   });
 });
