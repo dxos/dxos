@@ -343,6 +343,9 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-linear/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-map/tsconfig.json"
     },
     {
