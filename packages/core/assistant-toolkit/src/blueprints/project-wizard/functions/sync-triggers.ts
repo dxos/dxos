@@ -96,10 +96,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             ],
           },
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queueDxn.toString(),
-          },
+          spec: Trigger.specQueue(queueDxn.toString()),
           function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
@@ -125,10 +122,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           function: Ref.make(Operation.serialize(AgentWorker)),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: agent.queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(agent.queue.dxn.toString()),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',

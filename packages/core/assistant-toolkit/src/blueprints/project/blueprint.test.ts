@@ -168,10 +168,7 @@ describe('Agent', () => {
         yield* Database.add(
           Trigger.make({
             enabled: true,
-            spec: {
-              kind: 'queue',
-              queue: inboxQueue.dxn.toString(),
-            },
+            spec: Trigger.specQueue(inboxQueue.dxn.toString()),
             function: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),

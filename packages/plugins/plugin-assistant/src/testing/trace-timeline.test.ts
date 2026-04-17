@@ -187,10 +187,7 @@ describe('Trace timeline', () => {
             Trigger.make({
               function: Ref.make(Operation.serialize(AgentPrompt)),
               enabled: true,
-              spec: {
-                kind: 'queue',
-                queue: Feed.getQueueDxn(feed)?.toString() ?? failedInvariant('No queue DXN found'),
-              },
+              spec: Trigger.specFeed(feed),
               input: {
                 prompt: Ref.make(prompt),
                 input: '{{event.item}}',
