@@ -43,10 +43,7 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
     }
     const trigger = Trigger.make({
       enabled: true,
-      spec: {
-        kind: 'timer',
-        cron: '0 21 * * *',
-      },
+      spec: Trigger.specTimer('0 21 * * *'),
       function: Ref.make(Operation.serialize(GenerateSummary)),
     });
     space.db.add(trigger);

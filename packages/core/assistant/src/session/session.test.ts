@@ -14,6 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
+import { ToolExecutionServices } from '../functions';
 import { AssistantTestLayer } from '../testing';
 import { AiSession } from './session';
 
@@ -64,12 +65,15 @@ const toolkitLayer = TestToolkit.toLayer({
     }),
 });
 
-const TestLayer = Layer.mergeAll(
-  AssistantTestLayer({
-    types: [CalendarEventSchema],
-    tracing: 'pretty',
-  }),
-  toolkitLayer,
+const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(ToolExecutionServices),
+  Layer.provideMerge(
+    AssistantTestLayer({
+      types: [CalendarEventSchema],
+      tracing: 'pretty',
+    }),
+  ),
+  Layer.provideMerge(toolkitLayer),
 );
 
 describe('AiSession', () => {

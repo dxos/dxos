@@ -8,9 +8,10 @@ import handlebars from 'handlebars';
 
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { FunctionInvocationService, type FunctionNotFoundError, type TracingService } from '@dxos/functions';
+import { FunctionNotFoundError, type TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import type { Template } from '../index';
 
@@ -28,16 +29,20 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template.Template,
-): Effect.Effect<string, ObjectNotFoundError | FunctionNotFoundError, FunctionInvocationService | TracingService> =>
+): Effect.Effect<
+  string,
+  ObjectNotFoundError | FunctionNotFoundError,
+  OperationRegistry.Service | Operation.Service | TracingService
+> =>
   Effect.gen(function* () {
-    const functionInvoker = yield* FunctionInvocationService;
-
     const variables = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {
         if (input.kind === 'function') {
-          // TODO(dmaretskyi): create FunctionInvoker.invokeByKey function.
-          const fn = yield* functionInvoker.resolveFunction(input.function!);
-          const result = yield* functionInvoker.invokeFunction(fn, {});
+          const fn = yield* OperationRegistry.resolve(input.function!).pipe(
+            Effect.flatten,
+            Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(input.function!))),
+          );
+          const result = yield* Operation.invoke(fn, {} as any).pipe(Effect.orDie);
           return [input.name, result] as const;
         } else {
           return yield* Effect.dieMessage(`Unsupported input kind: ${input.kind}`);

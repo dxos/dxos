@@ -10,8 +10,8 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -416,14 +416,14 @@ describe('Database Blueprint', () => {
         ]);
         yield* Database.flush();
 
-        const noQueues = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+        const noQueues = yield* Operation.invoke(DatabaseQueryOperation, {
           text: 'op-search-token-7f3a2c91',
           includeQueues: false,
           limit: 20,
         });
         expect(noQueues).toHaveLength(0);
 
-        const withQueues = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+        const withQueues = yield* Operation.invoke(DatabaseQueryOperation, {
           text: 'op-search-token-7f3a2c91',
           includeQueues: true,
           limit: 20,
@@ -436,7 +436,7 @@ describe('Database Blueprint', () => {
           ),
         ).toBe(true);
 
-        const byTypename = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+        const byTypename = yield* Operation.invoke(DatabaseQueryOperation, {
           typename: 'org.dxos.type.organization',
           includeQueues: true,
           limit: 20,
