@@ -88,8 +88,6 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
         if (id) {
-          // TODO(burdon): ThreadTile.
-          console.log('?????', id, currentId);
           onAction?.({
             type: 'current',
             messageId: id,
@@ -145,7 +143,7 @@ type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'locatio
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
   const { message, labels, onAction } = data;
-  const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
+  const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId } = useMosaicContainer('MessageTile');
 
   const handleCurrentChange = useCallback(() => {
@@ -256,7 +254,7 @@ type ThreadTileProps = Pick<MosaicTileProps<ThreadTileData>, 'data' | 'location'
 const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location, current }, forwardedRef) => {
   const { threadId, messages, onAction } = data;
   const latest = messages[0];
-  const { hue, from, date, subject } = getMessageProps(latest, new Date(), true);
+  const { hue, from, subject } = getMessageProps(latest, new Date());
   const { setCurrentId } = useMosaicContainer('ThreadTile');
 
   const handleCurrentChange = useCallback(() => {
@@ -287,26 +285,25 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
             </Card.IconBlock>
-            <Card.Title classNames='flex items-center gap-3'>
+            <Card.Title classNames='flex items-center'>
               <span className='grow truncate font-medium'>{subject}</span>
-              <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
             </Card.Title>
             <Card.Menu />
           </Card.Toolbar>
           <Card.Content>
             {/* TODO(burdon): Currently limits to last n messages. */}
             {messages.slice(0, 4).map((message) => {
-              const { from, date, snippet } = getMessageProps(message, new Date(), true);
+              const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
               return (
-                <Card.Row key={message.id}>
+                <Card.Row key={message.id} icon='ph--user--regular'>
                   <div role='none' className='flex flex-col py-1'>
                     <button
                       type='button'
-                      className='flex items-center w-full gap-2 text-start text-sm dx-hover dx-focus-ring'
+                      className='flex items-center justify-between w-full gap-2 text-start text-sm dx-hover dx-focus-ring'
                       onClick={(event) => handleMessageClick(event, message.id)}
                     >
-                      <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
                       {from && <span className='truncate'>{from}</span>}
+                      <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
                     </button>
 
                     {snippet && (
