@@ -24,7 +24,8 @@
     "reset": "tsx reset.ts",
     "run": "tsx run.ts",
     "setup": "tsx setup.ts",
-    "start": "tsx demo.ts"
+    "start": "tsx demo.ts",
+    "auto-demo": "tsx auto-demo.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
