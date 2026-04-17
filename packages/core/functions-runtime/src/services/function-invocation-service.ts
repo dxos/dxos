@@ -1,7 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -12,7 +12,11 @@ import { FunctionInvocationService, type InvocationServices } from '@dxos/functi
 import { Operation } from '@dxos/operation';
 
 import { LocalFunctionExecutionService } from './local-function-execution';
-import { RemoteFunctionExecutionService } from './remote-function-execution-service';
+import type { RemoteFunctionExecutionService as RemoteFunctionExecutionServiceType } from './remote-function-execution-service';
+
+type RemoteService = Context.Tag.Service<RemoteFunctionExecutionServiceType>;
+const RemoteFunctionExecutionServiceTag: Context.Tag<RemoteFunctionExecutionServiceType, RemoteService> =
+  Context.GenericTag('@dxos/functions/RemoteFunctionExecutionService');
 
 /**
  * Layer that provides FunctionInvocationService implementation routing between local and remote execution.
@@ -21,7 +25,7 @@ export const FunctionInvocationServiceLayer = Layer.effect(
   FunctionInvocationService,
   Effect.gen(function* () {
     const localExecutionService = yield* LocalFunctionExecutionService;
-    const remoteExecutionService = yield* RemoteFunctionExecutionService;
+    const remoteExecutionService = yield* RemoteFunctionExecutionServiceTag;
 
     return {
       invokeFunction: <I, O>(
