@@ -117,12 +117,16 @@ export const sortByCreated =
   (a: T & Record<K, string>, b: T & Record<K, string>) =>
     descending ? b[prop].localeCompare(a[prop]) : a[prop].localeCompare(b[prop]);
 
-export const formatDateTime = (date: Date, now: Date, compact = false) =>
+export type FormatDateTimeOptions = { compact?: boolean; time?: boolean };
+
+export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOptions) =>
   isToday(date)
     ? format(date, 'hh:mm aaa')
-    : compact
-      ? formatShortDate(date)
-      : formatDistance(date, now, { addSuffix: true });
+    : options?.time
+      ? format(date, 'MMM d, h:mm aaa')
+      : options?.compact
+        ? formatShortDate(date)
+        : formatDistance(date, now, { addSuffix: true });
 
 export const formatShortDate = (date: Date) =>
   isToday(date) ? format(date, 'hh:mm aaa') : isThisWeek(date) ? format(date, 'EEEE') : format(date, 'MMM d');
@@ -138,12 +142,16 @@ type MessageProps = {
   hue: string;
 };
 
-export const getMessageProps = (message: Message.Message, now: Date = new Date(), compact = false): MessageProps => {
+export const getMessageProps = (
+  message: Message.Message,
+  now: Date = new Date(),
+  options?: FormatDateTimeOptions,
+): MessageProps => {
   const id = message.id;
   // Always use the first text block for display in the mailbox list.
   const textBlocks = message.blocks.filter((block) => 'text' in block);
   const text = textBlocks[0]?.text || '';
-  const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, compact);
+  const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
   const email = message.sender?.email;
   const subject = message.properties?.subject;

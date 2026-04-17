@@ -440,12 +440,12 @@ const PlankContainer = memo(
               primary={node}
               {...(part === 'solo'
                 ? {
-                    part: 'solo-companion',
                     order,
+                    part: 'solo-companion',
                   }
                 : {
-                    part,
                     order: (order ?? 0) + 1,
+                    part,
                   })}
             />
           )}
