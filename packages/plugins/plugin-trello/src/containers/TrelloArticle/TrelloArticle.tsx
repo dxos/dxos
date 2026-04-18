@@ -229,7 +229,7 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
       </Panel.Content>
       {!board.accessToken && (
         <Panel.Statusbar>
-          <p className='flex p-1 items-center text-warning-text'>Configure an AccessToken in board properties to enable sync.</p>
+          <Toolbar.Text>Configure an AccessToken in board properties to enable sync.</Toolbar.Text>
         </Panel.Statusbar>
       )}
     </Panel.Root>

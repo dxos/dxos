@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Icon, Panel, Toolbar } from '@dxos/react-ui';
+import { Input, Panel, Tag, Toolbar } from '@dxos/react-ui';
 
 import { PushCard } from '#operations';
 import { Trello } from '#types';
@@ -21,21 +21,19 @@ export type TrelloCardArticleProps = {
 
 /**
  * Article view for editing a TrelloCard and pushing changes back to Trello.
+ * Uses Composer UI primitives exclusively — no custom DOM elements.
  */
 export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProps) => {
   const [pushing, setPushing] = useState(false);
   const [pushStatus, setPushStatus] = useState<string | null>(null);
   const { invokePromise } = useOperationInvoker();
 
-  // Find the board that owns this card by matching Trello foreign keys.
   const db = Obj.getDatabase(card);
   const boards: Trello.TrelloBoard[] = useQuery(db, Filter.type(Trello.TrelloBoard));
   const board = useMemo(() => {
-    // If there's only one board, use it.
     if (boards.length <= 1) {
       return boards[0];
     }
-    // Otherwise, we return the first board with a matching accessToken (all boards are candidates).
     return boards.find((candidate) => candidate.accessToken !== undefined) ?? boards[0];
   }, [boards]);
 
@@ -83,66 +81,67 @@ export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProp
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='p-4 space-y-3'>
-        <div>
-          <label className='mb-1 block text-xs font-medium text-subdued'>Name</label>
-          <input
-            type='text'
+      <Panel.Content classNames='p-4 space-y-4'>
+        <Input.Root>
+          <Input.Label>Name</Input.Label>
+          <Input.TextInput
             value={card.name}
-            onChange={(event) => Obj.change(card, (mutable) => { mutable.name = event.target.value; })}
-            className='w-full rounded border border-separator bg-transparent px-3 py-2 text-sm'
+            onChange={(event) =>
+              Obj.change(card, (mutable) => {
+                mutable.name = event.target.value;
+              })
+            }
           />
-        </div>
+        </Input.Root>
 
-        <div>
-          <label className='mb-1 block text-xs font-medium text-subdued'>Description</label>
-          <textarea
+        <Input.Root>
+          <Input.Label>Description</Input.Label>
+          <Input.TextArea
             value={card.description ?? ''}
-            onChange={(event) => Obj.change(card, (mutable) => { mutable.description = event.target.value; })}
             rows={8}
-            className='w-full rounded border border-separator bg-transparent px-3 py-2 text-sm'
+            onChange={(event) =>
+              Obj.change(card, (mutable) => {
+                mutable.description = event.target.value;
+              })
+            }
           />
-        </div>
+        </Input.Root>
 
-        <div>
-          <label className='mb-1 block text-xs font-medium text-subdued'>List</label>
-          <p className='text-sm text-description'>{card.listName ?? 'Unknown'}</p>
-        </div>
+        <Input.Root>
+          <Input.Label>List</Input.Label>
+          <Input.Description>{card.listName ?? 'Unknown'}</Input.Description>
+        </Input.Root>
 
         {card.labels && card.labels.length > 0 && (
-          <div>
-            <label className='mb-1 block text-xs font-medium text-subdued'>Labels</label>
-            <div className='flex gap-1'>
+          <Input.Root>
+            <Input.Label>Labels</Input.Label>
+            <Input.Description>
               {card.labels.map((label) => (
-                <span
-                  key={label.trelloId}
-                  className='rounded px-2 py-0.5 text-xs'
-                  style={{ backgroundColor: label.color ?? '#ccc', color: '#fff' }}
-                >
+                <Tag key={label.trelloId ?? label.name} palette={label.color as any ?? 'neutral'}>
                   {label.name}
-                </span>
+                </Tag>
               ))}
-            </div>
-          </div>
+            </Input.Description>
+          </Input.Root>
         )}
 
         {card.dueDate && (
-          <div>
-            <label className='mb-1 block text-xs font-medium text-subdued'>Due Date</label>
-            <p className='text-sm text-description'>
+          <Input.Root>
+            <Input.Label>Due Date</Input.Label>
+            <Input.Description>
               {new Date(card.dueDate).toLocaleDateString()}
               {card.dueComplete && ' (complete)'}
-            </p>
-          </div>
+            </Input.Description>
+          </Input.Root>
         )}
 
         {card.members && card.members.length > 0 && (
-          <div>
-            <label className='mb-1 block text-xs font-medium text-subdued'>Members</label>
-            <p className='text-sm text-description'>
+          <Input.Root>
+            <Input.Label>Members</Input.Label>
+            <Input.Description>
               {card.members.map((member) => member.fullName ?? member.username).join(', ')}
-            </p>
-          </div>
+            </Input.Description>
+          </Input.Root>
         )}
       </Panel.Content>
     </Panel.Root>
