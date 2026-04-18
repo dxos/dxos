@@ -51,15 +51,25 @@ export const aiMatch = async <S, T>(config: AiMatchConfig<S, T>): Promise<AiMatc
   const sourceById = new Map<string, S>();
   const sourceSummaries = source.map((item, index) => {
     const id = sourceId(item);
+    if (sourceById.has(id)) {
+      log.warn('aiMatch: duplicate source ID', { id });
+    }
     sourceById.set(id, item);
-    return { _id: id, ...summarizeSource(item, index) };
+    const summary = summarizeSource(item, index);
+    const { _id: _dropped, ...rest } = summary as Record<string, unknown>;
+    return { _id: id, ...rest };
   });
 
   const targetById = new Map<string, T>();
   const targetSummaries = target.map((item, index) => {
     const id = targetId(item);
+    if (targetById.has(id)) {
+      log.warn('aiMatch: duplicate target ID', { id });
+    }
     targetById.set(id, item);
-    return { _id: id, ...summarizeTarget(item, index) };
+    const summary = summarizeTarget(item, index);
+    const { _id: _dropped, ...rest } = summary as Record<string, unknown>;
+    return { _id: id, ...rest };
   });
 
   const prompt = buildPrompt(task, sourceSummaries, targetSummaries);

@@ -19,6 +19,9 @@
       "path": "packages/apps/todomvc/tsconfig.json"
     },
     {
+      "path": "packages/common/ai-match/tsconfig.json"
+    },
+    {
       "path": "packages/common/async/tsconfig.json"
     },
     {

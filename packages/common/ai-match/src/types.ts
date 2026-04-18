@@ -7,9 +7,9 @@ export type MatchConfidence = 'high' | 'medium' | 'low';
 
 /** Shape every match returned by `aiMatch` conforms to. */
 export type MatchBase = {
-  /** The ID (from `sourceIdField`) of the source item. */
+  /** The ID (from `sourceId` config) of the source item. */
   sourceId: string;
-  /** The ID (from `targetIdField`) of the matched target item. */
+  /** The ID (from `targetId` config) of the matched target item. */
   targetId: string;
   confidence: MatchConfidence;
   /** One-sentence explanation from the LLM. */
@@ -21,7 +21,7 @@ export type MatchBase = {
  * Keep values short — string content gets truncated to ~500 chars in the
  * default summarizer, but callers should pre-trim heavy narrative fields.
  */
-export type Summary = Record<string, string | number | boolean | null | undefined>;
+export type Summary = Record<string, string | number | boolean | null>;
 
 export type AiMatchConfig<S, T> = {
   /** Objects on the "from" side of the match. */
