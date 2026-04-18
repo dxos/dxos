@@ -4,6 +4,7 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -11,21 +12,21 @@ import { Operation } from '@dxos/operation';
 
 import { PushCard } from './definitions';
 import * as TrelloAPI from './trello-api';
+import { TrelloCredentials } from '../services';
 import { Trello } from '../types';
 
 const handler: Operation.WithHandler<typeof PushCard> = PushCard.pipe(
   Operation.withHandler(({ board: boardRef, card: cardRef }) =>
     Effect.gen(function* () {
-      const board = yield* Database.load(boardRef);
       const card = yield* Database.load(cardRef);
-      const { apiKey, apiToken } = board as Trello.TrelloBoard;
-      const { trelloCardId, name, description, trelloListId } = card as Trello.TrelloCard;
+      const trelloCardId = Trello.getTrelloCardId(card as Trello.TrelloCard);
+      const { name, description, trelloListId } = card as Trello.TrelloCard;
 
-      if (!apiKey || !apiToken) {
-        return yield* Effect.fail(new Error('Trello API key and token are required'));
+      if (!trelloCardId) {
+        return yield* Effect.fail(new Error('Card has no Trello foreign key'));
       }
 
-      const auth = { apiKey, apiToken };
+      const auth = yield* TrelloCredentials.get();
 
       log('pushing card to trello', { trelloCardId, name });
 
@@ -44,7 +45,11 @@ const handler: Operation.WithHandler<typeof PushCard> = PushCard.pipe(
 
       log('card pushed to trello', { trelloCardId });
       return { success: true };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(FetchHttpClient.layer, TrelloCredentials.fromBoard(boardRef)),
+      ),
+    ),
   ),
 );
 

@@ -4,18 +4,21 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { AccessToken } from '@dxos/types';
 
 // @import-as-namespace
 
+// TODO(richburdon): Labels should map to Composer's cross-cutting Tag type
+//   (`org.dxos.type.tag`). Requires defining a 2-way mapping between Trello
+//   label colors and Composer tag hues. Tracked separately.
+
 /** Trello label attached to a card. */
 export const Label = Schema.Struct({
-  /** Trello label ID. */
-  trelloId: Schema.String,
-  /** Label display name. */
+  /** Trello label ID (for round-trip sync). */
+  trelloId: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
-  /** Label color. */
   color: Schema.optional(Schema.String),
 });
 
@@ -23,54 +26,42 @@ export type Label = Schema.Schema.Type<typeof Label>;
 
 /** Trello member assigned to a card. */
 export const Member = Schema.Struct({
-  /** Trello member ID. */
-  trelloId: Schema.String,
-  /** Full name. */
+  /** Trello member ID (for round-trip sync). */
+  trelloId: Schema.optional(Schema.String),
   fullName: Schema.optional(Schema.String),
-  /** Username. */
   username: Schema.optional(Schema.String),
-  /** Avatar URL. */
   avatarUrl: Schema.optional(Schema.String),
 });
 
 export type Member = Schema.Schema.Type<typeof Member>;
 
 /**
- * TrelloCard schema representing a card synced from Trello.
+ * TrelloCard synced from Trello.
+ *
+ * External identity is tracked via `Obj.Meta` foreignKeys
+ * (`{ source: 'trello.com', id: <trelloCardId> }`), not custom fields.
+ * The list ID and name are kept as regular fields because they drive
+ * Kanban column grouping.
  */
 export const TrelloCard = Schema.Struct({
-  /** Card name/title. */
   name: Schema.String,
-  /** Card description (markdown). */
   description: Schema.optional(Schema.String),
-  /** Trello card ID for sync. */
-  trelloCardId: Schema.String.pipe(FormInputAnnotation.set(false)),
-  /** Trello board ID this card belongs to (for multi-board filtering). */
-  trelloBoardId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Trello list ID this card belongs to. */
+  /** List ID on Trello (drives Kanban grouping). */
   trelloListId: Schema.String.pipe(FormInputAnnotation.set(false)),
-  /** List name (used as pivot field for kanban grouping). */
+  /** List name (pivot field for Kanban columns). */
   listName: Schema.optional(Schema.String),
-  /** Card position within the list. */
   position: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false))),
-  /** Due date as ISO string. */
   dueDate: Schema.optional(Schema.String),
-  /** Whether the due date is complete. */
   dueComplete: Schema.optional(Schema.Boolean),
-  /** Card labels. */
   labels: Schema.optional(Schema.Array(Label).pipe(FormInputAnnotation.set(false))),
-  /** Assigned members. */
   members: Schema.optional(Schema.Array(Member).pipe(FormInputAnnotation.set(false))),
-  /** Card URL on Trello. */
   url: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Whether the card is closed/archived. */
   closed: Schema.optional(Schema.Boolean.pipe(FormInputAnnotation.set(false))),
-  /** Last activity timestamp from Trello. */
   lastActivityAt: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.trelloCard',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
@@ -81,35 +72,34 @@ export const TrelloCard = Schema.Struct({
 
 export interface TrelloCard extends Schema.Schema.Type<typeof TrelloCard> {}
 
-/** Checks if a value is a TrelloCard object. */
 export const isCard = (value: unknown): value is TrelloCard => Obj.instanceOf(TrelloCard, value);
 
 /**
- * TrelloBoard schema representing a board synced from Trello.
+ * TrelloBoard synced from Trello.
+ *
+ * External identity tracked via `Obj.Meta` foreignKeys
+ * (`{ source: 'trello.com', id: <trelloBoardId> }`).
+ * Credentials stored as an `AccessToken` reference, not inline.
  */
 export const TrelloBoard = Schema.Struct({
-  /** Board name. */
   name: Schema.optional(Schema.String),
-  /** Trello board ID for sync. */
-  trelloBoardId: Schema.String.pipe(FormInputAnnotation.set(false)),
-  /** Board URL on Trello. */
   url: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Trello API key. */
-  apiKey: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Trello API token. */
-  apiToken: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Last sync timestamp. */
+  /** Trello API credentials (key + token stored as AccessToken). */
+  accessToken: Schema.optional(
+    Ref.Ref(AccessToken.AccessToken).annotations({
+      title: 'Trello credentials',
+      description: 'API key and token for syncing this board.',
+    }),
+  ),
   lastSyncedAt: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Polling interval in milliseconds. */
   pollIntervalMs: Schema.optional(Schema.Number),
-  /** Whether the board is closed/archived. */
   closed: Schema.optional(Schema.Boolean.pipe(FormInputAnnotation.set(false))),
-  /** Associated Kanban object ID for this board. */
+  /** Associated Kanban object ID. */
   kanbanId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.trelloBoard',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
@@ -120,39 +110,71 @@ export const TrelloBoard = Schema.Struct({
 
 export interface TrelloBoard extends Schema.Schema.Type<typeof TrelloBoard> {}
 
-/** Checks if a value is a TrelloBoard object. */
 export const isBoard = (value: unknown): value is TrelloBoard => Obj.instanceOf(TrelloBoard, value);
 
-/** Input schema for creating a TrelloBoard. */
+/** Input schema for creating a TrelloBoard via the Create menu. */
 export const CreateTrelloBoardSchema = Schema.Struct({
-  trelloBoardId: Schema.String.annotations({
-    title: 'Board ID',
-    description: 'Trello board ID (found in the board URL).',
-  }),
-  apiKey: Schema.String.annotations({
-    title: 'API Key',
-    description: 'Trello API key from https://trello.com/power-ups/admin.',
-  }),
-  apiToken: Schema.String.annotations({
-    title: 'API Token',
-    description: 'Trello API token generated for the API key.',
-  }),
+  name: Schema.optional(
+    Schema.String.annotations({
+      title: 'Name',
+      description: 'Display name for the board.',
+    }),
+  ),
 });
 
 export interface CreateTrelloBoardSchema extends Schema.Schema.Type<typeof CreateTrelloBoardSchema> {}
 
-/** Creates a TrelloBoard object. */
-export const makeBoard = (props: CreateTrelloBoardSchema): TrelloBoard => {
+/** Creates a TrelloBoard object with foreignKey for the Trello board ID. */
+export const makeBoard = (props: { name?: string; trelloBoardId: string }): TrelloBoard => {
   return Obj.make(TrelloBoard, {
-    name: 'Trello Board',
-    trelloBoardId: props.trelloBoardId,
-    apiKey: props.apiKey,
-    apiToken: props.apiToken,
+    [Obj.Meta]: {
+      keys: [{ id: props.trelloBoardId, source: 'trello.com' }],
+    },
+    name: props.name ?? 'Trello Board',
     pollIntervalMs: 30_000,
   });
 };
 
-/** Creates a TrelloCard object. */
-export const makeCard = (props: Omit<Obj.MakeProps<typeof TrelloCard>, 'id'>): TrelloCard => {
-  return Obj.make(TrelloCard, props);
+/** Creates a TrelloCard object with foreignKey for the Trello card ID. */
+export const makeCard = (props: {
+  trelloCardId: string;
+  name: string;
+  description?: string;
+  trelloListId: string;
+  listName?: string;
+  position?: number;
+  url?: string;
+  closed?: boolean;
+  lastActivityAt?: string;
+  labels?: Label[];
+  members?: Member[];
+}): TrelloCard => {
+  const { trelloCardId, ...rest } = props;
+  return Obj.make(TrelloCard, {
+    [Obj.Meta]: {
+      keys: [{ id: trelloCardId, source: 'trello.com' }],
+    },
+    ...rest,
+  });
+};
+
+// ── Foreign key helpers ─────────────────────────────────────────────────────
+
+const TRELLO_SOURCE = 'trello.com';
+
+/** Extract the Trello ID from an object's foreignKeys. */
+export const getTrelloId = (obj: Obj.Any): string | undefined => {
+  const meta = Obj.getMeta(obj);
+  return meta.keys?.find((key: { source: string; id: string }) => key.source === TRELLO_SOURCE)?.id;
+};
+
+/** Extract the Trello board ID (alias for getTrelloId). */
+export const getTrelloBoardId = getTrelloId;
+
+/** Extract the Trello card ID (alias for getTrelloId). */
+export const getTrelloCardId = getTrelloId;
+
+/** Check if an object has a specific Trello foreign key. */
+export const hasTrelloId = (obj: Obj.Any, trelloId: string): boolean => {
+  return getTrelloId(obj) === trelloId;
 };

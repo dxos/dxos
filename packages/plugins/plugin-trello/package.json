@@ -19,6 +19,7 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#services": "./src/services/index.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -73,6 +74,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",

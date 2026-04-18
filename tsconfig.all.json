@@ -454,6 +454,9 @@
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-trello/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {

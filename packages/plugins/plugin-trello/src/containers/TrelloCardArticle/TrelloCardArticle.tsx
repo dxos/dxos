@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Filter } from '@dxos/echo';
+import { Icon, Panel, Toolbar } from '@dxos/react-ui';
 
+import { PushCard } from '#operations';
 import { Trello } from '#types';
 
 export type TrelloCardArticleProps = {
@@ -17,22 +19,28 @@ export type TrelloCardArticleProps = {
   attendableId?: string;
 };
 
-const TRELLO_API_BASE = 'https://api.trello.com/1';
-
 /**
  * Article view for editing a TrelloCard and pushing changes back to Trello.
  */
-export const TrelloCardArticle = ({ subject: card }: TrelloCardArticleProps) => {
+export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProps) => {
   const [pushing, setPushing] = useState(false);
   const [pushStatus, setPushStatus] = useState<string | null>(null);
+  const { invokePromise } = useOperationInvoker();
 
-  // Find the board that owns this card (to get API credentials).
+  // Find the board that owns this card by matching Trello foreign keys.
   const db = Obj.getDatabase(card);
   const boards: Trello.TrelloBoard[] = useQuery(db, Filter.type(Trello.TrelloBoard));
-  const board = boards[0];
+  const board = useMemo(() => {
+    // If there's only one board, use it.
+    if (boards.length <= 1) {
+      return boards[0];
+    }
+    // Otherwise, we return the first board with a matching accessToken (all boards are candidates).
+    return boards.find((candidate) => candidate.accessToken !== undefined) ?? boards[0];
+  }, [boards]);
 
   const handlePush = useCallback(async () => {
-    if (!board?.apiKey || !board?.apiToken) {
+    if (!board?.accessToken) {
       setPushStatus('No API credentials found');
       return;
     }
@@ -40,26 +48,10 @@ export const TrelloCardArticle = ({ subject: card }: TrelloCardArticleProps) => 
     setPushing(true);
     setPushStatus(null);
     try {
-      const auth = `key=${board.apiKey}&token=${board.apiToken}`;
-      const fields = new URLSearchParams();
-      fields.set('name', card.name);
-      if (card.description !== undefined) {
-        fields.set('desc', card.description ?? '');
-      }
-      if (card.trelloListId) {
-        fields.set('idList', card.trelloListId);
-      }
-
-      const response = await fetch(
-        `${TRELLO_API_BASE}/cards/${card.trelloCardId}?${auth}`,
-        { method: 'PUT', body: fields },
-      );
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Trello API error: ${response.status} ${text}`);
-      }
-
+      await invokePromise(PushCard, {
+        board: Ref.make(board),
+        card: Ref.make(card),
+      });
       setPushStatus('Pushed to Trello');
       setTimeout(() => setPushStatus(null), 3000);
     } catch (error) {
@@ -68,13 +60,58 @@ export const TrelloCardArticle = ({ subject: card }: TrelloCardArticleProps) => 
     } finally {
       setPushing(false);
     }
-  }, [board, card]);
+  }, [board, card, invokePromise]);
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          {card.labels && card.labels.length > 0 && (
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Text classNames='truncate'>{card.name}</Toolbar.Text>
+          <Toolbar.Separator />
+          <Toolbar.IconButton
+            label={pushing ? 'Pushing...' : 'Push to Trello'}
+            icon='ph--cloud-arrow-up--regular'
+            iconOnly
+            disabled={pushing || !board?.accessToken}
+            onClick={handlePush}
+          />
+          {pushStatus && <Toolbar.Text>{pushStatus}</Toolbar.Text>}
+          {card.url && (
+            <a href={card.url} target='_blank' rel='noreferrer'>
+              <Toolbar.IconButton label='Open in Trello' icon='ph--arrow-square-out--regular' iconOnly />
+            </a>
+          )}
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content classNames='p-4 space-y-3'>
+        <div>
+          <label className='mb-1 block text-xs font-medium text-subdued'>Name</label>
+          <input
+            type='text'
+            value={card.name}
+            onChange={(event) => Obj.change(card, (mutable) => { mutable.name = event.target.value; })}
+            className='w-full rounded border border-separator bg-transparent px-3 py-2 text-sm'
+          />
+        </div>
+
+        <div>
+          <label className='mb-1 block text-xs font-medium text-subdued'>Description</label>
+          <textarea
+            value={card.description ?? ''}
+            onChange={(event) => Obj.change(card, (mutable) => { mutable.description = event.target.value; })}
+            rows={8}
+            className='w-full rounded border border-separator bg-transparent px-3 py-2 text-sm'
+          />
+        </div>
+
+        <div>
+          <label className='mb-1 block text-xs font-medium text-subdued'>List</label>
+          <p className='text-sm text-description'>{card.listName ?? 'Unknown'}</p>
+        </div>
+
+        {card.labels && card.labels.length > 0 && (
+          <div>
+            <label className='mb-1 block text-xs font-medium text-subdued'>Labels</label>
             <div className='flex gap-1'>
               {card.labels.map((label) => (
                 <span
@@ -86,72 +123,28 @@ export const TrelloCardArticle = ({ subject: card }: TrelloCardArticleProps) => 
                 </span>
               ))}
             </div>
-          )}
-        </div>
-        <div className='flex items-center gap-2 text-sm'>
-          <button
-            onClick={handlePush}
-            disabled={pushing || !board?.apiKey}
-            className='rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50'
-          >
-            {pushing ? 'Pushing...' : 'Push to Trello'}
-          </button>
-          {pushStatus && (
-            <span className='text-neutral-500'>{pushStatus}</span>
-          )}
-          {card.url && (
-            <a href={card.url} target='_blank' rel='noopener noreferrer' className='text-blue-500 hover:underline'>
-              Open in Trello
-            </a>
-          )}
-        </div>
-      </div>
-
-      <div className='flex flex-col gap-3'>
-        <div>
-          <label className='mb-1 block text-xs font-medium text-neutral-500'>Name</label>
-          <input
-            type='text'
-            value={card.name}
-            onChange={(event) => Obj.change(card, (mutable) => { mutable.name = event.target.value; })}
-            className='w-full rounded border border-neutral-600 bg-transparent px-3 py-2 text-sm'
-          />
-        </div>
-
-        <div>
-          <label className='mb-1 block text-xs font-medium text-neutral-500'>Description</label>
-          <textarea
-            value={card.description ?? ''}
-            onChange={(event) => Obj.change(card, (mutable) => { mutable.description = event.target.value; })}
-            rows={8}
-            className='w-full rounded border border-neutral-600 bg-transparent px-3 py-2 text-sm'
-          />
-        </div>
-
-        <div>
-          <label className='mb-1 block text-xs font-medium text-neutral-500'>List</label>
-          <div className='text-sm text-neutral-300'>{card.listName ?? 'Unknown'}</div>
-        </div>
+          </div>
+        )}
 
         {card.dueDate && (
           <div>
-            <label className='mb-1 block text-xs font-medium text-neutral-500'>Due Date</label>
-            <div className='text-sm text-neutral-300'>
+            <label className='mb-1 block text-xs font-medium text-subdued'>Due Date</label>
+            <p className='text-sm text-description'>
               {new Date(card.dueDate).toLocaleDateString()}
               {card.dueComplete && ' (complete)'}
-            </div>
+            </p>
           </div>
         )}
 
         {card.members && card.members.length > 0 && (
           <div>
-            <label className='mb-1 block text-xs font-medium text-neutral-500'>Members</label>
-            <div className='text-sm text-neutral-300'>
+            <label className='mb-1 block text-xs font-medium text-subdued'>Members</label>
+            <p className='text-sm text-description'>
               {card.members.map((member) => member.fullName ?? member.username).join(', ')}
-            </div>
+            </p>
           </div>
         )}
-      </div>
-    </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

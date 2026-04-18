@@ -6,14 +6,15 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getTypePath, LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Kanban } from '@dxos/plugin-kanban/types';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Icon, Panel, ScrollArea, Tag, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { ViewModel } from '@dxos/schema';
 
+import { SyncBoard } from '#operations';
 import { Trello } from '#types';
 
 export type TrelloArticleProps = {
@@ -21,8 +22,6 @@ export type TrelloArticleProps = {
   subject: Trello.TrelloBoard;
   attendableId?: string;
 };
-
-const TRELLO_API_BASE = 'https://api.trello.com/1';
 
 //
 // Card tile for Mosaic.VirtualStack.
@@ -37,10 +36,11 @@ type CardTileProps = Pick<MosaicTileProps<CardTileData>, 'data' | 'location' | '
 const CardTile = forwardRef<HTMLDivElement, CardTileProps>(({ data, location, current }, forwardedRef) => {
   const { card } = data;
   const { setCurrentId } = useMosaicContainer('CardTile');
+  const cardId = Trello.getTrelloCardId(card) ?? card.id;
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={card.trelloCardId} data={data} location={location}>
-      <Focus.Item asChild current={current} onCurrentChange={() => setCurrentId(card.trelloCardId)}>
+    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={cardId} data={data} location={location}>
+      <Focus.Item asChild current={current} onCurrentChange={() => setCurrentId(cardId)}>
         <Card.Root ref={forwardedRef}>
           <Card.Toolbar>
             <Card.IconBlock>
@@ -97,8 +97,12 @@ CardTile.displayName = 'CardTile';
 
 export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
   const db = Obj.getDatabase(board);
+  const trelloBoardId = Trello.getTrelloBoardId(board);
   const allCards: Trello.TrelloCard[] = useQuery(db, Filter.type(Trello.TrelloCard));
-  const boardCards = allCards.filter((card) => !card.closed && card.trelloBoardId === board.trelloBoardId);
+  const boardCards = useMemo(
+    () => allCards.filter((card) => !card.closed && Trello.getTrelloCardId(card) !== undefined),
+    [allCards],
+  );
   const [syncing, setSyncing] = useState(false);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const { invokePromise } = useOperationInvoker();
@@ -119,98 +123,22 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
   );
 
   const handleSync = useCallback(async () => {
-    if (!db || !board.apiKey || !board.apiToken) {
+    if (!db || !board.accessToken) {
       return;
     }
 
     setSyncing(true);
     try {
-      const auth = `key=${board.apiKey}&token=${board.apiToken}`;
-      const [boardRes, listsRes, cardsRes] = await Promise.all([
-        fetch(`${TRELLO_API_BASE}/boards/${board.trelloBoardId}?${auth}`),
-        fetch(`${TRELLO_API_BASE}/boards/${board.trelloBoardId}/lists?filter=open&${auth}`),
-        fetch(`${TRELLO_API_BASE}/boards/${board.trelloBoardId}/cards?members=true&filter=open&${auth}`),
-      ]);
+      await invokePromise(SyncBoard, { board: Ref.make(board) });
 
-      const [boardInfo, remoteLists, remoteCards] = await Promise.all([
-        boardRes.json(),
-        listsRes.json(),
-        cardsRes.json(),
-      ]);
-
-      const listNameById = new Map<string, string>(remoteLists.map((list: any) => [list.id, list.name]));
-
-      Obj.change(board, (mutable) => {
-        mutable.name = boardInfo.name;
-        mutable.url = boardInfo.url;
-        mutable.closed = boardInfo.closed;
-      });
-
-      const ownedCards = allCards.filter((card) => card.trelloBoardId === board.trelloBoardId || !card.trelloBoardId);
-      const existingByTrelloId = new Map(ownedCards.map((card) => [card.trelloCardId, card]));
-
-      for (const remote of remoteCards) {
-        const listName = listNameById.get(remote.idList);
-        const labels = remote.labels?.map((label: any) => ({
-          trelloId: label.id,
-          name: label.name,
-          color: label.color ?? undefined,
-        }));
-        const members = remote.members?.map((member: any) => ({
-          trelloId: member.id,
-          fullName: member.fullName,
-          username: member.username,
-          avatarUrl: member.avatarUrl ?? undefined,
-        }));
-
-        const existing = existingByTrelloId.get(remote.id);
-        if (existing) {
-          Obj.change(existing, (mutable) => {
-            mutable.name = remote.name;
-            mutable.description = remote.desc;
-            mutable.trelloBoardId = board.trelloBoardId;
-            mutable.trelloListId = remote.idList;
-            mutable.listName = listName;
-            mutable.position = remote.pos;
-            mutable.dueDate = remote.due ?? undefined;
-            mutable.dueComplete = remote.dueComplete;
-            mutable.labels = labels;
-            mutable.members = members;
-            mutable.url = remote.url;
-            mutable.closed = remote.closed;
-            mutable.lastActivityAt = remote.dateLastActivity;
-          });
-        } else {
-          db.add(Trello.makeCard({
-            name: remote.name,
-            description: remote.desc,
-            trelloCardId: remote.id,
-            trelloBoardId: board.trelloBoardId,
-            trelloListId: remote.idList,
-            listName,
-            position: remote.pos,
-            dueDate: remote.due ?? undefined,
-            dueComplete: remote.dueComplete,
-            labels,
-            members,
-            url: remote.url,
-            closed: remote.closed,
-            lastActivityAt: remote.dateLastActivity,
-          }));
-        }
-      }
-
-      const remoteIds = new Set(remoteCards.map((rc: any) => rc.id));
-      for (const [trelloId, existing] of existingByTrelloId) {
-        if (!remoteIds.has(trelloId)) {
-          Obj.change(existing, (mutable) => { mutable.closed = true; });
-        }
-      }
-
-      Obj.change(board, (mutable) => { mutable.lastSyncedAt = new Date().toISOString(); });
-
-      if (!board.kanbanId && db) {
+      // Create Kanban view on first sync if not already created.
+      if (!board.kanbanId) {
         try {
+          const remoteLists = allCards
+            .filter((card) => card.listName)
+            .map((card) => card.listName!)
+            .filter((name, index, arr) => arr.indexOf(name) === index);
+
           const { view } = await ViewModel.makeFromDatabase({
             db,
             typename: 'org.dxos.type.trelloCard',
@@ -218,11 +146,11 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
             fields: ['name', 'description', 'listName', 'dueDate'],
             createInitial: 0,
           });
-          const listOrder = remoteLists.map((list: any) => list.name as string);
+
           const kanban = Kanban.make({
-            name: boardInfo.name,
+            name: board.name ?? 'Trello Board',
             view,
-            arrangement: { order: listOrder, columns: {} },
+            arrangement: { order: remoteLists, columns: {} },
           });
           db.add(kanban);
           Obj.change(board, (mutable) => { mutable.kanbanId = kanban.id; });
@@ -235,15 +163,15 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
     } finally {
       setSyncing(false);
     }
-  }, [db, board, boardCards]);
+  }, [db, board, allCards, invokePromise]);
 
   const didAutoSync = useRef(false);
   useEffect(() => {
-    if (!didAutoSync.current && board.apiKey && board.apiToken && !board.lastSyncedAt) {
+    if (!didAutoSync.current && board.accessToken && !board.lastSyncedAt) {
       didAutoSync.current = true;
       void handleSync();
     }
-  }, [board.apiKey, board.apiToken, board.lastSyncedAt, handleSync]);
+  }, [board.accessToken, board.lastSyncedAt, handleSync]);
 
   return (
     <Panel.Root role={role}>
@@ -255,7 +183,7 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
             label={syncing ? 'Syncing...' : 'Sync board'}
             icon='ph--arrows-clockwise--regular'
             iconOnly
-            disabled={syncing || !board.apiKey || !board.apiToken}
+            disabled={syncing || !board.accessToken}
             onClick={handleSync}
           />
           {board.kanbanId && (
@@ -290,7 +218,7 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
                   gap={8}
                   items={cardItems}
                   draggable={false}
-                  getId={(item) => item.card.trelloCardId}
+                  getId={(item) => Trello.getTrelloCardId(item.card) ?? item.card.id}
                   getScrollElement={() => viewport}
                   estimateSize={() => 120}
                 />
@@ -299,9 +227,9 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
           </Mosaic.Container>
         </Focus.Group>
       </Panel.Content>
-      {(!board.apiKey || !board.apiToken) && (
+      {!board.accessToken && (
         <Panel.Statusbar>
-          <p className='flex p-1 items-center text-warning-text'>Configure API Key and Token in board properties to enable sync.</p>
+          <p className='flex p-1 items-center text-warning-text'>Configure an AccessToken in board properties to enable sync.</p>
         </Panel.Statusbar>
       )}
     </Panel.Root>

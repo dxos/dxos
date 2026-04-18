@@ -4,16 +4,26 @@
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-const TRELLO_API_BASE = 'https://api.trello.com/1';
+import { type TrelloAuth } from '../services';
 
-/** Auth params appended to every Trello request. */
-type TrelloAuth = { apiKey: string; apiToken: string };
+const TRELLO_API_BASE = 'https://api.trello.com/1';
 
 const withAuth = (request: HttpClientRequest.HttpClientRequest, auth: TrelloAuth) =>
   HttpClientRequest.setUrlParams(request, { key: auth.apiKey, token: auth.apiToken });
+
+/** Checks response status and fails with descriptive error if not ok. */
+const ensureOk = (response: HttpClientResponse.HttpClientResponse) =>
+  Effect.gen(function* () {
+    if (!response.status.toString().startsWith('2')) {
+      const text = yield* response.text;
+      return yield* Effect.fail(new Error(`Trello API error: ${response.status} ${text}`));
+    }
+    return response;
+  });
 
 /** Trello board response shape. */
 export const TrelloBoardResponse = Schema.Struct({
@@ -70,6 +80,7 @@ export const getBoard = (boardId: string, auth: TrelloAuth) =>
     const client = yield* HttpClient.HttpClient;
     const request = HttpClientRequest.get(`${TRELLO_API_BASE}/boards/${boardId}`);
     const response = yield* client.execute(withAuth(request, auth));
+    yield* ensureOk(response);
     const json = yield* response.json;
     return yield* Schema.decodeUnknown(TrelloBoardResponse)(json);
   });
@@ -80,6 +91,7 @@ export const getLists = (boardId: string, auth: TrelloAuth) =>
     const client = yield* HttpClient.HttpClient;
     const request = HttpClientRequest.get(`${TRELLO_API_BASE}/boards/${boardId}/lists`);
     const response = yield* client.execute(withAuth(HttpClientRequest.setUrlParams(request, { filter: 'open' }), auth));
+    yield* ensureOk(response);
     const json = yield* response.json;
     return yield* Schema.decodeUnknown(Schema.Array(TrelloListResponse))(json);
   });
@@ -92,6 +104,7 @@ export const getCards = (boardId: string, auth: TrelloAuth) =>
     const response = yield* client.execute(
       withAuth(HttpClientRequest.setUrlParams(request, { members: 'true', filter: 'open' }), auth),
     );
+    yield* ensureOk(response);
     const json = yield* response.json;
     return yield* Schema.decodeUnknown(Schema.Array(TrelloCardResponse))(json);
   });
@@ -102,6 +115,7 @@ export const updateCard = (cardId: string, fields: Record<string, string>, auth:
     const client = yield* HttpClient.HttpClient;
     const request = HttpClientRequest.put(`${TRELLO_API_BASE}/cards/${cardId}`);
     const response = yield* client.execute(withAuth(HttpClientRequest.setUrlParams(request, fields), auth));
+    yield* ensureOk(response);
     const json = yield* response.json;
     return yield* Schema.decodeUnknown(TrelloCardResponse)(json);
   });
@@ -116,6 +130,7 @@ export const createCard = (listId: string, name: string, auth: TrelloAuth) =>
     const client = yield* HttpClient.HttpClient;
     const request = HttpClientRequest.post(`${TRELLO_API_BASE}/cards`);
     const response = yield* client.execute(withAuth(HttpClientRequest.setUrlParams(request, { idList: listId, name }), auth));
+    yield* ensureOk(response);
     const json = yield* response.json;
     return yield* Schema.decodeUnknown(TrelloCardResponse)(json);
   });

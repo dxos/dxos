@@ -4,6 +4,7 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Database, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -11,19 +12,20 @@ import { Operation } from '@dxos/operation';
 
 import { SyncBoard } from './definitions';
 import * as TrelloAPI from './trello-api';
+import { TrelloCredentials } from '../services';
 import { Trello } from '../types';
 
 const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
   Operation.withHandler(({ board: boardRef }) =>
     Effect.gen(function* () {
       const board = yield* Database.load(boardRef);
-      const { trelloBoardId, apiKey, apiToken } = board as Trello.TrelloBoard;
+      const trelloBoardId = Trello.getTrelloBoardId(board as Trello.TrelloBoard);
 
-      if (!apiKey || !apiToken) {
-        return yield* Effect.fail(new Error('Trello API key and token are required'));
+      if (!trelloBoardId) {
+        return yield* Effect.fail(new Error('Board has no Trello foreign key'));
       }
 
-      const auth = { apiKey, apiToken };
+      const auth = yield* TrelloCredentials.get();
       log('syncing trello board', { boardId: trelloBoardId });
 
       // Fetch remote state.
@@ -43,7 +45,7 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
         mutable.closed = boardInfo.closed;
       });
 
-      // Query all existing TrelloCard objects and filter to this board's cards.
+      // Query all existing TrelloCard objects and filter to this board's cards by foreignKey.
       const db = Obj.getDatabase(board);
       if (!db) {
         return yield* Effect.fail(new Error('Board has no database'));
@@ -51,9 +53,15 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
       const allCards: Trello.TrelloCard[] = yield* Effect.promise(() =>
         db.query(Filter.type(Trello.TrelloCard)).run(),
       );
-      const existingCardsByTrelloId = new Map(
-        allCards.map((card) => [card.trelloCardId, card]),
-      );
+
+      // Build index of existing cards by their Trello foreign key.
+      const existingCardsByTrelloId = new Map<string, Trello.TrelloCard>();
+      for (const card of allCards) {
+        const cardTrelloId = Trello.getTrelloCardId(card);
+        if (cardTrelloId) {
+          existingCardsByTrelloId.set(cardTrelloId, card);
+        }
+      }
 
       let cardsCreated = 0;
       let cardsUpdated = 0;
@@ -92,9 +100,9 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
           cardsUpdated++;
         } else {
           const card = Trello.makeCard({
+            trelloCardId: remoteCard.id,
             name: remoteCard.name,
             description: remoteCard.desc,
-            trelloCardId: remoteCard.id,
             trelloListId: remoteCard.idList,
             listName,
             position: remoteCard.pos,
@@ -130,7 +138,11 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
 
       log('sync complete', { cardsCreated, cardsUpdated, cardsRemoved });
       return { cardsCreated, cardsUpdated, cardsRemoved };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(FetchHttpClient.layer, TrelloCredentials.fromBoard(boardRef)),
+      ),
+    ),
   ),
 );
 
