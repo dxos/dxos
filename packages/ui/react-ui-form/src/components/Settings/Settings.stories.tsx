@@ -61,9 +61,15 @@ const TestViewMode = Schema.Union(...TestViewModes.map((mode) => Schema.Literal(
 const TestSettings = Schema.mutable(
   Schema.Struct({
     viewMode: TestViewMode.annotations({ title: 'View mode', description: 'Default document view mode.' }),
-    toolbar: Schema.optional(Schema.Boolean.annotations({ title: 'Show toolbar', description: 'Display formatting toolbar.' })),
-    fontSize: Schema.optional(Schema.Number.annotations({ title: 'Font size', description: 'Editor font size in pixels.' })),
-    placeholder: Schema.optional(Schema.String.annotations({ title: 'Placeholder', description: 'Default placeholder text.' })),
+    toolbar: Schema.optional(
+      Schema.Boolean.annotations({ title: 'Show toolbar', description: 'Display formatting toolbar.' }),
+    ),
+    fontSize: Schema.optional(
+      Schema.Number.annotations({ title: 'Font size', description: 'Editor font size in pixels.' }),
+    ),
+    placeholder: Schema.optional(
+      Schema.String.annotations({ title: 'Placeholder', description: 'Default placeholder text.' }),
+    ),
     debug: Schema.optional(Schema.Boolean.annotations({ title: 'Debug mode', description: 'Enable debug features.' })),
   }),
 );

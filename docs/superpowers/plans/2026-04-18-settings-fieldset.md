@@ -15,6 +15,7 @@
 The `FormField.tsx` contains inline logic to detect schema types (boolean, string, number, literal union). Extract the type-detection into a standalone utility so both `FormField` and the new `SettingsFieldSet` can reuse it.
 
 **Files:**
+
 - Create: `packages/ui/react-ui-form/src/util/field-type.ts`
 - Modify: `packages/ui/react-ui-form/src/util/index.ts`
 
@@ -102,6 +103,7 @@ git commit -m "feat(react-ui-form): extract shared field-type detection utility"
 Create the core component that iterates schema properties and renders typed controls inside `Settings.Item` wrappers.
 
 **Files:**
+
 - Create: `packages/ui/react-ui-form/src/components/Settings/SettingsFieldSet.tsx`
 - Modify: `packages/ui/react-ui-form/src/components/Settings/Settings.tsx` (add FieldSet to exports)
 
@@ -312,11 +314,13 @@ const SettingsFieldItem = ({ property, value, onChange, readonly, customField }:
 In `packages/ui/react-ui-form/src/components/Settings/Settings.tsx`, add the import and export:
 
 Add import at top:
+
 ```typescript
 import { SettingsFieldSet } from './SettingsFieldSet';
 ```
 
 Update the `Settings` export object:
+
 ```typescript
 export const Settings = {
   Root: SettingsRoot,
@@ -355,6 +359,7 @@ git commit -m "feat(react-ui-form): add Settings.FieldSet for schema-driven sett
 Validate the component visually with a representative test schema.
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/components/Settings/Settings.stories.tsx`
 
 - [ ] **Step 1: Add a FieldSet story**
@@ -403,6 +408,7 @@ const FieldSetStory = () => {
 ```
 
 Add the story export:
+
 ```typescript
 export const FieldSet: Story = {
   render: FieldSetStory,
@@ -428,6 +434,7 @@ git commit -m "feat(react-ui-form): add Settings.FieldSet storybook story"
 Add `title` and `description` annotations to the markdown plugin's settings schema so `Settings.FieldSet` can auto-generate labels. Also annotate `EditorViewMode` and `EditorInputMode` literal members.
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/types/Settings.ts`
 - Modify: `packages/ui/ui-editor/src/types/types.ts`
 
@@ -529,6 +536,7 @@ git commit -m "feat(plugin-markdown): annotate settings schema with title and de
 Replace the manual settings component with the auto-generated version.
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/components/MarkdownSettings/MarkdownSettings.tsx`
 
 - [ ] **Step 1: Rewrite MarkdownSettings**
@@ -578,6 +586,7 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
 In `packages/plugins/plugin-markdown/src/translations.ts`, remove the settings-specific translation keys that are now handled by schema annotations:
 
 Remove these keys from the `[meta.id]` section:
+
 - `'settings.title'`
 - `'editor-input-mode.label'`
 - `'editor-input-mode.description'`
@@ -631,6 +640,7 @@ git commit -m "refactor(plugin-markdown): replace manual settings UI with Settin
 The `getSelectOptionsFromAst` utility in Task 1 capitalizes the literal value as the label. For annotated literals (like `Schema.Literal('preview').annotations({ title: 'Preview' })`), we should use the annotation instead.
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/util/field-type.ts`
 
 - [ ] **Step 1: Update getSelectOptionsFromAst to read literal annotations**
@@ -656,7 +666,8 @@ export const getSelectOptionsFromAst = (ast: SchemaAST.AST): SelectOption[] | un
     .map((value, index) => {
       const literalNode = (ast as SchemaAST.Union<SchemaAST.Literal>).types[index];
       const title = getAnnotation<string>(SchemaAST.TitleAnnotationId, false)(literalNode);
-      const label = title ?? (typeof value === 'string' ? value.charAt(0).toUpperCase() + value.slice(1) : String(value));
+      const label =
+        title ?? (typeof value === 'string' ? value.charAt(0).toUpperCase() + value.slice(1) : String(value));
       return { value, label };
     });
 };
@@ -681,6 +692,7 @@ git commit -m "feat(react-ui-form): read title annotations from literal union me
 ### Task 7: Visual verification and cleanup
 
 **Files:**
+
 - All modified files from previous tasks
 
 - [ ] **Step 1: Full build**
@@ -701,6 +713,7 @@ Expected: All PASS
 - [ ] **Step 4: Verify storybook**
 
 Run storybook and verify Settings.FieldSet story renders correctly with:
+
 - Select dropdown for view mode (with labeled options)
 - Boolean toggles for toolbar, debug, etc.
 - Conditional visibility of placeholder field
