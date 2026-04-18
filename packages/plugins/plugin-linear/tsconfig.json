@@ -33,7 +33,19 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-kanban"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }

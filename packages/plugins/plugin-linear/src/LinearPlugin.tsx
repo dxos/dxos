@@ -7,10 +7,13 @@ import * as Option from 'effect/Option';
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
+import { SpaceEvents } from '@dxos/plugin-space/types';
 
-import { meta } from './meta';
+import { AutoSync } from '#capabilities';
+import { meta } from '#meta';
+import { Linear } from '#types';
+
 import { translations } from './translations';
-import { Linear } from './types';
 
 export const LinearPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -32,5 +35,10 @@ export const LinearPlugin = Plugin.define(meta).pipe(
     ],
   }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'auto-sync',
+    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activate: AutoSync,
+  }),
   Plugin.make,
 );
