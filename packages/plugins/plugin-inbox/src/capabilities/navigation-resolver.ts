@@ -108,7 +108,7 @@ export default Capability.makeModule(
               | Message.Message
               | undefined;
             if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
-              return Option.some(mailboxDxn);
+              return Option.some(Obj.getDXN(fromDb));
             }
 
             return Option.none<DXN>();
