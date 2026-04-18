@@ -19,6 +19,7 @@ import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
+import { DiscordPlugin } from '@dxos/plugin-discord';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
@@ -146,6 +147,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
+      DiscordPlugin.meta.id,
       FeedPlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
@@ -199,6 +201,7 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
+    DiscordPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
@@ -231,7 +234,7 @@ export const getPlugins = ({
     RuntimePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
-    SidekickPlugin(),
+    isLabs && SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),

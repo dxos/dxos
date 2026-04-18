@@ -15,7 +15,7 @@ import { type Settings } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsProps = AppSurface.SettingsArticleProps<
+export type SpaceSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
     spaces?: Space[];
@@ -23,12 +23,7 @@ export type SpacePluginSettingsProps = AppSurface.SettingsArticleProps<
   }
 >;
 
-export const SpacePluginSettings = ({
-  settings,
-  onSettingsChange,
-  spaces,
-  onOpenSpaceSettings,
-}: SpacePluginSettingsProps) => {
+export const SpaceSettings = ({ settings, onSettingsChange, spaces, onOpenSpaceSettings }: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (

@@ -31,6 +31,7 @@ export const Profile = Schema.Struct({
 
 export interface Profile extends Schema.Schema.Type<typeof Profile> {}
 
+/** Creates a Sidekick profile with journal enabled by default. */
 export const make = (props: { agent: Ref.Ref<Agent.Agent>; journal: Ref.Ref<Journal.Journal>; name?: string }) =>
   Obj.make(Profile, {
     name: props.name,

@@ -49,6 +49,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
                   type='checkbox'
                   checked={entry.autoRespond}
                   onChange={() => onUpdate?.(entry.profileId, 'autoRespond', !entry.autoRespond)}
+                  aria-label={`Auto-respond for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
@@ -56,6 +57,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
                   type='checkbox'
                   checked={entry.createDraft}
                   onChange={() => onUpdate?.(entry.profileId, 'createDraft', !entry.createDraft)}
+                  aria-label={`Draft for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
@@ -63,6 +65,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
                   type='checkbox'
                   checked={entry.researchEnabled}
                   onChange={() => onUpdate?.(entry.profileId, 'researchEnabled', !entry.researchEnabled)}
+                  aria-label={`Research for ${entry.name}`}
                 />
               </td>
             </tr>

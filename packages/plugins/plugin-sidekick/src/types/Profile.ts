@@ -28,6 +28,7 @@ export const Profile = Schema.Struct({
 
 export interface Profile extends Schema.Schema.Type<typeof Profile> {}
 
+/** Creates a sidekick profile with default capability flags and timestamp metadata. */
 export const make = (props: { subject: Ref.Ref<Obj.Unknown>; document: Ref.Ref<Obj.Unknown> }) =>
   Obj.make(Profile, {
     subject: props.subject,

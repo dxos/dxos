@@ -14,7 +14,7 @@ import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -248,7 +248,8 @@ const runPrompt = Effect.fn(function* ({
   });
 
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(
+  const result = yield* Operation.invoke(AgentPrompt, inputData).pipe(
+    Effect.orDie,
     Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );

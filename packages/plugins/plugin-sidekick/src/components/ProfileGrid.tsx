@@ -33,6 +33,7 @@ export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
           {profiles.map((profile) => (
             <button
               key={profile.id}
+              type='button'
               onClick={() => onSelect?.(profile.id)}
               className='p-3 rounded-md border border-separator text-left hover:bg-hoverSurface transition-colors'
             >

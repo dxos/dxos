@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiSession } from '@dxos/assistant';
+import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
@@ -14,7 +14,10 @@ import { Pipeline } from '@dxos/types';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
-const TestLayer = AssistantTestLayer({});
+const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(ToolExecutionServices),
+  Layer.provideMerge(AssistantTestLayer({})),
+);
 
 describe('graph', () => {
   // let builder: EchoTestBuilder;

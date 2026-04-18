@@ -13,9 +13,9 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -54,7 +54,7 @@ describe('update', () => {
         });
         yield* Database.add(doc);
 
-        yield* FunctionInvocationService.invokeFunction(Update, {
+        yield* Operation.invoke(Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });

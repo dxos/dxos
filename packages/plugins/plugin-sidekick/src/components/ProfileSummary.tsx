@@ -19,7 +19,7 @@ export const ProfileSummary = ({ summary, onOpen }: ProfileSummaryProps) => {
   return (
     <Form.Section label={t('user-profile.title')}>
       {summary ? (
-        <button onClick={onOpen} className='text-left w-full'>
+        <button type='button' onClick={onOpen} className='text-left w-full'>
           <p className='text-sm text-description whitespace-pre-wrap line-clamp-4'>{summary}</p>
         </button>
       ) : (

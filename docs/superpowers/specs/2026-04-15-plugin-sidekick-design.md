@@ -10,7 +10,7 @@
 The agent's `spec` document contains a `Template.make()` with the following text.
 Template inputs: `userName` (from identity profile), space context objects.
 
-```
+```text
 # Sidekick Agent
 
 You are {{userName}}'s personal sidekick agent.

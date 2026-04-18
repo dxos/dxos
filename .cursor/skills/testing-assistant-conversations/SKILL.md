@@ -16,7 +16,7 @@ Import from `@dxos/assistant/testing`.
 - **AI** — `TestAiService` (memoized by default; see below), default model `@anthropic/claude-opus-4-6`.
 - **Tool execution** — `ToolExecutionServices` and `GenericToolkit.providerLayer`.
 - **Blueprint registry** — `Blueprint.RegistryService` seeded with optional `blueprints`.
-- **Functions** — `FunctionInvocationServiceLayerTest` with your `operationHandlers`.
+- **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/assistant/src/testing/layer.ts`).
 - **ECHO test DB** — `TestDatabaseLayer` with `types` you register.
 - **Credentials** — `CredentialsService.configuredLayer(credentials)` (often `[]` in tests).
 - **Tracing** — `noop` | `console` | `pretty`.
@@ -27,7 +27,7 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 
 | Option                        | Role                                                                                                                                                                                                                    |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `operationHandlers`           | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations.                                                                                                          |
+| `operationHandlers`           | `OperationHandlerSet` (or merged sets) registered via `OperationHandlerSet.provide` so `Operation.invoke` resolves your operations.                                                                                     |
 | `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                          |
 | `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                  |
 | `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                             |
@@ -97,7 +97,7 @@ Many tests call **`ObjectId.dangerouslyDisableRandomness()`** at module scope fo
 
 1. `yield* Database.add(...)` / `Obj.make(...)` for fixtures.
 2. `yield* Database.flush()` before invoking functions or conversations that read persisted state.
-3. Call **`FunctionInvocationService.invokeFunction(Operation, input)`** for direct operation tests, or **`AiConversationService.run`**, **`new AiConversation`**, **`AiSession`**, etc., depending on the layer under test.
+3. Call **`Operation.invoke(Operation, input)`** for direct operation tests, or **`AiConversationService.run`**, **`new AiConversation`**, **`AiSession`**, etc., depending on the layer under test.
 
 ### Registering blueprints in tests
 
