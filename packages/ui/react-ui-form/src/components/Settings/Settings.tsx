@@ -8,6 +8,9 @@ import { Input, type Label, ScrollArea, type ThemedClassName, toLocalizedString,
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
+import { SettingsFieldSet } from './SettingsFieldSet';
+
+export { type SettingsFieldMap, type SettingsFieldProps, type SettingsFieldSetProps } from './SettingsFieldSet';
 
 const SETTINGS_ROOT_NAME = 'Settings.Root';
 const SETTINGS_VIEWPORT_NAME = 'Settings.Viewport';
@@ -126,4 +129,5 @@ export const Settings = {
   Section: SettingsSection,
   Panel: SettingsPanel,
   Item: SettingsItem,
+  FieldSet: SettingsFieldSet,
 };
