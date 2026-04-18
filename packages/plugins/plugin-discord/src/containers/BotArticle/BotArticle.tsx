@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Button, Clipboard, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Column, Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { type Discord } from '#types';
@@ -39,12 +39,12 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <span>{t(`status-${bot.status ?? 'disconnected'}.label`)}</span>
+          <Toolbar.Text>{t(`status-${bot.status ?? 'disconnected'}.label`)}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 space-y-4'>
+        <Column.Root>
+          <Column.Viewport>
             <Input.Root>
               <Input.Label>{t('bot-token.label')}</Input.Label>
               <div role='none' className='flex items-center gap-2'>
@@ -90,8 +90,8 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
                 {t('disconnect.button')}
               </Button>
             )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+          </Column.Viewport>
+        </Column.Root>
       </Panel.Content>
     </Panel.Root>
   );
