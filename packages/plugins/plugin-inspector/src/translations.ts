@@ -11,7 +11,7 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin.name': 'Inspector',
-        'companion-label.label': 'Agent Inspector',
+        'companion.label': 'Agent Inspector',
         'stop-action.label': 'Stop',
         'clear-action.label': 'Clear',
         'status-running.label': 'Running',

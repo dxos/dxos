@@ -49,21 +49,11 @@ export const useEphemeralSteps = (traceMessages: readonly Trace.Message[]): Insp
     }
   }, [traceMessages]);
 
-  const clear = useCallback(() => {
-    setSteps([]);
-    processedCountRef.current = 0;
-  }, []);
 
   return steps;
 };
 
 /** Resets step state. */
-export const useClearSteps = () => {
-  const [version, setVersion] = useState(0);
-  const clear = useCallback(() => setVersion((v) => v + 1), []);
-  return { version, clear };
-};
-
 const normalizeEvent = (event: Trace.Event, message: Trace.Message): InspectorStep | undefined => {
   const baseId = `${message.id}-${event.timestamp}`;
 
@@ -76,7 +66,7 @@ const normalizeEvent = (event: Trace.Event, message: Trace.Message): InspectorSt
           id: `${baseId}-text-${event.data.messageId}`,
           timestamp: event.timestamp,
           type: isUser ? 'user-message' : 'assistant-message',
-          label: isUser ? block.text.slice(0, 80) : block.text.slice(0, 80),
+          label: block.text.slice(0, 80),
           pending: false,
           content: block.text,
         };
