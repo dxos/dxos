@@ -277,6 +277,9 @@
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
+      "path": "packages/experimental/discord-worker/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
@@ -311,6 +314,9 @@
     },
     {
       "path": "packages/plugins/plugin-deck/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
