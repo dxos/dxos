@@ -485,6 +485,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-worker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/env-tests/package.json",
           "jsonpath": "$.version"
         },
@@ -541,6 +546,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-discord/package.json",
           "jsonpath": "$.version"
         },
         {
