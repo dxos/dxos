@@ -149,6 +149,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                 state: 'expanded',
               });
               break;
+            case 'multi': {
+              invariant(db);
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+              break;
+            }
             default:
               // Show message in the companion panel.
               void invokePromise(DeckOperation.ChangeCompanion, {

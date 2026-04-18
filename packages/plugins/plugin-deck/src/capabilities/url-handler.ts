@@ -9,6 +9,7 @@ import {
   AppCapabilities,
   LayoutOperation,
   NOT_FOUND_PATH,
+  expandPath,
   fromUrlPath,
   getWorkspaceFromPath,
   toUrlPath,
@@ -66,6 +67,7 @@ export default Capability.makeModule(
     };
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
+      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -119,6 +121,9 @@ export default Capability.makeModule(
         // Multi-mode: restore planks from query params.
         const plankIds = deserializePlanks(resolvedUrl);
         if (plankIds.length > 0) {
+          for (const plankId of plankIds) {
+            expandPath(graph, plankId);
+          }
           updateState((state) => updateActiveDeck(state, { active: plankIds, initialized: true }));
         }
       }
