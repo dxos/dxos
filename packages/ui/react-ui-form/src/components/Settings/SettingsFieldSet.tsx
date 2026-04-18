@@ -9,9 +9,8 @@ import React, { useCallback, useMemo } from 'react';
 import { getAnnotation, type SchemaProperty } from '@dxos/effect';
 import { Input, Select } from '@dxos/react-ui';
 
-import { getFormProperties } from '../../util';
-import { type SelectOption, detectFieldType, getSelectOptionsFromAst } from '../../util/field-type';
-import { Settings } from './Settings';
+import { getFormProperties, type SelectOption, detectFieldType, getSelectOptionsFromAst } from '../../util';
+import { SettingsItem } from './SettingsItem';
 
 //
 // Types
@@ -19,7 +18,7 @@ import { Settings } from './Settings';
 
 /**
  * Props for a custom field renderer.
- * The renderer provides the control only; Settings.Item wrapper is handled by FieldSet.
+ * The renderer provides the control only; SettingsItem wrapper is handled by FieldSet.
  */
 export type SettingsFieldProps<T = any> = {
   value: T;
@@ -73,9 +72,11 @@ export const SettingsFieldSet = <T extends Record<string, any>>({
     if (!sort) {
       return props;
     }
-    return [...props].sort(
-      ({ name: a }, { name: b }) => (sort.indexOf(a.toString()) ?? Infinity) - (sort.indexOf(b.toString()) ?? Infinity),
-    );
+    const rank = (name: string) => {
+      const idx = sort.indexOf(name);
+      return idx === -1 ? Number.POSITIVE_INFINITY : idx;
+    };
+    return [...props].sort(({ name: a }, { name: b }) => rank(a.toString()) - rank(b.toString()));
   }, [schema, sort]);
 
   const handleChange = useCallback(
@@ -132,9 +133,9 @@ const SettingsFieldItem = ({ property, value, onChange, readonly, customField }:
   if (customField) {
     const CustomField = customField;
     return (
-      <Settings.Item title={title} description={description}>
+      <SettingsItem title={title} description={description}>
         <CustomField value={value} onChange={onChange} readonly={readonly} />
-      </Settings.Item>
+      </SettingsItem>
     );
   }
 
@@ -143,16 +144,23 @@ const SettingsFieldItem = ({ property, value, onChange, readonly, customField }:
   switch (fieldType) {
     case 'boolean':
       return (
-        <Settings.Item title={title} description={description}>
+        <SettingsItem title={title} description={description}>
           <Input.Switch disabled={readonly} checked={!!value} onCheckedChange={(checked) => onChange(!!checked)} />
-        </Settings.Item>
+        </SettingsItem>
       );
 
     case 'select': {
       const options = getSelectOptionsFromAst(type) ?? [];
       return (
-        <Settings.Item title={title} description={description}>
-          <Select.Root disabled={readonly} value={value ?? ''} onValueChange={onChange}>
+        <SettingsItem title={title} description={description}>
+          <Select.Root
+            disabled={readonly}
+            value={value == null ? '' : globalThis.String(value)}
+            onValueChange={(selected) => {
+              const matched = options.find((option) => globalThis.String(option.value) === selected);
+              onChange(matched?.value ?? selected);
+            }}
+          >
             <Select.TriggerButton disabled={readonly} />
             <Select.Portal>
               <Select.Content>
@@ -167,30 +175,34 @@ const SettingsFieldItem = ({ property, value, onChange, readonly, customField }:
               </Select.Content>
             </Select.Portal>
           </Select.Root>
-        </Settings.Item>
+        </SettingsItem>
       );
     }
 
     case 'string':
       return (
-        <Settings.Item title={title} description={description}>
+        <SettingsItem title={title} description={description}>
           <Input.TextInput disabled={readonly} value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
-        </Settings.Item>
+        </SettingsItem>
       );
 
     case 'number':
       return (
-        <Settings.Item title={title} description={description}>
+        <SettingsItem title={title} description={description}>
           <Input.TextInput
             disabled={readonly}
             type='number'
             value={value ?? ''}
             onChange={(event) => {
+              if (event.target.value === '') {
+                onChange(undefined);
+                return;
+              }
               const parsed = Number(event.target.value);
               onChange(Number.isNaN(parsed) ? undefined : parsed);
             }}
           />
-        </Settings.Item>
+        </SettingsItem>
       );
 
     default:

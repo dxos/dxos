@@ -45,14 +45,13 @@ export const getSelectOptionsFromAst = (ast: SchemaAST.AST): SelectOption[] | un
     return undefined;
   }
 
-  return (ast as SchemaAST.Union<SchemaAST.Literal>).types
-    .map((type) => type.literal)
-    .filter((v): v is string | number => v !== null)
-    .map((value, index) => {
-      const literalNode = (ast as SchemaAST.Union<SchemaAST.Literal>).types[index];
-      const title = getAnnotation<string>(SchemaAST.TitleAnnotationId, false)(literalNode);
-      const label =
-        title ?? (typeof value === 'string' ? value.charAt(0).toUpperCase() + value.slice(1) : String(value));
-      return { value, label };
-    });
+  return (ast as SchemaAST.Union<SchemaAST.Literal>).types.flatMap((literalNode) => {
+    const value = literalNode.literal;
+    if (typeof value !== 'string' && typeof value !== 'number') {
+      return [];
+    }
+    const title = getAnnotation<string>(SchemaAST.TitleAnnotationId, false)(literalNode);
+    const label = title ?? (typeof value === 'string' ? value.charAt(0).toUpperCase() + value.slice(1) : String(value));
+    return [{ value, label }];
+  });
 };
