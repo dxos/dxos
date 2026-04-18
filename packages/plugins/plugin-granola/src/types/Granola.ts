@@ -126,6 +126,7 @@ export const makeSyncRecord = (props: {
   ownerName?: string;
   ownerEmail?: string;
   createdAt?: string;
+  updatedAt?: string;
 }): GranolaSyncRecord => {
   const { granolaId, ...rest } = props;
   return Obj.make(GranolaSyncRecord, {

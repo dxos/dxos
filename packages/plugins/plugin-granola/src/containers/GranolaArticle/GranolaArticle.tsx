@@ -100,7 +100,7 @@ const aiMatch = async (
     const doc = record.document?.target;
     const summary = doc?.content?.target?.content?.slice(0, 500) ?? '';
     return {
-      id: record.granolaId,
+      id: Granola.getGranolaId(record),
       noteTitle: doc?.name ?? '',
       meetingTitle: record.calendarEvent?.title ?? '',
       attendees: (record.attendees ?? []).map((attendee) => attendee.name ?? attendee.email ?? '').join(', '),
@@ -176,15 +176,15 @@ const NoteTile = forwardRef<HTMLDivElement, NoteTileProps>(({ data, location, cu
   const doc = record.document?.target;
 
   const handleClick = useCallback(() => {
-    setCurrentId(record.granolaId);
+    setCurrentId(Granola.getGranolaId(record));
     onOpen(record);
   }, [record, onOpen, setCurrentId]);
 
   const published = record.createdAt ? new Date(record.createdAt).toLocaleDateString() : undefined;
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={record.granolaId} data={data} location={location}>
-      <Focus.Item asChild current={current} onCurrentChange={() => setCurrentId(record.granolaId)}>
+    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={Granola.getGranolaId(record)} data={data} location={location}>
+      <Focus.Item asChild current={current} onCurrentChange={() => setCurrentId(Granola.getGranolaId(record))}>
         <Card.Root ref={forwardedRef} onClick={handleClick}>
           <Card.Toolbar>
             <Card.IconBlock>
@@ -293,7 +293,7 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
   const handleMatchToTrello = useCallback(async () => {
     setMatching(true);
     try {
-      const uniqueByGranola = [...new Map(syncRecords.map((record) => [record.granolaId, record])).values()];
+      const uniqueByGranola = [...new Map(syncRecords.map((record) => [Granola.getGranolaId(record), record])).values()];
       const activeCards = trelloCards.filter((card) => !card.closed);
       const results = await aiMatch(uniqueByGranola, activeCards);
       setMatches(results);
@@ -340,14 +340,14 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
   }, [db, matches, invokePromise]);
 
   const handleSync = useCallback(async () => {
-    if (!db || !account.apiKey) {
+    if (!db || !account.accessToken?.target?.token) {
       return;
     }
 
     setSyncing(true);
     try {
-      const headers = { Authorization: `Bearer ${account.apiKey}` };
-      const existingByGranolaId = new Map(syncRecords.map((record) => [record.granolaId, record]));
+      const headers = { Authorization: `Bearer ${account.accessToken?.target?.token ?? ''}` };
+      const existingByGranolaId = new Map(syncRecords.map((record) => [Granola.getGranolaId(record), record]));
 
       let cursor: string | undefined;
       let hasMore = true;
@@ -365,6 +365,10 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
         const data = await response.json();
         remoteNotes.push(...data.notes);
         hasMore = data.hasMore;
+        if (hasMore && !data.cursor) {
+          log.warn("granola: pagination stuck — hasMore=true but no cursor");
+          break;
+        }
         cursor = data.cursor ?? undefined;
       }
 
@@ -440,13 +444,13 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
 
   const didAutoSync = useRef(false);
   useEffect(() => {
-    if (!didAutoSync.current && account.apiKey && !account.lastSyncedAt) {
+    if (!didAutoSync.current && account.accessToken?.target?.token && !account.lastSyncedAt) {
       didAutoSync.current = true;
       void handleSync();
     }
-  }, [account.apiKey, account.lastSyncedAt, handleSync]);
+  }, [account.accessToken?.target?.token, account.lastSyncedAt, handleSync]);
 
-  const uniqueRecords = [...new Map(syncRecords.map((record) => [record.granolaId, record])).values()];
+  const uniqueRecords = [...new Map(syncRecords.map((record) => [Granola.getGranolaId(record), record])).values()];
   const sortedRecords = [...uniqueRecords].sort((recordA, recordB) => {
     const dateA = recordA.createdAt ? new Date(recordA.createdAt).getTime() : 0;
     const dateB = recordB.createdAt ? new Date(recordB.createdAt).getTime() : 0;
@@ -473,7 +477,7 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
             label={syncing ? 'Syncing...' : 'Sync notes'}
             icon='ph--arrows-clockwise--regular'
             iconOnly
-            disabled={syncing || !account.apiKey}
+            disabled={syncing || !account.accessToken?.target?.token}
             onClick={handleSync}
           />
           {trelloCards.length > 0 && (
@@ -532,7 +536,7 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
                   gap={8}
                   items={noteItems}
                   draggable={false}
-                  getId={(item) => item.record.granolaId}
+                  getId={(item) => Granola.getGranolaId(item.record) ?? item.record.id}
                   getScrollElement={() => noteViewport}
                   estimateSize={() => 120}
                 />
@@ -541,7 +545,7 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
           </Mosaic.Container>
         </Focus.Group>
       </Panel.Content>
-      {!account.apiKey && (
+      {!account.accessToken && (
         <Panel.Statusbar>
           <p className='flex p-1 items-center text-warning-text'>Configure API key in account properties to enable sync.</p>
         </Panel.Statusbar>
