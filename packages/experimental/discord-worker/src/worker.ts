@@ -114,6 +114,17 @@ const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
   const guildName = interaction.guild?.name ?? 'Unknown';
   const channelId = interaction.channel_id;
 
+  console.log('[worker] /connect', { spaceKey, guildId, guildName, channelId });
+
+  // TODO(burdon): Forward to EDGE once the endpoint is available.
+  // For now, return success directly so the slash command flow can be tested end-to-end.
+  if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.dxos.network') {
+    return ephemeralResponse(
+      `Connected guild **${guildName}** to space \`${spaceKey}\` (channel: ${channelId}).\n` +
+        `_Note: EDGE integration pending — connection not persisted._`,
+    );
+  }
+
   try {
     const response = await fetch(`${env.EDGE_ENDPOINT}/discord/connect`, {
       method: 'POST',
@@ -148,6 +159,8 @@ const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
 const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
   const channelId = interaction.channel_id;
 
+  console.log('[worker] /track', { channelId });
+
   try {
     // Fetch thread messages from Discord API.
     const messagesResponse = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=100`, {
@@ -157,6 +170,8 @@ const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
     });
 
     if (!messagesResponse.ok) {
+      const text = await messagesResponse.text();
+      console.error('[worker] Failed to fetch messages:', messagesResponse.status, text);
       return errorResponse('Failed to fetch thread messages.');
     }
 
@@ -172,6 +187,17 @@ const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
       .join('\n\n---\n\n');
 
     const threadName = interaction.channel?.name ?? `Discord thread ${channelId}`;
+
+    console.log('[worker] Captured', reversed.length, 'messages from', threadName);
+    console.log('[worker] Markdown preview:', markdown.substring(0, 200));
+
+    // TODO(burdon): Forward to EDGE once the endpoint is available.
+    if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.dxos.network') {
+      return ephemeralResponse(
+        `Thread **${threadName}** tracked — ${reversed.length} messages captured.\n` +
+          `_Note: EDGE integration pending — document not created in space._`,
+      );
+    }
 
     // Post to EDGE.
     const response = await fetch(`${env.EDGE_ENDPOINT}/discord/track`, {
@@ -195,6 +221,7 @@ const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
 
     return ephemeralResponse(`Thread **${threadName}** tracked — ${reversed.length} messages captured.`);
   } catch (err) {
+    console.error('[worker] Track error:', err);
     return errorResponse(`Track failed: ${err instanceof Error ? err.message : 'unknown error'}`);
   }
 };
@@ -205,31 +232,40 @@ export default {
       return new Response('Method not allowed', { status: 405 });
     }
 
-    // Verify Discord signature.
-    const isValid = await verifyDiscordSignature(request, env.DISCORD_PUBLIC_KEY);
-    if (!isValid) {
-      return new Response('Invalid signature', { status: 401 });
-    }
-
-    // Handle Discord ping (required for interaction URL verification).
-    const interaction = (await request.json()) as any;
-    if (interaction.type === InteractionType.PING) {
-      return Response.json({ type: InteractionResponseType.PONG });
-    }
-
-    // Handle slash commands.
-    if (interaction.type === InteractionType.APPLICATION_COMMAND) {
-      const commandName = interaction.data?.name;
-      switch (commandName) {
-        case 'connect':
-          return handleConnect(interaction, env);
-        case 'track':
-          return handleTrack(interaction, env);
-        default:
-          return errorResponse(`Unknown command: ${commandName}`);
+    try {
+      // Verify Discord signature.
+      console.log('[worker] Verifying signature...');
+      const isValid = await verifyDiscordSignature(request, env.DISCORD_PUBLIC_KEY);
+      if (!isValid) {
+        console.log('[worker] Invalid signature');
+        return new Response('Invalid signature', { status: 401 });
       }
-    }
 
-    return new Response('Unknown interaction type', { status: 400 });
+      // Handle Discord ping (required for interaction URL verification).
+      const interaction = (await request.json()) as any;
+      console.log('[worker] Interaction type:', interaction.type, 'command:', interaction.data?.name);
+
+      if (interaction.type === InteractionType.PING) {
+        return Response.json({ type: InteractionResponseType.PONG });
+      }
+
+      // Handle slash commands.
+      if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+        const commandName = interaction.data?.name;
+        switch (commandName) {
+          case 'connect':
+            return handleConnect(interaction, env);
+          case 'track':
+            return handleTrack(interaction, env);
+          default:
+            return errorResponse(`Unknown command: ${commandName}`);
+        }
+      }
+
+      return new Response('Unknown interaction type', { status: 400 });
+    } catch (err) {
+      console.error('[worker] Unhandled error:', err);
+      return errorResponse(`Internal error: ${err instanceof Error ? err.message : String(err)}`);
+    }
   },
 };
