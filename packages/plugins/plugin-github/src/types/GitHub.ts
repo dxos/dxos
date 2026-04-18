@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { Organization } from '@dxos/types';
+import { AccessToken, Organization } from '@dxos/types';
 
 /**
  * A GitHub repository being tracked in the workspace.
@@ -52,8 +52,13 @@ export interface GitHubRepo extends Schema.Schema.Type<typeof GitHubRepo> {}
 export const GitHubAccount = Schema.Struct({
   /** Display name. */
   name: Schema.optional(Schema.String),
-  /** GitHub personal access token. */
-  accessToken: Schema.String.pipe(FormInputAnnotation.set(false)),
+  /** GitHub credentials (PAT stored as AccessToken). */
+  accessToken: Schema.optional(
+    Ref.Ref(AccessToken.AccessToken).annotations({
+      title: 'GitHub credentials',
+      description: 'Personal access token for syncing repos and PRs.',
+    }),
+  ),
   /** Last sync timestamp. */
   lastSyncedAt: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
 }).pipe(
@@ -109,25 +114,53 @@ export const GitHubPullRequest = Schema.Struct({
 
 export interface GitHubPullRequest extends Schema.Schema.Type<typeof GitHubPullRequest> {}
 
-/** Input schema for creating a GitHubAccount. */
+/** Input schema for creating a GitHubAccount via the Create menu. */
 export const CreateGitHubAccountSchema = Schema.Struct({
-  accessToken: Schema.String.annotations({
-    title: 'Personal Access Token',
-    description: 'GitHub personal access token (fine-grained or classic).',
-  }),
+  name: Schema.optional(
+    Schema.String.annotations({
+      title: 'Name',
+      description: 'Display name for this GitHub account.',
+    }),
+  ),
 });
 
 export interface CreateGitHubAccountSchema extends Schema.Schema.Type<typeof CreateGitHubAccountSchema> {}
 
 /** Creates a GitHubAccount object. */
-export const makeAccount = (props: CreateGitHubAccountSchema): GitHubAccount => {
+export const makeAccount = (props?: { name?: string }): GitHubAccount => {
   return Obj.make(GitHubAccount, {
-    name: 'GitHub',
-    accessToken: props.accessToken,
+    name: props?.name ?? 'GitHub',
   });
 };
 
-/** Creates a GitHubRepo object. */
+/** Creates a GitHubRepo object with foreignKey for the GitHub full name. */
 export const makeRepo = (props: Partial<Obj.MakeProps<typeof GitHubRepo>> & { fullName: string }): GitHubRepo => {
-  return Obj.make(GitHubRepo, props);
+  return Obj.make(GitHubRepo, {
+    [Obj.Meta]: {
+      keys: [{ id: props.fullName, source: 'github.com' }],
+    },
+    ...props,
+  });
+};
+
+/** Creates a GitHubPullRequest with foreignKey. */
+export const makePullRequest = (
+  props: Obj.MakeProps<typeof GitHubPullRequest> & { fullName: string; number: number },
+): GitHubPullRequest => {
+  return Obj.make(GitHubPullRequest, {
+    [Obj.Meta]: {
+      keys: [{ id: `${props.fullName}#${props.number}`, source: 'github.com' }],
+    },
+    ...props,
+  });
+};
+
+// ── Foreign key helpers ─────────────────────────────────────────────────────
+
+const GITHUB_SOURCE = 'github.com';
+
+/** Extract the GitHub ID from an object's foreignKeys. */
+export const getGitHubId = (obj: Obj.Any): string | undefined => {
+  const meta = Obj.getMeta(obj);
+  return meta.keys?.find((key: { source: string; id: string }) => key.source === GITHUB_SOURCE)?.id;
 };

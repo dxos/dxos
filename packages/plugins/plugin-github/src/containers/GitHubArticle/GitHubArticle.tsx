@@ -117,9 +117,11 @@ export const GitHubArticle = ({ role, subject: account }: GitHubArticleProps) =>
   const [syncing, setSyncing] = useState(false);
   const [repoViewport, setRepoViewport] = useState<HTMLElement | null>(null);
 
+  // TODO(richburdon): Move sync logic to an operation handler (like plugin-trello sync-board.ts).
   /** Sync repos for organizations in the workspace. */
   const handleSync = useCallback(async () => {
-    if (!db || !account.accessToken) {
+    const token = account.accessToken?.target?.token;
+    if (!db || !token) {
       return;
     }
 
@@ -152,7 +154,7 @@ export const GitHubArticle = ({ role, subject: account }: GitHubArticleProps) =>
         try {
           const searchData = await githubFetch(
             `/search/repositories?q=org:${encodeURIComponent(orgName)}&sort=stars&per_page=10`,
-            account.accessToken,
+            token,
           );
           const remoteRepos = (searchData.items ?? []) as GitHubApiRepo[];
 
@@ -266,7 +268,7 @@ export const GitHubArticle = ({ role, subject: account }: GitHubArticleProps) =>
       </Panel.Content>
       {!account.accessToken && (
         <Panel.Statusbar>
-          <p className='flex p-1 items-center text-warning-text'>Configure personal access token to enable sync.</p>
+          <Toolbar.Text>Configure an AccessToken in account properties to enable sync.</Toolbar.Text>
         </Panel.Statusbar>
       )}
     </Panel.Root>
