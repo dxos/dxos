@@ -117,7 +117,7 @@
     --dx-statusbar-size: var(--dx-rail-item); /* 32px */
 
     /** NOTE: Sidebar optimized to show plank + companion with sidebar open on 16" MBP. */
-    --dx-nav-sidebar-size: 342px;
+    --dx-nav-sidebar-size: 350px;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;
 

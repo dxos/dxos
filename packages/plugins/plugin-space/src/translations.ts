@@ -253,6 +253,10 @@ export const translations = [
         'archive-space.label': 'Archive',
         'unarchive-space.label': 'Unarchive',
 
+        'space-key.title': 'Space Key',
+        'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
+        'copy-space-key.label': 'Copy space key',
+
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',
         'backup-space.title': 'Backup Space',

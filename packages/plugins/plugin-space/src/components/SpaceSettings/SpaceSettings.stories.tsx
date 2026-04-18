@@ -7,18 +7,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-import { SpacePluginSettings } from './SpacePluginSettings';
+import { SpaceSettings } from './SpaceSettings';
 
 const meta = {
-  title: 'plugins/plugin-space/components/SpacePluginSettings',
-  component: SpacePluginSettings,
+  title: 'plugins/plugin-space/components/SpaceSettings',
+  component: SpaceSettings,
   tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof SpacePluginSettings>;
+} satisfies Meta<typeof SpaceSettings>;
 
 export default meta;
 

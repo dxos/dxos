@@ -19,7 +19,7 @@ import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { SpacePluginSettings } from '#components';
+import { SpaceSettings } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
@@ -91,7 +91,7 @@ export default Capability.makeModule(
           const spaces = useSpaces({ all: settings.showHidden });
           const { invokePromise } = useOperationInvoker();
           return (
-            <SpacePluginSettings
+            <SpaceSettings
               settings={settings}
               onSettingsChange={updateSettings}
               spaces={spaces}
