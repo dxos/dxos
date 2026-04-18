@@ -22,12 +22,12 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
     <SettingsForm.Viewport>
       <SettingsForm.Section title={meta.name ?? 'Editor'}>
         <SettingsForm.FieldSet
-          schema={Markdown.Settings}
-          values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
           readonly={!onSettingsChange}
+          schema={Markdown.Settings}
           visible={(path, values) => path !== 'typewriter' || !!values.debug}
           fieldMap={{ typewriter: TypewriterField }}
+          values={settings}
+          onValuesChanged={(values) => onSettingsChange?.(() => values)}
         />
       </SettingsForm.Section>
     </SettingsForm.Viewport>
