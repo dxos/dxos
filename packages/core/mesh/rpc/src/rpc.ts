@@ -15,7 +15,7 @@ import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
 
-const DEFAULT_TIMEOUT = 3_000;
+const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;
 
 const DEBUG_CALLS = true;

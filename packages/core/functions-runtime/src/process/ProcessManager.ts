@@ -30,7 +30,7 @@ import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
-import { ProcessNotFoundError } from '../errors';
+import { ProcessNotFoundError, ServiceNotAvailableError } from '../errors';
 import * as StorageService from './StorageService';
 
 export interface Status {
@@ -933,6 +933,14 @@ export class ProcessManagerImpl implements Manager {
         serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
           Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
           Effect.provideService(Scope.Scope, scope),
+          Effect.catchTag('ServiceNotAvailable', (err) =>
+            Effect.die(
+              new ServiceNotAvailableError({
+                message: err.message,
+                context: { ...err.context, process: definition.key, processName: params.name },
+              }),
+            ),
+          ),
           Effect.orDie,
         );
       }
@@ -1202,6 +1210,7 @@ export namespace ProcessOperationInvoker {
     poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
   }
 
+  // TODO(dmaretskyi): Can we move this into the core invoker?
   export interface ProcessOperationInvoker {
     /**
      * Invoke an operation and return a fiber that can be used to await the result.
@@ -1281,22 +1290,23 @@ export namespace ProcessOperationInvoker {
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
 
+        log.info('spawing process', { opKey: op.meta.key, ...options });
         const handle = yield* opts.manager.spawn(executable, {
           ...options,
           parentProcessId: opts.parentProcessId,
           name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         });
-        log.info('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
+        log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
 
         yield* handle.submitInput(input);
-        log.info('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
+        log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
         const fiber = yield* fiberFromProcess(handle);
         fiberCache.set(handle.pid, fiber);
         return fiber;
       }).pipe(
         Effect.onInterrupt(() =>
           Effect.sync(() => {
-            log.info('operation interrupted', { opKey: op.meta.key });
+            log('operation interrupted', { opKey: op.meta.key });
           }),
         ),
       );
@@ -1321,6 +1331,7 @@ export namespace ProcessOperationInvoker {
       const input = args[0] as I;
       const options = args[1] as Operation.InvokeOptions | undefined;
       const traceMeta = options?.tracing as Trace.Meta | undefined;
+      log.info('invoking operation', { opKey: op.meta.key, ...options });
       return Effect.gen(function* () {
         const fiber = yield* invokeFiber(op, input, {
           traceMeta,

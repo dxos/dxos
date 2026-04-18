@@ -7,10 +7,13 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
+import type { ObjectNotFoundError } from '@dxos/echo/Err';
+import { type FunctionNotFoundError, type TracingService } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Operation, type OperationRegistry } from '@dxos/operation';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -26,7 +29,11 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+  string,
+  FunctionNotFoundError | ObjectNotFoundError,
+  Database.Service | OperationRegistry.Service | Operation.Service | TracingService
+> =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
       blueprints,
@@ -64,7 +71,7 @@ export const formatSystemPrompt = ({
       Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );
-  });
+  }).pipe(Effect.withSpan('formatSystemPrompt'));
 
 /**
  * Formats the user prompt.
@@ -110,7 +117,7 @@ export const formatUserPrompt = ({
       sender: { role: 'user' },
       blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
-  });
+  }).pipe(Effect.withSpan('formatUserPrompt'));
 
 const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();

@@ -7,49 +7,27 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
-import { Database, DXN, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { FunctionInvocationService, FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import { Agent } from '../../../types';
 import { AgentWorker } from './definitions';
 
-/**
- * Creates a FunctionInvocationService that propagates the conversation DXN to child operations.
- * This ensures nested operations (e.g., get-context) can resolve AiContextService.
- */
-const functionInvocationServiceWithConversation = (
-  conversationDxn: DXN,
-): Layer.Layer<FunctionInvocationService, never, OperationRegistry.Service | Operation.Service> =>
-  Layer.effect(
-    FunctionInvocationService,
-    Effect.gen(function* () {
-      const operationRegistry = yield* OperationRegistry.Service;
-      const operationInvoker = yield* Operation.Service;
-      return FunctionInvocationService.of({
-        invokeFunction: <I, O>(operationDef: Operation.Definition<I, O, any>, input: I) =>
-          operationInvoker.invoke(operationDef, input, { conversation: conversationDxn.toString() }).pipe(Effect.orDie),
-        resolveFunction: (key: string) =>
-          operationRegistry.resolve(key).pipe(
-            Effect.flatten,
-            Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(key))),
-          ),
-      });
-    }),
-  );
-
 export default AgentWorker.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, prompt, event }) {
-      const agent = yield* Database.load(agentRef);
+      const agent = yield* Database.load(agentRef).pipe(
+        Effect.catchTag('ObjectNotFoundError', () => Effect.die(new Error('Unable to load agent object.'))),
+      );
       invariant(Obj.instanceOf(Agent.Agent, agent));
       invariant(agent.chat, 'Agent has no chat.');
 
       const chatFeed = yield* agent.chat.pipe(
         Database.load,
         Effect.flatMap((chat) => Database.load(chat.feed)),
+        Effect.catchTag('ObjectNotFoundError', () => Effect.die(new Error('Unable to load agent chat feed object.'))),
       );
       invariant(chatFeed, 'Agent chat feed not found.');
       const runtime = yield* Effect.runtime<Feed.FeedService>();
@@ -72,7 +50,6 @@ export default AgentWorker.pipe(
         input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
       }
 
-      const feedDxn = Obj.getDXN(chatFeed);
       yield* conversation
         .createRequest({
           prompt: input,
@@ -80,7 +57,7 @@ export default AgentWorker.pipe(
         .pipe(
           Effect.provide(
             Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
-              Layer.provideMerge(functionInvocationServiceWithConversation(feedDxn)),
+              Layer.provideMerge(Operation.withInvocationOptions({ conversation: Obj.getDXN(chatFeed).toString() })),
             ),
           ),
           Effect.retry({ times: 2 }),

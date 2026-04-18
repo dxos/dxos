@@ -115,7 +115,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
 
 ## Testing with AssistantTestLayer
 
-Use `AssistantTestLayer` from `@dxos/assistant/testing` to test operations and AI flows that use blueprints.
+Use `AssistantTestLayer` from `@dxos/assistant/testing` to test operations and AI flows that use blueprints. Operation definitions and `OperationHandlerSet` wiring follow the same patterns as production code (see `.cursor/skills/operations/SKILL.md`).
 
 ```ts
 import { AssistantTestLayer } from '@dxos/assistant/testing';
@@ -129,20 +129,22 @@ const TestLayer = AssistantTestLayer({
 });
 ```
 
-- **`operationHandlers`** — the blueprint's `operations` (handler set). Required for `FunctionInvocationService.invokeFunction` to resolve handlers.
-- **`types`** — ECHO types the test needs (e.g. `Markdown.Document`, `Blueprint.Blueprint`).
+- **`operationHandlers`** — the blueprint's `operations` (`OperationHandlerSet.OperationHandlerSet`). Required so the runtime can resolve handlers when you call `Operation.invoke` / `Operation.Service` (same mechanism as in-app operation execution).
+- **`types`** — ECHO types the test needs (e.g. `Markdown.Document`, `Blueprint.Blueprint`). Mirror any `types` declared on your `Operation.make` definitions where relevant.
 - **`blueprints`** — optional; use when the test binds blueprints via `AiContextService.bindContext({ blueprints: [...] })` and you need the registry to know about them.
 
-To invoke an operation directly:
+To invoke an operation directly, use **`Operation.invoke`** from `@dxos/operation` (not `FunctionInvocationService` from `@dxos/functions`, which is deprecated):
 
 ```ts
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { Create } from './definitions';
 
 const result =
   yield *
-  FunctionInvocationService.invokeFunction(Create, {
+  Operation.invoke(Create, {
     name: 'My Doc',
     content: 'Hello world.',
   });
 ```
+
+Inside another operation's handler, the same API applies (`yield* Operation.invoke(...)`, `yield* Operation.schedule(...)`); see the operations skill section **Invoking Operations**.

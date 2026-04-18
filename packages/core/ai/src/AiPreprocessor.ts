@@ -99,40 +99,40 @@ export const preprocessPrompt: (
  * Fast regex-based token estimation.
  * This is only an approximation and might differ from the actual token count.
  */
-export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = Effect.fn('estimateTokens')(
-  function* (prompt) {
-    let totalTokens = 0;
+export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = Effect.fn(
+  'AiPreprocessor.estimateTokens',
+)(function* (prompt) {
+  let totalTokens = 0;
 
-    for (const message of prompt.content) {
-      totalTokens += MESSAGE_DELIMITER_TOKENS;
+  for (const message of prompt.content) {
+    totalTokens += MESSAGE_DELIMITER_TOKENS;
 
-      switch (message.role) {
-        case 'system': {
-          totalTokens += TokenX.estimateTokenCount(message.content);
-          break;
+    switch (message.role) {
+      case 'system': {
+        totalTokens += TokenX.estimateTokenCount(message.content);
+        break;
+      }
+      case 'user':
+      case 'assistant': {
+        for (const part of message.content) {
+          totalTokens += estimatePartTokens(part);
         }
-        case 'user':
-        case 'assistant': {
-          for (const part of message.content) {
-            totalTokens += estimatePartTokens(part);
-          }
-          break;
+        break;
+      }
+      case 'tool': {
+        for (const part of message.content) {
+          totalTokens += TokenX.estimateTokenCount(part.name);
+          totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
         }
-        case 'tool': {
-          for (const part of message.content) {
-            totalTokens += TokenX.estimateTokenCount(part.name);
-            totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
-          }
-          break;
-        }
+        break;
       }
     }
+  }
 
-    totalTokens += REPLY_PRIMING_TOKENS;
+  totalTokens += REPLY_PRIMING_TOKENS;
 
-    return totalTokens;
-  },
-);
+  return totalTokens;
+});
 
 /** Per-message overhead for role/start/end delimiter tokens. */
 const MESSAGE_DELIMITER_TOKENS = 4;

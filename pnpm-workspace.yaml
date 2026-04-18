@@ -601,7 +601,7 @@ catalog:
   type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
-  typescript: ^6.0.2
+  typescript: ^6.0.3
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0

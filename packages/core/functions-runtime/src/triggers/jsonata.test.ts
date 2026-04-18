@@ -62,10 +62,7 @@ describe('jsonata', () => {
 
     const obj = Obj.make(TestSchema.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
     const trigger = Trigger.make({
-      spec: {
-        kind: 'queue',
-        queue: queueDxn,
-      },
+      spec: Trigger.specQueue(queueDxn),
       input: {
         nested: {
           value: 'nested',
