@@ -13,8 +13,7 @@
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-
-import { Linear } from '../types';
+import { Task } from '@dxos/types';
 
 const LINEAR_GRAPHQL = 'https://api.linear.app/graphql';
 
@@ -56,6 +55,7 @@ type RecentIssuesResponse = {
       title: string;
       description: string | null;
       updatedAt: string;
+      priority: number;
       state: { name: string } | null;
       team: { key: string } | null;
       assignee: { displayName: string } | null;
@@ -64,14 +64,41 @@ type RecentIssuesResponse = {
   };
 };
 
+/** Map Linear state names to Composer Task status. */
+const mapStatus = (linearState: string | undefined): 'todo' | 'in-progress' | 'done' | undefined => {
+  if (!linearState) {
+    return undefined;
+  }
+  const lower = linearState.toLowerCase();
+  if (lower === 'done' || lower === 'completed' || lower === 'closed' || lower === 'merged') {
+    return 'done';
+  }
+  if (lower === 'in progress' || lower === 'started' || lower === 'in review') {
+    return 'in-progress';
+  }
+  return 'todo';
+};
+
+/** Map Linear priority (1=urgent..4=low, 0=none) to Task priority. */
+const mapPriority = (linearPriority: number | undefined): 'urgent' | 'high' | 'medium' | 'low' | 'none' => {
+  switch (linearPriority) {
+    case 1: return 'urgent';
+    case 2: return 'high';
+    case 3: return 'medium';
+    case 4: return 'low';
+    default: return 'none';
+  }
+};
+
 /**
- * Fetch the most recently updated issues across the workspace, limited to
- * `first`. Shaped for the demo's "activity feed" angle — no pagination.
+ * Fetch recent Linear issues and return them as Composer Task objects.
+ * Each Task has a foreignKey (`source: 'linear.app'`) for 2-way sync.
+ * The `identifier` (e.g. "BLU-1") is prepended to the title for context.
  */
 export const fetchRecentIssues = async (
   auth: LinearAuth,
   first = 25,
-): Promise<Linear.LinearIssue[]> => {
+): Promise<Task.Task[]> => {
   const query = `
     query RecentIssues($first: Int!) {
       issues(first: $first, orderBy: updatedAt) {
@@ -81,6 +108,7 @@ export const fetchRecentIssues = async (
           title
           description
           updatedAt
+          priority
           state { name }
           team { key }
           assignee { displayName }
@@ -91,16 +119,14 @@ export const fetchRecentIssues = async (
   `;
   const data = await graphql<RecentIssuesResponse>(auth, query, { first });
   return data.issues.nodes.map((issue) =>
-    Obj.make(Linear.LinearIssue, {
-      linearIssueId: issue.id,
-      identifier: issue.identifier,
-      title: issue.title,
+    Task.make({
+      [Obj.Meta]: {
+        keys: [{ id: issue.id, source: 'linear.app' }],
+      },
+      title: `[${issue.identifier}] ${issue.title}`,
       description: issue.description ?? undefined,
-      state: issue.state?.name?.toLowerCase(),
-      teamKey: issue.team?.key,
-      assignee: issue.assignee?.displayName,
-      updatedAt: issue.updatedAt,
-      labels: (issue.labels?.nodes ?? []).map((entry) => entry.name),
+      status: mapStatus(issue.state?.name),
+      priority: mapPriority(issue.priority),
     }),
   );
 };

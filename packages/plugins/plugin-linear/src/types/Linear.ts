@@ -50,34 +50,3 @@ export const LinearTeam = Schema.Struct({
 );
 export interface LinearTeam extends Schema.Schema.Type<typeof LinearTeam> {}
 
-/**
- * A Linear issue. Minimal shape — the interesting fields for the demo.
- */
-export const LinearIssue = Schema.Struct({
-  linearIssueId: Schema.String.pipe(FormInputAnnotation.set(false)),
-  /** Issue identifier in the form "ENG-123". */
-  identifier: Schema.String.pipe(FormInputAnnotation.set(false)),
-  title: Schema.String.pipe(FormInputAnnotation.set(false)),
-  description: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Workflow state: 'backlog' | 'started' | 'completed' | 'canceled' | etc. */
-  state: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Team key (e.g. "ENG"). */
-  teamKey: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Linear login of the assignee, if any. */
-  assignee: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** ISO timestamp of last update in Linear. */
-  updatedAt: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Labels attached to the issue. */
-  labels: Schema.optional(Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false))),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.linearIssue',
-    version: '0.1.0',
-  }),
-  LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--list-checks--regular',
-    hue: 'violet',
-  }),
-);
-export interface LinearIssue extends Schema.Schema.Type<typeof LinearIssue> {}
