@@ -100,7 +100,7 @@ export default Capability.makeModule(
               const feed = await mailbox.feed.load();
               const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
               if (messages.length > 0) {
-                return Option.some(mailboxDxn);
+                return Option.some(Obj.getDXN(messages[0]));
               }
             }
 
