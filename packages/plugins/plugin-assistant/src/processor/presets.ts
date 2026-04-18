@@ -49,6 +49,10 @@ export const AiServicePresets: AiServicePreset[] = [
     model: 'deepseek-r1:latest' as const,
     provider: 'dxos-local' as const,
   },
+  {
+    provider: 'lm-studio' as const, // TODO(dmaretskyi): It's actually Ollama, but I dont understand this.
+    model: 'gpt-oss:20b' as const,
+  },
 ].map(
   ({ model, provider }, i) =>
     ({
