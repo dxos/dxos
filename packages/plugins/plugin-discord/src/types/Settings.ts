@@ -10,4 +10,4 @@ export const Settings = Schema.Struct({
   /** Discord application ID for the bot. */
   applicationId: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
-export type Settings = Schema.Schema.Type<typeof Settings>;
+export interface Settings extends Schema.Schema.Type<typeof Settings> {}
