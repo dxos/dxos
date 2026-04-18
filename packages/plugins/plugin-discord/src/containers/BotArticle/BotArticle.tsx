@@ -54,7 +54,7 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
                   onChange={(event) => handleSetToken(event.target.value)}
                 />
                 <Button variant='ghost' onClick={() => setTokenVisible((visible) => !visible)}>
-                  {tokenVisible ? 'Hide' : 'Show'}
+                  {tokenVisible ? t('token-hide.label') : t('token-show.label')}
                 </Button>
               </div>
             </Input.Root>

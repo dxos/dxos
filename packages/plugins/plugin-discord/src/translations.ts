@@ -33,6 +33,8 @@ export const translations = [
         'channels.label': 'Channels',
         'copy-invite.button': 'Copy',
         'disconnect.button': 'Disconnect',
+        'token-show.label': 'Show',
+        'token-hide.label': 'Hide',
         'token-hidden.label': 'Token hidden',
         'token-copied.label': 'Copied',
         'no-channels.label': 'No channels tracked',

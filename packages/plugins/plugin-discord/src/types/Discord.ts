@@ -25,6 +25,7 @@ export interface ChannelBinding extends Schema.Schema.Type<typeof ChannelBinding
  */
 export const Bot = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(burdon): Move to secure storage. Currently stored as replicated fields (space-level access only).
   token: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
   applicationId: Schema.optional(Schema.String),
   did: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
@@ -52,8 +53,8 @@ export interface Bot extends Schema.Schema.Type<typeof Bot> {}
 /** OAuth scopes required for the Discord bot. */
 const BOT_SCOPES = ['bot', 'applications.commands'];
 
-/** Bot permissions (send messages, read message history). */
-const BOT_PERMISSIONS = '3072';
+/** Bot permissions: VIEW_CHANNEL (1024) | SEND_MESSAGES (2048) | READ_MESSAGE_HISTORY (65536). */
+const BOT_PERMISSIONS = String((1 << 10) | (1 << 11) | (1 << 16));
 
 /**
  * Generates the Discord OAuth invite URL for adding the bot to a guild.

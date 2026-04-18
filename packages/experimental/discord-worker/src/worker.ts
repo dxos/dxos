@@ -18,7 +18,11 @@
  *   - Fetch bot config from the space via EDGE (eliminating env-var configuration).
  */
 
-// TODO(burdon): Integrate with EDGE webhook gateway. Figure out how to test locally.
+// TODO(burdon): Integrate with EDGE webhook gateway.
+
+//
+// Types
+//
 
 export interface Env {
   /** Discord application public key for verifying interaction signatures. */
@@ -31,6 +35,34 @@ export interface Env {
   EDGE_ENDPOINT: string;
 }
 
+/** Discord interaction payload from webhook. */
+interface DiscordInteraction {
+  type: number;
+  id: string;
+  token: string;
+  application_id: string;
+  guild_id?: string;
+  channel_id?: string;
+  guild?: { name?: string };
+  channel?: { name?: string };
+  data?: {
+    name?: string;
+    options?: Array<{ name: string; value: string }>;
+  };
+}
+
+/** Discord message from the REST API. */
+interface DiscordMessage {
+  id: string;
+  content: string;
+  timestamp: string;
+  author?: { username?: string };
+}
+
+//
+// Constants
+//
+
 /** Discord interaction types. */
 const InteractionType = {
   PING: 1,
@@ -41,10 +73,17 @@ const InteractionType = {
 const InteractionResponseType = {
   PONG: 1,
   CHANNEL_MESSAGE_WITH_SOURCE: 4,
+  DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE: 5,
 } as const;
 
 /** Flags for ephemeral messages (only visible to the invoking user). */
 const EPHEMERAL_FLAG = 1 << 6;
+
+const DISCORD_API = 'https://discord.com/api/v10';
+
+//
+// Helpers
+//
 
 /**
  * Verifies the Discord interaction request signature.
@@ -84,6 +123,30 @@ const hexToUint8Array = (hex: string): Uint8Array => {
 };
 
 /**
+ * Sends a followup message to a deferred interaction.
+ */
+const sendFollowup = async (applicationId: string, interactionToken: string, content: string): Promise<void> => {
+  const response = await fetch(`${DISCORD_API}/webhooks/${applicationId}/${interactionToken}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, flags: EPHEMERAL_FLAG }),
+  });
+
+  if (!response.ok) {
+    console.error('[worker] Failed to send followup:', response.status, await response.text());
+  }
+};
+
+/**
+ * Creates a deferred ephemeral response (shows "thinking..." in Discord).
+ */
+const deferredResponse = (): Response =>
+  Response.json({
+    type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+    data: { flags: EPHEMERAL_FLAG },
+  });
+
+/**
  * Creates an ephemeral Discord response.
  */
 const ephemeralResponse = (content: string): Response =>
@@ -96,18 +159,73 @@ const ephemeralResponse = (content: string): Response =>
   });
 
 /**
- * Creates an error response.
+ * Fetches all messages from a Discord channel, paginating through results.
  */
-const errorResponse = (content: string): Response => ephemeralResponse(`Error: ${content}`);
+const fetchAllMessages = async (channelId: string, botToken: string): Promise<DiscordMessage[]> => {
+  const allMessages: DiscordMessage[] = [];
+  let beforeId: string | undefined;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const url = new URL(`${DISCORD_API}/channels/${channelId}/messages`);
+    url.searchParams.set('limit', '100');
+    if (beforeId) {
+      url.searchParams.set('before', beforeId);
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Bot ${botToken}` },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Discord API error ${response.status}: ${text}`);
+    }
+
+    const batch: DiscordMessage[] = await response.json();
+    if (batch.length === 0) {
+      break;
+    }
+
+    allMessages.push(...batch);
+    beforeId = batch[batch.length - 1].id;
+
+    if (batch.length < 100) {
+      break;
+    }
+  }
+
+  return allMessages;
+};
+
+/**
+ * Formats messages as Markdown (chronological order).
+ */
+const formatMessagesAsMarkdown = (messages: DiscordMessage[]): string => {
+  // Messages come newest-first from Discord API; reverse for chronological order.
+  const chronological = [...messages].reverse();
+  return chronological
+    .map((msg) => {
+      const timestamp = new Date(msg.timestamp).toISOString();
+      const author = msg.author?.username ?? 'Unknown';
+      return `**${author}** (${timestamp})\n${msg.content}`;
+    })
+    .join('\n\n---\n\n');
+};
+
+//
+// Command handlers
+//
 
 /**
  * Handles the /connect slash command.
  * Forwards guild/channel binding to EDGE.
  */
-const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
-  const spaceKey = interaction.data?.options?.find((option: any) => option.name === 'space-key')?.value;
+const handleConnect = async (interaction: DiscordInteraction, env: Env): Promise<void> => {
+  const spaceKey = interaction.data?.options?.find((option) => option.name === 'space-key')?.value;
   if (!spaceKey) {
-    return errorResponse('Missing space-key argument.');
+    await sendFollowup(interaction.application_id, interaction.token, 'Error: Missing space-key argument.');
+    return;
   }
 
   const guildId = interaction.guild_id;
@@ -117,12 +235,14 @@ const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
   console.log('[worker] /connect', { spaceKey, guildId, guildName, channelId });
 
   // TODO(burdon): Forward to EDGE once the endpoint is available.
-  // For now, return success directly so the slash command flow can be tested end-to-end.
   if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.dxos.network') {
-    return ephemeralResponse(
+    await sendFollowup(
+      interaction.application_id,
+      interaction.token,
       `Connected guild **${guildName}** to space \`${spaceKey}\` (channel: ${channelId}).\n` +
         `_Note: EDGE integration pending — connection not persisted._`,
     );
+    return;
   }
 
   try {
@@ -132,23 +252,26 @@ const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
         'Content-Type': 'application/json',
         'X-Bot-DID': env.BOT_DID,
       },
-      body: JSON.stringify({
-        did: env.BOT_DID,
-        guildId,
-        guildName,
-        channelId,
-        spaceKey,
-      }),
+      body: JSON.stringify({ did: env.BOT_DID, guildId, guildName, channelId, spaceKey }),
     });
 
     if (!response.ok) {
       const text = await response.text();
-      return errorResponse(`Failed to connect: ${text}`);
+      await sendFollowup(interaction.application_id, interaction.token, `Error: Failed to connect: ${text}`);
+      return;
     }
 
-    return ephemeralResponse(`Connected guild **${guildName}** to space \`${spaceKey}\`.`);
+    await sendFollowup(
+      interaction.application_id,
+      interaction.token,
+      `Connected guild **${guildName}** to space \`${spaceKey}\`.`,
+    );
   } catch (err) {
-    return errorResponse(`Connection failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+    await sendFollowup(
+      interaction.application_id,
+      interaction.token,
+      `Error: Connection failed: ${err instanceof Error ? err.message : 'unknown error'}`,
+    );
   }
 };
 
@@ -156,50 +279,33 @@ const handleConnect = async (interaction: any, env: Env): Promise<Response> => {
  * Handles the /track slash command.
  * Fetches thread messages and posts them as Markdown to EDGE.
  */
-const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
+const handleTrack = async (interaction: DiscordInteraction, env: Env): Promise<void> => {
   const channelId = interaction.channel_id;
+  if (!channelId) {
+    await sendFollowup(interaction.application_id, interaction.token, 'Error: No channel context.');
+    return;
+  }
 
   console.log('[worker] /track', { channelId });
 
   try {
-    // Fetch thread messages from Discord API.
-    const messagesResponse = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages?limit=100`, {
-      headers: {
-        Authorization: `Bot ${env.BOT_TOKEN}`,
-      },
-    });
-
-    if (!messagesResponse.ok) {
-      const text = await messagesResponse.text();
-      console.error('[worker] Failed to fetch messages:', messagesResponse.status, text);
-      return errorResponse('Failed to fetch thread messages.');
-    }
-
-    // Format as Markdown (messages come newest-first, reverse for chronological order).
-    const messages: any[] = await messagesResponse.json();
-    const reversed = [...messages].reverse();
-    const markdown = reversed
-      .map((msg) => {
-        const timestamp = new Date(msg.timestamp).toISOString();
-        const author = msg.author?.username ?? 'Unknown';
-        return `**${author}** (${timestamp})\n${msg.content}`;
-      })
-      .join('\n\n---\n\n');
-
+    const messages = await fetchAllMessages(channelId, env.BOT_TOKEN);
+    const markdown = formatMessagesAsMarkdown(messages);
     const threadName = interaction.channel?.name ?? `Discord thread ${channelId}`;
 
-    console.log('[worker] Captured', reversed.length, 'messages from', threadName);
-    console.log('[worker] Markdown preview:', markdown.substring(0, 200));
+    console.log('[worker] Captured', messages.length, 'messages from', threadName);
 
     // TODO(burdon): Forward to EDGE once the endpoint is available.
     if (!env.EDGE_ENDPOINT || env.EDGE_ENDPOINT === 'https://edge.dxos.network') {
-      return ephemeralResponse(
-        `Thread **${threadName}** tracked — ${reversed.length} messages captured.\n` +
+      await sendFollowup(
+        interaction.application_id,
+        interaction.token,
+        `Thread **${threadName}** tracked — ${messages.length} messages captured.\n` +
           `_Note: EDGE integration pending — document not created in space._`,
       );
+      return;
     }
 
-    // Post to EDGE.
     const response = await fetch(`${env.EDGE_ENDPOINT}/discord/track`, {
       method: 'POST',
       headers: {
@@ -216,24 +322,36 @@ const handleTrack = async (interaction: any, env: Env): Promise<Response> => {
 
     if (!response.ok) {
       const text = await response.text();
-      return errorResponse(`Failed to track thread: ${text}`);
+      await sendFollowup(interaction.application_id, interaction.token, `Error: Failed to track thread: ${text}`);
+      return;
     }
 
-    return ephemeralResponse(`Thread **${threadName}** tracked — ${reversed.length} messages captured.`);
+    await sendFollowup(
+      interaction.application_id,
+      interaction.token,
+      `Thread **${threadName}** tracked — ${messages.length} messages captured.`,
+    );
   } catch (err) {
     console.error('[worker] Track error:', err);
-    return errorResponse(`Track failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+    await sendFollowup(
+      interaction.application_id,
+      interaction.token,
+      `Error: Track failed: ${err instanceof Error ? err.message : 'unknown error'}`,
+    );
   }
 };
 
+//
+// Worker entry point
+//
+
 export default {
-  fetch: async (request: Request, env: Env): Promise<Response> => {
+  fetch: async (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> => {
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
 
     try {
-      // Verify Discord signature.
       console.log('[worker] Verifying signature...');
       const isValid = await verifyDiscordSignature(request, env.DISCORD_PUBLIC_KEY);
       if (!isValid) {
@@ -241,31 +359,34 @@ export default {
         return new Response('Invalid signature', { status: 401 });
       }
 
-      // Handle Discord ping (required for interaction URL verification).
-      const interaction = (await request.json()) as any;
+      const interaction = (await request.json()) as DiscordInteraction;
       console.log('[worker] Interaction type:', interaction.type, 'command:', interaction.data?.name);
 
       if (interaction.type === InteractionType.PING) {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
-      // Handle slash commands.
       if (interaction.type === InteractionType.APPLICATION_COMMAND) {
         const commandName = interaction.data?.name;
+
+        // Return deferred response immediately, then process asynchronously.
+        // Discord enforces a 3-second deadline for the initial response.
         switch (commandName) {
           case 'connect':
-            return handleConnect(interaction, env);
+            ctx.waitUntil(handleConnect(interaction, env));
+            return deferredResponse();
           case 'track':
-            return handleTrack(interaction, env);
+            ctx.waitUntil(handleTrack(interaction, env));
+            return deferredResponse();
           default:
-            return errorResponse(`Unknown command: ${commandName}`);
+            return ephemeralResponse(`Error: Unknown command: ${commandName}`);
         }
       }
 
       return new Response('Unknown interaction type', { status: 400 });
     } catch (err) {
       console.error('[worker] Unhandled error:', err);
-      return errorResponse(`Internal error: ${err instanceof Error ? err.message : String(err)}`);
+      return ephemeralResponse(`Error: Internal error: ${err instanceof Error ? err.message : String(err)}`);
     }
   },
 };

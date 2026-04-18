@@ -35,7 +35,6 @@ export const DiscordPlugin = Plugin.define(meta).pipe(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
