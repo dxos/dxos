@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -201,7 +201,23 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>
+
       <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
+        <Settings.Item title={t('space-key.title')} description={t('space-key.description')}>
+          <div className='flex items-center gap-2'>
+            <Input.Root>
+              <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+            </Input.Root>
+            <IconButton
+              icon='ph--copy--regular'
+              iconOnly
+              label={t('copy-space-key.label')}
+              onClick={() => {
+                void navigator.clipboard.writeText(space.key.toHex());
+              }}
+            />
+          </div>
+        </Settings.Item>
         <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
           <Button onClick={handleBackup}>{t('download-backup.label')}</Button>
         </Settings.Item>
