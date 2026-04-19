@@ -8,7 +8,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-import { type EditorToolbarState } from './useEditorToolbar';
+import { type EditorToolbarState } from './types';
 
 const blockTypes = {
   blockquote: 'ph--quotes--regular',

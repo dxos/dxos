@@ -42,9 +42,9 @@ export const Typewriter = ({ initialContent = '', extensions = [], runtime }: Ty
   return (
     <ThemeProvider>
       <Editor.Root ref={editorRef}>
-        <Editor.Viewport>
+        <Editor.Content>
           <Editor.View initialValue={initialContent} extensions={extension} />
-        </Editor.Viewport>
+        </Editor.Content>
       </Editor.Root>
     </ThemeProvider>
   );

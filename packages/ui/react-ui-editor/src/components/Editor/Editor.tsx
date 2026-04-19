@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { type Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
@@ -12,12 +12,6 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import {
-  type EditorController,
-  EditorContent as NaturalEditorContent,
-  type EditorContentProps as NaturalEditorContentProps,
-  noopController,
-} from '../EditorContent';
 import {
   EditorMenuProvider,
   type EditorMenuProviderProps,
@@ -28,8 +22,14 @@ import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
-  useEditorToolbar,
 } from '../EditorToolbar';
+import {
+  type EditorController,
+  EditorView as NaturalEditorContent,
+  type EditorViewProps as NaturalEditorContentProps,
+  createEditorController,
+  noopController,
+} from './EditorView';
 
 //
 // Context
@@ -56,8 +56,9 @@ export { useEditorContext };
 type EditorRootProps = PropsWithChildren<
   Pick<EditorContextValue, 'extensions'> &
     Omit<UseEditorMenuProps, 'viewRef'> &
-    Pick<EditorToolbarState, 'viewMode'> &
-    Pick<EditorMenuProviderProps, 'numItems'>
+    Pick<EditorMenuProviderProps, 'numItems'> & {
+      viewMode?: EditorToolbarState['viewMode'];
+    }
 >;
 
 /**
@@ -66,10 +67,8 @@ type EditorRootProps = PropsWithChildren<
  */
 const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
   ({ children, extensions: extensionsProp, viewMode, numItems, ...props }, forwardedRef) => {
-    const state = useEditorToolbar({ viewMode });
-
-    const [controller, setController] = useState<EditorController>();
-    useImperativeHandle(forwardedRef, () => controller ?? noopController, [controller]);
+    // TODO(wittjosiah): Including initialState in the deps causes reactivity issues.
+    const state = useMemo(() => Atom.make<EditorToolbarState>({ viewMode }), [viewMode]);
 
     // TODO(burdon): Consider lighter-weight approach if EditorMenuProvider is not needed.
     const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
@@ -77,6 +76,10 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
       () => [extension, extensionsProp].filter(isNonNullable).flat(),
       [extension, extensionsProp],
     );
+
+    // External controller.
+    const [controller, setController] = useState<EditorController>(noopController);
+    useImperativeHandle(forwardedRef, () => controller, [controller]);
 
     return (
       <EditorContextProvider
@@ -96,17 +99,17 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
 EditorRoot.displayName = 'Editor.Root';
 
 //
-// Viewport
+// Content
 //
 
-const EDITOR_VIEWPORT_NAME = 'Editor.Viewport';
+const EDITOR_CONTENT_NAME = 'Editor.Content';
 
-type EditorViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /**
- * Viewport component that wraps the toolbar and editor content area.
+ * Content component that wraps the toolbar and editor view area.
  */
-const EditorViewport = ({ classNames, children }: EditorViewportProps) => {
+const EditorContent = ({ classNames, children }: EditorContentProps) => {
   return (
     <div role='none' className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>
       {children}
@@ -114,7 +117,7 @@ const EditorViewport = ({ classNames, children }: EditorViewportProps) => {
   );
 };
 
-EditorViewport.displayName = EDITOR_VIEWPORT_NAME;
+EditorContent.displayName = EDITOR_CONTENT_NAME;
 
 //
 // View
@@ -130,7 +133,6 @@ type EditorViewProps = Omit<NaturalEditorContentProps, 'ref'>;
  */
 const EditorView = ({ extensions: providedExtensions, ...props }: EditorViewProps) => {
   const { extensions: additionalExtensions = [], setController } = useEditorContext(EDITOR_VIEW_NAME);
-
   const extensions = useMemo(
     () => [additionalExtensions, providedExtensions].filter(isNonNullable).flat(),
     [providedExtensions, additionalExtensions],
@@ -173,9 +175,18 @@ EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 export const Editor = {
   Root: EditorRoot,
-  Viewport: EditorViewport,
+  Content: EditorContent,
   View: EditorView,
   Toolbar: EditorToolbar,
 };
 
-export type { EditorController, EditorRootProps, EditorViewportProps, EditorViewProps, EditorToolbarProps };
+export type {
+  EditorController,
+  EditorRootProps,
+  EditorContentProps,
+  EditorViewProps,
+  EditorToolbarProps,
+  EditorToolbarState,
+};
+
+export { createEditorController };

@@ -3,7 +3,7 @@
 //
 
 import { Transaction } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView as NaturalEditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -11,9 +11,9 @@ import { initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
-import { type EditorController, createEditorController } from './controller';
+import { type EditorController, createEditorController, noopController } from './controller';
 
-export type EditorContentProps = ThemedClassName<
+export type EditorViewProps = ThemedClassName<
   {
     focusable?: boolean;
     value?: string;
@@ -24,9 +24,8 @@ export type EditorContentProps = ThemedClassName<
 /**
  * Minimal text editor.
  * NOTE: This shouold not be used with the automerge extension.
- * @deprecated Use Editor.View
  */
-export const EditorContent = forwardRef<EditorController, EditorContentProps>(
+export const EditorView = forwardRef<EditorController, EditorViewProps>(
   ({ classNames, id, extensions, selectionEnd, focusable = true, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
@@ -35,7 +34,7 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
         selectionEnd,
         extensions: [
           extensions ?? [],
-          EditorView.updateListener.of(({ view, docChanged, transactions }) => {
+          NaturalEditorView.updateListener.of(({ view, docChanged, transactions }) => {
             const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
             if (!isInitialSync && docChanged) {
               onChange?.(view.state.doc.toString());
@@ -74,9 +73,11 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
           'w-full outline-hidden focus:border-accent-surface focus-within:border-neutral-focus-indicator',
           classNames,
         )}
-        ref={parentRef}
         {...(focusable ? focusAttributes : {})}
+        ref={parentRef}
       />
     );
   },
 );
+
+export { type EditorController, createEditorController, noopController };

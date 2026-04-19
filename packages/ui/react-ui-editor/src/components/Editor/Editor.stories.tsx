@@ -85,10 +85,10 @@ export const WithToolbar: Story = {
 export const WithPopover: Story = {
   render: (args) => (
     <Editor.Root trigger={['@']} getMenu={({ text }) => [createMenuGroup({ items, filter: text })]}>
-      <Editor.Viewport>
+      <Editor.Content>
         <Editor.Toolbar />
         <Editor.View {...args} />
-      </Editor.Viewport>
+      </Editor.Content>
     </Editor.Root>
   ),
 };
