@@ -37,7 +37,7 @@ export const email = (): Extension => [
       }
 
       update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged) {
+        if (update.docChanged) {
           this.decorations = buildDecorations(update.view);
         }
       }

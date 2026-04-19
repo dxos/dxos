@@ -3,9 +3,8 @@
 //
 
 import { type Diagnostic, linter } from '@codemirror/lint';
-import { type Extension, StateField } from '@codemirror/state';
-import { EditorView, type Tooltip, showTooltip } from '@codemirror/view';
-import { createRoot } from 'react-dom/client';
+import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 import { safeParseJson, trim } from '@dxos/util';
@@ -47,7 +46,6 @@ export const assistant = (options: AssistantOptions): Extension[] => {
   };
 
   return [
-    assistantState(options),
     assistantLinter(options),
     EditorView.baseTheme({
       // '.cm-lintRange': {
@@ -71,44 +69,48 @@ export const assistant = (options: AssistantOptions): Extension[] => {
 };
 
 //
-// Toolbar State & Tooltip
-//
-
-const assistantState = (options: AssistantOptions) =>
-  StateField.define<Tooltip | null>({
-    create: () => null,
-    update: (tooltip, tr): Tooltip | null => {
-      if (tr.selection || tr.docChanged) {
-        const { from, to } = tr.state.selection.main;
-        if (from === to) {
-          return null;
-        }
-
-        return {
-          pos: from,
-          above: false,
-          strictSide: true,
-          create: (view) => {
-            const dom = document.createElement('div');
-            const root = createRoot(dom);
-            return {
-              dom,
-              destroy: () => {
-                setTimeout(() => root.unmount(), 0);
-              },
-            };
-          },
-        };
-      }
-
-      return tooltip;
-    },
-    provide: (f) => showTooltip.from(f),
-  });
-
-//
 // Linter
 //
+
+type Suggestion = {
+  original: string;
+  replacement: string;
+  context: string;
+};
+
+const isSuggestion = (value: unknown): value is Suggestion =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Suggestion).original === 'string' &&
+  typeof (value as Suggestion).replacement === 'string' &&
+  typeof (value as Suggestion).context === 'string';
+
+/**
+ * Find the index of `original` within `content`, using `context` to disambiguate when there are multiple occurrences.
+ */
+const findSuggestionIndex = (content: string, suggestion: Suggestion): number => {
+  const firstIdx = content.indexOf(suggestion.original);
+  if (firstIdx === -1) {
+    return -1;
+  }
+
+  // Check for duplicate occurrences; use context to disambiguate.
+  const secondIdx = content.indexOf(suggestion.original, firstIdx + 1);
+  if (secondIdx === -1) {
+    return firstIdx;
+  }
+
+  // Find the occurrence whose surrounding text best matches the context.
+  const contextIdx = content.indexOf(suggestion.context);
+  if (contextIdx !== -1) {
+    const contextEnd = contextIdx + suggestion.context.length;
+    if (secondIdx >= contextIdx && secondIdx <= contextEnd) {
+      return secondIdx;
+    }
+  }
+
+  return firstIdx;
+};
 
 const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: AssistantOptions) =>
   linter(
@@ -118,12 +120,13 @@ const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: Assi
         const result = await generate({ instructions, content });
 
         const [match] = result.match(/\[.*\]/s) ?? [];
-        const suggestions = match && safeParseJson<any[]>(match, []);
-        if (suggestions) {
+        const parsed = match ? safeParseJson<unknown[]>(match, []) : [];
+        const suggestions = Array.isArray(parsed) ? parsed.filter(isSuggestion) : [];
+        if (suggestions && suggestions.length > 0) {
           log.debug('assistant suggestions', { count: suggestions.length });
           const diagnostics: Diagnostic[] = [];
           for (const suggestion of suggestions) {
-            const idx = content.indexOf(suggestion.original);
+            const idx = findSuggestionIndex(content, suggestion);
             if (idx !== -1) {
               diagnostics.push({
                 from: idx,

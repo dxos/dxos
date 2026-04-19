@@ -15,12 +15,12 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
-import { assistant, AssistantOptions } from '@dxos/react-ui-editor';
+import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 
 import { EditMessage } from '#components';
 
-import { EditMessageProps } from '../../components/EditMessage/EditMessage';
+import { type EditMessageProps } from '../../components/EditMessage/EditMessage';
 import { email } from '../../extensions';
 import { GmailFunctions } from '../../operations/google/gmail';
 import { stripQuotedMessage } from '../../util';
