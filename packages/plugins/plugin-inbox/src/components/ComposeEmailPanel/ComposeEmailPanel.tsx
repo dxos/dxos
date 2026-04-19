@@ -7,8 +7,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Column, Message, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { Editor } from '@dxos/react-ui-editor';
-import { Form } from '@dxos/react-ui-form';
+import { Editor, EditorContentProps } from '@dxos/react-ui-editor';
+import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -31,7 +31,16 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 
-    const initialValues = useMemo<ComposeEmail>(() => {
+    // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
+    const extension = useMemo(
+      () => [
+        createBasicExtensions({ scrollPastEnd: true, search: true, placeholder: t('message-body.placeholder') }),
+        createThemeExtensions({ themeMode, slots: compactSlots }),
+      ],
+      [t, themeMode],
+    );
+
+    const initialValues = useMemo<FormRootProps['defaultValues']>(() => {
       return {
         to: message.properties?.to ?? '',
         cc: message.properties?.cc,
@@ -40,8 +49,8 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
       };
     }, [message]);
 
-    const handleValuesChanged = useCallback(
-      (values: Partial<ComposeEmail>) => {
+    const handleValuesChanged = useCallback<NonNullable<FormRootProps<ComposeEmail>['onValuesChanged']>>(
+      (values) => {
         Obj.change(message, (message) => {
           const properties = (message.properties ??= {});
           if (values.to !== undefined) {
@@ -61,8 +70,8 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
       [message],
     );
 
-    const handleBodyChanged = useCallback(
-      (value: string) => {
+    const handleBodyChanged = useCallback<NonNullable<EditorContentProps['onChange']>>(
+      (value) => {
         Obj.change(message, (message) => {
           const blocks = (message.blocks ??= []);
           const textBlock = blocks.find((b) => b._tag === 'text');
@@ -76,27 +85,15 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
       [message],
     );
 
-    const handleSendEmail = useCallback(
-      async (_data: ComposeEmail) => {
-        try {
-          setError(null);
-          await onSend?.(message);
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : t('send-email-error-unknown.message');
-          setError(errorMessage);
-        }
-      },
-      [t, onSend, message],
-    );
-
-    // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
-    const extension = useMemo(
-      () => [
-        createBasicExtensions({ scrollPastEnd: true, search: true, placeholder: t('message-body.placeholder') }),
-        createThemeExtensions({ themeMode, slots: compactSlots }),
-      ],
-      [t, themeMode],
-    );
+    const handleSave = useCallback<NonNullable<FormRootProps<ComposeEmail>['onSave']>>(async () => {
+      try {
+        setError(null);
+        await onSend?.(message);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : t('send-email-error-unknown.message');
+        setError(errorMessage);
+      }
+    }, [t, onSend, message]);
 
     return (
       <Column.Root
@@ -109,7 +106,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
           schema={ComposeEmail}
           defaultValues={initialValues}
           onValuesChanged={handleValuesChanged}
-          onSave={handleSendEmail}
+          onSave={handleSave}
           testId='compose-email-form'
         >
           <Column.Center>
@@ -129,7 +126,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
               <Editor.Content
                 classNames='dx-expander border border-subdued-separator'
                 extensions={extension}
-                initialValue={message.blocks.find((b) => b._tag === 'text')?.text ?? ''}
+                initialValue={message.blocks.find((b) => b._tag === 'text')?.text}
                 onChange={(value) => {
                   handleBodyChanged(value);
                 }}
