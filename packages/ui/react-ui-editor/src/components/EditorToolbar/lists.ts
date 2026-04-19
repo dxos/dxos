@@ -8,7 +8,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { List, addList, removeList } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-import { type EditorToolbarState } from './useEditorToolbar';
+import { type EditorToolbarState } from './types';
 
 const listStyles = {
   bullet: 'ph--list-bullets--regular',
