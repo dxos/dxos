@@ -127,7 +127,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               <Editor.Content
                 classNames='dx-expander border border-subdued-separator'
                 extensions={extension}
-                initialValue={message.blocks.find((b) => b._tag === 'text')?.text}
+                initialValue={message.blocks?.find((b) => b._tag === 'text')?.text}
                 onChange={(value) => {
                   handleBodyChanged(value);
                 }}
