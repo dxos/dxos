@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Granola } from '@dxos/plugin-granola/types';
@@ -180,6 +180,116 @@ export default Capability.makeModule(() =>
 
     (globalThis as any).__DEMO__ = api;
     log.info('demo: globals exposed on window.__DEMO__');
+
+    // Linear auto-sync: fetch issues as Tasks + create Kanban board in root collection.
+    const linearApiKey = globalThis.localStorage?.getItem('LINEAR_API_KEY');
+    console.log('linear: api key', linearApiKey ? 'found' : 'missing');
+    if (linearApiKey) {
+      void (async () => {
+        try {
+          console.log('linear: starting sync...');
+          const { fetchRecentIssues } = await import('@dxos/plugin-linear');
+          const { Task } = await import('@dxos/types');
+          const { Kanban } = await import('@dxos/plugin-kanban/types');
+          const { ViewModel } = await import('@dxos/schema');
+          console.log('linear: imports loaded');
+
+          const space = await ensureReady();
+          console.log('linear: space ready');
+          const rootCollection = space.properties[Collection.Collection.typename]?.target;
+          const addToCollection = (obj: any) => {
+            if (rootCollection) {
+              Obj.change(rootCollection, (c: any) => { c.objects.push(Ref.make(obj)); });
+            }
+          };
+
+          // Sync tasks.
+          const tasks = await fetchRecentIssues({ apiKey: linearApiKey });
+          const existing: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
+          const existingIds = new Set(
+            existing.flatMap((t: any) => {
+              const keys = Obj.getMeta(t).keys;
+              return keys?.filter((k: any) => k.source === 'linear.app').map((k: any) => k.id) ?? [];
+            }),
+          );
+
+          let added = 0;
+          for (const task of tasks) {
+            const linearId = Obj.getMeta(task).keys?.find((k: any) => k.source === 'linear.app')?.id;
+            if (linearId && existingIds.has(linearId)) {
+              continue;
+            }
+            space.db.add(task);
+            addToCollection(task);
+            added++;
+          }
+
+          // Create Kanban board if none exists.
+          const kanbans: Kanban.Kanban[] = await space.db.query(Filter.type(Kanban.Kanban)).run();
+          if (!kanbans.some((k: any) => k.name === 'Linear Issues')) {
+            const { view } = await ViewModel.makeFromDatabase({
+              db: space.db,
+              typename: 'org.dxos.type.task',
+              pivotFieldName: 'status',
+              fields: ['title', 'status', 'priority', 'description'],
+              createInitial: 0,
+            });
+            const kanban = Kanban.make({
+              name: 'Linear Issues',
+              view,
+              arrangement: { order: ['todo', 'in-progress', 'done'], columns: {} },
+            });
+            space.db.add(kanban);
+            addToCollection(kanban);
+          }
+
+          // Write-back: watch for local Task changes and push to Linear.
+          const { updateIssue } = await import('@dxos/plugin-linear');
+          const allTasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
+          const linearTasks = allTasks.filter((t: any) =>
+            Obj.getMeta(t).keys?.some((k: any) => k.source === 'linear.app'),
+          );
+          const snapshots = new Map<string, { status?: string; priority?: string; title?: string }>();
+          for (const task of linearTasks) {
+            snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+          }
+
+          setInterval(async () => {
+            try {
+              for (const task of linearTasks) {
+                const prev = snapshots.get(task.id);
+                if (!prev) {
+                  continue;
+                }
+                const changes: Record<string, string | undefined> = {};
+                if (task.status !== prev.status) {
+                  changes.status = task.status;
+                }
+                if (task.priority !== prev.priority) {
+                  changes.priority = task.priority;
+                }
+                if (task.title !== prev.title) {
+                  changes.title = task.title;
+                }
+                if (Object.keys(changes).length > 0) {
+                  const linearId = Obj.getMeta(task).keys?.find((k: any) => k.source === 'linear.app')?.id;
+                  if (linearId) {
+                    await updateIssue({ apiKey: linearApiKey }, linearId, changes);
+                    snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('linear: write-back failed', error);
+            }
+          }, 10_000);
+
+          console.log(`linear: synced ${added} issues, ${tasks.length} total (write-back enabled)`);
+        } catch (error) {
+          console.error('linear: sync failed', error);
+        }
+      })();
+    }
 
     return Capability.contributes(Capabilities.Null, null);
   }),

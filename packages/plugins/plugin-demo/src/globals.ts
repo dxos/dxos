@@ -423,4 +423,152 @@ const api = {
 if (typeof globalThis !== 'undefined') {
   (globalThis as any).__DEMO__ = api;
   log.info('demo: window.__DEMO__ ready — try __DEMO__.help()');
+
+  // Linear auto-sync: runs at bundle load time, no capability system needed.
+  const linearApiKey = globalThis.localStorage?.getItem('LINEAR_API_KEY');
+  if (linearApiKey) {
+    void (async () => {
+      try {
+        // Wait for DXOS client to be ready.
+        let space: AnySpace | undefined;
+        for (let attempt = 0; attempt < 60; attempt++) {
+          space = resolveSpace();
+          if (space) {
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+        if (!space) {
+          return;
+        }
+        await space.waitUntilReady();
+
+        const { fetchRecentIssues, updateIssue } = await import('@dxos/plugin-linear');
+        const { Task } = await import('@dxos/types');
+        const { Collection } = await import('@dxos/echo');
+        const { Kanban } = await import('@dxos/plugin-kanban/types');
+        const { ViewModel } = await import('@dxos/schema');
+
+        const rootCollection = (space as any).properties?.[Collection.Collection.typename]?.target;
+        const addToCollection = (obj: any) => {
+          if (rootCollection) {
+            Obj.change(rootCollection, (c: any) => { c.objects.push(Ref.make(obj)); });
+          }
+        };
+
+        // Sync tasks.
+        const tasks = await fetchRecentIssues({ apiKey: linearApiKey });
+        const existing: any[] = await space.db.query(Filter.type(Task.Task)).run();
+        const existingIds = new Set(
+          existing.flatMap((t: any) =>
+            (Obj.getMeta(t).keys ?? []).filter((k: any) => k.source === 'linear.app').map((k: any) => k.id),
+          ),
+        );
+
+        let added = 0;
+        for (const task of tasks) {
+          const linearId = (Obj.getMeta(task).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
+          if (linearId && existingIds.has(linearId)) {
+            continue;
+          }
+          space.db.add(task);
+          addToCollection(task);
+          added++;
+        }
+
+        // Create Kanban board if none exists.
+        const kanbans: any[] = await space.db.query(Filter.type(Kanban.Kanban)).run();
+        if (!kanbans.some((k: any) => k.name === 'Linear Issues')) {
+          const { view } = await ViewModel.makeFromDatabase({
+            db: space.db,
+            typename: 'org.dxos.type.task',
+            pivotFieldName: 'status',
+            fields: ['title', 'status', 'priority', 'description'],
+            createInitial: 0,
+          });
+          const kanban = Kanban.make({
+            name: 'Linear Issues',
+            view,
+            arrangement: { order: ['todo', 'in-progress', 'done'], columns: {} },
+          });
+          space.db.add(kanban);
+          addToCollection(kanban);
+        }
+
+        console.log(`linear: synced ${added} issues, ${tasks.length} total`);
+
+        // Write-back: poll for local changes and push to Linear.
+        const snapshots = new Map<string, { status?: string; priority?: string; title?: string }>();
+        const allTasks: any[] = await space.db.query(Filter.type(Task.Task)).run();
+        for (const task of allTasks) {
+          const lid = (Obj.getMeta(task).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
+          if (lid) {
+            snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+          }
+        }
+        setInterval(async () => {
+          try {
+            const current: any[] = await space!.db.query(Filter.type(Task.Task)).run();
+            for (const task of current) {
+              const lid = (Obj.getMeta(task).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
+              if (!lid) {
+                continue;
+              }
+              const prev = snapshots.get(task.id);
+              if (!prev) {
+                snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+                continue;
+              }
+              const changes: Record<string, string | undefined> = {};
+              if (task.status !== prev.status) {
+                changes.status = task.status;
+              }
+              if (task.priority !== prev.priority) {
+                changes.priority = task.priority;
+              }
+              if (task.title !== prev.title) {
+                changes.title = task.title;
+              }
+              if (Object.keys(changes).length > 0) {
+                await updateIssue({ apiKey: linearApiKey }, lid, changes);
+                snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+              }
+            }
+          } catch (error) {
+            console.error('linear: write-back failed', error);
+          }
+        }, 10_000);
+
+        // Re-sync from Linear every 5 minutes.
+        setInterval(async () => {
+          try {
+            const fresh = await fetchRecentIssues({ apiKey: linearApiKey });
+            const nowExisting: any[] = await space!.db.query(Filter.type(Task.Task)).run();
+            const nowIds = new Set(
+              nowExisting.flatMap((t: any) =>
+                (Obj.getMeta(t).keys ?? []).filter((k: any) => k.source === 'linear.app').map((k: any) => k.id),
+              ),
+            );
+            let resyncAdded = 0;
+            for (const task of fresh) {
+              const lid = (Obj.getMeta(task).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
+              if (lid && nowIds.has(lid)) {
+                continue;
+              }
+              space!.db.add(task);
+              addToCollection(task);
+              resyncAdded++;
+            }
+            if (resyncAdded > 0) {
+              console.log(`linear: re-synced ${resyncAdded} new issues`);
+            }
+          } catch (error) {
+            console.error('linear: re-sync failed', error);
+          }
+        }, 5 * 60 * 1000);
+      } catch (error) {
+        console.error('linear: sync failed', error);
+      }
+    })();
+  }
 }

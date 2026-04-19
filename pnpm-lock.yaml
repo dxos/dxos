@@ -8921,6 +8921,12 @@ importers:
       '@dxos/plugin-granola':
         specifier: workspace:*
         version: link:../plugin-granola
+      '@dxos/plugin-kanban':
+        specifier: workspace:*
+        version: link:../plugin-kanban
+      '@dxos/plugin-linear':
+        specifier: workspace:*
+        version: link:../plugin-linear
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -8933,6 +8939,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -10251,6 +10260,21 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-kanban':
+        specifier: workspace:*
+        version: link:../plugin-kanban
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

@@ -136,6 +136,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Default
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
+    LinearPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
     SheetPlugin.meta.id,
@@ -153,8 +154,12 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       ConnectionsPlugin.meta.id,
+      GitHubPlugin.meta.id,
+      GranolaPlugin.meta.id,
       InspectorPlugin.meta.id,
+      ResearchPlugin.meta.id,
       SlackPlugin.meta.id,
+      TrelloPlugin.meta.id,
       DailySummaryPlugin.meta.id,
       FeedPlugin.meta.id,
       MeetingPlugin.meta.id,
