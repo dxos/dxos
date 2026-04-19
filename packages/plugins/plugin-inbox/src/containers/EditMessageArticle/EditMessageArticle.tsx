@@ -13,13 +13,13 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { ComposeEmailPanel } from '#components';
+import { EditMessagePanel } from '#components';
 
 import { GmailFunctions } from '../../operations/google/gmail';
 
-export type DraftMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
+export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 
-export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps) => {
+export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) => {
   const db = Obj.getDatabase(subject);
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   const runtime = db?.spaceId ? computeRuntime.getRuntime(db.spaceId) : undefined;
@@ -35,7 +35,7 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
   return (
     <Panel.Root role={role} className='dx-document'>
       <Panel.Content asChild>
-        <ComposeEmailPanel message={subject} onSend={handleSend} />
+        <EditMessagePanel message={subject} onSend={handleSend} />
       </Panel.Content>
     </Panel.Root>
   );
