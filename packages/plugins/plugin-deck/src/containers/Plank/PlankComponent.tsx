@@ -11,7 +11,7 @@ import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { StackItem, StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
+import { DEFAULT_HORIZONTAL_SIZE, StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';
@@ -44,8 +44,7 @@ const smoothScrollTo = (element: HTMLElement, target: number, duration: number) 
   requestAnimationFrame(step);
 };
 
-// NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
-export const DEFAULT_SIZE = 48 satisfies StackItemSize;
+export const DEFAULT_SIZE = DEFAULT_HORIZONTAL_SIZE;
 export const DEFAULT_COMPANION_SIZE = 35 satisfies StackItemSize;
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {

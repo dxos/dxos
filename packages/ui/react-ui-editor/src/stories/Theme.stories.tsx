@@ -34,10 +34,10 @@ const DefaultStory = () => {
   return (
     <div className='w-full grid grid-cols-2 gap-2'>
       <Editor.Root>
-        <Editor.Content classNames='p-2' extensions={ext1} initialValue={createText(false)} />
+        <Editor.View classNames='p-2' extensions={ext1} initialValue={createText(false)} />
       </Editor.Root>
       <Editor.Root>
-        <Editor.Content classNames='p-2' extensions={ext2} initialValue={createText(true)} />
+        <Editor.View classNames='p-2' extensions={ext2} initialValue={createText(true)} />
       </Editor.Root>
     </div>
   );
