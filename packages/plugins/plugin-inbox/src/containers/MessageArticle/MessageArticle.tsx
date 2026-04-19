@@ -54,29 +54,6 @@ export const MessageArticle = ({
     [db, invokePromise],
   );
 
-  const handleReply = useCallback(() => {
-    if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message, mailbox });
-    }
-  }, [db, invokePromise, message, mailbox]);
-
-  const handleReplyAll = useCallback(() => {
-    if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, {
-        db,
-        mode: 'reply-all',
-        replyToMessage: message,
-        mailbox,
-      });
-    }
-  }, [db, invokePromise, message, mailbox]);
-
-  const handleForward = useCallback(() => {
-    if (db) {
-      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message, mailbox });
-    }
-  }, [db, invokePromise, message, mailbox]);
-
   const handleOpen = useCallback(() => {
     if (!mailbox || !db) {
       return;
@@ -84,16 +61,29 @@ export const MessageArticle = ({
     void invokePromise(LayoutOperation.Open, { subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)] });
   }, [mailbox, db, message.id, invokePromise]);
 
+  const openDraft = useCallback(
+    (mode: 'reply' | 'reply-all' | 'forward') => {
+      if (db) {
+        void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode, message, mailbox });
+      }
+    },
+    [db, invokePromise, message, mailbox],
+  );
+
+  const handleReply = useCallback(() => openDraft('reply'), [openDraft]);
+  const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
+  const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
+
   return (
     <Message.Root
       attendableId={toolbarAttendableId}
       viewMode={viewMode}
       message={message}
       sender={sender}
+      onOpen={companionTo ? handleOpen : undefined}
       onReply={handleReply}
       onReplyAll={handleReplyAll}
       onForward={handleForward}
-      onOpen={companionTo ? handleOpen : undefined}
     >
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>

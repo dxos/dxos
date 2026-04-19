@@ -74,12 +74,15 @@ export const DraftEmail = Operation.make({
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.draft-email-and-open`, name: 'Draft email and open' },
+  meta: {
+    key: `${INBOX_OPERATION}.draft-email-and-open`,
+    name: 'Draft email and open',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
-    replyToMessage: Schema.optional(Schema.Any),
+    message: Schema.optional(Schema.Any),
     subject: Schema.optional(Schema.String),
     body: Schema.optional(Schema.String),
     // TODO(wittjosiah): Should be Mailbox.Mailbox.
