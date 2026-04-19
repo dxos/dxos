@@ -131,6 +131,84 @@ export const fetchRecentIssues = async (
   );
 };
 
+/** Reverse-map Composer Task status back to Linear workflow state name. */
+const reverseMapStatus = (status: string | undefined): string | undefined => {
+  switch (status) {
+    case 'done': return 'Done';
+    case 'in-progress': return 'In Progress';
+    case 'todo': return 'Todo';
+    default: return undefined;
+  }
+};
+
+/** Reverse-map Composer Task priority back to Linear priority number. */
+const reverseMapPriority = (priority: string | undefined): number | undefined => {
+  switch (priority) {
+    case 'urgent': return 1;
+    case 'high': return 2;
+    case 'medium': return 3;
+    case 'low': return 4;
+    case 'none': return 0;
+    default: return undefined;
+  }
+};
+
+/** Update a Linear issue's status and/or priority. */
+export const updateIssue = async (
+  auth: LinearAuth,
+  issueId: string,
+  updates: { status?: string; priority?: string; title?: string },
+): Promise<void> => {
+  const input: Record<string, unknown> = {};
+
+  if (updates.priority !== undefined) {
+    const mapped = reverseMapPriority(updates.priority);
+    if (mapped !== undefined) {
+      input.priority = mapped;
+    }
+  }
+
+  if (updates.title !== undefined) {
+    const raw = updates.title.replace(/^\[[\w-]+\]\s*/, '');
+    input.title = raw;
+  }
+
+  if (updates.status !== undefined) {
+    const stateName = reverseMapStatus(updates.status);
+    if (stateName) {
+      const statesQuery = `
+        query IssueStates($issueId: String!) {
+          issue(id: $issueId) {
+            team { states { nodes { id name } } }
+          }
+        }
+      `;
+      type StatesResponse = { issue: { team: { states: { nodes: { id: string; name: string }[] } } } };
+      const statesData = await graphql<StatesResponse>(auth, statesQuery, { issueId });
+      const stateNode = statesData.issue.team.states.nodes.find(
+        (s) => s.name.toLowerCase() === stateName.toLowerCase(),
+      );
+      if (stateNode) {
+        input.stateId = stateNode.id;
+      }
+    }
+  }
+
+  if (Object.keys(input).length === 0) {
+    return;
+  }
+
+  const mutation = `
+    mutation UpdateIssue($issueId: String!, $input: IssueUpdateInput!) {
+      issueUpdate(id: $issueId, input: $input) {
+        success
+      }
+    }
+  `;
+  await graphql<{ issueUpdate: { success: boolean } }>(auth, mutation, { issueId, input });
+  log.info('linear: updated issue', { issueId, input });
+};
+
 /** One-shot auth check — returns the viewer's display name on success. */
 export const whoAmI = async (auth: LinearAuth): Promise<string> => {
   type Response = { viewer: { displayName: string } };

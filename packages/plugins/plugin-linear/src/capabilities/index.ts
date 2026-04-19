@@ -2,5 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as AutoSync } from './auto-sync';
+import { Capability } from '@dxos/app-framework';
+
+export const AutoSync = Capability.lazy('AutoSync', () => import('./auto-sync'));
 export * from './linear-client';

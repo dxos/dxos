@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Filter, Obj } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Kanban } from '@dxos/plugin-kanban/types';
-import { ViewModel } from '@dxos/schema';
+import { CollectionModel, ViewModel } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { fetchRecentIssues, readLinearAuth } from './linear-client';
@@ -50,12 +50,14 @@ const syncOnce = async (client: { spaces: { get: () => any[] } }): Promise<void>
     if (linearId && existingLinearIds.has(linearId)) {
       continue;
     }
-    space.db.add(task);
+    await Effect.runPromise(
+      CollectionModel.add({ object: task }).pipe(Effect.provide(Database.layer(space.db))),
+    );
     added++;
   }
 
   if (added > 0) {
-    log.info('linear: synced issues', { added, total: remoteTasks.length });
+    console.log('linear: synced issues', { added, total: remoteTasks.length });
   }
 
   const existingKanbans: Kanban.Kanban[] = await space.db.query(Filter.type(Kanban.Kanban)).run();
@@ -74,20 +76,44 @@ const syncOnce = async (client: { spaces: { get: () => any[] } }): Promise<void>
         view,
         arrangement: { order: ['todo', 'in-progress', 'done'], columns: {} },
       });
-      space.db.add(kanban);
-      log.info('linear: created kanban board');
+      await Effect.runPromise(
+        CollectionModel.add({ object: kanban }).pipe(Effect.provide(Database.layer(space.db))),
+      );
+      console.log('linear: created kanban board');
     } catch (error) {
       log.warn('linear: failed to create kanban', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 };
 
+const waitForSpace = async (client: any, maxWait = 30_000): Promise<any> => {
+  const start = Date.now();
+  while (Date.now() - start < maxWait) {
+    const spaces = client.spaces.get();
+    if (spaces.length > 0) {
+      return spaces[0];
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return undefined;
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    console.log('linear: auto-sync module loaded');
+
     const client = yield* Capability.get(ClientCapabilities.Client);
+    console.log('linear: got client');
 
     yield* Effect.tryPromise({
       try: async () => {
+        const space = await waitForSpace(client);
+        if (!space) {
+          console.warn('linear: no space found after waiting');
+          return;
+        }
+        console.log('linear: space ready, starting sync');
+
         await syncOnce(client);
 
         setInterval(async () => {
@@ -99,7 +125,7 @@ export default Capability.makeModule(
         }, SYNC_INTERVAL_MS);
       },
       catch: (error: unknown) => {
-        log.warn('linear: initial sync failed', { error: error instanceof Error ? error.message : String(error) });
+        console.error('linear: initial sync failed', error instanceof Error ? error.message : String(error));
         return new Error(error instanceof Error ? error.message : String(error));
       },
     });

@@ -4,10 +4,9 @@
 
 import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
-import { SpaceEvents } from '@dxos/plugin-space/types';
 
 import { AutoSync } from '#capabilities';
 import { meta } from '#meta';
@@ -37,7 +36,7 @@ export const LinearPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'auto-sync',
-    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activatesOn: ActivationEvents.Startup,
     activate: AutoSync,
   }),
   Plugin.make,
