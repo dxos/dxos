@@ -32,13 +32,11 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     const [error, setError] = useState<string | null>(null);
 
     const initialValues = useMemo<ComposeEmail>(() => {
-      const textBlock = draft.blocks.find((b) => b._tag === 'text');
       return {
         to: draft.properties?.to ?? '',
         cc: draft.properties?.cc,
         bcc: draft.properties?.bcc,
         subject: draft.properties?.subject ?? '',
-        body: textBlock?.text ?? '',
       };
     }, [draft]);
 
@@ -96,7 +94,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
         createBasicExtensions({ scrollPastEnd: true, search: true, placeholder: t('message-body.placeholder') }),
         createThemeExtensions({ themeMode, slots: compactSlots }),
       ],
-      [],
+      [t, themeMode],
     );
 
     return (

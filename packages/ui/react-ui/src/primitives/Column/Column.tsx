@@ -101,6 +101,31 @@ const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(
 ColumnRow.displayName = COLUMN_ROW_NAME;
 
 //
+// Bleed
+//
+
+const COLUMN_BLEED_NAME = 'Column.Bleed';
+
+type ColumnBleedProps = SlottableProps;
+
+/**
+ * Spans all 3 columns of the parent Column.Root (gutter-to-gutter).
+ * Use for `ScrollArea`, full-width dividers, tables, or any content that should ignore the gutters.
+ */
+const ColumnBleed = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  return (
+    <Comp {...rest} className={tx('column.bleed', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
+
+ColumnBleed.displayName = COLUMN_BLEED_NAME;
+
+//
 // Center
 //
 
@@ -127,44 +152,14 @@ const ColumnCenter = slottable<HTMLDivElement>(({ children, asChild, ...props },
 ColumnCenter.displayName = COLUMN_CENTER_NAME;
 
 //
-// Bleed
-//
-
-const COLUMN_BLEED_NAME = 'Column.Bleed';
-
-type ColumnBleedProps = SlottableProps;
-
-/**
- * Spans all 3 columns of the parent Column.Root (gutter-to-gutter).
- * Use for `ScrollArea`, full-width dividers, tables, or any content that should ignore the gutters.
- */
-const ColumnBleed = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  return (
-    <Comp {...rest} className={tx('column.bleed', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
-
-ColumnBleed.displayName = COLUMN_BLEED_NAME;
-
-//
 // Column
 //
 
 export const Column = {
   Root: ColumnRoot,
-  Center: ColumnCenter,
-  Bleed: ColumnBleed,
   Row: ColumnRow,
+  Bleed: ColumnBleed,
+  Center: ColumnCenter,
 };
 
-export type {
-  ColumnRootProps,
-  ColumnCenterProps,
-  ColumnBleedProps,
-  ColumnRowProps,
-};
+export type { ColumnRootProps, ColumnRowProps, ColumnBleedProps, ColumnCenterProps };

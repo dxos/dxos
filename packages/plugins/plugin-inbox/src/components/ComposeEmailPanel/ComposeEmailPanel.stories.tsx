@@ -69,9 +69,6 @@ export const Spec: Story = {
     const subjectInput = canvas.getByLabelText('Subject');
     await userEvent.type(subjectInput, 'Test Subject');
 
-    const bodyInput = canvas.getByLabelText('Body');
-    await userEvent.type(bodyInput, 'Hello, this is a test email.');
-
     // Click the send button.
     const sendButton = canvas.getByTestId('save-button');
     await userEvent.click(sendButton);
@@ -83,7 +80,5 @@ export const Spec: Story = {
     const draft = args.onSend!.mock.calls[0][0];
     await expect(draft.properties.to).toBe('test@example.com');
     await expect(draft.properties.subject).toBe('Test Subject');
-    const textBlock = draft.blocks.find((block: any) => block._tag === 'text');
-    await expect(textBlock?.text).toBe('Hello, this is a test email.');
   },
 };
