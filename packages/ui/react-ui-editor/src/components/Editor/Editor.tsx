@@ -18,7 +18,12 @@ import {
   type EditorContentProps as NaturalEditorContentProps,
   noopController,
 } from '../EditorContent';
-import { EditorMenuProvider, type UseEditorMenuProps, useEditorMenu } from '../EditorMenuProvider';
+import {
+  EditorMenuProvider,
+  type EditorMenuProviderProps,
+  type UseEditorMenuProps,
+  useEditorMenu,
+} from '../EditorMenuProvider';
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
@@ -49,7 +54,10 @@ export { useEditorContext };
 //
 
 type EditorRootProps = PropsWithChildren<
-  Pick<EditorContextValue, 'extensions'> & Omit<UseEditorMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>
+  Pick<EditorContextValue, 'extensions'> &
+    Omit<UseEditorMenuProps, 'viewRef'> &
+    Pick<EditorToolbarState, 'viewMode'> &
+    Pick<EditorMenuProviderProps, 'numItems'>
 >;
 
 /**
@@ -57,7 +65,7 @@ type EditorRootProps = PropsWithChildren<
  * Provides context for all child components and manages the editor controller state.
  */
 const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
-  ({ children, extensions: extensionsProp, viewMode, ...props }, forwardedRef) => {
+  ({ children, extensions: extensionsProp, viewMode, numItems, ...props }, forwardedRef) => {
     const state = useEditorToolbar({ viewMode });
 
     const [controller, setController] = useState<EditorController>();
@@ -77,7 +85,7 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
         extensions={extensions}
         state={state}
       >
-        <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+        <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
           {children}
         </EditorMenuProvider>
       </EditorContextProvider>
@@ -109,19 +117,19 @@ const EditorViewport = ({ classNames, children }: EditorViewportProps) => {
 EditorViewport.displayName = EDITOR_VIEWPORT_NAME;
 
 //
-// Content
+// View
 //
 
-const EDITOR_CONTENT_NAME = 'Editor.Content';
+const EDITOR_VIEW_NAME = 'Editor.View';
 
-type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
+type EditorViewProps = Omit<NaturalEditorContentProps, 'ref'>;
 
 /**
- * Content component that renders the actual CodeMirror editor.
+ * View component that renders the actual CodeMirror editor.
  * Automatically registers the editor controller with the context.
  */
-const EditorContent = ({ extensions: providedExtensions, ...props }: EditorContentProps) => {
-  const { extensions: additionalExtensions = [], setController } = useEditorContext(EDITOR_CONTENT_NAME);
+const EditorView = ({ extensions: providedExtensions, ...props }: EditorViewProps) => {
+  const { extensions: additionalExtensions = [], setController } = useEditorContext(EDITOR_VIEW_NAME);
 
   const extensions = useMemo(
     () => [additionalExtensions, providedExtensions].filter(isNonNullable).flat(),
@@ -131,7 +139,7 @@ const EditorContent = ({ extensions: providedExtensions, ...props }: EditorConte
   return <NaturalEditorContent {...props} extensions={extensions} ref={setController} />;
 };
 
-EditorContent.displayName = EDITOR_CONTENT_NAME;
+EditorView.displayName = EDITOR_VIEW_NAME;
 
 //
 // Toolbar
@@ -166,8 +174,8 @@ EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 export const Editor = {
   Root: EditorRoot,
   Viewport: EditorViewport,
-  Content: EditorContent,
+  View: EditorView,
   Toolbar: EditorToolbar,
 };
 
-export type { EditorController, EditorRootProps, EditorViewportProps, EditorContentProps, EditorToolbarProps };
+export type { EditorController, EditorRootProps, EditorViewportProps, EditorViewProps, EditorToolbarProps };

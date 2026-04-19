@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Column, Message, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { Editor, EditorContentProps } from '@dxos/react-ui-editor';
+import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -71,7 +71,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
       [message],
     );
 
-    const handleBodyChanged = useCallback<NonNullable<EditorContentProps['onChange']>>(
+    const handleBodyChanged = useCallback<NonNullable<EditorViewProps['onChange']>>(
       (value) => {
         Obj.change(message, (message) => {
           const blocks = (message.blocks ??= []);
@@ -124,7 +124,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
           <Column.Center>
             <Editor.Root>
-              <Editor.Content
+              <Editor.View
                 classNames='dx-expander border border-subdued-separator'
                 extensions={extension}
                 initialValue={message.blocks?.find((b) => b._tag === 'text')?.text}

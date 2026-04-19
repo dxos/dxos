@@ -207,21 +207,20 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
 type MarkdownEditorToolbarProps = ThemedClassName<
-  Omit<NaturalMarkdownToolbarProps, 'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
+  Omit<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
   const { id, attendableId, onAction, onFileUpload, onViewModeChange } =
     useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
-  const { controller, state } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
+  const { controller } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return (
     <NaturalMarkdownToolbar
       {...props}
       id={attendableId ?? id}
       editorView={controller?.view ?? undefined}
-      state={state}
       onAction={onAction}
       onFileUpload={onFileUpload}
       onViewModeChange={onViewModeChange}

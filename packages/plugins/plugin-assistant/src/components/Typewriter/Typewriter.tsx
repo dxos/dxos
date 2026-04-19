@@ -43,7 +43,7 @@ export const Typewriter = ({ initialContent = '', extensions = [], runtime }: Ty
     <ThemeProvider>
       <Editor.Root ref={editorRef}>
         <Editor.Viewport>
-          <Editor.Content initialValue={initialContent} extensions={extension} />
+          <Editor.View initialValue={initialContent} extensions={extension} />
         </Editor.Viewport>
       </Editor.Root>
     </ThemeProvider>
