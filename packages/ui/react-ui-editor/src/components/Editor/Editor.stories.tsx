@@ -22,17 +22,12 @@ import {
 import { createMenuGroup } from '../EditorMenuProvider';
 import { Editor, type EditorViewProps } from './Editor';
 
-// TODO(burdon): PreviewPopoverProvider (MarkdownStream, Preview story).
-// TODO(burdon): Adapt Markdown plugin to use new Editor (plan first to check fit).
-// TODO(burdon): Remove redundant hooks and simplify props.
-
 random.seed(1234);
 
 const initialValue = ['# Blue Monday', '', 'How does it **feel**?', ''].join('\n');
 
 const items = random.helpers.multiple(random.commerce.productName, { count: 10 }).sort();
 
-// TODO(burdon): Adapter other tests in react-ui-editor/stories to use this pattern.
 const withExtensions: Decorator<EditorViewProps> = (Story, { args }) => {
   const { themeMode } = useThemeContext();
   const extensions = useMemo(

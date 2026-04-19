@@ -69,6 +69,7 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
     threadId: message.threadId,
 
     properties: {
+      threadId: message.threadId,
       snippet: decodeHtmlEntities(message.snippet),
       subject: decodeHtmlEntities(message.payload.headers.find(({ name }) => name === 'Subject')?.value),
       labels: message.labelIds,

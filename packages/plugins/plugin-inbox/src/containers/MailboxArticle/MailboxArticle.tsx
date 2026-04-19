@@ -129,7 +129,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
-      log.info('handleAction', { action, mode: layout.mode });
+      log.debug('handleAction', { action, mode: layout.mode });
       switch (action.type) {
         case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);

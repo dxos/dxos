@@ -10,8 +10,9 @@ import { Column, Message, useThemeContext, useTranslation } from '@dxos/react-ui
 import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
-import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { compactSlots, createBasicExtensions, createThemeExtensions, Extension } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
+import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -25,24 +26,26 @@ const MessageProperties = Schema.Struct({
 interface MessageProperties extends Schema.Schema.Type<typeof MessageProperties> {}
 
 export type EditMessageProps = {
-  /** Draft to edit. Form is bound to it (initial values, autosave, send uses it). */
   message: MessageType.Message;
+  extensions?: Extension[];
   onSend?: (message: MessageType.Message) => Promise<void>;
 };
 
 export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
-  ({ message, onSend, ...props }, forwardedRef) => {
+  ({ message, extensions, onSend, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 
     // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
     const extension = useMemo(
-      () => [
-        createBasicExtensions({ placeholder: t('message-body.placeholder') }),
-        createThemeExtensions({ themeMode, slots: compactSlots }),
-      ],
-      [t, themeMode, message],
+      () =>
+        [
+          createBasicExtensions({ placeholder: t('message-body.placeholder') }),
+          createThemeExtensions({ themeMode, slots: compactSlots }),
+          extensions,
+        ].filter(isTruthy),
+      [t, themeMode, extensions],
     );
 
     const initialValues = useMemo<FormRootProps<MessageProperties>['defaultValues']>(
