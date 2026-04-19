@@ -84,6 +84,7 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-editor/Assistant',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  tags: ['experimental'],
   parameters: {
     layout: 'fullscreen',
     translations,
