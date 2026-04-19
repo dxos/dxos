@@ -64,11 +64,12 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     const handleBodyChanged = useCallback(
       (value: string) => {
         Obj.change(draft, (draft) => {
-          const textBlock = draft.blocks.find((b) => b._tag === 'text');
+          const blocks = (draft.blocks ??= []);
+          const textBlock = blocks.find((b) => b._tag === 'text');
           if (textBlock && 'text' in textBlock) {
             textBlock.text = value;
           } else {
-            draft.blocks.push({ _tag: 'text', text: value });
+            blocks.push({ _tag: 'text', text: value });
           }
         });
       },
