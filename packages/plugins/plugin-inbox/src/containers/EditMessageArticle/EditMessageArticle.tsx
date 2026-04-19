@@ -13,7 +13,7 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { EditMessagePanel } from '#components';
+import { EditMessage } from '#components';
 
 import { GmailFunctions } from '../../operations/google/gmail';
 
@@ -35,7 +35,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
   return (
     <Panel.Root role={role} className='dx-document'>
       <Panel.Content asChild>
-        <EditMessagePanel message={subject} onSend={handleSend} />
+        <EditMessage message={subject} onSend={handleSend} />
       </Panel.Content>
     </Panel.Root>
   );
