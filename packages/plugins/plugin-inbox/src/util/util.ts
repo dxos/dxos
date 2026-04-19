@@ -23,7 +23,7 @@ export const formatQuotedMessage = (message: Message.Message): string => {
 
 export const stripQuotedMessage = (content: string): string => {
   const match = REPLY_REGEXP.exec(content);
-  return match ? content.slice(0, match.index) : content;
+  return match ? content.slice(0, match.index).replace(/\s+$/, '') : content;
 };
 
 export type CreateDraftOptions = {

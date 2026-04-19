@@ -11,7 +11,7 @@ import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { DEFAULT_HORIZONTAL_SIZE, StackItem, StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
+import { DEFAULT_HORIZONTAL_SIZE, StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';

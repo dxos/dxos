@@ -120,7 +120,7 @@ const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: Assi
         const [match] = result.match(/\[.*\]/s) ?? [];
         const suggestions = match && safeParseJson<any[]>(match, []);
         if (suggestions) {
-          log.info('response', { suggestions });
+          log.debug('assistant suggestions', { count: suggestions.length });
           const diagnostics: Diagnostic[] = [];
           for (const suggestion of suggestions) {
             const idx = content.indexOf(suggestion.original);

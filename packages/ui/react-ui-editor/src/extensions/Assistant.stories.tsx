@@ -17,7 +17,7 @@ import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxo
 
 import { Editor, type EditorViewProps } from '../components';
 import { translations } from '../translations';
-import { assistant, AssistantOptions } from './assistant-extension';
+import { assistant, type AssistantOptions } from './assistant-extension';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {
