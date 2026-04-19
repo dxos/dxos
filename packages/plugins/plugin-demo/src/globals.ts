@@ -459,21 +459,37 @@ if (typeof globalThis !== 'undefined') {
         // Sync tasks.
         const tasks = await fetchRecentIssues({ apiKey: linearApiKey });
         const existing: any[] = await space.db.query(Filter.type(Task.Task)).run();
-        const existingIds = new Set(
-          existing.flatMap((t: any) =>
-            (Obj.getMeta(t).keys ?? []).filter((k: any) => k.source === 'linear.app').map((k: any) => k.id),
-          ),
-        );
+        const existingByLinearId = new Map<string, any>();
+        for (const t of existing) {
+          const lid = (Obj.getMeta(t).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
+          if (lid) {
+            existingByLinearId.set(lid, t);
+          }
+        }
 
         let added = 0;
+        let updated = 0;
         for (const task of tasks) {
           const linearId = (Obj.getMeta(task).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
-          if (linearId && existingIds.has(linearId)) {
+          if (!linearId) {
             continue;
           }
-          space.db.add(task);
-          addToCollection(task);
-          added++;
+          const local = existingByLinearId.get(linearId);
+          if (local) {
+            if (local.title !== task.title || local.status !== task.status || local.priority !== task.priority || local.description !== task.description) {
+              Obj.change(local, (mutable: any) => {
+                mutable.title = task.title;
+                mutable.status = task.status;
+                mutable.priority = task.priority;
+                mutable.description = task.description;
+              });
+              updated++;
+            }
+          } else {
+            space.db.add(task);
+            addToCollection(task);
+            added++;
+          }
         }
 
         // Create Kanban board if none exists.
@@ -495,7 +511,7 @@ if (typeof globalThis !== 'undefined') {
           addToCollection(kanban);
         }
 
-        console.log(`linear: synced ${added} issues, ${tasks.length} total`);
+        console.log(`linear: synced ${added} new, ${updated} updated, ${tasks.length} total`);
 
         // Write-back: poll for local changes and push to Linear.
         const snapshots = new Map<string, { status?: string; priority?: string; title?: string }>();
@@ -544,23 +560,39 @@ if (typeof globalThis !== 'undefined') {
           try {
             const fresh = await fetchRecentIssues({ apiKey: linearApiKey });
             const nowExisting: any[] = await space!.db.query(Filter.type(Task.Task)).run();
-            const nowIds = new Set(
-              nowExisting.flatMap((t: any) =>
-                (Obj.getMeta(t).keys ?? []).filter((k: any) => k.source === 'linear.app').map((k: any) => k.id),
-              ),
-            );
+            const nowByLinearId = new Map<string, any>();
+            for (const t of nowExisting) {
+              const lid = (Obj.getMeta(t).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
+              if (lid) {
+                nowByLinearId.set(lid, t);
+              }
+            }
             let resyncAdded = 0;
+            let resyncUpdated = 0;
             for (const task of fresh) {
               const lid = (Obj.getMeta(task).keys ?? []).find((k: any) => k.source === 'linear.app')?.id;
-              if (lid && nowIds.has(lid)) {
+              if (!lid) {
                 continue;
               }
-              space!.db.add(task);
-              addToCollection(task);
-              resyncAdded++;
+              const local = nowByLinearId.get(lid);
+              if (local) {
+                if (local.title !== task.title || local.status !== task.status || local.priority !== task.priority) {
+                  Obj.change(local, (mutable: any) => {
+                    mutable.title = task.title;
+                    mutable.status = task.status;
+                    mutable.priority = task.priority;
+                    mutable.description = task.description;
+                  });
+                  resyncUpdated++;
+                }
+              } else {
+                space!.db.add(task);
+                addToCollection(task);
+                resyncAdded++;
+              }
             }
-            if (resyncAdded > 0) {
-              console.log(`linear: re-synced ${resyncAdded} new issues`);
+            if (resyncAdded > 0 || resyncUpdated > 0) {
+              console.log(`linear: re-synced ${resyncAdded} new, ${resyncUpdated} updated`);
             }
           } catch (error) {
             console.error('linear: re-sync failed', error);
