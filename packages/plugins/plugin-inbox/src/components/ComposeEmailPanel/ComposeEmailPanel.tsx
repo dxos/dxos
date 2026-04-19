@@ -15,9 +15,14 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-//
-// ComposeEmailPanel
-//
+const ComposeEmail = Schema.Struct({
+  to: Schema.String.annotations({ description: 'Recipient email address' }),
+  cc: Schema.optional(Schema.String.annotations({ description: 'CC recipients' })),
+  bcc: Schema.optional(Schema.String.annotations({ description: 'BCC recipients' })),
+  subject: Schema.optional(Schema.String.annotations({ description: 'Subject' })),
+});
+
+interface ComposeEmail extends Schema.Schema.Type<typeof ComposeEmail> {}
 
 export type ComposeEmailPanelProps = {
   /** Draft to edit. Form is bound to it (initial values, autosave, send uses it). */
@@ -34,21 +39,13 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
     const extension = useMemo(
       () => [
-        createBasicExtensions({ scrollPastEnd: true, search: true, placeholder: t('message-body.placeholder') }),
+        createBasicExtensions({ placeholder: t('message-body.placeholder') }),
         createThemeExtensions({ themeMode, slots: compactSlots }),
       ],
-      [t, themeMode],
+      [t, themeMode, message],
     );
 
-    const initialValues = useMemo<FormRootProps<ComposeEmail>['defaultValues']>(
-      () => ({
-        to: message.properties?.to ?? '',
-        cc: message.properties?.cc,
-        bcc: message.properties?.bcc,
-        subject: message.properties?.subject ?? '',
-      }),
-      [message],
-    );
+    const initialValues = useMemo<FormRootProps<ComposeEmail>['defaultValues']>(() => message.properties, [message]);
 
     const handleValuesChanged = useCallback<NonNullable<FormRootProps<ComposeEmail>['onValuesChanged']>>(
       (values) => {
@@ -143,16 +140,3 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     );
   },
 );
-
-//
-// ComposeEmail
-//
-
-export const ComposeEmail = Schema.Struct({
-  to: Schema.String.annotations({ description: 'Recipient email address' }),
-  cc: Schema.optional(Schema.String.annotations({ description: 'CC recipients' })),
-  bcc: Schema.optional(Schema.String.annotations({ description: 'BCC recipients' })),
-  subject: Schema.optional(Schema.String.annotations({ description: 'Subject' })),
-});
-
-export interface ComposeEmail extends Schema.Schema.Type<typeof ComposeEmail> {}
