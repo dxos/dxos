@@ -183,9 +183,9 @@ type DialogBodyProps = SlottableProps;
 const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Column.Content {...props} asChild={asChild} className={tx('dialog.body', {})} ref={forwardedRef}>
+    <Column.Center {...props} asChild={asChild} className={tx('dialog.body', {})} ref={forwardedRef}>
       {children}
-    </Column.Content>
+    </Column.Center>
   );
 });
 

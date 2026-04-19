@@ -9,7 +9,6 @@ import React, { type CSSProperties } from 'react';
 import { type ColumnStyleProps, composableProps, slottable } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { ScrollArea, type ScrollAreaRootProps } from '../../components';
 import { useThemeContext } from '../../hooks';
 
 //
@@ -38,10 +37,6 @@ type ColumnRootProps = { gutter?: GutterSize };
  * - **Column.Bleed** — spans all 3 columns gutter-to-gutter. Preferred for `ScrollArea` and
  *   other content that should ignore the gutters.
  * - **Column.Row** — 3-col subgrid row (icons in gutters, content in center).
- * - **Column.Viewport** — spans full width; delegates gutters to ScrollArea.
- * - **Column.Content** — legacy subgrid passthrough that auto-places non-`.dx-container` children
- *   in col 2. Fragile with transparent compound components (`Editor.Root`, `Form.Root`, etc.).
- *   Prefer `Column.Center`/`Column.Bleed` for new code.
  *
  * Gutter sizes: `'sm'` for compact layouts (Dialog); `'md'` (default); `'lg'` for wider spacing.
  */
@@ -106,32 +101,6 @@ const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(
 ColumnRow.displayName = COLUMN_ROW_NAME;
 
 //
-// Content
-//
-
-const COLUMN_CONTENT_NAME = 'Column.Content';
-
-type ColumnContentProps = SlottableProps;
-
-/**
- * Full-width content area that inherits Column.Root's 3-column grid via CSS subgrid.
- * Non-scrolling children default to the center column (between gutters).
- * ScrollArea children span all 3 columns via `[.dx-column_&]:col-span-full`.
- */
-const ColumnContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  return (
-    <Comp {...rest} className={tx('column.content', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
-
-ColumnContent.displayName = COLUMN_CONTENT_NAME;
-
-//
 // Center
 //
 
@@ -183,51 +152,19 @@ const ColumnBleed = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
 ColumnBleed.displayName = COLUMN_BLEED_NAME;
 
 //
-// Viewport
-//
-
-const COLUMN_VIEWPORT_NAME = 'Column.Viewport';
-
-type ColumnViewportProps = Pick<ScrollAreaRootProps, 'thin'>;
-
-const ColumnViewport = slottable<HTMLDivElement, ColumnViewportProps>(
-  ({ children, asChild, role, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { className, ...rest } = composableProps(props);
-    return (
-      <ScrollArea.Root
-        {...rest}
-        className={tx('column.viewport', {}, className)}
-        orientation='vertical'
-        padding
-        ref={forwardedRef}
-      >
-        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-      </ScrollArea.Root>
-    );
-  },
-);
-
-ColumnViewport.displayName = COLUMN_VIEWPORT_NAME;
-
-//
 // Column
 //
 
 export const Column = {
   Root: ColumnRoot,
-  Content: ColumnContent,
   Center: ColumnCenter,
   Bleed: ColumnBleed,
-  Viewport: ColumnViewport,
   Row: ColumnRow,
 };
 
 export type {
   ColumnRootProps,
-  ColumnContentProps,
   ColumnCenterProps,
   ColumnBleedProps,
-  ColumnViewportProps,
   ColumnRowProps,
 };

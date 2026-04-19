@@ -46,15 +46,19 @@ const DefaultStory = () => {
         </div>
       </Column.Row>
 
-      <Column.Viewport asChild>
-        <div className='flex flex-col gap-2'>
-          {Array.from({ length: 100 }).map((_, i) => (
-            <Input.Root key={i}>
-              <Input.TextInput value={`Item ${i}`} readOnly />
-            </Input.Root>
-          ))}
-        </div>
-      </Column.Viewport>
+      <Column.Bleed asChild>
+        <ScrollArea.Root orientation='vertical' padding>
+          <ScrollArea.Viewport>
+            <div className='flex flex-col gap-2'>
+              {Array.from({ length: 100 }).map((_, i) => (
+                <Input.Root key={i}>
+                  <Input.TextInput value={`Item ${i}`} readOnly />
+                </Input.Root>
+              ))}
+            </div>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Column.Bleed>
 
       <Column.Row asChild center>
         <Flex column>
@@ -116,7 +120,7 @@ export const WithScrollArea = {
 
 /**
  * Column.Center places a single element in the center column of the parent grid.
- * Preferred over Column.Content when you just want centered content — safe to nest
+ * Preferred for centered content — safe to nest
  * compound components (Form.Root, Editor.Root, etc.) that render `display: contents`.
  */
 export const WithCenter: Story = {
@@ -158,35 +162,6 @@ export const WithBleed: Story = {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Column.Bleed>
-      <Column.Row center>
-        <h2 className='py-3'>Footer (Column.Row)</h2>
-      </Column.Row>
-    </Column.Root>
-  ),
-};
-
-/**
- * Legacy: Column.Content is a subgrid passthrough that auto-places non-`.dx-container`
- * children in the center column. Retained for backwards compatibility with Dialog and
- * SearchList, but new code should prefer Column.Center / Column.Bleed for explicit
- * placement — those are safe to nest under compound components that render
- * `display: contents` wrappers (Editor.Root, Form.Root, etc.).
- */
-export const WithContent: Story = {
-  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
-  render: () => (
-    <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
-        <h2 className='py-3'>Header (Column.Row)</h2>
-      </Column.Row>
-      <Column.Content>
-        <p className='py-2'>Plain text — no `.dx-container`, auto-placed in col 2.</p>
-        <ScrollArea.Root orientation='vertical' padding thin>
-          <ScrollArea.Viewport>
-            <InputList items={30} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Column.Content>
       <Column.Row center>
         <h2 className='py-3'>Footer (Column.Row)</h2>
       </Column.Row>
