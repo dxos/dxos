@@ -40,14 +40,15 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
       [t, themeMode],
     );
 
-    const initialValues = useMemo<FormRootProps['defaultValues']>(() => {
-      return {
+    const initialValues = useMemo<FormRootProps<ComposeEmail>['defaultValues']>(
+      () => ({
         to: message.properties?.to ?? '',
         cc: message.properties?.cc,
         bcc: message.properties?.bcc,
         subject: message.properties?.subject ?? '',
-      };
-    }, [message]);
+      }),
+      [message],
+    );
 
     const handleValuesChanged = useCallback<NonNullable<FormRootProps<ComposeEmail>['onValuesChanged']>>(
       (values) => {
