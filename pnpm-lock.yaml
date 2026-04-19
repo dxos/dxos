@@ -9453,6 +9453,12 @@ importers:
 
   packages/plugins/plugin-inbox:
     dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.38.5
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -17836,6 +17842,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -17930,6 +17939,9 @@ importers:
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
         version: 2.5.1
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -17966,6 +17978,9 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.3)(scheduler@0.27.0)
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)

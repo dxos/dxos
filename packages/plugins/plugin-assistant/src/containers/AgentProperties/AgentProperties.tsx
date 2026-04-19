@@ -157,7 +157,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         <Input.Label>{t('instructions.label')}</Input.Label>
         {spec && (
           <Editor.Root>
-            <Editor.Content classNames='pb-form-gap' extensions={extension} />
+            <Editor.View classNames='pb-form-gap' extensions={extension} />
           </Editor.Root>
         )}
       </Input.Root>

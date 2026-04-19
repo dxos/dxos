@@ -10,28 +10,36 @@ import { toHue } from '@dxos/util';
 
 import { type Mailbox } from '#types';
 
-export type CreateDraftOptions = {
-  mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
-  replyToMessage?: Message.Message;
-  subject?: string;
-  body?: string;
-  mailbox?: Mailbox.Mailbox;
-};
+export const REPLY_DELIMITER = '\n\n---';
+export const REPLY_REGEXP = /^---\s*$/m;
 
-const formatQuotedBody = (message: Message.Message): string => {
+export const formatQuotedMessage = (message: Message.Message): string => {
   const textBlock = message.blocks.find((b) => b._tag === 'text');
   const originalText = textBlock?.text ?? '';
   const senderName = message.sender?.name ?? message.sender?.email ?? 'Unknown';
   const date = message.created ? new Date(message.created).toLocaleString() : '';
-  return `\n\n---\nOn ${date}, ${senderName} wrote:\n\n${originalText}`;
+  return `${REPLY_DELIMITER}\nOn ${date}, ${senderName} wrote:\n\n${originalText}`;
+};
+
+export const stripQuotedMessage = (content: string): string => {
+  const match = REPLY_REGEXP.exec(content);
+  return match ? content.slice(0, match.index).replace(/\s+$/, '') : content;
+};
+
+export type CreateDraftOptions = {
+  mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
+  message?: Message.Message;
+  subject?: string;
+  body?: string;
+  mailbox?: Mailbox.Mailbox;
 };
 
 /**
  * Builds draft message make-props for Obj.make(Message.Message, ...).
  * Used when creating a draft locally and adding via SpaceOperation.AddObject.
  */
-export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakeProps<typeof Message.Message> => {
-  const { mode = 'compose', replyToMessage, subject = '', body = '', mailbox } = options;
+export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<typeof Message.Message> => {
+  const { mode = 'compose', message, subject = '', body = '', mailbox } = options;
 
   let to = '';
   let cc: string | undefined;
@@ -39,22 +47,23 @@ export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakePro
   let draftBody = body;
   const properties: Record<string, unknown> = {};
 
-  if (replyToMessage && mode !== 'compose') {
-    const originalSubject = replyToMessage.properties?.subject ?? '';
-    const quotedBody = formatQuotedBody(replyToMessage);
+  if (message && mode !== 'compose') {
+    const originalSubject = message.properties?.subject ?? '';
+    const quotedBody = formatQuotedMessage(message);
 
     switch (mode) {
       case 'reply': {
-        to = replyToMessage.sender?.email ?? '';
+        to = message.sender?.email ?? '';
         draftSubject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
         draftBody = quotedBody;
         break;
       }
+
       case 'reply-all': {
-        to = replyToMessage.sender?.email ?? '';
-        const originalTo = replyToMessage.properties?.to ?? '';
-        const originalCc = replyToMessage.properties?.cc ?? '';
-        const senderEmail = replyToMessage.sender?.email ?? '';
+        to = message.sender?.email ?? '';
+        const originalTo = message.properties?.to ?? '';
+        const originalCc = message.properties?.cc ?? '';
+        const senderEmail = message.sender?.email ?? '';
         const allRecipients = [originalTo, originalCc]
           .flatMap((r: string) => r.split(',').map((e: string) => e.trim()))
           .filter((r: string) => r && r !== senderEmail);
@@ -63,6 +72,7 @@ export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakePro
         draftBody = quotedBody;
         break;
       }
+
       case 'forward': {
         draftSubject = originalSubject.startsWith('Fwd:') ? originalSubject : `Fwd: ${originalSubject}`;
         draftBody = quotedBody;
@@ -71,14 +81,15 @@ export const buildDraftMessageProps = (options: CreateDraftOptions): Obj.MakePro
     }
 
     // Set threading headers on the draft so send can use them directly.
-    if (replyToMessage.properties) {
-      if (replyToMessage.properties.threadId) {
-        properties.threadId = replyToMessage.properties.threadId;
+    if (message.properties) {
+      if (message.properties.threadId) {
+        properties.threadId = message.properties.threadId;
       }
-      const originalMsgId = replyToMessage.properties.messageId;
+
+      const originalMsgId = message.properties.messageId;
       if (originalMsgId) {
         properties.inReplyTo = originalMsgId;
-        const existingRefs = replyToMessage.properties.references ?? '';
+        const existingRefs = message.properties.references ?? '';
         properties.references = [existingRefs, originalMsgId].filter(Boolean).join(' ');
       }
     }

@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Button, Clipboard, Column, Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Column, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { type Discord } from '#types';
@@ -44,53 +44,57 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
       </Panel.Toolbar>
       <Panel.Content asChild>
         <Column.Root>
-          <Column.Viewport>
-            <Input.Root>
-              <Input.Label>{t('bot-token.label')}</Input.Label>
-              <div role='none' className='flex items-center gap-2'>
-                <Input.TextInput
-                  type={tokenVisible ? 'text' : 'password'}
-                  value={bot.token ?? ''}
-                  onChange={(event) => handleSetToken(event.target.value)}
-                />
-                <Button variant='ghost' onClick={() => setTokenVisible((visible) => !visible)}>
-                  {tokenVisible ? t('token-hide.label') : t('token-show.label')}
-                </Button>
-              </div>
-            </Input.Root>
+          <Column.Bleed asChild>
+            <ScrollArea.Root orientation='vertical' padding>
+              <ScrollArea.Viewport>
+                <Input.Root>
+                  <Input.Label>{t('bot-token.label')}</Input.Label>
+                  <div role='none' className='flex items-center gap-2'>
+                    <Input.TextInput
+                      type={tokenVisible ? 'text' : 'password'}
+                      value={bot.token ?? ''}
+                      onChange={(event) => handleSetToken(event.target.value)}
+                    />
+                    <Button variant='ghost' onClick={() => setTokenVisible((visible) => !visible)}>
+                      {tokenVisible ? t('token-hide.label') : t('token-show.label')}
+                    </Button>
+                  </div>
+                </Input.Root>
 
-            {bot.inviteUrl && (
-              <Input.Root>
-                <Input.Label>{t('invite-url.label')}</Input.Label>
-                <div role='none' className='flex items-center gap-2'>
-                  <Input.TextInput disabled value={bot.inviteUrl} />
-                  <Clipboard.IconButton value={bot.inviteUrl} />
-                </div>
-              </Input.Root>
-            )}
+                {bot.inviteUrl && (
+                  <Input.Root>
+                    <Input.Label>{t('invite-url.label')}</Input.Label>
+                    <div role='none' className='flex items-center gap-2'>
+                      <Input.TextInput disabled value={bot.inviteUrl} />
+                      <Clipboard.IconButton value={bot.inviteUrl} />
+                    </div>
+                  </Input.Root>
+                )}
 
-            {bot.guildName && (
-              <Input.Root>
-                <Input.Label>{t('guild.label')}</Input.Label>
-                <Input.TextInput disabled value={bot.guildName} />
-              </Input.Root>
-            )}
+                {bot.guildName && (
+                  <Input.Root>
+                    <Input.Label>{t('guild.label')}</Input.Label>
+                    <Input.TextInput disabled value={bot.guildName} />
+                  </Input.Root>
+                )}
 
-            {bot.channels && bot.channels.length > 0 && (
-              <Input.Root>
-                <Input.Label>{t('channels.label')}</Input.Label>
-                {bot.channels.map((channel) => (
-                  <Input.TextInput key={channel.channelId} disabled value={`#${channel.channelName}`} />
-                ))}
-              </Input.Root>
-            )}
+                {bot.channels && bot.channels.length > 0 && (
+                  <Input.Root>
+                    <Input.Label>{t('channels.label')}</Input.Label>
+                    {bot.channels.map((channel) => (
+                      <Input.TextInput key={channel.channelId} disabled value={`#${channel.channelName}`} />
+                    ))}
+                  </Input.Root>
+                )}
 
-            {bot.guildId && (
-              <Button variant='outline' onClick={handleDisconnect}>
-                {t('disconnect.button')}
-              </Button>
-            )}
-          </Column.Viewport>
+                {bot.guildId && (
+                  <Button variant='outline' onClick={handleDisconnect}>
+                    {t('disconnect.button')}
+                  </Button>
+                )}
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Column.Bleed>
         </Column.Root>
       </Panel.Content>
     </Panel.Root>

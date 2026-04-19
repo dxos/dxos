@@ -10,7 +10,7 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
@@ -75,26 +75,26 @@ export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchD
           <Dialog.CloseIconButton />
         </Dialog.Close>
       </Dialog.Header>
-      <Dialog.Body>
-        <SearchList.Root onSearch={handleSearch}>
-          <SearchList.Content classNames='max-h-[24rem]'>
-            <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
-            <SearchList.Viewport>
-              {allResults.map((result) => (
-                <SearchList.Item
-                  key={result.id}
-                  classNames='flex gap-2 items-center'
-                  value={result.id}
-                  label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
-                  icon={result.icon}
-                  onSelect={() => void handleSelect(result)}
-                />
-              ))}
-              {query && allResults.length === 0 && <SearchList.Empty />}
-            </SearchList.Viewport>
-          </SearchList.Content>
-        </SearchList.Root>
-      </Dialog.Body>
+      <SearchList.Root onSearch={handleSearch}>
+        <Column.Center>
+          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+        </Column.Center>
+        <Column.Bleed>
+          <SearchList.Viewport classNames='max-h-[24rem]'>
+            {allResults.map((result) => (
+              <SearchList.Item
+                key={result.id}
+                classNames='flex gap-2 items-center'
+                value={result.id}
+                label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
+                icon={result.icon}
+                onSelect={() => void handleSelect(result)}
+              />
+            ))}
+            {query && allResults.length === 0 && <SearchList.Empty />}
+          </SearchList.Viewport>
+        </Column.Bleed>
+      </SearchList.Root>
     </Dialog.Content>
   );
 };
