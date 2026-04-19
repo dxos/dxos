@@ -7,4 +7,4 @@
 import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.mutable(Schema.Struct({}));
-export type Settings = Schema.Schema.Type<typeof Settings>;
+export interface Settings extends Schema.Schema.Type<typeof Settings> {}

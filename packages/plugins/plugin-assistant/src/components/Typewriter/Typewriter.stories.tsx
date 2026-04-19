@@ -11,7 +11,8 @@ import React, { useEffect, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
 
 import { Typewriter } from './Typewriter';
 
@@ -25,25 +26,26 @@ export default meta;
 
 type Story = StoryObj<typeof Typewriter>;
 
-const sampleText = `# The Future of Artificial Intelligence
+const sampleText = trim`
+  # The Future of Artificial Intelligence
 
-Artificial Intelligence (AI) has rapidly evolved from a theoretical concept to a transformative force reshaping industries, economies, and daily life. At its core, AI refers to the development of computer systems capable of performing tasks that typically require human intelligence, such as visual perception, speech recognition, decision-making, and language translation.
+  Artificial Intelligence (AI) has rapidly evolved from a theoretical concept to a transformative force reshaping industries, economies, and daily life. At its core, AI refers to the development of computer systems capable of performing tasks that typically require human intelligence, such as visual perception, speech recognition, decision-making, and language translation.
 
-## Machine Learning and Neural Networks
+  ## Machine Learning and Neural Networks
 
-The resurgence of AI in recent years is largely driven by advancements in machine learning (ML) and deep learning. Neural networks, inspired by the human brain's architecture, enable computers to learn from vast amounts of data. This has led to breakthroughs in areas like natural language processing (NLP), allowing models like GPT-4 to generate human-like text and code.
+  The resurgence of AI in recent years is largely driven by advancements in machine learning (ML) and deep learning. Neural networks, inspired by the human brain's architecture, enable computers to learn from vast amounts of data. This has led to breakthroughs in areas like natural language processing (NLP), allowing models like GPT-4 to generate human-like text and code.
 
-## Ethical Considerations
+  ## Ethical Considerations
 
-As AI becomes more autonomous, ethical concerns have moved to the forefront. Issues such as algorithmic bias, data privacy, and the potential displacement of jobs are critical topics of debate. Ensuring that AI systems are fair, transparent, and aligned with human values is essential for their sustainable development.
+  As AI becomes more autonomous, ethical concerns have moved to the forefront. Issues such as algorithmic bias, data privacy, and the potential displacement of jobs are critical topics of debate. Ensuring that AI systems are fair, transparent, and aligned with human values is essential for their sustainable development.
 
-## Conclusion
+  ## Conclusion
 
-The journey of AI is just beginning. With responsible innovation and global collaboration, AI has the potential to solve some of humanity's most pressing challenges, from climate change to personalized medicine.
+  The journey of AI is just beginning. With responsible innovation and global collaboration, AI has the potential to solve some of humanity's most pressing challenges, from climate change to personalized medicine.
 
-(try selecting some text to see the AI assistant, or wait for the proofreader to find the typo below)
+  (try selecting some text to see the AI assistant, or wait for the proofreader to find the typo below)
 
-The quick brown fox jumps over teh lazy dog. i think this is cool.
+  The quick brown fox jumps over teh lazy dog. i think this is cool.
 `;
 
 export const Default: Story = {
@@ -57,6 +59,7 @@ export const Default: Story = {
           Layer.orDie,
         ),
       );
+
       queueMicrotask(async () => {
         try {
           if (disposed) {
@@ -66,11 +69,13 @@ export const Default: Story = {
           if (disposed) {
             return;
           }
+
           setRuntime(runtime);
         } catch (error) {
           console.error('Failed to initialize runtime:', error);
         }
       });
+
       return () => {
         disposed = true;
         void rt.dispose();
@@ -78,7 +83,7 @@ export const Default: Story = {
     }, []);
 
     if (!runtime) {
-      return <div>...Loading</div>;
+      return <Loading />;
     }
 
     return <Typewriter initialContent={sampleText} runtime={runtime} />;
