@@ -2,27 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as LanguageModel from '@effect/ai/LanguageModel';
+import * as LanguageModel from '@effect/ai/LanguageModel';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import type * as Runtime from 'effect/Runtime';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { Editor, type EditorViewProps } from '../components';
 import { translations } from '../translations';
-import { assistant } from './assistant-extension';
+import { assistant, AssistantOptions } from './assistant-extension';
 
 // TODO(burdon): Factor out.
-const useTestRuntime = () => {
-  const [runtime, setRuntime] = useState<Runtime.Runtime<LanguageModel.LanguageModel>>();
+const useTestGenerate = () => {
+  const [generate, setGenerate] = useState<AssistantOptions['generate']>();
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
@@ -32,18 +31,17 @@ const useTestRuntime = () => {
       ),
     );
 
-    queueMicrotask(async () => {
-      try {
-        if (!disposed) {
-          const runtime = await rt.runtime();
-          if (!disposed) {
-            setRuntime(runtime);
-          }
-        }
-      } catch (err) {
-        log.catch(err);
-      }
-    });
+    if (!disposed) {
+      setGenerate(({ instructions, content }: { instructions: string; content: string }) =>
+        rt.runPromise(
+          Effect.gen(function* () {
+            const prompt = [instructions, content].join('\n\n');
+            const response = yield* LanguageModel.generateText({ prompt });
+            return response.text;
+          }),
+        ),
+      );
+    }
 
     return () => {
       disposed = true;
@@ -51,24 +49,24 @@ const useTestRuntime = () => {
     };
   }, []);
 
-  return runtime;
+  return generate;
 };
 
 type DefaultStoryProps = Pick<EditorViewProps, 'value'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
-  const runtime = useTestRuntime();
+  const generate = useTestGenerate();
   const extensions = useMemo(
     () =>
-      runtime
+      generate
         ? [
             createBasicExtensions({ placeholder: 'Type here...' }),
             createThemeExtensions({ themeMode, slots: compactSlots }),
-            assistant({ runtime }),
+            assistant({ generate }),
           ]
         : [],
-    [runtime],
+    [generate, themeMode],
   );
 
   if (extensions.length === 0) {

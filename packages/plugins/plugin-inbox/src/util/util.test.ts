@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { buildDraftMessageProps } from './util';
+import { createDraftMessage } from './util';
 
-describe('buildDraftMessageProps', () => {
+describe('createDraftMessage', () => {
   test('compose mode returns empty to and provided subject/body', ({ expect }) => {
-    const props = buildDraftMessageProps({ mode: 'compose', subject: 'Hi', body: 'Hello' });
+    const props = createDraftMessage({ mode: 'compose', subject: 'Hi', body: 'Hello' });
     expect(props.properties).toBeDefined();
     expect(props.properties?.to).toBe('');
     expect(props.properties?.subject).toBe('Hi');
@@ -30,7 +30,7 @@ describe('buildDraftMessageProps', () => {
         references: '<parent@example.com>',
       },
     });
-    const props = buildDraftMessageProps({ mode: 'reply', replyToMessage: replyTo });
+    const props = createDraftMessage({ mode: 'reply', message: replyTo });
     expect(props.properties?.to).toBe('alice@example.com');
     expect(props.properties?.subject).toBe('Re: Topic');
     expect(props.properties?.threadId).toBe('thread-123');
@@ -48,7 +48,7 @@ describe('buildDraftMessageProps', () => {
       blocks: [{ _tag: 'text' as const, text: 'Body' }],
       properties: { subject: 'Topic', to: 'bob@example.com', cc: 'alice@example.com, carol@example.com' },
     });
-    const props = buildDraftMessageProps({ mode: 'reply-all', replyToMessage: replyTo });
+    const props = createDraftMessage({ mode: 'reply-all', message: replyTo });
     expect(props.properties?.to).toBe('alice@example.com');
     expect(props.properties?.cc).toContain('bob@example.com');
     expect(props.properties?.cc).toContain('carol@example.com');
@@ -64,7 +64,7 @@ describe('buildDraftMessageProps', () => {
       blocks: [{ _tag: 'text' as const, text: 'Original' }],
       properties: { subject: 'Topic' },
     });
-    const props = buildDraftMessageProps({ mode: 'forward', replyToMessage: replyTo });
+    const props = createDraftMessage({ mode: 'forward', message: replyTo });
     expect(props.properties?.to).toBe('');
     expect(props.properties?.subject).toBe('Fwd: Topic');
     const forwardBody = props.blocks[0] && props.blocks[0]._tag === 'text' ? props.blocks[0].text : '';

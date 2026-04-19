@@ -37,7 +37,6 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 
-    // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
     const extension = useMemo(
       () =>
         [

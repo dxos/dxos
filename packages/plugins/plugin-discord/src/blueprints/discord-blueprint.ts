@@ -8,7 +8,8 @@ import { trim } from '@dxos/util';
 
 import { CreateBot } from '#operations';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.discord';
+// TODO(burdon): Reconcile with assistant-toolkit/blueprints/discord/blueprint.ts.
+const BLUEPRINT_KEY = 'org.dxos.blueprint.discord2';
 
 const operations = [CreateBot];
 

@@ -5,17 +5,27 @@
 import { type Diagnostic, linter } from '@codemirror/lint';
 import { type Extension, StateField } from '@codemirror/state';
 import { EditorView, type Tooltip, showTooltip } from '@codemirror/view';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Effect from 'effect/Effect';
-import * as Runtime from 'effect/Runtime';
 import { createRoot } from 'react-dom/client';
 
-import { unwrapExit } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { trim } from '@dxos/util';
+import { safeParseJson, trim } from '@dxos/util';
+
+const DEFAULT_INSTRUCTIONS = trim`
+  Proofread the input text below.
+  Identify typos and grammatical errors. 
+  Return ONLY a valid JSON array of objects with fields: "original" (string), "replacement" (string), "context" (string, 3-5 words around match).
+  --
+`;
 
 export type AssistantOptions = {
-  runtime: Runtime.Runtime<LanguageModel.LanguageModel>;
+  /**
+   * Invoke the language model with the given prompt and return the raw text response.
+   */
+  generate: (request: { instructions: string; content: string }) => Promise<string>;
+  /**
+   * Instructions to use for the language model.
+   */
+  instructions?: string;
 };
 
 const underline = (color: string) => {
@@ -100,71 +110,54 @@ const assistantState = (options: AssistantOptions) =>
 // Linter
 //
 
-// TODO(burdon): Make pluggable.
-const createPrompt = (text: string) => trim`
-  Proofread the following text. 
-  Identify typos and simple grammar mistakes. 
-  Return ONLY a valid JSON array of objects with fields: "original" (string), "replacement" (string), "context" (string, 3-5 words around match).
-  TEXT:\n\n${text}
-`;
-
-const assistantLinter = ({ runtime }: AssistantOptions) =>
-  linter(async (view) => {
-    // TODO(burdon): Skip if empty.
-    const text = view.state.doc.toString();
-
-    try {
-      const result = unwrapExit(
-        await Effect.gen(function* () {
-          const response = yield* LanguageModel.generateText({ prompt: createPrompt(text) });
-          log.info('response', { response });
-          return response.text;
-        }).pipe(Runtime.runPromiseExit(runtime)),
-      );
-
-      let suggestions: any[] = [];
+const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: AssistantOptions) =>
+  linter(
+    async (view) => {
       try {
-        // Find JSON in response
-        const match = result.match(/\[.*\]/s);
-        if (match) {
-          suggestions = JSON.parse(match[0]);
+        const content = view.state.doc.toString();
+        const result = await generate({ instructions, content });
+
+        const [match] = result.match(/\[.*\]/s) ?? [];
+        const suggestions = match && safeParseJson<any[]>(match, []);
+        if (suggestions) {
+          log.info('response', { suggestions });
+          const diagnostics: Diagnostic[] = [];
+          for (const suggestion of suggestions) {
+            const idx = content.indexOf(suggestion.original);
+            if (idx !== -1) {
+              diagnostics.push({
+                from: idx,
+                to: idx + suggestion.original.length,
+                severity: 'info',
+                message: `Suggestion: ${suggestion.replacement}`,
+                actions: [
+                  {
+                    name: 'Apply',
+                    apply: (view, from, to) => {
+                      view.dispatch({
+                        changes: {
+                          from,
+                          to,
+                          insert: suggestion.replacement,
+                        },
+                      });
+                    },
+                  },
+                ],
+              });
+            }
+          }
+
+          return diagnostics;
         }
       } catch (err) {
         log.catch(err);
       }
 
-      log.info('suggestions', { result, suggestions });
-
-      const diagnostics: Diagnostic[] = [];
-      for (const suggestion of suggestions) {
-        const idx = text.indexOf(suggestion.original);
-        if (idx !== -1) {
-          diagnostics.push({
-            from: idx,
-            to: idx + suggestion.original.length,
-            severity: 'info',
-            message: `Suggestion: ${suggestion.replacement}`,
-            actions: [
-              {
-                name: 'Apply',
-                apply: (view, from, to) => {
-                  view.dispatch({
-                    changes: {
-                      from,
-                      to,
-                      insert: suggestion.replacement,
-                    },
-                  });
-                },
-              },
-            ],
-          });
-        }
-      }
-
-      return diagnostics;
-    } catch (error) {
-      log.catch(error);
       return [];
-    }
-  });
+    },
+    {
+      // Debounce.
+      delay: 3_000,
+    },
+  );

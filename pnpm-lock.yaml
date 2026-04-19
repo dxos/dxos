@@ -9450,6 +9450,12 @@ importers:
 
   packages/plugins/plugin-inbox:
     dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.38.5
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
