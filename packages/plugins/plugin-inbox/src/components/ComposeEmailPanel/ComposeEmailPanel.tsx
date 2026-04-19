@@ -93,7 +93,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
     const extension = useMemo(
       () => [
-        createBasicExtensions({ scrollPastEnd: true, search: true }),
+        createBasicExtensions({ scrollPastEnd: true, search: true, placeholder: t('message-body.placeholder') }),
         createThemeExtensions({ themeMode, slots: compactSlots }),
       ],
       [],
@@ -102,6 +102,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
     return (
       <Column.Root
         {...composableProps(props, { classNames: 'grid-rows-[min-content_1fr_min-content]' })}
+        gutter='sm'
         ref={forwardedRef}
       >
         <Form.Root
@@ -127,7 +128,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
           <Column.Center>
             <Editor.Root>
               <Editor.Content
-                classNames='dx-expander border border-separator'
+                classNames='dx-expander border border-subdued-separator'
                 extensions={extension}
                 initialValue={draft.blocks.find((b) => b._tag === 'text')?.text ?? ''}
                 onChange={(value) => {

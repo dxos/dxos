@@ -90,12 +90,14 @@ export const translations = [
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
 
+        'message-body.placeholder': 'Enter message text...',
+
         'mailbox-toolbar.title': 'Mailbox toolbar',
         'mailbox-toolbar-sort.menu': 'Sort messages',
         'mailbox-toolbar-filter.menu': 'Filter messages',
-
         'mailbox-toolbar-save-button.label': 'Save',
         'mailbox-toolbar-clear-button.label': 'Clear',
+
         'save-filter.placeholder': 'Filter name',
         'save-filter.button': 'Save',
         'delete-filter.label': 'Delete filter',
