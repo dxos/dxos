@@ -122,7 +122,6 @@ type EditorContentProps = Omit<NaturalEditorContentProps, 'ref'>;
  */
 const EditorContent = ({ extensions: providedExtensions, ...props }: EditorContentProps) => {
   const { extensions: additionalExtensions = [], setController } = useEditorContext(EDITOR_CONTENT_NAME);
-
   const extensions = useMemo(
     () => [additionalExtensions, providedExtensions].filter(isNonNullable).flat(),
     [providedExtensions, additionalExtensions],
