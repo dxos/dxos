@@ -24,6 +24,7 @@ export type TypewriterProps = {
   runtime: Runtime.Runtime<LanguageModel.LanguageModel>;
 };
 
+// TODO(burdon): Factor out.
 export const Typewriter = ({ initialContent = '', extensions = [], runtime }: TypewriterProps) => {
   const editorRef = useRef<EditorController>(null);
   const extension = useMemo(
