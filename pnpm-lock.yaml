@@ -9806,9 +9806,6 @@ importers:
       '@dxos/plugin-kanban':
         specifier: workspace:*
         version: link:../plugin-kanban
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

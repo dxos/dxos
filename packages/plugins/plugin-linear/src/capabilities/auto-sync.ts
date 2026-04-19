@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Kanban } from '@dxos/plugin-kanban/types';
-import { CollectionModel, ViewModel } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { fetchRecentIssues, readLinearAuth } from './linear-client';
+import { fetchRecentIssues, readLinearAuth, updateIssue } from './linear-client';
 
 const LINEAR_SOURCE = 'linear.app';
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
+const WRITE_BACK_INTERVAL_MS = 10_000;
 const KANBAN_NAME = 'Linear Issues';
 
 const getLinearId = (obj: Task.Task): string | undefined => {
@@ -23,17 +24,14 @@ const getLinearId = (obj: Task.Task): string | undefined => {
   return keys?.find((key) => key.source === LINEAR_SOURCE)?.id;
 };
 
-const syncOnce = async (client: { spaces: { get: () => any[] } }): Promise<void> => {
-  const auth = readLinearAuth();
-  if (!auth) {
-    return;
+const addToRootCollection = (space: any, obj: any): void => {
+  const rootCollection = space.properties[Collection.Collection.typename]?.target;
+  if (rootCollection) {
+    Obj.change(rootCollection, (c: any) => { c.objects.push(Ref.make(obj)); });
   }
+};
 
-  const space = client.spaces.get()[0];
-  if (!space) {
-    return;
-  }
-
+const syncOnce = async (space: any, auth: { apiKey: string }): Promise<void> => {
   const remoteTasks = await fetchRecentIssues(auth);
   const existingTasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
   const existingLinearIds = new Set<string>();
@@ -50,19 +48,17 @@ const syncOnce = async (client: { spaces: { get: () => any[] } }): Promise<void>
     if (linearId && existingLinearIds.has(linearId)) {
       continue;
     }
-    await Effect.runPromise(
-      CollectionModel.add({ object: task }).pipe(Effect.provide(Database.layer(space.db))),
-    );
+    space.db.add(task);
+    addToRootCollection(space, task);
     added++;
   }
 
   if (added > 0) {
-    console.log('linear: synced issues', { added, total: remoteTasks.length });
+    log.info('linear: synced issues', { added, total: remoteTasks.length });
   }
 
   const existingKanbans: Kanban.Kanban[] = await space.db.query(Filter.type(Kanban.Kanban)).run();
-  const hasLinearKanban = existingKanbans.some((kanban) => kanban.name === KANBAN_NAME);
-  if (!hasLinearKanban) {
+  if (!existingKanbans.some((kanban: any) => kanban.name === KANBAN_NAME)) {
     try {
       const { view } = await ViewModel.makeFromDatabase({
         db: space.db,
@@ -76,14 +72,59 @@ const syncOnce = async (client: { spaces: { get: () => any[] } }): Promise<void>
         view,
         arrangement: { order: ['todo', 'in-progress', 'done'], columns: {} },
       });
-      await Effect.runPromise(
-        CollectionModel.add({ object: kanban }).pipe(Effect.provide(Database.layer(space.db))),
-      );
-      console.log('linear: created kanban board');
+      space.db.add(kanban);
+      addToRootCollection(space, kanban);
+      log.info('linear: created kanban board');
     } catch (error) {
       log.warn('linear: failed to create kanban', { error: error instanceof Error ? error.message : String(error) });
     }
   }
+};
+
+const startWriteBack = (space: any, auth: { apiKey: string }): void => {
+  const snapshots = new Map<string, { status?: string; priority?: string; title?: string }>();
+
+  void (async () => {
+    const tasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
+    for (const task of tasks) {
+      if (getLinearId(task)) {
+        snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+      }
+    }
+  })();
+
+  setInterval(async () => {
+    try {
+      const tasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
+      for (const task of tasks) {
+        const linearId = getLinearId(task);
+        if (!linearId) {
+          continue;
+        }
+        const prev = snapshots.get(task.id);
+        if (!prev) {
+          snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+          continue;
+        }
+        const changes: Record<string, string | undefined> = {};
+        if (task.status !== prev.status) {
+          changes.status = task.status;
+        }
+        if (task.priority !== prev.priority) {
+          changes.priority = task.priority;
+        }
+        if (task.title !== prev.title) {
+          changes.title = task.title;
+        }
+        if (Object.keys(changes).length > 0) {
+          await updateIssue(auth, linearId, changes);
+          snapshots.set(task.id, { status: task.status, priority: task.priority, title: task.title });
+        }
+      }
+    } catch (error) {
+      log.warn('linear: write-back failed', { error: error instanceof Error ? error.message : String(error) });
+    }
+  }, WRITE_BACK_INTERVAL_MS);
 };
 
 const waitForSpace = async (client: any, maxWait = 30_000): Promise<any> => {
@@ -100,32 +141,33 @@ const waitForSpace = async (client: any, maxWait = 30_000): Promise<any> => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    console.log('linear: auto-sync module loaded');
+    const auth = readLinearAuth();
+    if (!auth) {
+      return;
+    }
 
     const client = yield* Capability.get(ClientCapabilities.Client);
-    console.log('linear: got client');
 
     yield* Effect.tryPromise({
       try: async () => {
         const space = await waitForSpace(client);
         if (!space) {
-          console.warn('linear: no space found after waiting');
           return;
         }
-        console.log('linear: space ready, starting sync');
 
-        await syncOnce(client);
+        await syncOnce(space, auth);
+        startWriteBack(space, auth);
 
         setInterval(async () => {
           try {
-            await syncOnce(client);
+            await syncOnce(space, auth);
           } catch (error) {
             log.warn('linear: periodic sync failed', { error: error instanceof Error ? error.message : String(error) });
           }
         }, SYNC_INTERVAL_MS);
       },
       catch: (error: unknown) => {
-        console.error('linear: initial sync failed', error instanceof Error ? error.message : String(error));
+        log.warn('linear: sync failed', { error: error instanceof Error ? error.message : String(error) });
         return new Error(error instanceof Error ? error.message : String(error));
       },
     });

@@ -43,9 +43,6 @@
     },
     {
       "path": "../plugin-kanban"
-    },
-    {
-      "path": "../plugin-space"
     }
   ]
 }
