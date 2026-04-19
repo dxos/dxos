@@ -26,45 +26,45 @@ export type ComposeEmailPanelProps = {
 };
 
 export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelProps>(
-  ({ message: draft, onSend, ...props }, forwardedRef) => {
+  ({ message, onSend, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 
     const initialValues = useMemo<ComposeEmail>(() => {
       return {
-        to: draft.properties?.to ?? '',
-        cc: draft.properties?.cc,
-        bcc: draft.properties?.bcc,
-        subject: draft.properties?.subject ?? '',
+        to: message.properties?.to ?? '',
+        cc: message.properties?.cc,
+        bcc: message.properties?.bcc,
+        subject: message.properties?.subject ?? '',
       };
-    }, [draft]);
+    }, [message]);
 
     const handleValuesChanged = useCallback(
-      (newValues: Partial<ComposeEmail>) => {
-        Obj.change(draft, (draft) => {
-          const properties = (draft.properties ??= {});
-          if (newValues.to !== undefined) {
-            properties.to = newValues.to;
+      (values: Partial<ComposeEmail>) => {
+        Obj.change(message, (message) => {
+          const properties = (message.properties ??= {});
+          if (values.to !== undefined) {
+            properties.to = values.to;
           }
-          if (newValues.cc !== undefined) {
-            properties.cc = newValues.cc;
+          if (values.cc !== undefined) {
+            properties.cc = values.cc;
           }
-          if (newValues.bcc !== undefined) {
-            properties.bcc = newValues.bcc;
+          if (values.bcc !== undefined) {
+            properties.bcc = values.bcc;
           }
-          if (newValues.subject !== undefined) {
-            properties.subject = newValues.subject;
+          if (values.subject !== undefined) {
+            properties.subject = values.subject;
           }
         });
       },
-      [draft],
+      [message],
     );
 
     const handleBodyChanged = useCallback(
       (value: string) => {
-        Obj.change(draft, (draft) => {
-          const blocks = (draft.blocks ??= []);
+        Obj.change(message, (message) => {
+          const blocks = (message.blocks ??= []);
           const textBlock = blocks.find((b) => b._tag === 'text');
           if (textBlock && 'text' in textBlock) {
             textBlock.text = value;
@@ -73,20 +73,20 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
           }
         });
       },
-      [draft],
+      [message],
     );
 
     const handleSendEmail = useCallback(
       async (_data: ComposeEmail) => {
         try {
           setError(null);
-          await onSend?.(draft);
+          await onSend?.(message);
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : t('send-email-error-unknown.message');
           setError(errorMessage);
         }
       },
-      [t, onSend, draft],
+      [t, onSend, message],
     );
 
     // TODO(burdon): Reconcile with Typewriter in plugin-assistant.
@@ -129,7 +129,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
               <Editor.Content
                 classNames='dx-expander border border-subdued-separator'
                 extensions={extension}
-                initialValue={draft.blocks.find((b) => b._tag === 'text')?.text ?? ''}
+                initialValue={message.blocks.find((b) => b._tag === 'text')?.text ?? ''}
                 onChange={(value) => {
                   handleBodyChanged(value);
                 }}
