@@ -154,11 +154,7 @@ export const ComposeEmail = Schema.Struct({
   to: Schema.String.annotations({ description: 'Recipient email address' }),
   cc: Schema.optional(Schema.String.annotations({ description: 'CC recipients' })),
   bcc: Schema.optional(Schema.String.annotations({ description: 'BCC recipients' })),
-  subject: Schema.optional(Schema.String.annotations({ description: 'Email subject' })),
-  // body: Schema.String.pipe(
-  //   Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-  //   Schema.annotations({ description: 'Email body' }),
-  // ),
+  subject: Schema.optional(Schema.String.annotations({ description: 'Subject' })),
 });
 
 export interface ComposeEmail extends Schema.Schema.Type<typeof ComposeEmail> {}
