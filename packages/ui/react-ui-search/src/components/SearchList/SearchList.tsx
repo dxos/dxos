@@ -233,16 +233,16 @@ SearchListRoot.displayName = 'SearchList.Root';
 
 type SearchListContentProps = {};
 
+/**
+ * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
+ * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
+ *
+ * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), skip this wrapper and
+ * place the `Input` and `Viewport` directly with `<Column.Center>` / `<Column.Bleed>`.
+ */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div
-      {...composableProps(props, {
-        role: 'none',
-        classNames:
-          'dx-expander [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
-      })}
-      ref={forwardedRef}
-    >
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={forwardedRef}>
       {children}
     </div>
   );

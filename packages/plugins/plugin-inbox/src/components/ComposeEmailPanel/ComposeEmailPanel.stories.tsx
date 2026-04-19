@@ -13,22 +13,22 @@ import { Message } from '@dxos/types';
 import { translations } from '../../translations';
 import { ComposeEmailPanel, type ComposeEmailPanelProps } from './ComposeEmailPanel';
 
-type DefaultStoryProps = Pick<ComposeEmailPanelProps, 'onSend'>;
-
-const createInMemoryDraft = () =>
+const createDraft = () =>
   Obj.make(Message.Message, {
     created: new Date().toISOString(),
     sender: { name: 'Me' },
-    blocks: [{ _tag: 'text' as const, text: '' }],
+    blocks: [{ _tag: 'text' as const, text: 'This is a draft message.' }],
     properties: {
       to: '',
       subject: '',
     },
   });
 
+type DefaultStoryProps = Pick<ComposeEmailPanelProps, 'onSend'>;
+
 const DefaultStory = (args: DefaultStoryProps) => {
-  const draft = useMemo(createInMemoryDraft, []);
-  return <ComposeEmailPanel draft={draft} onSend={args.onSend} />;
+  const message = useMemo(createDraft, []);
+  return <ComposeEmailPanel classNames='dx-expander' message={message} onSend={args.onSend} />;
 };
 
 const meta = {

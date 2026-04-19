@@ -10,7 +10,7 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
@@ -77,9 +77,11 @@ export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchD
       </Dialog.Header>
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
-          <SearchList.Content classNames='max-h-[24rem]'>
+          <Column.Center>
             <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
-            <SearchList.Viewport>
+          </Column.Center>
+          <Column.Bleed>
+            <SearchList.Viewport classNames='max-h-[24rem]'>
               {allResults.map((result) => (
                 <SearchList.Item
                   key={result.id}
@@ -92,7 +94,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchD
               ))}
               {query && allResults.length === 0 && <SearchList.Empty />}
             </SearchList.Viewport>
-          </SearchList.Content>
+          </Column.Bleed>
         </SearchList.Root>
       </Dialog.Body>
     </Dialog.Content>

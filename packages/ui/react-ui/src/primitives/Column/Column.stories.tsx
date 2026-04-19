@@ -115,8 +115,62 @@ export const WithScrollArea = {
 };
 
 /**
- * Column.Content provides gutter padding for non-scrolling content.
- * Compare with Column.Row which uses subgrid for gutter alignment.
+ * Column.Center places a single element in the center column of the parent grid.
+ * Preferred over Column.Content when you just want centered content — safe to nest
+ * compound components (Form.Root, Editor.Root, etc.) that render `display: contents`.
+ */
+export const WithCenter: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header (Column.Row)</h2>
+      </Column.Row>
+      <Column.Center classNames='flex flex-col'>
+        <p className='py-2'>This text is inside Column.Center. It sits in the central column between the gutters.</p>
+        <Input.Root>
+          <Input.Label>Name</Input.Label>
+          <Input.TextInput placeholder='Enter name' />
+        </Input.Root>
+      </Column.Center>
+      <Column.Row center>
+        <h2 className='py-3'>Footer (Column.Row)</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
+/**
+ * Column.Bleed spans all 3 columns gutter-to-gutter.
+ * Use for ScrollArea so that its scrollbar sits in the right-gutter track.
+ */
+export const WithBleed: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header (Column.Row)</h2>
+      </Column.Row>
+      <Column.Bleed asChild>
+        <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Viewport>
+            <InputList items={30} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Column.Bleed>
+      <Column.Row center>
+        <h2 className='py-3'>Footer (Column.Row)</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
+/**
+ * Legacy: Column.Content is a subgrid passthrough that auto-places non-`.dx-container`
+ * children in the center column. Retained for backwards compatibility with Dialog and
+ * SearchList, but new code should prefer Column.Center / Column.Bleed for explicit
+ * placement — those are safe to nest under compound components that render
+ * `display: contents` wrappers (Editor.Root, Form.Root, etc.).
  */
 export const WithContent: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
@@ -126,32 +180,7 @@ export const WithContent: Story = {
         <h2 className='py-3'>Header (Column.Row)</h2>
       </Column.Row>
       <Column.Content>
-        <p className='py-2'>This text is inside Column.Content. It gets gutter padding automatically.</p>
-        <Input.Root>
-          <Input.Label>Name</Input.Label>
-          <Input.TextInput placeholder='Enter name' />
-        </Input.Root>
-      </Column.Content>
-      <Column.Row center>
-        <h2 className='py-3'>Footer (Column.Row)</h2>
-      </Column.Row>
-    </Column.Root>
-  ),
-};
-
-/**
- * Column.Content with a nested ScrollArea.
- * The ScrollArea breaks out of Content's gutter padding via `--gutter-offset`
- * and applies its own asymmetric padding (accounting for scrollbar width).
- */
-export const ContentWithScrollArea: Story = {
-  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
-  render: () => (
-    <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
-        <h2 className='py-3'>Header (Column.Row)</h2>
-      </Column.Row>
-      <Column.Content>
+        <p className='py-2'>Plain text — no `.dx-container`, auto-placed in col 2.</p>
         <ScrollArea.Root orientation='vertical' padding thin>
           <ScrollArea.Viewport>
             <InputList items={30} />

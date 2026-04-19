@@ -10,7 +10,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
@@ -73,8 +73,10 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.id })}</Dialog.Title>
         <Dialog.Body>
           <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Content>
+            <Column.Center>
               <SearchList.Input placeholder={t('command-list-input.placeholder')} />
+            </Column.Center>
+            <Column.Bleed>
               <SearchList.Viewport>
                 {results.map((action) => {
                   const shortcut =
@@ -117,7 +119,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                   );
                 })}
               </SearchList.Viewport>
-            </SearchList.Content>
+            </Column.Bleed>
           </SearchList.Root>
         </Dialog.Body>
         <Dialog.ActionBar>
