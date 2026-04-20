@@ -20,7 +20,7 @@ File: [packages/core/ai/src/resolvers/ChatCompletionsAdapter.ts](packages/core/a
 
 1. **No timeout on `generateText`** (lines 340–364). Can hang forever if upstream stalls.
 2. **No timeout on `streamText`** (lines 394–414 request, 419–458 stream). Same hang risk; also no idle timeout between chunks.
-3. **SSE chunk-boundary bug** (lines 420–458). `Stream.mapConcat((chunk: Uint8Array) => ...)` decodes each chunk independently and splits on `\n`. HTTP chunks are not line-aligned — a JSON payload split across two TCP chunks silently drops text tokens. This is a correctness bug *separate from* the "no backpressure" concern in the original report.
+3. **SSE chunk-boundary bug** (lines 420–458). `Stream.mapConcat((chunk: Uint8Array) => ...)` decodes each chunk independently and splits on `\n`. HTTP chunks are not line-aligned — a JSON payload split across two TCP chunks silently drops text tokens. This is a correctness bug _separate from_ the "no backpressure" concern in the original report.
 4. **No yield boundary** inside `Stream.mapConcat` — minor, secondary to the buffering fix.
 
 ### TDD plan
@@ -44,7 +44,7 @@ File: [packages/core/functions-runtime/src/triggers/trigger-dispatcher.ts:450](p
 
 ### Findings
 
-- `Array.dropWhile` at lines 436–441 drops only *leading* objects with no position key. Any object in the middle of the snapshot that lacks a position key would fall through to line 450, where `.at(0)!.id` crashes the `Effect.forEach`.
+- `Array.dropWhile` at lines 436–441 drops only _leading_ objects with no position key. Any object in the middle of the snapshot that lacks a position key would fall through to line 450, where `.at(0)!.id` crashes the `Effect.forEach`.
 - `QueueService.append` always sets position keys, so the happy path is fine. But schema drift, migration bugs, or a new code path writing to the same queue without stamping positions would wedge the trigger indefinitely.
 
 ### TDD plan

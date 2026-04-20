@@ -144,7 +144,9 @@ describe('ChatCompletionsLanguageModel timeouts', () => {
   });
 
   it.live('streamText fails with an idle-timeout error when the stream stalls between chunks', ({ expect }) => {
-    const initial = [encode('data: {"id":"c","choices":[{"index":0,"delta":{"content":"hi"},"finish_reason":null}]}\n')];
+    const initial = [
+      encode('data: {"id":"c","choices":[{"index":0,"delta":{"content":"hi"},"finish_reason":null}]}\n'),
+    ];
     return Effect.gen(function* () {
       const exit = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toBe(true);

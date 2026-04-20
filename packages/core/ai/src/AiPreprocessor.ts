@@ -320,9 +320,7 @@ const convertAssistantMessagePart: (
 
       case 'toolCall': {
         const params =
-          block.input === ''
-            ? {}
-            : yield* parseToolJson(block.input, { field: 'input', toolCallId: block.toolCallId });
+          block.input === '' ? {} : yield* parseToolJson(block.input, { field: 'input', toolCallId: block.toolCallId });
         return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,

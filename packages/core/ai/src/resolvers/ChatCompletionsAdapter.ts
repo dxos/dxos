@@ -561,7 +561,8 @@ export const make = (model: string) =>
  * Apply a per-chunk idle timeout to a stream. Fails with `onTimeout(...)` if no chunk is
  * emitted within `timeout` of the previous one (or of stream start for the first chunk).
  */
-const withIdleTimeout = <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
+const withIdleTimeout =
+  <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
   <A, E, R>(stream: Stream.Stream<A, E, R>): Stream.Stream<A, E | E2, R> =>
     Stream.unwrapScoped(
       Effect.gen(function* () {
