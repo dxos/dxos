@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ModelName } from '@dxos/ai';
 
-const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio'] as const;
+const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio', 'ollama'] as const;
 
 const ModelProvider = Schema.Literal(...ModelProviders);
 type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
@@ -38,6 +38,10 @@ export const AiServicePresets: AiServicePreset[] = [
     model: '@anthropic/claude-3-5-haiku-20241022' as const,
   },
   {
+    provider: 'ollama' as const,
+    model: 'gpt-oss:20b' as const,
+  },
+  {
     provider: 'lm-studio' as const,
     model: '@google/gemma-3-27b' as const,
   },
@@ -48,10 +52,6 @@ export const AiServicePresets: AiServicePreset[] = [
   {
     model: 'deepseek-r1:latest' as const,
     provider: 'dxos-local' as const,
-  },
-  {
-    provider: 'lm-studio' as const, // TODO(dmaretskyi): It's actually Ollama, but I dont understand this.
-    model: 'gpt-oss:20b' as const,
   },
 ].map(
   ({ model, provider }, i) =>
