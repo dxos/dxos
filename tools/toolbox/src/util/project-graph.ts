@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { globSync } from 'glob';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-
-import { globSync } from 'glob';
 
 import { loadJson } from './file';
 
