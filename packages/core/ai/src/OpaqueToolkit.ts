@@ -95,6 +95,22 @@ export const fromContext = <Tools extends Record<string, Tool.Any>>(
   );
 
 /**
+ * Creates an opaque toolkit from an already-resolved WithHandler toolkit.
+ */
+export const fromResolved = <Tools extends Record<string, Tool.Any>>(
+  resolved: Toolkit.WithHandler<Tools>,
+): OpaqueToolkit => ({
+  [TypeId]: TypeId,
+  toolkit: resolved as any,
+  layer: Layer.empty as any,
+  handlers: Effect.succeed(resolved) as any,
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
+  },
+});
+
+/**
  * Empty opaque toolkit.
  */
 export const empty = make(Toolkit.empty, Layer.empty);

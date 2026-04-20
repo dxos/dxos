@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter, OpaqueToolkit } from '@dxos/ai';
-import { AiRequest, GenerationObserver, ToolExecutionServices } from '@dxos/assistant';
+import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
@@ -73,7 +73,9 @@ export default Research.pipe(
           ) as any;
         }
 
-        const toolkit = OpaqueToolkit.make(toolkitDef as any, handlers);
+        const finishedToolkit = yield* createToolkit({
+          toolkit: OpaqueToolkit.make(toolkitDef as any, handlers),
+        });
 
         const request = new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
@@ -84,7 +86,7 @@ export default Research.pipe(
             Template.process(PROMPT, { entityExtraction }),
             instructions && `<instructions>${instructions}</instructions>`,
           ),
-          toolkit,
+          toolkit: OpaqueToolkit.fromResolved(finishedToolkit),
         });
 
         const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(dxn)).pipe(
