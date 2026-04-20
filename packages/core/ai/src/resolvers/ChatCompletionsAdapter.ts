@@ -13,6 +13,7 @@ import * as Tool from '@effect/ai/Tool';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -922,16 +923,14 @@ export const make = (model: string) =>
                   return parts;
                 }),
               ),
-              Stream.catchAll(
-                (err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
-                  if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
-                    return Stream.fail(err);
-                  }
-                  return Stream.fail(
-                    new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
-                  );
-                },
-              ),
+              Stream.catchAll((err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
+                if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
+                  return Stream.fail(err);
+                }
+                return Stream.fail(
+                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
+                );
+              }),
             );
 
             return parsedStream;
@@ -950,10 +949,10 @@ const withIdleTimeout =
     Stream.unwrapScoped(
       Effect.gen(function* () {
         const pull = yield* Stream.toPull(stream);
-        const timedPull = pull.pipe(
+        const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(
           Effect.timeoutFail({
             duration: timeout,
-            onTimeout: () => Option.some(onTimeout()) as Option.Option<E | E2>,
+            onTimeout: (): Option.Option<E | E2> => Option.some(onTimeout()),
           }),
         );
         return Stream.repeatEffectChunkOption(timedPull);

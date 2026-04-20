@@ -60,5 +60,22 @@ describe('queue-position', () => {
       const ready = filterReadyQueueItems([alice, bob], undefined);
       expect(ready).toHaveLength(2);
     });
+
+    test('rejects all items when cursor is malformed', ({ expect }) => {
+      const alice = stamp(Obj.make(Person.Person, { fullName: 'Alice' }), '0');
+      const bob = stamp(Obj.make(Person.Person, { fullName: 'Bob' }), '1');
+
+      const ready = filterReadyQueueItems([alice, bob], 'not-a-number');
+      expect(ready).toEqual([]);
+    });
+
+    test('skips items with malformed position strings', ({ expect }) => {
+      const alice = stamp(Obj.make(Person.Person, { fullName: 'Alice' }), '0');
+      const bob = stamp(Obj.make(Person.Person, { fullName: 'Bob' }), '2abc');
+      const carol = stamp(Obj.make(Person.Person, { fullName: 'Carol' }), '3');
+
+      const ready = filterReadyQueueItems([alice, bob, carol], '0');
+      expect(ready.map(({ position }) => position)).toEqual(['3']);
+    });
   });
 });

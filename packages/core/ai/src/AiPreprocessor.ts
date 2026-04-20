@@ -272,7 +272,7 @@ const buildToolResultPart = (
     const hasError = block.error != null;
     const result = hasError
       ? block.error
-      : block.result
+      : block.result != null
         ? yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
         : {};
     return Prompt.makePart('tool-result', {
