@@ -67,9 +67,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         } else {
           input = { args: args.filter(isNonNullable) };
         }
-        const result = runtime.runPromise(
-          Operation.invoke(functionDef, input).pipe(Effect.orDie),
-        );
+        const result = runtime.runPromise(Operation.invoke(functionDef, input).pipe(Effect.orDie));
         return result as any;
       };
 

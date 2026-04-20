@@ -10,13 +10,7 @@ import * as Scope from 'effect/Scope';
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  QueueService,
-  Trace,
-  createDefectLogger,
-} from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, QueueService, Trace, createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
