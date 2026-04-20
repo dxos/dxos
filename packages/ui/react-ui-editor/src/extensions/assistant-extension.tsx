@@ -25,6 +25,14 @@ export type AssistantOptions = {
    * Instructions to use for the language model.
    */
   instructions?: string;
+  /**
+   * Show panel automatically.
+   */
+  autoPanel?: boolean;
+  /**
+   * Debounce delay.
+   */
+  delay?: number;
 };
 
 const underline = (color: string) => {
@@ -56,6 +64,44 @@ export const assistant = (options: AssistantOptions): Extension[] => {
       },
       '.cm-lintRange-error': {
         backgroundImage: underline(style.error),
+      },
+
+      '.cm-panels-bottom': {
+        borderTop: '1px solid var(--color-separator) !important',
+      },
+      '.cm-panel-lint .cm-panel': {
+        outline: 'none !important',
+      },
+      /** @apply dx-button */
+      '.cm-panel button': {
+        color: 'var(--color-base-surface-text) !important',
+      },
+      '.cm-panel.cm-panel-lint ul': {
+        color: 'var(--color-base-surface-text) !important',
+        backgroundColor: 'var(--color-base-surface) !important',
+        marginRight: '2rem !important',
+      },
+      '.cm-panel.cm-panel-lint ul [aria-selected]': {
+        color: 'var(--color-base-surface-text) !important',
+        backgroundColor: 'var(--color-base-surface) !important',
+      },
+      '.cm-panel.cm-panel-lint ul li': {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        alignItems: 'center',
+      },
+      '.cm-panel.cm-panel-lint ul li .cm-diagnosticText': {
+        paddingRight: '8px !important',
+      },
+      '.cm-panel.cm-panel-lint ul li button.cm-diagnosticAction': {
+        margin: 'none !important',
+      },
+      '.cm-diagnostic': {
+        padding: '0px 8px !important',
+        whiteSpace: 'pre-wrap !important',
+      },
+      '.cm-diagnostic-info': {
+        border: 'none !important',
       },
     }),
   ];
@@ -125,7 +171,12 @@ const replaceTextAndDropLintAtRange = (view: EditorView, from: number, to: numbe
   });
 };
 
-const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: AssistantOptions) =>
+const assistantLinter = ({
+  generate,
+  instructions = DEFAULT_INSTRUCTIONS,
+  autoPanel = true,
+  delay = 2_000,
+}: AssistantOptions) =>
   linter(
     async (view) => {
       try {
@@ -166,10 +217,7 @@ const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: Assi
       return [];
     },
     {
-      // Debounce.
-      delay: 3_000,
-
-      // TOOD(burdon): Style panel.
-      // autoPanel: true,
+      delay,
+      autoPanel,
     },
   );

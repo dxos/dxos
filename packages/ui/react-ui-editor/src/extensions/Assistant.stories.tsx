@@ -104,6 +104,8 @@ export const Default: Story = {
       This text has a speling mistake.
 
       And it grammatical errors.
+
+      But we can fix it.
     `,
   },
 };
