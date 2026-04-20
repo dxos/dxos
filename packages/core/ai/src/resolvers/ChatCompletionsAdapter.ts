@@ -18,8 +18,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { dbg } from '@dxos/log';
-
 /**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
  *
@@ -306,13 +304,15 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
   return messages;
 };
 
-const encodeToolParams = (part: Prompt.ToolCallPart): any => {
+const encodeToolParams = (part: Prompt.ToolCallPart): string => {
+  if (typeof part.params === 'string') {
+    return part.params;
+  }
   try {
-    if (typeof part.params === 'string' && part.params.includes('{')) {
-      return JSON.parse(part.params);
-    }
-  } catch {}
-  return part.params;
+    return JSON.stringify(part.params);
+  } catch {
+    return String(part.params);
+  }
 };
 
 const encodeToolResult = (part: Prompt.ToolResultPart): string => {
@@ -644,7 +644,6 @@ export const make = (model: string) =>
             const idGen = yield* IdGenerator.IdGenerator;
 
             const messages = promptToMessages(options.prompt);
-            dbg(JSON.stringify(messages, null, 2));
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
             const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
@@ -722,11 +721,18 @@ export const make = (model: string) =>
             };
             const openAiCalls = new Map<number, OpenAiCallState>();
 
+            // Buffer lines across chunk boundaries — newline-delimited frames and UTF-8
+            // characters can be split across network chunks.
+            const decoder = new TextDecoder();
+            let pendingLine = '';
+
             return response.stream.pipe(
               Stream.mapConcatEffect((chunk: Uint8Array) =>
                 Effect.gen(function* () {
-                  const text = new TextDecoder().decode(chunk);
-                  const lines = text.split('\n').filter((line) => line.trim().length > 0);
+                  const text = pendingLine + decoder.decode(chunk, { stream: true });
+                  const frames = text.split('\n');
+                  pendingLine = frames.pop() ?? '';
+                  const lines = frames.filter((line) => line.trim().length > 0);
                   const parts: Response.StreamPartEncoded[] = [];
 
                   for (const line of lines) {

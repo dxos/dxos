@@ -164,7 +164,7 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        log.info('init agent session session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
+        log.info('init agent session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
         const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(

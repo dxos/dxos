@@ -1290,7 +1290,7 @@ export namespace ProcessOperationInvoker {
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
 
-        log('spawing process', { opKey: op.meta.key, ...options });
+        log('spawning process', { opKey: op.meta.key, ...options });
         const handle = yield* opts.manager.spawn(executable, {
           ...options,
           parentProcessId: opts.parentProcessId,

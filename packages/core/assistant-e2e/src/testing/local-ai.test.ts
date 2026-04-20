@@ -9,7 +9,7 @@ import { Prompt } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 

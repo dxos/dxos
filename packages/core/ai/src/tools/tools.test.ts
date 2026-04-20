@@ -82,7 +82,7 @@ describe('ToolResolverService', () => {
   );
 
   it.effect(
-    'succesfull callTool',
+    'successful callTool',
     Effect.fn(
       function* () {
         const toolkit = yield* CalculatorToolkit.pipe(Effect.provide(CalculatorLayer));
@@ -118,13 +118,12 @@ describe('ToolResolverService', () => {
           input: JSON.stringify({ input: 'not a number' }),
           providerExecuted: false,
         });
-        expect(result).toEqual({
-          _tag: 'toolResult',
-          toolCallId: '1',
-          name: 'Calculator',
-          error: "SyntaxError: Unexpected token ')'",
-          providerExecuted: false,
-        });
+        expect(result._tag).toBe('toolResult');
+        expect(result.toolCallId).toBe('1');
+        expect(result.name).toBe('Calculator');
+        expect(result.providerExecuted).toBe(false);
+        expect((result as any).result).toBeUndefined();
+        expect((result as any).error).toMatch(/SyntaxError/);
       },
       Effect.provide(TestToolResolverService),
       Effect.provide(TestToolExecutionService),

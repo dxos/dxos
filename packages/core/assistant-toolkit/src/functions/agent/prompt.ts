@@ -77,7 +77,7 @@ export default AgentPrompt.pipe(
           Do not ask questions.
           Complete the task before you, and at the end call [completeJob] with the output.
           If you are unable to complete the task, call [completeJob] with the failure reason.
-          If no output is required, call [completeJob] with { "success": "undefined" }
+          If no output is required, call [completeJob] with an empty object: {}
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
@@ -154,7 +154,9 @@ export default AgentPrompt.pipe(
               return yield* Deferred.poll(resultSink).pipe(
                 Effect.flatten,
                 Effect.flatten,
-                Effect.catchTag('NoSuchElementException', () => Effect.die('Agent did not signal task completion.')),
+                Effect.catchTag('NoSuchElementException', () =>
+                  Effect.fail(new PromptError('Agent did not signal task completion.', {})),
+                ),
               );
             }),
           ),

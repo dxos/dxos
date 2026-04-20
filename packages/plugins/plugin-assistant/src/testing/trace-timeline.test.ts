@@ -210,7 +210,7 @@ describe('Trace timeline', () => {
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] complete_job - Success
+            │  ●  [check-circle] completeJob - Success
             ◆──╯  [check-circle] Agent
             "
           `);

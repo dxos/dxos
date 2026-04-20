@@ -3,10 +3,9 @@
 //
 
 import { TestContext } from '@effect/vitest';
-import { Function } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import { option } from 'effect/FastCheck';
+import * as Function from 'effect/Function';
 
 import { ModelName } from '@dxos/ai';
 import {
@@ -72,9 +71,12 @@ export const agentTest: {
 } = (...args: [AgentTestOptions, Prompt.Prompt] | [Prompt.Prompt]) => {
   const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
 
+  const model =
+    options.model ?? (options.inferenceProvider === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
+
   const TestLayer = AssistantTestLayer({
     aiServicePreset: options.inferenceProvider ?? 'edge-remote',
-    model: options.model ?? '@anthropic/claude-opus-4-6',
+    model,
     disableLlmMemoization: options.disableLlmMemoization ?? false,
     operationHandlers: [
       AgentHandlers,
@@ -116,7 +118,7 @@ export const agentTest: {
           prompt: Ref.make(prompt),
           input: {},
           systemInstructions: INSTRUCTIONS,
-          model: options.model,
+          model,
         },
         { conversation: Obj.getDXN(conversationFeed).toString() },
       ).pipe(Effect.exit);
