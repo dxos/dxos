@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiConversation } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Database, Feed } from '@dxos/echo';
@@ -25,11 +25,11 @@ describe('Chat processor', () => {
         const feed = Feed.make();
         yield* Database.add(feed);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(
           Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
         );
-        const processor = new AiChatProcessor(conversation, managedRuntime as any, feed);
+        const processor = new AiChatProcessor(session, managedRuntime as any, feed);
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },

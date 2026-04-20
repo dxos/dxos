@@ -12,7 +12,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 
 export interface McpToolkitOptions {
@@ -21,12 +21,12 @@ export interface McpToolkitOptions {
 }
 
 /**
- * Creates a GenericToolkit that connects to an MCP server and exposes its tools to the assistant.
+ * Creates an OpaqueToolkit that connects to an MCP server and exposes its tools to the assistant.
  *
  * @param options MCP server URL and transport kind ('sse' for SSE, 'http' for Streamable HTTP).
- * @returns A GenericToolkit containing all tools from the MCP server.
+ * @returns An OpaqueToolkit containing all tools from the MCP server.
  */
-export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.GenericToolkit> =>
+export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit> =>
   Effect.gen(function* () {
     const transport = createTransport(options.url, options.kind);
     const client = new Client({ name: '@dxos/mcp-client', version: '0.8.3' });
@@ -35,7 +35,7 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
     const { tools } = yield* Effect.promise(() => client.listTools());
 
     if (tools.length === 0) {
-      return GenericToolkit.empty;
+      return OpaqueToolkit.empty;
     }
 
     const effectTools = tools.map((mcpTool) => {
@@ -86,7 +86,7 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
 
     const layer = toolkit.toLayer(handlers);
 
-    return GenericToolkit.make(toolkit, layer);
+    return OpaqueToolkit.make(toolkit, layer);
   }).pipe(Effect.withSpan('McpToolkit.make'));
 
 /**

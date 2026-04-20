@@ -4,7 +4,7 @@
 
 import * as Layer from 'effect/Layer';
 
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
@@ -84,12 +84,12 @@ export const operationHandlers = OperationHandlerSet.merge(
   TranscriptionOperationHandlerSet,
 );
 
-export const toolkits: GenericToolkit.GenericToolkit[] = [
+export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
   // NOTE: Toolkits referenced by blueprints above need to be added here.
-  GenericToolkit.make(WebSearchToolkit, Layer.empty),
+  OpaqueToolkit.make(WebSearchToolkit, Layer.empty),
 
   // TODO(burdon): Remove?
-  GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
+  OpaqueToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
 ];
 
 export const types: Type.AnyEntity[] = [

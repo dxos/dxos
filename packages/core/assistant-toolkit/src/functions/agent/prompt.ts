@@ -12,9 +12,9 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ConsolePrinter, GenericToolkit, ModelName } from '@dxos/ai';
+import { AiService, ConsolePrinter, OpaqueToolkit, ModelName } from '@dxos/ai';
 import {
-  AiConversation,
+  AiSession,
   GenerationObserver,
   getOperationFromTool,
   makeToolExecutionService,
@@ -105,27 +105,26 @@ export default AgentPrompt.pipe(
         });
 
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
 
         yield* Effect.promise(() =>
-          conversation.context.bind({
+          session.context.bind({
             blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
             objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
           }),
         );
 
-        yield* conversation
+        yield* session
           .createRequest({
             prompt: promptText,
             system: systemText,
             observer,
-            toolkit: promptToolkit.toolkit,
+            toolkit: promptToolkit,
           })
           .pipe(
             Effect.provide(
               Layer.mergeAll(
                 modelLayer,
-                promptToolkit.layer,
                 ToolExecutionService({ feed }),
                 makeToolResolverFromOperations(),
               ),
@@ -188,7 +187,7 @@ const makePromptAgentToolkit = (options: {
     }),
   });
 
-  return GenericToolkit.make(PromptAgentToolkit, layer);
+  return OpaqueToolkit.make(PromptAgentToolkit, layer);
 };
 
 interface ToolExecutionServiceOptions {

@@ -1,6 +1,6 @@
 ---
 name: testing-assistant-conversations
-description: Test assistant conversations, agents, and blueprints using AssistantTestLayer, Effect/vitest, ECHO types, and memoized LLM fixtures. Use when writing or fixing assistant-toolkit tests, blueprint.operation tests, AiConversation flows, or when CI fails on missing memoized conversations.
+description: Test assistant conversations, agents, and blueprints using AssistantTestLayer, Effect/vitest, ECHO types, and memoized LLM fixtures. Use when writing or fixing assistant-toolkit tests, blueprint.operation tests, AiSession flows, or when CI fails on missing memoized conversations.
 ---
 
 # Testing assistant conversations, agents, and blueprints
@@ -14,7 +14,7 @@ Import from `@dxos/assistant/testing`.
 `AssistantTestLayer` composes:
 
 - **AI** — `TestAiService` (memoized by default; see below), default model `@anthropic/claude-opus-4-6`.
-- **Tool execution** — `ToolExecutionServices` and `GenericToolkit.providerLayer`.
+- **Tool execution** — `ToolExecutionServices` and `OpaqueToolkit.providerLayer`.
 - **Blueprint registry** — `Blueprint.RegistryService` seeded with optional `blueprints`.
 - **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/assistant/src/testing/layer.ts`).
 - **ECHO test DB** — `TestDatabaseLayer` with `types` you register.
@@ -30,7 +30,7 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 | `operationHandlers`           | `OperationHandlerSet` (or merged sets) registered via `OperationHandlerSet.provide` so `Operation.invoke` resolves your operations.                                                                                     |
 | `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                          |
 | `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                  |
-| `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                             |
+| `toolkits`                    | Extra toolkits (e.g. `OpaqueToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                              |
 | `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. Use `'edge-remote'` to route LLM calls through the DXOS Edge service so no Anthropic API key is required locally. |
 | `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                      |
 | `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                                                                                  |
@@ -97,7 +97,7 @@ Many tests call **`ObjectId.dangerouslyDisableRandomness()`** at module scope fo
 
 1. `yield* Database.add(...)` / `Obj.make(...)` for fixtures.
 2. `yield* Database.flush()` before invoking functions or conversations that read persisted state.
-3. Call **`Operation.invoke(Operation, input)`** for direct operation tests, or **`AiConversationService.run`**, **`new AiConversation`**, **`AiSession`**, etc., depending on the layer under test.
+3. Call **`Operation.invoke(Operation, input)`** for direct operation tests, or **`AiSessionService.run`**, **`new AiSession`**, **`AiRequest`**, etc., depending on the layer under test.
 
 ### Registering blueprints in tests
 
@@ -105,7 +105,7 @@ Two common patterns:
 
 1. **Registry at layer build** — pass `blueprints: [SomeBlueprint.make(), ...]` into `AssistantTestLayer` when services read from the registry.
 
-2. **Runtime bind** — `addBlueprints` from `packages/core/assistant-toolkit/src/blueprints/testing.ts` loads definition `make()` objects into the DB and calls `AiContextService.bindContext({ blueprints: [...] })`. Used with `AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))` in memory blueprint tests.
+2. **Runtime bind** — `addBlueprints` from `packages/core/assistant-toolkit/src/blueprints/testing.ts` loads definition `make()` objects into the DB and calls `AiContextService.bindContext({ blueprints: [...] })`. Used with `AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))` in memory blueprint tests.
 
 You still pass the blueprint’s **`operations`** (handler set) into `AssistantTestLayer({ operationHandlers: ... })` so tools actually execute.
 

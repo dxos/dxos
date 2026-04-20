@@ -12,12 +12,12 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
 /**
- * Unique identifier for generic toolkit instances.
+ * Unique identifier for opaque toolkit instances.
  */
-export const TypeId = '~@dxos/ai/GenericToolkit';
+export const TypeId = '~@dxos/ai/OpaqueToolkit';
 
 /**
- * Type-level representation of the generic toolkit identifier.
+ * Type-level representation of the opaque toolkit identifier.
  */
 export type TypeId = typeof TypeId;
 
@@ -25,19 +25,19 @@ export type TypeId = typeof TypeId;
  * Type-safe way to define toolkits where we don't know specific types of tools,
  * and we want to bundle definition and handlers together.
  *
- * Usefull for plugin-based systems, where tools are dynamically added.
+ * Useful for plugin-based systems, where tools are dynamically added.
  *
  * @param TR requirements type to the tool invocation.
  * @param E failure type to the handlers layer.
  * @param R requirements type to the handlers layer.
  */
-export interface GenericToolkit<TR = never, E = never, R = never> extends Pipeable.Pipeable {
+export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
 
   /**
    * Toolkit definition.
    */
-  readonly toolkit: Toolkit.Toolkit<GenericTools<TR>>;
+  readonly toolkit: Toolkit.Toolkit<OpaqueTools<TR>>;
 
   /**
    * Handlers layer.
@@ -47,13 +47,13 @@ export interface GenericToolkit<TR = never, E = never, R = never> extends Pipeab
   /**
    * Handlers effect.
    */
-  readonly handlers: Effect.Effect<Toolkit.WithHandler<GenericTools<TR>>, E, R>;
+  readonly handlers: Effect.Effect<Toolkit.WithHandler<OpaqueTools<TR>>, E, R>;
 }
 
 /**
  * Generic constraint.
  *
- * NOTE: Only use in place of `T extends PortableToolkit.Any`. Not suitable for standalone use.
+ * NOTE: Only use in place of `T extends OpaqueToolkit.Any`. Not suitable for standalone use.
  */
 export interface Any {
   readonly [TypeId]: TypeId;
@@ -61,9 +61,9 @@ export interface Any {
   readonly layer: Layer.Layer<unknown, any, any>;
 }
 
-export type InvocationRequirements<T extends Any> = T extends GenericToolkit<infer TR, infer _E, infer _R> ? TR : never;
-export type Failure<T extends Any> = T extends GenericToolkit<infer _TR, infer E, infer _R> ? E : never;
-export type Requirements<T extends Any> = T extends GenericToolkit<infer _TR, infer _E, infer R> ? R : never;
+export type InvocationRequirements<T extends Any> = T extends OpaqueToolkit<infer TR, infer _E, infer _R> ? TR : never;
+export type Failure<T extends Any> = T extends OpaqueToolkit<infer _TR, infer E, infer _R> ? E : never;
+export type Requirements<T extends Any> = T extends OpaqueToolkit<infer _TR, infer _E, infer R> ? R : never;
 
 /**
  * Creates a portable toolkit from toolkit definition and handlers layer.
@@ -71,7 +71,7 @@ export type Requirements<T extends Any> = T extends GenericToolkit<infer _TR, in
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): GenericToolkit<Tool.Requirements<Tools>, E, R> => {
+): OpaqueToolkit<Tool.Requirements<Tools>, E, R> => {
   return {
     [TypeId]: TypeId,
     toolkit: toolkit as any,
@@ -85,7 +85,17 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
 };
 
 /**
- * Empty generic toolkit.
+ * Creates an opaque toolkit from a typed toolkit by capturing handlers from the Effect context.
+ */
+export const fromContext = <Tools extends Record<string, Tool.Any>>(
+  toolkit: Toolkit.Toolkit<Tools>,
+): Effect.Effect<OpaqueToolkit, never, Tool.HandlersFor<Tools>> =>
+  Effect.map(Effect.context<Tool.HandlersFor<Tools>>(), (context) =>
+    make(toolkit, Layer.succeedContext(context) as any),
+  );
+
+/**
+ * Empty opaque toolkit.
  */
 export const empty = make(Toolkit.empty, Layer.empty);
 
@@ -97,7 +107,7 @@ export const merge = <const Toolkits extends ReadonlyArray<Any>>(
    * The toolkits to merge together.
    */
   ...toolkits: Toolkits
-): GenericToolkit<
+): OpaqueToolkit<
   InvocationRequirements<Toolkits[number]>,
   Failure<Toolkits[number]>,
   Requirements<Toolkits[number]>
@@ -109,9 +119,9 @@ export const merge = <const Toolkits extends ReadonlyArray<Any>>(
 };
 
 /**
- * Generic tools type where we cannot statically enumerate individual tools.
+ * Opaque tools type where we cannot statically enumerate individual tools.
  */
-export type GenericTools<R = never> = Record<
+export type OpaqueTools<R = never> = Record<
   string,
   Tool.Tool<
     string,
@@ -137,24 +147,24 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
 }
 
 /**
- * Provides a generic toolkit to the agent.
+ * Provides an opaque toolkit to the agent.
  */
-export class GenericToolkitProvider extends Context.Tag('@dxos/ai/GenericToolkit.GenericToolkitProvider')<
-  GenericToolkitProvider,
+export class OpaqueToolkitProvider extends Context.Tag('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider')<
+  OpaqueToolkitProvider,
   {
-    readonly getToolkit: () => GenericToolkit;
+    readonly getToolkit: () => OpaqueToolkit;
   }
 >() {}
 
 /**
- * Layer for providing a generic toolkit to the agent.
+ * Layer for providing an opaque toolkit to the agent.
  */
-export const providerLayer = (toolkit: GenericToolkit) =>
-  Layer.succeed(GenericToolkitProvider, {
+export const providerLayer = (toolkit: OpaqueToolkit) =>
+  Layer.succeed(OpaqueToolkitProvider, {
     getToolkit: () => toolkit,
   });
 
 /**
- * Layer for providing an empty generic toolkit to the agent.
+ * Layer for providing an empty opaque toolkit to the agent.
  */
 export const providerEmpty = providerLayer(empty);

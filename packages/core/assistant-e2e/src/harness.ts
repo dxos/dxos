@@ -17,7 +17,7 @@ import {
   MemoryBlueprint,
   WebSearchBlueprint,
   WebSearchHandlers,
-  WebSearchToolkitGeneric,
+  WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -57,7 +57,7 @@ const TestLayer = AssistantTestLayer({
     // AssistantBlueprint.make(),
     InboxBlueprint.make(),
   ],
-  toolkits: [WebSearchToolkitGeneric],
+  toolkits: [WebSearchToolkitOpaque],
 });
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;

@@ -9,15 +9,15 @@ import { pipe } from 'effect/Function';
 import { ConsolePrinter } from '@dxos/ai';
 import {
   AiContextService,
-  type AiConversation,
-  type AiConversationRunProps,
+  type AiSession,
+  type AiSessionRunProps,
   GenerationObserver,
 } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiConversationRunProps<{}>, 'prompt' | 'system'> & {
+export type TestStep = Pick<AiSessionRunProps, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 
@@ -33,13 +33,13 @@ export interface BlueprintDefinition {
 /**
  * Runs the prompt steps, calling the test function after each step.
  */
-export const runSteps = Effect.fn(function* (conversation: AiConversation, steps: TestStep[]) {
+export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep[]) {
   for (const { test, ...props } of steps) {
-    yield* conversation.createRequest({
+    yield* session.createRequest({
       ...props,
       observer: GenerationObserver.fromPrinter(new ConsolePrinter({ mode: 'json' })),
     });
-    const messages = yield* Effect.promise(() => conversation.getHistory());
+    const messages = yield* Effect.promise(() => session.getHistory());
     log.info('conversation', { messages });
     if (test) {
       yield* Effect.promise(() => test());

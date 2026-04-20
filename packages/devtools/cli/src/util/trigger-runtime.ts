@@ -14,7 +14,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
@@ -80,7 +80,7 @@ export const triggerRuntimeLayer = ({
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       // Use the same merged toolkit as chat.
-      const toolkit = GenericToolkit.merge(...toolkits);
+      const toolkit = OpaqueToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)
       const baseChatLayer = chatLayer({ provider: 'edge', spaceId, functions: blueprintOperationHandlers });
@@ -89,13 +89,13 @@ export const triggerRuntimeLayer = ({
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
         Layer.provide(ProcessManager.layer()),
-        Layer.provide(ServiceResolver.layerRequirements(Database.Service, GenericToolkit.GenericToolkitProvider)),
+        Layer.provide(ServiceResolver.layerRequirements(Database.Service, OpaqueToolkit.OpaqueToolkitProvider)),
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
         Layer.provideMerge(TracingService.layerNoop),
         Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
-        Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+        Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
         Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: blueprintOperationHandlers })),
         Layer.provideMerge(baseChatLayer),
         Layer.provideMerge(OperationHandlerSet.provide(blueprintOperationHandlers)),

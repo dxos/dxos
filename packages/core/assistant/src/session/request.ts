@@ -19,6 +19,7 @@ import {
   AiSummarizer,
   type AiToolNotFoundError,
   callTool,
+  type OpaqueToolkit,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
@@ -36,9 +37,9 @@ import { CompleteBlock, PartialBlock } from '../tracing';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
-export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
+export type AiRequestRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
-export type AiSessionRunRequirements =
+export type AiRequestRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
@@ -52,7 +53,7 @@ export type AiSessionRunRequirements =
    */
   | TracingService;
 
-export type AiSessionOptions = {
+export type AiRequestOptions = {
   /**
    * Summarize before executing the prompt if the existing history exceeds this threshold.
    */
@@ -67,17 +68,17 @@ export type AiSessionOptions = {
   onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
 };
 
-export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
+export type AiRequestRunProps = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
-  toolkit?: Toolkit.WithHandler<Tools>;
+  toolkit?: OpaqueToolkit.OpaqueToolkit;
 };
 
-export type AiSessionBeginProps = {
+export type AiRequestBeginProps = {
   prompt: string;
   system?: string;
   history?: Message.Message[];
@@ -85,12 +86,12 @@ export type AiSessionBeginProps = {
   blueprints?: readonly Blueprint.Blueprint[];
 };
 
-export type AiSessionTurnProps<Tools extends Record<string, Tool.Any>> = {
+export type AiRequestTurnProps = {
   system: string;
-  toolkit?: Toolkit.WithHandler<Tools>;
+  toolkit?: Toolkit.WithHandler<any>;
 };
 
-export type AiSessionTurnResult = {
+export type AiRequestTurnResult = {
   messages: Message.Message[];
   done: boolean;
 };
@@ -105,8 +106,7 @@ export type AiSessionTurnResult = {
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
-// TODO(dmaretskyi): Rename AiSessionRequest
-export class AiSession {
+export class AiRequest {
   /** Prevents concurrent execution of session. */
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
@@ -124,7 +124,7 @@ export class AiSession {
   private _ended = 0;
   private _toolCalls = 0;
 
-  constructor(private readonly _options: AiSessionOptions = {}) {
+  constructor(private readonly _options: AiRequestOptions = {}) {
     this._observer = _options.observer ?? GenerationObserver.noop();
     this._onOutput = _options.onOutput ?? (() => Effect.void);
   }
@@ -175,7 +175,7 @@ export class AiSession {
     history = [],
     blueprints = [],
     objects = [],
-  }: AiSessionBeginProps): Effect.Effect<void, AiSessionRunError, AiSessionRunRequirements> =>
+  }: AiRequestBeginProps): Effect.Effect<void, AiRequestRunError, AiRequestRunRequirements> =>
     Effect.gen(this, function* () {
       this._started = Date.now();
       this._history = [...history];
@@ -196,7 +196,7 @@ export class AiSession {
       }
 
       yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
-    }).pipe(Effect.withSpan('AiSession.begin'));
+    }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**
    * Execute a single turn: one LLM generation followed by tool execution.
@@ -205,7 +205,7 @@ export class AiSession {
   runAgentTurn = <Tools extends Record<string, Tool.Any>>({
     system,
     toolkit,
-  }: AiSessionTurnProps<Tools>): Effect.Effect<AiSessionTurnResult, AiSessionRunError, AiSessionRunRequirements> =>
+  }: AiRequestTurnProps): Effect.Effect<AiRequestTurnResult, AiRequestRunError, AiRequestRunRequirements> =>
     Effect.gen(this, function* () {
       log('request', {
         system: { snippet: createSnippet(system), length: system.length },
@@ -277,9 +277,9 @@ export class AiSession {
       }
 
       return { messages, done: false };
-    }).pipe(Effect.withSpan('AiSession.runAgentTurn'));
+    }).pipe(Effect.withSpan('AiRequest.runAgentTurn'));
 
-  runTools = <Tools extends Record<string, Tool.Any>>({ toolkit }: { toolkit?: Toolkit.WithHandler<Tools> }) =>
+  runTools = ({ toolkit }: { toolkit?: Toolkit.WithHandler<any> }) =>
     Effect.gen(this, function* () {
       const toolCalls = this.getToolCalls();
       // TODO(burdon): Retry errors? Write result when each completes individually?
@@ -309,22 +309,24 @@ export class AiSession {
       );
 
       this._toolCalls += toolResults.length;
-    }).pipe(Effect.withSpan('AiSession.runTools'));
+    }).pipe(Effect.withSpan('AiRequest.runTools'));
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */
-  run = <Tools extends Record<string, Tool.Any>>({
+  run = ({
     prompt,
     system: systemTemplate,
     history = [],
     objects = [],
     blueprints = [],
-    toolkit,
-  }: AiSessionRunProps<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
+    toolkit: opaqueToolkit,
+  }: AiRequestRunProps): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements> =>
     Effect.gen(this, function* () {
       yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
 
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+
+      const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
 
       do {
         const { done } = yield* this.runAgentTurn({ system, toolkit });
@@ -336,7 +338,7 @@ export class AiSession {
 
       log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
       return this._pending;
-    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
+    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
 
 const createSnippet = (text: string, len = 32) =>
