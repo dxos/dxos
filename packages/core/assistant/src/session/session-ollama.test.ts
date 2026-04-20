@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { CalculatorLayer, CalculatorToolkit } from '@dxos/ai/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
@@ -53,6 +53,8 @@ describe('AiSession (ollama gpt-oss:20b)', () => {
           prompt: 'What is six times seven? Use the Calculator tool and reply with only the number.',
           history: [],
         });
+
+        dbg(messages);
 
         const toolCalls = messages.flatMap((m) => m.blocks).filter(ContentBlock.is('toolCall'));
         const toolResults = messages.flatMap((m) => m.blocks).filter(ContentBlock.is('toolResult'));
