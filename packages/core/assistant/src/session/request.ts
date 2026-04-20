@@ -321,26 +321,30 @@ export class AiRequest {
     blueprints = [],
     toolkit: opaqueToolkit,
   }: AiRequestRunProps): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements> =>
-    (Effect.gen(this, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
+    (
+      Effect.gen(this, function* () {
+        yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
 
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+        const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
-      const toolkit = opaqueToolkit
-        ? yield* (opaqueToolkit.toolkit.pipe(Effect.provide(opaqueToolkit.layer)) as Effect.Effect<Toolkit.WithHandler<any>>)
-        : undefined;
+        const toolkit = opaqueToolkit
+          ? yield* opaqueToolkit.toolkit.pipe(Effect.provide(opaqueToolkit.layer)) as Effect.Effect<
+              Toolkit.WithHandler<any>
+            >
+          : undefined;
 
-      do {
-        const { done } = yield* this.runAgentTurn({ system, toolkit });
-        if (done) {
-          break;
-        }
-        yield* this.runTools({ toolkit });
-      } while (true);
+        do {
+          const { done } = yield* this.runAgentTurn({ system, toolkit });
+          if (done) {
+            break;
+          }
+          yield* this.runTools({ toolkit });
+        } while (true);
 
-      log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
-      return this._pending;
-    }) as Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
+        log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
+        return this._pending;
+      }) as Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>
+    ).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
 
 const createSnippet = (text: string, len = 32) =>

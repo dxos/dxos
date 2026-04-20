@@ -13,13 +13,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import {
-  AgentService,
-  AiContextBinder,
-  AiContextService,
-  AiSession,
-  AiSessionService,
-} from '@dxos/assistant';
+import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';

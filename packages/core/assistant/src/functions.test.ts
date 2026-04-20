@@ -9,7 +9,13 @@ import * as Schema from 'effect/Schema';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit, formatSystemPrompt } from '@dxos/assistant';
+import {
+  AiRequest,
+  GenerationObserver,
+  ToolExecutionServices,
+  createToolkit,
+  formatSystemPrompt,
+} from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

@@ -92,7 +92,11 @@ export class AiSession extends Resource {
     return items.filter(Obj.instanceOf(Message.Message));
   }
 
-  getTools(): Effect.Effect<Record<string, import('@effect/ai/Tool').Any>, never, ToolExecutionService | ToolResolverService> {
+  getTools(): Effect.Effect<
+    Record<string, import('@effect/ai/Tool').Any>,
+    never,
+    ToolExecutionService | ToolResolverService
+  > {
     return Effect.gen(this, function* () {
       const tookit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
       return tookit.tools;
@@ -197,10 +201,7 @@ export class AiSession extends Resource {
 /**
  * Gives access to the ai session.
  */
-export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionService')<
-  AiSessionService,
-  AiSession
->() {
+export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionService')<AiSessionService, AiSession>() {
   /**
    * Create a new session layer from options.
    */
@@ -241,11 +242,7 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
    */
   static run = (
     params: AiSessionRunProps,
-  ): Effect.Effect<
-    Message.Message[],
-    AiRequestRunError,
-    AiRequestRunRequirements | AiSessionService
-  > =>
+  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | AiSessionService> =>
     Effect.gen(function* () {
       const session = yield* AiSessionService;
       return yield* session.createRequest(params);
@@ -262,9 +259,7 @@ const aiContextFromSession = Layer.effect(
   }),
 );
 
-const connectMcpServers = (
-  blueprints: readonly Blueprint.Blueprint[],
-): Effect.Effect<OpaqueToolkit.OpaqueToolkit[]> =>
+const connectMcpServers = (blueprints: readonly Blueprint.Blueprint[]): Effect.Effect<OpaqueToolkit.OpaqueToolkit[]> =>
   pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),

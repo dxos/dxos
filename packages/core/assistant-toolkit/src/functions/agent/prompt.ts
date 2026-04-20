@@ -123,11 +123,7 @@ export default AgentPrompt.pipe(
           })
           .pipe(
             Effect.provide(
-              Layer.mergeAll(
-                modelLayer,
-                ToolExecutionService({ feed }),
-                makeToolResolverFromOperations(),
-              ),
+              Layer.mergeAll(modelLayer, ToolExecutionService({ feed }), makeToolResolverFromOperations()),
             ),
           );
 
