@@ -31,7 +31,7 @@ export const withColumn = {
 export type ColumnStyleProps = {};
 
 const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('dx-column grid', ...etc);
+  return mx('dx-column grid content-start', ...etc);
 };
 
 /**
