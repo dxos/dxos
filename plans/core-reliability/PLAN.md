@@ -70,7 +70,7 @@ File: [packages/core/ai/src/AiPreprocessor.ts](../../packages/core/ai/src/AiPrep
    - [line 296](../../packages/core/ai/src/AiPreprocessor.ts:296) — `convertAssistantMessagePart` tool-call, on `block.input`.
    - [line 303](../../packages/core/ai/src/AiPreprocessor.ts:303) — `convertAssistantMessagePart` tool-result, on `block.result`.
 
-   If a previous turn stored malformed JSON (provider bug, version skew, partial write), the whole prompt preprocessing fails with an uncaught `SyntaxError`. Fix: try/catch → `PromptPreprocesorError` with context about which block failed.
+   If a previous turn stored malformed JSON (provider bug, version skew, partial write), the whole prompt preprocessing fails with an uncaught `SyntaxError`. Fix: try/catch → `PromptPreprocessingError` with context about which block failed.
 
 2. **`isFailure: false` even when `block.error` is set** at [line 260](../../packages/core/ai/src/AiPreprocessor.ts:260) and [line 303](../../packages/core/ai/src/AiPreprocessor.ts:303). A tool that errored is reported to the model as a successful tool-result containing the error payload. Model may not realize the tool failed.
 
@@ -95,8 +95,8 @@ File: [packages/core/ai/src/AiPreprocessor.ts](../../packages/core/ai/src/AiPrep
 
 ### TDD plan for preprocessor fixes (items 1–3)
 
-1. RED: preprocessing a tool message whose `block.result` is malformed JSON — expect a `PromptPreprocesorError`, not a crash.
-2. GREEN: wrap each `JSON.parse` in a try/catch that maps to `PromptPreprocesorError` with block id and reason.
+1. RED: preprocessing a tool message whose `block.result` is malformed JSON — expect a `PromptPreprocessingError`, not a crash.
+2. GREEN: wrap each `JSON.parse` in a try/catch that maps to `PromptPreprocessingError` with block id and reason.
 3. RED: preprocessing a tool-result with `block.error` set — expect `isFailure: true`.
 4. GREEN: set `isFailure: block.error != null` in both tool-result branches.
 5. REFACTOR: extract `convertToolResultPart(block)` helper used by both converters.
