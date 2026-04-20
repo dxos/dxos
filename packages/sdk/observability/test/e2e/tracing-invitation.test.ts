@@ -21,7 +21,7 @@ import { identityProvider } from '../../src/providers/client-observability';
 // DX_TEST_TAGS=tracing-e2e \
 // DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
 // DX_OTEL_HEADERS='signoz-ingestion-key:5300e0c9-a5e8-4a10-9c61-f473e539c0b7' \
-// DX_CLIENT_TAG=tracing-e2e-$(uuidgen) \
+// DX_TELEMETRY_TAG=tracing-e2e-$(uuidgen) \
 //   moon run observability:test -- --run test/e2e/tracing-invitation.test.ts
 
 const LOCAL = false;
@@ -72,8 +72,8 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('tracing-e2e'))(
   { timeout: 300_000, retry: 0 },
   () => {
     test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async () => {
-      const clientTag = process.env.DX_CLIENT_TAG;
-      expect(clientTag, 'DX_CLIENT_TAG must be set').toBeTruthy();
+      const clientTag = process.env.DX_TELEMETRY_TAG;
+      expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();
       expect(process.env.DX_OTEL_ENDPOINT, 'DX_OTEL_ENDPOINT must be set').toBeTruthy();
       expect(process.env.DX_OTEL_HEADERS, 'DX_OTEL_HEADERS must be set').toBeTruthy();
 

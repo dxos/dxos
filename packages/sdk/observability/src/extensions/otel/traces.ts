@@ -12,39 +12,14 @@ import {
 } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import {
-  BasicTracerProvider,
-  BatchSpanProcessor,
-  type ReadableSpan,
-  type SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
-
-/**
- * Injects dynamic tags (e.g. `ctx.tag`) as attributes on every span.
- * Parity with the browser-side `TagInjectorSpanProcessor`.
- */
-class TagInjectorSpanProcessor implements SpanProcessor {
-  constructor(private readonly _getTags: () => Record<string, string>) {}
-
-  onStart(span: { setAttribute: (key: string, value: string) => void }): void {
-    const tags = this._getTags();
-    for (const [key, value] of Object.entries(tags)) {
-      span.setAttribute(key, value);
-    }
-  }
-
-  onEnd(_span: ReadableSpan): void {}
-
-  async shutdown(): Promise<void> {}
-
-  async forceFlush(): Promise<void> {}
-}
+import { TagInjectorSpanProcessor } from './span-processors';
 
 export class OtelTraces {
   private _tracer: Tracer;

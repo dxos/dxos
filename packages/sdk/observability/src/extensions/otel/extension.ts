@@ -79,13 +79,21 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
-  // Matches edge's `ctx.tag` span attribute (stamped by `@trace.span({ attributes: { tag } })`
-  // when edge reads the `X-DXOS-Client-Tag` header). Injected on every span via the
-  // Tag injector span processor so a single `ctx.tag = <value>` filter matches both
-  // composer-side and edge-side spans in SigNoz.
+  // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
+  // when it reads the `X-DXOS-Client-Tag` header, see
+  // /edge/packages/services/edge/src/log-middleware.ts).
+  //
+  // Stamped in TWO places:
+  //   1. Resource attribute — so logs and metrics emitted from this extension
+  //      also carry it, and for zero per-span cost.
+  //   2. Span attribute via `tags` — because edge puts `ctx.tag` in the span-
+  //      attribute context (not resource), and SigNoz indexes the two contexts
+  //      separately. Stamping it on span attributes here keeps a single
+  //      `ctx.tag = <value>` filter matching spans from both tiers in SigNoz
+  //      without requiring qualified `attribute.ctx.tag`/`resource.ctx.tag` syntax.
   const clientTag = isNode()
-    ? process.env.DX_CLIENT_TAG
-    : config.values.runtime?.app?.env?.DX_CLIENT_TAG;
+    ? process.env.DX_TELEMETRY_TAG
+    : config.values.runtime?.app?.env?.DX_TELEMETRY_TAG;
   if (clientTag) {
     tags.set('ctx.tag', clientTag);
   }
@@ -97,6 +105,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       'session.id': crypto.randomUUID(),
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
+      ...(clientTag ? { 'ctx.tag': clientTag } : {}),
     }),
   );
 

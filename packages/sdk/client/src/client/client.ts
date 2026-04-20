@@ -38,7 +38,7 @@ import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dx
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
-import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { isNode, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
@@ -424,7 +424,7 @@ export class Client {
     const edgeUrl = this._config!.get('runtime.services.edge.url');
     if (edgeUrl) {
       const { EdgeHttpClient } = await import('@dxos/edge-client');
-      const clientTag = this._config!.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
+      const clientTag = resolveClientTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
@@ -587,3 +587,15 @@ export class Client {
     log('reset complete');
   }
 }
+
+/**
+ * Resolves the client tag used as the `X-DXOS-Client-Tag` header on edge requests
+ * and as the `ctx.tag` attribute in observability traces. Must stay in sync with
+ * the observability extension's resolution (`packages/sdk/observability/src/extensions/otel/extension.ts`)
+ * so a single tag identifies a session across both tiers.
+ */
+const resolveClientTag = (config?: Config): string | undefined => {
+  return (
+    config?.get('runtime.app.env.DX_TELEMETRY_TAG') ?? (isNode() ? process.env.DX_TELEMETRY_TAG : undefined)
+  );
+};

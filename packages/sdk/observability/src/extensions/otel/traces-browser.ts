@@ -18,8 +18,6 @@ import {
   AlwaysOnSampler,
   BatchSpanProcessor,
   ParentBasedSampler,
-  type ReadableSpan,
-  type SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -29,26 +27,7 @@ import { log } from '@dxos/log';
 import { TRACE_ALL_KEY, type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
-
-/**
- * Injects dynamic tags (e.g. userId) as attributes on every span.
- */
-class TagInjectorSpanProcessor implements SpanProcessor {
-  constructor(private readonly _getTags: () => Record<string, string>) {}
-
-  onStart(span: { setAttribute: (key: string, value: string) => void }): void {
-    const tags = this._getTags();
-    for (const [key, value] of Object.entries(tags)) {
-      span.setAttribute(key, value);
-    }
-  }
-
-  onEnd(_span: ReadableSpan): void {}
-
-  async shutdown(): Promise<void> {}
-
-  async forceFlush(): Promise<void> {}
-}
+import { TagInjectorSpanProcessor } from './span-processors';
 
 export class OtelTraces {
   private _tracer: Tracer;
