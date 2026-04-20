@@ -4,7 +4,6 @@
 
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -67,14 +66,14 @@ export type AiRequestOptions = {
   onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
 };
 
-export type AiRequestRunProps = {
+export type AiRequestRunProps<R = never> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
-  toolkit?: OpaqueToolkit.Any;
+  toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
 export type AiRequestBeginProps = {
@@ -85,9 +84,9 @@ export type AiRequestBeginProps = {
   blueprints?: readonly Blueprint.Blueprint[];
 };
 
-export type AiRequestTurnProps = {
+export type AiRequestTurnProps<R = never> = {
   system: string;
-  toolkit?: OpaqueToolkit.Any;
+  toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
 export type AiRequestTurnResult = {
@@ -201,10 +200,10 @@ export class AiRequest {
    * Execute a single turn: one LLM generation followed by tool execution.
    * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled blueprints).
    */
-  runAgentTurn = ({
+  runAgentTurn = <const R = never>({
     system,
     toolkit: opaqueToolkit,
-  }: AiRequestTurnProps): Effect.Effect<AiRequestTurnResult, AiRequestRunError, AiRequestRunRequirements> =>
+  }: AiRequestTurnProps<R>): Effect.Effect<AiRequestTurnResult, AiRequestRunError, AiRequestRunRequirements | R> =>
     Effect.gen(this, function* () {
       log('request', {
         system: { snippet: createSnippet(system), length: system.length },
@@ -217,9 +216,7 @@ export class AiRequest {
         cacheControl: 'ephemeral',
       });
 
-      const toolkit: Toolkit.WithHandler<any> | undefined = opaqueToolkit
-        ? yield* opaqueToolkit.handlers as Effect.Effect<Toolkit.WithHandler<any>>
-        : undefined;
+      const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null;
@@ -282,15 +279,13 @@ export class AiRequest {
       return { messages, done: false };
     }).pipe(Effect.withSpan('AiRequest.runAgentTurn'));
 
-  runTools = ({
+  runTools = <const R = never>({
     toolkit: opaqueToolkit,
   }: {
-    toolkit?: OpaqueToolkit.Any;
-  }): Effect.Effect<void, AiRequestRunError, AiRequestRunRequirements> =>
+    toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
+  }): Effect.Effect<void, AiRequestRunError, AiRequestRunRequirements | R> =>
     Effect.gen(this, function* () {
-      const toolkit: Toolkit.WithHandler<any> | undefined = opaqueToolkit
-        ? yield* opaqueToolkit.handlers as Effect.Effect<Toolkit.WithHandler<any>>
-        : undefined;
+      const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       const toolCalls = this.getToolCalls();
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
         if (!toolkit) {
@@ -321,14 +316,14 @@ export class AiRequest {
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */
-  run = ({
+  run = <const R = never>({
     prompt,
     system: systemTemplate,
     history = [],
     objects = [],
     blueprints = [],
     toolkit,
-  }: AiRequestRunProps): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements> =>
+  }: AiRequestRunProps<R>): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | R> =>
     Effect.gen(this, function* () {
       yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
 

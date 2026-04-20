@@ -27,7 +27,7 @@ export const createToolkit = ({
   blueprints = [],
   opaqueToolkits = [],
 }: CreateToolkitProps): Effect.Effect<
-  OpaqueToolkit.OpaqueToolkit<never, any>,
+  OpaqueToolkit.OpaqueToolkit,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService
 > =>
@@ -43,9 +43,5 @@ export const createToolkit = ({
       toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
       opaqueToolkit.layer,
     );
-    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit<never, any>;
-  }) as Effect.Effect<
-    OpaqueToolkit.OpaqueToolkit<never, any>,
-    AiToolNotFoundError,
-    ToolResolverService | ToolExecutionService
-  >;
+    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit;
+  }) as Effect.Effect<OpaqueToolkit.OpaqueToolkit, AiToolNotFoundError, ToolResolverService | ToolExecutionService>;

@@ -34,11 +34,11 @@ import {
 } from '../session';
 import { AiContextBinder, AiContextService } from './context';
 
-export interface AiSessionRunProps {
+export interface AiSessionRunProps<R = never> {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
-  toolkit?: OpaqueToolkit.Any;
+  toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 }
 
 export type AiSessionOptions = {
@@ -118,9 +118,9 @@ export class AiSession extends Resource {
   /**
    * Creates a new cancelable request effect.
    */
-  public createRequest(
-    params: AiSessionRunProps,
-  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements> {
+  public createRequest<R = never>(
+    params: AiSessionRunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const blueprints = this.context.getBlueprints();
@@ -240,9 +240,9 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
   /**
    * Run a prompt in the current session.
    */
-  static run = (
-    params: AiSessionRunProps,
-  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | AiSessionService> =>
+  static run = <R = never>(
+    params: AiSessionRunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | AiSessionService | R> =>
     Effect.gen(function* () {
       const session = yield* AiSessionService;
       return yield* session.createRequest(params);

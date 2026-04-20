@@ -35,8 +35,9 @@ export default EntityExtraction.pipe(
           const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
             onAppend: (dxns) => created.push(...dxns),
           });
-          const handlersLayer = GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer));
-          const toolkit = OpaqueToolkit.make(GraphWriterToolkit, handlersLayer);
+          const toolkit = yield* OpaqueToolkit.fromContext(GraphWriterToolkit).pipe(
+            Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
+          );
 
           yield* new AiRequest().run({
             system: trim`

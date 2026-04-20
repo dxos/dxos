@@ -110,8 +110,11 @@ export const fromContext = <Tools extends Record<string, Tool.Any>>(
 export const provide: {
   <R0, E2, R2>(
     layer: Layer.Layer<R0, E2, R2>,
-  ): <TR, E, R extends R0>(self: OpaqueToolkit<TR, E, R>) => OpaqueToolkit<TR, E | E2, R2>;
-  <TR, E, R, E2, R2>(self: OpaqueToolkit<TR, E, R>, layer: Layer.Layer<R, E2, R2>): OpaqueToolkit<TR, E | E2, R2>;
+  ): <TR, E, R>(self: OpaqueToolkit<TR, E, R>) => OpaqueToolkit<TR, E | E2, Exclude<R, R0> | R2>;
+  <TR, E, R, R0, E2, R2>(
+    self: OpaqueToolkit<TR, E, R>,
+    layer: Layer.Layer<R0, E2, R2>,
+  ): OpaqueToolkit<TR, E | E2, Exclude<R, R0> | R2>;
 } = function (...args: any[]) {
   if (args.length === 1) {
     const [layer] = args;
@@ -120,10 +123,10 @@ export const provide: {
   return provideImpl(args[0], args[1]);
 } as any;
 
-const provideImpl = <TR, E, R, E2, R2>(
+const provideImpl = <TR, E, R, R0, E2, R2>(
   self: OpaqueToolkit<TR, E, R>,
-  layer: Layer.Layer<R, E2, R2>,
-): OpaqueToolkit<TR, E | E2, R2> => {
+  layer: Layer.Layer<R0, E2, R2>,
+): OpaqueToolkit<TR, E | E2, Exclude<R, R0> | R2> => {
   const provided = Layer.provide(self.layer, layer as any);
   return make(self.toolkit as any, provided as any) as any;
 };
