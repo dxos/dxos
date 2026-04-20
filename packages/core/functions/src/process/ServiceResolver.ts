@@ -14,6 +14,7 @@ import * as Scope from 'effect/Scope';
 import type { DXN, SpaceId } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from '../errors';
+import type * as LayerSpec from './LayerSpec';
 import * as Process from './Process';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
@@ -28,7 +29,7 @@ export interface ServiceResolver {
    */
   resolve<Tag extends Context.Tag<any, any>>(
     tag: Tag,
-    context: ResolutionContext,
+    context: LayerSpec.LayerContext,
   ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope>;
 }
 
@@ -41,7 +42,7 @@ export const resolve = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.re
 
 export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
   tags: Tags,
-  context: ResolutionContext,
+  context: LayerSpec.LayerContext,
 ): Effect.Effect<Context.Context<Tags[number]>, ServiceNotAvailableError, Scope.Scope | ServiceResolver> =>
   Effect.gen(function* () {
     const services = yield* Effect.forEach(tags, (tag) =>
@@ -50,34 +51,9 @@ export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
     return Context.mergeAll(...services);
   });
 
-/**
- * Provides context for service resolution.
- */
-export interface ResolutionContext {
-  /**
-   * Under which identity the process is running.
-   */
-  readonly identity?: string;
-
-  /**
-   * Under which space the process is running.
-   */
-  readonly space?: SpaceId;
-
-  /**
-   * DXN of the conversation feed the process is running in.
-   */
-  readonly conversation?: DXN.String;
-
-  /**
-   * Under which process the process is running.
-   */
-  readonly process?: Process.ID;
-}
-
 export const succeed = <I, S>(
   tag: Context.Tag<I, S>,
-  getService: (context: ResolutionContext) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
+  getService: (context: LayerSpec.LayerContext) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => {
   return make((tag1, context) => {
     if (tag1.key !== tag.key) {
@@ -94,7 +70,7 @@ export const succeed = <I, S>(
 export const make = (
   resolveFn: <I, S>(
     tag: Context.Tag<I, S>,
-    context: ResolutionContext,
+    context: LayerSpec.LayerContext,
   ) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => ({
   [ServiceResolverTypeId]: ServiceResolverTypeId,
