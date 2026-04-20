@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
@@ -27,7 +28,7 @@ export const ContextModule = ({ space }: ComponentProps) => {
       <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
         {objects.map((object) => (
           <StackItem.Root key={object.id} item={object}>
-            <Surface.Surface role='section' limit={1} data={{ subject: object }} />
+            <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object }} />
           </StackItem.Root>
         ))}
       </Stack>

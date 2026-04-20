@@ -177,10 +177,7 @@ describe('AppSurface', () => {
 
     test('throws when filters have different role sets', ({ expect }) => {
       expect(() =>
-        AppSurface.allOf(
-          AppSurface.object(AppSurface.Article, TypeA),
-          AppSurface.object(AppSurface.Section, TypeA),
-        ),
+        AppSurface.allOf(AppSurface.object(AppSurface.Article, TypeA), AppSurface.object(AppSurface.Section, TypeA)),
       ).toThrow(/same role set/);
     });
 

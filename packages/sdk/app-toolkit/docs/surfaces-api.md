@@ -126,10 +126,7 @@ AppSurface.companion(AppSurface.Article);
 
 ```typescript
 // oneOf: register across multiple roles with the same (or differing) guards.
-AppSurface.oneOf(
-  AppSurface.object(AppSurface.Article, MySchema),
-  AppSurface.object(AppSurface.Section, MySchema),
-);
+AppSurface.oneOf(AppSurface.object(AppSurface.Article, MySchema), AppSurface.object(AppSurface.Section, MySchema));
 
 // allOf: same-role intersection (all filters must share the same role set).
 AppSurface.allOf(
@@ -139,10 +136,7 @@ AppSurface.allOf(
 
 // Article/Section/Tabpanel tokens inherently require `data.attendableId` to be
 // a string — no additional wrapper needed when combining them via oneOf.
-AppSurface.oneOf(
-  AppSurface.object(AppSurface.Article, MySchema),
-  AppSurface.object(AppSurface.Section, MySchema),
-);
+AppSurface.oneOf(AppSurface.object(AppSurface.Article, MySchema), AppSurface.object(AppSurface.Section, MySchema));
 ```
 
 ### Legacy predicate filters

@@ -10,6 +10,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -59,7 +60,7 @@ const DefaultStory = () => {
 
   return (
     <div className='contents' {...attentionAttrs}>
-      <Surface.Surface role='article' data={data} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
     </div>
   );
 };

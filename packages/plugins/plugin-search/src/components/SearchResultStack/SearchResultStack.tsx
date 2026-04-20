@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
@@ -106,7 +106,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
                 </Menu.Trigger>
                 <Menu.Content items={menuItems} />
               </Card.Toolbar>
-              <Surface.Surface role='card--content' data={{ subject: result.object }} limit={1} />
+              <Surface.Surface type={AppSurface.Card} data={{ subject: result.object }} limit={1} />
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

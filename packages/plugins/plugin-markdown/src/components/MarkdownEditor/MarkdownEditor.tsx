@@ -10,6 +10,7 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
@@ -258,7 +259,7 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface.Surface role='card--content' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface type={AppSurface.Card} data={data} limit={1} />, el);
 };
 
 //

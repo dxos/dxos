@@ -103,7 +103,10 @@ export default Capability.makeModule(() =>
       // the `data` field from `AppNode.makeDeckCompanion` in the graph builder.
       Surface.create({
         id: 'deck-companion',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--sample-panel'), 'sample-panel'),
+        filter: AppSurface.literal(
+          Surface.makeType<{ subject: string }>('deck-companion--sample-panel'),
+          'sample-panel',
+        ),
         component: () => <SampleDeckCompanion />,
       }),
     ]),

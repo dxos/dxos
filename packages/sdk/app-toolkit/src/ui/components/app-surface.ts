@@ -337,14 +337,10 @@ export type ObjectSectionProps<
  * Role token for the `object-properties` role (per-object configuration panel).
  * Distinct from Section: no `attendableId` requirement.
  */
-export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<Obj.Any>> =
-  Surface.makeType('object-properties');
+export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<Obj.Any>> = Surface.makeType('object-properties');
 
 /** Surface data for object-properties surfaces (distinct from section; no attendableId). */
-export type ObjectPropertiesData<
-  Subject extends Obj.Unknown | undefined = Obj.Unknown,
-  Props extends {} = {},
-> = {
+export type ObjectPropertiesData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
   subject: Subject;
 } & Props;
 

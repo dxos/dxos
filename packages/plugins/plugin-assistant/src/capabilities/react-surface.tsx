@@ -141,7 +141,10 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'prompts',
-        filter: AppSurface.subject(Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'), Obj.isObject),
+        filter: AppSurface.subject(
+          Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'),
+          Obj.isObject,
+        ),
         component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),

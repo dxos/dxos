@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { Card } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -47,7 +48,7 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
   // TODO(burdon): Subject property?
   return (
     <Box shape={shape} onAction={handleAction}>
-      <Card.Root>{value !== null && <Surface.Surface role='card--content' data={{ value }} limit={1} />}</Card.Root>
+      <Card.Root>{value !== null && <Surface.Surface type={AppSurface.Card} data={{ value }} limit={1} />}</Card.Root>
     </Box>
   );
 };

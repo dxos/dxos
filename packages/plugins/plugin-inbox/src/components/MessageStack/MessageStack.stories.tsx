@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -64,8 +65,8 @@ const CompanionStory = () => {
 
   return (
     <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
-      <Surface.Surface role='article' data={mailboxData} />
-      <Surface.Surface role='article' data={companionData} />
+      <Surface.Surface type={AppSurface.Article} data={mailboxData} />
+      <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>
   );
 };

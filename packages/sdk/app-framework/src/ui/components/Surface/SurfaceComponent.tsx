@@ -238,10 +238,7 @@ const ErrorFallback = ({ error }: Props) => {
   );
 };
 
-const findCandidates = (
-  surfaces: Definition[],
-  { role, data }: { role: string; data: Props['data'] },
-) => {
+const findCandidates = (surfaces: Definition[], { role, data }: { role: string; data: Props['data'] }) => {
   return Object.values(surfaces)
     .filter((definition) =>
       Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,

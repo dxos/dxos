@@ -4,13 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import {
-  type RoleToken,
-  type SurfaceFilter,
-  create,
-  isSurfaceFilter,
-  makeType,
-} from './types';
+import { type RoleToken, type SurfaceFilter, create, isSurfaceFilter, makeType } from './types';
 
 describe('Surface.makeType', () => {
   test('creates a role token carrying the role string', ({ expect }) => {

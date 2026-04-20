@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
           return (
             <>
               <PersonCard role={role} subject={data.subject} />
-              <Surface.Surface role='related' data={data} limit={1} />
+              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
             </>
           );
         },
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
           return (
             <>
               <OrganizationCard role={role} subject={data.subject} />
-              <Surface.Surface role='related' data={data} limit={1} />
+              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
             </>
           );
         },
@@ -99,7 +99,7 @@ export default Capability.makeModule(() =>
             <div role='none' className='flex w-full justify-center'>
               <div role='none' className='pt-2 pb-2 dx-card-min-width dx-card-max-width'>
                 <Card.Root>
-                  <Surface.Surface role='card--content' data={data} limit={1} />
+                  <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
                 </Card.Root>
               </div>
             </div>

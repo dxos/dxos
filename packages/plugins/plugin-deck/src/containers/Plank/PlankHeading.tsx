@@ -5,7 +5,7 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
@@ -187,7 +187,7 @@ export const PlankHeading = memo(
                   onAction={handleAction}
                 >
                   <Surface.Surface
-                    role='menu-footer'
+                    type={AppSurface.MenuFooter}
                     data={{ subject: node.data } satisfies AppSurface.MenuFooterData}
                   />
                 </StackItem.Sigil>
@@ -216,7 +216,10 @@ export const PlankHeading = memo(
           </div>
         )}
         {node && part !== 'complementary' && (
-          <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+          <Surface.Surface
+            type={AppSurface.NavbarEnd}
+            data={{ subject: node.data } satisfies AppSurface.NavbarEndData}
+          />
         )}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />

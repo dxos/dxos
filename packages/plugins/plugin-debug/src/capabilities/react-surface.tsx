@@ -178,7 +178,10 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space-objects',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--space-objects'), 'space-objects'),
+        filter: AppSurface.literal(
+          Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
+          'space-objects',
+        ),
         component: () => <DebugSpaceObjectsPanel />,
       }),
 

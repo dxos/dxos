@@ -189,7 +189,10 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: CREATE_OBJECT_DIALOG,
-        filter: AppSurface.component<ComponentProps<typeof CreateObjectDialog>>(AppSurface.Dialog, CREATE_OBJECT_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof CreateObjectDialog>>(
+          AppSurface.Dialog,
+          CREATE_OBJECT_DIALOG,
+        ),
         component: ({ data }) => <CreateObjectDialog {...data.props} />,
       }),
       Surface.create({

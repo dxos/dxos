@@ -52,7 +52,10 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: RECOVERY_CODE_DIALOG,
-        filter: AppSurface.component<ComponentProps<typeof RecoveryCodeDialog>>(AppSurface.Dialog, RECOVERY_CODE_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof RecoveryCodeDialog>>(
+          AppSurface.Dialog,
+          RECOVERY_CODE_DIALOG,
+        ),
         component: ({ data }) => <RecoveryCodeDialog {...data.props} />,
       }),
       Surface.create({

@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';
@@ -58,7 +58,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
             {notes && (
               <Surface.Surface
-                role='section'
+                type={AppSurface.Section}
                 data={
                   { id, subject: notes, attendableId: id } satisfies AppSurface.ObjectArticleData<
                     Obj.Unknown,

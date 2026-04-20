@@ -5,7 +5,7 @@
 import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
@@ -36,7 +36,7 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
             />
           }
         >
-          <Surface.Surface role='slide' data={{ subject: collection.objects[slide] }} />
+          <Surface.Surface type={AppSurface.Slide} data={{ subject: collection.objects[slide] }} />
         </PresenterLayout>
       </Panel.Content>
     </Panel.Root>

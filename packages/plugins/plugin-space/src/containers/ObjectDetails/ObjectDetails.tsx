@@ -5,7 +5,7 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
@@ -23,7 +23,7 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ObjectProperties object={object}>
-            <Surface.Surface role='object-properties' data={data} />
+            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
           </ObjectProperties>
         </Panel.Content>
       </Panel.Root>
