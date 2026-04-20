@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 
 import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from '../testing/calculator';
 import { callTool } from './call';
