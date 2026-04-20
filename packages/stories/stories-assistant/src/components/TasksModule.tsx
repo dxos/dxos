@@ -9,7 +9,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useThemeContext } from '@dxos/react-ui';
-import { EditorContent } from '@dxos/react-ui-editor';
+import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -32,17 +32,19 @@ export const TasksModule = ({ space }: ComponentProps) => {
       <Toolbar.Root classNames='border-b border-subdued-separator'>
         <h2>{Obj.getLabel(document)}</h2>
       </Toolbar.Root>
-      <EditorContent
-        id={document.id}
-        classNames='h-full p-2 overflow-hidden'
-        extensions={[
-          createThemeExtensions({ themeMode }),
-          createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
-          createBasicExtensions({ readOnly: false }),
-          createMarkdownExtensions(),
-          outliner(),
-        ]}
-      />
+      <Editor.Root>
+        <Editor.View
+          id={document.id}
+          classNames='h-full p-2 overflow-hidden'
+          extensions={[
+            createThemeExtensions({ themeMode }),
+            createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
+            createBasicExtensions({ readOnly: false }),
+            createMarkdownExtensions(),
+            outliner(),
+          ]}
+        />
+      </Editor.Root>
     </>
   );
 };

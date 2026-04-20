@@ -17,7 +17,7 @@ import { addHeadings } from './headings';
 import { addImageUpload } from './image';
 import { addLists } from './lists';
 import { addSearch } from './search';
-import { type EditorToolbarState } from './useEditorToolbar';
+import { type EditorToolbarState } from './types';
 import { addViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{
