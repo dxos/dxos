@@ -1,7 +1,5 @@
-import { Effect, Context, ManagedRuntime, Scope, Exit, Layer, Option, Equal } from 'effect';
-import { runInThisContext } from 'node:vm';
+import { Effect, Context, ManagedRuntime, type Scope, Layer, Option } from 'effect';
 
-import { runAndForwardErrors } from '@dxos/effect';
 import { ServiceNotAvailableError, ServiceResolver, type LayerSpec } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
@@ -29,18 +27,26 @@ export class LayerStack {
     context: LayerSpec.LayerContext,
   ): Effect.Effect<unknown, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
-      // - init appication slice
+      // Initialise slices top-down (dependencies first) so that higher-affinity slices
+      // can use the services provided by lower-affinity ones.
       yield* this.#getOrInitSlice('application', contextForAffinity('application', context));
 
       if (context.space) {
-        // - init space slice
         yield* this.#getOrInitSlice('space', contextForAffinity('space', context));
       }
 
-      // - init process slice
-      yield* this.#getOrInitSlice('process', contextForAffinity('process', context));
+      // Only init a process slice if we actually have process context.
+      const topAffinity: LayerSpec.Affinity = context.process
+        ? 'process'
+        : context.space
+          ? 'space'
+          : 'application';
 
-      const services = this.#resolveServices('application', {}, [tag]);
+      if (topAffinity === 'process') {
+        yield* this.#getOrInitSlice('process', contextForAffinity('process', context));
+      }
+
+      const services = this.#resolveServices(topAffinity, context, [tag]);
       return yield* Context.getOption(services, tag).pipe(
         Effect.catchTag('NoSuchElementException', () => Effect.fail(new ServiceNotAvailableError(tag.key))),
       );
@@ -52,11 +58,10 @@ export class LayerStack {
     context: LayerSpec.LayerContext,
   ): Effect.Effect<Slice, never, Scope.Scope> {
     return Effect.gen(this, function* () {
-      // TODO(dmaretskyi): check if Equal.equals does deep equality check.
-      let slice = this.#slices.find((s) => s.affinity === affinity && Equal.equals(s.context, context));
+      let slice = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, context));
 
       if (!slice) {
-        slice = new Slice({
+        const newSlice = new Slice({
           affinity,
           context,
           keepAlive: affinity === 'application' || affinity === 'space',
@@ -64,9 +69,11 @@ export class LayerStack {
         });
         const resolveAffinity = lowerAffinity(affinity);
         const requirements = resolveAffinity
-          ? this.#resolveServices(resolveAffinity, context, slice.requires)
+          ? this.#resolveServices(resolveAffinity, context, newSlice.requires)
           : Context.empty();
-        slice.init(requirements as Context.Context<unknown>);
+        yield* newSlice.init(requirements as Context.Context<unknown>);
+        this.#slices.push(newSlice);
+        slice = newSlice;
       }
 
       slice.incrementRefCount();
@@ -90,8 +97,9 @@ export class LayerStack {
       tagsNeeded = new Set(tags);
 
     while (currentAffinity) {
+      const affinityContext = contextForAffinity(currentAffinity, context);
       const slice = this.#slices.find(
-        (s) => s.affinity === currentAffinity && Equal.equals(s.context, contextForAffinity(currentAffinity, context)),
+        (s) => s.affinity === currentAffinity && layerContextEquals(s.context, affinityContext),
       );
       if (slice) {
         const availableTags = [...tagsNeeded].filter((t) => slice.provides.some((p) => p.key === t.key));
@@ -107,6 +115,10 @@ export class LayerStack {
   #maybeDestroySlice(slice: Slice) {
     return Effect.gen(this, function* () {
       if (slice.refCount === 0 && !slice.keepAlive) {
+        const index = this.#slices.indexOf(slice);
+        if (index !== -1) {
+          this.#slices.splice(index, 1);
+        }
         yield* Effect.promise(() => slice.destroy());
       }
     }).pipe(this.#semapphore.withPermits(1));
@@ -136,6 +148,13 @@ const contextForAffinity = (affinity: LayerSpec.Affinity, context: LayerSpec.Lay
       return context;
   }
 };
+
+/**
+ * Shallow structural equality over the fields of {@link LayerSpec.LayerContext}.
+ * Plain objects don't participate in Effect's {@link Equal.equals}, so we compare field-by-field.
+ */
+const layerContextEquals = (a: LayerSpec.LayerContext, b: LayerSpec.LayerContext): boolean =>
+  a.space === b.space && a.conversation === b.conversation && a.process === b.process;
 
 interface SliceOpts {
   readonly affinity: LayerSpec.Affinity;
@@ -207,7 +226,7 @@ class Slice {
   }
 
   get refCount(): number {
-    return this.refCount;
+    return this.#refCount;
   }
 
   get provides(): Context.Tag<any, any>[] {
@@ -235,15 +254,16 @@ class Slice {
       throw new Error('Requirements not satisfied');
     }
 
-    const combinedLayer = (Layer.mergeAll as any)(...this.#layers.map((l) => l.make(this.#context))) as Layer.Layer<
-      any,
-      any,
-      any
-    >;
-
-    this.#managedRuntime = ManagedRuntime.make(
-      combinedLayer.pipe(Layer.provide(Layer.syncContext(() => requirements))),
+    // Layers are already topologically sorted so dependencies come before dependants.
+    // Fold them left-to-right with `provideMerge` so that each subsequent layer can see the
+    // services provided by the previous ones (and externally-supplied `requirements`).
+    const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() => requirements) as any;
+    const combinedLayer = this.#layers.reduce<Layer.Layer<unknown, unknown, unknown>>(
+      (acc, spec) => Layer.provideMerge(spec.make(this.#context) as Layer.Layer<unknown, unknown, unknown>, acc),
+      baseLayer,
     );
+
+    this.#managedRuntime = ManagedRuntime.make(combinedLayer);
 
     return Effect.gen(this, function* () {
       const rt = yield* this.#managedRuntime!.runtimeEffect;
