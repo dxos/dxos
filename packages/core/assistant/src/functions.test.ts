@@ -83,10 +83,10 @@ describe('Research', () => {
         const request = new AiRequest({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) });
         const prompt = `What is the name of the organization? ${org.id}`;
 
-        yield* request.begin({ prompt, blueprints: [blueprint] });
+        yield* request.begin({ prompt });
 
         const resolvedToolkit = yield* createToolkit({ blueprints: [blueprint] });
-        const system = yield* formatSystemPrompt({ blueprints: [blueprint] }).pipe(Effect.orDie);
+        const system = yield* formatSystemPrompt({}).pipe(Effect.orDie);
 
         do {
           const { done } = yield* request.runAgentTurn({ system, toolkit: resolvedToolkit });
