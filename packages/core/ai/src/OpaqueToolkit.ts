@@ -96,12 +96,13 @@ export const fromContext = <Tools extends Record<string, Tool.Any>>(
 
 /**
  * Creates an opaque toolkit from an already-resolved WithHandler toolkit.
+ * The resolved toolkit is wrapped so it can be used with `toolkit.pipe(Effect.provide(layer))`.
  */
 export const fromResolved = <Tools extends Record<string, Tool.Any>>(
   resolved: Toolkit.WithHandler<Tools>,
 ): OpaqueToolkit => ({
   [TypeId]: TypeId,
-  toolkit: resolved as any,
+  toolkit: Effect.succeed(resolved) as any,
   layer: Layer.empty as any,
   handlers: Effect.succeed(resolved) as any,
   pipe() {
