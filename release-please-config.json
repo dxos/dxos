@@ -555,11 +555,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-exemplar/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -676,6 +671,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-sample/package.json",
           "jsonpath": "$.version"
         },
         {
