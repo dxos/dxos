@@ -73,7 +73,7 @@ export default Research.pipe(
           ) as any;
         }
 
-        const toolkit = OpaqueToolkit.make(toolkitDef, handlers);
+        const toolkit = OpaqueToolkit.make(toolkitDef as any, handlers);
 
         const request = new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),

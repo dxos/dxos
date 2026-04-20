@@ -38,7 +38,7 @@ export interface AiSessionRunProps {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
-  toolkit?: OpaqueToolkit.OpaqueToolkit;
+  toolkit?: OpaqueToolkit.Any;
 }
 
 export type AiSessionOptions = {

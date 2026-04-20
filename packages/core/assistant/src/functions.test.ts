@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
+import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit, formatSystemPrompt } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -73,12 +73,22 @@ describe('Research', () => {
           }),
         );
         yield* Database.flush();
-        yield* new AiRequest({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
-          prompt: `What is the name of the organization? ${org.id}`,
-          toolkit: yield* createToolkit({
-            blueprints: [blueprint],
-          }),
-        });
+
+        const request = new AiRequest({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) });
+        const prompt = `What is the name of the organization? ${org.id}`;
+
+        yield* request.begin({ prompt, blueprints: [blueprint] });
+
+        const toolkit = yield* createToolkit({ blueprints: [blueprint] });
+        const system = yield* formatSystemPrompt({ blueprints: [blueprint] }).pipe(Effect.orDie);
+
+        do {
+          const { done } = yield* request.runAgentTurn({ system, toolkit });
+          if (done) {
+            break;
+          }
+          yield* request.runTools({ toolkit });
+        } while (true);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

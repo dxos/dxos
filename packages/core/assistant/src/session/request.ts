@@ -75,7 +75,7 @@ export type AiRequestRunProps = {
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
-  toolkit?: OpaqueToolkit.OpaqueToolkit;
+  toolkit?: OpaqueToolkit.Any;
 };
 
 export type AiRequestBeginProps = {
@@ -321,12 +321,14 @@ export class AiRequest {
     blueprints = [],
     toolkit: opaqueToolkit,
   }: AiRequestRunProps): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements> =>
-    Effect.gen(this, function* () {
+    (Effect.gen(this, function* () {
       yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
 
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
-      const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      const toolkit = opaqueToolkit
+        ? yield* (opaqueToolkit.toolkit.pipe(Effect.provide(opaqueToolkit.layer)) as Effect.Effect<Toolkit.WithHandler<any>>)
+        : undefined;
 
       do {
         const { done } = yield* this.runAgentTurn({ system, toolkit });
@@ -338,7 +340,7 @@ export class AiRequest {
 
       log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
       return this._pending;
-    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
+    }) as Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
 
 const createSnippet = (text: string, len = 32) =>

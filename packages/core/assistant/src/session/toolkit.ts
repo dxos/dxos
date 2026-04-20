@@ -12,16 +12,17 @@ import { type Blueprint } from '@dxos/blueprints';
 import { isTruthy } from '@dxos/util';
 
 export type CreateToolkitProps = {
-  toolkit?: OpaqueToolkit.OpaqueToolkit;
+  toolkit?: OpaqueToolkit.Any;
   blueprints?: readonly Blueprint.Blueprint[];
   /**
    * Self-contained with handlers toolkits.
    */
-  opaqueToolkits?: readonly OpaqueToolkit.OpaqueToolkit[];
+  opaqueToolkits?: readonly OpaqueToolkit.Any[];
 };
 
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
+ * Returns a resolved Toolkit.WithHandler for internal use.
  */
 export const createToolkit = ({
   toolkit: toolkitProp,
