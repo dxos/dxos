@@ -464,15 +464,17 @@ export const applyExtrusion = (
   faceId: number,
   normal: Model.Vec3,
   distance: number,
+  /** Pre-computed bounding box to avoid repeated WASM calls on the hot path. */
+  cachedBBox?: { min: number[]; max: number[] },
 ): Manifold => {
   if (distance === 0) {
-    // NOTE: Must clone even for zero distance. The caller (onPointerUp) deletes baseSolid
-    // and stores the result in ctx.solids. Self-union is a no-op clone in Manifold.
-    return Manifold.union(baseSolid, baseSolid);
+    // Clone via getMesh() roundtrip — avoids heavyweight CSG union and ensures
+    // the result shares no internal WASM state with baseSolid.
+    return new Manifold(baseSolid.getMesh());
   }
 
   // Clamp negative extrusion to prevent collapse below minimum size.
-  const bbox = baseSolid.boundingBox();
+  const bbox = cachedBBox ?? baseSolid.boundingBox();
   const normalArr = [normal.x, normal.y, normal.z];
   const absNormal = normalArr.map(Math.abs);
   const dominantAxis =
@@ -484,7 +486,7 @@ export const applyExtrusion = (
     const maxInward = Math.max(0, bboxDim - MIN_SIZE);
     clampedDistance = -Math.min(Math.abs(distance), maxInward);
     if (clampedDistance === 0) {
-      return Manifold.union(baseSolid, baseSolid);
+      return new Manifold(baseSolid.getMesh());
     }
   }
 
