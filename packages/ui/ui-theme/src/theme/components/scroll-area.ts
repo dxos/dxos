@@ -5,6 +5,7 @@
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
+import { withColumn } from '../primitives/column';
 
 export const scrollbar = {
   thin: {
@@ -76,6 +77,10 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
             'pr-[calc(var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))-var(--scroll-width))]',
           ]
         : centered && 'pl-[var(--scroll-width)]'),
+
+    // Reset --dx-col so nested components don't try to grid-position themselves.
+    // ScrollArea has already consumed --gutter for padding.
+    withColumn.consumed(),
 
     (orientation === 'horizontal' || orientation === 'all') &&
       (padding
