@@ -11,43 +11,19 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
+import { CalculatorTool, calculatorHandler } from '../testing/calculator';
 import { ToolId } from './tool';
 import { ToolExecutionService } from './tool-execution-service';
 import { ToolResolverService } from './tool-resolver-service';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
-  resolve: (_id: ToolId) =>
-    Effect.succeed(
-      Tool.make('Calculator', {
-        description: 'Basic calculator tool',
-        parameters: {
-          input: Schema.String.annotations({
-            description: 'The calculation to perform.',
-          }),
-        },
-        success: Schema.Struct({
-          result: Schema.Number,
-        }),
-        failure: Schema.Never,
-      }),
-    ),
+  resolve: (_id: ToolId) => Effect.succeed(CalculatorTool),
 }));
 
 const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
   handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
     toolkit.of({
-      Calculator: Effect.fn(function* ({ input }) {
-        const result = (() => {
-          // Restrict to basic arithmetic operations for safety.
-          const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
-          log.info('calculate', { sanitizedInput });
-
-          // eslint-disable-next-line @typescript-eslint/no-implied-eval
-          return Function(`"use strict"; return (${sanitizedInput})`)();
-        })();
-
-        return { result };
-      }),
+      Calculator: calculatorHandler,
     } as any),
 }));
 

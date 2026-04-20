@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './calculator';
 export * from './defs';
 export * from './memoization';
 export * from './tap';
