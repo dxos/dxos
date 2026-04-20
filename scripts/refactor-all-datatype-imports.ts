@@ -63,7 +63,7 @@ async function addDependencyIfNeeded(filePath: string): Promise<boolean> {
 
     if (!deps['@dxos/types']) {
       console.log(`Adding @dxos/types dependency to ${packageDir}`);
-      execSync(`bun add @dxos/types`, { cwd: packageDir });
+      execSync(`bun add @dxos/types@workspace:*`, { cwd: packageDir });
       return true;
     }
   } catch (error) {

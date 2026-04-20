@@ -20,7 +20,14 @@ const repoRoot = await $`git rev-parse --show-toplevel`.text().then((text) => te
 
 const packages = globSync(['packages/**/package.json', 'vendor/**/package.json', 'tools/**/package.json'], {
   cwd: repoRoot,
-  ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'],
+  ignore: [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/out/**',
+    'packages/deprecated/**',
+    'packages/sdk/examples/src/template/**',
+  ],
 }).map((file) => {
   const absPath = join(repoRoot, file);
   const pkg = JSON.parse(fs.readFileSync(absPath, 'utf-8'));

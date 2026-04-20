@@ -4,7 +4,7 @@ This section includes tips for dealing with common problems.
 
 Please consider submitting a PR if you encounter problems you've successfully resolved.
 
-### Conflicts in `bun.lock`
+## Conflicts in `bun.lock`
 
 While rebasing, you can skip dealing with it during the rebase, just be sure to finalize with a `bun install` to regenerate the file at the end.
 
@@ -14,7 +14,7 @@ git checkout --ours bun.lock && git add bun.lock && git rebase --continue
 
 Then, `bun install` to regenerate the `bun.lock` on the new `HEAD`.
 
-### Obscure errors while running tests
+## Obscure errors while running tests
 
 Mocha may obfuscate the error message when a test fails. (E.g., ERR_REQUIRE_ESM.)
 

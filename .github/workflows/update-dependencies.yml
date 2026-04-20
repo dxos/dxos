@@ -64,7 +64,7 @@ jobs:
         run: npx npm-check-updates --deep --upgrade ${{ matrix.packages.spec }}
 
       - name: Install dependencies
-        run: bun install --no-save
+        run: bun install
 
       - name: Create Pull Request
         id: cpr

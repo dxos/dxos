@@ -75,7 +75,7 @@ moon <package>:e2e -- --debug # Debug with Playwright inspector
 
 ### Development
 
-- Always run `bun install` and `moon :build` when switching branches.
+- Always run `bun install` and `moon run :build` when switching branches.
 - Run tests before committing changes.
 - When writing comments, use proper punctuation, especially ending full sentences with a full stop, ‘.’, even if the comment doesn’t have another sentence.
 - Always memoize any functions or values computed in the closure of a React component’s render function by using `useMemo`, `useCallback`, etc.

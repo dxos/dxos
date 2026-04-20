@@ -45,7 +45,12 @@ class DxosMochaRunProfileState(
 
     private fun resolvePackageManagerPath(): String {
         val propertiesComponent = PropertiesComponent.getInstance(project)
-        return propertiesComponent.getValue("nodejs_package_manager_path") ?: "bun"
+        val stored = propertiesComponent.getValue("nodejs_package_manager_path")
+        // Treat a legacy "pnpm" value as unset so users migrating from pnpm pick up the new default.
+        if (stored.isNullOrBlank() || stored == "pnpm") {
+            return "bun"
+        }
+        return stored
     }
 
     private fun buildNxCommands(): List<String> {

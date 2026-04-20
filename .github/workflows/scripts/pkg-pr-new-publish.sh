@@ -12,7 +12,7 @@ PUBLIC_PACKAGES=$(node -e "
   const path = require('path');
   const { globSync } = require('glob');
   const patterns = ['packages/**/package.json', 'vendor/**/package.json'];
-  const ignore = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'];
+  const ignore = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**', 'packages/deprecated/**', 'packages/sdk/examples/src/template/**'];
   const dirs = [];
   for (const pattern of patterns) {
     for (const file of globSync(pattern, { ignore })) {

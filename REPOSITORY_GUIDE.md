@@ -103,10 +103,11 @@ Playwright tests are written using these [guidelines](./tools/executors/test/PLA
 
 ## Adding new dependencies
 
-All dependency versions are managed in the catalog (root `package.json` under `workspaces.catalog`). To add a new dependency:
+All dependency versions are managed in the catalog (root `package.json` under `workspaces.catalog`). To add a new dependency, `cd` into the target package and run `bun add` (Bun's `--filter` flag is not supported on `bun add`):
 
 ```bash
-bun add --filter "<project>" "<package>"
+cd packages/<project>
+bun add "<package>"
 ```
 
 Then pin the version in the catalog and set the workspace entry to `"catalog:"`.
@@ -329,5 +330,5 @@ This is currently how the HALO vault's service worker is setup (though it will l
 ### Detecting unused deps
 
 ```bash
-bun --filter "./packages/core/**" --filter "!@dxos/automerge" run depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
+bun run --filter "./packages/core/**" --filter "!@dxos/automerge" depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
 ```

@@ -10,7 +10,7 @@
 ## Dependencies
 
 - All dependency versions are managed in the default catalog (root `package.json` under `workspaces.catalog`).
-- To add a new dependency, run `bun add --filter "<project>" "<package>"` then pin the version in the root catalog and set the workspace entry to `"catalog:"`.
+- To add a new dependency, `cd` into the target package (`cd packages/<project>`) and run `bun add "<package>"`, then pin the version in the root catalog and set the workspace entry to `"catalog:"`. (Bun's `--filter` is not supported on `bun add`.)
 - **IMPORTANT**: Any `@dxos` package that lives within this repo must be added as `workspace:*`, never from the catalog. The catalog is only for external (non-workspace) packages.
 
 ## Build, Test, Lint Commands
