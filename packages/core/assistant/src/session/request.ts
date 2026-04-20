@@ -4,7 +4,6 @@
 
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';

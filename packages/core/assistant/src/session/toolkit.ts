@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -30,7 +29,7 @@ export const createToolkit = ({
 }: CreateToolkitProps): Effect.Effect<
   OpaqueToolkit.OpaqueToolkit<never, any>,
   AiToolNotFoundError,
-  ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
+  ToolResolverService | ToolExecutionService
 > =>
   Effect.gen(function* () {
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
@@ -39,17 +38,14 @@ export const createToolkit = ({
 
     const toolkitDefs = [toolkitProp?.toolkit, blueprintToolkit, opaqueToolkit.toolkit].filter(isTruthy);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
-    const resolved = yield* mergedToolkit.pipe(
-      Effect.provide(Layer.succeedContext(blueprintToolHandler)),
-      Effect.provide(toolkitProp?.layer ?? OpaqueToolkit.empty.layer),
-      Effect.provide(opaqueToolkit.layer),
+    const combinedHandlerLayer = Layer.mergeAll(
+      Layer.succeedContext(blueprintToolHandler),
+      toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
+      opaqueToolkit.layer,
     );
-    return OpaqueToolkit.make(
-      mergedToolkit,
-      mergedToolkit.toLayer(resolved as any),
-    ) as unknown as OpaqueToolkit.OpaqueToolkit<never, any>;
+    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit<never, any>;
   }) as Effect.Effect<
     OpaqueToolkit.OpaqueToolkit<never, any>,
     AiToolNotFoundError,
-    ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
+    ToolResolverService | ToolExecutionService
   >;
