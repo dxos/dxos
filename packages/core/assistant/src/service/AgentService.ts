@@ -106,6 +106,10 @@ export const createSession: (
 
 export const layer = (opts?: {
   systemPrompt?: string;
+  /**
+   * Default model used by sessions that don't specify one explicitly.
+   */
+  model?: ModelName;
 }): Layer.Layer<AgentService, never, ProcessManager.ProcessManagerService> =>
   Layer.effect(
     AgentService,
@@ -122,7 +126,10 @@ export const layer = (opts?: {
             }
 
             const target = Obj.getDXN(feed).toString();
-            const executable = AgentProcess({ systemPrompt: opts?.systemPrompt, model: options?.model });
+            const executable = AgentProcess({
+              systemPrompt: opts?.systemPrompt,
+              model: options?.model ?? opts?.model,
+            });
             const processes = yield* processManager.list({ target, key: executable.key });
 
             let handle: ProcessManager.Handle<string, void>;

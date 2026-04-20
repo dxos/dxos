@@ -43,7 +43,7 @@ import { AgentService } from '../service';
 import { CompleteBlock } from '../tracing';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
+  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: GenericToolkit.GenericToolkit[];
@@ -114,7 +114,7 @@ export const AssistantTestLayer = ({
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AgentService.layer({ systemPrompt })),
+    Layer.provideMerge(AgentService.layer({ systemPrompt, model })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
       // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
