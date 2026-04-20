@@ -35,8 +35,6 @@ import { AgentPrompt } from './definitions';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
-const observer = GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' }));
-
 export default AgentPrompt.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
@@ -78,10 +76,10 @@ export default AgentPrompt.pipe(
           You are an agent running in the non-interactive mode.
           The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
-          Complete the task before you, and at the end call [complete_job] with the output.
-          If you are unable to complete the task, call [complete_job] with the failure reason.
-          If no output is required, call [complete_job] with { "success": "undefined" }
-          Do not stop until you call [complete_job].
+          Complete the task before you, and at the end call [completeJob] with the output.
+          If you are unable to complete the task, call [completeJob] with the failure reason.
+          If no output is required, call [completeJob] with { "success": "undefined" }
+          Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
           systemText += `\n\n${data.systemInstructions}`;
@@ -118,7 +116,6 @@ export default AgentPrompt.pipe(
           .createRequest({
             prompt: promptText,
             system: systemText,
-            observer,
             toolkit: promptToolkit.toolkit,
           })
           .pipe(
@@ -134,14 +131,31 @@ export default AgentPrompt.pipe(
 
         return yield* Deferred.poll(resultSink).pipe(
           Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Effect.die('Agent did not signal task completion.')),
-          Effect.flatten,
-          Effect.mapError(
-            (err) =>
-              new PromptError(err.message ?? 'Agent failed with an unknown error.', {
-                description: err.context.description as string | undefined,
-                prompt: data.prompt.dxn.toString(),
-              }),
+          Effect.catchTag('NoSuchElementException', () =>
+            Effect.gen(function* () {
+              // Retry once if the agent did not signal task completion.
+              yield* conversation
+                .createRequest({
+                  prompt: 'You must signal task completion by calling [completeJob] with the output or failure reason.',
+                  system: systemText,
+                  toolkit: promptToolkit.toolkit,
+                })
+                .pipe(
+                  Effect.provide(
+                    Layer.mergeAll(
+                      modelLayer,
+                      promptToolkit.layer,
+                      ToolExecutionService({ feed }),
+                      makeToolResolverFromOperations(),
+                    ),
+                  ),
+                );
+
+              return yield* Deferred.poll(resultSink).pipe(
+                Effect.flatten,
+                Effect.catchTag('NoSuchElementException', () => Effect.die('Agent did not signal task completion.')),
+              );
+            }),
           ),
         );
       },
@@ -157,7 +171,7 @@ const makePromptAgentToolkit = (options: {
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(
-    Tool.make('complete_job', {
+    Tool.make('completeJob', {
       parameters: {
         success: Schema.optional(Schema.Any), // TODO(dmaretskyi): Pipe output schema here.
         failure: Schema.optional(
@@ -174,7 +188,7 @@ const makePromptAgentToolkit = (options: {
     }),
   ) {}
   const layer = PromptAgentToolkit.toLayer({
-    complete_job: Effect.fnUntraced(function* (result) {
+    completeJob: Effect.fnUntraced(function* (result) {
       if (result.failure) {
         yield* Deferred.fail(
           options.resultSink,
