@@ -49,6 +49,9 @@ runs:
         restore-keys: |
           ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-bun-store-
 
+    # --os=* --cpu=* installs optional platform-specific packages for all
+    # architectures (e.g. @opentui/core-darwin-arm64 on linux-x64 runners).
+    # This is required for cross-platform builds such as cli:compile.
     - name: Install dependencies
-      run: bun install --frozen-lockfile
+      run: bun install --frozen-lockfile --os=* --cpu=*
       shell: bash
