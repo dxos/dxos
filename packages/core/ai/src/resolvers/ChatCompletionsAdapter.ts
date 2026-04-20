@@ -17,6 +17,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import { log } from 'node:util';
+
+import { dbg } from '@dxos/log';
 
 /**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
@@ -275,7 +278,7 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
             type: 'function',
             function: {
               name: part.name,
-              arguments: JSON.stringify(part.params ?? {}),
+              arguments: encodeToolParams(part),
             },
           });
         }
@@ -304,12 +307,23 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
   return messages;
 };
 
-const encodeToolResult = (part: Prompt.ToolResultPart): string => {
+const encodeToolParams = (part: Prompt.ToolCallPart): any => {
   try {
-    return typeof part.result === 'string' ? part.result : JSON.stringify(part.result);
-  } catch {
-    return String(part.result);
+    if (typeof part.params === 'string' && part.params.includes('{')) {
+      return JSON.parse(part.params);
+    }
+  } catch {}
+  return part.params;
+};
+
+const encodeToolResult = (part: Prompt.ToolResultPart): string => {
+  if (typeof part.result === 'string') {
+    return part.result;
   }
+  try {
+    return JSON.stringify(part.result);
+  } catch {}
+  return String(part.result);
 };
 
 /**
@@ -477,25 +491,23 @@ const mapOpenAiFinishReason = (reason: string | null | undefined): Response.Fini
   }
 };
 
-type ParsedStreamChunk =
-  | {
-      content?: string;
-      reasoning?: string;
-      done: boolean;
-      inputTokens?: number;
-      outputTokens?: number;
-      finishReason?: Response.FinishReason;
-      /** Fully-assembled tool calls present in this chunk (Ollama). */
-      toolCalls?: NormalizedToolCall[];
-      /** Partial OpenAI-style deltas that must be accumulated across chunks. */
-      toolCallDeltas?: Array<{
-        index: number;
-        id?: string;
-        name?: string;
-        argsDelta?: string;
-      }>;
-    }
-  | null;
+type ParsedStreamChunk = {
+  content?: string;
+  reasoning?: string;
+  done: boolean;
+  inputTokens?: number;
+  outputTokens?: number;
+  finishReason?: Response.FinishReason;
+  /** Fully-assembled tool calls present in this chunk (Ollama). */
+  toolCalls?: NormalizedToolCall[];
+  /** Partial OpenAI-style deltas that must be accumulated across chunks. */
+  toolCallDeltas?: Array<{
+    index: number;
+    id?: string;
+    name?: string;
+    argsDelta?: string;
+  }>;
+} | null;
 
 /**
  * Parse a streaming chunk based on API format.
@@ -633,6 +645,7 @@ export const make = (model: string) =>
             const idGen = yield* IdGenerator.IdGenerator;
 
             const messages = promptToMessages(options.prompt);
+            dbg(JSON.stringify(messages, null, 2));
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
             const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
@@ -659,6 +672,29 @@ export const make = (model: string) =>
                 ) as Effect.Effect<never, any, never>;
               }),
             );
+            if (response.status !== 200) {
+              const body = yield* response.text;
+              try {
+                const json = JSON.parse(body);
+                const error = json.error;
+                if (typeof error === 'string') {
+                  return Stream.fail(
+                    new AiError.UnknownError({
+                      module: 'ChatCompletionsClient',
+                      method: 'streamText',
+                      description: error,
+                    }),
+                  );
+                }
+              } catch {}
+              return Stream.fail(
+                new AiError.UnknownError({
+                  module: 'ChatCompletionsClient',
+                  method: 'streamText',
+                  description: body,
+                }),
+              );
+            }
 
             const textId = `chat-text-${Date.now()}`;
             const reasoningId = `chat-reasoning-${Date.now()}`;
