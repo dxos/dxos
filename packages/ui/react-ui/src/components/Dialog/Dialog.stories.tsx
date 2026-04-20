@@ -24,7 +24,7 @@ type DefaultStoryProps = Pick<DialogContentProps, 'size'> &
 
 /**
  * Standard Dialog with non-scrolling content in Dialog.Body.
- * Dialog.Body delegates to Column.Center, placing content in the center column between gutters.
+ * Dialog.Body propagates the Column grid via subgrid. Children auto-center via --dx-col.
  */
 const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (
@@ -62,7 +62,7 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
 
 /**
  * Dialog with a ScrollArea child inside Dialog.Body.
- * The ScrollArea breaks out of Body's gutter padding via `--gutter-offset`
+ * The ScrollArea breaks out of Body's gutter padding via `--gutter`
  * and applies its own asymmetric padding (accounting for scrollbar width).
  */
 const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {

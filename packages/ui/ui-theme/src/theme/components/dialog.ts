@@ -5,6 +5,7 @@
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
+import { withColumn } from '../primitives/column';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -35,12 +36,13 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
 };
 
 export const dialogHeader: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('dx-dialog__header flex pb-4 items-center justify-between', ...etc);
+  mx('dx-dialog__header flex pb-4 items-center justify-between', withColumn.center(), ...etc);
 
-export const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) => mx('dx-dialog__body', ...etc);
+export const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+  mx('dx-dialog__body', withColumn.propagate(), ...etc);
 
 export const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('dx-dialog__actionbar flex items-center pt-4 gap-2 dx-density-coarse', ...etc);
+  mx('dx-dialog__actionbar flex items-center pt-4 gap-2 dx-density-coarse', withColumn.center(), ...etc);
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);
