@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Trace } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
@@ -115,6 +116,7 @@ export default GenerateSummary.pipe(
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
           Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          Trace.writerLayerNoop,
         ),
       ),
     ),
