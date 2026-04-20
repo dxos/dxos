@@ -667,8 +667,25 @@ export const make = (model: string) =>
             let reasoningStarted = false;
             let reasoningEnded = false;
 
+            /**
+             * Ensure reasoning is closed before emitting non-reasoning parts.
+             */
+            const closeReasoningIfOpen = (parts: Response.StreamPartEncoded[]) => {
+              if (reasoningStarted && !reasoningEnded) {
+                reasoningEnded = true;
+                parts.push({ type: 'reasoning-end', id: reasoningId });
+              }
+            };
+
             // Accumulator for OpenAI-style tool call deltas keyed by index.
-            const openAiCalls = new Map<number, { id?: string; name?: string; args: string }>();
+            type OpenAiCallState = {
+              id?: string;
+              name?: string;
+              args: string;
+              emittedId?: string;
+              started: boolean;
+            };
+            const openAiCalls = new Map<number, OpenAiCallState>();
 
             return response.stream.pipe(
               Stream.mapConcatEffect((chunk: Uint8Array) =>
@@ -692,10 +709,7 @@ export const make = (model: string) =>
                     }
 
                     if (parsed.content && parsed.content.length > 0) {
-                      if (reasoningStarted && !reasoningEnded) {
-                        reasoningEnded = true;
-                        parts.push({ type: 'reasoning-end', id: reasoningId });
-                      }
+                      closeReasoningIfOpen(parts);
                       if (!textStarted) {
                         textStarted = true;
                         parts.push({ type: 'text-start', id: textId });
@@ -705,9 +719,21 @@ export const make = (model: string) =>
 
                     // Fully-assembled tool calls (Ollama).
                     if (parsed.toolCalls && parsed.toolCalls.length > 0) {
+                      closeReasoningIfOpen(parts);
+                      if (textStarted && !textEnded) {
+                        textEnded = true;
+                        parts.push({ type: 'text-end', id: textId });
+                      }
                       for (const call of parsed.toolCalls) {
-                        const params = yield* parseToolArguments(call.arguments, call.name, 'streamText');
                         const id = call.id ?? (yield* idGen.generateId());
+                        const argsJson =
+                          typeof call.arguments === 'string' ? call.arguments : JSON.stringify(call.arguments);
+                        parts.push({ type: 'tool-params-start', id, name: call.name, providerExecuted: false });
+                        if (argsJson.length > 0) {
+                          parts.push({ type: 'tool-params-delta', id, delta: argsJson });
+                        }
+                        parts.push({ type: 'tool-params-end', id });
+                        const params = yield* parseToolArguments(call.arguments, call.name, 'streamText');
                         parts.push({
                           type: 'tool-call',
                           id,
@@ -720,16 +746,37 @@ export const make = (model: string) =>
 
                     // Incremental tool call deltas (OpenAI).
                     if (parsed.toolCallDeltas && parsed.toolCallDeltas.length > 0) {
+                      closeReasoningIfOpen(parts);
                       for (const delta of parsed.toolCallDeltas) {
-                        const existing = openAiCalls.get(delta.index) ?? { args: '' };
+                        const existing: OpenAiCallState = openAiCalls.get(delta.index) ?? {
+                          args: '',
+                          started: false,
+                        };
                         if (delta.id) {
                           existing.id = delta.id;
                         }
                         if (delta.name) {
                           existing.name = delta.name;
                         }
-                        if (delta.argsDelta) {
+                        if (!existing.started && existing.name) {
+                          existing.started = true;
+                          existing.emittedId = existing.id ?? (yield* idGen.generateId());
+                          parts.push({
+                            type: 'tool-params-start',
+                            id: existing.emittedId,
+                            name: existing.name,
+                            providerExecuted: false,
+                          });
+                        }
+                        if (delta.argsDelta && delta.argsDelta.length > 0) {
                           existing.args += delta.argsDelta;
+                          if (existing.started && existing.emittedId) {
+                            parts.push({
+                              type: 'tool-params-delta',
+                              id: existing.emittedId,
+                              delta: delta.argsDelta,
+                            });
+                          }
                         }
                         openAiCalls.set(delta.index, existing);
                       }
@@ -740,21 +787,18 @@ export const make = (model: string) =>
                         textEnded = true;
                         parts.push({ type: 'text-end', id: textId });
                       }
-                      if (reasoningStarted && !reasoningEnded) {
-                        reasoningEnded = true;
-                        parts.push({ type: 'reasoning-end', id: reasoningId });
-                      }
+                      closeReasoningIfOpen(parts);
 
                       // Flush accumulated OpenAI tool calls.
                       for (const [, call] of openAiCalls) {
-                        if (!call.name) {
+                        if (!call.started || !call.name || !call.emittedId) {
                           continue;
                         }
+                        parts.push({ type: 'tool-params-end', id: call.emittedId });
                         const params = yield* parseToolArguments(call.args, call.name, 'streamText');
-                        const id = call.id ?? (yield* idGen.generateId());
                         parts.push({
                           type: 'tool-call',
-                          id,
+                          id: call.emittedId,
                           name: call.name,
                           params,
                           providerExecuted: false,
