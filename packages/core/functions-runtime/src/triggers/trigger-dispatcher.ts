@@ -21,7 +21,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { Process, QueueService, Trigger, type TriggerEvent } from '@dxos/functions';
@@ -29,10 +29,10 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { FeedProtocol } from '@dxos/protocols';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';
+import { filterReadyQueueItems } from './queue-position';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
@@ -421,31 +421,21 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
               // TODO(dmaretskyi): Include cursor & limit in the query.
               const chunks = yield* Effect.promise(() => queue.queryObjects()).pipe(
-                Effect.map(
-                  Array.dropWhile((object) => {
-                    const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
-                    // TODO(dmaretskyi): Extract methods for managing queue position.
-                    return objectPos === undefined || (cursor !== undefined && parseInt(cursor) >= parseInt(objectPos));
-                  }),
-                ),
+                Effect.map((objects) => filterReadyQueueItems(objects, cursor)),
                 Effect.map(Array.chunksOf(concurrency)),
               );
 
               for (const chunk of chunks) {
                 const invocationsThisIteration = yield* Effect.forEach(
                   chunk,
-                  (object) =>
-                    Effect.gen(this, function* () {
-                      const objectPos = Entity.getKeys(object, FeedProtocol.KEY_QUEUE_POSITION).at(0)!.id;
-
-                      return yield* this.invokeTrigger({
-                        trigger,
-                        event: {
-                          queue: spec.queue,
-                          item: object,
-                          cursor: objectPos,
-                        } satisfies TriggerEvent.QueueEvent,
-                      });
+                  ({ item, position }) =>
+                    this.invokeTrigger({
+                      trigger,
+                      event: {
+                        queue: spec.queue,
+                        item,
+                        cursor: position,
+                      } satisfies TriggerEvent.QueueEvent,
                     }),
                   { concurrency: 'unbounded' },
                 );

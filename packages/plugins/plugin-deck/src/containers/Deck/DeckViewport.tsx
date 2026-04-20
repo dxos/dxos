@@ -49,7 +49,7 @@ export type DeckViewportProps = PropsWithChildren;
  */
 export const DeckViewport = ({ children }: DeckViewportProps) => {
   const {
-    deck: { active, solo, plankSizing },
+    deck: { active, plankSizing },
     state: { sidebarState, complementarySidebarState },
     settings,
     layoutMode,
@@ -440,12 +440,12 @@ const PlankContainer = memo(
               primary={node}
               {...(part === 'solo'
                 ? {
-                    part: 'solo-companion',
                     order,
+                    part: 'solo-companion',
                   }
                 : {
-                    part,
                     order: (order ?? 0) + 1,
+                    part,
                   })}
             />
           )}

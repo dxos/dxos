@@ -24,7 +24,7 @@ type DefaultStoryProps = Pick<DialogContentProps, 'size'> &
 
 /**
  * Standard Dialog with non-scrolling content in Dialog.Body.
- * Dialog.Body delegates to Column.Content, which applies gutter padding via `px-[var(--gutter)]`.
+ * Dialog.Body delegates to Column.Center, placing content in the center column between gutters.
  */
 const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (

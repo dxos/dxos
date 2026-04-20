@@ -37,6 +37,7 @@ export type PlankHeadingProps = {
   companioned?: 'primary' | 'companion';
   companions?: Node.Node[];
   actions?: StackItemSigilAction[];
+  debug?: boolean;
 };
 
 export const PlankHeading = memo(
@@ -54,6 +55,7 @@ export const PlankHeading = memo(
     companions,
     layoutMode,
     actions = [],
+    debug = false,
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
     const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
@@ -207,6 +209,11 @@ export const PlankHeading = memo(
               </StackItem.HeadingLabel>
             </TextTooltip>
           </>
+        )}
+        {debug && (
+          <div role='none' className='flex items-center text-sm text-info-text'>
+            {layoutMode}:{part}:{companioned}
+          </div>
         )}
         {node && part !== 'complementary' && (
           <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />

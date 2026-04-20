@@ -22,20 +22,15 @@ export const SpecSelector = (props: SpecSelectorProps) => {
       const getDefaultTriggerSpec = (kind: string) => {
         switch (kind) {
           case 'timer':
-            return { kind: 'timer', cron: '' };
+            return Trigger.specTimer('');
           case 'subscription':
-            return {
-              kind: 'subscription',
-              query: {
-                ast: Query.select(Filter.nothing()).ast,
-              },
-            };
+            return Trigger.specSubscription(Query.select(Filter.nothing()));
           case 'queue':
-            return { kind: 'queue', queue: 'dxn:queue:default' };
+            return Trigger.specQueue('dxn:queue:default');
           case 'email':
-            return { kind: 'email' };
+            return Trigger.specEmail();
           case 'webhook':
-            return { kind: 'webhook' };
+            return Trigger.specWebhook();
           default:
             return undefined;
         }

@@ -11,11 +11,11 @@ import * as Option from 'effect/Option';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { ContextQueueService, FunctionInvocationService, QueueService } from '@dxos/functions';
+import { ContextQueueService, QueueService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -113,8 +113,14 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           AiService.model('@anthropic/claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          FunctionInvocationService.layerNotAvailable,
           Trace.writerLayerNoop,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
         ),
       ),
     ),

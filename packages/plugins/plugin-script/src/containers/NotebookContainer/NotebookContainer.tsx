@@ -14,7 +14,6 @@ import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -240,7 +239,7 @@ const runPrompt = Effect.fn(function* ({
 }) {
   const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(Effect.exit);
+  const result = yield* Operation.invoke(AgentPrompt, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

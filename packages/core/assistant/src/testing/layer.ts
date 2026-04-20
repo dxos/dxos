@@ -11,14 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import {
-  AiService,
-  ConsolePrinter,
-  GenericToolkit,
-  type ModelName,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
+import { AiService, ConsolePrinter, GenericToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
@@ -26,7 +19,6 @@ import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
 import {
   CredentialsService,
-  FunctionInvocationService,
   QueueService,
   type ServiceCredential,
   ServiceNotAvailableError,
@@ -41,16 +33,15 @@ import {
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
-import { ToolExecutionServices } from '../functions';
 import { AgentService } from '../service';
 import { CompleteBlock } from '../tracing';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
+  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: GenericToolkit.GenericToolkit[];
@@ -96,15 +87,11 @@ export type AssistantTestServices =
   | ServiceResolver.ServiceResolver
   | Trace.TraceService
   | Trace.TraceSink
-  | FeedTraceSink.FeedTraceSink
-  // Deprecated
-  | ToolExecutionService
-  | ToolResolverService
-  | FunctionInvocationService;
+  | FeedTraceSink.FeedTraceSink;
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
-  model = '@anthropic/claude-opus-4-6',
+  model,
   operationHandlers = [],
   toolkits = [],
   types = [],
@@ -114,6 +101,8 @@ export const AssistantTestLayer = ({
   blueprints = [],
   systemPrompt,
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
+  const resolvedModel: ModelName =
+    model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
   const toolkit = GenericToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
@@ -124,7 +113,7 @@ export const AssistantTestLayer = ({
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AgentService.layer({ systemPrompt })),
+    Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
       // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
@@ -179,19 +168,13 @@ export const AssistantTestLayer = ({
               AiService.AiService,
               OperationRegistry.Service,
               Blueprint.RegistryService,
-              FunctionInvocationService,
               QueueService,
             ),
           );
         }),
       ),
     ),
-    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model), ToolExecutionServices)),
-    Layer.provideMerge(
-      FunctionInvocationServiceLayerTest({
-        functions: operationHandlersSet,
-      }),
-    ),
+    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
     Layer.provideMerge(
       Match.value(tracing).pipe(
         Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),

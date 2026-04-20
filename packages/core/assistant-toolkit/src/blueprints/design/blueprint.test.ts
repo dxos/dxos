@@ -4,19 +4,12 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, GenerationObserver, ToolExecutionServices } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
-import { Database, Feed } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -25,24 +18,20 @@ import { trim } from '@dxos/util';
 import { MarkdownHandlers } from '../markdown';
 import DesignBlueprint from './blueprint';
 
+const TestLayer = AssistantTestLayer({
+  operationHandlers: MarkdownHandlers,
+  types: [Text.Text, Markdown.Document, Blueprint.Blueprint],
+  blueprints: [DesignBlueprint.make()],
+});
+
 describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.scoped(
     'design blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        const feed = Feed.make();
-        yield* Database.add(feed);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
-
-        const blueprint = DesignBlueprint.make();
-        yield* Database.add(blueprint);
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(blueprint)],
-          }),
-        );
+        const agent = yield* AgentService.createSession({
+          blueprints: [DesignBlueprint.make()],
+        });
 
         const artifact = yield* Database.add(Markdown.make({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
@@ -61,7 +50,8 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
             Let's capture the key design decisions in our spec in ${Obj.getDXN(artifact)}
           `;
 
-          yield* conversation.createRequest({ prompt, observer });
+          yield* agent.submitPrompt(prompt);
+          yield* agent.waitForCompletion();
           log.info('spec', { doc: artifact });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
@@ -73,23 +63,13 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
             Adjust the spec to reflect this.
           `;
 
-          yield* conversation.createRequest({ observer, prompt });
+          yield* agent.submitPrompt(prompt);
+          yield* agent.waitForCompletion();
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
         }
       },
-      Effect.provide(
-        Layer.mergeAll(ToolExecutionServices, AiService.model('@anthropic/claude-3-5-sonnet-20241022')).pipe(
-          Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
-          Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
-          Layer.provideMerge(
-            FunctionInvocationServiceLayerTestMocked({
-              functions: MarkdownHandlers,
-            }),
-          ),
-          Layer.provideMerge(Trace.writerLayerNoop),
-        ),
-      ),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),

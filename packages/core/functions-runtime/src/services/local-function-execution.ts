@@ -54,6 +54,21 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               Effect.provideService(QueueService, queues),
               Effect.provideService(Feed.FeedService, feedService),
               Effect.provideService(FunctionInvocationService, functionInvocationService),
+              Effect.provideService(Operation.Service, {
+                invoke: (op: any, ...args: any[]) => functionInvocationService.invokeFunction(op, args[0]),
+                schedule: (op: any, ...args: any[]) =>
+                  functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
+                invokePromise: async (op: any, ...args: any[]) => {
+                  try {
+                    const data = await runAndForwardErrors(
+                      functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
+                    );
+                    return { data };
+                  } catch (error) {
+                    return { error: error as Error };
+                  }
+                },
+              } as any),
               Effect.provide(Trace.writerLayerNoop),
               Effect.provide(Layer.succeedContext(callerContext)),
             ),

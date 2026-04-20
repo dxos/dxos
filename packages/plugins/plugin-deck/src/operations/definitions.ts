@@ -47,6 +47,7 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
+// TODO(burdon): Rename UpdateCompanion?
 export const ChangeCompanion = Operation.make({
   meta: {
     key: `${meta.id}.operation.change-companion`,

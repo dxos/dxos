@@ -10,6 +10,8 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
@@ -127,54 +129,78 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
+      log.debug('handleAction', { action, mode: layout.mode });
       switch (action.type) {
         case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
+          invariant(message);
+
           void invokePromise(AttentionOperation.Select, {
             contextId: id,
-            selection: { mode: 'single', id: message?.id },
+            selection: { mode: 'single', id: message.id },
           });
 
           const companion = linkedSegment('message');
-          if (layout.mode === 'simple') {
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else if (message) {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
+          switch (layout.mode) {
+            case 'simple':
+              // Open drawer with message companion.
+              void invokePromise(LayoutOperation.UpdateComplementary, {
+                subject: companion,
+                state: 'expanded',
+              });
+              break;
+            case 'multi': {
+              invariant(db);
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+              break;
+            }
+            default:
+              // Show message in the companion panel.
+              void invokePromise(DeckOperation.ChangeCompanion, {
+                companion,
+              });
+              break;
           }
           break;
         }
 
         case 'current': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
+          invariant(message);
+          invariant(db);
+
           void invokePromise(AttentionOperation.Select, {
             contextId: id,
-            selection: { mode: 'single', id: message?.id },
+            selection: { mode: 'single', id: message.id },
           });
 
           const companion = linkedSegment('message');
-          if (layout.mode === 'simple') {
-            // Simple layout: open drawer with message companion.
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else if (layout.mode === 'multi' && message && db) {
-            // Multi deck: open the message plank beside this mailbox (pivot).
-            void invokePromise(LayoutOperation.Open, {
-              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
-              pivotId: id,
-              navigation: 'immediate',
-            });
-          } else if (message) {
-            // Solo deck: show message in the companion panel.
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
+          switch (layout.mode) {
+            case 'simple':
+              // Open drawer with message companion.
+              void invokePromise(LayoutOperation.UpdateComplementary, {
+                subject: companion,
+                state: 'expanded',
+              });
+              break;
+            case 'multi':
+              // Open the message plank beside this mailbox (pivot).
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+              break;
+            default:
+              // Show message in the companion panel.
+              void invokePromise(DeckOperation.ChangeCompanion, {
+                companion,
+              });
+              break;
           }
           break;
         }
@@ -185,9 +211,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             const tags = prevFilterText.split(/\s+/).filter(Boolean);
             if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
               return prevFilterText;
+            } else {
+              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
             }
-
-            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
           filterEditorRef.current?.focus();
           break;

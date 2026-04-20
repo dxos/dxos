@@ -5,6 +5,7 @@
 import { type AiService } from '@dxos/ai';
 import { type Database, type Feed } from '@dxos/echo';
 import { type Trace } from '@dxos/functions';
+import type { Operation } from '@dxos/operation';
 
 import { type CredentialsService, type FunctionInvocationService, type QueueService } from './services';
 
@@ -25,4 +26,5 @@ export type FunctionServices =
   | QueueService
   | Feed.FeedService
   | Trace.TraceService
-  | FunctionInvocationService;
+  | FunctionInvocationService
+  | Operation.Service;

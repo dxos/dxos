@@ -29,6 +29,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -45,6 +48,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/ai"
     },
     {
       "path": "../../core/echo/echo"

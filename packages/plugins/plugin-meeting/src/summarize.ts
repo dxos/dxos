@@ -15,10 +15,11 @@ import {
   ToolResolverService,
 } from '@dxos/ai';
 import { type AiAssistantError, AiSession } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
-import { FunctionInvocationService, Trace } from '@dxos/functions';
+import { Database, Type } from '@dxos/echo';
+import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -59,8 +60,14 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       AiService.model('@anthropic/claude-3-5-haiku-latest'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
-      FunctionInvocationService.layerNotAvailable,
       Trace.writerLayerNoop,
+      Database.notAvailable,
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Not available.'),
+        schedule: () => Effect.die('Not available.'),
+        invokePromise: async () => ({ error: new Error('Not available.') }),
+      } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
     ),
   ),
 );

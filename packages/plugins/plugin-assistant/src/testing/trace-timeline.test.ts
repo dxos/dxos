@@ -21,7 +21,6 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/functions';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
-import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -187,10 +186,7 @@ describe('Trace timeline', () => {
             Trigger.make({
               function: Ref.make(Operation.serialize(AgentPrompt)),
               enabled: true,
-              spec: {
-                kind: 'queue',
-                queue: Feed.getQueueDxn(feed)?.toString() ?? failedInvariant('No queue DXN found'),
-              },
+              spec: Trigger.specFeed(feed),
               input: {
                 prompt: Ref.make(prompt),
                 input: '{{event.item}}',
@@ -214,7 +210,7 @@ describe('Trace timeline', () => {
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
             │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] complete_job - Success
+            │  ●  [check-circle] completeJob - Success
             ◆──╯  [check-circle] Agent
             "
           `);

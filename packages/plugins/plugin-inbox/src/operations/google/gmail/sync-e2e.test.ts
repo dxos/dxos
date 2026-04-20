@@ -75,7 +75,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/30 * * * * *' },
+        spec: Trigger.specTimer('*/30 * * * * *'),
         input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
@@ -100,7 +100,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/30 * * * * *' },
+        spec: Trigger.specTimer('*/30 * * * * *'),
         input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
@@ -123,7 +123,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/3 * * * * *' },
+        spec: Trigger.specTimer('*/3 * * * * *'),
         input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );

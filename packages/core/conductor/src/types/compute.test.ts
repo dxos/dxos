@@ -11,12 +11,22 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { ValueBag } from './compute';
 
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service not available in test.'),
+        schedule: () => Effect.die('Operation.Service not available in test.'),
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+    ),
+  ),
   Layer.provideMerge(
     Layer.mergeAll(TestAiService(), TestDatabaseLayer(), CredentialsService.configuredLayer([]), Feed.notAvailable),
   ),
