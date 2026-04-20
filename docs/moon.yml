@@ -10,7 +10,7 @@ tasks:
       mergeOutputs: replace
     outputs: []
   bundle:
-    command: pnpm exec astro build
+    command: bunx astro build
     deps:
       - ^:build
       - build
@@ -22,20 +22,20 @@ tasks:
       - .astro
       - dist
   prebuild:
-    command: pnpm exec astro sync
+    command: bunx astro sync
     inputs:
       - astro.config.ts
       - '@group(sources)'
     outputs:
       - .astro
   serve:
-    command: pnpm exec astro dev
+    command: bunx astro dev
     deps:
       - ^:build
       - typedoc
     preset: server
   typedoc:
-    command: pnpm run --silent typedoc
+    command: bun run --silent typedoc
     deps:
       - ^:typedoc
     inputs:

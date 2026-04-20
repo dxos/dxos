@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   typedoc:
-    command: pnpm run typedoc
+    command: bun run typedoc
     deps:
       - build
     inputs:

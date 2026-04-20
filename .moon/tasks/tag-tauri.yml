@@ -1,23 +1,23 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   tauri-build:
-    command: pnpm exec tauri build
+    command: bunx tauri build
     options:
       # TODO(wittjosiah): Determine which the outputs are which should be cached.
       cache: false
   tauri-dev:
-    command: pnpm exec tauri dev
+    command: bunx tauri dev
     deps:
       - ^:compile
     preset: server
   # https://tauri.app/develop/#developing-your-mobile-application
   tauri-ios:
-    command: pnpm exec tauri ios dev
+    command: bunx tauri ios dev
     deps:
       - ^:compile
     preset: server
   tauri-ios-build:
-    command: pnpm exec tauri ios build
+    command: bunx tauri ios build
     # TODO(wittjosiah): Determine which the outputs are which should be cached.
     options:
       cache: false

@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test-storybook:
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=storybook
+    command: bunx dx-killorphans vitest run --passWithNoTests --project=storybook
     deps:
       - esbuild-plugins:compile
       - node-std:compile

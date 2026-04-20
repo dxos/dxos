@@ -27,7 +27,7 @@ Technologies to consider:
 
 Monorepo tools:
 - moon for monorepo management.
-- pnpm for package management.
+- bun for package management.
 - vitest
 - vite
 

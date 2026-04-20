@@ -25,8 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.4
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -34,7 +36,7 @@ jobs:
           node-version: 24
 
       - name: Install semver
-        run: pnpm install -g semver
+        run: bun install -g semver
 
       - name: Install jq
         run: |
@@ -168,11 +170,14 @@ jobs:
           version: ${{ needs.draft_tauri.outputs.version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
-      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      # TODO(wittjosiah): Having install run through moon was causing OOM issues.
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          run_install: true
+          bun-version: 1.3.4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
       - uses: moonrepo/setup-toolchain@v0
         with:
@@ -304,11 +309,14 @@ jobs:
           version: ${{ needs.draft_tauri.outputs.version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
-      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      # TODO(wittjosiah): Having install run through moon was causing OOM issues.
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          run_install: true
+          bun-version: 1.3.4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
       - uses: moonrepo/setup-toolchain@v0
         with:
@@ -345,7 +353,7 @@ jobs:
 
       - name: Initialize iOS project
         run: |
-          pnpm tauri ios init --ci
+          bunx tauri ios init --ci
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 

@@ -24,7 +24,7 @@ eval "$(proto activate zsh --config-mode all)"
 
 ## Monorepo workspace
 
-This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
+This monorepo repository is built with [`bun`](https://bun.sh) and [`moon`](https://moonrepo.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
 
 Setup:
 
@@ -42,13 +42,13 @@ proto pin moon latest
 Install at the repo root:
 
 ```bash
-pnpm i
+bun install
 ```
 
 Build everything:
 
 ```bash
-pnpm build
+bun run build
 ```
 
 > Don't forget to install and build when switching branches
@@ -56,13 +56,13 @@ pnpm build
 Run all unit tests:
 
 ```bash
-pnpm test
+bun run test
 ```
 
 Recompile any package within the monorepo when changes are detected:
 
 ```bash
-pnpm watch
+bun run watch
 ```
 
 > Run watch alongside a vite dev server to get monorepo-wide hot module reloading
@@ -103,13 +103,15 @@ Playwright tests are written using these [guidelines](./tools/executors/test/PLA
 
 ## Adding new dependencies
 
-All dependency versions are managed in the catalog. To add a new dependency, use the following command:
+All dependency versions are managed in the catalog (root `package.json` under `workspaces.catalog`). To add a new dependency:
 
 ```bash
-pnpm add --filter "<project>" --save-catalog "<package>"
+bun add --filter "<project>" "<package>"
 ```
 
-See the [pnpm catalog docs](https://pnpm.io/catalogs) for more information.
+Then pin the version in the catalog and set the workspace entry to `"catalog:"`.
+
+See the [bun catalog docs](https://bun.com/docs/install/catalogs) for more information.
 
 > TODO: Introduce a separate catalog for peer dependencies.
 
@@ -119,10 +121,10 @@ Use `npm-check-updates` to update dependencies from the root directory. For exam
 
 ```bash
 npx npm-check-updates -u --deep "@codemirror/*"
-pnpm i
+bun install
 ```
 
-NOTE: Do not use `pnpm up` since it will update more than the targeted dependencies.
+NOTE: Do not use `bun update` since it will update more than the targeted dependencies.
 
 ## Folders
 
@@ -139,7 +141,7 @@ NOTE: Do not use `pnpm up` since it will update more than the targeted dependenc
 | `packages/deprecated`   | deprecated things                                                                              |
 | `tools`                 | workflow, automation, tooling code that supports the repo, but isn't part of the main platform |
 | `scripts`               | shell scripts for automation                                                                   |
-| `patches`               | pnpm applied patches via `pnpm patch`                                                          |
+| `patches`               | bun applied patches via `bun patch`                                                            |
 | `docs`                  | a `astro` docs site behind `docs.dxos.org`                                                     |
 
 ## Logging
@@ -155,7 +157,7 @@ The filter consists of a series of filename pattern/level tuples separated by co
 ## Branches
 
 - In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
-- Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
+- Features merge to `main` via PRs and checks like `bun run test` and `bun run lint` must pass.
 - PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
 - The default branch for development is `main`, if you are contributing this is where you make PRs to.
 - Feature branches within the repo are prefixed with the contributors username.
@@ -181,7 +183,7 @@ In order to include a new app in the publish loop it needs to be added to the `A
 
 ## Dependencies
 
-Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
+Packages can be locked to a particular version as required by updating `overrides` in the root `package.json`.
 
 Examples:
 
@@ -220,27 +222,28 @@ Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branc
 cd ~/Code/Effect-TS
 git clone https://github.com/Effect-TS/effect.git
 git remote add upstream https://github.com/Effect-TS/effect.git
-pnpm build
-pnpm ellint
+bun install
+bun run build
+bun run lint
 ```
 
 2. Create and commit a patch.
 
 ```bash
 cd ~/Code/dxos/dxos
-pnpm patch @effect/ai-anthropic
-cp -r ~/Code/Effect-TS/effect/packages/ai/anthropic/dist/* ~/Code/dxos/dxos/node_modules/.pnpm_patches/@effect/ai-anthropic@0.16.1/
-pnpm patch-commit
+bun patch @effect/ai-anthropic
+# Edit files in the patch directory that bun prints, then commit:
+bun patch --commit @effect/ai-anthropic
 ```
 
-This will create a patch file in the `patches` directory and update the `patchDependencies` of the root `package.json`.
+This will create a patch file in the `patches` directory and update the `patchedDependencies` of the root `package.json`.
 
 3. Submit a PR to the third-party repo.
 
-Create a changeset, command and push.
+Create a changeset, commit and push.
 
 ```bash
-pnpm changeset
+bunx changeset
 ```
 
 Commit and push the changes to the third-party repo.
@@ -249,9 +252,9 @@ Commit and push the changes to the third-party repo.
 
 Formatting is done by `prettier` and linting by `eslint`. Passing lint is required to merge to `main`.
 
-Run `pnpm lint` to conform the entire repository with (equivalent of `lint --fix`).
+Run `bun run lint` to conform the entire repository with (equivalent of `lint --fix`).
 
-Run `pnpm lint:changed` to lint only what you've been working on using `pnpm changed-packages`.
+Run `bun run lint-changed` to lint only what you've been working on using `bun run changed-packages`.
 
 ### ESLint errors in vscode
 
@@ -326,5 +329,5 @@ This is currently how the HALO vault's service worker is setup (though it will l
 ### Detecting unused deps
 
 ```bash
-pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
+bun --filter "./packages/core/**" --filter "!@dxos/automerge" run depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
 ```

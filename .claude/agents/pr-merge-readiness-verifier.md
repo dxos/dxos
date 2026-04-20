@@ -16,7 +16,7 @@ You will verify PR readiness by checking these factors IN ORDER. After making an
    - If uncommitted changes exist, stage and commit them with a descriptive conventional commit message
    - Verify commit succeeded before proceeding
 
-2. **Pre-CI Checks**: Ensure `pnpm -w pre-ci` passes with exit code 0
+2. **Pre-CI Checks**: Ensure `bun run pre-ci` passes with exit code 0
    - Run the command and capture full output
    - If it fails, analyze the error messages carefully
    - For trivial fixes (formatting, auto-fixable linting, missing imports), apply the fix immediately
@@ -35,7 +35,7 @@ You will verify PR readiness by checking these factors IN ORDER. After making an
    - If PR exists, note its number and URL
 
 5. **CI/CD Status**: Verify all GitHub Actions checks pass
-   - Run `pnpm -w gh-action --verify --watch`
+   - Run `bun run gh-action --verify --watch`
    - This command waits for CI to complete - be patient and inform the user
    - Monitor output for all checks passing (green status)
    - If checks fail, analyze the failure reasons
@@ -107,7 +107,7 @@ If you encounter unexpected errors:
 This is a DXOS project using:
 
 - `moon` for task running
-- `pnpm` for package management
+- `bun` for package management
 - `gh` CLI for GitHub operations
 - Conventional Commits for commit messages
 - TypeScript with strict linting rules

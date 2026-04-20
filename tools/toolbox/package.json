@@ -29,6 +29,7 @@
     "comment-json": "catalog:",
     "console-table-printer": "catalog:",
     "deep-equal": "catalog:",
+    "glob": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.sortby": "catalog:",
     "sort-package-json": "catalog:"

@@ -26,8 +26,8 @@ We welcome your pull requests:
 1. Fork the repo and create your branch from `main`.
 2. If you've added code that should be tested, add tests.
 3. If you've added or changed APIs, update the JSDoc documentation.
-4. Ensure the test suite passes `pnpm test`.
-5. Make sure your code lints `pnpm lint`.
+4. Ensure the test suite passes `bun run test`.
+5. Make sure your code lints `bun run lint`.
 6. Create the pull request!
 
 ## Contribution Licensing

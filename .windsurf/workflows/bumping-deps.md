@@ -3,7 +3,7 @@ description: When asked to do a dependency bump
 ---
 
 1. Use npm-check-updates tool: (from root) `ncu -u --deep <...package names> #globs supported` (example: ncu -u --deep eslint "_eslint_"). This updates package json file but doesnt update the lockfile
-2. Run pnpm install
+2. Run bun install
 3. If any peer deps issues arise try to resolve them. Use `pkg-inspect` script to query information about a package including peer dep compatibility.
 4. Make sure to commit.
 5. Follow the pull-request workflow and fix any project errors arising after package bump.

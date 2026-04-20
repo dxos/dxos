@@ -36,16 +36,16 @@ class DxosMochaRunProfileState(
         )
         targetRun.envData = runSettings.envData
         targetRun.commandLineBuilder.apply {
-            setExePath(resolvePnpmPath())
+            setExePath(resolvePackageManagerPath())
             setWorkingDirectory(guessProjectDir())
             buildNxCommands().forEach { addParameter(it) }
         }
         return targetRun.startProcess()
     }
 
-    private fun resolvePnpmPath(): String {
+    private fun resolvePackageManagerPath(): String {
         val propertiesComponent = PropertiesComponent.getInstance(project)
-        return propertiesComponent.getValue("nodejs_package_manager_path") ?: "pnpm"
+        return propertiesComponent.getValue("nodejs_package_manager_path") ?: "bun"
     }
 
     private fun buildNxCommands(): List<String> {

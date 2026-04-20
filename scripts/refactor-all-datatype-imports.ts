@@ -1,4 +1,4 @@
-#!/usr/bin/env -S pnpm tsx
+#!/usr/bin/env bun
 //
 // Copyright 2024 DXOS.org
 //
@@ -63,7 +63,7 @@ async function addDependencyIfNeeded(filePath: string): Promise<boolean> {
 
     if (!deps['@dxos/types']) {
       console.log(`Adding @dxos/types dependency to ${packageDir}`);
-      execSync(`pnpm add @dxos/types`, { cwd: packageDir });
+      execSync(`bun add @dxos/types`, { cwd: packageDir });
       return true;
     }
   } catch (error) {

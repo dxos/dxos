@@ -4,4 +4,4 @@ description:
 globs: package.json
 ---
 
-Use `pnpm install` to install new packages.
+Use `bun install` to install new packages.

@@ -13,7 +13,7 @@ tasks:
     deps:
       - compile-node
   compile-node:
-    command: pnpm exec dx-compile
+    command: bunx dx-compile
     args:
       - '--entryPoint=src/plugins/ThemePlugin.ts'
       - '--entryPoint=src/main.css'

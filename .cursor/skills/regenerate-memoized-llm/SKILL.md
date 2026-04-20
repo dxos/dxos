@@ -17,7 +17,7 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 1. **Load model credentials** (required for LLM calls):
 
    ```fish
-   eval (pnpm -ws 1p-credentials)
+   eval (bun run 1p-credentials)
    ```
 
    (In bash/zsh, use the equivalent way to load 1Password credentials for the workspace.)
@@ -35,7 +35,7 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 To refresh cache for a single package, run that package’s tests with generation enabled:
 
 ```bash
-eval (pnpm -ws 1p-credentials)   # or your shell’s equivalent
+eval (bun run 1p-credentials)   # or your shell’s equivalent
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
 

@@ -13,7 +13,7 @@ tasks:
     deps:
       - gen-pieces
   gen-pieces:
-    command: pnpm run --silent gen:pieces
+    command: bun run --silent gen:pieces
     inputs:
       - assets/*.*
     outputs:

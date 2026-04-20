@@ -49,7 +49,7 @@ for APP_PATH in "${APPS[@]}"; do
   outdir=${APP%-app}
 
   set +e
-  pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
+  bunx wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?
   set -e
 

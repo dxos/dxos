@@ -1,7 +1,6 @@
 # https://moonrepo.dev/docs/proto/config
 
 node = "24.11.1"
-pnpm = "10.28.0"
 bun = "1.3.4"
 
 # Upgrading moon: https://moonrepo.dev/docs/install#upgrading

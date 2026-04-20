@@ -52,8 +52,8 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
 ### Requirements for regeneration
 
 1. **Credentials** — API keys must be in the environment. In this repo, load 1Password-injected env from the workspace root:
-   - **fish:** `eval (pnpm -ws 1p-credentials)`
-   - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
+   - **fish:** `eval (bun run 1p-credentials)`
+   - **bash/zsh:** `eval "$(bun run 1p-credentials)"`
 
    The script is the `1p-credentials` package script (runs `op inject` against `.env.1password`).
 
