@@ -19,6 +19,7 @@ import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
+import { DiscordPlugin } from '@dxos/plugin-discord';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
@@ -43,6 +44,7 @@ import { PresenterPlugin } from '@dxos/plugin-presenter';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { PwaPlugin } from '@dxos/plugin-pwa';
 import { RegistryPlugin } from '@dxos/plugin-registry';
+import { SamplePlugin } from '@dxos/plugin-sample';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SettingsPlugin } from '@dxos/plugin-settings';
@@ -82,6 +84,7 @@ export type State = {
 
 export type PluginConfig = State & {
   isDev?: boolean;
+  isLocal?: boolean;
   isPwa?: boolean;
   isTauri?: boolean;
   isLabs?: boolean;
@@ -123,7 +126,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     .flat();
 };
 
-export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
     InboxPlugin.meta.id,
@@ -141,10 +144,14 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Dev
     isDev && DebugPlugin.meta.id,
 
+    // Local
+    isLocal && SamplePlugin.meta.id,
+
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
+      DiscordPlugin.meta.id,
       FeedPlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
@@ -164,6 +171,7 @@ export const getPlugins = ({
   observability,
   logBuffer,
   isDev,
+  isLocal,
   isLabs,
   isPwa,
   isTauri,
@@ -197,6 +205,7 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
+    DiscordPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
@@ -227,6 +236,7 @@ export const getPlugins = ({
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
+    isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
     SettingsPlugin(),

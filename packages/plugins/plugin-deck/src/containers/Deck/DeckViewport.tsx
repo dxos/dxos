@@ -49,7 +49,7 @@ export type DeckViewportProps = PropsWithChildren;
  */
 export const DeckViewport = ({ children }: DeckViewportProps) => {
   const {
-    deck: { active, solo, plankSizing },
+    deck: { active, plankSizing },
     state: { sidebarState, complementarySidebarState },
     settings,
     layoutMode,

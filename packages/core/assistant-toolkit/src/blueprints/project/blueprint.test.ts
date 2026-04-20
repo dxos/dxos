@@ -93,10 +93,12 @@ describe('Agent', () => {
         yield* Effect.promise(() => conversation.context.open());
 
         const documentDxn = Obj.getDXN(document);
-        yield* conversation.createRequest({
-          system: SYSTEM,
-          prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this agent.`,
-        });
+        yield* conversation
+          .createRequest({
+            system: SYSTEM,
+            prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this agent.`,
+          })
+          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
 
         expect(agent.artifacts).toHaveLength(1);
         expect(agent.artifacts[0].name).toBe('My Test Document');
@@ -128,10 +130,12 @@ describe('Agent', () => {
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
-        yield* conversation.createRequest({
-          system: SYSTEM,
-          prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
-        });
+        yield* conversation
+          .createRequest({
+            system: SYSTEM,
+            prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
+          })
+          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },
@@ -168,10 +172,7 @@ describe('Agent', () => {
         yield* Database.add(
           Trigger.make({
             enabled: true,
-            spec: {
-              kind: 'queue',
-              queue: inboxQueue.dxn.toString(),
-            },
+            spec: Trigger.specQueue(inboxQueue.dxn.toString()),
             function: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),
@@ -240,10 +241,12 @@ describe('Agent', () => {
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => conversation.context.open());
 
-        yield* conversation.createRequest({
-          system: SYSTEM,
-          prompt: `Go`,
-        });
+        yield* conversation
+          .createRequest({
+            system: SYSTEM,
+            prompt: `Go`,
+          })
+          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },

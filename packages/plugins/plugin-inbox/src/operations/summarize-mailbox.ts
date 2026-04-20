@@ -19,9 +19,9 @@ import {
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -93,8 +93,14 @@ const handler: Operation.WithHandler<typeof SummarizeMailbox> = SummarizeMailbox
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
-          FunctionInvocationService.layerNotAvailable,
           Trace.writerLayerNoop,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
         ),
       ),
     ),

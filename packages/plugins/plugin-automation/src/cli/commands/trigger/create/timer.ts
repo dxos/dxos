@@ -70,10 +70,7 @@ export const timer = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: {
-          kind: 'timer',
-          cron,
-        },
+        spec: Trigger.specTimer(cron),
         input,
       });
 

@@ -23,12 +23,7 @@ import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import { AiConversation } from '../conversation';
-import {
-  functionInvocationServiceFromOperations,
-  getOperationFromTool,
-  makeToolExecutionService,
-  makeToolResolverFromOperations,
-} from '../functions';
+import { getOperationFromTool, makeToolExecutionService, makeToolResolverFromOperations } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 
 interface AgentProcessOptions {
@@ -136,14 +131,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   toolCallManager,
                   feed,
                 }),
-                functionInvocationServiceFromOperations,
                 AsynchronousExectionToolkitLayer,
                 AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
               ).pipe(Layer.orDie),
             ),
           ),
           onChildEvent: Effect.fnUntraced(function* (event) {
-            log.info('childEvent', { event });
+            log('childEvent', { event });
             if (event._tag === 'exited') {
               if (!toolCallManager.isToolCall(event.pid)) {
                 log.verbose('childEvent ignored non-tool call', { pid: event.pid });

@@ -485,6 +485,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-worker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/env-tests/package.json",
           "jsonpath": "$.version"
         },
@@ -545,12 +550,12 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-excalidraw/package.json",
+          "path": "packages/plugins/plugin-discord/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-exemplar/package.json",
+          "path": "packages/plugins/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -671,6 +676,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-sample/package.json",
           "jsonpath": "$.version"
         },
         {

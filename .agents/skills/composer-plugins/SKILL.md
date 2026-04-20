@@ -106,10 +106,38 @@ High-level surface component. Uses capabilities and is referenced by `react-surf
 Each container lives in its own subdirectory. The subdirectory `index.ts` bridges named to default export (for `React.lazy`).
 The top-level `containers/index.ts` uses `lazy(() => import('./X'))` with `: ComponentType<any>` annotation.
 Surface components use suffixes matching their role: `Article`, `Card`, `Dialog`, `Popover`, `Settings`.
-Containers should NOT use custom classNames/styles (except functional TailwindCSS like `@container`).
 Create a basic storybook for each.
 
-See: `plugin-chess/src/containers/ChessArticle/`, `plugin-chess/src/containers/index.ts`
+**Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
+
+- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for article layout structure.
+- `ScrollArea.Root` + `ScrollArea.Viewport` inside `Panel.Content asChild` for scrollable content.
+- `Input.Root` / `Input.Label` / `Input.TextInput` for form fields.
+- `Button` (with `variant`) for actions.
+- `Clipboard.IconButton` for copy-to-clipboard.
+- `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
+- `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
+
+The only acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g., `p-4 space-y-4`) or responsive `@container` queries. If you find yourself writing custom styles, you are probably missing an existing UI component.
+
+**Standard article container pattern:**
+
+```tsx
+<Panel.Root role={role}>
+  <Panel.Toolbar asChild>
+    <Toolbar.Root>{/* toolbar content */}</Toolbar.Root>
+  </Panel.Toolbar>
+  <Panel.Content asChild>
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport classNames='p-4 space-y-4'>{/* Input.Root, Button, etc. */}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  </Panel.Content>
+</Panel.Root>
+```
+
+All imports from `@dxos/react-ui`: `Panel`, `ScrollArea`, `Input`, `Button`, `Clipboard`, `Toolbar`, `Card`, `Icon`, `useTranslation`.
+
+See: `plugin-chess/src/containers/ChessArticle/`, `plugin-discord/src/containers/BotArticle/`
 
 ### Capability (`src/capabilities/`)
 

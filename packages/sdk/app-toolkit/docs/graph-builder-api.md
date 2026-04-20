@@ -214,7 +214,7 @@ connector: (space, get) => {
 
 ## Examples
 
-- **plugin-exemplar**: [`src/capabilities/app-graph-builder.ts`](../../plugins/plugin-exemplar/src/capabilities/app-graph-builder.ts) — Root actions, sub-graph sections, type-specific actions, plank companions, and deck companions.
+- **plugin-sample**: [`src/capabilities/app-graph-builder.ts`](../../plugins/plugin-sample/src/capabilities/app-graph-builder.ts) — Root actions, sub-graph sections, type-specific actions, plank companions, and deck companions.
 - **plugin-space**: [`src/capabilities/app-graph-builder/extensions/spaces.ts`](../../plugins/plugin-space/src/capabilities/app-graph-builder/extensions/spaces.ts) — Complex root actions with keyboard shortcuts and space node connectors.
 - **plugin-script**: [`src/capabilities/app-graph-builder.ts`](../../plugins/plugin-script/src/capabilities/app-graph-builder.ts) — Type-specific companion panels.
 - **plugin-meeting**: [`src/capabilities/app-graph-builder.ts`](../../plugins/plugin-meeting/src/capabilities/app-graph-builder.ts) — Conditional type-specific actions with reactive state.

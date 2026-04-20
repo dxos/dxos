@@ -634,10 +634,7 @@ export const WithTriggers: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(Reply)),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '*/5 * * * * *', // Every 5 seconds.
-          },
+          spec: Trigger.specTimer('*/5 * * * * *'), // Every 5 seconds.
         }),
       );
     },
@@ -687,12 +684,7 @@ export const WithChessTrigger: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(ChessFunctions.Play)),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Chess.Game)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Chess.Game))),
           input: {
             id: '{{event.changedObjectId}}',
             side: 'black', // NOTE: Removing it makes the bot play itself.
@@ -738,10 +730,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: researchInputQueue.queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(researchInputQueue.queue.dxn.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -872,12 +861,7 @@ export const WithProject: Story = {
       const researchTrigger = Trigger.make({
         function: Ref.make(Operation.serialize(AgentPrompt)),
         enabled: true,
-        spec: {
-          kind: 'subscription',
-          query: {
-            ast: organizationsQuery.ast,
-          },
-        },
+        spec: Trigger.specSubscription(organizationsQuery),
         input: {
           prompt: Ref.make(researchPrompt),
           input: {

@@ -8,7 +8,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { setHeading } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-import { type EditorToolbarState } from './useEditorToolbar';
+import { type EditorToolbarState } from './types';
 
 const headingIcons: Record<string, string> = {
   0: 'ph--paragraph--regular',

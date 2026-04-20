@@ -17,8 +17,8 @@ import { InboxSettings } from '#components';
 import {
   CalendarArticle,
   CalendarProperties,
-  DraftMessageArticle,
   DraftsArticle,
+  EditMessageArticle,
   EventArticle,
   EventCard,
   MailboxArticle,
@@ -85,7 +85,7 @@ export default Capability.makeModule(() =>
         role: ['article'],
         filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
         component: ({ data: { subject }, role }) => {
-          return <DraftMessageArticle role={role} subject={subject} />;
+          return <EditMessageArticle role={role} subject={subject} />;
         },
       }),
       Surface.create({

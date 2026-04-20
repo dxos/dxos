@@ -157,6 +157,7 @@ class FunctionContext extends Resource {
       ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
+    const operationServiceLayer = MockedOperationServiceLayer;
     const tracing = TracingService.layerNoop;
 
     const aiLayer = this.context.services.functionsAiService
@@ -180,6 +181,7 @@ class FunctionContext extends Resource {
       feedLayer,
       credentials,
       functionInvocationService,
+      operationServiceLayer,
       aiLayer,
       tracing,
       // TODO(dmaretskyi): Forward trace events.
@@ -192,6 +194,12 @@ const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService,
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
   resolveFunction: () => Effect.die('Not implemented.'),
 });
+
+const MockedOperationServiceLayer = Layer.succeed(Operation.Service, {
+  invoke: () => Effect.die('Calling operations from functions is not implemented yet.'),
+  schedule: () => Effect.die('Not implemented.'),
+  invokePromise: async () => ({ error: new Error('Not implemented') }),
+} as any);
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
   if (value == null) {

@@ -8,14 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import {
-  type AiService,
-  DEFAULT_EDGE_MODEL,
-  type ModelName,
-  type ModelRegistry,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
+import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
   AiContextService,
   type AiConversation,
@@ -23,18 +16,13 @@ import {
   formatSystemPrompt,
   AgentService,
   PartialBlock,
+  ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import {
-  Trace,
-  type CredentialsService,
-  type FunctionInvocationService,
-  type QueueService,
-  type TracingService,
-} from '@dxos/functions';
+import { Trace, type CredentialsService, type QueueService, type TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
@@ -50,10 +38,7 @@ export type AiChatServices =
   | CredentialsService
   | Database.Service
   | QueueService
-  | FunctionInvocationService
   | AiService.AiService
-  | ToolExecutionService
-  | ToolResolverService
   | TracingService
   | Trace.TraceService;
 
@@ -151,7 +136,7 @@ export class AiChatProcessor {
   }
 
   async getTools(): Promise<Record<string, any>> {
-    return this._runtime.runPromise(this._conversation.getTools());
+    return this._runtime.runPromise(Effect.provide(this._conversation.getTools(), ToolExecutionServices));
   }
 
   async getSystemPrompt(): Promise<string> {
@@ -179,7 +164,8 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        const session = yield* AgentService.getSession(this._feed);
+        log.info('init agent session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
+        const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
           Stream.runForEach((message) =>

@@ -14,4 +14,4 @@ export const Settings = Schema.Struct({
   // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);
-export type Settings = Schema.Schema.Type<typeof Settings>;
+export interface Settings extends Schema.Schema.Type<typeof Settings> {}

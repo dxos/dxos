@@ -12,3 +12,4 @@ export * from './resource';
 export * from './url';
 export * as RuntimeProvider from './RuntimeProvider';
 export * as Performance from './Performance';
+export * from './async-task-tagging';

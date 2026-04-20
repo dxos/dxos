@@ -92,9 +92,6 @@
       "path": "../../plugins/plugin-client"
     },
     {
-      "path": "../../plugins/plugin-exemplar"
-    },
-    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -111,6 +108,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-sample"
     },
     {
       "path": "../../plugins/plugin-script"
