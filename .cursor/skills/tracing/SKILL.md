@@ -310,7 +310,7 @@ async openFeed(ctx: Context): Promise<Feed> {
 
 Manual span API for cases where decorator-based spans don't fit (e.g., spans that cross method boundaries). Supports `showInBrowserTimeline` independently of `showInRemoteTracing`.
 
-`spanStart` returns a **derived `Context`** carrying the new span's `TRACE_SPAN_ATTRIBUTE`. Callers MUST reassign the local `ctx` to the returned value so that downstream `@trace.span()` methods, RPC calls, and edge-client requests see this span as their parent (otherwise they start a new root trace — the span you just created becomes a single-span disconnected trace).
+`spanStart` returns a **derived `Context`** carrying the new span's `TRACE_SPAN_ATTRIBUTE`. Callers MUST reassign the local `ctx` to the returned value so that downstream `@trace.span()` methods, RPC calls, and edge-client requests see this span as their parent. If the returned derived Context is not reassigned, downstream spans read the OLD `TRACE_SPAN_ATTRIBUTE` from the original `ctx` and attach to whatever span that was — becoming siblings of the manual span rather than children. When the original `ctx` had no parent span, they become a new root trace and the manual span is left as a single-span disconnected trace.
 
 ```typescript
 const spanId = `invitation-guest-${invitation.invitationId}`;
@@ -335,9 +335,9 @@ await this._handleGuestFlow(ctx, ...);
 **Antipattern** — ignoring the return value:
 
 ```typescript
-// ❌ WRONG — downstream spans see the OLD ctx (or none), become a separate root trace.
+// ❌ WRONG — downstream spans see the OLD ctx, so they attach to ctx's parent span (becoming siblings of the manual span, or a new root if ctx had no parent).
 trace.spanStart({ id: spanId, instance: this, methodName: 'acceptInvitation', parentCtx: ctx, ... });
-await this._handleGuestFlow(ctx, ...); // ctx unchanged; handleGuestFlow's @trace.span creates a new root
+await this._handleGuestFlow(ctx, ...); // ctx unchanged; handleGuestFlow's @trace.span is a sibling of the manual span, not a child.
 ```
 
 This was the root cause of the historical pattern where `InvitationsHandler.acceptInvitation` appeared as a 1-span disconnected trace while `EdgeInvitationHandler._handleSpaceInvitationFlow` started its own parallel root. Fixed by reassigning `ctx` to the return value of `spanStart`.

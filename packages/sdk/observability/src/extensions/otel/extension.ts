@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 
-import { type Config } from '@dxos/config';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
 import { isNode, isNonNullable } from '@dxos/util';
 
@@ -91,9 +91,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //      separately. Stamping it on span attributes here keeps a single
   //      `ctx.tag = <value>` filter matching spans from both tiers in SigNoz
   //      without requiring qualified `attribute.ctx.tag`/`resource.ctx.tag` syntax.
-  const clientTag = isNode()
-    ? process.env.DX_TELEMETRY_TAG
-    : config.values.runtime?.app?.env?.DX_TELEMETRY_TAG;
+  const clientTag = resolveTelemetryTag(config);
   if (clientTag) {
     tags.set('ctx.tag', clientTag);
   }
@@ -161,18 +159,30 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     }),
     close: () =>
       Effect.promise(async () => {
-        await logs?.close();
-        await metrics?.close();
+        // Run logs/metrics close concurrently and swallow their failures so the
+        // tracer provider shutdown below ALWAYS runs. Without this, a rejection
+        // from logs or metrics would drop the tracer provider's BatchSpanProcessor
+        // queue on process exit, manifesting as "Missing Span" in SigNoz for any
+        // already-exported children.
+        const results = await Promise.allSettled([logs?.close(), metrics?.close()]);
+        for (const result of results) {
+          if (result.status === 'rejected') {
+            log.catch(result.reason);
+          }
+        }
         // Critical: shut down the tracer provider so BatchSpanProcessor drains its
         // queue. Otherwise spans enqueued in the last 5s (close/teardown spans)
-        // are dropped on process exit, appearing as "Missing Span" in SigNoz for
-        // any already-exported children.
+        // are dropped on process exit.
         await traces?.close();
       }),
     flush: () =>
       Effect.promise(async () => {
-        await logs?.flush();
-        await metrics?.flush();
+        const results = await Promise.allSettled([logs?.flush(), metrics?.flush()]);
+        for (const result of results) {
+          if (result.status === 'rejected') {
+            log.catch(result.reason);
+          }
+        }
         await traces?.flush();
       }),
     setTags: (incomingTags) => {

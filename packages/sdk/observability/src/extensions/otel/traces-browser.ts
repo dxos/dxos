@@ -73,7 +73,15 @@ export class OtelTraces {
     await this._tracerProvider.forceFlush();
   }
 
-  /** Flush + shut down the tracer provider. Idempotent with flush(). */
+  /**
+   * Flush + shut down the tracer provider via `WebTracerProvider.shutdown()`,
+   * which forces a final export then terminates all span processors.
+   *
+   * Terminal and effectively one-shot: safe to call after `flush()`, but
+   * `flush()` MUST NOT be called after `close()` — shutdown stops further
+   * exporting, so subsequent `close()`/`flush()` calls resolve without
+   * emitting new spans.
+   */
   public async close(): Promise<void> {
     await this._tracerProvider.shutdown();
   }

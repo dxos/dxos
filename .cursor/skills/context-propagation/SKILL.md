@@ -154,10 +154,10 @@ await this._handleGuestFlow(ctx, ...); // inherits the manual span as parent
 // ❌ WRONG — return value ignored; downstream spans don't see this one.
 trace.spanStart({ id: spanId, instance: this, methodName: 'acceptInvitation', parentCtx: ctx, ... });
 ctx.onDispose(() => trace.spanEnd(spanId));
-await this._handleGuestFlow(ctx, ...); // ctx unchanged → handleGuestFlow's @trace.span becomes a new root
+await this._handleGuestFlow(ctx, ...); // ctx unchanged → handleGuestFlow's @trace.span attaches to ctx's parent, becoming a sibling of the manual span (or a new root if ctx had no parent)
 ```
 
-When `parentCtx` is not `null` and the span is actually created, the returned ctx is a `parentCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: newSpanContext } })`. Disposing the original `parentCtx` still cascades to the derived one, so the `onDispose(spanEnd)` pattern remains correct.
+When `parentCtx` is not `null` and the span is actually created, the returned ctx is a `parentCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: newSpanContext } })` — i.e., the original `parentCtx` with `TRACE_SPAN_ATTRIBUTE` overridden to the new span. Leaving `ctx` unchanged means downstream `@trace.span` methods read the OLD `TRACE_SPAN_ATTRIBUTE` from `parentCtx` and attach to _that_ span, so they end up as siblings of the manual span rather than children. They only become a new root trace when the old `ctx` had no parent span at all. Either way, the `onDispose(spanEnd)` pattern remains correct — disposing the original `parentCtx` cascades to the derived one.
 
 ### 6. Complete call chain: every method between entry point and @trace.span must forward ctx
 
@@ -299,7 +299,7 @@ If none of these hold, the span will be orphaned. Either fix the call chain or d
 - **Breaking the chain with `Context.default()` in an intermediate method** — if a method calls `child(Context.default())` where `child` has `@trace.span()`, the span is an orphaned root. The intermediate method must accept `ctx` from its caller and forward it.
 - **Passing `this._ctx` in a direct call** when the method has `ctx` in scope — breaks trace hierarchy, creates a new root instead of a child span.
 - **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended. However, `this._ctx` from lifecycle contexts still works as a parent because `TRACE_SPAN_ATTRIBUTE` stores W3C strings that remain valid after the span ends.
-- **Ignoring the return value of `trace.spanStart()`** — `spanStart` returns a derived ctx carrying the new span. Downstream `@trace.span` methods called with the unchanged `ctx` will see the span's parent, not the span itself, and start a new root trace. Reassign `ctx = trace.spanStart(...) ?? ctx;` before forwarding.
+- **Ignoring the return value of `trace.spanStart()`** — `spanStart` returns a derived ctx carrying the new span. Downstream `@trace.span` methods called with the unchanged `ctx` will see the span's parent, not the span itself, making them siblings of the manual span (or, if the parent ctx had no span, a new root). Reassign `ctx = trace.spanStart(...) ?? ctx;` before forwarding.
 - **Adding `ctx` to Node.js protocol methods** (e.g., `[Symbol.for('nodejs.util.inspect.custom')]`) — fixed-signature methods that don't support extra parameters.
 - **Adding `ctx` to public APIs** — user-facing methods should not expose `Context`; create `Context.default()` internally.
 - **Ignoring `options.ctx` in RPC service methods** — `RpcPeer` provides `options.ctx` with the caller's trace context decoded from W3C headers. Use `options?.ctx ?? Context.default()`, not `this._ctx` or a bare `Context.default()`. Using `this._ctx` breaks the cross-process trace hierarchy; using `Context.default()` discards the propagated trace.

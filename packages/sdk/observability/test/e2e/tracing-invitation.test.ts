@@ -3,7 +3,7 @@
 //
 
 import * as Function from 'effect/Function';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Client, Config, DXOS_VERSION, LocalClientServices } from '@dxos/client';
@@ -75,7 +75,7 @@ const initTracing = (config: Config): Promise<Observability> =>
   );
 
 describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0 }, () => {
-  test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async () => {
+  test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async ({ expect }) => {
     const clientTag = process.env.DX_TELEMETRY_TAG;
     expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();
     expect(process.env.DX_OTEL_ENDPOINT, 'DX_OTEL_ENDPOINT must be set').toBeTruthy();
