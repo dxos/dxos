@@ -43,7 +43,7 @@ import { AgentService } from '../service';
 import { CompleteBlock } from '../tracing';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
+  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: GenericToolkit.GenericToolkit[];
@@ -94,7 +94,7 @@ export type AssistantTestServices =
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
-  model = '@anthropic/claude-opus-4-6',
+  model,
   operationHandlers = [],
   toolkits = [],
   types = [],
@@ -104,6 +104,8 @@ export const AssistantTestLayer = ({
   blueprints = [],
   systemPrompt,
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
+  const resolvedModel: ModelName =
+    model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
   const toolkit = GenericToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
@@ -114,7 +116,7 @@ export const AssistantTestLayer = ({
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AgentService.layer({ systemPrompt })),
+    Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
       // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
@@ -175,7 +177,7 @@ export const AssistantTestLayer = ({
         }),
       ),
     ),
-    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model))),
+    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
     Layer.provideMerge(
       Match.value(tracing).pipe(
         Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
