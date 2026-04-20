@@ -26,7 +26,13 @@ export type Options = {
   key?: string;
 };
 
-type RemotePluginEntry = { id: string; url: string };
+/**
+ * Persisted record of a remote plugin that has been loaded previously.
+ */
+export type RemotePluginEntry = {
+  id: string;
+  url: string;
+};
 
 const defaultStorage = (): Storage => ({
   get: (key) => localStorage.getItem(key),
@@ -67,6 +73,66 @@ const isUrl = (locator: string): boolean => {
   }
 };
 
+const GITHUB_RELEASE_ASSET_PATH = /\/repos\/[^/]+\/[^/]+\/releases\/assets\/\d+$/;
+
+/**
+ * True when `locator` is a GitHub REST release-asset URL (`GET` + `Accept: application/octet-stream`
+ * returns the file and is CORS-enabled). Plain `browser_download_url` values are not importable in
+ * the browser because blob storage omits `Access-Control-Allow-Origin`.
+ */
+export const isGitHubReleaseAssetApiUrl = (locator: string): boolean => {
+  try {
+    const url = new URL(locator);
+    return url.hostname === 'api.github.com' && GITHUB_RELEASE_ASSET_PATH.test(url.pathname);
+  } catch {
+    return false;
+  }
+};
+
+const importGitHubReleaseAssetModule = async (assetApiUrl: string): Promise<Record<string, unknown>> => {
+  const response = await fetch(assetApiUrl, {
+    headers: {
+      Accept: 'application/octet-stream',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`GitHub release asset request failed: ${response.status} ${response.statusText}`);
+  }
+  const source = await response.text();
+  const blob = new Blob([source], { type: 'text/javascript' });
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    return (await import(/* @vite-ignore */ objectUrl)) as Record<string, unknown>;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+};
+
+/**
+ * Returns true when the URL's hostname is the local host (localhost, 127.0.0.1, or ::1).
+ */
+export const isLocalUrl = (locator: string): boolean => {
+  try {
+    const hostname = new URL(locator).hostname.toLowerCase();
+    // WHATWG URL returns '::1' without brackets in Node; some browsers return '[::1]'.
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Returns the list of remote plugin entries previously persisted by {@link make}.
+ * Useful for UI code that needs to know which loaded plugins were installed from a URL
+ * (e.g. to surface a tag on remote or localhost-hosted plugins).
+ */
+export const getRemoteEntries = (options: Options = {}): readonly RemotePluginEntry[] => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  return getPersistedRemotePlugins(storage, key);
+};
+
 const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
   const exported = mod.default;
   if (Plugin.isPlugin(exported)) {
@@ -83,7 +149,9 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
 
 const loadRemotePlugin = async (url: string): Promise<Plugin.Plugin> => {
   log.info('loading remote plugin', { url });
-  const mod = await import(/* @vite-ignore */ url);
+  const mod = isGitHubReleaseAssetApiUrl(url)
+    ? await importGitHubReleaseAssetModule(url)
+    : ((await import(/* @vite-ignore */ url)) as Record<string, unknown>);
   const plugin = normalizePluginExport(mod);
   if (!plugin.meta.id || !plugin.meta.name) {
     throw new Error(`Remote plugin at ${url} is missing required meta.id or meta.name.`);

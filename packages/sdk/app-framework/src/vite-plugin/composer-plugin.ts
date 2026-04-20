@@ -4,15 +4,16 @@
 
 import { type Plugin } from 'vite';
 
-import { DEFAULT_PACKAGES } from './packages';
+import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
 
-/** Regex patterns matching each shared package and all its subpath imports. */
-const EXTERNAL_DEPS = DEFAULT_PACKAGES.map((pkg) => new RegExp(`^${pkg.replace('/', '\\/')}(\\/|$)`));
-
-/** Checks whether an import should be externalized (all shared deps except jsx-dev-runtime). */
-const isExternal = (id: string) => id !== JSX_DEV_RUNTIME && EXTERNAL_DEPS.some((pattern) => pattern.test(id));
+/**
+ * Whether an import should be externalized by the plugin bundle.
+ * Uses the shared-package predicate directly so plugins automatically pick up any
+ * new `@dxos/*` (non-plugin) package the host provides, without a code change here.
+ */
+const isExternal = (id: string) => id !== JSX_DEV_RUNTIME && isSharedPackage(id);
 
 /**
  * Vite plugin for **external Composer plugin projects**. Configures the build to produce
@@ -50,7 +51,7 @@ export const composerPlugin = (options?: { entry?: string; port?: number }): Plu
             formats: ['es'],
           },
           rolldownOptions: {
-            external: EXTERNAL_DEPS,
+            external: (id: string) => isExternal(id),
           },
         },
       }),
