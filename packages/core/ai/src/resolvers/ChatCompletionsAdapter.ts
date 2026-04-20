@@ -12,8 +12,10 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 /**
@@ -137,7 +139,20 @@ export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+  /**
+   * Maximum duration to wait for the HTTP response to start. Applies to both
+   * `generateText` and the initial connection in `streamText`. Defaults to 2 minutes.
+   */
+  readonly requestTimeout?: Duration.Duration;
+  /**
+   * Maximum duration allowed between streamed SSE chunks before the stream is
+   * aborted with a timeout error. Defaults to 60 seconds.
+   */
+  readonly streamIdleTimeout?: Duration.Duration;
 };
+
+const DEFAULT_REQUEST_TIMEOUT: Duration.Duration = Duration.minutes(2);
+const DEFAULT_STREAM_IDLE_TIMEOUT: Duration.Duration = Duration.seconds(60);
 
 /**
  * Chat completions client service tag.
@@ -328,8 +343,11 @@ const parseStreamChunk = (
  * Create a chat completions language model service.
  */
 export const make = (model: string) =>
-  Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) =>
-    LanguageModel.make({
+  Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) => {
+    const requestTimeout = config.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
+    const streamIdleTimeout = config.streamIdleTimeout ?? DEFAULT_STREAM_IDLE_TIMEOUT;
+
+    return LanguageModel.make({
       generateText: (options) =>
         Effect.gen(function* () {
           const messages = promptToMessages(options.prompt);
@@ -339,7 +357,22 @@ export const make = (model: string) =>
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
             Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
+            Effect.timeoutFail({
+              duration: requestTimeout,
+              onTimeout: () =>
+                new AiError.HttpRequestError({
+                  module: 'ChatCompletionsClient',
+                  method: 'generateText',
+                  request: undefined as any,
+                  reason: 'Transport',
+                  description: `Request timed out after ${Duration.format(requestTimeout)}`,
+                  cause: new Error('request timeout'),
+                }),
+            }),
             Effect.catchAll((err) => {
+              if (err instanceof AiError.HttpRequestError) {
+                return Effect.fail(err) as Effect.Effect<never, any, never>;
+              }
               if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
                 return Effect.fail(
                   new AiError.HttpRequestError({
@@ -393,7 +426,22 @@ export const make = (model: string) =>
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
               Effect.flatMap((req) => httpClient.execute(req)),
+              Effect.timeoutFail({
+                duration: requestTimeout,
+                onTimeout: () =>
+                  new AiError.HttpRequestError({
+                    module: 'ChatCompletionsClient',
+                    method: 'streamText',
+                    request: undefined as any,
+                    reason: 'Transport',
+                    description: `Request timed out after ${Duration.format(requestTimeout)}`,
+                    cause: new Error('request timeout'),
+                  }),
+              }),
               Effect.catchAll((err) => {
+                if (err instanceof AiError.HttpRequestError) {
+                  return Effect.fail(err) as Effect.Effect<never, any, never>;
+                }
                 if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
                   return Effect.fail(
                     new AiError.HttpRequestError({
@@ -415,57 +463,118 @@ export const make = (model: string) =>
 
             const id = `chat-${Date.now()}`; // TODO(burdon): Better id.
             let started = false;
+            let buffer = '';
+            const decoder = new TextDecoder();
 
-            return response.stream.pipe(
-              Stream.mapConcat((chunk: Uint8Array) => {
-                const text = new TextDecoder().decode(chunk);
-                const lines = text.split('\n').filter((line) => line.trim().length > 0);
-                const parts: Response.StreamPartEncoded[] = [];
+            /**
+             * Parse any complete lines (terminated by `\n`) currently in the buffer into stream
+             * parts, leaving any trailing partial line in the buffer for the next chunk.
+             */
+            const drainCompleteLines = (): Response.StreamPartEncoded[] => {
+              const lastNewline = buffer.lastIndexOf('\n');
+              if (lastNewline < 0) {
+                return [];
+              }
+              const complete = buffer.slice(0, lastNewline);
+              buffer = buffer.slice(lastNewline + 1);
+              return linesToParts(complete.split('\n').filter((line) => line.trim().length > 0));
+            };
 
-                for (const line of lines) {
-                  const parsed = parseStreamChunk(line, config.apiFormat);
-                  if (!parsed) {
-                    continue;
-                  }
-
-                  // Emit text-start on first chunk.
-                  if (!started) {
-                    started = true;
-                    parts.push({ type: 'text-start', id });
-                  }
-
-                  // Emit text delta if there's content.
-                  if (parsed.content && parsed.content.length > 0) {
-                    parts.push({ type: 'text-delta', id, delta: parsed.content });
-                  }
-
-                  // Handle completion.
-                  if (parsed.done) {
-                    parts.push({ type: 'text-end', id });
-                    parts.push({
-                      type: 'finish',
-                      reason: 'stop',
-                      usage: {
-                        inputTokens: parsed.inputTokens,
-                        outputTokens: parsed.outputTokens,
-                        totalTokens: (parsed.inputTokens ?? 0) + (parsed.outputTokens ?? 0),
-                      },
-                    });
-                  }
+            const linesToParts = (lines: string[]): Response.StreamPartEncoded[] => {
+              const parts: Response.StreamPartEncoded[] = [];
+              for (const line of lines) {
+                const parsed = parseStreamChunk(line, config.apiFormat);
+                if (!parsed) {
+                  continue;
                 }
 
-                return parts;
+                if (!started) {
+                  started = true;
+                  parts.push({ type: 'text-start', id });
+                }
+
+                if (parsed.content && parsed.content.length > 0) {
+                  parts.push({ type: 'text-delta', id, delta: parsed.content });
+                }
+
+                if (parsed.done) {
+                  parts.push({ type: 'text-end', id });
+                  parts.push({
+                    type: 'finish',
+                    reason: 'stop',
+                    usage: {
+                      inputTokens: parsed.inputTokens,
+                      outputTokens: parsed.outputTokens,
+                      totalTokens: (parsed.inputTokens ?? 0) + (parsed.outputTokens ?? 0),
+                    },
+                  });
+                }
+              }
+              return parts;
+            };
+
+            const parsedStream: Stream.Stream<Response.StreamPartEncoded, any, any> = response.stream.pipe(
+              withIdleTimeout(
+                streamIdleTimeout,
+                () =>
+                  new AiError.HttpRequestError({
+                    module: 'ChatCompletionsClient',
+                    method: 'streamText',
+                    request: undefined as any,
+                    reason: 'Transport',
+                    description: `Stream idle for more than ${Duration.format(streamIdleTimeout)}`,
+                    cause: new Error('stream idle timeout'),
+                  }),
+              ),
+              Stream.mapConcat((chunk: Uint8Array) => {
+                buffer += decoder.decode(chunk, { stream: true });
+                return drainCompleteLines();
               }),
+              Stream.concat(
+                Stream.suspend(() => {
+                  buffer += decoder.decode();
+                  if (buffer.trim().length === 0) {
+                    return Stream.empty;
+                  }
+                  const parts = linesToParts([buffer]);
+                  buffer = '';
+                  return Stream.fromIterable(parts);
+                }),
+              ),
               Stream.catchAll((err) => {
+                if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
+                  return Stream.fail(err);
+                }
                 return Stream.fail(
                   new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
                 );
               }),
             );
+
+            return parsedStream;
           }),
         ),
-    }),
-  );
+    });
+  });
+
+/**
+ * Apply a per-chunk idle timeout to a stream. Fails with `onTimeout(...)` if no chunk is
+ * emitted within `timeout` of the previous one (or of stream start for the first chunk).
+ */
+const withIdleTimeout = <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
+  <A, E, R>(stream: Stream.Stream<A, E, R>): Stream.Stream<A, E | E2, R> =>
+    Stream.unwrapScoped(
+      Effect.gen(function* () {
+        const pull = yield* Stream.toPull(stream);
+        const timedPull = pull.pipe(
+          Effect.timeoutFail({
+            duration: timeout,
+            onTimeout: () => Option.some(onTimeout()) as Option.Option<E | E2>,
+          }),
+        );
+        return Stream.repeatEffectChunkOption(timedPull);
+      }),
+    );
 
 /**
  * Create a chat completions language model layer.
