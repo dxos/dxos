@@ -10,8 +10,8 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -284,7 +284,7 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
         const tagDxn = Obj.getDXN(tag).toString();
-        Entity.change(org, (obj) => Entity.addTag(obj, tagDxn));
+        Entity.change(org, (org) => Entity.addTag(org, tagDxn));
         expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
@@ -416,14 +416,14 @@ describe('Database Blueprint', () => {
         ]);
         yield* Database.flush();
 
-        const noQueues = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+        const noQueues = yield* Operation.invoke(DatabaseQueryOperation, {
           text: 'op-search-token-7f3a2c91',
           includeQueues: false,
           limit: 20,
         });
         expect(noQueues).toHaveLength(0);
 
-        const withQueues = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+        const withQueues = yield* Operation.invoke(DatabaseQueryOperation, {
           text: 'op-search-token-7f3a2c91',
           includeQueues: true,
           limit: 20,
@@ -436,7 +436,7 @@ describe('Database Blueprint', () => {
           ),
         ).toBe(true);
 
-        const byTypename = yield* FunctionInvocationService.invokeFunction(DatabaseQueryOperation, {
+        const byTypename = yield* Operation.invoke(DatabaseQueryOperation, {
           typename: 'org.dxos.type.organization',
           includeQueues: true,
           limit: 20,
@@ -451,5 +451,82 @@ describe('Database Blueprint', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+  );
+
+  it.effect(
+    'query: in param scopes to feed children (agent uses Query tool)',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed1 = Feed.make({ name: 'inbox-1' });
+        yield* Database.add(feed1);
+        yield* Feed.append(feed1, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Alpha',
+            description: 'Mock email in-param-token-a1b2c3.',
+          }),
+        ]);
+
+        const feed2 = Feed.make({ name: 'inbox-2' });
+        yield* Database.add(feed2);
+        yield* Feed.append(feed2, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Beta',
+            description: 'Mock email in-param-token-d4e5f6.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const agent = yield* AgentService.createSession({
+          blueprints: [DatabaseBlueprint.make()],
+        });
+        yield* agent.submitPrompt('Query for organizations in "inbox-1" feed.');
+        yield* agent.waitForCompletion();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'query operation: in param can be passed as string',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed1 = Feed.make({ name: 'inbox-1' });
+        yield* Database.add(feed1);
+        yield* Feed.append(feed1, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Alpha',
+            description: 'Mock email in-param-invoke-token-a1b2c3.',
+          }),
+        ]);
+
+        const feed2 = Feed.make({ name: 'inbox-2' });
+        yield* Database.add(feed2);
+        yield* Feed.append(feed2, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Beta',
+            description: 'Mock email in-param-invoke-token-d4e5f6.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const agent = yield* AgentService.createSession({
+          blueprints: [DatabaseBlueprint.make()],
+        });
+        yield* agent.submitPrompt(
+          `Call query tool with precisely ${JSON.stringify({
+            includeContent: false,
+            limit: 10,
+            typename: Organization.Organization.typename,
+            in: [Obj.getDXN(feed1).toString()],
+          })}`,
+        );
+        yield* agent.waitForCompletion();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
   );
 });

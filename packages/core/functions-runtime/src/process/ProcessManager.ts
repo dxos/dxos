@@ -30,7 +30,7 @@ import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
-import { ProcessNotFoundError } from '../errors';
+import { ProcessNotFoundError, ServiceNotAvailableError } from '../errors';
 import * as StorageService from './StorageService';
 
 export interface Status {
@@ -594,10 +594,11 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }
     log('lifecycle: failed', { cause: Cause.pretty(cause) });
     this.#finished = true;
-    return this.#cleanup().pipe(
-      Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.failCause(cause))),
-      Effect.tap(() => this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void),
-    );
+    return Effect.gen(this, function* () {
+      this.#setStatus(Process.State.FAILED, Exit.failCause(cause));
+      yield* this.#cleanup();
+      yield* this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void;
+    });
   }
 
   #cleanup(): Effect.Effect<void> {
@@ -932,6 +933,14 @@ export class ProcessManagerImpl implements Manager {
         serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
           Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
           Effect.provideService(Scope.Scope, scope),
+          Effect.catchTag('ServiceNotAvailable', (err) =>
+            Effect.die(
+              new ServiceNotAvailableError({
+                message: err.message,
+                context: { ...err.context, process: definition.key, processName: params.name },
+              }),
+            ),
+          ),
           Effect.orDie,
         );
       }
@@ -1201,6 +1210,7 @@ export namespace ProcessOperationInvoker {
     poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
   }
 
+  // TODO(dmaretskyi): Can we move this into the core invoker?
   export interface ProcessOperationInvoker {
     /**
      * Invoke an operation and return a fiber that can be used to await the result.
@@ -1208,7 +1218,7 @@ export namespace ProcessOperationInvoker {
     invokeFiber: <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
+      options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
     ) => Effect.Effect<OperationFiber<O>>;
 
     /**
@@ -1275,11 +1285,12 @@ export namespace ProcessOperationInvoker {
     const invokeFiber = <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
+      options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
     ): Effect.Effect<OperationFiber<O>> =>
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
 
+        log('spawning process', { opKey: op.meta.key, ...options });
         const handle = yield* opts.manager.spawn(executable, {
           ...options,
           parentProcessId: opts.parentProcessId,
@@ -1292,7 +1303,13 @@ export namespace ProcessOperationInvoker {
         const fiber = yield* fiberFromProcess(handle);
         fiberCache.set(handle.pid, fiber);
         return fiber;
-      });
+      }).pipe(
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            log('operation interrupted', { opKey: op.meta.key });
+          }),
+        ),
+      );
 
     const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
       Effect.gen(function* () {
@@ -1313,10 +1330,11 @@ export namespace ProcessOperationInvoker {
     ): Effect.Effect<O> => {
       const input = args[0] as I;
       const options = args[1] as Operation.InvokeOptions | undefined;
-      const tracing = options?.tracing as TracingOptions | undefined;
+      const traceMeta = options?.tracing as Trace.Meta | undefined;
+      log('invoking operation', { opKey: op.meta.key, ...options });
       return Effect.gen(function* () {
         const fiber = yield* invokeFiber(op, input, {
-          tracing,
+          traceMeta,
           environment: {
             ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
             ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
@@ -1341,15 +1359,30 @@ export namespace ProcessOperationInvoker {
     ): Effect.Effect<void> => {
       const input = args[0] as I;
       return Effect.gen(function* () {
+        log.info('scheduling operation', { opKey: op.meta.key });
         yield* Ref.update(pendingCount, (count) => count + 1);
         const fiber = yield* invokeFiber(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
           Effect.ignore,
-          Effect.fork,
+          Effect.forkDaemon,
         );
         pendingFibers.add(fiber);
-        fiber.addObserver(() => pendingFibers.delete(fiber));
-      });
+        fiber.addObserver((exit) => {
+          pendingFibers.delete(fiber);
+
+          if (Exit.isInterrupted(exit)) {
+            log.warn('scheduled operation interrupted', { opKey: op.meta.key });
+          } else if (Exit.isFailure(exit)) {
+            log.error('operation schedule failed', { opKey: op.meta.key, cause: Cause.pretty(exit.cause) });
+          }
+        });
+      }).pipe(
+        Effect.onInterrupt(() =>
+          Effect.sync(() => {
+            log.info('operation schedule interrupted', { opKey: op.meta.key });
+          }),
+        ),
+      );
     };
 
     const invokePromise: OperationInvoker.OperationInvoker['invokePromise'] = async <I, O>(

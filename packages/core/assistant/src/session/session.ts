@@ -25,9 +25,10 @@ import {
   withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
-import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
+import { Database, Obj } from '@dxos/echo';
+import { Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -41,7 +42,9 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | FunctionInvocationService
+  | Database.Service
+  | Operation.Service
+  | OperationRegistry.Service
   | Trace.TraceService
   /**
    * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().
@@ -160,6 +163,7 @@ export class AiSession {
       Array.takeWhile((_) => _.sender.role === 'assistant'),
       Array.flatMap((_) => _.blocks.filter(ContentBlock.is('toolCall')).map((block) => ({ block, message: _ }))),
       Array.filter((_) => !_.block.providerExecuted),
+      Array.reverse,
     );
 
   /**
@@ -193,7 +197,7 @@ export class AiSession {
       }
 
       yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
-    });
+    }).pipe(Effect.withSpan('AiSession.begin'));
 
   /**
    * Execute a single turn: one LLM generation followed by tool execution.
@@ -204,7 +208,7 @@ export class AiSession {
     toolkit,
   }: AiSessionTurnProps<Tools>): Effect.Effect<AiSessionTurnResult, AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
-      log('request', {
+      log.info('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
         history: this._history.length,
@@ -263,6 +267,7 @@ export class AiSession {
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
+      log.info('messages', { messages });
 
       const toolCalls = this.getToolCalls();
 
@@ -274,7 +279,7 @@ export class AiSession {
       }
 
       return { messages, done: false };
-    });
+    }).pipe(Effect.withSpan('AiSession.runAgentTurn'));
 
   runTools = <Tools extends Record<string, Tool.Any>>({ toolkit }: { toolkit?: Toolkit.WithHandler<Tools> }) =>
     Effect.gen(this, function* () {
@@ -306,7 +311,7 @@ export class AiSession {
       );
 
       this._toolCalls += toolResults.length;
-    });
+    }).pipe(Effect.withSpan('AiSession.runTools'));
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */

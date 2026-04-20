@@ -130,7 +130,8 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
   }
 
-  // Intentionally do not await; i.e., don't block app startup for telemetry.
+  // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
+  // early spans and replays them once the real OTEL backend registers.
   const observability = initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);

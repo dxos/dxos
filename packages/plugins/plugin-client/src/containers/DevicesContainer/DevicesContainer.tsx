@@ -13,7 +13,7 @@ import { type CancellableInvitationObservable, Invitation, InvitationEncoder } f
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { AuthCode, Centered, DeviceListItem, Emoji, Viewport, translationKey } from '@dxos/shell/react';
+import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -25,7 +25,7 @@ export type DevicesContainerProps = {
 };
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
@@ -38,7 +38,7 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
   );
 
   const handleJoinNewIdentity = useCallback(
-    () => invokePromise(ClientOperation.ResetStorage, { mode: 'join new identity' }),
+    () => invokePromise(ClientOperation.ResetStorage, { mode: 'join-new-identity' }),
     [invokePromise],
   );
 

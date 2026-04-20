@@ -14,6 +14,7 @@ import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
+import type * as Obj from './Obj';
 import * as Ref from './Ref';
 
 export interface Filter<T> {
@@ -337,6 +338,35 @@ export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', 
  * Filter objects by createdAt timestamp.
  */
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
+
+export type ChildOfOptions = {
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive?: boolean;
+};
+
+/**
+ * Filter objects that are children of the specified parent(s).
+ * Accepts ECHO objects, Refs, or arrays of either.
+ * Refs are resolved to DXNs without loading; objects use {@link Obj.getDXN}.
+ * With transitive=true (default), also matches grandchildren and beyond.
+ */
+export const childOf = (
+  parents: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+  options?: ChildOfOptions,
+): Any => {
+  const items = Array.isArray(parents) ? parents : [parents];
+  const dxns = items.map((item) => {
+    if (Ref.isRef(item)) {
+      return item.dxn.toString();
+    }
+    return internal.getDXN(item).toString();
+  });
+  return new FilterClass({
+    type: 'child-of',
+    parents: dxns,
+    transitive: options?.transitive ?? true,
+  });
+};
 
 /**
  * Negate the filter.

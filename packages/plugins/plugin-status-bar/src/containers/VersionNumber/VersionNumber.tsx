@@ -22,7 +22,6 @@ export const VersionNumber = (_props: VersionNumberProps) => {
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
-  const isLabs = config.values.runtime?.app?.env?.DX_LABS;
 
   const releaseUrl =
     config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
@@ -34,15 +33,11 @@ export const VersionNumber = (_props: VersionNumberProps) => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Button classNames='text-xs'>{isLabs ? version : v}</StatusBar.Button>
+        <StatusBar.Button classNames='h-full text-xs'>{v}</StatusBar.Button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content
-          side='top'
-          role='message'
-          classNames='z-[12] bg-warning-500 max-w-[min(calc(100vw-16px),40ch)]'
-        >
-          <Message.Root valence='warning' classNames='rounded-b-none p-5'>
+        <Popover.Content side='top' role='message' classNames='z-[12] max-w-[min(calc(100vw-16px),40ch)]'>
+          <Message.Root valence='info' classNames='rounded-b-none p-4'>
             <Message.Title>{t('warning.title')}</Message.Title>
             <Message.Content>
               {t('technology-preview.message')}
@@ -53,30 +48,46 @@ export const VersionNumber = (_props: VersionNumberProps) => {
               </Link>
             </Message.Content>
           </Message.Root>
-          <div role='none' className='py-4 px-5 space-b-2 text-base-surface-text'>
+          <div role='none' className='flex flex-col ps-9 pe-4 py-2 gap-1 space-b-2 text-base-surface-text'>
             {timestamp && (
+              <div>
+                <p>
+                  {t('released.message', {
+                    released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
+                  })}
+                </p>
+                <div>
+                  <span className='dx-tag dx-tag--neutral -ml-1'>{version}</span>
+                </div>
+              </div>
+            )}
+            <div>
               <p>
-                {t('released.message', {
-                  released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
-                })}
-                <br />
                 <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('see-release.label')}
-                  <Icon icon='ph--arrow-square-out--bold' classNames='dx-icon-inline ms-1' />
+                  <Icon icon='ph--arrow-square-out--bold' size={4} classNames='dx-icon-inline ms-1' />
                 </Link>
               </p>
-            )}
-            <p>
-              <Trans
-                {...{
-                  t,
-                  i18nKey: 'powered by dxos message',
-                  components: {
-                    dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
-                  },
-                }}
-              />
-            </p>
+              <p>
+                <Trans
+                  {...{
+                    t,
+                    i18nKey: 'powered-by-dxos.message',
+                    components: {
+                      dxos: (
+                        <Link
+                          classNames='text-green-500'
+                          href='https://dxos.org'
+                          target='_blank'
+                          rel='noreferrer'
+                          variant='neutral'
+                        />
+                      ),
+                    },
+                  }}
+                />
+              </p>
+            </div>
           </div>
           <Popover.Arrow />
         </Popover.Content>

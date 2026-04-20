@@ -18,10 +18,10 @@ const STATUSES: string[] = ['active', 'archived', 'draft'];
 const handler: Operation.WithHandler<typeof Randomize> = Randomize.pipe(
   Operation.withHandler(({ item }) =>
     Effect.sync(() => {
-      Obj.change(item, (draft) => {
-        draft.name = random.lorem.words({ min: 2, max: 5 });
-        draft.description = random.lorem.sentence();
-        draft.status = random.helpers.arrayElement(STATUSES);
+      Obj.change(item, (item) => {
+        item.name = random.lorem.words({ min: 2, max: 5 });
+        item.description = random.lorem.sentence();
+        item.status = random.helpers.arrayElement(STATUSES);
       });
     }),
   ),

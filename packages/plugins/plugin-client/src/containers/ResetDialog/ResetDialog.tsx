@@ -28,7 +28,7 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
   const handleReset = useCallback(async () => {
     await client.reset();
     const target =
-      mode === 'join new identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
+      mode === 'join-new-identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
     if (onReset) {
       await runAndForwardErrors(onReset({ target }).pipe(Effect.provideService(Capability.Service, capabilityManager)));
     }
@@ -43,8 +43,10 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
       <Dialog.Header>
         <Dialog.Title>{t('reset-dialog.title')}</Dialog.Title>
       </Dialog.Header>
-      <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
-      <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
+      <Dialog.Body>
+        <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
+        <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

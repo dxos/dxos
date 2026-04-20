@@ -52,8 +52,8 @@ export class Registry {
           continue;
         }
         const source = Obj.clone(registryBlueprint, { deep: true });
-        Obj.change(blueprint, (mutable) => {
-          void Obj.updateFrom(mutable, source);
+        Obj.change(blueprint, (blueprint) => {
+          void Obj.updateFrom(blueprint, source);
         });
       }
     }).pipe(Effect.orDie);

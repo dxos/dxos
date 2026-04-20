@@ -51,7 +51,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* */30 * * * *' },
+        spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 100 },
       }),
     );
@@ -72,7 +72,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* */30 * * * *' },
+        spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 1_000_000_000 },
       }),
     );
@@ -88,8 +88,8 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     }
 
     {
-      Obj.change(trigger, (obj) => {
-        obj.input!.iterations = 100;
+      Obj.change(trigger, (trigger) => {
+        trigger.input!.iterations = 100;
       });
       await sync(space);
       const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
@@ -109,7 +109,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* * * * * *' },
+        spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 1_000_000 },
       }),
     );
@@ -129,21 +129,21 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* * * * * *' },
+        spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 100 },
       }),
     );
     await sync(space);
     await observeInvocations(space, 5);
 
-    Obj.change(trigger, (obj) => {
-      obj.input!.iterations = 1_000_000_000;
+    Obj.change(trigger, (trigger) => {
+      trigger.input!.iterations = 1_000_000_000;
     });
     await sync(space);
     await observeInvocations(space, 10);
 
-    Obj.change(trigger, (obj) => {
-      obj.input!.iterations = 100;
+    Obj.change(trigger, (trigger) => {
+      trigger.input!.iterations = 100;
     });
     await sync(space);
     await observeInvocations(space, 1_000);

@@ -668,6 +668,114 @@ describe('query api', () => {
     });
   });
 
+  describe('Filter.childOf', () => {
+    test('childOf with Ref', () => {
+      const parentDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(parentDxn);
+      const filter = Filter.childOf(parentRef);
+
+      expect(filter.ast).toMatchObject({
+        type: 'child-of',
+        parents: [parentDxn.toString()],
+        transitive: true,
+      });
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    test('childOf with object', () => {
+      const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
+      const filter = Filter.childOf(parent);
+
+      expect(filter.ast).toMatchObject({
+        type: 'child-of',
+        transitive: true,
+      });
+      expect(filter.ast.type === 'child-of' && filter.ast.parents.length).toBe(1);
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    test('childOf with array of Refs', () => {
+      const dxn1 = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const dxn2 = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const filter = Filter.childOf([Ref.fromDXN(dxn1), Ref.fromDXN(dxn2)]);
+
+      expect(filter.ast).toMatchObject({
+        type: 'child-of',
+        parents: [dxn1.toString(), dxn2.toString()],
+        transitive: true,
+      });
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    test('childOf with transitive=false', () => {
+      const parentRef = Ref.fromDXN(DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()));
+      const filter = Filter.childOf(parentRef, { transitive: false });
+
+      expect(filter.ast).toMatchObject({
+        type: 'child-of',
+        parents: [parentRef.dxn.toString()],
+        transitive: false,
+      });
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    test('childOf in select query', () => {
+      const parentDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(parentDxn);
+      const query = Query.select(Filter.childOf(parentRef));
+
+      expect(query.ast).toMatchObject({
+        type: 'select',
+        filter: {
+          type: 'child-of',
+          parents: [parentDxn.toString()],
+          transitive: true,
+        },
+      });
+      Schema.validateSync(QueryAST.Query)(query.ast);
+    });
+
+    test('childOf combined with type filter', () => {
+      const parentDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(parentDxn);
+      const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.childOf(parentRef)));
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'select',
+        filter: {
+          type: 'and',
+          filters: [
+            { type: 'object', typename: 'dxn:type:com.example.type.person:0.1.0' },
+            { type: 'child-of', parents: [parentDxn.toString()], transitive: true },
+          ],
+        },
+      });
+    });
+
+    test('childOf pretty-prints correctly', () => {
+      const parentRef = Ref.fromDXN(DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()));
+      const filter = Filter.childOf(parentRef);
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.childOf');
+      expect(pretty).toContain('transitive: true');
+    });
+
+    test('childOf with mixed objects and Refs', () => {
+      const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
+      const refDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(refDxn);
+      const filter = Filter.childOf([parent, parentRef]);
+
+      expect(filter.ast).toMatchObject({
+        type: 'child-of',
+        transitive: true,
+      });
+      expect(filter.ast.type === 'child-of' && filter.ast.parents.length).toBe(2);
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+  });
+
   describe('Filter', () => {
     test('Filter.or(Filter.typename(...))', () => {
       const filter = Filter.or(Filter.typename('com.example.type.person'));

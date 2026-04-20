@@ -13,16 +13,13 @@ import { Input, Toolbar } from '@dxos/react-ui';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
-import { getXmlTextChild, type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback, trim } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
-import TEXT_MIXED from './testing/text-mixed.md?raw';
-import TEXT_REASONING from './testing/text-reasoning.md?raw';
-import TEXT_WIDGET from './testing/text-widget.md?raw';
-import { PromptWidget, ReasoningWidget } from './widgets';
+import TEXT from './testing/text.md?raw';
 
 random.seed(123);
 
@@ -53,24 +50,6 @@ const ReactWidget = ({ children }: { children: string }) => {
 };
 
 const registry: XmlWidgetRegistry = {
-  prompt: {
-    block: true,
-    factory: ({ children }) => {
-      const text = getXmlTextChild(children);
-      return text ? new PromptWidget(text) : null;
-    },
-  },
-  reasoning: {
-    block: true,
-    streaming: true,
-    factory: ({ children, range }) => {
-      const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text, range.from) : null;
-    },
-  },
-
-  // Custom widgets.
-
   'dom-widget': {
     block: true,
     streaming: true,
@@ -79,6 +58,7 @@ const registry: XmlWidgetRegistry = {
       return text ? new DOMWidget(text) : null;
     },
   },
+
   'react-widget': {
     block: true,
     streaming: true,
@@ -109,7 +89,7 @@ const DefaultStory = ({
   }, [controller, initialContent]);
 
   useEffect(() => {
-    if (!controller || !streaming) {
+    if (!controller || !streaming || !content) {
       return;
     }
 
@@ -201,18 +181,21 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    registry: registry,
-    content: TEXT_MIXED,
+    initialContent: TEXT,
+    options: {
+      autoScroll: true,
+    },
   },
 };
 
-export const Wire: Story = {
+export const Streaming: Story = {
   args: {
-    registry: registry,
-    content: TEXT_MIXED,
+    registry,
+    content: TEXT,
     options: {
       autoScroll: true,
       wire: true,
+      fader: true,
       cursor: true,
     },
   },
@@ -220,7 +203,7 @@ export const Wire: Story = {
 
 export const Widgets: Story = {
   args: {
-    registry: registry,
+    registry,
     initialContent: trim`
       # DOM Widget
       <dom-widget>${random.lorem.paragraph()}</dom-widget>
@@ -228,64 +211,5 @@ export const Widgets: Story = {
       # React Widget
       <react-widget>${random.lorem.paragraph()}</react-widget>
     `,
-  },
-};
-
-export const StreamingWidgets: Story = {
-  args: {
-    registry: registry,
-    content: TEXT_WIDGET,
-    options: {
-      autoScroll: true,
-      wire: true,
-      fader: true,
-      cursor: true,
-    },
-  },
-};
-
-export const StreamingTags: Story = {
-  args: {
-    registry: registry,
-    content: TEXT_REASONING,
-    options: {
-      autoScroll: true,
-      wire: true,
-      fader: true,
-      cursor: true,
-    },
-  },
-};
-
-export const Short: Story = {
-  args: {
-    registry: registry,
-    content: random.lorem.paragraph(),
-    options: {
-      autoScroll: true,
-      wire: true,
-      fader: true,
-      cursor: true,
-    },
-  },
-};
-
-export const AutoScroll: Story = {
-  args: {
-    initialContent: TEXT_MIXED,
-    registry: registry,
-    content: TEXT_MIXED,
-    options: {
-      autoScroll: true,
-    },
-  },
-};
-
-export const Debug: Story = {
-  args: {
-    initialContent: TEXT_MIXED,
-    registry: registry,
-    content: TEXT_MIXED,
-    debug: true,
   },
 };

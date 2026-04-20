@@ -19,7 +19,7 @@ import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { SpacePluginSettings } from '#components';
+import { SpaceSettings } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
@@ -33,6 +33,7 @@ import {
   ObjectDetails,
   ObjectRenamePopover,
   RecordArticle,
+  RelatedArticle,
   SchemaContainer,
   SmallPresenceLive,
   SpacePresence,
@@ -90,7 +91,7 @@ export default Capability.makeModule(
           const spaces = useSpaces({ all: settings.showHidden });
           const { invokePromise } = useOperationInvoker();
           return (
-            <SpacePluginSettings
+            <SpaceSettings
               settings={settings}
               onSettingsChange={updateSettings}
               spaces={spaces}
@@ -100,10 +101,16 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'companion.object-settings',
+        id: 'companion.object-properties',
         role: 'article',
         filter: AppSurface.and(AppSurface.literalArticle('settings'), AppSurface.companionArticle()),
-        component: ({ ref, data, role }) => <ObjectDetails subject={data.companionTo} role={role} ref={ref} />,
+        component: ({ ref, data, role }) => <ObjectDetails role={role} subject={data.companionTo} ref={ref} />,
+      }),
+      Surface.create({
+        id: 'companion.related',
+        role: 'article',
+        filter: AppSurface.and(AppSurface.literalArticle('related'), AppSurface.companionArticle()),
+        component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'space-settings-properties',
@@ -261,8 +268,8 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'object-settings',
-        role: 'object-settings',
+        id: 'object-properties',
+        role: 'object-properties',
         filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
           if (!Obj.isObject(data.subject)) {
             return false;

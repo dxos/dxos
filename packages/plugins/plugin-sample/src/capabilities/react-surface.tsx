@@ -20,7 +20,7 @@ import {
   SampleArticle,
   SampleCompanionPanel,
   SampleDeckCompanion,
-  SampleObjectSettings,
+  SampleProperties,
   SampleSettings,
 } from '#containers';
 import { meta } from '#meta';
@@ -43,15 +43,15 @@ export default Capability.makeModule(() =>
         ),
       }),
 
-      // --- Object settings surface ---
-      // Renders in the per-object settings panel (gear icon companion).
-      // `AppSurface.objectSettings(Schema)` matches when viewing settings for this type.
+      // --- Object properties surface ---
+      // Renders in the per-object properties panel (gear icon companion).
+      // `AppSurface.objectProperties(Schema)` matches when viewing properties for this type.
       Surface.create({
-        id: 'object-settings',
-        role: 'object-settings',
+        id: 'object-properties',
+        role: 'object-properties',
         position: 'hoist',
-        filter: AppSurface.objectSettings(SampleItem.SampleItem),
-        component: ({ data }) => <SampleObjectSettings subject={data.subject} />,
+        filter: AppSurface.objectProperties(SampleItem.SampleItem),
+        component: ({ data }) => <SampleProperties subject={data.subject} />,
       }),
 
       // --- Plugin settings surface ---

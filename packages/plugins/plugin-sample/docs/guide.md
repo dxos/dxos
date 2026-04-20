@@ -48,14 +48,14 @@ See [Surfaces API](../../../sdk/app-toolkit/docs/surfaces-api.md) for more detai
 
 [`src/capabilities/react-surface.tsx`](../src/capabilities/react-surface.tsx) registers six surfaces:
 
-| Surface          | Role                           | Filter                                                         | Component               |
-| ---------------- | ------------------------------ | -------------------------------------------------------------- | ----------------------- |
-| Article          | `article`, `section`           | `objectArticle(SampleItem)`                                    | `SampleArticle`         |
-| Object settings  | `object-settings`              | `objectSettings(SampleItem)`                                   | `SampleObjectSettings`  |
-| Plugin settings  | `article`                      | `settingsArticle(meta.id)`                                     | `SampleSettings`        |
-| Status indicator | `status-indicator`             | _(none)_                                                       | `SampleStatusIndicator` |
-| Companion        | `article`                      | `and(literalArticle('related'), companionArticle(SampleItem))` | `SampleCompanionPanel`  |
-| Deck companion   | `deck-companion--sample-panel` | `literalSection('sample-panel')`                               | `SampleDeckCompanion`   |
+| Surface           | Role                           | Filter                                                         | Component               |
+| ----------------- | ------------------------------ | -------------------------------------------------------------- | ----------------------- |
+| Article           | `article`, `section`           | `objectArticle(SampleItem)`                                    | `SampleArticle`         |
+| Object properties | `object-properties`            | `objectProperties(SampleItem)`                                 | `SampleProperties`      |
+| Plugin settings   | `article`                      | `settingsArticle(meta.id)`                                     | `SampleSettings`        |
+| Status indicator  | `status-indicator`             | _(none)_                                                       | `SampleStatusIndicator` |
+| Companion         | `article`                      | `and(literalArticle('related'), companionArticle(SampleItem))` | `SampleCompanionPanel`  |
+| Deck companion    | `deck-companion--sample-panel` | `literalSection('sample-panel')`                               | `SampleDeckCompanion`   |
 
 ## App Graph
 

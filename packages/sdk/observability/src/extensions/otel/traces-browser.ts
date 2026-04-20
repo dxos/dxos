@@ -2,7 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, type Tracer, context as otelContext, propagation, trace } from '@opentelemetry/api';
+import {
+  ROOT_CONTEXT,
+  SpanStatusCode,
+  type Tracer,
+  context as otelContext,
+  propagation,
+  trace,
+} from '@opentelemetry/api';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -19,7 +26,7 @@ import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
-import { type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_ALL_KEY, type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
 
@@ -49,7 +56,7 @@ export class OtelTraces {
   constructor(private readonly options: OtelOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
-    const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem('dxos.debug.traceAll') === 'true';
+    const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
     const tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
@@ -83,28 +90,48 @@ export class OtelTraces {
     registerInstrumentations({
       instrumentations: [
         getWebAutoInstrumentations({
-          // Fetch is disabled in favor of explicit ctx on our call sites; if re-enabled, keep noisy
-          // third-party URLs out of traces (matches prior browser tracing setup).
           '@opentelemetry/instrumentation-fetch': { enabled: false, ignoreUrls: [/api\.ipdata\.co/] },
           '@opentelemetry/instrumentation-document-load': { enabled: false },
           '@opentelemetry/instrumentation-xml-http-request': { enabled: false },
+          '@opentelemetry/instrumentation-user-interaction': { enabled: false },
         }),
       ],
     });
 
-    TRACE_PROCESSOR.remoteTracing.registerProcessor({
-      startSpan: (options: StartSpanOptions) => {
+    const tracer = this._tracer;
+
+    TRACE_PROCESSOR.tracingBackend = {
+      startSpan: (options: StartSpanOptions): RemoteSpan => {
         log('begin otel trace', { options });
-        const explicitParent = options.parentContext as Context | undefined;
-        const parentCtx = explicitParent ?? otelContext.active();
-        const span = this._tracer.startSpan(options.name, options, parentCtx);
-        const spanCtx = trace.setSpan(parentCtx, span);
+        const parentCtx = options.parentContext
+          ? propagation.extract(ROOT_CONTEXT, {
+              traceparent: options.parentContext.traceparent,
+              tracestate: options.parentContext.tracestate ?? '',
+            })
+          : otelContext.active();
+
+        const span = tracer.startSpan(options.name, options, parentCtx);
+
+        const sc = span.spanContext();
+        const spanContext =
+          sc && sc.traceId && sc.spanId
+            ? {
+                traceparent: `00-${sc.traceId}-${sc.spanId}-${(sc.traceFlags ?? 0).toString(16).padStart(2, '0')}`,
+                tracestate: sc.traceState?.serialize(),
+              }
+            : undefined;
+
         return {
-          end: () => span.end(),
-          wrapExecution: <T>(fn: () => T): T => otelContext.with(spanCtx, fn),
-          spanContext: spanCtx,
+          end: (endTime?: number) => span.end(endTime),
+          setError: (err: unknown) => {
+            if (err instanceof Error) {
+              span.recordException(err);
+            }
+            span.setStatus({ code: SpanStatusCode.ERROR, message: err instanceof Error ? err.message : String(err) });
+          },
+          spanContext,
         };
       },
-    });
+    };
   }
 }

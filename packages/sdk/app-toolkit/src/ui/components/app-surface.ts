@@ -162,23 +162,23 @@ export const objectSection: {
   };
 };
 
-/** Surface data for object-settings surfaces. */
-export type ObjectSettingsData<
+/** Surface data for object-properties surfaces. */
+export type ObjectPropertiesData<
   Subject extends Obj.Unknown | undefined = Obj.Unknown,
   Props extends {} = {},
 > = SectionData<Subject, Props>;
 
-/** Component props for object-settings surfaces. */
-export type ObjectSettingsProps<
+/** Component props for object-properties surfaces. */
+export type ObjectPropertiesProps<
   Subject extends Obj.Unknown | undefined = Obj.Unknown,
   Props extends {} = {},
 > = SectionProps<Subject, Props>;
 
-/** Filter: object-settings-role ECHO object. */
-export const objectSettings: {
+/** Filter: object-properties-role ECHO object. */
+export const objectProperties: {
   <S extends Type.AnyEntity>(
     schema: S,
-  ): (data: Record<string, unknown>) => data is ObjectSettingsData<Schema.Schema.Type<S>>;
+  ): (data: Record<string, unknown>) => data is ObjectPropertiesData<Schema.Schema.Type<S>>;
 } = (schema: Type.AnyEntity) => {
   return (data: Record<string, unknown>): data is any => {
     return Obj.instanceOf(schema, data.subject);

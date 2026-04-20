@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReactNode } from 'react';
+import { HTMLAttributes } from 'react';
 
 import { type ThemedClassName } from './theme';
 
@@ -22,11 +22,8 @@ import { type ThemedClassName } from './theme';
  * @see https://www.radix-ui.com/primitives/docs/guides/composition
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type ComposableProps<P extends object = {}> = ThemedClassName<P> & {
-  className?: string;
-  children?: ReactNode;
-  role?: string;
-};
+export type ComposableProps<P extends object = {}> = ThemedClassName<P> &
+  Pick<HTMLAttributes<Element>, 'children' | 'className' | 'role' | 'style'>;
 
 /**
  * Props for components that render a default DOM element but support `asChild` to delegate rendering

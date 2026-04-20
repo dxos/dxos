@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -58,7 +58,7 @@ const meta = {
 export default meta;
 
 export const Default = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const { registry } = useContext(ComputeGraphContext) ?? {};
   const sheet = useTestSheet(space, graph, { cells: createTestCells() });
@@ -81,7 +81,7 @@ export const Default = () => {
 };
 
 export const Spec = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const { registry } = useContext(ComputeGraphContext) ?? {};
   const sheet = useTestSheet(space, graph, { cells: { A1: { value: 'Ready' } } });

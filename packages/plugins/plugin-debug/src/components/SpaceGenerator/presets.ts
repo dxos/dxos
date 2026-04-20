@@ -74,8 +74,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (obj) => {
-            Obj.getMeta(obj).tags = [tagDxn];
+          Obj.change(doc, (doc) => {
+            Obj.getMeta(doc).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -135,10 +135,7 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'timer',
-                cron: '* * * * *', // Every minute.
-              },
+              spec: Trigger.specTimer('* * * * *'), // Every minute.
               function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
@@ -150,10 +147,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-              spec: {
-                kind: 'queue',
-                queue: queueDxn,
-              },
+              spec: Trigger.specQueue(queueDxn),
               function: Ref.make(Operation.serialize(EntityExtraction)),
               input: {
                 source: '{{event.item}}',
@@ -184,12 +178,7 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'subscription',
-                query: {
-                  ast: organizationsQuery.ast,
-                },
-              },
+              spec: Trigger.specSubscription(organizationsQuery),
               function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
@@ -763,8 +752,8 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    Obj.change(functionTrigger, (ft) => {
-      initSpec(ft.spec as any);
+    Obj.change(functionTrigger, (functionTrigger) => {
+      initSpec(functionTrigger.spec as any);
     });
   });
 
@@ -815,9 +804,9 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (obj) => {
-    obj.function = Ref.make(computeModel.root);
-    obj.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (functionTrigger) => {
+    functionTrigger.function = Ref.make(computeModel.root);
+    functionTrigger.inputNodeId = inputNode.id;
   });
 };
 

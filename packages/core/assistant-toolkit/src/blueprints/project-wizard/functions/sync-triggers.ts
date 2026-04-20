@@ -10,27 +10,27 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
-import { Project } from '../../../types';
+import { Agent } from '../../../types';
 import { SyncTriggers } from './definitions';
 
 export default SyncTriggers.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ project: projectRef }) {
-      const project = yield* Database.load(projectRef);
-      yield* syncProjectTriggers(project);
+    Effect.fn(function* ({ agent: agentRef }) {
+      const agent = yield* Database.load(agentRef);
+      yield* syncAgentTriggers(agent);
     }),
   ),
 );
 
 /**
- * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <project id : ObjectId>.
+ * Foreign key {@link AGENT_TRIGGER_EXTENSION_KEY} => <agent id : ObjectId>.
  */
-const PROJECT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.ProjectTrigger';
+const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
 
 /**
- * Foreign key {@link PROJECT_TRIGGER_TARGET_EXTENSION_KEY} => <dxn string of subscription target>.
+ * Foreign key {@link AGENT_TRIGGER_TARGET_EXTENSION_KEY} => <dxn string of subscription target>.
  */
-const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.ProjectTriggerTarget';
+const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
 
 /** Checks if an object's schema has the FeedAnnotation. */
 const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
@@ -43,36 +43,24 @@ const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
 };
 
 /**
- * Syncs triggers in the database with the project subscriptions.
+ * Syncs triggers in the database with the agent subscriptions.
  */
-const syncProjectTriggers = (project: Project.Project): Effect.Effect<void, never, Database.Service> =>
+const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
     const triggers = yield* Database.runQuery(
-      Filter.foreignKeys(Trigger.Trigger, [{ source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id }]),
+      Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
     );
 
+    // Remove all existing triggers — they will be recreated with the current config.
+    // This ensures operation and concurrency stay in sync when filterEvents is toggled.
     for (const trigger of triggers) {
-      const target = Obj.getKeys(trigger, PROJECT_TRIGGER_TARGET_EXTENSION_KEY).at(0)?.id;
-
-      const exists = project.subscriptions.find((subscription) => subscription.dxn.toString() === target);
-      if (!exists && !(project.useQualifyingAgent && target === Obj.getDXN(project)?.toString())) {
-        yield* Database.remove(trigger);
-      }
+      yield* Database.remove(trigger);
     }
 
-    // lazy import to avoid circular dependency issues
-    const { Qualifier, Agent } = yield* Effect.promise(() => import('../../project'));
+    // Lazy import to avoid circular dependency issues.
+    const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../project'));
 
-    for (const subscription of project.subscriptions) {
-      const relevantTrigger = triggers.find((trigger) =>
-        Obj.getKeys(trigger, PROJECT_TRIGGER_TARGET_EXTENSION_KEY).some(
-          (key) => key.id === subscription.dxn.toString(),
-        ),
-      );
-      if (relevantTrigger) {
-        continue;
-      }
-
+    for (const subscription of agent.subscriptions) {
       const targetOption = yield* Database.loadOption(subscription);
       if (Option.isNone(targetOption)) {
         continue;
@@ -96,62 +84,51 @@ const syncProjectTriggers = (project: Project.Project): Effect.Effect<void, neve
         continue;
       }
 
+      const filterEvents = agent.filterEvents ?? true;
+
       yield* Database.add(
         Trigger.make({
-          [Obj.Parent]: project,
+          [Obj.Parent]: agent,
           [Obj.Meta]: {
             keys: [
-              { source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id },
-              { source: PROJECT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
             ],
           },
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queueDxn.toString(),
-          },
-          function: Ref.make(Operation.serialize(project.useQualifyingAgent ? Qualifier : Agent)),
+          spec: Trigger.specQueue(queueDxn.toString()),
+          function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
-            project: Ref.make(project),
+            agent: Ref.make(agent),
             event: '{{event}}',
           },
-          concurrency: project.useQualifyingAgent ? 5 : undefined,
+          concurrency: filterEvents ? 5 : undefined,
         }),
       );
     }
 
-    if (project.useQualifyingAgent) {
-      const qualifierTrigger = triggers.find((trigger) =>
-        Obj.getKeys(trigger, PROJECT_TRIGGER_TARGET_EXTENSION_KEY).some(
-          (key) => key.id === Obj.getDXN(project)?.toString(),
-        ),
+    if ((agent.filterEvents ?? true) && agent.queue) {
+      yield* Database.add(
+        Trigger.make({
+          [Obj.Parent]: agent,
+          [Obj.Meta]: {
+            keys: [
+              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+              {
+                source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
+                id: Obj.getDXN(agent)?.toString() ?? '',
+              },
+            ],
+          },
+          function: Ref.make(Operation.serialize(AgentWorker)),
+          enabled: true,
+          spec: Trigger.specQueue(agent.queue.dxn.toString()),
+          input: {
+            agent: Ref.make(agent),
+            event: '{{event}}',
+          },
+        }),
       );
-      if (!qualifierTrigger && project.queue) {
-        yield* Database.add(
-          Trigger.make({
-            [Obj.Parent]: project,
-            [Obj.Meta]: {
-              keys: [
-                { source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id },
-                {
-                  source: PROJECT_TRIGGER_TARGET_EXTENSION_KEY,
-                  id: Obj.getDXN(project)?.toString() ?? '',
-                },
-              ],
-            },
-            function: Ref.make(Operation.serialize(Agent)),
-            enabled: true,
-            spec: {
-              kind: 'queue',
-              queue: project.queue.dxn.toString(),
-            },
-            input: {
-              project: Ref.make(project),
-              event: '{{event}}',
-            },
-          }),
-        );
-      }
     }
 
     yield* Database.flush();

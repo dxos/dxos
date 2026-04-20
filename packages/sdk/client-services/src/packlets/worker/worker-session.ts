@@ -55,21 +55,21 @@ export class WorkerSession {
     this._serviceHost = serviceHost;
 
     const middleware: Pick<ClientRpcServerProps, 'handleCall' | 'handleStream'> = {
-      handleCall: async (method, params, handler) => {
+      handleCall: async (method, params, handler, options) => {
         const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
           throw error;
         }
 
-        return handler(method, params);
+        return handler(method, params, options);
       },
-      handleStream: async (method, params, handler) => {
+      handleStream: async (method, params, handler, options) => {
         const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
           throw error;
         }
 
-        return handler(method, params);
+        return handler(method, params, options);
       },
     };
 

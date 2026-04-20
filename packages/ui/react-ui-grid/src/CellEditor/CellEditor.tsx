@@ -148,10 +148,10 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
                 slots?.editor?.className,
               ),
             },
-            scroll: {
+            scroller: {
               className: mx(
                 'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pe-0! !pl-(--dx-grid-cell-editor-padding-inline)',
-                slots?.scroll?.className,
+                slots?.scroller?.className,
               ),
             },
             content: {

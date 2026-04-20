@@ -17,7 +17,7 @@ export const Spec = Schema.Struct({
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.plugin.deus.spec',
+    typename: 'org.dxos.type.spec',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({

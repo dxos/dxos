@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ChannelArticle, ChannelSettings, VideoArticle, VideoCard } from '#containers';
+import { ChannelArticle, ChannelProperties, VideoArticle, VideoCard } from '#containers';
 import { Channel, Video } from '#types';
 
 export default Capability.makeModule(() =>
@@ -42,10 +42,10 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject }, role }) => <VideoCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: 'channel.companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Channel.YouTubeChannel),
-        component: ({ data }) => <ChannelSettings subject={data.subject} />,
+        id: 'channel-properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Channel.YouTubeChannel),
+        component: ({ data }) => <ChannelProperties subject={data.subject} />,
       }),
     ]),
   ),

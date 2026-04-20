@@ -31,8 +31,8 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
           );
           const [fn] = functions;
           if (fn) {
-            Obj.change(trigger, (obj) => {
-              obj.function = Ref.make(fn);
+            Obj.change(trigger, (trigger) => {
+              trigger.function = Ref.make(fn);
             });
           }
         }
@@ -40,17 +40,14 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
 
       switch (template.type) {
         case 'timer': {
-          Obj.change(trigger, (obj) => {
-            obj.spec = { kind: 'timer', cron: template.cron };
+          Obj.change(trigger, (trigger) => {
+            trigger.spec = Trigger.specTimer(template.cron);
           });
           break;
         }
         case 'queue': {
-          Obj.change(trigger, (obj) => {
-            obj.spec = {
-              kind: 'queue',
-              queue: (template.queueDXN as DXN).toString(),
-            };
+          Obj.change(trigger, (trigger) => {
+            trigger.spec = Trigger.specQueue((template.queueDXN as DXN).toString());
           });
           break;
         }

@@ -11,6 +11,6 @@ import { type ComponentType, lazy } from 'react';
 
 export const SampleArticle: ComponentType<any> = lazy(() => import('./SampleArticle'));
 export const SampleSettings: ComponentType<any> = lazy(() => import('./SampleSettings'));
-export const SampleObjectSettings: ComponentType<any> = lazy(() => import('./SampleObjectSettings'));
+export const SampleProperties: ComponentType<any> = lazy(() => import('./SampleProperties'));
 export const SampleCompanionPanel: ComponentType<any> = lazy(() => import('./SampleCompanionPanel'));
 export const SampleDeckCompanion: ComponentType<any> = lazy(() => import('./SampleDeckCompanion'));

@@ -54,8 +54,8 @@ export default Deploy.pipe(
 
       Operation.setFrom(loaded, newFunction);
 
-      Obj.change(script, (draft) => {
-        draft.changed = false;
+      Obj.change(script, (script) => {
+        script.changed = false;
       });
 
       const edgeFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));

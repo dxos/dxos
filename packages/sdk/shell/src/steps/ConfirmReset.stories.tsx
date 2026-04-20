@@ -23,10 +23,10 @@ const meta = {
 export default meta;
 
 export const ResetStorage = () => (
-  <StorybookDialog inOverlayLayout>
+  <StorybookDialog>
     <ConfirmReset
       active
-      mode='reset storage'
+      mode='reset-storage'
       onCancel={() => console.log('cancel')}
       onConfirm={async () => console.log('confirm reset storage')}
     />
@@ -34,10 +34,10 @@ export const ResetStorage = () => (
 );
 
 export const JoinNewIdentity = () => (
-  <StorybookDialog inOverlayLayout>
+  <StorybookDialog>
     <ConfirmReset
       active
-      mode='join new identity'
+      mode='join-new-identity'
       onCancel={() => console.log('cancel')}
       onConfirm={async () => console.log('confirm join new identity')}
     />
@@ -45,7 +45,7 @@ export const JoinNewIdentity = () => (
 );
 
 export const Recover = () => (
-  <StorybookDialog inOverlayLayout>
+  <StorybookDialog>
     <ConfirmReset
       active
       mode='recover'
@@ -56,16 +56,16 @@ export const Recover = () => (
 );
 
 export const NoCancel = () => (
-  <StorybookDialog inOverlayLayout>
-    <ConfirmReset active mode='reset storage' onConfirm={async () => console.log('confirm')} />
+  <StorybookDialog>
+    <ConfirmReset active mode='reset-storage' onConfirm={async () => console.log('confirm')} />
   </StorybookDialog>
 );
 
 export const Inactive = () => (
-  <StorybookDialog inOverlayLayout>
+  <StorybookDialog>
     <ConfirmReset
       active={false}
-      mode='reset storage'
+      mode='reset-storage'
       onCancel={() => console.log('cancel')}
       onConfirm={async () => console.log('confirm')}
     />

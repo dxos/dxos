@@ -13,7 +13,7 @@ import { Query } from './definitions';
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default Query.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ typename, text, includeContent = false, limit = 10, includeQueues = false }) {
+    Effect.fn(function* ({ in: parents, typename, text, includeContent = false, limit = 10, includeQueues = false }) {
       const { db } = yield* Database.Service;
       let query: EchoQuery.Any;
       if (text) {
@@ -36,6 +36,11 @@ export default Query.pipe(
       } else {
         query = EchoQuery.select(Filter.everything());
       }
+
+      if (parents && parents.length > 0) {
+        query = query.select(Filter.childOf(parents));
+      }
+
       query = query.limit(limit);
       if (includeQueues) {
         // Must scope to the current space: `from({ allQueuesFromSpaces: true })` alone has no spaceIds, so the SQL

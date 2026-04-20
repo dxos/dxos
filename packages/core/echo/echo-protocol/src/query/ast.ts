@@ -167,6 +167,21 @@ export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
 export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
 /**
+ * Filter objects that are children of the specified parents.
+ * With transitive=true (default), matches grandchildren and beyond.
+ */
+const FilterChildOf_ = Schema.Struct({
+  type: Schema.Literal('child-of'),
+  /** Parent DXNs to match children of. */
+  parents: Schema.Array(DXN.Schema),
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive: Schema.Boolean,
+});
+
+export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_> {}
+export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union(
@@ -178,6 +193,7 @@ export const Filter = Schema.Union(
   FilterRange,
   FilterTimestamp,
   FilterTextSearch,
+  FilterChildOf,
   FilterNot,
   FilterAnd,
   FilterOr,

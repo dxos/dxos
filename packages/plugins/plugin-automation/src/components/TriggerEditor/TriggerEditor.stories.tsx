@@ -47,7 +47,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     const trigger = space.db.add(
       Trigger.make({
         function: Ref.make(fn),
-        spec: { kind: 'webhook' },
+        spec: Trigger.specWebhook(),
         input: {
           from: 'USD',
           to: 'JPY',

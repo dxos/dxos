@@ -97,7 +97,7 @@ export const useSyncTrigger = ({
       const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
-        spec: { kind: 'timer', cron: '*/5 * * * *' },
+        spec: Trigger.specTimer('*/5 * * * *'),
         function: Ref.make(fn),
         input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
       });

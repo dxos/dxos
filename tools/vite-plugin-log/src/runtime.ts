@@ -36,15 +36,26 @@ const entryToNdjsonLine = (_config: LogConfig, entry: LogEntry): string | null =
     record.n = entry.meta.L;
   }
 
-  if (entry.error) {
-    record.e = entry.error.stack ?? entry.error.message;
+  const ctx = entry.context;
+
+  let error = entry.error;
+  if (!error && ctx?.error) {
+    error = ctx.error;
+    delete ctx.error;
+  } else if (!error && ctx.err) {
+    error = ctx.err;
+    delete ctx.err;
   }
 
-  if (entry.context != null) {
+  if (error) {
+    record.e = error.stack ?? error.message;
+  }
+
+  if (ctx != null) {
     try {
-      const ctx = typeof entry.context === 'function' ? entry.context() : entry.context;
-      if (ctx != null && !(ctx instanceof Error)) {
-        let json = JSON.stringify(ctx);
+      const ctx1 = typeof ctx === 'function' ? ctx() : ctx;
+      if (ctx1 != null && !(ctx1 instanceof Error)) {
+        let json = JSON.stringify(ctx1);
         if (json.length > MAX_CONTEXT_LENGTH) {
           json = json.slice(0, MAX_CONTEXT_LENGTH);
         }

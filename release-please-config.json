@@ -485,6 +485,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-worker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/env-tests/package.json",
           "jsonpath": "$.version"
         },
@@ -545,6 +550,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-discord/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
@@ -576,6 +586,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-iroh-beacon/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -751,6 +766,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-tictactoe/package.json",
           "jsonpath": "$.version"
         },
         {

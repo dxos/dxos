@@ -116,6 +116,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-discord"
+    },
+    {
       "path": "../../plugins/plugin-excalidraw"
     },
     {
@@ -135,6 +138,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-iroh-beacon"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -237,6 +243,9 @@
     },
     {
       "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-tictactoe"
     },
     {
       "path": "../../plugins/plugin-token-manager"

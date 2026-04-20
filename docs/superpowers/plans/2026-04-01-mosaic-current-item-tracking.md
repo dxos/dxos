@@ -356,7 +356,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} data-message-id={message.id}>
+        <Card.Root ref={forwardedRef}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar

@@ -191,7 +191,7 @@ export const translations = [
         'join-success.label': 'Successfully joined space',
         'name.label': 'Name',
         'name.placeholder': 'Name',
-        'object-settings.label': 'Details',
+        'object-properties.label': 'Properties',
         'edge-replication.label': 'Enable EDGE Replication',
         'saving-locally.label': 'Writing to disk',
         'downloading.label': 'Replicating from peers',
@@ -214,10 +214,11 @@ export const translations = [
         'advanced-settings.label': 'Advanced',
         'settings.space-list.label': 'Spaces',
         'settings.open-settings.label': 'Open settings',
+        'settings-panel.label': 'Open settings',
         'related-actions.label': 'Related Actions',
         'related-objects.label': 'Related Objects',
-        'open-space-settings.label': 'Open settings',
         'row-details-no-selection.label': 'No objects selected',
+        'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
         'field-deleted.label': 'Field deleted',
 
@@ -252,6 +253,10 @@ export const translations = [
         'archive-space.label': 'Archive',
         'unarchive-space.label': 'Unarchive',
 
+        'space-key.title': 'Space Key',
+        'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
+        'copy-space-key.label': 'Copy space key',
+
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',
         'backup-space.title': 'Backup Space',
@@ -262,7 +267,7 @@ export const translations = [
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
 
-        'sync-edge-connected.label': 'Edge connected',
+        'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
         'sync-no-connection.label': 'No connection to edge service',
         'sync-latency.label': 'Latency',

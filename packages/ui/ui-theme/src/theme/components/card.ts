@@ -18,7 +18,7 @@ export type CardStyleProps = {
 
 const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card dx-card-min-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
+    'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
     border &&
       'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
@@ -34,7 +34,7 @@ const cardToolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
 const cardTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
 const cardContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__content contents [&>:last-child]:pb-1', ...etc);
+  mx('dx-card__content contents pb-1 last:pb-0', ...etc);
 
 const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(

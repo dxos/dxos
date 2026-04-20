@@ -106,7 +106,7 @@ IDs with a `~` prefix on the last segment (e.g., `root/obj/~settings`) mark the 
 | -------------- | ----------- | ------------------------------------------------------ |
 | DOM focus      | Browser     | `tabIndex`, `focus()`, focus/blur events               |
 | Attention      | App-wide    | `data-attendable-id` + `RootAttentionProvider` capture |
-| Matrix.current | Matrix only | `focusin` on viewport → resolve `data-mosaic-tile-id`  |
+| Matrix.current | Matrix only | `focusin` on viewport → resolve `data-object-id`       |
 
 Currently, Matrix.current and the attention system are independent. For the Matrix to participate in the attention system, tiles would need `data-attendable-id` attributes and the `RootAttentionProvider` would track them automatically via DOM focus. The `onCurrentChange` callback on Matrix.Root could then be driven by attention rather than raw focus events.
 

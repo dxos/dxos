@@ -33,7 +33,7 @@ describe('useSpace', () => {
   test('returns undefined when no id provided', async () => {
     const { client } = await createClient({ createIdentity: true });
     const wrapper = await createClientContextProvider(client);
-    const { result } = renderHook(() => useSpace(), { wrapper });
+    const { result } = renderHook(() => useSpace(undefined), { wrapper });
     expect(result.current).to.be.undefined;
   });
 

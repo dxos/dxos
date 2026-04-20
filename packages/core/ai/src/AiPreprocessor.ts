@@ -88,6 +88,8 @@ export const preprocessPrompt: (
     Effect.map(Array.filter((_) => _.content.length > 0)),
     Effect.map(Prompt.fromMessages),
     Effect.map(fixMissingToolResults),
+    Effect.map(fixDuplicateToolResults),
+    Effect.map(removeUnsatisfiedServerToolCalls),
     Effect.map(system ? Prompt.setSystem(system) : Function.identity),
     Effect.map(setCacheControl(cacheControl)),
   );
@@ -97,40 +99,40 @@ export const preprocessPrompt: (
  * Fast regex-based token estimation.
  * This is only an approximation and might differ from the actual token count.
  */
-export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = Effect.fn('estimateTokens')(
-  function* (prompt) {
-    let totalTokens = 0;
+export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = Effect.fn(
+  'AiPreprocessor.estimateTokens',
+)(function* (prompt) {
+  let totalTokens = 0;
 
-    for (const message of prompt.content) {
-      totalTokens += MESSAGE_DELIMITER_TOKENS;
+  for (const message of prompt.content) {
+    totalTokens += MESSAGE_DELIMITER_TOKENS;
 
-      switch (message.role) {
-        case 'system': {
-          totalTokens += TokenX.estimateTokenCount(message.content);
-          break;
+    switch (message.role) {
+      case 'system': {
+        totalTokens += TokenX.estimateTokenCount(message.content);
+        break;
+      }
+      case 'user':
+      case 'assistant': {
+        for (const part of message.content) {
+          totalTokens += estimatePartTokens(part);
         }
-        case 'user':
-        case 'assistant': {
-          for (const part of message.content) {
-            totalTokens += estimatePartTokens(part);
-          }
-          break;
+        break;
+      }
+      case 'tool': {
+        for (const part of message.content) {
+          totalTokens += TokenX.estimateTokenCount(part.name);
+          totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
         }
-        case 'tool': {
-          for (const part of message.content) {
-            totalTokens += TokenX.estimateTokenCount(part.name);
-            totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
-          }
-          break;
-        }
+        break;
       }
     }
+  }
 
-    totalTokens += REPLY_PRIMING_TOKENS;
+  totalTokens += REPLY_PRIMING_TOKENS;
 
-    return totalTokens;
-  },
-);
+  return totalTokens;
+});
 
 /** Per-message overhead for role/start/end delimiter tokens. */
 const MESSAGE_DELIMITER_TOKENS = 4;
@@ -462,6 +464,136 @@ const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
     }
   }
 
+  return Prompt.fromMessages(result);
+};
+
+/**
+ * Removes tool-result parts that reference no tool-call id (in prior messages or the same
+ * message), and drops duplicate tool results for the same id (keeps the first in conversation order).
+ *
+ * Tool-call ids in the current message are collected up front so a `tool-result` is still kept
+ * when it appears before its matching `tool-call` in the part list (e.g. provider web_search blocks).
+ */
+const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  const seenToolCallIds = new Set<string>();
+  const seenToolResultIds = new Set<string>();
+
+  const processUserOrAssistantPart = (
+    part: Prompt.UserMessagePart | Prompt.AssistantMessagePart,
+  ): Prompt.UserMessagePart | Prompt.AssistantMessagePart | undefined => {
+    if (part.type === 'tool-call') {
+      seenToolCallIds.add(part.id);
+      return part;
+    }
+    if (part.type === 'tool-result') {
+      if (!part.providerExecuted && (!seenToolCallIds.has(part.id) || seenToolResultIds.has(part.id))) {
+        return undefined;
+      }
+      seenToolResultIds.add(part.id);
+      return part;
+    }
+    return part;
+  };
+
+  const result: Prompt.Message[] = [];
+  for (const message of prompt.content) {
+    switch (message.role) {
+      case 'system': {
+        result.push(message);
+        break;
+      }
+      case 'user': {
+        const filtered: Prompt.UserMessagePart[] = [];
+        for (const part of message.content) {
+          const next = processUserOrAssistantPart(part);
+          if (next !== undefined) {
+            filtered.push(next as Prompt.UserMessagePart);
+          }
+        }
+        if (filtered.length > 0) {
+          result.push(
+            message.options !== undefined
+              ? Prompt.makeMessage('user', { content: filtered, options: message.options })
+              : Prompt.makeMessage('user', { content: filtered }),
+          );
+        }
+        break;
+      }
+      case 'assistant': {
+        const filtered: Prompt.AssistantMessagePart[] = [];
+        for (const part of message.content) {
+          const next = processUserOrAssistantPart(part);
+          if (next !== undefined) {
+            filtered.push(next);
+          }
+        }
+        if (filtered.length > 0) {
+          result.push(
+            message.options !== undefined
+              ? Prompt.makeMessage('assistant', { content: filtered, options: message.options })
+              : Prompt.makeMessage('assistant', { content: filtered }),
+          );
+        }
+        break;
+      }
+      case 'tool': {
+        const filtered: Prompt.ToolMessagePart[] = [];
+        for (const part of message.content) {
+          const next = processUserOrAssistantPart(part);
+          if (next !== undefined) {
+            filtered.push(next as any);
+          }
+        }
+        if (filtered.length > 0) {
+          result.push(Prompt.makeMessage('tool', { content: filtered }));
+        }
+        break;
+      }
+    }
+  }
+
+  return Prompt.fromMessages(result);
+};
+
+const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  const seeToolResultIds = new Set<string>();
+
+  //1. Scan all assistant message and collect all tool-result ids that are not provider-executed.
+  for (const message of prompt.content) {
+    if (message.role !== 'assistant') {
+      continue;
+    }
+    for (const part of message.content) {
+      if (part.type === 'tool-result' && !part.providerExecuted) {
+        seeToolResultIds.add(part.id);
+      }
+    }
+  }
+
+  const result: Prompt.Message[] = [];
+  for (const message of prompt.content) {
+    if (message.role !== 'assistant') {
+      result.push(message);
+      continue;
+    }
+    const filtered: Prompt.AssistantMessagePart[] = [];
+    for (const part of message.content) {
+      if (part.type === 'tool-call' && part.providerExecuted) {
+        if (seeToolResultIds.has(part.id)) {
+          filtered.push(part);
+        }
+      } else {
+        filtered.push(part);
+      }
+    }
+    if (filtered.length > 0) {
+      result.push(
+        message.options !== undefined
+          ? Prompt.makeMessage('assistant', { content: filtered, options: message.options })
+          : Prompt.makeMessage('assistant', { content: filtered }),
+      );
+    }
+  }
   return Prompt.fromMessages(result);
 };
 

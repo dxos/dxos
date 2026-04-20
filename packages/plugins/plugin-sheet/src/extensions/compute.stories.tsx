@@ -8,7 +8,7 @@ import React, { useEffect, useMemo } from 'react';
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -45,7 +45,7 @@ const SHEET_NAME = 'Test Sheet';
 const DefaultStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
-  const space = useSpace();
+  const [space] = useSpaces();
   const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
@@ -67,7 +67,7 @@ const DefaultStory = ({ text }: EditorProps) => {
 };
 
 const Grid = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { name: SHEET_NAME });
   const model = useSheetModel(graph, sheet);

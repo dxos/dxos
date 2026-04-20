@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 import { translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
@@ -41,7 +41,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
-  const space = useSpace();
+  const [space] = useSpaces();
   useAsyncEffect(async () => {
     if (!space) {
       return;

@@ -21,7 +21,6 @@ import { useClient } from '../client';
 export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
-
   if (!spaceId) {
     return undefined;
   }

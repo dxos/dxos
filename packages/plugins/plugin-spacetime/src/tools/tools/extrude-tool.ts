@@ -24,6 +24,9 @@ const snapToGrid = (value: number): number => Math.round(value / SNAP_SIZE) * SN
 /** Dot product of a Vector3 and a plain {x,y,z} vector. */
 const dotVec3 = (a: Vector3, b: Vector3): number => a.x * b.x + a.y * b.y + a.z * b.z;
 
+/** Minimum distance threshold to trigger an extrusion (avoids no-op WASM work). */
+const DISTANCE_EPSILON = 0.001;
+
 /** State tracked during an active extrude drag. */
 type ExtrudeState = {
   /** ECHO object id being extruded. */
@@ -42,6 +45,8 @@ type ExtrudeState = {
   startT: number;
   /** Manifold solid at the start of this extrusion (cloned). */
   baseSolid: Manifold;
+  /** Pre-computed bounding box — cached to avoid repeated WASM calls during drag. */
+  baseBBox: { min: number[]; max: number[] };
   /** Timestamp of last move update (for throttling). */
   lastMoveTime: number;
 };
@@ -139,9 +144,11 @@ export class ExtrudeTool implements Tool {
       ctx.selection.highlightMesh.setEnabled(false);
     }
 
-    // Clone the solid so we can rebuild from base during drag.
+    // Deep-copy the solid via getMesh() roundtrip — avoids heavyweight CSG union
+    // and ensures the clone shares no internal WASM state with the original.
     const { Manifold } = ctx.manifold;
-    const baseSolid = Manifold.union(currentSolid, currentSolid);
+    const baseSolid = new Manifold(currentSolid.getMesh());
+    const baseBBox = baseSolid.boundingBox();
 
     this._state = {
       objectId,
@@ -152,6 +159,7 @@ export class ExtrudeTool implements Tool {
       normalVec,
       startT,
       baseSolid,
+      baseBBox,
       lastMoveTime: 0,
     };
 
@@ -184,6 +192,11 @@ export class ExtrudeTool implements Tool {
       distance = snapToGrid(facePos + distance) - facePos;
     }
 
+    // Skip WASM operations when distance is negligible (e.g. initial move with no displacement).
+    if (Math.abs(distance) < DISTANCE_EPSILON) {
+      return true;
+    }
+
     const t0 = performance.now();
     const extruded = applyExtrusion(
       ctx.manifold.Manifold,
@@ -191,6 +204,7 @@ export class ExtrudeTool implements Tool {
       this._state.faceId,
       this._state.normal,
       distance,
+      this._state.baseBBox,
     );
 
     const t1 = performance.now();
@@ -227,12 +241,26 @@ export class ExtrudeTool implements Tool {
       distance = snapToGrid(facePos + distance) - facePos;
     }
 
+    // No significant drag — clean up without creating a new solid.
+    // This avoids unnecessary WASM allocations on clicks without drag.
+    if (Math.abs(distance) < DISTANCE_EPSILON) {
+      this._state.baseSolid.delete();
+      // Restore selection highlight that was hidden at drag start.
+      if (ctx.selection?.type === 'face' && ctx.selection.highlightMesh) {
+        ctx.selection.highlightMesh.setEnabled(true);
+      }
+      ctx.camera.attachControl(ctx.canvas, true);
+      this._state = null;
+      return true;
+    }
+
     const finalSolid = applyExtrusion(
       ctx.manifold.Manifold,
       this._state.baseSolid,
       this._state.faceId,
       this._state.normal,
       distance,
+      this._state.baseBBox,
     );
 
     // Replace the runtime solid for this object.
@@ -250,9 +278,9 @@ export class ExtrudeTool implements Tool {
     const modelObject = ctx.getObject(this._state.objectId);
     if (modelObject) {
       const meshData = serializeManifold(finalSolid);
-      Obj.change(modelObject, (obj) => {
-        obj.primitive = undefined;
-        obj.mesh = meshData;
+      Obj.change(modelObject, (modelObject) => {
+        modelObject.primitive = undefined;
+        modelObject.mesh = meshData;
       });
     }
 

@@ -19,12 +19,14 @@ import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
+import { DiscordPlugin } from '@dxos/plugin-discord';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
@@ -58,6 +60,7 @@ import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
@@ -148,7 +151,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
+      DiscordPlugin.meta.id,
       FeedPlugin.meta.id,
+      IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
@@ -200,12 +205,14 @@ export const getPlugins = ({
     ConductorPlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
+    DiscordPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
+    IrohBeaconPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
@@ -249,6 +256,7 @@ export const getPlugins = ({
       noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
+    TicTacToePlugin(),
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),

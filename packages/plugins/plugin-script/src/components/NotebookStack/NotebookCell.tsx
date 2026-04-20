@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { EditorContent, type EditorContentProps } from '@dxos/react-ui-editor';
+import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -195,7 +195,7 @@ const NotebookTextEditor = ({
   extensions: extensionsProp,
   readOnly,
   ...props
-}: EditorContentProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
+}: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
@@ -211,5 +211,9 @@ const NotebookTextEditor = ({
     ].filter(isNonNullable);
   }, [extensionsProp]);
 
-  return <EditorContent {...props} extensions={extensions} selectionEnd />;
+  return (
+    <Editor.Root>
+      <Editor.View {...props} extensions={extensions} selectionEnd />
+    </Editor.Root>
+  );
 };

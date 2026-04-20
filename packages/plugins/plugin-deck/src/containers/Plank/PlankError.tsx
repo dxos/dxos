@@ -56,7 +56,7 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
 
   useEffect(() => {
     if (error) {
-      log.error(error);
+      log.error('plank error', { error });
     }
   }, [error]);
 

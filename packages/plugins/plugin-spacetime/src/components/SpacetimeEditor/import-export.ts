@@ -40,8 +40,8 @@ export const handleImport = ({ scene, hue, importGLBRef, setSelectedObjectId }: 
         mesh: meshData,
         color: hue,
       });
-      Obj.change(scene, (obj) => {
-        obj.objects.push(Ref.make(object));
+      Obj.change(scene, (scene) => {
+        scene.objects.push(Ref.make(object));
       });
       Obj.setParent(object, scene);
       const objId = (object as any).id as string | undefined;

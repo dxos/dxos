@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat, Project } from '@dxos/assistant-toolkit';
+import { Chat, Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
@@ -22,8 +22,8 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  ProjectArticle,
-  ProjectSettings,
+  AgentArticle,
+  AgentProperties,
   PromptArticle,
   PromptList,
   TracePanel,
@@ -56,18 +56,18 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'project',
+        id: 'agent',
         role: 'article',
-        filter: AppSurface.objectArticle(Project.Project),
+        filter: AppSurface.objectArticle(Agent.Agent),
         component: ({ data, role }) => (
-          <ProjectArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <AgentArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'project.companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Project.Project),
-        component: ({ data }) => <ProjectSettings subject={data.subject} />,
+        id: 'agent-properties',
+        role: 'object-properties',
+        filter: AppSurface.objectProperties(Agent.Agent),
+        component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion-chat',

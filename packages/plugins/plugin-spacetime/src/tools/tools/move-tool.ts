@@ -194,8 +194,8 @@ export class MoveTool implements Tool {
     const modelObject = ctx.getObject(objectId);
     if (modelObject) {
       // Commit final position to ECHO.
-      Obj.change(modelObject, (obj) => {
-        obj.position = {
+      Obj.change(modelObject, (modelObject) => {
+        modelObject.position = {
           x: mesh.position.x,
           y: mesh.position.y,
           z: mesh.position.z,
@@ -207,8 +207,8 @@ export class MoveTool implements Tool {
     for (const companion of this._drag.companions) {
       const companionObj = ctx.getObject(companion.objectId);
       if (companionObj) {
-        Obj.change(companionObj, (obj) => {
-          obj.position = {
+        Obj.change(companionObj, (companionObj) => {
+          companionObj.position = {
             x: companion.mesh.position.x,
             y: companion.mesh.position.y,
             z: companion.mesh.position.z,

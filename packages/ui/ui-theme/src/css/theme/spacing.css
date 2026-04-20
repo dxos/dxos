@@ -32,6 +32,7 @@
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);
   --spacing-form-gap: var(--spacing-trim-sm);
+  --spacing-form-section-gap: var(--spacing-trim-lg);
 
   /**
    * Density: fine
@@ -115,12 +116,12 @@
     --dx-toolbar-size: var(--dx-rail-action); /* 40px */
     --dx-statusbar-size: var(--dx-rail-item); /* 32px */
 
-    /** NOTE: On MBP, should have nav sidebare open with 4 column mosaic board. */
-    --dx-nav-sidebar-size: 21.5rem;
+    /** NOTE: Sidebar optimized to show plank + companion with sidebar open on 16" MBP. */
+    --dx-nav-sidebar-size: 350px;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;
 
-    --dx-l0-size: 74px; /* MacOS windowing controls. */
+    --dx-l0-size: 72px;
     --dx-l0-avatar-size: 3rem;
     --dx-l1-size: calc(var(--dx-nav-sidebar-size) - var(--dx-l0-size));
     --dx-r0-size: var(--dx-rail-size);

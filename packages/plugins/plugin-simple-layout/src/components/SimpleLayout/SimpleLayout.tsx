@@ -33,9 +33,9 @@ export const SimpleLayout = () => {
   return (
     <DebugOverlay.Root enabled={false}>
       <PopoverRoot>
-        <Mosaic.Root classNames='dx-container grid relative'>
+        <Mosaic.Root>
           <MobileLayout.Root
-            classNames='bg-toolbar-surface'
+            classNames='dx-container grid relative bg-toolbar-surface'
             onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
           >
             <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'top' }}>

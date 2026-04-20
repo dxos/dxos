@@ -13,7 +13,7 @@ import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harnes
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('Web', () => {
-  it.effect.skip(
+  it.effect(
     // TODO(dmaretskyi): Agent unable to activate blueprints.
     'search the web',
     agentTest(

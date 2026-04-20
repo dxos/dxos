@@ -9,7 +9,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Graph } from '@dxos/app-graph';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -23,7 +23,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { DeckState } from '#capabilities';
+import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 
 import { Plank } from '../../containers/Plank';
@@ -37,6 +37,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     id: Capability.getModuleTag(DeckState),
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: () => DeckState(),
+  }),
+  AppPlugin.addOperationHandlerModule({
+    activate: OperationHandler,
   }),
   Plugin.make,
 );
@@ -155,7 +158,7 @@ const DefaultStory = ({ Tile }: DefaultStoryProps) => {
   const currentIndex = items.findIndex((item) => item.id === current);
 
   return (
-    <Mosaic.Root classNames='dx-container'>
+    <Mosaic.Root>
       <Matrix.Root Tile={Tile} items={items} current={current} onCurrentChange={handleCurrentChange} ref={controller}>
         <Panel.Root>
           <Panel.Toolbar asChild>

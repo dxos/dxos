@@ -46,7 +46,7 @@ Surface.create({
 | ---------------------- | ------------------------------ | ------------------------------------ |
 | `article`              | Main content area (plank body) | Primary object views, settings pages |
 | `section`              | Inline sections within planks  | Compact/embedded views               |
-| `object-settings`      | Per-object settings panel      | Object configuration UI              |
+| `object-properties`    | Per-object properties panel    | Object configuration UI              |
 | `status-indicator`     | Application status bar         | Status icons, indicators             |
 | `form-input`           | Form field slots               | Custom form inputs                   |
 | `deck-companion--{id}` | Deck sidebar companion         | Workspace-wide panels                |
@@ -64,9 +64,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 // Narrows data to: { subject: MyType, attendableId: string }
 AppSurface.objectArticle(MySchema);
 
-// Matches object settings for this type.
+// Matches object properties for this type.
 // Narrows data to: { subject: MyType }
-AppSurface.objectSettings(MySchema);
+AppSurface.objectProperties(MySchema);
 
 // Matches sections displaying an ECHO object of this type.
 AppSurface.objectSection(MySchema);

@@ -25,8 +25,8 @@ export const RangeList = ({ sheet }: RangeListProps) => {
   const handleDeleteRange = useCallback(
     (range: Sheet.Range) => {
       const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
-      Obj.change(sheet, (obj) => {
-        obj.ranges.splice(index, 1);
+      Obj.change(sheet, (sheet) => {
+        sheet.ranges.splice(index, 1);
       });
     },
     [sheet],
@@ -49,8 +49,8 @@ export const RangeList = ({ sheet }: RangeListProps) => {
                 <List.ItemTitle onClick={() => handleSelectRange(range)}>
                   {t('range.title', {
                     position: rangeToA1Notation(rangeFromIndex(sheet, range.range)),
-                    key: t(`range-key-${range.key}.label`),
-                    value: t(`range-value-${range.value}.label`),
+                    key: t(`range-key.${range.key}.label`),
+                    value: t(`range-value.${range.value}.label`),
                   })}
                 </List.ItemTitle>
                 <List.ItemDeleteButton onClick={() => handleDeleteRange(range)} />

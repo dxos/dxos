@@ -7,12 +7,15 @@ import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiConversation } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 
 import { AiChatProcessor } from './processor';
+
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 
 describe('Chat processor', () => {
   it.scoped(
@@ -30,7 +33,7 @@ describe('Chat processor', () => {
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },
-      Effect.provide(AssistantTestLayer({ tracing: 'noop' })),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
   );

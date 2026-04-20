@@ -28,6 +28,31 @@ import { withoutToolCallParising } from '../../util';
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
 
+/**
+ * Matches the line injected by assistant system prompts (see format.tpl) so memoized conversations stay stable when tests run on different days.
+ */
+const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
+const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
+
+const normalizePromptForMemoization = (prompt: unknown): unknown =>
+  deepMapValues(prompt, (value, recurse) => {
+    if (typeof value === 'string') {
+      return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER);
+    }
+    return recurse(value);
+  });
+
+/**
+ * Deep clone before normalizing so we never mutate prompts still in use by the caller.
+ */
+const cloneForMemoNormalization = (prompt: unknown): unknown => {
+  try {
+    return JSON.parse(JSON.stringify(prompt)) as unknown;
+  } catch {
+    return prompt;
+  }
+};
+
 export interface LayerOptions {
   modelName: string;
   storePath: string;
@@ -195,7 +220,10 @@ const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedCo
     return false;
   }
 
-  if (jsonStableStringify(haystack.prompt) !== jsonStableStringify(needle.prompt)) {
+  if (
+    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(haystack.prompt))) !==
+    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(needle.prompt)))
+  ) {
     return false;
   }
 
@@ -320,12 +348,15 @@ const formatMemoizedConversation = (conversation: MemoziedConversation): string 
       {
         parameters: conversation.parameters,
         // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
-        prompt: deepMapValues(conversation.prompt, (value, recurse, key) => {
-          if (typeof value === 'string' && value.length > 256 && key === 'encrypted_content') {
-            return sanitizeString(value);
-          }
-          return recurse(value);
-        }),
+        prompt: deepMapValues(
+          normalizePromptForMemoization(cloneForMemoNormalization(conversation.prompt)),
+          (value, recurse, key) => {
+            if (typeof value === 'string' && value.length > 256 && key === 'encrypted_content') {
+              return sanitizeString(value);
+            }
+            return recurse(value);
+          },
+        ),
       },
       { space: 2 },
     ) ?? ''
