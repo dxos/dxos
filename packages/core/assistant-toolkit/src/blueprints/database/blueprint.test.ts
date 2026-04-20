@@ -488,7 +488,7 @@ describe('Database Blueprint', () => {
     { timeout: 60_000 },
   );
 
-  it.effect.only(
+  it.effect(
     'query operation: in param can be passed as string',
     Effect.fnUntraced(
       function* (_) {

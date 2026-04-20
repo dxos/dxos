@@ -130,6 +130,7 @@ export default AgentPrompt.pipe(
 
         return yield* Deferred.poll(resultSink).pipe(
           Effect.flatten,
+          Effect.flatten,
           Effect.catchTag('NoSuchElementException', () =>
             Effect.gen(function* () {
               // Retry once if the agent did not signal task completion.
@@ -151,6 +152,7 @@ export default AgentPrompt.pipe(
                 );
 
               return yield* Deferred.poll(resultSink).pipe(
+                Effect.flatten,
                 Effect.flatten,
                 Effect.catchTag('NoSuchElementException', () => Effect.die('Agent did not signal task completion.')),
               );
