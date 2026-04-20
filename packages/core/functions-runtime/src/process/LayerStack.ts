@@ -263,7 +263,7 @@ class Slice {
       baseLayer,
     );
 
-    this.#managedRuntime = ManagedRuntime.make(combinedLayer);
+    this.#managedRuntime = ManagedRuntime.make(combinedLayer as Layer.Layer<unknown, unknown, never>);
 
     return Effect.gen(this, function* () {
       const rt = yield* this.#managedRuntime!.runtimeEffect;

@@ -24,7 +24,7 @@ import * as Stream from 'effect/Stream';
 import { DXN, Obj } from '@dxos/echo';
 import { Performance } from '@dxos/effect';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import { LayerSpec, Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
@@ -790,7 +790,7 @@ export class ProcessManagerImpl implements Manager {
         ...options?.environment,
       };
 
-      const resolutionContext: ServiceResolver.ResolutionContext = {
+      const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
         conversation: environment.conversation,
         process: id,
