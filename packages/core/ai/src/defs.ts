@@ -50,6 +50,7 @@ export const DEFAULT_OLLAMA_MODELS = [
   'llama3:70b',
   'deepseek-r1:latest',
   'gpt-oss:20b',
+  'gemma4:latest',
 ] as const;
 
 /**

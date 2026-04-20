@@ -42,6 +42,10 @@ export const AiServicePresets: AiServicePreset[] = [
     model: 'gpt-oss:20b' as const,
   },
   {
+    provider: 'ollama' as const,
+    model: 'gemma4:latest' as const,
+  },
+  {
     provider: 'lm-studio' as const,
     model: '@google/gemma-3-27b' as const,
   },
