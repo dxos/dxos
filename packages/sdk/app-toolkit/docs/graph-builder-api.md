@@ -166,7 +166,7 @@ AppNode.makeDeckCompanion({
 });
 ```
 
-The corresponding surface uses `role: 'deck-companion--my-panel'` and `filter: AppSurface.literalSection('my-panel')`.
+The corresponding surface uses `role: 'deck-companion--my-panel'` and `filter: AppSurface.literal(AppSurface.Section, 'my-panel')`.
 
 ### `AppNode.makeSection(options)`
 

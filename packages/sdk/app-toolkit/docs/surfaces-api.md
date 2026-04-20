@@ -19,23 +19,26 @@ The layout plugins (deck, simple-layout) are one canonical consumer of surfaces 
 
 ### `Surface.create(options)`
 
-Registers a React component for a specific role and data shape.
+Registers a React component for a specific role and data shape. Prefer the typed
+form: pass an `AppSurface` filter and the role is derived from its bindings.
 
 ```typescript
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
+// Typed form — role carried by the filter.
 Surface.create({
-  // Unique identifier for this surface.
   id: 'article',
-  // Role(s) this surface renders in. Can be a string or array.
-  role: ['article', 'section'],
-  // Optional: controls rendering order. 'hoist' renders first.
+  filter: AppSurface.object(AppSurface.Article, MySchema),
   position: 'hoist',
-  // Filter function — a type predicate that narrows the data type.
-  // The predicate is required because it determines the type of `data`
-  // passed to the component. TypeScript uses it to infer the component's props.
+  component: ({ data, role }) => <MyComponent subject={data.subject} role={role} />,
+});
+
+// Legacy form — still supported.
+Surface.create({
+  id: 'article',
+  role: ['article', 'section'],
   filter: (data): data is { subject: MyType } => isMyType(data.subject),
-  // React component to render. `data` is typed by the filter's predicate.
   component: ({ data, role }) => <MyComponent subject={data.subject} role={role} />,
 });
 ```
@@ -53,63 +56,114 @@ Surface.create({
 
 ## App-Toolkit Filters: `AppSurface`
 
-`AppSurface` from `@dxos/app-toolkit/ui` provides type-safe filter predicates for common patterns. Each returns a type predicate that narrows the surface data to the expected shape.
+`AppSurface` from `@dxos/app-toolkit/ui` provides typed role tokens and filter
+builders. A filter is a `Surface.Filter<TData>` carrying both the role(s) it
+applies to and a runtime guard that narrows the data type.
 
-### Object Filters
+### Role tokens
 
 ```typescript
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-// Matches articles displaying an ECHO object of this type.
-// Narrows data to: { subject: MyType, attendableId: string }
-AppSurface.objectArticle(MySchema);
-
-// Matches object properties for this type.
-// Narrows data to: { subject: MyType }
-AppSurface.objectProperties(MySchema);
-
-// Matches sections displaying an ECHO object of this type.
-AppSurface.objectSection(MySchema);
-
-// Matches card views for this type.
-AppSurface.objectCard(MySchema);
+// Built-in tokens: Article, Section, Card, Slide, Tabpanel, Related, Dialog,
+// Popover, Navigation, MenuFooter, NavbarEnd, DocumentTitle.
+// Mint your own:
+import { Surface } from '@dxos/app-framework/ui';
+const MyRole = Surface.makeType<{ subject: MyShape }>('my-plugin/my-role');
 ```
 
-### Literal Filters
+### Object filters
 
 ```typescript
-// Matches when subject is a specific string literal.
-// Used for companions and devtools panels.
-AppSurface.literalArticle('details');
-AppSurface.literalSection('my-panel');
+// Matches article-role ECHO objects of this type (requires attendableId).
+AppSurface.object(AppSurface.Article, MySchema);
+
+// Matches section-role ECHO objects of this type.
+AppSurface.object(AppSurface.Section, MySchema);
+
+// Array of schemas narrows subject to their union.
+AppSurface.object(AppSurface.Card, [SchemaA, SchemaB]);
+
+// Object-properties panel.
+AppSurface.object(AppSurface.ObjectProperties, MySchema);
 ```
 
-### Settings Filter
+### Component filter
 
 ```typescript
-// Matches the settings page for this plugin.
-// Narrows data to: { subject: { atom: Atom.Writable<Settings> } }
-AppSurface.settingsArticle(meta.id);
+// Matches dialog/popover content by `data.component === id`.
+AppSurface.component(AppSurface.Dialog, MY_DIALOG_ID);
+// Second type parameter narrows `data.props` at the call site:
+AppSurface.component<typeof MY_DIALOG_ID, { onClose: () => void }>(AppSurface.Dialog, MY_DIALOG_ID);
 ```
 
-### Companion Filter
+### Settings filter
 
 ```typescript
-// Matches companion panels attached to an ECHO object of this type.
-// Narrows data to: { companionTo: MyType }
-AppSurface.companionArticle(MySchema);
-
-// Matches companion panels for any ECHO object.
-AppSurface.companionArticle();
+// Matches the plugin settings article with the given prefix.
+AppSurface.settings(AppSurface.Article, meta.id);
 ```
 
-### Composing Filters
+### Predicate lift
 
 ```typescript
-// `and()` composes multiple filters with type intersection.
-// Both filters must match for the surface to render.
-AppSurface.and(AppSurface.literalArticle('related'), AppSurface.companionArticle(MySchema));
+// Wraps an ad-hoc predicate for a given role so it composes via `and`.
+AppSurface.predicate(AppSurface.Article, (data) => data.variant === undefined);
 ```
+
+### Companion filter
+
+```typescript
+// Matches when data.companionTo is an ECHO object of this type.
+AppSurface.companion(AppSurface.Article, MySchema);
+// Or a literal string.
+AppSurface.companion(AppSurface.Article, 'feeds-root');
+// Or any ECHO object.
+AppSurface.companion(AppSurface.Article);
+```
+
+### Combinators
+
+```typescript
+// oneOf: register across multiple roles with the same (or differing) guards.
+AppSurface.oneOf(
+  AppSurface.object(AppSurface.Article, MySchema),
+  AppSurface.object(AppSurface.Section, MySchema),
+);
+
+// allOf: same-role intersection (all filters must share the same role set).
+AppSurface.allOf(
+  AppSurface.object(AppSurface.Article, MySchema),
+  AppSurface.predicate(AppSurface.Article, (data) => data.variant === undefined),
+);
+
+// Article/Section/Tabpanel tokens inherently require `data.attendableId` to be
+// a string — no additional wrapper needed when combining them via oneOf.
+AppSurface.oneOf(
+  AppSurface.object(AppSurface.Article, MySchema),
+  AppSurface.object(AppSurface.Section, MySchema),
+);
+```
+
+### Legacy predicate filters
+
+Still supported for the literal/section/graph-node/plugin/schema/snapshot
+patterns that have not been ported to the typed form:
+`literalArticle`, `literalSection`, `anyObjectSection`, `graphNodeSection`,
+`pluginSection`, `schemaSection`, `snapshotSection`, `companionArticle`,
+`objectProperties`. These return raw type predicates and compose via the
+two-argument form of `AppSurface.allOf(leftPred, rightPred)`.
+
+Prefer the typed equivalents:
+
+- `literalArticle(v)` → `literal(AppSurface.Article, v)`
+- `literalSection(v)` → `literal(AppSurface.Section, v)`
+- `companionArticle(...)` → `companion(AppSurface.Article, ...)`
+- `anyObjectSection()` → `subject(AppSurface.Section, Obj.isObject)`
+- `graphNodeSection()` → `subject(AppSurface.Section, Node.isGraphNode)`
+- `pluginSection()` → `subject(AppSurface.Section, Plugin.isPlugin)`
+- `snapshotSection(S)` → `snapshot(AppSurface.Section, S)`
+- `objectProperties(S)` → `object(AppSurface.ObjectProperties, S)`
 
 ## App-Toolkit Helper: `AppPlugin.addSurfaceModule`
 

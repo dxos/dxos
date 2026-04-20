@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
@@ -28,8 +28,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const client = useClient();
@@ -50,8 +49,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'script.article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Script.Script),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Script.Script),
+          AppSurface.object(AppSurface.Section, Script.Script),
+        ),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           const settings = useAtomCapability(ScriptCapabilities.Settings);
@@ -68,8 +69,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'notebook.article',
-        role: 'article',
-        filter: AppSurface.objectArticle(Notebook.Notebook),
+        filter: AppSurface.object(AppSurface.Article, Notebook.Notebook),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           return (
@@ -84,20 +84,23 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'properties',
-        role: 'object-properties',
-        filter: AppSurface.objectProperties(Script.Script),
+        filter: AppSurface.object(AppSurface.ObjectProperties, Script.Script),
         component: ({ data, role }) => <ScriptProperties role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion.execute',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('execute'), AppSurface.companionArticle(Script.Script)),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'execute'),
+          AppSurface.companion(AppSurface.Article, Script.Script),
+        ),
         component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
       }),
       Surface.create({
         id: 'companion.logs',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('logs'), AppSurface.companionArticle(Script.Script)),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'logs'),
+          AppSurface.companion(AppSurface.Article, Script.Script),
+        ),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
@@ -117,8 +120,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: DEPLOYMENT_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(DEPLOYMENT_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof DeploymentDialog>>(AppSurface.Dialog, DEPLOYMENT_DIALOG),
         component: ({ data }) => <DeploymentDialog {...data.props} />,
       }),
     ]),

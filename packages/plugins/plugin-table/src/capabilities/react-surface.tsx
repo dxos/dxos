@@ -18,16 +18,18 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'table',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section', 'slide'],
-        filter: AppSurface.objectArticle(Table.Table),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Table.Table),
+          AppSurface.object(AppSurface.Section, Table.Table),
+          AppSurface.object(AppSurface.Slide, Table.Table),
+        ),
         component: ({ data, role }) => (
           <TableContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'table-card',
-        role: ['card--content'],
-        filter: AppSurface.objectCard(Table.Table),
+        filter: AppSurface.object(AppSurface.Card, Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),

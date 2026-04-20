@@ -25,9 +25,8 @@ export default Capability.makeModule(() =>
 
       Surface.create<{ subject: Person.Person }>({
         id: 'schema-popover--contact',
-        role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.objectCard(Person.Person),
+        filter: AppSurface.object(AppSurface.Card, Person.Person),
         component: ({ data, role }) => {
           return (
             <>
@@ -39,9 +38,8 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'schema-popover--organization',
-        role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.objectCard(Organization.Organization),
+        filter: AppSurface.object(AppSurface.Card, Organization.Organization),
         component: ({ data, role }) => {
           return (
             <>
@@ -53,18 +51,16 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'schema-popover--project',
-        role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.objectCard(Pipeline.Pipeline),
+        filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
         },
       }),
       Surface.create({
         id: 'schema-popover--task',
-        role: 'card--content',
         position: 'hoist',
-        filter: AppSurface.objectCard(Task.Task),
+        filter: AppSurface.object(AppSurface.Card, Task.Task),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;
         },
@@ -96,9 +92,8 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'section',
-        role: ['section'],
         position: 'fallback',
-        filter: AppSurface.anyObjectSection(),
+        filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
         component: ({ data }) => {
           return (
             <div role='none' className='flex w-full justify-center'>

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
@@ -70,22 +70,19 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'collection-fallback',
-        role: 'article',
         position: 'fallback',
-        filter: AppSurface.objectArticle(Collection.Collection),
+        filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
         id: 'record-article',
-        role: 'article',
         position: 'fallback',
-        filter: AppSurface.anyObjectSection(),
+        filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const spaces = useSpaces({ all: settings.showHidden });
@@ -102,20 +99,23 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'companion.object-properties',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('settings'), AppSurface.companionArticle()),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'settings'),
+          AppSurface.companion(AppSurface.Article),
+        ),
         component: ({ ref, data, role }) => <ObjectDetails role={role} subject={data.companionTo} ref={ref} />,
       }),
       Surface.create({
         id: 'companion.related',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('related'), AppSurface.companionArticle()),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'related'),
+          AppSurface.companion(AppSurface.Article),
+        ),
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'space-settings-properties',
-        role: 'article',
-        filter: AppSurface.literalSection(`${meta.id}.general`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -127,9 +127,8 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space-settings-members',
-        role: 'article',
         position: 'hoist',
-        filter: AppSurface.literalSection(`${meta.id}.members`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -141,8 +140,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space-settings-schema',
-        role: 'article',
-        filter: AppSurface.literalSection(`${meta.id}.schema`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.schema`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -181,20 +179,17 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: JOIN_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(JOIN_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof JoinDialog>>(AppSurface.Dialog, JOIN_DIALOG),
         component: ({ data }) => <JoinDialog {...data.props} />,
       }),
       Surface.create({
         id: CREATE_SPACE_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(CREATE_SPACE_DIALOG),
+        filter: AppSurface.component(AppSurface.Dialog, CREATE_SPACE_DIALOG),
         component: () => <CreateSpaceDialog />,
       }),
       Surface.create({
         id: CREATE_OBJECT_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(CREATE_OBJECT_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof CreateObjectDialog>>(AppSurface.Dialog, CREATE_OBJECT_DIALOG),
         component: ({ data }) => <CreateObjectDialog {...data.props} />,
       }),
       Surface.create({
@@ -305,8 +300,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'menu-footer',
-        role: 'menu-footer',
-        filter: AppSurface.anyObjectSection(),
+        filter: AppSurface.subject(AppSurface.MenuFooter, Obj.isObject),
         component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Surface.create({
@@ -352,8 +346,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'collection-section',
-        role: 'section',
-        filter: AppSurface.objectSection(Collection.Collection),
+        filter: AppSurface.object(AppSurface.Section, Collection.Collection),
         component: ({ data }) => <CollectionSection subject={data.subject} />,
       }),
       Surface.create({

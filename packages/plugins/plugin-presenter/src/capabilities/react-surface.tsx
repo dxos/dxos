@@ -48,14 +48,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'slide',
-        role: 'slide',
-        filter: AppSurface.objectSection(Markdown.Document),
+        filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;
