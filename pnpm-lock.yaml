@@ -4243,6 +4243,9 @@ importers:
 
   packages/core/assistant-e2e:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
@@ -23211,45 +23214,6 @@ packages:
   '@moonrepo/cli@2.2.0':
     resolution: {integrity: sha512-a7C0pGp9PV/3a6qsybKBFuUIRvdLJRMY3KCJLyOiZJovRiJ4IluwR2VunnRAYLgmdjQvFDMd14APNrVOLhfvsw==}
     hasBin: true
-
-  '@moonrepo/core-linux-arm64-gnu@2.2.0':
-    resolution: {integrity: sha512-W2pZlhfN19FF3jkRJfQSoiIwAG1643Ybc9XseWKWOspdeJx2DAuiJOfbIU4UxDnCkpObz6DYiQ9AAETXqA4DVQ==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@moonrepo/core-linux-arm64-musl@2.2.0':
-    resolution: {integrity: sha512-EkjsNbcEzOjSghnXalaGwggCeix1pkp16/Wmnrdb5IKF+HtM/QTHZZR4j4pPPHKL/gAku/E6YNUIL2yJ/5KC2A==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
-  '@moonrepo/core-linux-x64-gnu@2.2.0':
-    resolution: {integrity: sha512-WVjrahvM6+t6cc4Y7wQuvM4nSss8Tseg44BEcwjncP8uGsH9z1zKjdm9utwLZbILIDrTxZEVHAez3azs8rOnEg==}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@moonrepo/core-linux-x64-musl@2.2.0':
-    resolution: {integrity: sha512-LUPSwSBiyp28S8qqCTd5VPI7EeC7puJJhTVGNnNX1dWWez1Ytjxtr/j9jWvodBwjWRxYFSd50vfTxF4IT+W1sA==}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
-  '@moonrepo/core-macos-arm64@2.2.0':
-    resolution: {integrity: sha512-d97j0Hf71vmu7k0aStTCCBA0mxWevYDEVtOZevfDghiI+svmzQOX6ajWRYtjYKNA9nR5HtNTdFWANNq0gJuuaA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@moonrepo/core-macos-x64@2.2.0':
-    resolution: {integrity: sha512-vMLNf7amt6PKe9qOwZwWsUCjS72OzbK+zH1YHZtnkh+3xbHUgPpAlwLIvbrWg27VgLpBFn3HG86NRuiTGHe6qA==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@moonrepo/core-windows-x64-msvc@2.2.0':
-    resolution: {integrity: sha512-S8rJmhWYQDW+Xgkow2l+EbjrvF3KgHx5BsP7nUKeu7jIzuRgI3CCZV7G/dwx5gnI6IhBz2V9JXtEb/X//BimrQ==}
-    cpu: [x64]
-    os: [win32]
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
@@ -42579,35 +42543,6 @@ snapshots:
   '@moonrepo/cli@2.2.0':
     dependencies:
       detect-libc: 2.1.2
-    optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.2.0
-      '@moonrepo/core-linux-arm64-musl': 2.2.0
-      '@moonrepo/core-linux-x64-gnu': 2.2.0
-      '@moonrepo/core-linux-x64-musl': 2.2.0
-      '@moonrepo/core-macos-arm64': 2.2.0
-      '@moonrepo/core-macos-x64': 2.2.0
-      '@moonrepo/core-windows-x64-msvc': 2.2.0
-
-  '@moonrepo/core-linux-arm64-gnu@2.2.0':
-    optional: true
-
-  '@moonrepo/core-linux-arm64-musl@2.2.0':
-    optional: true
-
-  '@moonrepo/core-linux-x64-gnu@2.2.0':
-    optional: true
-
-  '@moonrepo/core-linux-x64-musl@2.2.0':
-    optional: true
-
-  '@moonrepo/core-macos-arm64@2.2.0':
-    optional: true
-
-  '@moonrepo/core-macos-x64@2.2.0':
-    optional: true
-
-  '@moonrepo/core-windows-x64-msvc@2.2.0':
-    optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true

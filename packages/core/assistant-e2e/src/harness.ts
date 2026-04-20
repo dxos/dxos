@@ -3,9 +3,12 @@
 //
 
 import { TestContext } from '@effect/vitest';
+import { Function } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import { option } from 'effect/FastCheck';
 
+import { ModelName } from '@dxos/ai';
 import {
   AgentHandlers,
   AgentPrompt,
@@ -22,43 +25,13 @@ import {
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect/testing';
+import { TestHelpers, type TestTag } from '@dxos/effect/testing';
 import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
-
-const TestLayer = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
-  operationHandlers: [
-    AgentHandlers,
-    DatabaseHandlers,
-    BlueprintManagerHandlers,
-    InboxOperationHandlerSet,
-    WebSearchHandlers,
-  ],
-  types: [
-    Organization.Organization,
-    Person.Person,
-    Employer.Employer,
-    Tag.Tag,
-    Blueprint.Blueprint,
-    Feed.Feed,
-    Mailbox.Mailbox,
-  ],
-  blueprints: [
-    BlueprintManagerBlueprint.make(),
-    DatabaseBlueprint.make(),
-    WebSearchBlueprint.make(),
-    MemoryBlueprint.make(),
-    AutomationBlueprint.make(),
-    // AssistantBlueprint.make(),
-    InboxBlueprint.make(),
-  ],
-  toolkits: [WebSearchToolkitGeneric],
-});
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;
 
@@ -80,16 +53,59 @@ const INSTRUCTIONS = trim`
 
 interface AgentTestOptions {
   expect?: 'success' | 'failure';
+
+  model?: ModelName;
+
+  /**
+   * @default 'edge-remote'
+   */
+  inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+
+  disableLlmMemoization?: boolean;
+
+  testTag?: TestTag;
 }
 
 export const agentTest: {
   (options: AgentTestOptions, prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
   (prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
 } = (...args: [AgentTestOptions, Prompt.Prompt] | [Prompt.Prompt]) => {
+  const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
+
+  const TestLayer = AssistantTestLayer({
+    aiServicePreset: options.inferenceProvider ?? 'edge-remote',
+    model: options.model ?? '@anthropic/claude-opus-4-6',
+    disableLlmMemoization: options.disableLlmMemoization ?? false,
+    operationHandlers: [
+      AgentHandlers,
+      DatabaseHandlers,
+      BlueprintManagerHandlers,
+      InboxOperationHandlerSet,
+      WebSearchHandlers,
+    ],
+    types: [
+      Organization.Organization,
+      Person.Person,
+      Employer.Employer,
+      Tag.Tag,
+      Blueprint.Blueprint,
+      Feed.Feed,
+      Mailbox.Mailbox,
+    ],
+    blueprints: [
+      BlueprintManagerBlueprint.make(),
+      DatabaseBlueprint.make(),
+      WebSearchBlueprint.make(),
+      MemoryBlueprint.make(),
+      AutomationBlueprint.make(),
+      // AssistantBlueprint.make(),
+      InboxBlueprint.make(),
+    ],
+    toolkits: [WebSearchToolkitGeneric],
+  });
+
   return Effect.fnUntraced(
     function* (_) {
-      const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
-
       yield* Database.add(prompt);
       const conversationFeed = Feed.make();
       yield* Database.add(conversationFeed);
@@ -100,6 +116,7 @@ export const agentTest: {
           prompt: Ref.make(prompt),
           input: {},
           systemInstructions: INSTRUCTIONS,
+          model: options.model,
         },
         { conversation: Obj.getDXN(conversationFeed).toString() },
       ).pipe(Effect.exit);
@@ -114,5 +131,6 @@ export const agentTest: {
     },
     Effect.provide(TestLayer),
     TestHelpers.provideTestContext,
+    options.testTag ? TestHelpers.taggedTest(options.testTag) : Function.identity,
   );
 };

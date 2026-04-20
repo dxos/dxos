@@ -1290,7 +1290,7 @@ export namespace ProcessOperationInvoker {
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
 
-        log.info('spawing process', { opKey: op.meta.key, ...options });
+        log('spawing process', { opKey: op.meta.key, ...options });
         const handle = yield* opts.manager.spawn(executable, {
           ...options,
           parentProcessId: opts.parentProcessId,
@@ -1331,7 +1331,7 @@ export namespace ProcessOperationInvoker {
       const input = args[0] as I;
       const options = args[1] as Operation.InvokeOptions | undefined;
       const traceMeta = options?.tracing as Trace.Meta | undefined;
-      log.info('invoking operation', { opKey: op.meta.key, ...options });
+      log('invoking operation', { opKey: op.meta.key, ...options });
       return Effect.gen(function* () {
         const fiber = yield* invokeFiber(op, input, {
           traceMeta,
