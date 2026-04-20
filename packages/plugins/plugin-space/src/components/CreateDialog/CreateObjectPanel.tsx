@@ -141,26 +141,26 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Column.Center classNames='mb-form-gap'>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.schema-input'
-          placeholder={t('schema-input.placeholder')}
-        />
-      </Column.Center>
-      <Column.Bleed>
-        <SearchList.Viewport>
-          {results.map((option) => (
-            <SearchList.Item
-              key={option.id}
-              value={option.id}
-              label={option.label}
-              icon={option.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.id)}
-            />
-          ))}
-        </SearchList.Viewport>
-      </Column.Bleed>
+      {/* <Column.Center classNames='mb-form-gap'> */}
+      <SearchList.Input
+        autoFocus
+        data-testid='create-object-form.schema-input'
+        placeholder={t('schema-input.placeholder')}
+      />
+      {/* </Column.Center> */}
+      {/* <Column.Center classNames='border'> */}
+      <SearchList.Viewport>
+        {results.map((option) => (
+          <SearchList.Item
+            key={option.id}
+            value={option.id}
+            label={option.label}
+            icon={option.icon ?? 'ph--placeholder--regular'}
+            onSelect={() => onChange(option.id)}
+          />
+        ))}
+      </SearchList.Viewport>
+      {/* </Column.Center> */}
     </SearchList.Root>
   );
 };

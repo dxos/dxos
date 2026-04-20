@@ -15,13 +15,13 @@ export type SidekickArticleProps = AppSurface.ObjectArticleProps<Sidekick.Profil
 export const SidekickArticle = ({ role, subject: _sidekick, attendableId: _attendableId }: SidekickArticleProps) => {
   return (
     <Column.Root role={role}>
-      <Column.Viewport>
+      <Column.Center>
         <DayAhead />
         <ActionItems items={[]} />
         <ProfileGrid profiles={[]} />
         <ProfileSummary />
         <Permissions entries={[]} />
-      </Column.Viewport>
+      </Column.Center>
     </Column.Root>
   );
 };

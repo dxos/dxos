@@ -4249,6 +4249,9 @@ importers:
 
   packages/core/assistant-e2e:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
