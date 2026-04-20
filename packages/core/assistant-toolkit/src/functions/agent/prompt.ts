@@ -12,10 +12,9 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ConsolePrinter, GenericToolkit, ModelName } from '@dxos/ai';
+import { AiService, GenericToolkit, ModelName } from '@dxos/ai';
 import {
   AiConversation,
-  GenerationObserver,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
