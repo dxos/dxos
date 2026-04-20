@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// Plank companion article — a side panel that appears alongside an SampleItem.
+// Plank companion article — a side panel that appears alongside a SampleItem.
 // Companions are registered via `AppNode.makeCompanion` in the graph builder
 // and rendered via a surface with `companionArticle` filter.
 // The `data.companionTo` prop contains the parent ECHO object.

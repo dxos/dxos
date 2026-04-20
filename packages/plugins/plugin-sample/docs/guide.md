@@ -98,7 +98,7 @@ See [`src/capabilities/app-graph-builder.ts`](../src/capabilities/app-graph-buil
 
 ## Status Bar
 
-[`src/containers/SampleStatusIndicator.tsx`](../src/containers/SampleStatusIndicator.tsx) — Uses `StatusBar.Item` from `@dxos/plugin-status-bar` to contribute an icon to the application status bar. Rendered via the `status-indicator` surface role.
+[`src/components/SampleStatusIndicator.tsx`](../src/components/SampleStatusIndicator.tsx) — Uses `StatusBar.Item` from `@dxos/plugin-status-bar` to contribute an icon to the application status bar. Rendered via the `status-indicator` surface role.
 
 ## Translations
 

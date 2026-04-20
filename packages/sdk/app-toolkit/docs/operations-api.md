@@ -119,6 +119,6 @@ src/operations/
 
 ## Examples
 
-- **plugin-sample**: [`src/operations/`](../../plugins/plugin-sample/src/operations/) — Simple create and update operations.
-- **plugin-kanban**: [`src/operations/`](../../plugins/plugin-kanban/src/operations/) — Delete/restore operations with undo support.
-- **plugin-space**: [`src/operations/`](../../plugins/plugin-space/src/operations/) — Complex operations for space management.
+- **plugin-sample**: [`src/operations/`](../../../plugins/plugin-sample/src/operations/) — Simple create and update operations.
+- **plugin-kanban**: [`src/operations/`](../../../plugins/plugin-kanban/src/operations/) — Delete/restore operations with undo support.
+- **plugin-space**: [`src/operations/`](../../../plugins/plugin-space/src/operations/) — Complex operations for space management.
