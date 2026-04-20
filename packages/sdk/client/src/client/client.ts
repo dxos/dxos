@@ -17,7 +17,7 @@ import {
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
-import { Config, SaveConfig } from '@dxos/config';
+import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
@@ -38,7 +38,7 @@ import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dx
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
-import { isNode, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
@@ -424,7 +424,7 @@ export class Client {
     const edgeUrl = this._config!.get('runtime.services.edge.url');
     if (edgeUrl) {
       const { EdgeHttpClient } = await import('@dxos/edge-client');
-      const clientTag = resolveClientTag(this._config);
+      const clientTag = resolveTelemetryTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
@@ -587,15 +587,3 @@ export class Client {
     log('reset complete');
   }
 }
-
-/**
- * Resolves the client tag used as the `X-DXOS-Client-Tag` header on edge requests
- * and as the `ctx.tag` attribute in observability traces. Must stay in sync with
- * the observability extension's resolution (`packages/sdk/observability/src/extensions/otel/extension.ts`)
- * so a single tag identifies a session across both tiers.
- */
-const resolveClientTag = (config?: Config): string | undefined => {
-  return (
-    config?.get('runtime.app.env.DX_TELEMETRY_TAG') ?? (isNode() ? process.env.DX_TELEMETRY_TAG : undefined)
-  );
-};

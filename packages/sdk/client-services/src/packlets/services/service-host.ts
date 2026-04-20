@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
@@ -28,7 +28,6 @@ import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
-import { isNode } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { EdgeAgentServiceImpl } from '../agents';
@@ -256,7 +255,7 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
-      const clientTag = resolveClientTag(config);
+      const clientTag = resolveTelemetryTag(config);
       this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
       this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
@@ -464,15 +463,3 @@ export class ClientServicesHost {
     return identity;
   }
 }
-
-/**
- * Resolves the client tag used as the `X-DXOS-Client-Tag` header on edge requests
- * and as the `ctx.tag` attribute in observability traces. Must stay in sync with
- * the observability extension's resolution (`packages/sdk/observability/src/extensions/otel/extension.ts`)
- * so a single tag identifies a session across both tiers.
- */
-const resolveClientTag = (config?: Config): string | undefined => {
-  return (
-    config?.get('runtime.app.env.DX_TELEMETRY_TAG') ?? (isNode() ? process.env.DX_TELEMETRY_TAG : undefined)
-  );
-};
