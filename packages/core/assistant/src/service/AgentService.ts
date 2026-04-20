@@ -13,7 +13,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type Trace } from '@dxos/functions';
-import { ProcessManager } from '@dxos/functions-runtime';
+import { ProcessManager } from '@dxos/compute-runtime';
 
 import { AiContextBinder } from '../conversation';
 import { AgentProcess } from './agent-process';

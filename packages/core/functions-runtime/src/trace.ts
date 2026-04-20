@@ -14,10 +14,9 @@ import { Queue } from '@dxos/echo-db';
 import { QueueService, TracingService, Trigger } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Process } from '@dxos/functions';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
 import { Message } from '@dxos/types';
-
-import { Process } from './process';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',

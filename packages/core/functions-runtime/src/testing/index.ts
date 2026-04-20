@@ -3,4 +3,4 @@
 //
 
 export * from './services';
-export * from './layer';
+export { TestDatabaseLayer, testStoragePath, type TestDatabaseOptions } from '@dxos/compute-runtime/testing';

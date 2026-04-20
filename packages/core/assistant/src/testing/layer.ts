@@ -17,9 +17,13 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
+import { ProcessManager } from '@dxos/compute-runtime';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import {
   CredentialsService,
+  Process,
   QueueService,
+  ServiceResolver,
   type ServiceCredential,
   ServiceNotAvailableError,
   Trace,
@@ -28,14 +32,10 @@ import {
 } from '@dxos/functions';
 import {
   FeedTraceSink,
-  Process,
-  ProcessManager,
-  ServiceResolver,
   TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';

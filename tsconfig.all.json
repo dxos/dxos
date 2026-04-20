@@ -151,6 +151,9 @@
       "path": "packages/core/compute/tsconfig.json"
     },
     {
+      "path": "packages/core/compute-runtime/tsconfig.json"
+    },
+    {
       "path": "packages/core/conductor/tsconfig.json"
     },
     {

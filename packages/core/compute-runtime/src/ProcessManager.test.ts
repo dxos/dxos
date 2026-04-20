@@ -15,15 +15,14 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Database } from '@dxos/echo';
-import { Process, ServiceResolver, TracingService } from '@dxos/functions';
-import { Trace } from '@dxos/functions';
+import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import * as StorageService from '@dxos/functions/StorageService';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
-import { TestDatabaseLayer } from '../testing';
 import * as ProcessManager from './ProcessManager';
-import * as StorageService from './StorageService';
+import { TestDatabaseLayer } from './testing';
 
 //
 // Test services (for unit tests without full ECHO stack).

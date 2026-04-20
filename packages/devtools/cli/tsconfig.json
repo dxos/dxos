@@ -59,6 +59,9 @@
       "path": "../../core/blueprints"
     },
     {
+      "path": "../../core/compute-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

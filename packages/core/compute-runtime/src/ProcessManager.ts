@@ -24,14 +24,14 @@ import * as Stream from 'effect/Stream';
 import { DXN, Obj } from '@dxos/echo';
 import { Performance } from '@dxos/effect';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LayerSpec, Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import { LayerSpec, Process, ServiceResolver, StorageService, Trace, TracingService } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
-import { ProcessNotFoundError, ServiceNotAvailableError } from '../errors';
-import * as StorageService from './StorageService';
+import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
+import { layer as storageServiceLayer } from './storage-service-layer';
 
 export interface Status {
   readonly state: Process.State;
@@ -245,7 +245,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly #scope: Scope.CloseableScope;
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
-  readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
+  readonly #storage: Context.Tag.Service<typeof StorageService>;
   readonly #traceSink: Trace.Sink;
 
   readonly #ephemeralBuffer = new EphemralTraceBuffer();
@@ -263,7 +263,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     services: Context.Context<R | Process.BaseServices>,
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
-    storage: Context.Tag.Service<typeof StorageService.StorageService>,
+    storage: Context.Tag.Service<typeof StorageService>,
     key: string,
     params: Process.Params,
     environment: Environment,
@@ -779,7 +779,7 @@ export class ProcessManagerImpl implements Manager {
       const scope = yield* Scope.make();
       const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
 
-      const storage = StorageService.layer(this.#kvStore, `process/${id}/`);
+      const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
       const parentOption = Option.fromNullable(options?.parentProcessId);
 
@@ -876,7 +876,7 @@ export class ProcessManagerImpl implements Manager {
       };
 
       let builtinCtx = Context.empty().pipe(
-        Context.add(StorageService.StorageService, storage),
+        Context.add(StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(TracingService, processTracingService),
         Context.add(Trace.TraceService, {
@@ -919,7 +919,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         TracingService.key,
         Trace.TraceService.key,

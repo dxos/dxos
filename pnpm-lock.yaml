@@ -4158,6 +4158,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4500,6 +4503,61 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7
+
+  packages/core/compute-runtime:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.94.4(effect@3.20.0)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.27.0(effect@3.20.0)(vitest@3.2.4)
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/core/conductor:
     dependencies:
@@ -5246,6 +5304,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -6157,6 +6218,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -7580,6 +7644,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor

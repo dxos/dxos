@@ -33,14 +33,14 @@ import {
   feedServiceFromQueueServiceLayer,
   QueueService,
   ServiceNotAvailableError,
+  ServiceResolver,
 } from '@dxos/functions';
+import { ProcessManager } from '@dxos/compute-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
-  ProcessManager,
   RemoteFunctionExecutionService,
-  ServiceResolver,
   TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,

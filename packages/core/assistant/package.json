@@ -52,6 +52,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",

@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/functions",
+  "name": "@dxos/compute-runtime",
   "version": "0.8.3",
-  "description": "Functions API.",
+  "description": "Compute runtime: process manager, layer stack and runtime-level service resolution.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -18,45 +18,47 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
-    "./Trace": {
-      "source": "./src/Trace.ts",
-      "types": "./dist/types/src/Trace.d.ts",
-      "default": "./dist/lib/neutral/Trace.mjs"
-    },
-    "./StorageService": {
-      "source": "./src/process/StorageService.ts",
-      "types": "./dist/types/src/process/StorageService.d.ts",
-      "default": "./dist/lib/neutral/process/StorageService.mjs"
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
-    "schema",
     "src"
   ],
   "scripts": {},
   "dependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
-  "publishConfig": {
-    "access": "public"
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/kv-store": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
   }
 }

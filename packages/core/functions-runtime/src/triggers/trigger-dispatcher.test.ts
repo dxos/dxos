@@ -28,7 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
-import * as ProcessManager from '../process/ProcessManager';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '../testing';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';

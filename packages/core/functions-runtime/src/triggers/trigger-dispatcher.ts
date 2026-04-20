@@ -31,7 +31,7 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { FeedProtocol } from '@dxos/protocols';
 
-import * as ProcessManager from '../process/ProcessManager';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 

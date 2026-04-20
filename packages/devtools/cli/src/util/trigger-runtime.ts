@@ -21,9 +21,9 @@ import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, type Key } from '@dxos/echo';
 import { ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import { ProcessManager } from '@dxos/compute-runtime';
 import {
   FunctionImplementationResolver,
-  ProcessManager,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';

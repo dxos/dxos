@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import React from 'react';
 
-import { Process } from '@dxos/functions-runtime';
+import { Process } from '@dxos/functions';
 import { Icon, ScrollArea, Treegrid } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 

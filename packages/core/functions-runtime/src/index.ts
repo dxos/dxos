@@ -3,7 +3,6 @@
 //
 
 export * from './executor';
-export * from './process';
 export * from './services';
 export * from './trace';
 export * from './triggers';
