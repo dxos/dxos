@@ -47,6 +47,7 @@ RUN ARCH=$(uname -m) \
   && unzip /tmp/bun.zip -d /tmp \
   && mv /tmp/bun-linux-$ARCH/bun /usr/local/bin/bun \
   && chmod +x /usr/local/bin/bun \
+  && ln -s /usr/local/bin/bun /usr/local/bin/bunx \
   && rm -rf /tmp/bun.zip /tmp/bun-linux-$ARCH
 
 # Create a user with a fixed UID:GID and add to sudo group.

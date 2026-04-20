@@ -17,10 +17,18 @@ runs:
         # IMPORTANT: Keep in-sync with .prototools
         moon-version: '2.0.4'
 
+    # IMPORTANT: Keep bun-version in-sync with .prototools.
+    # setup-bun is used in addition to proto because proto only installs the
+    # `bun` shim, not `bunx`, which moon tasks invoke directly.
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: '1.3.4'
+
     - name: Log out debug info
       run: |
         node --version
         bun --version
+        bunx --version
       shell: bash
 
     - name: Bun Install Cache Path
