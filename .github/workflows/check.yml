@@ -81,7 +81,9 @@ jobs:
         run: moon run :lint :build
 
       - name: Check for peer dependency issues
-        run: bun install --dry-run
+        run: |
+          find packages tools vendor -path '*/dist/*/package.json' -delete 2>/dev/null || true
+          bun install --dry-run
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
