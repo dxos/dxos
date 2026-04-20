@@ -12,7 +12,12 @@ import {
 } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  BasicTracerProvider,
+  BatchSpanProcessor,
+  type ReadableSpan,
+  type SpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
@@ -20,15 +25,38 @@ import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/t
 
 import { type OtelOptions } from './otel';
 
+/**
+ * Injects dynamic tags (e.g. `ctx.tag`) as attributes on every span.
+ * Parity with the browser-side `TagInjectorSpanProcessor`.
+ */
+class TagInjectorSpanProcessor implements SpanProcessor {
+  constructor(private readonly _getTags: () => Record<string, string>) {}
+
+  onStart(span: { setAttribute: (key: string, value: string) => void }): void {
+    const tags = this._getTags();
+    for (const [key, value] of Object.entries(tags)) {
+      span.setAttribute(key, value);
+    }
+  }
+
+  onEnd(_span: ReadableSpan): void {}
+
+  async shutdown(): Promise<void> {}
+
+  async forceFlush(): Promise<void> {}
+}
+
 export class OtelTraces {
   private _tracer: Tracer;
+  private readonly _tracerProvider: BasicTracerProvider;
 
   constructor(private readonly options: OtelOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
-    const tracerProvider = new BasicTracerProvider({
+    this._tracerProvider = new BasicTracerProvider({
       resource: this.options.resource,
       spanProcessors: [
+        new TagInjectorSpanProcessor(this.options.getTags),
         new BatchSpanProcessor(
           new OTLPTraceExporter({
             url: this.options.endpoint + '/v1/traces',
@@ -39,11 +67,25 @@ export class OtelTraces {
       ],
     });
 
-    trace.setGlobalTracerProvider(tracerProvider);
+    trace.setGlobalTracerProvider(this._tracerProvider);
     this._tracer = trace.getTracer(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
     );
+  }
+
+  /**
+   * Forcibly flush the BatchSpanProcessor. Call before process exit to avoid
+   * losing queued spans (which manifests as "Missing Span" in SigNoz — their
+   * already-exported children reference a parent that never made it to OTLP).
+   */
+  public async flush(): Promise<void> {
+    await this._tracerProvider.forceFlush();
+  }
+
+  /** Flush + shut down the tracer provider. Idempotent with flush(). */
+  public async close(): Promise<void> {
+    await this._tracerProvider.shutdown();
   }
 
   public start(): void {

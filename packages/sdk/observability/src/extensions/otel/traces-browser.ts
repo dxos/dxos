@@ -52,13 +52,14 @@ class TagInjectorSpanProcessor implements SpanProcessor {
 
 export class OtelTraces {
   private _tracer: Tracer;
+  private readonly _tracerProvider: WebTracerProvider;
 
   constructor(private readonly options: OtelOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
-    const tracerProvider = new WebTracerProvider({
+    this._tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
       sampler: new ParentBasedSampler({
         root: forceTraceAll ? new AlwaysOnSampler() : new TraceIdRatioBasedSampler(0.3),
@@ -76,12 +77,26 @@ export class OtelTraces {
       ],
     });
 
-    trace.setGlobalTracerProvider(tracerProvider);
+    trace.setGlobalTracerProvider(this._tracerProvider);
 
     this._tracer = trace.getTracer(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
     );
+  }
+
+  /**
+   * Forcibly flush the BatchSpanProcessor. Call before process exit / page unload
+   * to avoid losing queued spans (which manifests as "Missing Span" in SigNoz —
+   * their already-exported children reference a parent that never made it to OTLP).
+   */
+  public async flush(): Promise<void> {
+    await this._tracerProvider.forceFlush();
+  }
+
+  /** Flush + shut down the tracer provider. Idempotent with flush(). */
+  public async close(): Promise<void> {
+    await this._tracerProvider.shutdown();
   }
 
   public start(): void {

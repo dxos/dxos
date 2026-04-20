@@ -90,17 +90,19 @@ export class InvitationsHandler {
     metrics.increment('dxos.invitation.host');
 
     const hostSpanId = `invitation-host-${invitation.invitationId}`;
-    _trace.spanStart({
-      id: hostSpanId,
-      instance: this,
-      methodName: 'handleInvitationFlow',
-      parentCtx: ctx,
-      op: 'invitation.host',
-      attributes: {
-        'ctx.dxos.invitation.id': invitation.invitationId,
-        'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
-      },
-    });
+    // Reassign ctx to the child context so downstream `@trace.span` calls stay in the same trace.
+    ctx =
+      _trace.spanStart({
+        id: hostSpanId,
+        instance: this,
+        methodName: 'handleInvitationFlow',
+        parentCtx: ctx,
+        op: 'invitation.host',
+        attributes: {
+          'ctx.dxos.invitation.id': invitation.invitationId,
+          'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
+        },
+      }) ?? ctx;
     ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
@@ -248,17 +250,21 @@ export class InvitationsHandler {
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
     const guestSpanId = `invitation-guest-${invitation.invitationId}`;
-    _trace.spanStart({
-      id: guestSpanId,
-      instance: this,
-      methodName: 'acceptInvitation',
-      parentCtx: ctx,
-      op: 'invitation.guest',
-      attributes: {
-        'ctx.dxos.invitation.id': invitation.invitationId,
-        'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
-      },
-    });
+    // Reassign ctx to the child context returned by spanStart so downstream calls
+    // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
+    // parent rather than starting a new root trace.
+    ctx =
+      _trace.spanStart({
+        id: guestSpanId,
+        instance: this,
+        methodName: 'acceptInvitation',
+        parentCtx: ctx,
+        op: 'invitation.guest',
+        attributes: {
+          'ctx.dxos.invitation.id': invitation.invitationId,
+          'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
+        },
+      }) ?? ctx;
     ctx.onDispose(() => _trace.spanEnd(guestSpanId));
 
     if (deviceProfile) {

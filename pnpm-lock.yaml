@@ -15507,6 +15507,12 @@ importers:
         specifier: 'catalog:'
         version: 0.15.1
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/messaging':
+        specifier: workspace:*
+        version: link:../../core/mesh/messaging
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)

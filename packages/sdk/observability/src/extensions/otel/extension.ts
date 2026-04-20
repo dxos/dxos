@@ -79,6 +79,17 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
+  // Matches edge's `ctx.tag` span attribute (stamped by `@trace.span({ attributes: { tag } })`
+  // when edge reads the `X-DXOS-Client-Tag` header). Injected on every span via the
+  // Tag injector span processor so a single `ctx.tag = <value>` filter matches both
+  // composer-side and edge-side spans in SigNoz.
+  const clientTag = isNode()
+    ? process.env.DX_CLIENT_TAG
+    : config.values.runtime?.app?.env?.DX_CLIENT_TAG;
+  if (clientTag) {
+    tags.set('ctx.tag', clientTag);
+  }
+
   const resource = defaultResource().merge(
     resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
@@ -143,11 +154,17 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       Effect.promise(async () => {
         await logs?.close();
         await metrics?.close();
+        // Critical: shut down the tracer provider so BatchSpanProcessor drains its
+        // queue. Otherwise spans enqueued in the last 5s (close/teardown spans)
+        // are dropped on process exit, appearing as "Missing Span" in SigNoz for
+        // any already-exported children.
+        await traces?.close();
       }),
     flush: () =>
       Effect.promise(async () => {
         await logs?.flush();
         await metrics?.flush();
+        await traces?.flush();
       }),
     setTags: (incomingTags) => {
       for (const [key, value] of Object.entries(incomingTags)) {
