@@ -209,6 +209,7 @@ feat F-1: Agent Creation and Configuration
   req F-1.3: Agent chat created and linked for companion interaction.
   req F-1.4: Agent queue created for event processing.
   req F-1.5: Journal created and added as agent artifact.
+  req F-1.6: Create document to track agent memories.
 ```
 
 ```mdl
