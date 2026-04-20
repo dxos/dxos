@@ -10,7 +10,6 @@ import { withLayout, withTheme } from '../../testing';
 import { Flex } from '../Flex';
 import { Column } from './Column';
 
-// TODO(burdon): Content is clipped!
 const List = () => {
   return (
     <ScrollArea.Root centered>
@@ -28,9 +27,9 @@ const List = () => {
 const DefaultStory = () => {
   return (
     <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
+      <Column.Center>
         <h1 className='p-1 bg-blue-500 text-black'>Header</h1>
-      </Column.Row>
+      </Column.Center>
 
       <Column.Row>
         <div className='p-1 bg-blue-500'>A</div>
@@ -38,13 +37,13 @@ const DefaultStory = () => {
         <div className='p-1 bg-blue-500'>C</div>
       </Column.Row>
 
-      <Column.Row asChild center>
+      <Column.Center asChild>
         <div className='py-2'>
           <Input.Root>
             <Input.TextInput placeholder='Search' />
           </Input.Root>
         </div>
-      </Column.Row>
+      </Column.Center>
 
       <Column.Bleed asChild>
         <ScrollArea.Root orientation='vertical' padding>
@@ -60,16 +59,16 @@ const DefaultStory = () => {
         </ScrollArea.Root>
       </Column.Bleed>
 
-      <Column.Row asChild center>
+      <Column.Center asChild>
         <Flex column>
           <h1 className='p-1 bg-red-500 text-black'>Section with overflow</h1>
           <pre className='p-1 text-xs text-subdued overflow-auto'>{new Error().stack}</pre>
         </Flex>
-      </Column.Row>
+      </Column.Center>
 
-      <Column.Row center>
+      <Column.Center>
         <div className='p-1 bg-green-500 text-black'>Footer</div>
-      </Column.Row>
+      </Column.Center>
     </Column.Root>
   );
 };
@@ -103,17 +102,17 @@ export const WithScrollArea = {
   decorators: [withLayout({ layout: 'column' })],
   render: () => (
     <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
+      <Column.Center>
         <h2 className='py-3'>Header</h2>
-      </Column.Row>
+      </Column.Center>
       <ScrollArea.Root padding centered orientation='vertical' classNames='col-span-full'>
         <ScrollArea.Viewport>
           <InputList items={30} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <Column.Row center>
+      <Column.Center>
         <h2 className='py-3'>Footer</h2>
-      </Column.Row>
+      </Column.Center>
     </Column.Root>
   ),
 };
@@ -127,9 +126,9 @@ export const WithCenter: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
   render: () => (
     <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
-        <h2 className='py-3'>Header (Column.Row)</h2>
-      </Column.Row>
+      <Column.Center>
+        <h2 className='py-3'>Header (Column.Center)</h2>
+      </Column.Center>
       <Column.Center classNames='flex flex-col'>
         <p className='py-2'>This text is inside Column.Center. It sits in the central column between the gutters.</p>
         <Input.Root>
@@ -137,9 +136,9 @@ export const WithCenter: Story = {
           <Input.TextInput placeholder='Enter name' />
         </Input.Root>
       </Column.Center>
-      <Column.Row center>
-        <h2 className='py-3'>Footer (Column.Row)</h2>
-      </Column.Row>
+      <Column.Center>
+        <h2 className='py-3'>Footer (Column.Center)</h2>
+      </Column.Center>
     </Column.Root>
   ),
 };
@@ -152,9 +151,9 @@ export const WithBleed: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
   render: () => (
     <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
-        <h2 className='py-3'>Header (Column.Row)</h2>
-      </Column.Row>
+      <Column.Center>
+        <h2 className='py-3'>Header (Column.Center)</h2>
+      </Column.Center>
       <Column.Bleed asChild>
         <ScrollArea.Root orientation='vertical' padding thin>
           <ScrollArea.Viewport>
@@ -162,9 +161,9 @@ export const WithBleed: Story = {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Column.Bleed>
-      <Column.Row center>
-        <h2 className='py-3'>Footer (Column.Row)</h2>
-      </Column.Row>
+      <Column.Center>
+        <h2 className='py-3'>Footer (Column.Center)</h2>
+      </Column.Center>
     </Column.Root>
   ),
 };
