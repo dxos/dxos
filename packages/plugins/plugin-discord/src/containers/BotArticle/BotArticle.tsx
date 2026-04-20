@@ -44,9 +44,8 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
       </Panel.Toolbar>
       <Panel.Content asChild>
         <Column.Root>
-          <Column.Bleed asChild>
-            <ScrollArea.Root orientation='vertical' padding>
-              <ScrollArea.Viewport>
+          <ScrollArea.Root orientation='vertical' padding>
+            <ScrollArea.Viewport>
                 <Input.Root>
                   <Input.Label>{t('bot-token.label')}</Input.Label>
                   <div role='none' className='flex items-center gap-2'>
@@ -92,9 +91,8 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
                     {t('disconnect.button')}
                   </Button>
                 )}
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Column.Bleed>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
         </Column.Root>
       </Panel.Content>
     </Panel.Root>

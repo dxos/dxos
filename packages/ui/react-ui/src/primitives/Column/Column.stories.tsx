@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Input, ScrollArea } from '../../components';
 import { withLayout, withTheme } from '../../testing';
-import { Flex } from '../Flex';
 import { Column } from './Column';
 
 const List = () => {
@@ -45,25 +44,23 @@ const DefaultStory = () => {
         </div>
       </Column.Center>
 
-      <Column.Bleed asChild>
-        <ScrollArea.Root orientation='vertical' padding>
-          <ScrollArea.Viewport>
-            <div className='flex flex-col gap-2'>
-              {Array.from({ length: 100 }).map((_, i) => (
-                <Input.Root key={i}>
-                  <Input.TextInput value={`Item ${i}`} readOnly />
-                </Input.Root>
-              ))}
-            </div>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Column.Bleed>
+      <ScrollArea.Root orientation='vertical' padding>
+        <ScrollArea.Viewport>
+          <div className='flex flex-col gap-2'>
+            {Array.from({ length: 100 }).map((_, i) => (
+              <Input.Root key={i}>
+                <Input.TextInput value={`Item ${i}`} readOnly />
+              </Input.Root>
+            ))}
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
 
       <Column.Center asChild>
-        <Flex column>
+        <div className='flex flex-col'>
           <h1 className='p-1 bg-red-500 text-black'>Section with overflow</h1>
           <pre className='p-1 text-xs text-subdued overflow-auto'>{new Error().stack}</pre>
-        </Flex>
+        </div>
       </Column.Center>
 
       <Column.Center>
@@ -105,7 +102,7 @@ export const WithScrollArea = {
       <Column.Center>
         <h2 className='py-3'>Header</h2>
       </Column.Center>
-      <ScrollArea.Root padding centered orientation='vertical' classNames='col-span-full'>
+      <ScrollArea.Root padding centered orientation='vertical'>
         <ScrollArea.Viewport>
           <InputList items={30} />
         </ScrollArea.Viewport>
@@ -125,42 +122,40 @@ export const WithScrollArea = {
 export const WithCenter: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
   render: () => (
-    <Column.Root classNames='overflow-hidden' gutter='md'>
+    <Column.Root gutter='md'>
       <Column.Center>
-        <h2 className='py-3'>Header (Column.Center)</h2>
+        <h2>Header (Column.Center)</h2>
       </Column.Center>
       <Column.Center classNames='flex flex-col'>
-        <p className='py-2'>This text is inside Column.Center. It sits in the central column between the gutters.</p>
+        <p>This text is inside Column.Center. It sits in the central column between the gutters.</p>
         <Input.Root>
           <Input.Label>Name</Input.Label>
           <Input.TextInput placeholder='Enter name' />
         </Input.Root>
       </Column.Center>
       <Column.Center>
-        <h2 className='py-3'>Footer (Column.Center)</h2>
+        <h2>Footer (Column.Center)</h2>
       </Column.Center>
     </Column.Root>
   ),
 };
 
 /**
- * Column.Bleed spans all 3 columns gutter-to-gutter.
- * Use for ScrollArea so that its scrollbar sits in the right-gutter track.
+ * ScrollArea auto-bleeds inside Column.Root (via [.dx-column_&]:col-span-full).
+ * No Column.Bleed wrapper needed.
  */
-export const WithBleed: Story = {
+export const WithScrollAreaAutoBleed: Story = {
   decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
   render: () => (
     <Column.Root classNames='overflow-hidden' gutter='md'>
       <Column.Center>
         <h2 className='py-3'>Header (Column.Center)</h2>
       </Column.Center>
-      <Column.Bleed asChild>
-        <ScrollArea.Root orientation='vertical' padding thin>
-          <ScrollArea.Viewport>
-            <InputList items={30} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Column.Bleed>
+      <ScrollArea.Root orientation='vertical' padding thin>
+        <ScrollArea.Viewport>
+          <InputList items={30} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       <Column.Center>
         <h2 className='py-3'>Footer (Column.Center)</h2>
       </Column.Center>
