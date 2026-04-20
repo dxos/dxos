@@ -48,7 +48,9 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
   // TODO(burdon): Subject property?
   return (
     <Box shape={shape} onAction={handleAction}>
-      <Card.Root>{value !== null && <Surface.Surface type={AppSurface.Card} data={{ value }} limit={1} />}</Card.Root>
+      <Card.Root>
+        {value !== null && <Surface.Surface type={AppSurface.Card} data={{ subject: value }} limit={1} />}
+      </Card.Root>
     </Box>
   );
 };

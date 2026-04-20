@@ -100,8 +100,8 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {state.popoverKind === 'base' && (
-            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent ?? undefined} limit={1} />
+          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
+            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
           )}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='dx-card-popover'>
@@ -111,7 +111,9 @@ export const PopoverContent = () => {
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
                 <Card.CloseIconButton onClick={handleClose} />
               </Card.Toolbar>
-              <Surface.Surface type={AppSurface.Card} data={state.popoverContent ?? undefined} limit={1} />
+              {state.popoverContent && 'subject' in state.popoverContent && (
+                <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
+              )}
             </Card.Root>
           )}
         </Popover.Viewport>

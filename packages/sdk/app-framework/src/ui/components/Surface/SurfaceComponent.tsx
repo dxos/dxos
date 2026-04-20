@@ -177,8 +177,10 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
  * A surface is a named region of the screen that can be populated by plugins.
  */
 // TODO(burdon): Remove `ref` since relying on this would be error prone.
-export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLElement>> &
-  (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode) = memo(
+export const SurfaceComponent: (<TToken extends RoleToken<any>>(
+  props: TypedProps<TToken> & RefAttributes<HTMLElement>,
+) => React.ReactNode) &
+  NamedExoticComponent<Props & RefAttributes<HTMLElement>> = memo(
   forwardRef<HTMLElement, Props & { type?: RoleToken<any> }>(
     ({ id: _id, role, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       const data = useDefaultValue(dataProp, () => ({}));
@@ -223,8 +225,8 @@ export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLEl
       );
     },
   ),
-) as NamedExoticComponent<Props & RefAttributes<HTMLElement>> &
-  (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode);
+) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode) &
+  NamedExoticComponent<Props & RefAttributes<HTMLElement>>;
 
 SurfaceComponent.displayName = 'Surface';
 

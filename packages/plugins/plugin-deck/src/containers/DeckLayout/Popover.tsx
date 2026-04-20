@@ -122,8 +122,8 @@ export const PopoverContent = () => {
       >
         <Popover.Viewport>
           {/* Base popover */}
-          {state.popoverKind === 'base' && (
-            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent ?? undefined} limit={1} />
+          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
+            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
           )}
 
           {/* Card popover */}
@@ -147,7 +147,9 @@ export const PopoverContent = () => {
                   </Card.IconBlock>
                 </Card.Toolbar>
 
-                <Surface.Surface type={AppSurface.Card} data={state.popoverContent ?? undefined} limit={1} />
+                {state.popoverContent && 'subject' in state.popoverContent && (
+                  <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
+                )}
               </Card.Root>
             </Menu.Root>
           )}

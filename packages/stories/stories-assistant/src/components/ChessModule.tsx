@@ -16,5 +16,5 @@ export const ChessModule: FC<ComponentProps> = ({ space }) => {
   const objects = useQuery(space.db, Filter.type(Chess.Game));
   const chess = objects.at(-1);
 
-  return <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: chess }} />;
+  return <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: chess, attendableId: 'story' }} />;
 };

@@ -25,7 +25,10 @@ export const MessageModule = ({ space }: ComponentProps) => {
     space.db,
     feed && selected ? Query.select(Filter.id(selected)).from(feed) : Query.select(Filter.nothing()),
   )[0];
-  const data = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
+  const data = useMemo(
+    () => ({ attendableId: 'story', subject: message ?? 'message', companionTo: mailbox }),
+    [message, mailbox],
+  );
 
   return <Surface.Surface type={AppSurface.Section} data={data} limit={1} />;
 };

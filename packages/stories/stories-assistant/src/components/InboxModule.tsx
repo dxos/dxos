@@ -16,5 +16,5 @@ export const InboxModule = ({ space }: ComponentProps) => {
   const mailboxes = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes[0];
 
-  return <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox }} limit={1} />;
+  return <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: 'story' }} limit={1} />;
 };

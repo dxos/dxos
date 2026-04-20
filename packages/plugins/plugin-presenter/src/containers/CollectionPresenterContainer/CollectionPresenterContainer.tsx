@@ -6,7 +6,7 @@ import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Collection } from '@dxos/echo';
+import { type Collection, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { PageNumber, Pager, Layout as PresenterLayout } from '#components';
@@ -36,7 +36,13 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
             />
           }
         >
-          <Surface.Surface type={AppSurface.Slide} data={{ subject: collection.objects[slide] }} />
+          <Surface.Surface
+            type={AppSurface.Slide}
+            data={{
+              subject: collection.objects[slide],
+              attendableId: Obj.getDXN(collection).toString(),
+            }}
+          />
         </PresenterLayout>
       </Panel.Content>
     </Panel.Root>

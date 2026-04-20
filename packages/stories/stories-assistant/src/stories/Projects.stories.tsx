@@ -131,7 +131,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object }} />
+          <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object, attendableId: object.id }} />
         </StackItem.Root>
       ))}
     </Stack>

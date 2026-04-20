@@ -21,7 +21,10 @@ export type LocalFileContainerProps = {
 
 export const LocalFileContainer: FC<LocalFileContainerProps> = ({ file }) => {
   const transformedData = useMemo(
-    () => ({ subject: file.text ? { id: file.id, text: file.text } : file }),
+    () => ({
+      attendableId: file.id,
+      subject: file.text ? { id: file.id, text: file.text } : file,
+    }),
     [file.id, Boolean(file.text)],
   );
 

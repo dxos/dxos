@@ -28,7 +28,7 @@ export const ContextModule = ({ space }: ComponentProps) => {
       <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
         {objects.map((object) => (
           <StackItem.Root key={object.id} item={object}>
-            <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object }} />
+            <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object, attendableId: 'story' }} />
           </StackItem.Root>
         ))}
       </Stack>

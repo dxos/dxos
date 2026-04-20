@@ -12,6 +12,6 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 
 export const PromptModule = ({ space }: { space: Space }) => {
   const [prompt] = useQuery(space.db, Filter.type(Prompt.Prompt));
-  const data = useMemo(() => ({ subject: prompt }), [prompt]);
+  const data = useMemo(() => ({ attendableId: 'story', subject: prompt }), [prompt]);
   return <Surface.Surface type={AppSurface.Article} limit={1} data={data} />;
 };

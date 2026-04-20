@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
+import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../capabilities';
 
@@ -179,7 +180,7 @@ export const snapshot = <S extends Type.AnyEntity>(
  * Filter: lifts an ad-hoc predicate into the typed filter world so it composes
  * via {@link allOf} on the same role as `token`.
  */
-export const predicate = <TData extends Record<string, any>>(
+export const predicate = <TData extends Record<string, unknown>>(
   token: Surface.RoleToken<TData>,
   fn: (data: TData) => boolean,
 ): Surface.Filter<TData> => {
@@ -229,8 +230,10 @@ export const companion: {
 // Article
 //
 
-/** Role token for the `article` role. */
-export const Article: Surface.RoleToken<ArticleData<Obj.Any>> = Surface.makeType('article');
+/** Role token for the `article` role. Subject defaults to `any` until narrowed
+ * via {@link object}, {@link literal}, or {@link subject}. Extra passthrough
+ * props are permitted. */
+export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('article');
 
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
@@ -292,16 +295,18 @@ export const settings = (
 //
 
 /** Role token for the `section` role. */
-export const Section: Surface.RoleToken<ObjectSectionData<Obj.Any>> = Surface.makeType('section');
+export const Section: Surface.RoleToken<SectionData<any>> = Surface.makeType('section');
 
 /** Role token for the `slide` role. Shares the section data shape. */
-export const Slide: Surface.RoleToken<ObjectSectionData<Obj.Any>> = Surface.makeType('slide');
+export const Slide: Surface.RoleToken<SectionData<any>> = Surface.makeType('slide');
 
 /** Role token for the `tabpanel` role. Shares the article data shape. */
-export const Tabpanel: Surface.RoleToken<ArticleData<Obj.Any>> = Surface.makeType('tabpanel');
+export const Tabpanel: Surface.RoleToken<ArticleData<any>> = Surface.makeType('tabpanel');
 
-/** Role token for the `related` role. Shares the section data shape. */
-export const Related: Surface.RoleToken<ObjectSectionData<Obj.Any>> = Surface.makeType('related');
+/** Role token for the `related` role. Related panels may render in both
+ * plank (attendable) and popover (non-attendable) contexts, so `attendableId`
+ * is optional here. */
+export const Related: Surface.RoleToken<{ attendableId?: string; subject: any }> = Surface.makeType('related');
 
 /**
  * Surface data for section role (from StackSection). Sections always render
@@ -337,7 +342,7 @@ export type ObjectSectionProps<
  * Role token for the `object-properties` role (per-object configuration panel).
  * Distinct from Section: no `attendableId` requirement.
  */
-export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<Obj.Any>> = Surface.makeType('object-properties');
+export const ObjectProperties: Surface.RoleToken<ObjectPropertiesData<any>> = Surface.makeType('object-properties');
 
 /** Surface data for object-properties surfaces (distinct from section; no attendableId). */
 export type ObjectPropertiesData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
@@ -357,11 +362,13 @@ export type ObjectPropertiesProps<
 //
 
 /** Role token for the `card--content` role. */
-export const Card: Surface.RoleToken<ObjectCardData<Obj.Any>> = Surface.makeType('card--content');
+export const Card: Surface.RoleToken<CardData<any>> = Surface.makeType('card--content');
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
   subject: Subject;
+  /** Optional projection model (set by form/kanban/pipeline consumers that pre-project the subject). */
+  projection?: ProjectionModel;
 } & Props;
 
 /** Component props for card role. */

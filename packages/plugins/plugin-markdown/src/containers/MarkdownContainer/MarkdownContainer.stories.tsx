@@ -48,8 +48,8 @@ const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const data = useMemo(() => ({ subject: doc }), [doc]);
   const id = doc && Obj.getDXN(doc).toString();
+  const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
   const attentionAttrs = useAttentionAttributes(id);
 
   useAsyncEffect(async () => {

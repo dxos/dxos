@@ -57,16 +57,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
             <Event.Content />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
             {notes && (
-              <Surface.Surface
-                type={AppSurface.Section}
-                data={
-                  { id, subject: notes, attendableId: id } satisfies AppSurface.ObjectArticleData<
-                    Obj.Unknown,
-                    { id: string }
-                  >
-                }
-                limit={1}
-              />
+              <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />
             )}
           </Event.Viewport>
         </Panel.Content>

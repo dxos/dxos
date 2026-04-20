@@ -16,7 +16,7 @@ export const CommentsModule = ({ space }: ComponentProps) => {
   const feedTarget = chats.at(-1)?.feed.target;
   const context = useContextBinder(space, feedTarget);
   const object = context?.getObjects()[0];
-  const data = useMemo(() => ({ subject: 'comments', companionTo: object }), [object]);
+  const data = useMemo(() => ({ attendableId: 'story', subject: 'comments', companionTo: object }), [object]);
   if (!object) {
     return null;
   }

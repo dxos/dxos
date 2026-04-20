@@ -53,8 +53,11 @@ const CompanionStory = () => {
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
   )[0];
 
-  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id }), [mailbox]);
-  const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: feed }), [message, feed]);
+  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id ?? 'story' }), [mailbox]);
+  const companionData = useMemo(
+    () => ({ subject: message ?? 'message', attendableId: 'story-companion', companionTo: feed }),
+    [message, feed],
+  );
 
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);

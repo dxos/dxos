@@ -92,7 +92,7 @@ const DefaultComponent = () => {
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
-  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : {}), [kanban]);
+  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {

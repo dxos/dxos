@@ -76,14 +76,21 @@ export type Props<T extends Record<string, any> = Record<string, unknown>> = {
    * The placeholder component will be rendered while the surface component is loading.
    */
   placeholder?: ReactNode;
-} & MakeOptional<CoreProps<T>, 'id' | 'data' | 'role'> &
-  /**
+} & MakeOptional<CoreProps<T>, 'id' | 'data' | 'role'> & {
+    /**
+     * Explicitly disallow `type` on the untyped Props overload — if the caller
+     * provides `type={AppSurface.X}`, TypeScript must route to the typed
+     * overload (where `data` is narrowed by the token). Without this, the
+     * catch-all index signature below would accept any `type` value and mask
+     * the typed overload entirely.
+     */
+    type?: undefined;
+  } /**
    * Additional props to pass to the component.
    * These props are not used by Surface itself but may be used by components which resolve the surface.
    * Exclude known prop names to prevent overriding well-defined props.
-   */
-  {
-    [K in keyof Record<string, any>]: K extends keyof CoreProps<T> | 'fallback' | 'placeholder' ? never : any;
+   */ & {
+    [K in keyof Record<string, any>]: K extends keyof CoreProps<T> | 'fallback' | 'placeholder' | 'type' ? never : any;
   };
 
 /**
@@ -97,10 +104,16 @@ export type TypedProps<TToken extends RoleToken<any>> = {
   placeholder?: ReactNode;
   id?: string;
   type: TToken;
-  data: TokenData<TToken>;
+  data?: TokenData<TToken>;
   limit?: number | undefined;
 } & {
-  [K: string]: any;
+  /**
+   * Additional pass-through props. Known prop names are excluded so the
+   * catch-all doesn't widen `data` / `type` / etc. to `any` at the intersection.
+   */
+  [K in keyof Record<string, any>]: K extends 'fallback' | 'placeholder' | 'id' | 'type' | 'data' | 'limit'
+    ? never
+    : any;
 };
 
 /**

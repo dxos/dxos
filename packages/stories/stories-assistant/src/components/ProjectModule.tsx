@@ -14,5 +14,7 @@ import { type ComponentProps } from './types';
 
 export const ProjectModule: FC<ComponentProps> = ({ space }) => {
   const projects = useQuery(space.db, Filter.type(Pipeline.Pipeline));
-  return <Surface.Surface type={AppSurface.Article} limit={1} data={{ subject: projects.at(-1) }} />;
+  return (
+    <Surface.Surface type={AppSurface.Article} limit={1} data={{ subject: projects.at(-1), attendableId: 'story' }} />
+  );
 };
