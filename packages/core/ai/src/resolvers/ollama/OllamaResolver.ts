@@ -47,6 +47,8 @@ export const make = ({
       'llama3.2:1b': createModelLayer('llama3.2:1b'),
       'llama3:70b': createModelLayer('llama3:70b'),
       'qwen2.5:14b': createModelLayer('qwen2.5:14b'),
+      'gpt-oss:20b': createModelLayer('gpt-oss:20b'),
+      'gemma4:latest': createModelLayer('gemma4:latest'),
     } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>),
   );
 };
