@@ -162,7 +162,7 @@ describe('AppSurface', () => {
     });
   });
 
-  describe('and (typed form)', () => {
+  describe('allOf (typed form)', () => {
     test('combines same-role filters with AND semantics', ({ expect }) => {
       const filter = AppSurface.allOf(
         AppSurface.object(AppSurface.Article, TypeA),

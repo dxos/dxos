@@ -25,7 +25,7 @@ export const LocalFileContainer: FC<LocalFileContainerProps> = ({ file }) => {
       attendableId: file.id,
       subject: file.text ? { id: file.id, text: file.text } : file,
     }),
-    [file.id, Boolean(file.text)],
+    [file.id, file.text],
   );
 
   if (file.permission !== 'granted') {

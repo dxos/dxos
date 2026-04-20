@@ -221,8 +221,9 @@ const expandBindings = <T extends Record<string, any>>(
   const roles = Array.from(new Set(bindings.map((binding) => binding.role)));
   const guard = (data: Record<string, unknown>, role?: string): data is T => {
     if (role != null) {
-      const binding = bindings.find((entry) => entry.role === role);
-      return binding ? binding.guard(data) : false;
+      // Multiple bindings may share a role (e.g. via `oneOf` of same-role filters);
+      // the role matches if ANY of them passes.
+      return bindings.some((entry) => entry.role === role && entry.guard(data));
     }
     return bindings.some((entry) => entry.guard(data));
   };

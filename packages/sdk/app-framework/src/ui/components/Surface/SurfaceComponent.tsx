@@ -177,13 +177,17 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
  * A surface is a named region of the screen that can be populated by plugins.
  */
 // TODO(burdon): Remove `ref` since relying on this would be error prone.
-export const SurfaceComponent: (<TToken extends RoleToken<any>>(
-  props: TypedProps<TToken> & RefAttributes<HTMLElement>,
-) => React.ReactNode) &
-  NamedExoticComponent<Props & RefAttributes<HTMLElement>> = memo(
+export const SurfaceComponent = memo(
   forwardRef<HTMLElement, Props & { type?: RoleToken<any> }>(
     ({ id: _id, role, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       const data = useDefaultValue(dataProp, () => ({}));
+      // TODO(wittjosiah): This will make all surfaces depend on a single signal.
+      //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
+      //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
+      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
+      //   In the future, it would be nice to be able to bucket the surface contributions by role.
+      const surfaces = useSurfaces();
+
       const effectiveRole = role ?? type?.role;
       if (effectiveRole == null) {
         if (DEBUG) {
@@ -191,13 +195,6 @@ export const SurfaceComponent: (<TToken extends RoleToken<any>>(
         }
         return null;
       }
-
-      // TODO(wittjosiah): This will make all surfaces depend on a single signal.
-      //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
-      //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
-      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
-      //   In the future, it would be nice to be able to bucket the surface contributions by role.
-      const surfaces = useSurfaces();
 
       // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
       const definitions = findCandidates(surfaces, { role: effectiveRole, data });

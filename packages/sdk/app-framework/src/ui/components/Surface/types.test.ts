@@ -15,6 +15,7 @@ describe('Surface.makeType', () => {
   test('tokens with the same role are independent objects (identity-by-role)', ({ expect }) => {
     const a = makeType<{ x: number }>('shared');
     const b = makeType<{ x: number }>('shared');
+    expect(a).not.toBe(b);
     expect(a.role).toBe(b.role);
   });
 });

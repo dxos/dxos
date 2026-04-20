@@ -139,25 +139,27 @@ AppSurface.allOf(
 AppSurface.oneOf(AppSurface.object(AppSurface.Article, MySchema), AppSurface.object(AppSurface.Section, MySchema));
 ```
 
-### Legacy predicate filters
+### Migration from legacy helpers
 
-Still supported for the literal/section/graph-node/plugin/schema/snapshot
-patterns that have not been ported to the typed form:
-`literalArticle`, `literalSection`, `anyObjectSection`, `graphNodeSection`,
-`pluginSection`, `schemaSection`, `snapshotSection`, `companionArticle`,
-`objectProperties`. These return raw type predicates and compose via the
-two-argument form of `AppSurface.allOf(leftPred, rightPred)`.
+The legacy predicate-returning helpers have been removed. `AppSurface.allOf`
+now accepts typed `SurfaceFilter`s only — the two-predicate form is gone.
 
-Prefer the typed equivalents:
-
-- `literalArticle(v)` → `literal(AppSurface.Article, v)`
-- `literalSection(v)` → `literal(AppSurface.Section, v)`
-- `companionArticle(...)` → `companion(AppSurface.Article, ...)`
-- `anyObjectSection()` → `subject(AppSurface.Section, Obj.isObject)`
-- `graphNodeSection()` → `subject(AppSurface.Section, Node.isGraphNode)`
-- `pluginSection()` → `subject(AppSurface.Section, Plugin.isPlugin)`
-- `snapshotSection(S)` → `snapshot(AppSurface.Section, S)`
-- `objectProperties(S)` → `object(AppSurface.ObjectProperties, S)`
+| Removed helper | Typed replacement |
+|---|---|
+| `literalArticle(v)` | `AppSurface.literal(AppSurface.Article, v)` |
+| `literalSection(v)` | `AppSurface.literal(AppSurface.Section, v)` |
+| `companionArticle(...)` | `AppSurface.companion(AppSurface.Article, ...)` |
+| `anyObjectSection()` | `AppSurface.subject(AppSurface.Section, Obj.isObject)` |
+| `graphNodeSection()` | `AppSurface.subject(AppSurface.Section, Node.isGraphNode)` |
+| `pluginSection()` | `AppSurface.subject(AppSurface.Section, Plugin.isPlugin)` |
+| `schemaSection()` | `AppSurface.subject(AppSurface.Section, Type.isObjectSchema)` |
+| `snapshotSection(S)` | `AppSurface.snapshot(AppSurface.Section, S)` |
+| `objectProperties(S)` | `AppSurface.object(AppSurface.ObjectProperties, S)` |
+| `objectArticle(S)` | `AppSurface.object(AppSurface.Article, S)` |
+| `objectSection(S)` | `AppSurface.object(AppSurface.Section, S)` |
+| `objectCard(S)` | `AppSurface.object(AppSurface.Card, S)` |
+| `componentDialog(id)` | `AppSurface.component(AppSurface.Dialog, id)` |
+| `settingsArticle(prefix)` | `AppSurface.settings(AppSurface.Article, prefix)` |
 
 ## App-Toolkit Helper: `AppPlugin.addSurfaceModule`
 

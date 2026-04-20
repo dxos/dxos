@@ -65,10 +65,10 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
   const bindings: Surface.Binding[] = Array.from(firstRoles).map((role) => ({
     role,
     guard: (data: unknown) =>
-      filters.every((filter) => {
-        const binding = filter.bindings.find((entry: Surface.Binding) => entry.role === role);
-        return binding ? binding.guard(data) : false;
-      }),
+      filters.every((filter) =>
+        // Within a single filter, same-role bindings compose disjunctively (ANY match passes).
+        filter.bindings.some((entry: Surface.Binding) => entry.role === role && entry.guard(data)),
+      ),
   }));
   return { bindings };
 };
@@ -162,11 +162,12 @@ export const subject: {
 
 /**
  * Filter: matches when `data.subject` is an ECHO snapshot of the given schema.
+ * Preserves the token's other data fields (e.g. Article/Section `attendableId`).
  */
-export const snapshot = <S extends Type.AnyEntity>(
-  token: Surface.RoleToken<any>,
+export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
+  token: TToken,
   schema: S,
-): Surface.Filter<{ subject: Obj.Snapshot<Schema.Schema.Type<S>> }> => {
+): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Schema.Schema.Type<S>> }> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
