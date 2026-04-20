@@ -153,11 +153,11 @@ const findSuggestionIndex = (content: string, suggestion: Suggestion): number =>
 
 const replaceTextAndDropLintAtRange = (view: EditorView, from: number, to: number, insert: string) => {
   const kept: Diagnostic[] = [];
-  forEachDiagnostic(view.state, (d, f, t) => {
-    if (f === from && t === to) {
+  forEachDiagnostic(view.state, (diagnostic, diagnosticFrom, diagnosticTo) => {
+    if (diagnosticFrom < to && diagnosticTo > from) {
       return;
     }
-    kept.push({ ...d, from: f, to: t });
+    kept.push({ ...diagnostic, from: diagnosticFrom, to: diagnosticTo });
   });
   const changeSet = ChangeSet.of({ from, to, insert }, view.state.doc.length);
   const next = kept.map((d) => ({
