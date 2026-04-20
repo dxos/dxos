@@ -85,15 +85,15 @@ describe('Research', () => {
 
         yield* request.begin({ prompt, blueprints: [blueprint] });
 
-        const toolkit = yield* createToolkit({ blueprints: [blueprint] });
+        const resolvedToolkit = yield* createToolkit({ blueprints: [blueprint] });
         const system = yield* formatSystemPrompt({ blueprints: [blueprint] }).pipe(Effect.orDie);
 
         do {
-          const { done } = yield* request.runAgentTurn({ system, toolkit });
+          const { done } = yield* request.runAgentTurn({ system, toolkit: resolvedToolkit });
           if (done) {
             break;
           }
-          yield* request.runTools({ toolkit });
+          yield* request.runTools({ toolkit: resolvedToolkit });
         } while (true);
       },
       Effect.provide(TestLayer),
