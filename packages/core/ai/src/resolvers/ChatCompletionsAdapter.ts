@@ -13,9 +13,12 @@ import * as Tool from '@effect/ai/Tool';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 /**
@@ -198,7 +201,20 @@ export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+  /**
+   * Maximum duration to wait for the HTTP response to start. Applies to both
+   * `generateText` and the initial connection in `streamText`. Defaults to 2 minutes.
+   */
+  readonly requestTimeout?: Duration.Duration;
+  /**
+   * Maximum duration allowed between streamed SSE chunks before the stream is
+   * aborted with a timeout error. Defaults to 60 seconds.
+   */
+  readonly streamIdleTimeout?: Duration.Duration;
 };
+
+const DEFAULT_REQUEST_TIMEOUT: Duration.Duration = Duration.minutes(2);
+const DEFAULT_STREAM_IDLE_TIMEOUT: Duration.Duration = Duration.seconds(60);
 
 /**
  * Chat completions client service tag.
@@ -564,8 +580,11 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
  * Create a chat completions language model service.
  */
 export const make = (model: string) =>
-  Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) =>
-    LanguageModel.make({
+  Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) => {
+    const requestTimeout = config.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
+    const streamIdleTimeout = config.streamIdleTimeout ?? DEFAULT_STREAM_IDLE_TIMEOUT;
+
+    return LanguageModel.make({
       generateText: (options) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
@@ -578,7 +597,22 @@ export const make = (model: string) =>
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
             Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
+            Effect.timeoutFail({
+              duration: requestTimeout,
+              onTimeout: () =>
+                new AiError.HttpRequestError({
+                  module: 'ChatCompletionsClient',
+                  method: 'generateText',
+                  request: undefined as any,
+                  reason: 'Transport',
+                  description: `Request timed out after ${Duration.format(requestTimeout)}`,
+                  cause: new Error('request timeout'),
+                }),
+            }),
             Effect.catchAll((err) => {
+              if (err instanceof AiError.HttpRequestError) {
+                return Effect.fail(err) as Effect.Effect<never, any, never>;
+              }
               if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
                 return Effect.fail(
                   new AiError.HttpRequestError({
@@ -651,7 +685,22 @@ export const make = (model: string) =>
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
               Effect.flatMap((req) => httpClient.execute(req)),
+              Effect.timeoutFail({
+                duration: requestTimeout,
+                onTimeout: () =>
+                  new AiError.HttpRequestError({
+                    module: 'ChatCompletionsClient',
+                    method: 'streamText',
+                    request: undefined as any,
+                    reason: 'Transport',
+                    description: `Request timed out after ${Duration.format(requestTimeout)}`,
+                    cause: new Error('request timeout'),
+                  }),
+              }),
               Effect.catchAll((err) => {
+                if (err instanceof AiError.HttpRequestError) {
+                  return Effect.fail(err) as Effect.Effect<never, any, never>;
+                }
                 if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
                   return Effect.fail(
                     new AiError.HttpRequestError({
@@ -726,7 +775,19 @@ export const make = (model: string) =>
             const decoder = new TextDecoder();
             let pendingLine = '';
 
-            return response.stream.pipe(
+            const parsedStream: Stream.Stream<Response.StreamPartEncoded, any, any> = response.stream.pipe(
+              withIdleTimeout(
+                streamIdleTimeout,
+                () =>
+                  new AiError.HttpRequestError({
+                    module: 'ChatCompletionsClient',
+                    method: 'streamText',
+                    request: undefined as any,
+                    reason: 'Transport',
+                    description: `Stream idle for more than ${Duration.format(streamIdleTimeout)}`,
+                    cause: new Error('stream idle timeout'),
+                  }),
+              ),
               Stream.mapConcatEffect((chunk: Uint8Array) =>
                 Effect.gen(function* () {
                   const text = pendingLine + decoder.decode(chunk, { stream: true });
@@ -862,16 +923,41 @@ export const make = (model: string) =>
                   return parts;
                 }),
               ),
-              Stream.catchAll((err) => {
+              Stream.catchAll((err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
+                if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
+                  return Stream.fail(err);
+                }
                 return Stream.fail(
                   new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
                 );
               }),
             );
+
+            return parsedStream;
           }),
         ),
-    }),
-  );
+    });
+  });
+
+/**
+ * Apply a per-chunk idle timeout to a stream. Fails with `onTimeout(...)` if no chunk is
+ * emitted within `timeout` of the previous one (or of stream start for the first chunk).
+ */
+const withIdleTimeout =
+  <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
+  <A, E, R>(stream: Stream.Stream<A, E, R>): Stream.Stream<A, E | E2, R> =>
+    Stream.unwrapScoped(
+      Effect.gen(function* () {
+        const pull = yield* Stream.toPull(stream);
+        const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(
+          Effect.timeoutFail({
+            duration: timeout,
+            onTimeout: (): Option.Option<E | E2> => Option.some(onTimeout()),
+          }),
+        );
+        return Stream.repeatEffectChunkOption(timedPull);
+      }),
+    );
 
 /**
  * Create a chat completions language model layer.
