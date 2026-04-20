@@ -22,14 +22,13 @@ export type CreateToolkitProps = {
 
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
- * Returns a resolved Toolkit.WithHandler for internal use.
  */
 export const createToolkit = ({
   toolkit: toolkitProp,
   blueprints = [],
   opaqueToolkits = [],
 }: CreateToolkitProps): Effect.Effect<
-  Toolkit.WithHandler<any>,
+  OpaqueToolkit.OpaqueToolkit<never, any>,
   AiToolNotFoundError,
   ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
 > =>
@@ -39,10 +38,18 @@ export const createToolkit = ({
     const opaqueToolkit = OpaqueToolkit.merge(...opaqueToolkits);
 
     const toolkitDefs = [toolkitProp?.toolkit, blueprintToolkit, opaqueToolkit.toolkit].filter(isTruthy);
-    const toolkit = Toolkit.merge(...toolkitDefs);
-    return yield* toolkit.pipe(
-      Effect.provide(blueprintToolHandler),
-      Effect.provide(toolkitProp?.layer ?? Layer.empty),
+    const mergedToolkit = Toolkit.merge(...toolkitDefs);
+    const resolved = yield* mergedToolkit.pipe(
+      Effect.provide(Layer.succeedContext(blueprintToolHandler)),
+      Effect.provide(toolkitProp?.layer ?? OpaqueToolkit.empty.layer),
       Effect.provide(opaqueToolkit.layer),
-    ) as any as Effect.Effect<Toolkit.WithHandler<any>, never, Tool.HandlersFor<any>>;
-  });
+    );
+    return OpaqueToolkit.make(
+      mergedToolkit,
+      mergedToolkit.toLayer(resolved as any),
+    ) as unknown as OpaqueToolkit.OpaqueToolkit<never, any>;
+  }) as Effect.Effect<
+    OpaqueToolkit.OpaqueToolkit<never, any>,
+    AiToolNotFoundError,
+    ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
+  >;

@@ -73,8 +73,8 @@ export default Research.pipe(
           ) as any;
         }
 
-        const finishedToolkit = yield* createToolkit({
-          toolkit: OpaqueToolkit.make(toolkitDef as any, handlers),
+        const toolkit = yield* createToolkit({
+          toolkit: OpaqueToolkit.make(toolkitDef as Toolkit.Toolkit<any>, handlers),
         });
 
         const request = new AiRequest({
@@ -86,7 +86,7 @@ export default Research.pipe(
             Template.process(PROMPT, { entityExtraction }),
             instructions && `<instructions>${instructions}</instructions>`,
           ),
-          toolkit: OpaqueToolkit.fromResolved(finishedToolkit),
+          toolkit,
         });
 
         const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(dxn)).pipe(

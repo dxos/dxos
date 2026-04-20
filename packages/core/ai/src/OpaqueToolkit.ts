@@ -59,6 +59,7 @@ export interface Any {
   readonly [TypeId]: TypeId;
   readonly toolkit: Toolkit.Toolkit<any>;
   readonly layer: Layer.Layer<unknown, any, any>;
+  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, any, any>;
 }
 
 export type InvocationRequirements<T extends Any> = T extends OpaqueToolkit<infer TR, infer _E, infer _R> ? TR : never;
@@ -71,50 +72,66 @@ export type Requirements<T extends Any> = T extends OpaqueToolkit<infer _TR, inf
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): OpaqueToolkit<Tool.Requirements<Tools>, E, R> => {
-  return {
+): OpaqueToolkit<Tool.Requirements<Tools>, E, R> =>
+  ({
     [TypeId]: TypeId,
-    toolkit: toolkit as any,
-    layer: layer as any,
-    handlers: toolkit.pipe(Effect.provide(layer)) as any,
+    toolkit,
+    layer,
+    handlers: toolkit.pipe(Effect.provide(layer)),
     pipe() {
       // eslint-disable-next-line prefer-rest-params
       return Pipeable.pipeArguments(this, arguments);
     },
-  };
-};
+  }) as any;
 
 /**
  * Creates an opaque toolkit from a typed toolkit by capturing handlers from the Effect context.
  */
 export const fromContext = <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>,
-): Effect.Effect<OpaqueToolkit, never, Tool.HandlersFor<Tools>> =>
-  Effect.map(Effect.context<Tool.HandlersFor<Tools>>(), (context) =>
-    make(toolkit, Layer.succeedContext(context) as any),
+): Effect.Effect<OpaqueToolkit<Tool.Requirements<Tools>>, never, Tool.HandlersFor<Tools>> =>
+  Effect.map(
+    Effect.context<Tool.HandlersFor<Tools>>(),
+    (context): OpaqueToolkit<Tool.Requirements<Tools>> => make(toolkit, Layer.succeedContext(context)),
   );
 
 /**
- * Creates an opaque toolkit from an already-resolved WithHandler toolkit.
- * The resolved toolkit is wrapped so it can be used with `toolkit.pipe(Effect.provide(layer))`.
+ * Satisfies dependencies of an opaque toolkit by providing a layer.
+ * Similar to `Layer.provide`, removes satisfied requirements from `R`.
+ *
+ * @example
+ * ```ts
+ * // As a function
+ * const narrowed = OpaqueToolkit.provide(toolkit, dbLayer);
+ * // As a pipeable
+ * const narrowed = toolkit.pipe(OpaqueToolkit.provide(dbLayer));
+ * ```
  */
-export const fromResolved = <Tools extends Record<string, Tool.Any>>(
-  resolved: Toolkit.WithHandler<Tools>,
-): OpaqueToolkit => ({
-  [TypeId]: TypeId,
-  toolkit: Effect.succeed(resolved) as any,
-  layer: Layer.empty as any,
-  handlers: Effect.succeed(resolved) as any,
-  pipe() {
-    // eslint-disable-next-line prefer-rest-params
-    return Pipeable.pipeArguments(this, arguments);
-  },
-});
+export const provide: {
+  <R0, E2, R2>(
+    layer: Layer.Layer<R0, E2, R2>,
+  ): <TR, E, R extends R0>(self: OpaqueToolkit<TR, E, R>) => OpaqueToolkit<TR, E | E2, R2>;
+  <TR, E, R, E2, R2>(self: OpaqueToolkit<TR, E, R>, layer: Layer.Layer<R, E2, R2>): OpaqueToolkit<TR, E | E2, R2>;
+} = function (...args: any[]) {
+  if (args.length === 1) {
+    const [layer] = args;
+    return (self: OpaqueToolkit<any, any, any>) => provideImpl(self, layer);
+  }
+  return provideImpl(args[0], args[1]);
+} as any;
+
+const provideImpl = <TR, E, R, E2, R2>(
+  self: OpaqueToolkit<TR, E, R>,
+  layer: Layer.Layer<R, E2, R2>,
+): OpaqueToolkit<TR, E | E2, R2> => {
+  const provided = Layer.provide(self.layer, layer as any);
+  return make(self.toolkit as any, provided as any) as any;
+};
 
 /**
  * Empty opaque toolkit.
  */
-export const empty = make(Toolkit.empty, Layer.empty);
+export const empty: OpaqueToolkit = make(Toolkit.empty, Layer.empty);
 
 /**
  * Merges multiple portable toolkits into a single portable toolkit.
@@ -131,8 +148,12 @@ export const merge = <const Toolkits extends ReadonlyArray<Any>>(
 > => {
   return make(
     Toolkit.merge(...toolkits.map((t) => t.toolkit)),
-    Layer.mergeAll(...(toolkits.map((t) => t.layer) as any)),
-  ) as any;
+    Layer.mergeAll(...(toolkits.map((t) => t.layer) as [any, ...any[]])),
+  ) as unknown as OpaqueToolkit<
+    InvocationRequirements<Toolkits[number]>,
+    Failure<Toolkits[number]>,
+    Requirements<Toolkits[number]>
+  >;
 };
 
 /**

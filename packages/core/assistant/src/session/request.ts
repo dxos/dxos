@@ -88,7 +88,7 @@ export type AiRequestBeginProps = {
 
 export type AiRequestTurnProps = {
   system: string;
-  toolkit?: Toolkit.WithHandler<any>;
+  toolkit?: OpaqueToolkit.Any;
 };
 
 export type AiRequestTurnResult = {
@@ -202,9 +202,9 @@ export class AiRequest {
    * Execute a single turn: one LLM generation followed by tool execution.
    * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled blueprints).
    */
-  runAgentTurn = <Tools extends Record<string, Tool.Any>>({
+  runAgentTurn = ({
     system,
-    toolkit,
+    toolkit: opaqueToolkit,
   }: AiRequestTurnProps): Effect.Effect<AiRequestTurnResult, AiRequestRunError, AiRequestRunRequirements> =>
     Effect.gen(this, function* () {
       log('request', {
@@ -218,8 +218,12 @@ export class AiRequest {
         cacheControl: 'ephemeral',
       });
 
+      const toolkit: Toolkit.WithHandler<any> | undefined = opaqueToolkit
+        ? yield* opaqueToolkit.handlers as Effect.Effect<Toolkit.WithHandler<any>>
+        : undefined;
+
       const observer = this._observer;
-      let currentMessageId: Obj.ID | null = null; // Consistent IDs for pending blocks preceding the complete one.
+      let currentMessageId: Obj.ID | null = null;
 
       const messages = yield* LanguageModel.streamText({
         prompt,
@@ -279,10 +283,16 @@ export class AiRequest {
       return { messages, done: false };
     }).pipe(Effect.withSpan('AiRequest.runAgentTurn'));
 
-  runTools = ({ toolkit }: { toolkit?: Toolkit.WithHandler<any> }) =>
+  runTools = ({
+    toolkit: opaqueToolkit,
+  }: {
+    toolkit?: OpaqueToolkit.Any;
+  }): Effect.Effect<void, AiRequestRunError, AiRequestRunRequirements> =>
     Effect.gen(this, function* () {
+      const toolkit: Toolkit.WithHandler<any> | undefined = opaqueToolkit
+        ? yield* opaqueToolkit.handlers as Effect.Effect<Toolkit.WithHandler<any>>
+        : undefined;
       const toolCalls = this.getToolCalls();
-      // TODO(burdon): Retry errors? Write result when each completes individually?
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
         if (!toolkit) {
           throw new Error('No toolkit provided');
@@ -298,8 +308,6 @@ export class AiRequest {
         );
       });
 
-      // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
-      // TODO(dmaretskyi): Stream tool results one by one.
       yield* this._submitMessage(
         Obj.make(Message.Message, {
           created: new Date().toISOString(),
@@ -310,6 +318,7 @@ export class AiRequest {
 
       this._toolCalls += toolResults.length;
     }).pipe(Effect.withSpan('AiRequest.runTools'));
+
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */
@@ -319,32 +328,24 @@ export class AiRequest {
     history = [],
     objects = [],
     blueprints = [],
-    toolkit: opaqueToolkit,
+    toolkit,
   }: AiRequestRunProps): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements> =>
-    (
-      Effect.gen(this, function* () {
-        yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
+    Effect.gen(this, function* () {
+      yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
 
-        const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
-        const toolkit = opaqueToolkit
-          ? yield* opaqueToolkit.toolkit.pipe(Effect.provide(opaqueToolkit.layer)) as Effect.Effect<
-              Toolkit.WithHandler<any>
-            >
-          : undefined;
+      do {
+        const { done } = yield* this.runAgentTurn({ system, toolkit });
+        if (done) {
+          break;
+        }
+        yield* this.runTools({ toolkit });
+      } while (true);
 
-        do {
-          const { done } = yield* this.runAgentTurn({ system, toolkit });
-          if (done) {
-            break;
-          }
-          yield* this.runTools({ toolkit });
-        } while (true);
-
-        log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
-        return this._pending;
-      }) as Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>
-    ).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
+      log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
+      return this._pending;
+    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiRequest.run'));
 }
 
 const createSnippet = (text: string, len = 32) =>

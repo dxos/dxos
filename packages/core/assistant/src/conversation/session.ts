@@ -98,8 +98,8 @@ export class AiSession extends Resource {
     ToolExecutionService | ToolResolverService
   > {
     return Effect.gen(this, function* () {
-      const tookit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
-      return tookit.tools;
+      const toolkit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
+      return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
   }
 
@@ -157,7 +157,7 @@ export class AiSession extends Resource {
           blueprints: currentBlueprints,
           opaqueToolkits: mcps,
         });
-        log('toolkit', { tools: Record.keys(toolkit.tools) });
+        log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
           blueprints: currentBlueprints,
