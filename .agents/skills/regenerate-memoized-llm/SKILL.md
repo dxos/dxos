@@ -48,7 +48,7 @@ To refresh cache for a single package, run that package's tests with generation 
 env | grep -E '^ANTHROPIC_API_KEY=' | awk -F= '{print "len=" length($2)}'
 
 # Only if missing or empty — otherwise skip this line:
-eval (pnpm -ws 1p-credentials)
+eval "$(pnpm -ws 1p-credentials)"
 
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
