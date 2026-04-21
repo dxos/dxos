@@ -24,11 +24,13 @@ export class QueueLogger implements SequenceLogger {
     const existingFeedRef = this._space.properties.invocationTraceFeed;
     let queueDxn: DXN | undefined;
 
-    if (existingFeedRef?.target) {
+    if (existingFeedRef) {
+      // A feed reference exists; resolve its queue DXN. If the target isn't loaded yet,
+      // fail loudly rather than silently creating a new feed and orphaning existing traces.
+      invariant(existingFeedRef.target, 'invocationTraceFeed reference is not yet loaded');
       queueDxn = Feed.getQueueDxn(existingFeedRef.target) ?? undefined;
-    }
-
-    if (!queueDxn) {
+      invariant(queueDxn, 'invocationTraceFeed has no queue DXN');
+    } else {
       const feed = space.db.add(Feed.make({ namespace: 'trace' }));
       queueDxn = Feed.getQueueDxn(feed)!;
       Obj.change(this._space.properties, (obj) => {
