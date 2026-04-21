@@ -27,7 +27,7 @@ import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessHandleImpl, type OutputItem } from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { createProcessTraceService, prepareProcessTracing } from './process-trace';
+import { buildBaseTraceContext, createProcessTraceService, prepareProcessTracing } from './process-trace';
 import { layer as storageServiceLayer } from './storage-service-layer';
 
 export { type ProcessIdGenerator, UUIDProcessIdGenerator, SequentialProcessIdGenerator } from './process-id';
@@ -399,7 +399,11 @@ export class ProcessManagerImpl implements Manager {
       };
 
       // Build tracing context for this process.
-      const baseTraceContext = yield* this.#buildTraceContext(id, options);
+      const baseTraceContext = buildBaseTraceContext({
+        parentTraceContext:
+          options?.parentProcessId !== undefined ? this.#traceContexts.get(options.parentProcessId) : undefined,
+        tracing: options?.tracing,
+      });
       this.#traceContexts.set(id, baseTraceContext);
 
       const isRoot = !options?.parentProcessId;
@@ -533,33 +537,6 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: started', { pid: id, key: definition.key });
 
       return handle;
-    });
-  }
-
-  /**
-   * Build trace context for a process, inheriting from parent if specified.
-   */
-  #buildTraceContext(_id: Process.ID, options?: SpawnOptions): Effect.Effect<TracingService.TraceContext> {
-    return Effect.sync(() => {
-      let baseContext: TracingService.TraceContext = {};
-
-      if (options?.parentProcessId) {
-        const parentContext = this.#traceContexts.get(options.parentProcessId);
-        if (parentContext) {
-          baseContext = { ...parentContext };
-        }
-      }
-
-      if (options?.tracing) {
-        if (options.tracing.message !== undefined) {
-          baseContext = { ...baseContext, parentMessage: options.tracing.message };
-        }
-        if (options.tracing.toolCallId !== undefined) {
-          baseContext = { ...baseContext, toolCallId: options.tracing.toolCallId };
-        }
-      }
-
-      return baseContext;
     });
   }
 

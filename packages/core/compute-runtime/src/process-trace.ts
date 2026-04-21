@@ -11,7 +11,30 @@ import { Process, Trace, TracingService } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import type { TracingOptions } from './ProcessManager';
 import { detachData } from './trace-buffer';
+
+/**
+ * Build a process's base trace context by inheriting from the parent (if any)
+ * and overlaying the spawn request's `tracing.message` / `tracing.toolCallId`.
+ */
+export const buildBaseTraceContext = (args: {
+  readonly parentTraceContext?: TracingService.TraceContext;
+  readonly tracing?: TracingOptions;
+}): TracingService.TraceContext => {
+  let baseContext: TracingService.TraceContext = args.parentTraceContext ? { ...args.parentTraceContext } : {};
+
+  if (args.tracing) {
+    if (args.tracing.message !== undefined) {
+      baseContext = { ...baseContext, parentMessage: args.tracing.message };
+    }
+    if (args.tracing.toolCallId !== undefined) {
+      baseContext = { ...baseContext, toolCallId: args.tracing.toolCallId };
+    }
+  }
+
+  return baseContext;
+};
 
 export interface ProcessTraceServiceOptions {
   /** Id of the process whose events we're tagging. */
