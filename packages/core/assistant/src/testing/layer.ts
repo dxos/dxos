@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, ConsolePrinter, GenericToolkit, type ModelName } from '@dxos/ai';
+import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
@@ -38,7 +38,7 @@ import {
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
-import { AiContextBinder, AiContextService, AiConversation, AiConversationService } from '../conversation';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '../conversation';
 import { AgentService } from '../service';
 import { CompleteBlock } from '../tracing';
 
@@ -46,7 +46,7 @@ interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
-  toolkits?: GenericToolkit.GenericToolkit[];
+  toolkits?: OpaqueToolkit.OpaqueToolkit[];
   types?: Type.AnyEntity[];
   blueprints?: Blueprint.Blueprint[];
   credentials?: ServiceCredential[];
@@ -77,7 +77,7 @@ export type AssistantTestServices =
   // Registries
   | Blueprint.RegistryService
   | OperationRegistry.Service
-  | GenericToolkit.GenericToolkitProvider
+  | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   // Core
   | ProcessManager.ProcessManagerService
@@ -106,7 +106,7 @@ export const AssistantTestLayer = ({
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const resolvedModel: ModelName =
     model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
-  const toolkit = GenericToolkit.merge(...toolkits);
+  const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
@@ -146,27 +146,27 @@ export const AssistantTestLayer = ({
                 return { binder };
               }).pipe(Effect.provide(services)),
             ),
-            // AiConversationService.
-            ServiceResolver.succeed(AiConversationService, (context) =>
+            // AiSessionService.
+            ServiceResolver.succeed(AiSessionService, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const conversation = yield* acquireReleaseResource(
+                const session = yield* acquireReleaseResource(
                   () =>
-                    new AiConversation({
+                    new AiSession({
                       feed,
                       runtime,
                     }),
                 );
-                return conversation;
+                return session;
               }).pipe(Effect.provide(services)),
             ),
             yield* ServiceResolver.fromRequirements(
               Database.Service,
-              GenericToolkit.GenericToolkitProvider,
+              OpaqueToolkit.OpaqueToolkitProvider,
               Feed.FeedService,
               AiService.AiService,
               OperationRegistry.Service,
@@ -200,7 +200,7 @@ export const AssistantTestLayer = ({
           Match.when('console', () => TracingServiceExt.layerLogInfo()),
           Match.when('pretty', () =>
             TracingServiceExt.layerConsolePrettyPrint({
-              toolkit: (toolkits.length > 0 ? GenericToolkit.merge(...toolkits) : GenericToolkit.empty).toolkit as any,
+              toolkit: (toolkits.length > 0 ? OpaqueToolkit.merge(...toolkits) : OpaqueToolkit.empty).toolkit as any,
             }),
           ),
           Match.when('feed', () => TracingService.layerNoop),
@@ -209,7 +209,7 @@ export const AssistantTestLayer = ({
       ),
     ),
     Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
-    Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+    Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),
     Layer.provideMerge(Registry.layer),

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
+import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -31,9 +31,9 @@ export default AgentWorker.pipe(
       );
       invariant(chatFeed, 'Agent chat feed not found.');
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
+      const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
 
-      const agentsInContext = conversation.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
+      const agentsInContext = session.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
       if (agentsInContext.length !== 1) {
         throw new Error('There should be exactly one agent in context. Got: ' + agentsInContext.length);
       }
@@ -50,7 +50,7 @@ export default AgentWorker.pipe(
         input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
       }
 
-      yield* conversation
+      yield* session
         .createRequest({
           prompt: input,
         })

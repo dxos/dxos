@@ -19,7 +19,7 @@ import {
   MemoryBlueprint,
   WebSearchBlueprint,
   WebSearchHandlers,
-  WebSearchToolkitGeneric,
+  WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -103,7 +103,7 @@ export const agentTest: {
       // AssistantBlueprint.make(),
       InboxBlueprint.make(),
     ],
-    toolkits: [WebSearchToolkitGeneric],
+    toolkits: [WebSearchToolkitOpaque],
   });
 
   return Effect.fnUntraced(

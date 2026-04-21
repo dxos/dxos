@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, GenericToolkit, ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { Trace } from '@dxos/functions';
@@ -46,7 +46,7 @@ export const AgentPrompt = Operation.make({
     AiService.AiService,
     Database.Service,
     Feed.FeedService,
-    GenericToolkit.GenericToolkitProvider,
+    OpaqueToolkit.OpaqueToolkitProvider,
     OperationRegistry.Service,
     Trace.TraceService,
   ],

@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
@@ -85,7 +85,7 @@ export default Commentary.pipe(
         const moveNotation = lastMove.san;
 
         // Generate AI commentary about the move
-        const result = yield* new AiSession({
+        const result = yield* new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
         }).run({
           prompt:

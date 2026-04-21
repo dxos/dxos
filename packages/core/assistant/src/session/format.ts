@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunError, type AiSessionRunProps } from './session';
+import { type AiRequestRunError, type AiRequestRunProps } from './request';
 
 /**
  * Formats the system prompt.
@@ -29,7 +29,7 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+}: Pick<AiRequestRunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
   FunctionNotFoundError | ObjectNotFoundError,
   Database.Service | OperationRegistry.Service | Operation.Service | TracingService
@@ -81,7 +81,7 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiSessionRunProps<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
+}: Pick<AiRequestRunProps, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiRequestRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 
