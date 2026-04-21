@@ -52,11 +52,11 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
  * NOTE: The browser reserves space for scrollbars.
  */
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, centered, padding, snap, thin, autoHide },
+  { orientation, centered, padding, snap, autoHide },
   ...etc
 ) => {
   return mx(
-    'h-full w-full',
+    'flex-1 min-h-0 w-full',
 
     orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
     orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',
