@@ -143,7 +143,7 @@ export const createConfig = ({
         },
         optimizeDeps: {
           // WASM modules.
-          exclude: ['@dxos/wa-sqlite', 'manifold-3d'],
+          exclude: ['@dxos/wa-sqlite', 'manifold-3d', 'js-clipper'],
           ...(isFastBundle && {
             include: [
               // React.
