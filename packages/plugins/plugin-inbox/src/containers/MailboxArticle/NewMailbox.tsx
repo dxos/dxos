@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framew
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -89,9 +89,13 @@ export const NewMailbox = composable<HTMLDivElement, NewMailboxProps>(({ mailbox
       {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
     >
       <p className='text-description'>{t('empty-mailbox.message')}</p>
-      <Button onClick={handleSync} disabled={syncing}>
-        {t('sync-mailbox.label')}
-      </Button>
+      <IconButton
+        disabled={syncing}
+        classNames='animate-spin'
+        icon='ph--spinner-gap--regular'
+        label={t('sync-mailbox.label')}
+        onClick={handleSync}
+      />
     </div>
   );
 });

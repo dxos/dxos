@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -61,6 +61,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
