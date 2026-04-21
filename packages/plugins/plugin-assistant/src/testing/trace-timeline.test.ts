@@ -13,7 +13,7 @@ import {
   DatabaseHandlers,
   WebSearchBlueprint,
   WebSearchHandlers,
-  WebSearchToolkitGeneric,
+  WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -42,7 +42,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
   blueprints: [DatabaseBlueprint.make(), WebSearchBlueprint.make()],
   operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
-  toolkits: [WebSearchToolkitGeneric],
+  toolkits: [WebSearchToolkitOpaque],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
 });

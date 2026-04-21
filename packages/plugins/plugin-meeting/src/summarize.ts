@@ -14,7 +14,7 @@ import {
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
-import { type AiAssistantError, AiSession } from '@dxos/assistant';
+import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import { Database, Type } from '@dxos/echo';
 import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -46,7 +46,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   function* (content) {
     log.info('summarizing meeting', { contentLength: content.length });
 
-    const output = yield* new AiSession().run({
+    const output = yield* new AiRequest().run({
       system: SUMMARIZE_PROMPT,
       prompt: content,
     });

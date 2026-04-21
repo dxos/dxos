@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, QueueService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
@@ -43,7 +43,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         const messageContent = Function.pipe([message], Array.flatMap(renderMarkdown), Array.join('\n\n'));
         const tagList = tags.map((tag) => `- ${tag.label}`).join('\n');
 
-        const result = yield* new AiSession({
+        const result = yield* new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
         }).run({
           prompt:

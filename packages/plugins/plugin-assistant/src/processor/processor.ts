@@ -11,7 +11,7 @@ import * as Stream from 'effect/Stream';
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
   AiContextService,
-  type AiConversation,
+  type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
   AgentService,
@@ -106,7 +106,7 @@ export class AiChatProcessor {
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
   constructor(
-    private readonly _conversation: AiConversation,
+    private readonly _conversation: AiSession,
     private readonly _runtime: AutomationCapabilities.ComputeRuntime,
     private readonly _feed: Feed.Feed,
     private readonly _options: AiChatProcessorOptions = defaultOptions,

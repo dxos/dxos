@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { OpaqueToolkit } from '@dxos/ai';
 import { CalculatorLayer, CalculatorToolkit } from '@dxos/ai/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { dbg, log } from '@dxos/log';
@@ -13,10 +14,10 @@ import { ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
 import { AssistantTestLayer } from '../testing';
-import { AiSession } from './session';
+import { AiRequest } from './request';
 
 /**
- * Exercises the full AiSession tool-call loop against a local Ollama instance.
+ * Exercises the full AiRequest tool-call loop against a local Ollama instance.
  *
  * Prerequisites:
  * - `ollama serve` running on `localhost:11434` with the `gpt-oss:20b` model pulled.
@@ -40,15 +41,15 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(CalculatorLayer),
 );
 
-describe('AiSession (ollama gpt-oss:20b)', () => {
+describe('AiRequest (ollama gpt-oss:20b)', () => {
   it.effect(
     'calculator tool-call loop',
     Effect.fn(
       function* ({ expect }) {
-        const session = new AiSession();
-        const toolkit = yield* CalculatorToolkit;
+        const request = new AiRequest();
+        const toolkit = yield* OpaqueToolkit.fromContext(CalculatorToolkit);
 
-        const messages = yield* session.run({
+        const messages = yield* request.run({
           toolkit,
           prompt: 'What is six times seven? Use the Calculator tool and reply with only the number.',
           history: [],
@@ -59,11 +60,11 @@ describe('AiSession (ollama gpt-oss:20b)', () => {
         const toolCalls = messages.flatMap((m) => m.blocks).filter(ContentBlock.is('toolCall'));
         const toolResults = messages.flatMap((m) => m.blocks).filter(ContentBlock.is('toolResult'));
 
-        log.info('session result', {
+        log.info('request result', {
           messageCount: messages.length,
           toolCalls: toolCalls.length,
           toolResults: toolResults.length,
-          sessionToolCalls: session.toolCalls,
+          requestToolCalls: request.toolCalls,
         });
 
         expect(toolCalls.length).toBeGreaterThan(0);

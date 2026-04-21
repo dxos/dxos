@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, GenericToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService, Trace, TriggerEvent } from '@dxos/functions';
@@ -31,7 +31,7 @@ export const AgentWorker = Operation.make({
     Feed.FeedService,
     OperationRegistry.Service,
     Trace.TraceService,
-    GenericToolkit.GenericToolkitProvider,
+    OpaqueToolkit.OpaqueToolkitProvider,
   ],
 });
 
