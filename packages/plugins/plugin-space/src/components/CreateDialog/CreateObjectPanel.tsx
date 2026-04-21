@@ -203,6 +203,7 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Input
+        classNames='mb-form-gap'
         autoFocus
         data-testid='create-object-form.space-input'
         placeholder={t('space-input.placeholder')}

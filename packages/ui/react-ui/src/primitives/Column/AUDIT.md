@@ -78,7 +78,7 @@ withColumn.consumed()
 
 ## CSS custom property cascade
 
-```
+```text
 Column.Root
   sets --gutter = var(--dx-gutter-<size>)
   sets --dx-col = 2 / span 1
