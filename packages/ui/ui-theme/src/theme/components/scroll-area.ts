@@ -42,8 +42,8 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     orientation === 'horizontal' && 'group/scroll-h flex',
     orientation === 'all' && 'group/scroll-all',
 
-    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
-    '[.dx-column_&]:col-span-full',
+    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column-root marker).
+    '[.dx-column-root_&]:col-span-full',
 
     ...etc,
   );

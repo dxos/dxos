@@ -22,7 +22,7 @@ export const withColumn = {
   center: () => '[grid-column:var(--dx-col,auto)]',
 
   /** Propagates the Column grid to children via subgrid. No-op outside Column. */
-  propagate: () => '[.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid',
+  propagate: () => '[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid',
 
   /** Resets --dx-col after consuming --gutter. Applied by ScrollArea.Viewport. */
   consumed: () => '[--dx-col:auto]',
@@ -31,7 +31,7 @@ export const withColumn = {
 export type ColumnStyleProps = {};
 
 const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('dx-column grid', ...etc);
+  return mx('dx-column-root grid', ...etc);
 };
 
 /**
