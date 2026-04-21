@@ -14,28 +14,39 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 
 ## Regenerate all memoized-llm caches
 
-1. **Load model credentials** (required for LLM calls):
+1. **Check if credentials are already in env first**. Some harnesses (e.g. Cursor Cloud, CI, devcontainers) inject API keys via their own env config, so you may not need to pull from 1Password at all. Check for provider keys before running the 1Password script:
+
+   ```bash
+   env | grep -E '^(ANTHROPIC_API_KEY|OPENAI_API_KEY|GOOGLE_API_KEY|EDGE_AI_SERVICE_ENDPOINT)='
+   ```
+
+   If the required key(s) for the provider used by the test are already set, skip step 2.
+
+2. **Load model credentials from 1Password** (only if not already in env):
 
    ```fish
    eval (pnpm -ws 1p-credentials)
    ```
 
-   (In bash/zsh, use the equivalent way to load 1Password credentials for the workspace.)
+   (In bash/zsh, use the equivalent way to load 1Password credentials for the workspace. If multiple 1Password accounts are configured, prefix with `OP_ACCOUNT=<your-account>`.)
 
-2. **Run tests with generation enabled**:
+3. **Run tests with generation enabled**:
 
    ```bash
    ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'
    ```
 
-3. **Commit updated conversation files** (e.g. `*.conversations.json`).
+4. **Commit updated conversation files** (e.g. `*.conversations.json`).
 
 ## Regenerate one package
 
-To refresh cache for a single package, run that package’s tests with generation enabled:
+To refresh cache for a single package, run that package’s tests with generation enabled. First check if provider API keys are already in env — only run `1p-credentials` if they aren't:
 
 ```bash
-eval (pnpm -ws 1p-credentials)   # or your shell’s equivalent
+# Check env first; if keys are already set, skip the 1p step.
+env | grep -E '^(ANTHROPIC_API_KEY|OPENAI_API_KEY|GOOGLE_API_KEY|EDGE_AI_SERVICE_ENDPOINT)='
+
+eval (pnpm -ws 1p-credentials)   # only if keys aren't already in env
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
 
