@@ -26,7 +26,7 @@ export const make = () =>
               type: 'adaptive' as any,
             } as const)
           : undefined;
-        const max_tokens = 4096;
+        const max_tokens = 16_384;
         switch (model) {
           case '@anthropic/claude-3-5-haiku-20241022':
             return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022', config: { max_tokens } }).pipe(
