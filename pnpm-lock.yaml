@@ -1894,6 +1894,9 @@ patchedDependencies:
   '@automerge/automerge-repo@2.5.1':
     hash: be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8
     path: patches/@automerge__automerge-repo@2.5.1.patch
+  js-clipper@1.0.1:
+    hash: 7123e29f40e298dc40c17d413e16b6fe49dd7eb797ec1e05b21b5596514335de
+    path: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -18579,7 +18582,7 @@ importers:
         version: 3.1.1
       js-clipper:
         specifier: 'catalog:'
-        version: 1.0.1
+        version: 1.0.1(patch_hash=7123e29f40e298dc40c17d413e16b6fe49dd7eb797ec1e05b21b5596514335de)
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -54414,7 +54417,7 @@ snapshots:
       js-cookie: 3.0.5
       nopt: 7.2.1
 
-  js-clipper@1.0.1: {}
+  js-clipper@1.0.1(patch_hash=7123e29f40e298dc40c17d413e16b6fe49dd7eb797ec1e05b21b5596514335de): {}
 
   js-cookie@2.2.1: {}
 
