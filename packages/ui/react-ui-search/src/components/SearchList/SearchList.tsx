@@ -377,17 +377,8 @@ type SearchListViewportProps = {};
 
 const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root
-      {...composableProps(props, { classNames: 'border border-red-500' })}
-      role='listbox'
-      thin
-      padding
-      ref={forwardedRef}
-    >
-      <ScrollArea.Viewport>
-        <div className='h-[100px]'>PLACEHOLDER</div>
-        {children}
-      </ScrollArea.Viewport>
+    <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 });
