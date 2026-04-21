@@ -29,7 +29,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import {
@@ -234,16 +234,15 @@ SearchListRoot.displayName = 'SearchList.Root';
 type SearchListContentProps = {};
 
 /**
- * Optional wrapper that groups `SearchList.Input` and `SearchList.Viewport`.
- * When inside a Column context, propagates the grid via subgrid so children
- * can auto-center (Input) or auto-bleed (Viewport).
+ * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
+ * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
+ *
+ * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
+ * handles column placement for SearchList's children automatically.
  */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div
-      {...composableProps(props, { role: 'none', classNames: mx('dx-expander', withColumn.propagate()) })}
-      ref={forwardedRef}
-    >
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={forwardedRef}>
       {children}
     </div>
   );
