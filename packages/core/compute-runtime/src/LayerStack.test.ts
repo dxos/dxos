@@ -9,7 +9,8 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 
-import { LayerSpec, ServiceNotAvailableError } from '@dxos/functions';
+import { runAndForwardErrors } from '@dxos/effect';
+import { LayerSpec } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
 
 import { LayerStack } from './LayerStack';
@@ -378,7 +379,7 @@ describe('LayerStack', () => {
       const resolver = stack.getServiceResolver();
 
       // Cycle is detected eagerly inside the Slice constructor (which runs during resolution).
-      return Effect.runPromise(resolveWithScope(resolver.resolve(ServiceA, {})).pipe(Effect.exit)).then((exit) => {
+      return runAndForwardErrors(resolveWithScope(resolver.resolve(ServiceA, {})).pipe(Effect.exit)).then((exit) => {
         expect(Exit.isFailure(exit)).toBe(true);
       });
     });

@@ -11,11 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 
-import type { DXN, SpaceId } from '@dxos/keys';
-
 import { ServiceNotAvailableError } from '../errors';
 import type * as LayerSpec from './LayerSpec';
-import * as Process from './Process';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;

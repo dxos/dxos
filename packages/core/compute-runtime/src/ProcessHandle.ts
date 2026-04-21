@@ -20,7 +20,7 @@ import { Performance } from '@dxos/effect';
 import { Process, type StorageService, type Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import type { Environment, Handle, Status } from './ProcessManager';
+import type * as ProcessManager from './ProcessManager';
 import { EphemeralTraceBuffer } from './trace-buffer';
 
 /**
@@ -35,15 +35,15 @@ export type OutputItem<O> = Option.Option<O>;
  * ephemeral trace buffer/subscribers for a single spawned process. The
  * manager drives lifecycle by invoking `runOnSpawn()` after construction,
  * `submitInput()`/`requestSubmitOutput()` during operation, and `terminate()`
- * on shutdown. Status transitions are computed here from handler accounting
+ * on shutdown. ProcessManager.Status transitions are computed here from handler accounting
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
-export class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
-  readonly statusAtom: Atom.Writable<Status>;
+export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
+  readonly statusAtom: Atom.Writable<ProcessManager.Status>;
   readonly parentId: Process.ID | null;
-  readonly environment: Environment;
+  readonly environment: ProcessManager.Environment;
 
-  #currentStatus: Status;
+  #currentStatus: ProcessManager.Status;
   #activeHandlers = 0;
   #finished = false;
   #succeedRequested = false;
@@ -82,7 +82,7 @@ export class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     storage: Context.Tag.Service<typeof StorageService>,
     key: string,
     params: Process.Params,
-    environment: Environment,
+    environment: ProcessManager.Environment,
     traceSink: Trace.Sink,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
@@ -109,12 +109,12 @@ export class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       startedAt: new Date(),
       completedAt: Option.none(),
     };
-    this.statusAtom = Atom.make<Status>(this.#currentStatus);
+    this.statusAtom = Atom.make<ProcessManager.Status>(this.#currentStatus);
     this.#registry.mount(this.statusAtom);
     log('lifecycle: created', { parentId, key, params });
   }
 
-  snapshotStatus(): Status {
+  snapshotStatus(): ProcessManager.Status {
     return this.#currentStatus;
   }
 
@@ -289,7 +289,7 @@ export class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }).pipe(Effect.scoped);
   }
 
-  get status(): Status {
+  get status(): ProcessManager.Status {
     return this.#currentStatus;
   }
 

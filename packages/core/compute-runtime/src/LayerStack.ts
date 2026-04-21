@@ -1,4 +1,13 @@
-import { Effect, Context, ManagedRuntime, type Scope, Layer, Option } from 'effect';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
+import type * as Scope from 'effect/Scope';
 
 import { ServiceNotAvailableError, ServiceResolver, type LayerSpec } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';

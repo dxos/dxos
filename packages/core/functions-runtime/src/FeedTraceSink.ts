@@ -10,6 +10,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
 import { Database, Feed, Filter, Order, Query } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { ServiceResolver, Trace } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -176,7 +177,7 @@ export const makeRoutingSink = (opts: { resolver: ServiceResolver.ServiceResolve
       return;
     }
     const effect = opts.resolver.resolve(FeedTraceSink, { space }).pipe(Effect.scoped);
-    Effect.runPromise(effect).then(
+    runAndForwardErrors(effect).then(
       (service) => {
         const entry = perSpace.get(space);
         perSpace.set(space, { status: 'ready', sink: service.sink });

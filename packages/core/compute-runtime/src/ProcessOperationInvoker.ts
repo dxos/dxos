@@ -24,7 +24,7 @@ import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/ope
 
 import type { ProcessNotFoundError } from './errors';
 import { ProcessManagerService } from './process-manager-service';
-import type { Handle, Manager, SpawnOptions } from './ProcessManager';
+import type * as ProcessManager from './ProcessManager';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -40,7 +40,7 @@ export interface ProcessOperationInvoker {
   invokeFiber: <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
+    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'>,
   ) => Effect.Effect<OperationFiber<O>>;
 
   /**
@@ -54,7 +54,7 @@ export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoke
   ProcessOperationInvoker
 >() {}
 
-const fiberFromProcess = <T>(handle: Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
+const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     // `forkDaemon` so the collector fiber's lifetime is independent of whichever
     // scope originated the `invoke`/`attach` call. Otherwise, subsequent
@@ -102,7 +102,7 @@ const fiberFromProcess = <T>(handle: Handle<any, T>): Effect.Effect<OperationFib
  * When `parentProcessId` is set, spawned processes inherit the parent's trace context.
  */
 export const make = (opts: {
-  manager: Manager;
+  manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
 }): Operation.OperationService & ProcessOperationInvoker => {
@@ -114,7 +114,7 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<SpawnOptions, 'traceMeta' | 'environment'>,
+    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'>,
   ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
       const executable = Process.fromOperation(op, opts.handlerSet);

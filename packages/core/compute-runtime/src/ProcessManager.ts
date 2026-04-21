@@ -21,13 +21,12 @@ import { LayerSpec, Process, ServiceResolver, StorageService, Trace } from '@dxo
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
-import type { ObjectId } from '@dxos/protocols';
 
-import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
+import { ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessManagerService } from './process-manager-service';
 import { createProcessTraceService } from './process-trace';
-import { ProcessHandleImpl, type OutputItem } from './ProcessHandle';
+import * as ProcessHandle from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
 import { layer as storageServiceLayer } from './storage-service-layer';
 
@@ -201,7 +200,7 @@ export interface ProcessManagerImplOpts {
 
 export class ProcessManagerImpl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
-  readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any, any>>();
+  readonly #handles = new Map<Process.ID, ProcessHandle.ProcessHandleImpl<any, any, any>>();
   readonly #registry: Registry.Registry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -280,10 +279,10 @@ export class ProcessManagerImpl implements Manager {
   /**
    * Pids with no pending children in the handle map first, so child processes shut down before parents.
    */
-  #shutdownTerminationOrder(): ProcessHandleImpl<any, any, any>[] {
+  #shutdownTerminationOrder(): ProcessHandle.ProcessHandleImpl<any, any, any>[] {
     const byPid = new Map(this.#handles);
     const pending = new Set<Process.ID>(byPid.keys());
-    const result: ProcessHandleImpl<any, any, any>[] = [];
+    const result: ProcessHandle.ProcessHandleImpl<any, any, any>[] = [];
 
     const pendingChildCount = (pid: Process.ID): number => {
       let count = 0;
@@ -323,7 +322,7 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
-      const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
+      const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -342,7 +341,7 @@ export class ProcessManagerImpl implements Manager {
         process: id,
       };
 
-      let handleRef: ProcessHandleImpl<I, O, any> | null = null;
+      let handleRef: ProcessHandle.ProcessHandleImpl<I, O, any> | null = null;
 
       const params: Process.Params = {
         name: options?.name ?? null,
@@ -445,7 +444,7 @@ export class ProcessManagerImpl implements Manager {
           }
         });
 
-      const handle = new ProcessHandleImpl<I, O, any>(
+      const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
         callbacks,
@@ -488,7 +487,7 @@ export class ProcessManagerImpl implements Manager {
 
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
     return Effect.sync(() => {
-      let impls: ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
+      let impls: ProcessHandle.ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
       if (options?.key !== undefined) {
         impls = impls.filter((handle) => handle.key === options.key);
       }

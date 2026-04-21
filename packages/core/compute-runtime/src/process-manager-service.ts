@@ -4,7 +4,7 @@
 
 import * as Context from 'effect/Context';
 
-import type { Manager } from './ProcessManager';
+import type * as ProcessManager from './ProcessManager';
 
 /**
  * Service tag for the {@link Manager}.
@@ -14,5 +14,5 @@ import type { Manager } from './ProcessManager';
  */
 export class ProcessManagerService extends Context.Tag('@dxos/functions-runtime/ProcessManagerService')<
   ProcessManagerService,
-  Manager
+  ProcessManager.Manager
 >() {}
