@@ -94,9 +94,23 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
 };
 
 /**
- * Reads a package's `exports` field and returns all JS subpath entrypoints as bare specifiers
- * (e.g. `@dxos/client`, `@dxos/client/echo`). Skips wildcard patterns, non-JS assets,
- * and excluded subpaths. Falls back to just the package name if exports is absent or simple.
+ * Asset subpaths (CSS, PCSS, images, etc.) that the host already loads via its own
+ * bundle — for example `@dxos/react-ui-form` pulls in `@dxos/lit-ui/dx-tag-picker.pcss`
+ * on startup, so the stylesheet is already attached to the DOM by the time a remote
+ * plugin runs. Community plugins should still be able to _import_ those specifiers
+ * (rolldown leaves the `import "…"` statements in the output when the package is
+ * externalized), so the import map maps them to a no-op empty ES module. The
+ * resulting browser fetch is a cheap no-op; the styles are never re-downloaded
+ * and never re-injected.
+ */
+const ASSET_SUBPATH = /\.(css|pcss|scss|sass|less|json|node|wasm|html|svg|png|jpe?g|gif|webp|ico)$/;
+const isAssetSubpath = (specifier: string) => ASSET_SUBPATH.test(specifier);
+
+/**
+ * Reads a package's `exports` field and returns all subpath entrypoints as bare specifiers
+ * (e.g. `@dxos/client`, `@dxos/client/echo`, `@dxos/lit-ui/dx-tag-picker.pcss`). Skips
+ * wildcard patterns and excluded subpaths. Falls back to just the package name if
+ * exports is absent or simple.
  */
 const getPackageEntrypoints = (packageName: string, packageJsonPath: string): string[] => {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
@@ -125,10 +139,6 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
 
     const subpath = key.slice(2);
     if (excluded?.has(subpath)) {
-      return [];
-    }
-
-    if (/\.(css|pcss|scss|less|json|node|wasm|html|svg|png|jpg)$/.test(subpath)) {
       return [];
     }
 
@@ -222,6 +232,22 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         ];
 
         for (const specifier of modules) {
+          if (isAssetSubpath(specifier)) {
+            // Host already loaded the real asset; remote plugins need the specifier to
+            // resolve to *something* that behaves as an ES module. Emit a no-op wrapper
+            // (prod) or a small data URL (dev) and skip file resolution entirely.
+            if (importMapIsDev) {
+              imports[specifier] = 'data:text/javascript;charset=utf-8,export%20%7B%7D%3B';
+            } else {
+              chunkRefIds[specifier] = this.emitFile({
+                type: 'chunk',
+                id: `${WRAPPER_PREFIX}${specifier}`,
+                preserveSignature: 'strict',
+              });
+            }
+            continue;
+          }
+
           const resolved = await this.resolve(specifier);
           if (!resolved) {
             this.warn(`Import map: unable to resolve "${specifier}"; omitting from import map.`);
@@ -258,6 +284,10 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           return;
         }
         const specifier = id.slice(WRAPPER_PREFIX.length);
+        if (isAssetSubpath(specifier)) {
+          // No-op — the asset is already loaded by the host bundle.
+          return 'export {};\n';
+        }
         const resolvedId = resolvedIds[specifier];
         if (!resolvedId) {
           return `export * from ${JSON.stringify(specifier)};\n`;
