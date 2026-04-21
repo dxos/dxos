@@ -37,7 +37,7 @@ const DefaultStory = () => {
       </Column.Row>
 
       <Column.Center asChild>
-        <div className='py-2'>
+        <div>
           <Input.Root>
             <Input.TextInput placeholder='Search' />
           </Input.Root>
@@ -100,7 +100,7 @@ export const WithScrollArea = {
   render: () => (
     <Column.Root classNames='overflow-hidden' gutter='md'>
       <Column.Center>
-        <h2 className='py-3'>Header</h2>
+        <h2>Header</h2>
       </Column.Center>
       <ScrollArea.Root padding centered orientation='vertical'>
         <ScrollArea.Viewport>
@@ -108,7 +108,7 @@ export const WithScrollArea = {
         </ScrollArea.Viewport>
       </ScrollArea.Root>
       <Column.Center>
-        <h2 className='py-3'>Footer</h2>
+        <h2>Footer</h2>
       </Column.Center>
     </Column.Root>
   ),
@@ -120,7 +120,7 @@ export const WithScrollArea = {
  * compound components (Form.Root, Editor.Root, etc.) that render `display: contents`.
  */
 export const WithCenter: Story = {
-  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  decorators: [withLayout({ classNames: 'w-[25rem]' })],
   render: () => (
     <Column.Root gutter='md'>
       <Column.Center>
@@ -149,7 +149,7 @@ export const WithScrollAreaAutoBleed: Story = {
   render: () => (
     <Column.Root classNames='overflow-hidden' gutter='md'>
       <Column.Center>
-        <h2 className='py-3'>Header (Column.Center)</h2>
+        <h2>Header (Column.Center)</h2>
       </Column.Center>
       <ScrollArea.Root orientation='vertical' padding thin>
         <ScrollArea.Viewport>
@@ -157,7 +157,7 @@ export const WithScrollAreaAutoBleed: Story = {
         </ScrollArea.Viewport>
       </ScrollArea.Root>
       <Column.Center>
-        <h2 className='py-3'>Footer (Column.Center)</h2>
+        <h2>Footer (Column.Center)</h2>
       </Column.Center>
     </Column.Root>
   ),
