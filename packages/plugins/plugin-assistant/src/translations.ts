@@ -130,7 +130,7 @@ export const translations = [
         'blueprints-in-context.title': 'Blueprints',
         'objects-in-context.title': 'Content',
         'remove-object-in-context.label': 'Remove document',
-        'chat-model.title': 'Model',
+        'chat-model.title': 'Models',
         'mcp-servers.title': 'MCP Servers',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
@@ -139,6 +139,8 @@ export const translations = [
         'mcp-server-url.label': 'Server URL',
         'mcp-server-url.placeholder': 'https://...',
         'mcp-server-protocol.label': 'Protocol',
+        'mcp-server-api-key.label': 'API key',
+        'mcp-server-api-key.placeholder': 'API key (optional)',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',

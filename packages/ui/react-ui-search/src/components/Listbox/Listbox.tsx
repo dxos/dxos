@@ -97,13 +97,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
 
     return (
       <ListboxProvider scope={__listboxScope} selectedValue={selectedValue} onValueChange={handleValueChange}>
-        <ul
-          role='listbox'
-          {...rootProps}
-          className={mx('w-full p-form-chrome', classNames)}
-          ref={rootRef}
-          {...arrowGroup}
-        >
+        <ul role='listbox' {...rootProps} className={mx('w-full', classNames)} ref={rootRef} {...arrowGroup}>
           {children}
         </ul>
       </ListboxProvider>

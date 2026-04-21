@@ -76,7 +76,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                   <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Panel>
-                  <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
+                  <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
                   <Tabs.Panel value='mcp-servers' tabIndex={-1} classNames='dx-focus-ring-inset'>
@@ -174,8 +174,8 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   const [adding, setAdding] = useState(false);
 
   const handleAdd = useCallback(
-    (name: string, url: string, protocol: 'sse' | 'http') => {
-      db.add(Obj.make(McpServer.McpServer, { name, url, protocol, enabled: true }));
+    (name: string, url: string, protocol: 'sse' | 'http', apiKey?: string) => {
+      db.add(Obj.make(McpServer.McpServer, { name, url, protocol, apiKey, enabled: true }));
       setAdding(false);
     },
     [db],
@@ -219,7 +219,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div className='px-form-chrome'>
+        <div role='none' className='px-form-chrome'>
           <IconButton
             variant='ghost'
             icon='ph--plus--regular'
@@ -233,7 +233,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
 };
 
 type McpServerFormProps = {
-  onSubmit: (name: string, url: string, protocol: 'sse' | 'http') => void;
+  onSubmit: (name: string, url: string, protocol: 'sse' | 'http', apiKey?: string) => void;
   onCancel: () => void;
 };
 
@@ -242,12 +242,14 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [protocol, setProtocol] = useState<'sse' | 'http'>('sse');
+  const [apiKey, setApiKey] = useState('');
 
+  const canSubmit = name.trim().length > 0 && url.trim().length > 0;
   const handleSubmit = useCallback(() => {
-    if (name.trim() && url.trim()) {
-      onSubmit(name.trim(), url.trim(), protocol);
+    if (canSubmit) {
+      onSubmit(name.trim(), url.trim(), protocol, apiKey.trim() || undefined);
     }
-  }, [name, url, protocol, onSubmit]);
+  }, [canSubmit, name, url, protocol, apiKey, onSubmit]);
 
   return (
     <div className='space-y-2 px-form-chrome'>
@@ -279,13 +281,23 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           </Select.Content>
         </Select.Portal>
       </Select.Root>
-      <div className='flex gap-2'>
+      <Input.Root>
+        <Input.Label srOnly>{t('mcp-server-api-key.label')}</Input.Label>
+        <Input.TextInput
+          type='password'
+          placeholder={t('mcp-server-api-key.placeholder')}
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+        />
+      </Input.Root>
+      <div role='none' className='flex gap-2'>
         <IconButton
           variant='ghost'
           icon='ph--check--regular'
           iconOnly
           label={t('save.button')}
           onClick={handleSubmit}
+          disabled={!canSubmit}
         />
         <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('cancel.button')} onClick={onCancel} />
       </div>

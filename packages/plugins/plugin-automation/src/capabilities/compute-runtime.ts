@@ -127,6 +127,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         yield* Effect.promise(() => space.waitUntilReady());
 
         // Maintain a live query of space-level MCP server configs.
+        // TODO: Unsubscribe when runtime is disposed (currently tied to space lifecycle).
         const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
         mcpQuery.subscribe();
 
