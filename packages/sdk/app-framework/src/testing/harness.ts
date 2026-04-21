@@ -13,13 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { type Operation } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
-import {
-  ActivationEvent,
-  type Capability,
-  type CapabilityManager,
-  type Plugin,
-  PluginManager,
-} from '../core';
+import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
 
 export type TestAppOptions = {
   /** Plugins to register. */
@@ -122,13 +116,18 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
   }
 
   if (autoStart) {
-    await runAndForwardErrors(
-      Effect.all([
-        ...setupEvents.map((event) => manager.activate(event)),
-        manager.activate(ActivationEvents.SetupReactSurface),
-        manager.activate(ActivationEvents.Startup),
-      ]),
-    );
+    try {
+      await runAndForwardErrors(
+        Effect.all([
+          ...setupEvents.map((event) => manager.activate(event)),
+          manager.activate(ActivationEvents.SetupReactSurface),
+          manager.activate(ActivationEvents.Startup),
+        ]),
+      );
+    } catch (err) {
+      await runAndForwardErrors(manager.shutdown()).catch(() => undefined);
+      throw err;
+    }
   }
 
   return new TestHarnessImpl(manager);
@@ -177,12 +176,13 @@ class TestHarnessImpl implements TestHarness {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
     const timeout = opts?.timeout ?? DEFAULT_TIMEOUT_MS;
 
-    if (this.manager.getEventsFired().includes(key)) {
-      return Promise.resolve();
-    }
-
     const program = Effect.gen(this, function* () {
       const queue = yield* PubSub.subscribe(this.manager.activation);
+      // Re-check after subscribing to avoid a race where the event fires
+      // between the caller invoking this and the subscription being installed.
+      if (this.manager.getEventsFired().includes(key)) {
+        return;
+      }
       while (true) {
         const message = yield* Queue.take(queue);
         if (message.event === key && message.state === 'activated') {

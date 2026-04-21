@@ -15,7 +15,7 @@ import { PluginManagerProvider } from '../ui/components/PluginManager/PluginMana
 import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent';
 import { type TestHarness } from './harness';
 
-export type HarnessRenderOptions = RenderOptions & {
+export type HarnessRenderOptions = Omit<RenderOptions, 'wrapper'> & {
   /** Additional providers to wrap around the harness tree (applied innermost first). */
   reactContexts?: FC<PropsWithChildren>[];
 };
@@ -31,7 +31,7 @@ export const render = (harness: TestHarness, ui: ReactNode, options?: HarnessRen
       {children}
     </HarnessProviders>
   );
-  return rtlRender(<>{ui}</>, { wrapper: Wrapper, ...rest });
+  return rtlRender(<>{ui}</>, { ...rest, wrapper: Wrapper });
 };
 
 export type RenderSurfaceProps = {
@@ -93,15 +93,21 @@ const composeContexts = (contexts: Capabilities.ReactContext[]): FC<PropsWithChi
     ));
 };
 
+// Composes in innermost-first order: the first context in the array wraps
+// `children` directly; subsequent contexts wrap the accumulator.
 const composeExtra = (contexts: FC<PropsWithChildren>[]): FC<PropsWithChildren> => {
   if (contexts.length === 0) {
     return Passthrough;
   }
-  return contexts.reduce((Acc, Next) => ({ children }: PropsWithChildren) => (
-    <Acc>
-      <Next>{children}</Next>
-    </Acc>
-  ));
+  return contexts.reduce<FC<PropsWithChildren>>(
+    (Acc, Next) =>
+      ({ children }: PropsWithChildren) => (
+        <Next>
+          <Acc>{children}</Acc>
+        </Next>
+      ),
+    Passthrough,
+  );
 };
 
 const Passthrough: FC<PropsWithChildren> = ({ children }) => <Fragment>{children}</Fragment>;

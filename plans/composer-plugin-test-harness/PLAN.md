@@ -30,7 +30,7 @@ export type TestAppOptions = {
   registerFrameworkCapabilities?: boolean;          // default true (PluginManager + AtomRegistry)
 };
 
-export interface TestHarness {
+export interface TestHarness extends AsyncDisposable {
   readonly manager: PluginManager.PluginManager;
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
@@ -49,6 +49,7 @@ export interface TestHarness {
   disable(id: string): Promise<boolean>;
 
   dispose(): Promise<void>;                            // manager.shutdown()
+  [Symbol.asyncDispose](): Promise<void>;              // alias for dispose(); enables `await using`
 }
 
 export const createTestApp = (opts: TestAppOptions): Promise<TestHarness>;
@@ -75,11 +76,7 @@ export type HarnessRenderOptions = RenderOptions & {
   reactContexts?: Array<FC<PropsWithChildren>>;
 };
 
-export const render: (
-  harness: TestHarness,
-  ui: React.ReactNode,
-  options?: HarnessRenderOptions,
-) => RenderResult;
+export const render: (harness: TestHarness, ui: React.ReactNode, options?: HarnessRenderOptions) => RenderResult;
 
 /** Shorthand for <SurfaceComponent role=... data=... /> inside the harness. */
 export const renderSurface: (
@@ -95,14 +92,18 @@ Wraps UI in the same provider tree as `useApp`: `PluginManagerProvider`, `Contex
 
 ```ts
 export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
-  plugins?: Plugin.Plugin[];        // added on top of core
-  client?: boolean | ClientPluginOptions;   // adds ClientPlugin, with optional config
+  plugins?: Plugin.Plugin[]; // added on top of core
+  client?: boolean | ClientPluginOptions; // adds ClientPlugin, with optional config
 };
 
 export const createComposerTestApp = (opts?: ComposerTestAppOptions) =>
   createTestApp({
     ...opts,
-    plugins: [...corePlugins(), ...(opts?.client ? [ClientPlugin(opts.client === true ? {} : opts.client)] : []), ...(opts?.plugins ?? [])],
+    plugins: [
+      ...corePlugins(),
+      ...(opts?.client ? [ClientPlugin(opts.client === true ? {} : opts.client)] : []),
+      ...(opts?.plugins ?? []),
+    ],
   });
 ```
 
