@@ -14,8 +14,7 @@ import { type ComponentProps } from './types';
 export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
   const traceFeed = space.properties?.invocationTraceFeed?.target;
   const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
-  const invocations =
-    useQueue(traceQueueDxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ?? [];
+  const invocations = useQueue(traceQueueDxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ?? [];
   // Use provided traceQueue, or fall back to the per-invocation trace queue from the most recent invocation.
   const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target;
   const { branches, commits } = useExecutionGraph(queue);
