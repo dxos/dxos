@@ -155,6 +155,16 @@ message Runtime {
     optional bool enable_vector_indexing = 12;
 
     optional EdgeFeatures edge_features = 11;
+
+    /// Observability group sent with signaling metadata.
+    optional string observability_group = 13;
+
+    /// Enable telemetry metadata sent with signaling requests.
+    optional bool signal_telemetry_enabled = 14;
+
+    /// Use in-process (single-client) coordinator for dedicated-worker mode.
+    /// Bypasses SharedWorker; used for WKWebView where the coordinator SharedWorker port is unreliable.
+    optional bool single_client_mode = 15;
   }
 
   message App {

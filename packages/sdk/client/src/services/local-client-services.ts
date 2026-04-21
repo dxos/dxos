@@ -45,9 +45,9 @@ export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'>
 export const fromHost = async (
   config = new Config(),
   params?: LocalClientServicesParams,
-  observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
+  const observabilityGroup = config.get('runtime.client.observabilityGroup');
+  const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
   const networking = await setupNetworking(config, {}, () =>
     signalTelemetryEnabled
       ? {

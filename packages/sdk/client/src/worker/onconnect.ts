@@ -5,6 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
+import { type ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -22,12 +23,18 @@ void navigator.locks.request(STORAGE_LOCK_KEY, (_lock: Lock | null) => {
   return lockPromise;
 });
 
+// Config supplied by the first connecting client. Used as an overlay on top of the worker's own
+// Storage/Envs/Local/Defaults so fields like observabilityGroup (sourced from localStorage in the
+// app) can reach the worker without RPC parameter threading.
+const clientConfigOverlay = new Trigger<ConfigProto | undefined>();
+
 const setupRuntime = async () => {
   const { WorkerRuntime } = await import('@dxos/client-services');
 
   const workerRuntime = new WorkerRuntime({
     configProvider: async () => {
-      const config = new Config(await Storage(), Envs(), Local(), Defaults());
+      const overlay = await clientConfigOverlay.wait();
+      const config = new Config(overlay ?? {}, await Storage(), Envs(), Local(), Defaults());
       log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
       return config;
     },
@@ -70,10 +77,12 @@ export const onconnect = async (event: MessageEvent<any>) => {
   const systemChannel = new MessageChannel();
   const appChannel = new MessageChannel();
 
-  // set log configuration forwarded from localStorage setting
+  // Set log configuration forwarded from localStorage setting and receive client config overlay.
   // TODO(nf): block worker initialization until this is set? we usually win the race.
   port.onmessage = (event) => {
     (globalThis as any).localStorage_dxlog = event.data.dxlog;
+    // NOTE: Trigger.wake is a NOOP once resolved; only the first client seeds the overlay.
+    clientConfigOverlay.wake(event.data.config);
   };
   // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
   port.postMessage(

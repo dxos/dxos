@@ -22,15 +22,6 @@ export type CreateClientServicesOptions = {
   createCoordinatorWorker?: () => SharedWorker;
   /** Factory for creating an OPFS worker. */
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
-  /**
-   * Use single-client mode for the dedicated worker coordinator.
-   * This bypasses SharedWorker; use for WKWebView where the coordinator SharedWorker port is unreliable.
-   */
-  singleClientMode?: boolean;
-  /** Observability group sent with signaling metadata. */
-  observabilityGroup?: string;
-  /** Enable telemetry metadata sent with signaling requests. */
-  signalTelemetryEnabled?: boolean;
   /** Path to SQLite database file for persistent indexing in Node/Bun. */
   sqlitePath?: LocalClientServicesParams['sqlitePath'];
 };
@@ -42,16 +33,7 @@ export const createClientServices = async (
   config: Config,
   options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
-  const {
-    createWorker,
-    createDedicatedWorker,
-    createCoordinatorWorker,
-    singleClientMode,
-    createOpfsWorker,
-    observabilityGroup,
-    signalTelemetryEnabled,
-    sqlitePath,
-  } = options;
+  const { createWorker, createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath } = options;
 
   // Derive sqlitePath from dataRoot when not explicitly provided (matches CLI behavior).
   const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
@@ -84,6 +66,8 @@ export const createClientServices = async (
     useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
   }
 
+  const singleClientMode = config.values.runtime?.client?.singleClientMode;
+
   return createDedicatedWorker
     ? new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
@@ -96,14 +80,6 @@ export const createClientServices = async (
         config,
       })
     : createWorker && useWorker
-      ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-      : fromHost(
-          config,
-          {
-            createOpfsWorker,
-            sqlitePath: effectiveSqlitePath,
-          },
-          observabilityGroup,
-          signalTelemetryEnabled,
-        );
+      ? fromWorker(config, { createWorker })
+      : fromHost(config, { createOpfsWorker, sqlitePath: effectiveSqlitePath });
 };

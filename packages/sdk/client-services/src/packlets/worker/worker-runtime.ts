@@ -143,6 +143,11 @@ export class WorkerRuntime {
 
       await this._acquireLock();
       this._config = await this._configProvider();
+      this._signalTelemetryEnabled = this._config.get('runtime.client.signalTelemetryEnabled') ?? false;
+      const observabilityGroup = this._config.get('runtime.client.observabilityGroup');
+      if (observabilityGroup) {
+        this._signalMetadataTags.group = observabilityGroup;
+      }
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
         config: this._config,
@@ -213,10 +218,6 @@ export class WorkerRuntime {
       !this._signalMetadataTags.origin || this._signalMetadataTags.origin === session.origin,
       `worker origin changed from ${this._signalMetadataTags.origin} to ${session.origin}?`,
     );
-    if (session.observabilityGroup) {
-      this._signalMetadataTags.group = session.observabilityGroup;
-    }
-    this._signalTelemetryEnabled = session.signalTelemetryEnabled ?? false;
     this._signalMetadataTags.origin = session.origin;
     this._sessions.add(session);
 

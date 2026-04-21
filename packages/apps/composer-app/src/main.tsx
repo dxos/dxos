@@ -89,7 +89,7 @@ const main = async () => {
 
   profiler?.mark('dynamic-imports:start');
 
-  const { defs, SaveConfig } = await import('@dxos/config');
+  const { Config, defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
@@ -175,6 +175,18 @@ const main = async () => {
 
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
   const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  config = new Config(
+    {
+      runtime: {
+        client: {
+          observabilityGroup,
+          signalTelemetryEnabled: !observabilityDisabled,
+          singleClientMode: useSingleClientMode,
+        },
+      },
+    },
+    config.values,
+  );
   const services = await createClientServices(config, {
     createWorker:
       useLocalServices || !useSharedWorker
@@ -202,9 +214,6 @@ const main = async () => {
             }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    singleClientMode: useSingleClientMode,
-    observabilityGroup,
-    signalTelemetryEnabled: !observabilityDisabled,
   });
 
   profiler?.mark('services:end');
