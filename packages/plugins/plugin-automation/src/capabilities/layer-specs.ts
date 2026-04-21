@@ -3,7 +3,6 @@
 //
 
 import { Registry } from '@effect-atom/atom';
-import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -55,23 +54,55 @@ export default Capability.makeModule(
     //
 
     // Composes FunctionInvocationService with local + remote execution.
+    // `RemoteFunctionExecutionService` is sourced from the environment (a
+    // sibling LayerSpec), so a space-affinity spec can override it without
+    // rebuilding `FunctionInvocationService`.
     const functionInvocationSpec = LayerSpec.make(
       {
         affinity: 'application',
-        requires: [Feed.FeedService, QueueService, AiService.AiService, CredentialsService, Database.Service],
-        provides: [FunctionInvocationService, FunctionImplementationResolver, RemoteFunctionExecutionService],
+        requires: [
+          Feed.FeedService,
+          QueueService,
+          AiService.AiService,
+          CredentialsService,
+          Database.Service,
+          RemoteFunctionExecutionService,
+        ],
+        provides: [FunctionInvocationService, FunctionImplementationResolver],
       },
       () => {
-        const remoteLayer = RemoteFunctionExecutionService.fromClient(client);
         const implementationResolverLayer = FunctionImplementationResolver.layerTest({
           functions: mergedOperationHandlers,
         });
         const functionInvocationLayer = FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
           Layer.provide(implementationResolverLayer),
-          Layer.provide(remoteLayer),
         );
-        return Layer.mergeAll(functionInvocationLayer, implementationResolverLayer, remoteLayer);
+        return Layer.mergeAll(functionInvocationLayer, implementationResolverLayer);
       },
+    );
+
+    // Default application-affinity `RemoteFunctionExecutionService`. Space
+    // specs (see `remoteFunctionExecutionOverrideSpec`) can override this with
+    // a space-scoped client.
+    const remoteFunctionExecutionSpec = LayerSpec.make(
+      {
+        affinity: 'application',
+        requires: [],
+        provides: [RemoteFunctionExecutionService],
+      },
+      () => RemoteFunctionExecutionService.fromClient(client),
+    );
+
+    // Exposes merged operation handlers via the OperationHandlerProvider tag
+    // so that space-affinity specs (e.g. `operationRegistrySpec`) can consume
+    // them through the normal LayerStack resolution path.
+    const operationHandlerProviderSpec = LayerSpec.make(
+      {
+        affinity: 'application',
+        requires: [],
+        provides: [OperationHandlerSet.OperationHandlerProvider],
+      },
+      () => OperationHandlerSet.provide(mergedOperationHandlers),
     );
 
     const blueprintRegistrySpec = LayerSpec.make(
@@ -121,13 +152,18 @@ export default Capability.makeModule(
       () => OperationRegistry.layer,
     );
 
+    // In-memory trigger state. Loses state across restarts but works in both
+    // browser and CLI/Node contexts. Hosts that need durable storage should
+    // contribute a replacement LayerSpec that provides `TriggerStateStore`
+    // backed by a persistent `KeyValueStore` (e.g. `BrowserKeyValueStore` or
+    // `BunKeyValueStore`).
     const triggerStateStoreSpec = LayerSpec.make(
       {
         affinity: 'application',
         requires: [],
         provides: [TriggerStateStore],
       },
-      () => TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
+      () => TriggerStateStore.layerMemory,
     );
 
     //
@@ -174,6 +210,8 @@ export default Capability.makeModule(
 
     const contributions = [
       Capability.contributes(Capabilities.LayerSpec, functionInvocationSpec),
+      Capability.contributes(Capabilities.LayerSpec, remoteFunctionExecutionSpec),
+      Capability.contributes(Capabilities.LayerSpec, operationHandlerProviderSpec),
       Capability.contributes(Capabilities.LayerSpec, blueprintRegistrySpec),
       Capability.contributes(Capabilities.LayerSpec, opaqueToolkitSpec),
       Capability.contributes(Capabilities.LayerSpec, agentServiceSpec),
