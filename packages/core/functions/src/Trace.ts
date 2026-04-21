@@ -238,3 +238,38 @@ export const OperationEnd = EventType('operation.end', {
   }),
   isEphemeral: false,
 });
+
+/**
+ * Operation input. Emitted as an ephemeral event alongside {@link OperationStart}
+ * so subscribers (such as the undo/redo history tracker) can observe the raw
+ * input payload without persisting it to long-lived sinks.
+ */
+export const OperationInput = EventType('operation.input', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Raw operation input. Shape determined by the operation definition. */
+    input: Schema.Unknown,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Operation output. Emitted as an ephemeral event just before
+ * {@link OperationEnd} for successful invocations so subscribers (such as the
+ * undo/redo history tracker) can observe the raw output payload without
+ * persisting it to long-lived sinks.
+ */
+export const OperationOutput = EventType('operation.output', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Raw operation output. Shape determined by the operation definition. */
+    output: Schema.Unknown,
+  }),
+  isEphemeral: true,
+});
