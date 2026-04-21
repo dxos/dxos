@@ -23,12 +23,12 @@ import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
 import {
+  compactSlots,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  documentSlots,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -54,8 +54,6 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
       );
     }
   }, [agent, computeRuntime]);
-
-  const spec = useAtomValue(AtomRef.make(agent.spec));
 
   useEffect(() => {
     const db = Obj.getDatabase(agent);
@@ -86,43 +84,44 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
     return Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
   }, [db]);
-  const subscribableObjects = useQuery(db, feedFilter);
+  const subscribedObjects = useQuery(db, feedFilter);
 
-  const existingSubscripts = useAtomValue(
+  const existingSubscriptions = useAtomValue(
     useMemo(
       () =>
         AtomObj.make(agent).pipe((_) =>
           Atom.make((get) => {
             const agentObj = get(_);
-            const selectedSubscriptions: Obj.Unknown[] = subscribableObjects.filter((object) =>
+            const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
               agentObj.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
             );
 
             return selectedSubscriptions;
           }),
         ),
-      [agent, subscribableObjects],
+      [agent, subscribedObjects],
     ),
   );
 
+  const instructions = useAtomValue(AtomRef.make(agent.spec));
   const extension = useMemo(
     () =>
-      spec && [
-        createBasicExtensions({ placeholder: t('agent.spec.placeholder') }),
+      instructions && [
+        createBasicExtensions({ placeholder: t('instructions.placeholder') }),
         createThemeExtensions({
           syntaxHighlighting: true,
           slots: {
-            ...documentSlots,
-            scroller: {
-              className: 'min-h-[2lh]',
-            },
+            ...compactSlots,
+            // scroller: {
+            //   className: 'min-h-[2lh]',
+            // },
           },
         }),
-        createDataExtensions({ id: agent.id, text: createDocAccessor(spec, ['content']) }),
+        createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),
       ],
-    [spec, agent.id, t],
+    [instructions, agent.id, t],
   );
 
   return (
@@ -131,11 +130,11 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         <Input.Label>{t('subscriptions.label')}</Input.Label>
       </Input.Root>
 
-      {subscribableObjects.map((object) => (
+      {subscribedObjects.map((object) => (
         <Input.Root key={object.id}>
           <div className='flex items-center gap-2'>
             <Input.Checkbox
-              checked={existingSubscripts.includes(object)}
+              checked={existingSubscriptions.includes(object)}
               onCheckedChange={(checked) => {
                 Obj.change(agent, (agent) => {
                   if (checked) {
@@ -155,7 +154,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
       <Input.Root>
         <Input.Label>{t('instructions.label')}</Input.Label>
-        {spec && (
+        {instructions && (
           <Editor.Root>
             <Editor.View classNames='pb-form-gap' extensions={extension} />
           </Editor.Root>

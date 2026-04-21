@@ -161,7 +161,7 @@ export const translations = [
 
         // AgentProperties.
         'instructions.label': 'Instructions',
-        'agent.spec.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
+        'instructions.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
       },
