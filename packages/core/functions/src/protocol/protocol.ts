@@ -22,7 +22,7 @@ import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
+import { CredentialsService, FunctionInvocationService, QueueService } from '../services';
 import * as Trace from '../Trace';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
@@ -158,7 +158,6 @@ class FunctionContext extends Resource {
       : CredentialsService.configuredLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
     const operationServiceLayer = MockedOperationServiceLayer;
-    const tracing = TracingService.layerNoop;
 
     const aiLayer = this.context.services.functionsAiService
       ? AiModelResolver.AiModelResolver.buildAiService.pipe(
@@ -183,7 +182,6 @@ class FunctionContext extends Resource {
       functionInvocationService,
       operationServiceLayer,
       aiLayer,
-      tracing,
       // TODO(dmaretskyi): Forward trace events.
       Trace.writerLayerNoop,
     );
