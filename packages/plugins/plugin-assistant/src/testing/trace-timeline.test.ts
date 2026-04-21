@@ -73,10 +73,12 @@ describe('Trace timeline', () => {
             ├──●  [user] Create an organization called "Cyberdyne Systems".
             │  ●  [check-circle] list-schemas - Success
             │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
             │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -204,14 +206,7 @@ describe('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     [play] Agent
-            ├──●  [user] Research the given topic, or object.
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] completeJob - Success
-            ◆──╯  [check-circle] Agent
+            ●  [check-circle] Agent
             "
           `);
         },
