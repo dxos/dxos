@@ -735,6 +735,11 @@ peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
+    # @effect/vitest@0.29 declares peer vitest ^3.2.0, but the only newer
+    # versions (4.0.0-beta.*) require effect ^4.0.0-beta which is a breaking
+    # upgrade we aren't ready for. Our use of @effect/vitest is limited to
+    # it.effect/describe.effect helpers which work unchanged on Vitest 4.
+    # Remove this override once we adopt effect 4.x (stable or beta).
     '@effect/vitest>vitest': '^4.0.0'
   ignoreMissing:
     - '@cloudflare/ai-chat'
