@@ -20,7 +20,7 @@ import type {
   Trace as Trace$,
 } from '@dxos/functions';
 import { Operation as Operation$ } from '@dxos/operation';
-import type { OperationInvoker as OperationInvoker$, OperationHandlerSet } from '@dxos/operation';
+import type { OperationHandlerSet } from '@dxos/operation';
 
 import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
 import type {
@@ -232,10 +232,14 @@ export type UndoMapping = UndoMapping$.UndoMapping;
  */
 export const UndoMapping = Capability$.make<UndoMapping[]>('org.dxos.app-framework.capability.undo-mapping');
 
-export type OperationInvoker = OperationInvoker$.OperationInvoker;
+/**
+ * Operation invoker backed by the process manager. Spawns a process per
+ * operation invocation; see {@link ProcessManager$.ProcessOperationInvoker}.
+ */
+export type OperationInvoker = Operation$.OperationService;
 
 /**
- * Operation invoker - provided by OperationPlugin.
+ * Operation invoker - provided by the process-manager capability.
  * @category Capability
  */
 export const OperationInvoker = Capability$.make<OperationInvoker>(

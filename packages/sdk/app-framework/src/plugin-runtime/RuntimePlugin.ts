@@ -18,8 +18,8 @@ export const RuntimePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
-    activatesBefore: [ActivationEvents.SetupLayer],
-    activatesAfter: [ActivationEvents.ManagedRuntimeReady],
+    activatesBefore: [ActivationEvents.SetupLayer, ActivationEvents.SetupOperationHandler],
+    activatesAfter: [ActivationEvents.ManagedRuntimeReady, ActivationEvents.OperationInvokerReady],
     activate: ProcessManagerCapability,
   }),
   Plugin.make,

@@ -43,6 +43,7 @@ export default Capability.makeModule(
     const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
 
     yield* Plugin.activate(ActivationEvents.SetupLayer);
+    yield* Plugin.activate(ActivationEvents.SetupOperationHandler);
 
     const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
     const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
@@ -95,10 +96,16 @@ export default Capability.makeModule(
       Effect.flatMap(Process.ProcessMonitorService, Effect.succeed) as Effect.Effect<Process.Monitor, never, never>,
     );
 
+    // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
+    const operationInvoker = managedRuntime.runSync(
+      Effect.flatMap(Operation.Service, Effect.succeed) as Effect.Effect<Operation.OperationService, never, never>,
+    );
+
     return [
       Capability.contributes(Capabilities.ProcessManagerRuntime, processManagerRuntime),
       Capability.contributes(Capabilities.ServiceResolver, serviceResolver),
       Capability.contributes(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contributes(Capabilities.OperationInvoker, operationInvoker),
     ];
   }),
 );
