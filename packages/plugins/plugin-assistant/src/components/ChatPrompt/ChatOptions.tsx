@@ -7,8 +7,7 @@ import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { type Database, Filter, Obj, Type } from '@dxos/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -65,6 +64,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
             <Popover.Viewport>
               <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
                 <Tabs.Viewport
+                  // TODO(burdon): Simplify styles.
                   classNames={mx(
                     'max-h-(--radix-popover-content-available-height) grid grid-rows-[1fr_min-content]',
                     '[&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content]',
@@ -107,7 +107,6 @@ const BlueprintsPanel = ({
   const blueprints = useBlueprints({ blueprintRegistry, db });
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
-
   const { results, handleSearch } = useSearchListResults({
     items: blueprints,
     extract: (blueprint) => blueprint.name,
@@ -158,7 +157,8 @@ const ModelsPanel = ({
 
 const ANY = '__any__';
 
-const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
+/** @private */
+export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
   const { t } = useTranslation(meta.id);
 
   // Item types sorted by label.
@@ -186,7 +186,6 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
   // Context objects.
   const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
-
   const { results, handleSearch } = useSearchListResults({
     items: objects,
     extract: (object) => Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id,
@@ -201,7 +200,10 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
               const { icon, hue } = Option.fromNullable(Obj.getSchema(object)).pipe(
                 Option.flatMap(Annotation.IconAnnotation.get),
-                Option.getOrElse(() => ({ icon: DEFAULT_OBJECT_ICON, hue: undefined as string | undefined })),
+                Option.getOrElse(() => ({
+                  icon: 'ph--cube--regular',
+                  hue: undefined as string | undefined,
+                })),
               );
               const styles = hue ? getStyles(hue) : undefined;
               return (
@@ -223,7 +225,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 px-form-chrome mb-form-chrome'>
+      <div role='none' className='grid grid-cols-[min-content_1fr] px-form-chrome mb-form-chrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
@@ -247,6 +249,3 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
     </SearchList.Root>
   );
 };
-
-// TODO(dmaretskyi): Extract those somewhere else.
-const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
