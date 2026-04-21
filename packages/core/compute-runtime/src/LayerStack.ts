@@ -390,7 +390,9 @@ class Slice {
         break;
       }
       if (next === -1) {
-        throw new LayerDependencyCycleError('Cycle in layer dependency graph (requires / provides)');
+        throw new LayerDependencyCycleError({
+          message: 'Cycle in layer dependency graph (requires / provides)',
+        });
       }
       sorted.push(next);
       placed[next] = true;
