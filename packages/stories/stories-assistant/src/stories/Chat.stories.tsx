@@ -707,7 +707,7 @@ export const WithResearchQueue: Story = {
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { queue: Ref.make(feed) }));
+      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
       const feedQueueDxn = Feed.getQueueDxn(feed);
       invariant(feedQueueDxn);

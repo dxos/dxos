@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Feed, Ref, Type } from '@dxos/echo';
 
 export const ResearchInputQueue = Schema.Struct({
-  queue: Ref.Ref(Feed.Feed),
+  feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.researchInputQueue',

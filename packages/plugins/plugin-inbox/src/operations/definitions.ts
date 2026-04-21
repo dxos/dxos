@@ -8,7 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
+import { CredentialsService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Actor, Message } from '@dxos/types';
 
@@ -253,7 +253,7 @@ export const SummarizeMailbox = Operation.make({
       description: 'The summary of the mailbox.',
     }),
   }),
-  services: [Database.Service, Feed.FeedService, AiService.AiService, QueueService],
+  services: [Database.Service, Feed.FeedService, AiService.AiService],
 });
 
 export const ClassifyEmail = Operation.make({
@@ -279,7 +279,7 @@ export const ClassifyEmail = Operation.make({
     }),
     Schema.Void,
   ),
-  services: [AiService.AiService, Database.Service, QueueService],
+  services: [AiService.AiService, Database.Service, Feed.FeedService],
 });
 
 export const ExtractContact = Operation.make({
