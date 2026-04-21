@@ -18,8 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'space-settings-functions',
-        role: 'article',
-        filter: AppSurface.literalSection(`${meta.id}.space-settings-functions`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-functions`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -31,8 +30,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'space-settings-automation',
-        role: 'article',
-        filter: AppSurface.literalSection(`${meta.id}.space-settings-automation`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-automation`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -44,8 +42,10 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companion.automation',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('automation'), AppSurface.companionArticle()),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'automation'),
+          AppSurface.companion(AppSurface.Article),
+        ),
         component: ({ data }) => {
           const space = getSpace(data.companionTo);
           if (!space) {

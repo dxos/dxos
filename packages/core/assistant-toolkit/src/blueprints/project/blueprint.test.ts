@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -89,16 +89,16 @@ describe('Agent', () => {
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
-        yield* Effect.promise(() => conversation.context.open());
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        yield* Effect.promise(() => session.context.open());
 
         const documentDxn = Obj.getDXN(document);
-        yield* conversation
+        yield* session
           .createRequest({
             system: SYSTEM,
             prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this agent.`,
           })
-          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
 
         expect(agent.artifacts).toHaveLength(1);
         expect(agent.artifacts[0].name).toBe('My Test Document');
@@ -127,15 +127,15 @@ describe('Agent', () => {
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
-        yield* Effect.promise(() => conversation.context.open());
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        yield* Effect.promise(() => session.context.open());
 
-        yield* conversation
+        yield* session
           .createRequest({
             system: SYSTEM,
             prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
           })
-          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },
@@ -238,15 +238,15 @@ describe('Agent', () => {
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed: chatFeed, runtime }));
-        yield* Effect.promise(() => conversation.context.open());
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        yield* Effect.promise(() => session.context.open());
 
-        yield* conversation
+        yield* session
           .createRequest({
             system: SYSTEM,
             prompt: `Go`,
           })
-          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },

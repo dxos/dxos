@@ -310,19 +310,37 @@ async openFeed(ctx: Context): Promise<Feed> {
 
 Manual span API for cases where decorator-based spans don't fit (e.g., spans that cross method boundaries). Supports `showInBrowserTimeline` independently of `showInRemoteTracing`.
 
+`spanStart` returns a **derived `Context`** carrying the new span's `TRACE_SPAN_ATTRIBUTE`. Callers MUST reassign the local `ctx` to the returned value so that downstream `@trace.span()` methods, RPC calls, and edge-client requests see this span as their parent. If the returned derived Context is not reassigned, downstream spans read the OLD `TRACE_SPAN_ATTRIBUTE` from the original `ctx` and attach to whatever span that was — becoming siblings of the manual span rather than children. When the original `ctx` had no parent span, they become a new root trace and the manual span is left as a single-span disconnected trace.
+
 ```typescript
-trace.spanStart({
-  id: `replication-${peerId}`,
+const spanId = `invitation-guest-${invitation.invitationId}`;
+
+// Reassign ctx — downstream calls (@trace.span, RPC, edge-http-client) now nest under this span.
+ctx = trace.spanStart({
+  id: spanId,
   instance: this,
-  methodName: 'replicate',
-  parentCtx: this._ctx,
-  op: 'replication',
-});
+  methodName: 'acceptInvitation',
+  parentCtx: ctx,
+  op: 'invitation.guest',
+}) ?? ctx;
 
-// ... later, potentially in a different method or callback ...
+ctx.onDispose(() => trace.spanEnd(spanId));
 
-trace.spanEnd(`replication-${peerId}`);
+// ... work that should nest under the manual span uses the reassigned ctx ...
+await this._handleGuestFlow(ctx, ...);
 ```
+
+`spanStart` returns the original `parentCtx` unchanged (not a derived ctx) when the span cannot be created — duplicate id, `showInRemoteTracing: false`, or no tracing backend. The `?? ctx` fallback handles a `null` return if `parentCtx` was `null`.
+
+**Antipattern** — ignoring the return value:
+
+```typescript
+// ❌ WRONG — downstream spans see the OLD ctx, so they attach to ctx's parent span (becoming siblings of the manual span, or a new root if ctx had no parent).
+trace.spanStart({ id: spanId, instance: this, methodName: 'acceptInvitation', parentCtx: ctx, ... });
+await this._handleGuestFlow(ctx, ...); // ctx unchanged; handleGuestFlow's @trace.span is a sibling of the manual span, not a child.
+```
+
+This was the root cause of the historical pattern where `InvitationsHandler.acceptInvitation` appeared as a 1-span disconnected trace while `EdgeInvitationHandler._handleSpaceInvitationFlow` started its own parallel root. Fixed by reassigning `ctx` to the return value of `spanStart`.
 
 ### `trace.metrics`
 

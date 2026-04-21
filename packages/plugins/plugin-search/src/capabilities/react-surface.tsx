@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -20,8 +20,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: SEARCH_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(SEARCH_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof SearchDialog>>(AppSurface.Dialog, SEARCH_DIALOG),
         component: ({ data }) => (
           <SearchContextProvider>
             <SearchDialog {...data.props} />

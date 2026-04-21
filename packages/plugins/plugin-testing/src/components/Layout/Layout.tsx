@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect, useR
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { type LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AlertDialog,
   Button,
@@ -153,7 +154,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             >
               {layout.dialogBlockAlign === 'end' ? (
                 <Surface.Surface
-                  role='dialog'
+                  type={AppSurface.Dialog}
                   data={layout.dialogContent}
                   limit={1}
                   fallback={ErrorFallback}
@@ -165,7 +166,12 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   classNames={layout.dialogOverlayClasses}
                   style={layout.dialogOverlayStyle}
                 >
-                  <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ErrorFallback} />
+                  <Surface.Surface
+                    type={AppSurface.Dialog}
+                    data={layout.dialogContent}
+                    limit={1}
+                    fallback={ErrorFallback}
+                  />
                 </DialogOverlay>
               )}
             </DialogRoot>
@@ -192,11 +198,11 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                         )}
                         <Card.CloseIconButton onClick={handleClose} />
                       </Card.Toolbar>
-                      <Surface.Surface role='card--content' data={layout.popoverContent} limit={1} />
+                      <Surface.Surface type={AppSurface.Card} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}
                   {layout.popoverKind === 'base' && (
-                    <Surface.Surface role='popover' data={layout.popoverContent} limit={1} />
+                    <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                   )}
                 </Popover.Viewport>
                 <Popover.Arrow />

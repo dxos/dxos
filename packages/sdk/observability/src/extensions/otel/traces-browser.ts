@@ -18,8 +18,6 @@ import {
   AlwaysOnSampler,
   BatchSpanProcessor,
   ParentBasedSampler,
-  type ReadableSpan,
-  type SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -29,36 +27,18 @@ import { log } from '@dxos/log';
 import { TRACE_ALL_KEY, type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
-
-/**
- * Injects dynamic tags (e.g. userId) as attributes on every span.
- */
-class TagInjectorSpanProcessor implements SpanProcessor {
-  constructor(private readonly _getTags: () => Record<string, string>) {}
-
-  onStart(span: { setAttribute: (key: string, value: string) => void }): void {
-    const tags = this._getTags();
-    for (const [key, value] of Object.entries(tags)) {
-      span.setAttribute(key, value);
-    }
-  }
-
-  onEnd(_span: ReadableSpan): void {}
-
-  async shutdown(): Promise<void> {}
-
-  async forceFlush(): Promise<void> {}
-}
+import { TagInjectorSpanProcessor } from './span-processors';
 
 export class OtelTraces {
   private _tracer: Tracer;
+  private readonly _tracerProvider: WebTracerProvider;
 
   constructor(private readonly options: OtelOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
-    const tracerProvider = new WebTracerProvider({
+    this._tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
       sampler: new ParentBasedSampler({
         root: forceTraceAll ? new AlwaysOnSampler() : new TraceIdRatioBasedSampler(0.3),
@@ -76,12 +56,34 @@ export class OtelTraces {
       ],
     });
 
-    trace.setGlobalTracerProvider(tracerProvider);
+    trace.setGlobalTracerProvider(this._tracerProvider);
 
     this._tracer = trace.getTracer(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
     );
+  }
+
+  /**
+   * Forcibly flush the BatchSpanProcessor. Call before process exit / page unload
+   * to avoid losing queued spans (which manifests as "Missing Span" in SigNoz —
+   * their already-exported children reference a parent that never made it to OTLP).
+   */
+  public async flush(): Promise<void> {
+    await this._tracerProvider.forceFlush();
+  }
+
+  /**
+   * Flush + shut down the tracer provider via `WebTracerProvider.shutdown()`,
+   * which forces a final export then terminates all span processors.
+   *
+   * Terminal and effectively one-shot: safe to call after `flush()`, but
+   * `flush()` MUST NOT be called after `close()` — shutdown stops further
+   * exporting, so subsequent `close()`/`flush()` calls resolve without
+   * emitting new spans.
+   */
+  public async close(): Promise<void> {
+    await this._tracerProvider.shutdown();
   }
 
   public start(): void {

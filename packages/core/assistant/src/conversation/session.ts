@@ -3,8 +3,6 @@
 //
 
 import type { Registry } from '@effect-atom/atom-react';
-import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -14,8 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
-import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type GenericToolkit } from '@dxos/ai';
+import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
@@ -28,23 +25,23 @@ import { Message } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
 import {
-  AiSession,
-  type AiSessionRunError,
-  type AiSessionRunRequirements,
+  AiRequest,
+  type AiRequestRunError,
+  type AiRequestRunRequirements,
   type GenerationObserver,
   createToolkit,
   formatSystemPrompt,
 } from '../session';
 import { AiContextBinder, AiContextService } from './context';
 
-export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {
+export interface AiSessionRunProps<R = never> {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
-  toolkit?: Toolkit.Toolkit<Tools>;
+  toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 }
 
-export type AiConversationOptions = {
+export type AiSessionOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
@@ -60,16 +57,15 @@ const SUMMARY_THRESHOLD = 80_000;
  * Durable conversation state (initiated by users and agents) backed by a Feed.
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
-export class AiConversation extends Resource {
+export class AiSession extends Resource {
   /**
    * Blueprints and objects bound to the conversation.
    */
   private readonly _binder: AiContextBinder;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
-  private readonly _toolkit?: Toolkit.Any;
 
-  public constructor(options: AiConversationOptions) {
+  public constructor(options: AiSessionOptions) {
     super();
     this._feed = options.feed;
     this._runtime = options.runtime;
@@ -90,21 +86,20 @@ export class AiConversation extends Resource {
     return this._binder;
   }
 
-  public get toolkit() {
-    return this._toolkit;
-  }
-
   public async getHistory(): Promise<Message.Message[]> {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
     return items.filter(Obj.instanceOf(Message.Message));
   }
 
-  getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
+  getTools(): Effect.Effect<
+    Record<string, import('@effect/ai/Tool').Any>,
+    never,
+    ToolExecutionService | ToolResolverService
+  > {
     return Effect.gen(this, function* () {
-      const blueprints = this.context.getBlueprints();
-      const tookit = yield* createToolkit({ toolkit: this._toolkit, blueprints });
-      return tookit.tools;
+      const toolkit = yield* createToolkit({ blueprints: this.context.getBlueprints() });
+      return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
   }
 
@@ -114,7 +109,7 @@ export class AiConversation extends Resource {
   makeToolExecutionServices(): Layer.Layer<
     ToolExecutionService | ToolResolverService,
     never,
-    GenericToolkit.GenericToolkitProvider | Operation.Service | OperationRegistry.Service
+    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | OperationRegistry.Service
   > {
     return ToolExecutionServices.pipe(
       Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() })),
@@ -123,9 +118,9 @@ export class AiConversation extends Resource {
   /**
    * Creates a new cancelable request effect.
    */
-  public createRequest<Tools extends Record<string, Tool.Any> = {}>(
-    params: AiConversationRunProps<Tools>,
-  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | Tool.HandlersFor<Tools>> {
+  public createRequest<R = never>(
+    params: AiSessionRunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const blueprints = this.context.getBlueprints();
@@ -137,14 +132,14 @@ export class AiConversation extends Resource {
         objects: objects.length,
       });
 
-      const session = new AiSession({
+      const request = new AiRequest({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         onOutput: (message) =>
           Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
       });
 
-      yield* session.begin({
+      yield* request.begin({
         history,
         blueprints,
         objects,
@@ -160,81 +155,78 @@ export class AiConversation extends Resource {
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           blueprints: currentBlueprints,
-          genericToolkits: mcps,
+          opaqueToolkits: mcps,
         });
 
-        log('toolkit', { tools: Record.keys(toolkit.tools) });
+        log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
           blueprints: currentBlueprints,
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* session.runAgentTurn({ system, toolkit });
+        const { done } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
           break;
         }
 
-        yield* session.runTools({ toolkit });
+        yield* request.runTools({ toolkit });
       } while (true);
 
       log('result', {
-        messages: session.pending.length,
-        duration: session.duration,
-        toolCalls: session.toolCalls,
+        messages: request.pending.length,
+        duration: request.duration,
+        toolCalls: request.toolCalls,
       });
 
-      return [...session.pending];
+      return [...request.pending];
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
           Layer.succeed(AiContextService, {
             binder: this.context,
           }),
-          Layer.succeed(AiConversationService, this),
+          Layer.succeed(AiSessionService, this),
           Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() }),
         ),
       ),
-      Effect.withSpan('AiConversation.createRequest'),
+      Effect.withSpan('AiSession.createRequest'),
     );
   }
 }
 
 /**
- * Gives access to the ai conversation.
+ * Gives access to the ai session.
  */
-export class AiConversationService extends Context.Tag('@dxos/assistant/AiConversationService')<
-  AiConversationService,
-  AiConversation
->() {
+export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionService')<AiSessionService, AiSession>() {
   /**
-   * Create a new conversation layer from options.
+   * Create a new session layer from options.
    */
-  static layer = (options: AiConversationOptions): Layer.Layer<AiConversationService | AiContextService> =>
-    aiContextFromConversation.pipe(
+  static layer = (options: AiSessionOptions): Layer.Layer<AiSessionService | AiContextService> =>
+    aiContextFromSession.pipe(
       Layer.provideMerge(
         Layer.scoped(
-          AiConversationService,
+          AiSessionService,
           Effect.gen(function* () {
-            const conversation = yield* acquireReleaseResource(() => new AiConversation(options));
-            return conversation;
+            const session = yield* acquireReleaseResource(() => new AiSession(options));
+            return session;
           }),
         ),
       ),
     );
 
   /**
-   * Create a new conversation with a new feed.
+   * Create a new session with a new feed.
    */
   static layerNewFeed = (
-    options?: Omit<AiConversationOptions, 'feed' | 'runtime'>,
-  ): Layer.Layer<AiConversationService | AiContextService, never, Database.Service | Feed.FeedService> =>
+    options?: Omit<AiSessionOptions, 'feed' | 'runtime'>,
+  ): Layer.Layer<AiSessionService | AiContextService, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
         const feed = Feed.make();
         yield* Database.add(feed);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        return AiConversationService.layer({
+        return AiSessionService.layer({
           ...options,
           feed,
           runtime,
@@ -243,34 +235,28 @@ export class AiConversationService extends Context.Tag('@dxos/assistant/AiConver
     );
 
   /**
-   * Run a prompt in the current conversation.
+   * Run a prompt in the current session.
    */
-  static run = <Tools extends Record<string, Tool.Any> = {}>(
-    params: AiConversationRunProps<Tools>,
-  ): Effect.Effect<
-    Message.Message[],
-    AiSessionRunError,
-    AiSessionRunRequirements | Tool.HandlersFor<Tools> | AiConversationService
-  > =>
+  static run = <R = never>(
+    params: AiSessionRunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | AiSessionService | R> =>
     Effect.gen(function* () {
-      const conversation = yield* AiConversationService;
-      return yield* conversation.createRequest(params);
+      const session = yield* AiSessionService;
+      return yield* session.createRequest(params);
     });
 }
 
-const aiContextFromConversation = Layer.effect(
+const aiContextFromSession = Layer.effect(
   AiContextService,
   Effect.gen(function* () {
-    const conversation = yield* AiConversationService;
+    const session = yield* AiSessionService;
     return {
-      binder: conversation.context,
+      binder: session.context,
     };
   }),
 );
 
-const connectMcpServers = (
-  blueprints: readonly Blueprint.Blueprint[],
-): Effect.Effect<GenericToolkit.GenericToolkit[]> =>
+const connectMcpServers = (blueprints: readonly Blueprint.Blueprint[]): Effect.Effect<OpaqueToolkit.OpaqueToolkit[]> =>
   pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),

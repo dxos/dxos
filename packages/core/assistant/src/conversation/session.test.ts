@@ -11,9 +11,9 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { ContextBinding } from './context';
-import { AiConversation } from './conversation';
+import { AiSession } from './session';
 
-describe('AiConversation', () => {
+describe('AiSession', () => {
   const TestLayer = TestDatabaseLayer({
     types: [Blueprint.Blueprint, ContextBinding],
   });
@@ -48,11 +48,11 @@ describe('AiConversation', () => {
       ]);
 
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const conversation = new AiConversation({ feed, runtime });
-      yield* Effect.promise(() => conversation.open());
+      const session = new AiSession({ feed, runtime });
+      yield* Effect.promise(() => session.open());
 
-      expect(conversation.context.getBlueprints()).toHaveLength(1);
-      expect(conversation.context.getObjects()).toHaveLength(0);
+      expect(session.context.getBlueprints()).toHaveLength(1);
+      expect(session.context.getObjects()).toHaveLength(0);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

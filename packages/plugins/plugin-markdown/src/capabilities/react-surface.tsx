@@ -48,9 +48,12 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.text',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section', 'tabpanel'],
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
-        filter: AppSurface.objectArticle(Text.Text),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Text.Text),
+          AppSurface.object(AppSurface.Section, Text.Text),
+          AppSurface.object(AppSurface.Tabpanel, Text.Text),
+        ),
         component: ({ data, role, ref }) => {
           return (
             <Container
@@ -65,8 +68,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -74,8 +76,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.preview',
-        role: 'card--content',
-        filter: AppSurface.objectCard([Markdown.Document, Text.Text]),
+        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text]),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),

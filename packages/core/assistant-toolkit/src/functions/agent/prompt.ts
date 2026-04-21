@@ -12,9 +12,9 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, GenericToolkit, ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
 import {
-  AiConversation,
+  AiSession,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -22,7 +22,7 @@ import {
 import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -46,7 +46,7 @@ export default AgentPrompt.pipe(
 
         yield* Database.flush();
         const prompt = yield* Database.load(data.prompt);
-        yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
+        yield* Trace.emitStatus(`Running ${prompt.id}`);
 
         log.info('starting agent', { prompt: prompt.id, input });
 
@@ -102,29 +102,24 @@ export default AgentPrompt.pipe(
         });
 
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
 
         yield* Effect.promise(() =>
-          conversation.context.bind({
+          session.context.bind({
             blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
             objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
           }),
         );
 
-        yield* conversation
+        yield* session
           .createRequest({
             prompt: promptText,
             system: systemText,
-            toolkit: promptToolkit.toolkit,
+            toolkit: promptToolkit,
           })
           .pipe(
             Effect.provide(
-              Layer.mergeAll(
-                modelLayer,
-                promptToolkit.layer,
-                ToolExecutionService({ feed }),
-                makeToolResolverFromOperations(),
-              ),
+              Layer.mergeAll(modelLayer, ToolExecutionService({ feed }), makeToolResolverFromOperations()),
             ),
           );
 
@@ -133,21 +128,15 @@ export default AgentPrompt.pipe(
           Effect.flatten,
           Effect.catchTag('NoSuchElementException', () =>
             Effect.gen(function* () {
-              // Retry once if the agent did not signal task completion.
-              yield* conversation
+              yield* session
                 .createRequest({
                   prompt: 'You must signal task completion by calling [completeJob] with the output or failure reason.',
                   system: systemText,
-                  toolkit: promptToolkit.toolkit,
+                  toolkit: promptToolkit,
                 })
                 .pipe(
                   Effect.provide(
-                    Layer.mergeAll(
-                      modelLayer,
-                      promptToolkit.layer,
-                      ToolExecutionService({ feed }),
-                      makeToolResolverFromOperations(),
-                    ),
+                    Layer.mergeAll(modelLayer, ToolExecutionService({ feed }), makeToolResolverFromOperations()),
                   ),
                 );
 
@@ -163,7 +152,7 @@ export default AgentPrompt.pipe(
         );
       },
       Effect.scoped,
-      Effect.provide(TracingService.layerNoop),
+      Effect.provide(Trace.writerLayerNoop),
     ),
   ),
   Operation.opaqueHandler,
@@ -205,7 +194,7 @@ const makePromptAgentToolkit = (options: {
     }),
   });
 
-  return GenericToolkit.make(PromptAgentToolkit, layer);
+  return OpaqueToolkit.make(PromptAgentToolkit, layer);
 };
 
 interface ToolExecutionServiceOptions {

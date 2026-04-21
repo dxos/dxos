@@ -10,12 +10,11 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
-import { AiService, type ModelName } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiConversation,
-  type AiSessionRunError,
-  type AiSessionRunRequirements,
+  AiSession,
+  type AiRequestRunError,
+  type AiRequestRunRequirements,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
@@ -34,7 +33,7 @@ import { type AiChatServices, blueprintRegistry } from '../../util';
 
 export type ChatProcessorOptions = {
   runtime: Runtime.Runtime<AiChatServices>;
-  toolkit: GenericToolkit.GenericToolkit;
+  toolkit: OpaqueToolkit.OpaqueToolkit;
   functions: OperationHandlerSet.OperationHandlerSet;
   metadata?: AiService.ServiceMetadata;
   registry?: Registry.Registry;
@@ -43,7 +42,7 @@ export type ChatProcessorOptions = {
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
   private readonly _runtime: Runtime.Runtime<AiChatServices>;
-  private readonly _toolkit: GenericToolkit.GenericToolkit;
+  private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;
   private readonly _functions: OperationHandlerSet.OperationHandlerSet;
   private readonly _metadata?: AiService.ServiceMetadata;
   private readonly _registry?: Registry.Registry;
@@ -69,13 +68,13 @@ export class ChatProcessor {
   }
 
   async execute(
-    request: Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements>,
+    request: Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>,
     model: ModelName,
   ) {
     const fiber = request.pipe(
       Effect.provide(
         Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
-          Layer.provideMerge(GenericToolkit.providerLayer(this._toolkit)),
+          Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
         ),
       ),
@@ -91,7 +90,7 @@ export class ChatProcessor {
     }
   }
 
-  async createConversation(space: Space, blueprintIds: string[]) {
+  async createSession(space: Space, blueprintIds: string[]) {
     const spaceBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
 
     // Add blueprints to space.
@@ -125,14 +124,14 @@ export class ChatProcessor {
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const conversation = new AiConversation({ feed, runtime, registry: this._registry });
-    await conversation.open();
+    const session = new AiSession({ feed, runtime, registry: this._registry });
+    await session.open();
 
     // Bind blueprints.
-    await conversation.context.bind({
+    await session.context.bind({
       blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
     });
 
-    return conversation;
+    return session;
   }
 }

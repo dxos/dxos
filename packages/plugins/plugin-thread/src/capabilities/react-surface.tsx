@@ -22,16 +22,17 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'channel',
-        role: 'article',
-        filter: AppSurface.objectArticle(Channel.Channel),
+        filter: AppSurface.object(AppSurface.Article, Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
           <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
         ),
       }),
       Surface.create({
         id: 'chat-companion',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('chat'), AppSurface.companionArticle(Channel.Channel)),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'chat'),
+          AppSurface.companion(AppSurface.Article, Channel.Channel),
+        ),
         component: ({ data: { companionTo: channel } }) => {
           const space = getSpace(channel);
           const thread = channel.defaultThread.target;
@@ -44,8 +45,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'thread',
-        role: 'article',
-        filter: AppSurface.objectArticle(Thread.Thread),
+        filter: AppSurface.object(AppSurface.Article, Thread.Thread),
         component: ({ data: { subject } }) => {
           const space = getSpace(subject);
           if (!space || !subject) {
@@ -57,15 +57,16 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'comments',
-        role: 'article',
-        filter: AppSurface.and(AppSurface.literalArticle('comments'), AppSurface.companionArticle()),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'comments'),
+          AppSurface.companion(AppSurface.Article),
+        ),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;

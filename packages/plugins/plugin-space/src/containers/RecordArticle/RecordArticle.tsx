@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
@@ -37,7 +37,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
                 <Card.Title>{Obj.getLabel(subject)}</Card.Title>
               </Card.Toolbar>
               <Card.Content>
-                <Surface.Surface role='card--content' data={{ subject }} limit={1} />
+                <Surface.Surface type={AppSurface.Card} data={{ subject }} limit={1} />
               </Card.Content>
             </Card.Root>
 

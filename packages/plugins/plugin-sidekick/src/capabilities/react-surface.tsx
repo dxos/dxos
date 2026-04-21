@@ -19,8 +19,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'sidekick-dashboard',
-        role: 'article',
-        filter: AppSurface.objectArticle(Sidekick.Profile),
+        filter: AppSurface.object(AppSurface.Article, Sidekick.Profile),
         component: ({ data, role }) => (
           <SidekickArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

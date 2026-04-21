@@ -14,7 +14,6 @@ import {
   CredentialsService,
   FunctionInvocationService,
   QueueService,
-  TracingService,
 } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { entries } from '@dxos/util';
@@ -37,7 +36,6 @@ const SERVICES = {
   operationRegistryService: OperationRegistry.Service,
   queues: QueueService,
   feeds: Feed.FeedService,
-  tracing: TracingService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
 /**
@@ -65,9 +63,7 @@ const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = Object.fromEntries(
 
 export const SERVICE_TAGS: Context.Tag<any, any>[] = Object.values(SERVICES);
 
-const DEFAULT_SERVICES: Partial<ServiceRecord> = {
-  tracing: TracingService.noop,
-};
+const DEFAULT_SERVICES: Partial<ServiceRecord> = {};
 
 /**
  * Legacy service container for managing runtime services.
@@ -116,7 +112,6 @@ export class ServiceContainer {
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
     const feeds =
       this._services.feeds != null ? Layer.succeed(Feed.FeedService, this._services.feeds) : Feed.notAvailable;
-    const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);
     const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
     const functionCallService = Layer.succeed(
       RemoteFunctionExecutionService,
@@ -139,7 +134,6 @@ export class ServiceContainer {
       database,
       queues,
       feeds,
-      tracing,
       eventLogger,
       functionCallService,
       operationService,

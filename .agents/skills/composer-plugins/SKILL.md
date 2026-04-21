@@ -182,7 +182,7 @@ See: `plugin-chess/src/ChessPlugin.tsx`
 
 Surfaces are contributed via `Capability.contributes(Capabilities.ReactSurface, [...])` with `Surface.create()`.
 Common roles: `article`, `section`, `card--content`, `object-properties`, `form-input`, `dialog`.
-Common filters: `AppSurface.objectArticle(Type)`, `AppSurface.objectCard(Type)`, `AppSurface.objectProperties(Type)`.
+Common filters: `AppSurface.object(AppSurface.Article, Type)`, `AppSurface.object(AppSurface.Card, Type)`, `AppSurface.objectProperties(Type)`.
 
 See: `plugin-chess/src/capabilities/react-surface.tsx`
 

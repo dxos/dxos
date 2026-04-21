@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -24,7 +25,10 @@ export const MessageModule = ({ space }: ComponentProps) => {
     space.db,
     feed && selected ? Query.select(Filter.id(selected)).from(feed) : Query.select(Filter.nothing()),
   )[0];
-  const data = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
+  const data = useMemo(
+    () => ({ attendableId: 'story', subject: message ?? 'message', companionTo: mailbox }),
+    [message, mailbox],
+  );
 
-  return <Surface.Surface role='section' data={data} limit={1} />;
+  return <Surface.Surface type={AppSurface.Section} data={data} limit={1} />;
 };
