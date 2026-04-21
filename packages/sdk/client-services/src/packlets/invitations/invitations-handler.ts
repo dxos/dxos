@@ -91,6 +91,12 @@ export class InvitationsHandler {
 
     const hostSpanId = `invitation-host-${invitation.invitationId}`;
     // Reassign ctx to the child context so downstream `@trace.span` calls stay in the same trace.
+    // Link child -> parent disposal so `ctx.dispose()` inside this flow still completes the
+    // invitation stream (the caller's ctx owns `stream.complete()` via onDispose).
+    // Do NOT await `invitationCtx.dispose()` here: `derive()` registers a parent -> child
+    // dispose hook, so awaiting the parent dispose would re-enter the still-pending child
+    // dispose promise and deadlock.
+    const invitationCtx = ctx;
     ctx =
       _trace.spanStart({
         id: hostSpanId,
@@ -103,6 +109,11 @@ export class InvitationsHandler {
           'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
         },
       }) ?? ctx;
+    if (ctx !== invitationCtx) {
+      ctx.onDispose(() => {
+        void invitationCtx.dispose();
+      });
+    }
     ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
@@ -253,6 +264,11 @@ export class InvitationsHandler {
     // Reassign ctx to the child context returned by spanStart so downstream calls
     // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
     // parent rather than starting a new root trace.
+    // Link child -> parent disposal so `ctx.dispose()` inside this flow still completes the
+    // invitation stream. See note in `handleInvitationFlow`: must not await the parent
+    // dispose here (`derive()` registers a parent -> child dispose hook, so awaiting would
+    // re-enter the still-pending child dispose promise and deadlock).
+    const invitationCtx = ctx;
     ctx =
       _trace.spanStart({
         id: guestSpanId,
@@ -265,6 +281,11 @@ export class InvitationsHandler {
           'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
         },
       }) ?? ctx;
+    if (ctx !== invitationCtx) {
+      ctx.onDispose(() => {
+        void invitationCtx.dispose();
+      });
+    }
     ctx.onDispose(() => _trace.spanEnd(guestSpanId));
 
     if (deviceProfile) {
