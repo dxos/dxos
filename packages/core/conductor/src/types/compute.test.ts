@@ -11,7 +11,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { ValueBag } from './compute';

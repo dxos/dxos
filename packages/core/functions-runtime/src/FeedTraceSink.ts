@@ -68,8 +68,20 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service | Fee
             yield* Feed.append(feed, messages);
           }
         }
-        flushFiber = undefined;
-      }).pipe(Effect.provide(runtime), Effect.runFork);
+      }).pipe(
+        // Reset `flushFiber` even if `Feed.append` fails, otherwise
+        // `scheduleFlush` would see a stale fiber handle and never re-arm.
+        Effect.tapErrorCause((cause) =>
+          Effect.sync(() => log.warn('feed trace flush failed', { cause })),
+        ),
+        Effect.ensuring(
+          Effect.sync(() => {
+            flushFiber = undefined;
+          }),
+        ),
+        Effect.provide(runtime),
+        Effect.runFork,
+      );
     };
 
     const flushNow = () =>
@@ -89,7 +101,7 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service | Fee
     return FeedTraceSink.context({
       sink: {
         write: (message) => {
-          log('write trace message', { message });
+          log('write trace message', { id: message.id, space: message.meta.space, pid: message.meta.pid });
           buffer.push(message);
           scheduleFlush();
         },
@@ -191,7 +203,7 @@ export const makeRoutingSink = (opts: { resolver: ServiceResolver.ServiceResolve
     write: (message) => {
       const space = message.meta.space;
       if (!space) {
-        log('dropping trace message with no space id', { message });
+        log('dropping trace message with no space id', { id: message.id, pid: message.meta.pid });
         return;
       }
       const entry = perSpace.get(space);

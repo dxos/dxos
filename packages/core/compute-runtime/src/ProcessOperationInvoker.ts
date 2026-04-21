@@ -60,6 +60,10 @@ export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoke
 
 const fiberFromProcess = <T>(handle: Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
+    // `forkDaemon` so the collector fiber's lifetime is independent of whichever
+    // scope originated the `invoke`/`attach` call. Otherwise, subsequent
+    // `attachFiber` lookups would see an interrupted exit once the caller's
+    // scope closed.
     const outputFiber = yield* handle.subscribeOutputs().pipe(
       Stream.runCollect,
       Effect.map(Chunk.head),
@@ -82,7 +86,7 @@ const fiberFromProcess = <T>(handle: Handle<any, T>): Effect.Effect<OperationFib
           }
         }),
       ),
-      Effect.fork,
+      Effect.forkDaemon,
     );
     log('lifecycle: subscribed to outputs', { handle });
     return {
@@ -127,6 +131,10 @@ export const make = (opts: {
       yield* handle.submitInput(input);
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       const fiber = yield* fiberFromProcess(handle);
+      // TODO(dmaretskyi): Bound `fiberCache` lifetime without breaking attach
+      // of completed processes. We keep cached fibers indefinitely today so
+      // that `attachFiber` can still return the collected exit after the
+      // spawn-side `await` has resolved.
       fiberCache.set(handle.pid, fiber);
       return fiber;
     }).pipe(

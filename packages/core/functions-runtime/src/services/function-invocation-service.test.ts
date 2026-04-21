@@ -11,7 +11,7 @@ import { AiService } from '@dxos/ai';
 import { FunctionInvocationService } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
-import { TestDatabaseLayer } from '../testing';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { FunctionInvocationServiceLayer } from './function-invocation-service';
 import { FunctionImplementationResolver } from './local-function-execution';
 

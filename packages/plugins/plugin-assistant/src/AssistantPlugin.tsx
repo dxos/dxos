@@ -227,5 +227,5 @@ const withComputeRuntime =
   ): Effect.Effect<A, E, Capability.Service> =>
     Effect.gen(function* () {
       const layer = yield* provideSpaceServices(spaceId, [QueueService, Feed.FeedService, Database.Service] as const);
-      return yield* effect.pipe(Effect.provide(layer), Effect.orDie);
+      return yield* effect.pipe(Effect.provide(layer));
     });

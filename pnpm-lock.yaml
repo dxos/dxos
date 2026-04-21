@@ -4756,6 +4756,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -17496,6 +17499,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor

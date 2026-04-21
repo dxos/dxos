@@ -8,7 +8,7 @@ import { describe, expect } from 'vitest';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 
 import { ContextBinding } from './context';
 import { AiSession } from './session';

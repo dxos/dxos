@@ -81,6 +81,12 @@ export default Capability.makeModule(
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
+    // Dispose the managed runtime — and its scoped process manager, service
+    // resolver, trace sinks, etc. — when this capability module is torn down.
+    yield* Effect.addFinalizer(() =>
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.catchAllCause(() => Effect.void)),
+    );
+
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
       runPromise: (effect, options) => managedRuntime.runPromise(effect as Effect.Effect<any, any, any>, options),
       runPromiseExit: (effect, options) =>

@@ -79,8 +79,8 @@ export const make = (opts: HistoryTrackerOptions): HistoryTracker => {
   const { invoker, undoRegistry } = opts;
 
   const history: HistoryEntry[] = [];
-  // In-flight invocations keyed by pid. Cleared when the matching
-  // `operation.end` arrives (or on failure).
+  // In-flight invocations keyed by `${pid}:${operationKey}` so that concurrent
+  // operations within the same process don't collide on a shared Pending record.
   type Pending = {
     readonly pid: string;
     readonly key: string;
@@ -89,13 +89,16 @@ export const make = (opts: HistoryTrackerOptions): HistoryTracker => {
     output?: unknown;
     outputSeen: boolean;
   };
-  const pendingByPid = new Map<string, Pending>();
+  const pendingByPidAndKey = new Map<string, Pending>();
+
+  const pendingKey = (pid: string, key: string): string => `${pid}:${key}`;
 
   const getOrCreatePending = (pid: string, key: string): Pending => {
-    let pending = pendingByPid.get(pid);
+    const mapKey = pendingKey(pid, key);
+    let pending = pendingByPidAndKey.get(mapKey);
     if (!pending) {
       pending = { pid, key, inputSeen: false, outputSeen: false };
-      pendingByPid.set(pid, pending);
+      pendingByPidAndKey.set(mapKey, pending);
     }
     return pending;
   };
@@ -154,8 +157,9 @@ export const make = (opts: HistoryTrackerOptions): HistoryTracker => {
         pending.output = event.data.output;
         pending.outputSeen = true;
       } else if (Trace.isOfType(Trace.OperationEnd, event)) {
-        const pending = pendingByPid.get(pid);
-        pendingByPid.delete(pid);
+        const mapKey = pendingKey(pid, event.data.key);
+        const pending = pendingByPidAndKey.get(mapKey);
+        pendingByPidAndKey.delete(mapKey);
         if (pending && event.data.outcome === 'success') {
           recordHistoryEntry(pending);
         }

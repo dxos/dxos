@@ -20,7 +20,18 @@ export class LayerStack {
     return ServiceResolver.make((tag, context) => this.#resolveService(tag, context) as any);
   }
 
-  async destroy() {}
+  /**
+   * Dispose every cached slice (including keep-alive application/space slices)
+   * so their `ManagedRuntime` finalizers run. Slices are torn down in reverse
+   * insertion order so higher-affinity slices dispose before the lower-affinity
+   * ones they depend on.
+   */
+  async destroy(): Promise<void> {
+    const slices = this.#slices.splice(0).reverse();
+    for (const slice of slices) {
+      await slice.destroy();
+    }
+  }
 
   #resolveService(
     tag: Context.Tag<any, any>,
@@ -56,7 +67,7 @@ export class LayerStack {
   #getOrInitSlice(
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<Slice, never, Scope.Scope> {
+  ): Effect.Effect<Slice, ServiceNotAvailableError, Scope.Scope> {
     return Effect.gen(this, function* () {
       let slice = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, context));
 
@@ -249,9 +260,10 @@ class Slice {
     this.#refCount--;
   }
 
-  init(requirements: Context.Context<unknown>): Effect.Effect<void> {
-    if (!this.#requires.every((id) => Context.getOption(requirements, id).pipe(Option.isSome))) {
-      throw new Error('Requirements not satisfied');
+  init(requirements: Context.Context<unknown>): Effect.Effect<void, ServiceNotAvailableError> {
+    const missing = this.#requires.find((id) => Option.isNone(Context.getOption(requirements, id)));
+    if (missing) {
+      return Effect.fail(new ServiceNotAvailableError(missing.key));
     }
 
     // Layers are already topologically sorted so dependencies come before dependants.

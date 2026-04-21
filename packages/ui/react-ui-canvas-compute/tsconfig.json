@@ -60,6 +60,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/compute-runtime"
+    },
+    {
       "path": "../../core/conductor"
     },
     {

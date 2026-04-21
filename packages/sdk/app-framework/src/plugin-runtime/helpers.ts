@@ -4,6 +4,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { ServiceResolver, type ServiceNotAvailableError } from '@dxos/functions';
@@ -59,7 +60,14 @@ export const runInSpace = <const Tags extends readonly Context.Tag<any, any>[], 
   Effect.gen(function* () {
     const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime).pipe(Effect.orDie);
     const layer = yield* provideSpaceServices(spaceId, tags);
-    return (yield* Effect.promise(() =>
-      runtime.runPromise(effect.pipe(Effect.provide(layer)) as Effect.Effect<A, E, any>),
-    )) as A;
+    // Use `runPromiseExit` + `Exit.match` so the effect's typed `E` failure
+    // channel is preserved. `runPromise` would throw on failure and the caller
+    // would see an untyped rejection via `Effect.promise`.
+    const exit = yield* Effect.promise(() =>
+      runtime.runPromiseExit(effect.pipe(Effect.provide(layer)) as Effect.Effect<A, E, any>),
+    );
+    return yield* Exit.match(exit as Exit.Exit<A, E>, {
+      onSuccess: (value) => Effect.succeed(value),
+      onFailure: (cause) => Effect.failCause(cause),
+    });
   });
