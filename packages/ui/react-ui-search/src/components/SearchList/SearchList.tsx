@@ -240,7 +240,10 @@ type SearchListContentProps = {};
  */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: mx('dx-expander', withColumn.propagate()) })} ref={forwardedRef}>
+    <div
+      {...composableProps(props, { role: 'none', classNames: mx('dx-expander', withColumn.propagate()) })}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );
@@ -349,20 +352,18 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     );
 
     return (
-      <div className={withColumn.center()}>
-        <Input.Root>
-          <Input.TextInput
-            {...props}
-            variant='subdued'
-            autoFocus={props.autoFocus && !hasIosKeyboard}
-            placeholder={placeholder ?? defaultPlaceholder}
-            value={query}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            ref={forwardedRef}
-          />
-        </Input.Root>
-      </div>
+      <Input.Root>
+        <Input.TextInput
+          {...props}
+          variant='subdued'
+          autoFocus={props.autoFocus && !hasIosKeyboard}
+          placeholder={placeholder ?? defaultPlaceholder}
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          ref={forwardedRef}
+        />
+      </Input.Root>
     );
   },
 );
@@ -377,8 +378,17 @@ type SearchListViewportProps = {};
 
 const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    <ScrollArea.Root
+      {...composableProps(props, { classNames: 'border border-red-500' })}
+      role='listbox'
+      thin
+      padding
+      ref={forwardedRef}
+    >
+      <ScrollArea.Viewport>
+        <div className='h-[100px]'>PLACEHOLDER</div>
+        {children}
+      </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 });
