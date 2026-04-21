@@ -12,6 +12,8 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { ProcessManager } from '@dxos/compute-runtime';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import {
@@ -27,8 +29,6 @@ import { invariant } from '@dxos/invariant';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
-import { ProcessManager } from '@dxos/compute-runtime';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 

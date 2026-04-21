@@ -23,12 +23,8 @@ import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 
 import type { ProcessNotFoundError } from './errors';
-import {
-  type Handle,
-  type Manager,
-  ProcessManagerService,
-  type SpawnOptions,
-} from './ProcessManager';
+import { ProcessManagerService } from './process-manager-service';
+import type { Handle, Manager, SpawnOptions } from './ProcessManager';
 
 export interface OperationFiber<T> {
   pid: Process.ID;

@@ -12,11 +12,11 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Feed } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 

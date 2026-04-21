@@ -27,9 +27,9 @@ export default Capability.makeModule(
       undoRegistry,
       invoker: {
         invokeInverse: (inverse, inverseInput) =>
-          invoker.invoke(inverse, inverseInput).pipe(
-            Effect.mapError((err) => (err instanceof Error ? err : new Error(String(err)))),
-          ),
+          invoker
+            .invoke(inverse, inverseInput)
+            .pipe(Effect.mapError((err) => (err instanceof Error ? err : new Error(String(err))))),
         invokeShowUndo: (message) => {
           if (message === undefined) {
             return;

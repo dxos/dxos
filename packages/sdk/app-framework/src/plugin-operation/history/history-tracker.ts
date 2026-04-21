@@ -59,10 +59,7 @@ export interface HistoryTracker {
  *   surface the host wants (toast, log, etc.).
  */
 export interface HistoryTrackerInvoker {
-  readonly invokeInverse: (
-    inverse: Operation.Definition<any, any>,
-    inverseInput: any,
-  ) => Effect.Effect<unknown, Error>;
+  readonly invokeInverse: (inverse: Operation.Definition<any, any>, inverseInput: any) => Effect.Effect<unknown, Error>;
   readonly invokeShowUndo: (message: Label | undefined) => void;
 }
 

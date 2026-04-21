@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { describe, expect } from 'vitest';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 
 import { ContextBinding } from './context';
 import { AiSession } from './session';

@@ -61,11 +61,7 @@ export class LayerStack {
       }
 
       // Only init a process slice if we actually have process context.
-      const topAffinity: LayerSpec.Affinity = context.process
-        ? 'process'
-        : context.space
-          ? 'space'
-          : 'application';
+      const topAffinity: LayerSpec.Affinity = context.process ? 'process' : context.space ? 'space' : 'application';
 
       if (topAffinity === 'process') {
         yield* this.#getOrInitSlice('process', contextForAffinity('process', context));

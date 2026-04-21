@@ -14,11 +14,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { Process, Trace } from '@dxos/functions';
 import * as StorageService from '@dxos/functions/StorageService';
-import { ProcessManager } from '@dxos/compute-runtime';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';

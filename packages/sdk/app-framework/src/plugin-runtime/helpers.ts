@@ -51,11 +51,7 @@ export const provideSpaceServices = <const Tags extends readonly Context.Tag<any
 export const runInSpace = <const Tags extends readonly Context.Tag<any, any>[], A, E>(
   spaceId: SpaceId,
   tags: Tags,
-  effect: Effect.Effect<
-    A,
-    E,
-    Context.Tag.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices
-  >,
+  effect: Effect.Effect<A, E, Context.Tag.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
 ): Effect.Effect<A, E, Capability.Service> =>
   Effect.gen(function* () {
     const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime).pipe(Effect.orDie);

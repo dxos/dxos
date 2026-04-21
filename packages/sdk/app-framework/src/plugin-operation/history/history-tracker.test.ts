@@ -50,25 +50,15 @@ const publishSuccess = (
   input: unknown,
   output: unknown,
 ): void => {
+  sink.write(makeMessage(pid, [event(Trace.OperationInput, { key: op.meta.key, name: op.meta.name, input })], true));
+  sink.write(makeMessage(pid, [event(Trace.OperationOutput, { key: op.meta.key, name: op.meta.name, output })], true));
   sink.write(
-    makeMessage(pid, [event(Trace.OperationInput, { key: op.meta.key, name: op.meta.name, input })], true),
-  );
-  sink.write(
-    makeMessage(pid, [event(Trace.OperationOutput, { key: op.meta.key, name: op.meta.name, output })], true),
-  );
-  sink.write(
-    makeMessage(
-      pid,
-      [event(Trace.OperationEnd, { key: op.meta.key, name: op.meta.name, outcome: 'success' })],
-      false,
-    ),
+    makeMessage(pid, [event(Trace.OperationEnd, { key: op.meta.key, name: op.meta.name, outcome: 'success' })], false),
   );
 };
 
 const publishFailure = (sink: Trace.Sink, pid: string, op: Operation.Definition<any, any>, input: unknown): void => {
-  sink.write(
-    makeMessage(pid, [event(Trace.OperationInput, { key: op.meta.key, name: op.meta.name, input })], true),
-  );
+  sink.write(makeMessage(pid, [event(Trace.OperationInput, { key: op.meta.key, name: op.meta.name, input })], true));
   sink.write(
     makeMessage(
       pid,

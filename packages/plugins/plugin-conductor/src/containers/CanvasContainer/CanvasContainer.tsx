@@ -106,7 +106,9 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
     );
     const computeGraphRuntime = {
       runPromiseExit: <A, E>(effect: Effect.Effect<A, E, any>): Promise<Exit.Exit<A, E>> =>
-        processManagerRuntime.runPromiseExit(effect.pipe(Effect.provide(spaceLayer)) as any) as Promise<Exit.Exit<A, E>>,
+        processManagerRuntime.runPromiseExit(effect.pipe(Effect.provide(spaceLayer)) as any) as Promise<
+          Exit.Exit<A, E>
+        >,
     };
     const controller = new ComputeGraphController(computeGraphRuntime, model);
     return controller;

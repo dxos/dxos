@@ -21,6 +21,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
+import { ProcessManager } from '@dxos/compute-runtime';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
@@ -30,7 +31,6 @@ import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
-import { ProcessManager } from '@dxos/compute-runtime';
 import { createInvocationPayload } from './input-builder';
 import { filterReadyQueueItems } from './queue-position';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';

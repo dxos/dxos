@@ -11,10 +11,10 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';

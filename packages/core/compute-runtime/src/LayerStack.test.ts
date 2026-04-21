@@ -265,9 +265,7 @@ describe('LayerStack', () => {
 
         const space = SpaceId.random();
         const process = 'pid-1' as any;
-        const resolved = yield* resolveWithScope(
-          resolver.resolve(ServiceB, { space, process }),
-        );
+        const resolved = yield* resolveWithScope(resolver.resolve(ServiceB, { space, process }));
         expect(resolved).toEqual({ value: `process(space:${space}):pid-1` });
       }),
     );

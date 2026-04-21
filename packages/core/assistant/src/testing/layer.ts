@@ -14,11 +14,11 @@ import * as Match from 'effect/Match';
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
+import { ProcessManager } from '@dxos/compute-runtime';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
-import { ProcessManager } from '@dxos/compute-runtime';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import {
   CredentialsService,
   Process,
@@ -29,11 +29,7 @@ import {
   Trace,
   Trigger,
 } from '@dxos/functions';
-import {
-  FeedTraceSink,
-  TriggerDispatcher,
-  TriggerStateStore,
-} from '@dxos/functions-runtime';
+import { FeedTraceSink, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '../conversation';

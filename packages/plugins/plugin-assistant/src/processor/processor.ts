@@ -5,10 +5,9 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
-
-import * as Layer from 'effect/Layer';
 
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';

@@ -71,9 +71,7 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service | Fee
       }).pipe(
         // Reset `flushFiber` even if `Feed.append` fails, otherwise
         // `scheduleFlush` would see a stale fiber handle and never re-arm.
-        Effect.tapErrorCause((cause) =>
-          Effect.sync(() => log.warn('feed trace flush failed', { cause })),
-        ),
+        Effect.tapErrorCause((cause) => Effect.sync(() => log.warn('feed trace flush failed', { cause }))),
         Effect.ensuring(
           Effect.sync(() => {
             flushFiber = undefined;

@@ -13,12 +13,7 @@ import { AgentService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
-import {
-  CredentialsService,
-  FunctionInvocationService,
-  LayerSpec,
-  QueueService,
-} from '@dxos/functions';
+import { CredentialsService, FunctionInvocationService, LayerSpec, QueueService } from '@dxos/functions';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,

@@ -52,8 +52,7 @@ export default Capability.makeModule(
     const layerStack = new LayerStack({ layers: [...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
-    const handlerSet =
-      handlerSets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...handlerSets);
+    const handlerSet = handlerSets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...handlerSets);
 
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
     const mergedTraceSink = Trace.mergeSinks(traceSinks);

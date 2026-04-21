@@ -25,9 +25,10 @@ import type { ObjectId } from '@dxos/protocols';
 
 import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
+import { ProcessManagerService } from './process-manager-service';
+import { createProcessTraceService } from './process-trace';
 import { ProcessHandleImpl, type OutputItem } from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { createProcessTraceService } from './process-trace';
 import { layer as storageServiceLayer } from './storage-service-layer';
 
 export { type ProcessIdGenerator, UUIDProcessIdGenerator, SequentialProcessIdGenerator } from './process-id';
@@ -187,13 +188,7 @@ export interface Manager {
   readonly operationHandlerSet: OperationHandlerSet.OperationHandlerSet;
 }
 
-/**
- * Tag for the ProcessManager service.
- */
-export class ProcessManagerService extends Context.Tag('@dxos/functions-runtime/ProcessManagerService')<
-  ProcessManagerService,
-  Manager
->() {}
+export { ProcessManagerService };
 
 export interface ProcessManagerImplOpts {
   registry: Registry.Registry;
@@ -567,4 +562,3 @@ export const layer = (opts?: {
       );
     }),
   );
-
