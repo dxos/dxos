@@ -362,6 +362,7 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
+        this._serviceContext.echoHost,
         dataSpaceManagerProvider,
       ),
 
