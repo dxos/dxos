@@ -5,21 +5,21 @@
 /**
  * Packages shared between the Composer host app and remote plugins.
  *
- * Rule: every `@dxos/*` package EXCEPT `@dxos/plugin-*` is provided by the host
- * via import map and must NOT be re-bundled into a plugin's module. Plugin packages
- * are intentionally excluded so that community plugins can depend on each other
- * for lightweight types/operation defs (which are small and safe to duplicate
- * between bundles).
+ * {@link DEFAULT_PACKAGES} is the single source of truth: `importMapPlugin` emits
+ * one wrapper chunk per entry so the host serves it at runtime, and `composerPlugin`
+ * (via {@link isSharedPackage}) externalizes the same set from plugin bundles.
+ * Adding a new `@dxos/*` (or third-party) package that plugins may depend on means
+ * adding it here — in one place — so the externalization contract stays in sync
+ * with what the host actually provides.
  *
- * The explicit list below drives `importMapPlugin` (it needs concrete specifiers
- * to emit wrapper chunks). `composerPlugin` and `isSharedPackage` use the
- * predicate form for externalization so newly-added @dxos packages are handled
- * automatically without a code change on every plugin.
+ * Plugin packages (`@dxos/plugin-*`) are intentionally NOT listed: community plugins
+ * bundle their own copy of any plugin-subpath import, which is safe because those
+ * exports are limited to lightweight types/operation defs.
  */
+
 /**
  * Non-`@dxos/*` packages the Composer host provides to plugins via import map.
- * Spread into {@link DEFAULT_PACKAGES} and consulted by {@link isSharedPackage}
- * so the third-party set lives in exactly one place.
+ * Spread into {@link DEFAULT_PACKAGES} so the third-party set lives in one place.
  */
 const THIRD_PARTY_SHARED_PACKAGES = [
   '@effect-atom/atom',
@@ -130,18 +130,14 @@ export const DEFAULT_PACKAGES = [
 ];
 
 /**
- * True when the given bare specifier (or one of its subpaths) is provided by
- * the Composer host at runtime and must not be re-bundled by a plugin.
+ * True when the given bare specifier (or one of its subpaths) is provided by the
+ * Composer host at runtime and must not be re-bundled by a plugin.
  *
- * The rule: every `@dxos/*` package except `@dxos/plugin-*` is shared.
- * Plugin packages (`@dxos/plugin-markdown`, `@dxos/plugin-space`, …) are
- * intentionally NOT shared — community plugins bundle their own copy of any
- * plugin-subpath they import, which is safe because those exports are limited
- * to lightweight types/operation defs.
+ * Matches only packages listed in {@link DEFAULT_PACKAGES} — the same list
+ * {@link importMapPlugin} consumes — so externalization cannot claim a package
+ * the host isn't actually mapping. Unknown `@dxos/*` packages fall through to
+ * normal bundling, which is the correct default for plugin-owned or yet-to-be
+ * shared workspace packages.
  */
-export const isSharedPackage = (id: string): boolean => {
-  if (id.startsWith('@dxos/')) {
-    return !id.startsWith('@dxos/plugin-');
-  }
-  return THIRD_PARTY_SHARED_PACKAGES.some((pkg) => id === pkg || id.startsWith(`${pkg}/`));
-};
+export const isSharedPackage = (id: string): boolean =>
+  DEFAULT_PACKAGES.some((pkg) => id === pkg || id.startsWith(`${pkg}/`));
