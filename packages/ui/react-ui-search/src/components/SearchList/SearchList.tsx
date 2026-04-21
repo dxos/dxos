@@ -242,7 +242,7 @@ type SearchListContentProps = {};
  */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-container flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
