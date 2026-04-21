@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-import-source"
+    },
+    {
       "path": "../../common/async"
     },
     {
