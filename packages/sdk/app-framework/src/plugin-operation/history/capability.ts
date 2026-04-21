@@ -4,33 +4,43 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type OperationInvoker } from '@dxos/operation';
-
+import { UndoOperation } from '../../common';
 import { Capabilities } from '../../common';
 import { Capability } from '../../core';
 import * as HistoryTracker from './history-tracker';
 import * as UndoRegistry from './undo-registry';
 
 //
-// Capability Module - contributes both UndoRegistry and HistoryTracker.
+// Capability Module - contributes UndoRegistry, HistoryTracker, and a
+// {@link Capabilities.TraceSink} that feeds operation traces into the
+// tracker.
 //
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Get the context for synchronous access in callbacks.
     const capabilities = yield* Capability.Service;
+    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
 
-    // Create UndoRegistry.
     const undoRegistry = UndoRegistry.make(() => capabilities.getAll(Capabilities.UndoMapping).flat());
 
-    // Create HistoryTracker (depends on UndoRegistry and OperationInvoker).
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
-    // Cast to internal type - the factory always returns OperationInvokerInternal.
-    const historyTracker = HistoryTracker.make(invoker as OperationInvoker.OperationInvokerInternal, undoRegistry);
+    const historyTracker = HistoryTracker.make({
+      undoRegistry,
+      invoker: {
+        invokeInverse: (inverse, inverseInput) =>
+          invoker.invoke(inverse, inverseInput).pipe(Effect.mapError((err) => err as Error)),
+        invokeShowUndo: (message) => {
+          if (message === undefined) {
+            return;
+          }
+          Effect.runFork(invoker.invoke(UndoOperation.ShowUndo, { message }));
+        },
+      },
+    });
 
     return [
       Capability.contributes(Capabilities.UndoRegistry, undoRegistry),
       Capability.contributes(Capabilities.HistoryTracker, historyTracker),
+      Capability.contributes(Capabilities.TraceSink, () => historyTracker.traceSink),
     ];
   }),
 );

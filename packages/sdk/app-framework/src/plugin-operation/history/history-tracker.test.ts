@@ -4,30 +4,107 @@
 
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as TestClock from 'effect/TestClock';
 import { describe, expect } from 'vitest';
 
-import { Operation, OperationInvoker } from '@dxos/operation';
+import { Obj } from '@dxos/echo';
+import { Trace } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 
-const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
-
-import { UndoOperation } from '../../common';
-import {
-  Compute,
-  HalveCompute,
-  ToString,
-  computeHandler,
-  createEventCollector,
-  halveComputeHandler,
-  toStringHandler,
-  waitUntil,
-} from '../testing';
+import { type Label } from '../../common';
+import { Compute, HalveCompute, ToString } from '../testing';
 import * as HistoryTracker from './history-tracker';
 import * as UndoMapping from './undo-mapping';
 import * as UndoRegistry from './undo-registry';
+
+//
+// Test helpers
+//
+
+let pidCounter = 0;
+const nextPid = (): string => `pid-${++pidCounter}`;
+
+const makeMessage = (pid: string, events: Trace.Event[], isEphemeral: boolean): Trace.Message =>
+  Obj.make(Trace.Message, {
+    meta: { pid },
+    isEphemeral,
+    events,
+  });
+
+const event = <T>(eventType: Trace.EventType<T>, data: T): Trace.Event => ({
+  type: eventType.key,
+  timestamp: Date.now(),
+  data,
+});
+
+/**
+ * Simulates the `operation.input`, `operation.output`, and `operation.end`
+ * trace messages that the process manager would publish for a successful
+ * operation invocation. Events are split across multiple messages to
+ * mirror the production layout: ephemeral input/output are emitted as
+ * separate ephemeral messages, end as a persisted one.
+ */
+const publishSuccess = (
+  sink: Trace.Sink,
+  pid: string,
+  op: Operation.Definition<any, any>,
+  input: unknown,
+  output: unknown,
+): void => {
+  sink.write(
+    makeMessage(pid, [event(Trace.OperationInput, { key: op.meta.key, name: op.meta.name, input })], true),
+  );
+  sink.write(
+    makeMessage(pid, [event(Trace.OperationOutput, { key: op.meta.key, name: op.meta.name, output })], true),
+  );
+  sink.write(
+    makeMessage(
+      pid,
+      [event(Trace.OperationEnd, { key: op.meta.key, name: op.meta.name, outcome: 'success' })],
+      false,
+    ),
+  );
+};
+
+const publishFailure = (sink: Trace.Sink, pid: string, op: Operation.Definition<any, any>, input: unknown): void => {
+  sink.write(
+    makeMessage(pid, [event(Trace.OperationInput, { key: op.meta.key, name: op.meta.name, input })], true),
+  );
+  sink.write(
+    makeMessage(
+      pid,
+      [event(Trace.OperationEnd, { key: op.meta.key, name: op.meta.name, outcome: 'failure', error: 'boom' })],
+      false,
+    ),
+  );
+};
+
+interface InverseCall {
+  readonly inverse: Operation.Definition<any, any>;
+  readonly inverseInput: unknown;
+}
+
+const makeTestInvoker = (): {
+  invoker: HistoryTracker.HistoryTrackerInvoker;
+  inverseCalls: InverseCall[];
+  showUndoCalls: (Label | undefined)[];
+} => {
+  const inverseCalls: InverseCall[] = [];
+  const showUndoCalls: (Label | undefined)[] = [];
+  const invoker: HistoryTracker.HistoryTrackerInvoker = {
+    invokeInverse: (inverse, inverseInput) =>
+      Effect.sync(() => {
+        inverseCalls.push({ inverse, inverseInput });
+      }),
+    invokeShowUndo: (message) => {
+      showUndoCalls.push(message);
+    },
+  };
+  return { invoker, inverseCalls, showUndoCalls };
+};
+
+//
+// Tests
+//
 
 describe('HistoryTracker', () => {
   it.effect('tracks undoable operations', () =>
@@ -38,19 +115,13 @@ describe('HistoryTracker', () => {
         deriveContext: (_input, output) => ({ value: output.value }),
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
+      const { invoker } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
       expect(tracker.canUndo()).toBe(false);
 
-      // Fork compute operation and advance clock.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      // Wait until the tracker has processed the event.
-      yield* waitUntil(() => tracker.canUndo());
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 2 }, { value: 4 });
 
       expect(tracker.canUndo()).toBe(true);
     }),
@@ -58,20 +129,13 @@ describe('HistoryTracker', () => {
 
   it.effect('does not track operations without undo mapping', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
+      const { invoker } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => []);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
-      const collector = yield* createEventCollector(invoker);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
-      yield* invoker.invoke(ToString, { value: 42 });
+      publishSuccess(tracker.traceSink, nextPid(), ToString, { value: 42 }, { string: '42' });
 
-      // Wait for event to be processed.
-      yield* collector.waitForEvents(1);
-
-      // Without an undo mapping, canUndo should remain false.
       expect(tracker.canUndo()).toBe(false);
-
-      yield* collector.dispose;
     }),
   );
 
@@ -83,63 +147,19 @@ describe('HistoryTracker', () => {
         deriveContext: (_input, output) => ({ value: output.value }),
       });
 
-      let halveWasCalled = false;
-      const trackingHalveHandler = Operation.withHandler(HalveCompute, (data) => {
-        halveWasCalled = true;
-        return Effect.succeed({ value: data.value / 2 });
-      });
-
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, trackingHalveHandler]), testRuntime);
+      const { invoker, inverseCalls } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
-      // Fork compute operation: 2 * 2 = 4.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      // Wait until the tracker has processed the event.
-      yield* waitUntil(() => tracker.canUndo());
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 2 }, { value: 4 });
       expect(tracker.canUndo()).toBe(true);
 
-      // Undo should invoke halve with { value: 4 }.
       yield* tracker.undo();
-      expect(halveWasCalled).toBe(true);
+
+      expect(inverseCalls.length).toBe(1);
+      expect(inverseCalls[0]!.inverse.meta.key).toBe(HalveCompute.meta.key);
+      expect(inverseCalls[0]!.inverseInput).toEqual({ value: 4 });
       expect(tracker.canUndo()).toBe(false);
-    }),
-  );
-
-  it.effect('undo uses _invokeCore to skip event emission', () =>
-    Effect.gen(function* () {
-      const undoMapping = UndoMapping.make({
-        operation: Compute,
-        inverse: HalveCompute,
-        deriveContext: (_input, output) => ({ value: output.value }),
-      });
-
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
-      const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
-      const collector = yield* createEventCollector(invoker);
-
-      // Fork compute operation (should emit event).
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      yield* collector.waitForEvents(1);
-      expect(collector.events.length).toBe(1);
-
-      // Wait until the tracker has processed the event.
-      yield* waitUntil(() => tracker.canUndo());
-
-      // Undo (should NOT emit event because it uses _invokeCore).
-      yield* tracker.undo();
-
-      // Verify no new events were emitted.
-      expect(collector.events.length).toBe(1);
-
-      yield* collector.dispose;
     }),
   );
 
@@ -151,49 +171,28 @@ describe('HistoryTracker', () => {
         deriveContext: (_input, output) => ({ value: output.value }),
       });
 
-      const halveInputs: number[] = [];
-      const trackingHalveHandler = Operation.withHandler(HalveCompute, (data) => {
-        halveInputs.push(data.value);
-        return Effect.succeed({ value: data.value / 2 });
-      });
-
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, trackingHalveHandler]), testRuntime);
+      const { invoker, inverseCalls } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
-      const collector = yield* createEventCollector(invoker);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
-      // Fork compute with 2 → 4.
-      const fiber1 = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber1);
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 2 }, { value: 4 });
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 3 }, { value: 6 });
 
-      // Fork compute with 3 → 6.
-      const fiber2 = yield* Effect.fork(invoker.invoke(Compute, { value: 3 }));
-      yield* TestClock.adjust('30 millis');
-      yield* Fiber.join(fiber2);
-
-      // Wait for both events to be collected.
-      yield* collector.waitForEvents(2);
-
-      // First undo should halve 6 (the output of the second compute).
       yield* tracker.undo();
-      expect(halveInputs[0]).toBe(6);
+      expect(inverseCalls[0]!.inverseInput).toEqual({ value: 6 });
 
-      // Second undo should halve 4 (the output of the first compute).
       yield* tracker.undo();
-      expect(halveInputs[1]).toBe(4);
+      expect(inverseCalls[1]!.inverseInput).toEqual({ value: 4 });
 
       expect(tracker.canUndo()).toBe(false);
-
-      yield* collector.dispose;
     }),
   );
 
   it.effect('undo on empty history returns error', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
+      const { invoker } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => []);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
       const result = yield* tracker.undo().pipe(Effect.either);
       expect(result._tag).toBe('Left');
@@ -203,7 +202,7 @@ describe('HistoryTracker', () => {
     }),
   );
 
-  it.effect('fires ShowUndo operation when undoable operation is tracked', () =>
+  it.effect('fires ShowUndo with static message when undoable operation is tracked', () =>
     Effect.gen(function* () {
       const testMessage: [string, { ns: string }] = ['test-undo.message', { ns: 'test' }];
       const undoMapping = UndoMapping.make({
@@ -213,41 +212,19 @@ describe('HistoryTracker', () => {
         message: testMessage,
       });
 
-      let showUndoWasCalled = false;
-      let showUndoMessage: unknown = undefined;
-      const showUndoHandler = Operation.withHandler(UndoOperation.ShowUndo, (input) => {
-        showUndoWasCalled = true;
-        showUndoMessage = input.message;
-        return Effect.succeed(undefined);
-      });
-
-      const invoker = OperationInvoker.make(
-        () => Effect.succeed([computeHandler, halveComputeHandler, showUndoHandler]),
-        testRuntime,
-      );
+      const { invoker, showUndoCalls } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
-      expect(showUndoWasCalled).toBe(false);
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 2 }, { value: 4 });
 
-      // Fork compute operation and advance clock.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      // Wait until the tracker has processed the event.
-      yield* waitUntil(() => tracker.canUndo());
-
-      // ShowUndo should have been called with the message from the undo mapping.
-      yield* waitUntil(() => showUndoWasCalled);
-      expect(showUndoWasCalled).toBe(true);
-      expect(showUndoMessage).toEqual(testMessage);
+      expect(showUndoCalls.length).toBe(1);
+      expect(showUndoCalls[0]).toEqual(testMessage);
     }),
   );
 
   it.effect('ShowUndo message can be derived from input and output', () =>
     Effect.gen(function* () {
-      // Dynamic message that depends on input/output.
       const dynamicMessage = (input: { value: number }, output: { value: number }): [string, { ns: string }] => [
         `computed-${input.value}-to-${output.value}`,
         { ns: 'test' },
@@ -259,115 +236,97 @@ describe('HistoryTracker', () => {
         message: dynamicMessage,
       });
 
-      let showUndoWasCalled = false;
-      let showUndoMessage: unknown = undefined;
-      const showUndoHandler = Operation.withHandler(UndoOperation.ShowUndo, (input) => {
-        showUndoWasCalled = true;
-        showUndoMessage = input.message;
-        return Effect.succeed(undefined);
-      });
-
-      const invoker = OperationInvoker.make(
-        () => Effect.succeed([computeHandler, halveComputeHandler, showUndoHandler]),
-        testRuntime,
-      );
+      const { invoker, showUndoCalls } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
-      expect(showUndoWasCalled).toBe(false);
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 2 }, { value: 4 });
 
-      // Fork compute operation and advance clock (same as passing test).
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      // Wait until the tracker has processed the event.
-      yield* waitUntil(() => tracker.canUndo());
-
-      // ShowUndo should have been called with the derived message.
-      yield* waitUntil(() => showUndoWasCalled);
-      expect(showUndoWasCalled).toBe(true);
-      // Compute 2 * 2 = 4, so message should be 'computed 2 to 4'.
-      expect(showUndoMessage).toEqual(['computed-2-to-4', { ns: 'test' }]);
+      expect(showUndoCalls.length).toBe(1);
+      expect(showUndoCalls[0]).toEqual(['computed-2-to-4', { ns: 'test' }]);
     }),
   );
 
-  it.effect('does not track operations when deriveContext returns undefined', () =>
+  it.effect('does not track when deriveContext returns undefined', () =>
     Effect.gen(function* () {
-      // Undo mapping that conditionally returns undefined to indicate not undoable.
       const undoMapping = UndoMapping.make({
         operation: Compute,
         inverse: HalveCompute,
-        deriveContext: (_input, output) => {
-          // Return undefined for values less than 10 to indicate not undoable.
-          if (output.value < 10) {
-            return undefined;
-          }
-          return { value: output.value };
-        },
+        deriveContext: (_input, output) => (output.value < 10 ? undefined : { value: output.value }),
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
+      const { invoker } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
-      const collector = yield* createEventCollector(invoker);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
+
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 2 }, { value: 4 });
 
       expect(tracker.canUndo()).toBe(false);
-
-      // Compute 2 * 2 = 4, which is < 10, so deriveContext returns undefined.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      // Wait for event to be processed.
-      yield* collector.waitForEvents(1);
-
-      // Even though there's an undo mapping, deriveContext returned undefined,
-      // so this operation should not be tracked as undoable.
-      expect(tracker.canUndo()).toBe(false);
-
-      yield* collector.dispose;
     }),
   );
 
-  it.effect('tracks operations when deriveContext returns a value', () =>
+  it.effect('tracks when deriveContext returns a value', () =>
     Effect.gen(function* () {
-      // Undo mapping that conditionally returns undefined to indicate not undoable.
       const undoMapping = UndoMapping.make({
         operation: Compute,
         inverse: HalveCompute,
-        deriveContext: (_input, output) => {
-          // Return undefined for values less than 10 to indicate not undoable.
-          if (output.value < 10) {
-            return undefined;
-          }
-          return { value: output.value };
-        },
+        deriveContext: (_input, output) => (output.value < 10 ? undefined : { value: output.value }),
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
+      const { invoker } = makeTestInvoker();
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
-      const tracker = HistoryTracker.make(invoker, undoRegistry);
-      const collector = yield* createEventCollector(invoker);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
 
-      expect(tracker.canUndo()).toBe(false);
+      publishSuccess(tracker.traceSink, nextPid(), Compute, { value: 5 }, { value: 10 });
 
-      // Compute 5 * 2 = 10, which is >= 10, so deriveContext returns a value.
-      // Handler sleeps for value * 10 = 50ms.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 5 }));
-      yield* TestClock.adjust('50 millis');
-      yield* Fiber.join(fiber);
-
-      // Wait for event to be processed.
-      yield* collector.waitForEvents(1);
-
-      // Wait until the tracker has processed the event.
-      yield* waitUntil(() => tracker.canUndo());
-
-      // This operation should be tracked as undoable.
       expect(tracker.canUndo()).toBe(true);
+    }),
+  );
 
-      yield* collector.dispose;
+  it.effect('does not track failed operations', () =>
+    Effect.gen(function* () {
+      const undoMapping = UndoMapping.make({
+        operation: Compute,
+        inverse: HalveCompute,
+        deriveContext: (_input, output) => ({ value: output.value }),
+      });
+
+      const { invoker } = makeTestInvoker();
+      const undoRegistry = UndoRegistry.make(() => [undoMapping]);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
+
+      publishFailure(tracker.traceSink, nextPid(), Compute, { value: 2 });
+
+      expect(tracker.canUndo()).toBe(false);
+    }),
+  );
+
+  it.effect('handles batched input+output+end in a single message', () =>
+    Effect.gen(function* () {
+      const undoMapping = UndoMapping.make({
+        operation: Compute,
+        inverse: HalveCompute,
+        deriveContext: (_input, output) => ({ value: output.value }),
+      });
+
+      const { invoker } = makeTestInvoker();
+      const undoRegistry = UndoRegistry.make(() => [undoMapping]);
+      const tracker = HistoryTracker.make({ invoker, undoRegistry });
+
+      const pid = nextPid();
+      tracker.traceSink.write(
+        makeMessage(
+          pid,
+          [
+            event(Trace.OperationInput, { key: Compute.meta.key, input: { value: 2 } }),
+            event(Trace.OperationOutput, { key: Compute.meta.key, output: { value: 4 } }),
+            event(Trace.OperationEnd, { key: Compute.meta.key, outcome: 'success' }),
+          ],
+          false,
+        ),
+      );
+
+      expect(tracker.canUndo()).toBe(true);
     }),
   );
 });
