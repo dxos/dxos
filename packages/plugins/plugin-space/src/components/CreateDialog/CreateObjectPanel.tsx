@@ -9,7 +9,7 @@ import { type Database, Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
-import { Column, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { type MaybePromise } from '@dxos/util';
@@ -141,14 +141,12 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      {/* <Column.Center classNames='mb-form-gap'> */}
       <SearchList.Input
+        classNames='mb-form-gap'
         autoFocus
         data-testid='create-object-form.schema-input'
         placeholder={t('schema-input.placeholder')}
       />
-      {/* </Column.Center> */}
-      {/* <Column.Center classNames='border'> */}
       <SearchList.Viewport>
         {results.map((option) => (
           <SearchList.Item
@@ -160,7 +158,6 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
           />
         ))}
       </SearchList.Viewport>
-      {/* </Column.Center> */}
     </SearchList.Root>
   );
 };
@@ -205,27 +202,24 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Column.Center>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.space-input'
-          placeholder={t('space-input.placeholder')}
-        />
-      </Column.Center>
-      <Column.Bleed>
-        <SearchList.Viewport>
-          {results.map((space) => {
-            return (
-              <SearchList.Item
-                key={space.id}
-                value={space.id}
-                label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-                onSelect={() => onChange?.(space.db)}
-              />
-            );
-          })}
-        </SearchList.Viewport>
-      </Column.Bleed>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((space) => {
+          return (
+            <SearchList.Item
+              key={space.id}
+              value={space.id}
+              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              onSelect={() => onChange?.(space.db)}
+            />
+          );
+        })}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };

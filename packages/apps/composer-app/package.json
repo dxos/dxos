@@ -72,6 +72,7 @@
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-pwa": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
+    "@dxos/plugin-sample": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
