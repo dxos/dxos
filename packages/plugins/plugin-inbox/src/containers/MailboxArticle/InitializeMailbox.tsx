@@ -32,7 +32,7 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
     const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
     const [syncing, setSyncing] = useState(false);
 
-    const openSpaceSettings = useCallback(() => {
+    const handleOpenSettings = useCallback(() => {
       if (db) {
         void invokePromise(LayoutOperation.Open, {
           subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.token-manager.integrations`],
@@ -50,40 +50,31 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
       }
     }, [invokePromise, mailbox]);
 
-    const { message, action } = ((): { message?: string; action: ReactNode } => {
-      const token = tokens.find((token) => token.source.includes('google'));
-      if (!token) {
-        const authSurfaceData = { source: 'google.com' };
-        if (Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data: authSurfaceData })) {
-          return {
-            message: t('no-integrations.label'),
-            action: <Surface.Surface role='integration--auth' data={authSurfaceData} limit={1} />,
-          };
-        }
-
-        return {
-          message: t('no-integrations.label'),
-          action: (
-            <Button variant='primary' onClick={openSpaceSettings}>
-              {t('manage-integrations-button.label')}
-            </Button>
-          ),
-        };
-      }
-
-      return {
-        action: (
-          <IconButton
-            disabled={syncing}
-            variant='primary'
-            iconClassNames={syncing ? 'animate-spin' : undefined}
-            icon={syncing ? 'ph--spinner-gap--regular' : 'ph--arrow-clockwise--regular'}
-            label={t('sync-mailbox.label')}
-            onClick={handleSync}
-          />
-        ),
-      };
-    })();
+    let message: string | undefined;
+    let action: ReactNode;
+    const token = tokens.find((token) => token.source.includes('google'));
+    if (token) {
+      action = (
+        <IconButton
+          disabled={syncing}
+          variant='primary'
+          iconClassNames={syncing ? 'animate-spin' : undefined}
+          icon={syncing ? 'ph--spinner-gap--regular' : 'ph--arrow-clockwise--regular'}
+          label={t('sync-mailbox.label')}
+          onClick={handleSync}
+        />
+      );
+    } else {
+      message = t('no-integrations.label');
+      const data = { source: 'google.com' };
+      action = Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
+        <Surface.Surface role='integration--auth' data={data} limit={1} />
+      ) : (
+        <Button variant='primary' onClick={handleOpenSettings}>
+          {t('manage-integrations-button.label')}
+        </Button>
+      );
+    }
 
     return (
       <div {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })} ref={forwardedRef}>
