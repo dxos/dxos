@@ -100,16 +100,39 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app
 export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layer-spec');
 
 /**
+ * Context passed to {@link TraceSinkFactory} implementations when the
+ * process-manager capability materialises contributed sinks.
+ */
+export interface TraceSinkFactoryContext {
+  /**
+   * Service resolver backing the shared {@link ProcessManagerRuntime}. Use it
+   * to resolve per-space (or per-process) services like `FeedTraceSink` when
+   * building a routing sink.
+   */
+  readonly resolver: ServiceResolver$.ServiceResolver;
+}
+
+/**
+ * Factory that builds a {@link Trace$.Sink} when the process-manager
+ * capability is ready. Plugins that only need a static sink can ignore the
+ * context (e.g. `() => myConsoleSink`); plugins that need per-space routing
+ * can use {@link TraceSinkFactoryContext.resolver} to look up services.
+ */
+export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
+
+/**
  * Trace sink contribution.
  *
- * Plugins contribute {@link Trace$.Sink} instances; the process-manager
- * capability collects them, merges them via {@link Trace$.mergeSinks}, and
- * installs the result as {@link Trace$.TraceSink} in the runtime layer so
- * every process writes to every contributed sink.
+ * Plugins contribute {@link TraceSinkFactory} functions; the process-manager
+ * capability invokes each factory with the runtime's
+ * {@link ServiceResolver$.ServiceResolver}, collects the resulting
+ * {@link Trace$.Sink}s, merges them via {@link Trace$.mergeSinks}, and
+ * installs the merged sink as {@link Trace$.TraceSink} in the runtime layer
+ * so every process writes to every contributed sink.
  *
  * @category Capability
  */
-export const TraceSink = Capability$.make<Trace$.Sink>('org.dxos.app-framework.capability.trace-sink');
+export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framework.capability.trace-sink');
 
 /**
  * Service resolver backing the shared {@link ProcessManagerRuntime}.

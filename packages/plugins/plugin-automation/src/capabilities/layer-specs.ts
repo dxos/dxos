@@ -20,7 +20,6 @@ import {
   FunctionInvocationService,
   LayerSpec,
   QueueService,
-  Trace,
   TracingService,
 } from '@dxos/functions';
 import {
@@ -142,7 +141,7 @@ export default Capability.makeModule(
       {
         affinity: 'space',
         requires: [Database.Service, Feed.FeedService],
-        provides: [FeedTraceSink.FeedTraceSink, Trace.TraceSink],
+        provides: [FeedTraceSink.FeedTraceSink],
       },
       () => FeedTraceSink.layerLive,
     );
@@ -212,6 +211,7 @@ export default Capability.makeModule(
       Capability.contributes(Capabilities.LayerSpec, feedTraceSinkSpec),
       Capability.contributes(Capabilities.LayerSpec, tracingLiveSpec),
       Capability.contributes(Capabilities.LayerSpec, triggerDispatcherSpec),
+      Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
     ];
 
     if (remoteFunctionExecutionOverrideSpec) {

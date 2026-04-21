@@ -15,7 +15,7 @@ import { TestDatabaseLayer } from './testing';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-  Layer.provideMerge(FeedTraceSink.layerLive),
+  Layer.provideMerge(FeedTraceSink.layerLiveWithDirectSink),
   Layer.provideMerge(TestDatabaseLayer()),
 );
 
