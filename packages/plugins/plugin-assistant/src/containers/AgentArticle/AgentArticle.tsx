@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { type Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -128,7 +128,11 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
         </Card.IconBlock>
       </Card.Toolbar>
       <Card.Content>
-        <Surface.Surface role='card--content' limit={1} data={{ subject: data } satisfies AppSurface.ObjectCardData} />
+        <Surface.Surface
+          type={AppSurface.Card}
+          limit={1}
+          data={{ subject: data } satisfies AppSurface.ObjectCardData}
+        />
       </Card.Content>
     </Card.Root>
   );

@@ -125,7 +125,10 @@ export class CollectionSynchronizer extends Resource {
   onConnectionOpen(peerId: PeerId): void {
     log('onConnectionOpen', { peerId });
     const spanId = getSpanId(peerId);
-    trace.spanStart({
+    // Browser-timeline-only span; the derived ctx is intentionally discarded because
+    // the downstream `_queryCollectionState` hop is user-supplied callback land with
+    // no ctx plumbing.
+    void trace.spanStart({
       id: spanId,
       methodName: SYNC_SPAN_METHOD,
       instance: this,
@@ -198,7 +201,8 @@ export class CollectionSynchronizer extends Resource {
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
     } else {
-      trace.spanStart({
+      // Browser-timeline-only span; see note in onConnectionOpen.
+      void trace.spanStart({
         id: spanId,
         methodName: SYNC_SPAN_METHOD,
         instance: this,

@@ -17,7 +17,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { DXN } from '@dxos/echo';
-import { LayerSpec, Process, ServiceResolver, StorageService, Trace, TracingService } from '@dxos/functions';
+import { LayerSpec, Process, ServiceResolver, StorageService, Trace } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
@@ -27,7 +27,7 @@ import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessHandleImpl, type OutputItem } from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { buildBaseTraceContext, createProcessTraceService, prepareProcessTracing } from './process-trace';
+import { createProcessTraceService } from './process-trace';
 import { layer as storageServiceLayer } from './storage-service-layer';
 
 export { type ProcessIdGenerator, UUIDProcessIdGenerator, SequentialProcessIdGenerator } from './process-id';
@@ -108,23 +108,6 @@ export interface Environment {
 }
 
 /**
- * Tracing metadata attached to a process spawn.
- */
-export interface TracingOptions {
-  /** Parent message ObjectId for trace context. */
-  readonly message?: ObjectId;
-  /** Tool call ID for trace context. */
-  readonly toolCallId?: string;
-  /**
-   * Merged into {@link TracingService.traceInvocationStart} payload for root processes
-   * (e.g. trigger id/kind and event data), together with built-in `process` metadata.
-   */
-  readonly invocationPayload?: Partial<TracingService.FunctionInvocationPayload>;
-  /** Invoked function/workflow DXN (trace target). */
-  readonly invocationTarget?: DXN;
-}
-
-/**
  * Options for spawning a process.
  */
 export interface SpawnOptions {
@@ -141,12 +124,6 @@ export interface SpawnOptions {
    */
   // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
   readonly target?: DXN.String;
-
-  /**
-   * Tracing metadata for this invocation.
-   * @deprecated use `traceMeta` instead.
-   */
-  readonly tracing?: TracingOptions;
 
   /**
    * Tracing metadata for this invocation.
@@ -223,7 +200,6 @@ export interface ProcessManagerImplOpts {
   kvStore: KeyValueStore.KeyValueStore;
   traceSink: Trace.Sink;
   serviceResolver?: ServiceResolver.ServiceResolver;
-  tracingService?: Context.Tag.Service<TracingService>;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
   idGenerator?: ProcessIdGenerator;
 }
@@ -231,11 +207,9 @@ export interface ProcessManagerImplOpts {
 export class ProcessManagerImpl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any, any>>();
-  readonly #traceContexts = new Map<Process.ID, TracingService.TraceContext>();
   readonly #registry: Registry.Registry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
-  readonly #tracingService: Context.Tag.Service<TracingService>;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
   readonly #traceSink: Trace.Sink;
 
@@ -247,7 +221,6 @@ export class ProcessManagerImpl implements Manager {
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
-    this.#tracingService = opts.tracingService ?? TracingService.noop;
     this.#handlerSet = opts.handlerSet;
     this.#traceSink = opts.traceSink;
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
@@ -398,35 +371,9 @@ export class ProcessManagerImpl implements Manager {
         },
       };
 
-      // Build tracing context for this process.
-      const baseTraceContext = buildBaseTraceContext({
-        parentTraceContext:
-          options?.parentProcessId !== undefined ? this.#traceContexts.get(options.parentProcessId) : undefined,
-        tracing: options?.tracing,
-      });
-      this.#traceContexts.set(id, baseTraceContext);
-
-      const isRoot = !options?.parentProcessId;
-
-      const tracingSetup = yield* prepareProcessTracing({
-        pid: id,
-        definitionKey: definition.key,
-        params,
-        invocationPayload: options?.tracing?.invocationPayload,
-        invocationTarget: options?.tracing?.invocationTarget,
-        traceContext: baseTraceContext,
-        isRoot,
-        parentTracingService: this.#tracingService,
-      });
-      const { invocationTrace, traceContext, tracingService: processTracingService } = tracingSetup;
-      if (isRoot && invocationTrace) {
-        this.#traceContexts.set(id, traceContext);
-      }
-
       let builtinCtx = Context.empty().pipe(
         Context.add(StorageService, storage),
         Context.add(Scope.Scope, scope),
-        Context.add(TracingService, processTracingService),
         Context.add(
           Trace.TraceService,
           createProcessTraceService({
@@ -455,7 +402,6 @@ export class ProcessManagerImpl implements Manager {
       const builtinTagKeys = new Set([
         StorageService.key,
         Scope.Scope.key,
-        TracingService.key,
         Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
@@ -502,13 +448,6 @@ export class ProcessManagerImpl implements Manager {
               });
             }
           }
-
-          // Call traceInvocationEnd for root processes.
-          if (isRoot && invocationTrace) {
-            const exception = state === Process.State.FAILED && cause ? cause : undefined;
-            yield* this.#tracingService.traceInvocationEnd({ trace: invocationTrace, exception });
-          }
-          this.#traceContexts.delete(id);
         });
 
       const handle = new ProcessHandleImpl<I, O, any>(
@@ -538,10 +477,6 @@ export class ProcessManagerImpl implements Manager {
 
       return handle;
     });
-  }
-
-  getTraceContext(processId: Process.ID): TracingService.TraceContext | undefined {
-    return this.#traceContexts.get(processId);
   }
 
   attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>> {
@@ -592,7 +527,7 @@ export class ProcessManagerImpl implements Manager {
  * On scope close, the manager's `shutdown()` runs (layer finalizer), stopping
  * alarms and process work so the shared Atom registry is not updated after disposal.
  *
- * Requires KeyValueStore, ServiceResolver, TracingService, OperationHandlerSet.OperationHandlerProvider,
+ * Requires KeyValueStore, ServiceResolver, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.
  */
 export const layer = (opts?: {
@@ -602,7 +537,6 @@ export const layer = (opts?: {
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
-  | TracingService
   | OperationHandlerSet.OperationHandlerProvider
   | Registry.AtomRegistry
   | Trace.TraceSink
@@ -611,7 +545,6 @@ export const layer = (opts?: {
     Effect.gen(function* () {
       const kvStore = yield* KeyValueStore.KeyValueStore;
       const serviceResolver = yield* ServiceResolver.ServiceResolver;
-      const tracingService = yield* TracingService;
 
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const registry = yield* Registry.AtomRegistry;
@@ -622,7 +555,6 @@ export const layer = (opts?: {
         kvStore,
         traceSink,
         serviceResolver,
-        tracingService,
         handlerSet,
         idGenerator: opts?.idGenerator,
       });

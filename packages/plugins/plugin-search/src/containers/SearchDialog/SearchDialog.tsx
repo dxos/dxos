@@ -10,7 +10,7 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
@@ -76,24 +76,20 @@ export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchD
         </Dialog.Close>
       </Dialog.Header>
       <SearchList.Root onSearch={handleSearch}>
-        <Column.Center>
-          <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
-        </Column.Center>
-        <Column.Bleed>
-          <SearchList.Viewport classNames='max-h-[24rem]'>
-            {allResults.map((result) => (
-              <SearchList.Item
-                key={result.id}
-                classNames='flex gap-2 items-center'
-                value={result.id}
-                label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
-                icon={result.icon}
-                onSelect={() => void handleSelect(result)}
-              />
-            ))}
-            {query && allResults.length === 0 && <SearchList.Empty />}
-          </SearchList.Viewport>
-        </Column.Bleed>
+        <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+        <SearchList.Viewport classNames='max-h-[24rem]'>
+          {allResults.map((result) => (
+            <SearchList.Item
+              key={result.id}
+              classNames='flex gap-2 items-center'
+              value={result.id}
+              label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
+              icon={result.icon}
+              onSelect={() => void handleSelect(result)}
+            />
+          ))}
+          {query && allResults.length === 0 && <SearchList.Empty />}
+        </SearchList.Viewport>
       </SearchList.Root>
     </Dialog.Content>
   );

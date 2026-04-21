@@ -13,7 +13,7 @@ import {
   DatabaseHandlers,
   WebSearchBlueprint,
   WebSearchHandlers,
-  WebSearchToolkitGeneric,
+  WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -42,7 +42,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
   blueprints: [DatabaseBlueprint.make(), WebSearchBlueprint.make()],
   operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
-  toolkits: [WebSearchToolkitGeneric],
+  toolkits: [WebSearchToolkitOpaque],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
 });
@@ -73,10 +73,12 @@ describe('Trace timeline', () => {
             ├──●  [user] Create an organization called "Cyberdyne Systems".
             │  ●  [check-circle] list-schemas - Success
             │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
             │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);

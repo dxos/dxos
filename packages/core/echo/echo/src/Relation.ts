@@ -237,7 +237,9 @@ export const getSource = <T extends Unknown | Snapshot>(relation: T): SourceOf<T
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationSourceId];
-  invariant(obj !== undefined, `Invalid source: ${relation.id}`);
+  if (obj === undefined) {
+    throw new Error(`Relation source could not be resolved.`);
+  }
   return obj as SourceOf<T>;
 };
 
@@ -250,7 +252,9 @@ export const getTarget = <T extends Unknown | Snapshot>(relation: T): TargetOf<T
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationTargetId];
-  invariant(obj !== undefined, `Invalid target: ${relation.id}`);
+  if (obj === undefined) {
+    throw new Error(`Relation target could not be resolved.`);
+  }
   return obj as TargetOf<T>;
 };
 

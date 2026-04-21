@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiConversationService } from '@dxos/assistant';
+import { AiContextService, AiSessionService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
@@ -32,14 +32,14 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiConversationService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
+const provideTestLayers = Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
 
 /**
  * Gets the conversation DXN for passing to Operation.invoke options.
  */
 const getConversationDxn = Effect.gen(function* () {
-  const conversation = yield* AiConversationService;
-  return Obj.getDXN(conversation.feed).toString() as DXN.String;
+  const session = yield* AiSessionService;
+  return Obj.getDXN(session.feed).toString() as DXN.String;
 });
 
 describe('Blueprint Manager', () => {
@@ -169,15 +169,15 @@ describe('Blueprint Manager', () => {
         yield* Database.flush();
         expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
 
-        const conversation = yield* AiConversationService;
-        yield* Effect.promise(() => conversation.context.open());
+        const session = yield* AiSessionService;
+        yield* Effect.promise(() => session.context.open());
         yield* Effect.promise(() =>
-          conversation.context.bind({
+          session.context.bind({
             blueprints: [Ref.make(BlueprintManagerDefinition.make())],
           }),
         );
 
-        yield* conversation
+        yield* session
           .createRequest({
             system: trim`
             You can call blueprint manager tools. When asked to refresh or sync blueprints from the registry,
@@ -187,7 +187,7 @@ describe('Blueprint Manager', () => {
             Refresh blueprints from the registry so database copies match the built-in definitions.
           `,
           })
-          .pipe(Effect.provide(conversation.makeToolExecutionServices()));
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
 
         expect(stored.name).toBe(originalName);
       },

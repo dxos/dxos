@@ -9,6 +9,7 @@ import React, { type FC, useCallback } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -130,7 +131,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
+          <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object, attendableId: object.id }} />
         </StackItem.Root>
       ))}
     </Stack>

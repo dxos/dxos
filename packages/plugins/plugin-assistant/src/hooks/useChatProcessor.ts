@@ -10,13 +10,13 @@ import { useContext, useMemo, useState } from 'react';
 import { AiService } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AgentService, AiConversation } from '@dxos/assistant';
+import { AgentService, AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { CredentialsService, QueueService, ServiceResolver, TracingService } from '@dxos/functions';
+import { CredentialsService, QueueService, ServiceResolver } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { OperationRegistry } from '@dxos/operation';
 import { type Space } from '@dxos/react-client/echo';
@@ -48,7 +48,7 @@ export const useChatProcessor = ({
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
-  const [conversation, setConversation] = useState<AiConversation>();
+  const [session, setSession] = useState<AiSession>();
   useAsyncEffect(async () => {
     if (!space || !chat) {
       return;
@@ -62,16 +62,16 @@ export const useChatProcessor = ({
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const conversation = new AiConversation({
+    const session = new AiSession({
       feed: feedTarget,
       runtime,
       registry: observableRegistry as Registry.Registry,
     });
-    await conversation.open();
-    setConversation(conversation);
+    await session.open();
+    setSession(session);
     return () => {
-      void conversation.close();
-      setConversation(undefined);
+      void session.close();
+      setSession(undefined);
     };
   }, [space, chat?.feed.target]);
 
@@ -79,7 +79,7 @@ export const useChatProcessor = ({
   const serviceResolver = useCapability(Capabilities.ServiceResolver);
 
   const processor = useMemo(() => {
-    if (!runtime || !conversation || !chat || !feed || !space) {
+    if (!runtime || !session || !chat || !feed || !space) {
       return undefined;
     }
 
@@ -90,19 +90,18 @@ export const useChatProcessor = ({
       Feed.FeedService,
       CredentialsService,
       AiService.AiService,
-      TracingService,
       AgentService.AgentService,
       OperationRegistry.Service,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 
     log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(conversation, runtime, feed, spaceLayer, {
+    return new AiChatProcessor(session, runtime, feed, spaceLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       blueprintRegistry,
       model: preset?.model,
     });
-  }, [runtime, conversation, blueprintRegistry, preset, feed, space?.id]);
+  }, [runtime, session, blueprintRegistry, preset, feed, space?.id]);
 
   return processor;
 };

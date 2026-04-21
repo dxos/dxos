@@ -565,11 +565,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-exemplar/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -690,6 +685,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sample/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
@@ -706,6 +706,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-sheet/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-sidekick/package.json",
           "jsonpath": "$.version"
         },
         {

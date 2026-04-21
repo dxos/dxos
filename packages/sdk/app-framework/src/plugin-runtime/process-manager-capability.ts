@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
-import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
@@ -69,7 +69,6 @@ export default Capability.makeModule(
       Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver),
       OperationHandlerSet.provide(handlerSet),
       KeyValueStore.layerMemory,
-      TracingService.layerNoop,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
     );
 

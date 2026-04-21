@@ -172,6 +172,31 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
 ChatRoot.displayName = 'Chat.Root';
 
 //
+// Toolbar
+//
+
+const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
+
+type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  companionTo?: Obj.Unknown;
+};
+
+const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
+  ({ attendableId, companionTo, ...props }, forwardedRef) => {
+    const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
+    const menuActions = useChatToolbarActions({ chat, companionTo });
+
+    return (
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      </Menu.Root>
+    );
+  },
+);
+
+ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
+
+//
 // Viewport
 //
 
@@ -435,40 +460,15 @@ const ChatPrompt = ({
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 //
-// Toolbar
-//
-
-const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
-
-type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
-  companionTo?: Obj.Unknown;
-};
-
-const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ attendableId, companionTo, ...props }, forwardedRef) => {
-    const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-    const menuActions = useChatToolbarActions({ chat, companionTo });
-
-    return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
-      </Menu.Root>
-    );
-  },
-);
-
-ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
-
-//
 // Chat
 //
 
 export const Chat = {
   Root: ChatRoot,
+  Toolbar: ChatToolbar,
   Viewport: ChatViewport,
   Thread: ChatThread,
   Prompt: ChatPrompt,
-  Toolbar: ChatToolbar,
 };
 
-export type { ChatRootProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };
+export type { ChatRootProps, ChatToolbarProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatEvent };

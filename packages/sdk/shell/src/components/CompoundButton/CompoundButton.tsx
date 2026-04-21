@@ -5,7 +5,7 @@
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
 import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
-import { descriptionTextPrimary, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Convert to radix primitive and move to react-ui.
 
@@ -68,7 +68,7 @@ export const CompoundButton = ({
             {...slots.description}
             className={mx(
               'text-xs mb-1 font-normal',
-              variant === 'primary' ? descriptionTextPrimary : 'text-description',
+              variant === 'primary' ? 'text-sm font-normal text-base-surface-text' : 'text-description',
               slots.description?.className,
             )}
           >

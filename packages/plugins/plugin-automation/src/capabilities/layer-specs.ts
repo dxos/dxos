@@ -7,27 +7,24 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, GenericToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AgentService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { SpaceProperties } from '@dxos/client/echo';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import {
   CredentialsService,
   FunctionInvocationService,
   LayerSpec,
   QueueService,
-  TracingService,
 } from '@dxos/functions';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   RemoteFunctionExecutionService,
-  TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
@@ -91,17 +88,17 @@ export default Capability.makeModule(
       },
     );
 
-    const genericToolkitSpec = LayerSpec.make(
+    const opaqueToolkitSpec = LayerSpec.make(
       {
         affinity: 'application',
         requires: [],
-        provides: [GenericToolkit.GenericToolkitProvider],
+        provides: [OpaqueToolkit.OpaqueToolkitProvider],
       },
       () =>
-        Layer.succeed(GenericToolkit.GenericToolkitProvider, {
+        Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
           getToolkit: () => {
             const toolkits = capabilities.getAll(AppCapabilities.Toolkit);
-            return GenericToolkit.merge(...toolkits);
+            return OpaqueToolkit.merge(...toolkits);
           },
         }),
     );
@@ -146,31 +143,6 @@ export default Capability.makeModule(
       () => FeedTraceSink.layerLive,
     );
 
-    const tracingLiveSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [Database.Service, QueueService],
-        provides: [TracingService],
-      },
-      () =>
-        Layer.unwrapEffect(
-          Effect.gen(function* () {
-            const objects = yield* Database.runQuery(Query.type(SpaceProperties));
-            const [properties] = objects;
-            invariant(properties);
-            if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
-              const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-              Obj.change(properties, (properties) => {
-                properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
-              });
-            }
-            const queue = properties.invocationTraceQueue!.target;
-            invariant(queue);
-            return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
-          }),
-        ),
-    );
-
     const remoteFunctionExecutionOverrideSpec = client.config.get('runtime.client.edgeFeatures.agents')
       ? LayerSpec.make(
           {
@@ -192,7 +164,6 @@ export default Capability.makeModule(
           Database.Service,
           QueueService,
           TriggerStateStore,
-          TracingService,
           ProcessManager.ProcessManagerService,
           Registry.AtomRegistry,
         ],
@@ -204,12 +175,11 @@ export default Capability.makeModule(
     const contributions = [
       Capability.contributes(Capabilities.LayerSpec, functionInvocationSpec),
       Capability.contributes(Capabilities.LayerSpec, blueprintRegistrySpec),
-      Capability.contributes(Capabilities.LayerSpec, genericToolkitSpec),
+      Capability.contributes(Capabilities.LayerSpec, opaqueToolkitSpec),
       Capability.contributes(Capabilities.LayerSpec, agentServiceSpec),
       Capability.contributes(Capabilities.LayerSpec, operationRegistrySpec),
       Capability.contributes(Capabilities.LayerSpec, triggerStateStoreSpec),
       Capability.contributes(Capabilities.LayerSpec, feedTraceSinkSpec),
-      Capability.contributes(Capabilities.LayerSpec, tracingLiveSpec),
       Capability.contributes(Capabilities.LayerSpec, triggerDispatcherSpec),
       Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
     ];

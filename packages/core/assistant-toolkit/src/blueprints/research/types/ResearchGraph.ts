@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Migration, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { ContextQueueService, QueueService } from '@dxos/functions';
@@ -24,10 +24,8 @@ export const LegacyResearchGraph = Schema.Struct({
 
 export interface LegacyResearchGraph extends Schema.Schema.Type<typeof LegacyResearchGraph> {}
 
-/**
- * Container for a set of ephemeral research results.
- */
-export const ResearchGraph = Schema.Struct({
+/** @deprecated Migration target of LegacyResearchGraph; migrated to ResearchGraph (v0.2.0) with feed ref. */
+export const ResearchGraphV1 = Schema.Struct({
   queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
@@ -37,13 +35,28 @@ export const ResearchGraph = Schema.Struct({
   SystemTypeAnnotation.set(true),
 );
 
+export interface ResearchGraphV1 extends Schema.Schema.Type<typeof ResearchGraphV1> {}
+
+/**
+ * Container for a set of ephemeral research results.
+ */
+export const ResearchGraph = Schema.Struct({
+  queue: Ref.Ref(Feed.Feed),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.researchGraph',
+    version: '0.2.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
+
 export interface ResearchGraph extends Schema.Schema.Type<typeof ResearchGraph> {}
 
 export const create: () => Effect.Effect<ResearchGraph, never, Database.Service | QueueService> = Effect.fn(
   'createResearchGraph',
 )(function* () {
-  const queue = yield* QueueService.createQueue();
-  return yield* Database.add(Obj.make(ResearchGraph, { queue: Ref.fromDXN(queue.dxn) }));
+  const feed = yield* Database.add(Feed.make());
+  return yield* Database.add(Obj.make(ResearchGraph, { queue: Ref.make(feed) }));
 });
 
 export const query: () => Effect.Effect<ResearchGraph | undefined, never, Database.Service> = Effect.fn(
@@ -56,7 +69,28 @@ export const query: () => Effect.Effect<ResearchGraph | undefined, never, Databa
 export const contextQueueLayer = Layer.unwrapEffect(
   Effect.gen(function* () {
     const researchGraph = (yield* query()) ?? (yield* create());
-    const researchQueue = yield* Database.load(researchGraph.queue);
-    return ContextQueueService.layer(researchQueue);
+    const researchFeed = yield* Database.load(researchGraph.queue);
+    const feedDxn = Feed.getQueueDxn(researchFeed);
+    if (!feedDxn) {
+      throw new Error('ResearchGraph feed must be stored in a space');
+    }
+    const { queues } = yield* QueueService;
+    return ContextQueueService.layer(queues.get(feedDxn));
   }),
 );
+
+export const migrations = [
+  Migration.define({
+    from: ResearchGraphV1,
+    to: ResearchGraph,
+    transform: async (from, { db }) => {
+      const feed = Feed.unsafeFromQueueDXN(from.queue.dxn);
+      const existing = db.getObjectById<Feed.Feed>(feed.id);
+      const dbFeed = existing ?? db.add(feed);
+      return {
+        queue: Ref.make(dbFeed),
+      };
+    },
+    onMigration: async () => {},
+  }),
+];

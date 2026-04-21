@@ -8,7 +8,7 @@ import handlebars from 'handlebars';
 
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { FunctionNotFoundError, type TracingService } from '@dxos/functions';
+import { FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -29,11 +29,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template.Template,
-): Effect.Effect<
-  string,
-  ObjectNotFoundError | FunctionNotFoundError,
-  OperationRegistry.Service | Operation.Service | TracingService
-> =>
+): Effect.Effect<string, ObjectNotFoundError | FunctionNotFoundError, OperationRegistry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const variables = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {

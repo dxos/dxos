@@ -10,7 +10,7 @@ import { describe } from 'vitest';
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { ComputeEventLogger, CredentialsService, Trace, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, Trace } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -31,7 +31,7 @@ import {
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
+const TestLayer = Layer.mergeAll(ComputeEventLogger.layerNoop).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       Layer.succeed(Operation.Service, {
@@ -48,7 +48,6 @@ const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
       Feed.notAvailable,
-      TracingService.layerNoop,
       Trace.writerLayerNoop,
     ),
   ),

@@ -540,7 +540,7 @@ export const WithResearch: Story = {
       };
     },
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -703,14 +703,15 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
-      const researchInputQueue = space.db.add(
-        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
-      );
+      const feed = space.db.add(Feed.make());
+      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { queue: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      await researchInputQueue.queue.target!.append(orgs);
+      const feedQueueDxn = Feed.getQueueDxn(feed);
+      invariant(feedQueueDxn);
+      await space.queues.get(feedQueueDxn).append(orgs);
 
       const researchPrompt = space.db.add(
         Prompt.make({

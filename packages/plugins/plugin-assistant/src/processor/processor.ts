@@ -14,7 +14,7 @@ import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry 
 import { Capabilities } from '@dxos/app-framework';
 import {
   AiContextService,
-  type AiConversation,
+  type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
   AgentService,
@@ -25,7 +25,7 @@ import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { Trace, type CredentialsService, type QueueService, type TracingService } from '@dxos/functions';
+import { Trace, type CredentialsService, type QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
@@ -41,7 +41,6 @@ export type AiChatServices =
   | Database.Service
   | QueueService
   | AiService.AiService
-  | TracingService
   | Trace.TraceService;
 
 export type AiChatProcessorOptions = {
@@ -109,7 +108,7 @@ export class AiChatProcessor {
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
   constructor(
-    private readonly _conversation: AiConversation,
+    private readonly _conversation: AiSession,
     private readonly _runtime: Capabilities.ProcessManagerRuntime,
     private readonly _feed: Feed.Feed,
     /**
@@ -181,7 +180,8 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        const session = yield* AgentService.getSession(this._feed);
+        log.info('init agent session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
+        const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
           Stream.runForEach((message) =>
