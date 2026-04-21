@@ -125,7 +125,7 @@ export const createConfig = ({
           assetsInlineLimit: 0,
           // Target modern browsers that support top-level await natively.
           target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
-          rollupOptions: {
+          rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
             },

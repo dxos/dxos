@@ -4,6 +4,7 @@
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react-swc';
+import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
@@ -51,7 +52,7 @@ const createStorybookProject = (dirname: string) =>
       browser: {
         enabled: true,
         headless: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
@@ -123,18 +124,14 @@ const createBrowserProject = ({
 
       testTimeout: isDebug ? 3600_000 : 5000,
       isolate: false,
-      poolOptions: {
-        threads: {
-          singleThread: true,
-        },
-      },
+      maxWorkers: 1,
 
       browser: {
         enabled: true,
         screenshotFailures: false,
         headless: !isDebug,
-        provider: 'playwright',
-        name: browserName,
+        provider: playwright(),
+        instances: [{ browser: browserName }],
         isolate: false,
       },
     },
