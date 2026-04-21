@@ -63,23 +63,26 @@ const fiberFromProcess = <T>(handle: Handle<any, T>): Effect.Effect<OperationFib
     const outputFiber = yield* handle.subscribeOutputs().pipe(
       Stream.runCollect,
       Effect.map(Chunk.head),
-      Effect.flatten,
-      Effect.catchTag('NoSuchElementException', () =>
-        Effect.gen(function* () {
-          switch (handle.status.state) {
-            case Process.State.FAILED: {
-              return yield* Effect.failCause(
-                handle.status.exit.pipe(
-                  Option.flatMap(Exit.causeOption),
-                  Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
-                ),
-              );
-            }
-            case Process.State.TERMINATED:
-              return yield* Effect.die('Operation was terminated');
-            default:
-              return yield* Effect.die('Process produced no output');
-          }
+      Effect.flatMap(
+        Option.match({
+          onSome: Effect.succeed,
+          onNone: () =>
+            Effect.gen(function* () {
+              switch (handle.status.state) {
+                case Process.State.FAILED: {
+                  return yield* Effect.failCause(
+                    handle.status.exit.pipe(
+                      Option.flatMap(Exit.causeOption),
+                      Option.getOrElse(() => Cause.die('Operation failed with unknown error')),
+                    ),
+                  );
+                }
+                case Process.State.TERMINATED:
+                  return yield* Effect.die('Operation was terminated');
+                default:
+                  return yield* Effect.die('Process produced no output');
+              }
+            }),
         }),
       ),
       Effect.forkDaemon,
@@ -177,6 +180,8 @@ export const make = (opts: {
           ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
         },
       });
+      // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`,
+      // so flattening unwraps it into `Effect<O, …>` with the original cause.
       const output = yield* fiber.await.pipe(Effect.flatten);
 
       yield* PubSub.publish(pubsub, {

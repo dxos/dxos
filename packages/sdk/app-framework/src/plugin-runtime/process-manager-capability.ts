@@ -85,10 +85,15 @@ export default Capability.makeModule(
     // The LayerStack owns keep-alive application/space slices outside of
     // `managedRuntime`, so we explicitly destroy it after the runtime so that
     // its cached slice runtimes (and their finalizers) also run.
+    // `try`/`finally` ensures the stack is destroyed even if runtime disposal
+    // throws — otherwise a failed teardown would leak keep-alive slices.
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
-        await managedRuntime.dispose();
-        await layerStack.destroy();
+        try {
+          await managedRuntime.dispose();
+        } finally {
+          await layerStack.destroy();
+        }
       }).pipe(Effect.catchAllCause(() => Effect.void)),
     );
 
