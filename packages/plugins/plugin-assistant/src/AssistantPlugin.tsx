@@ -126,7 +126,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           iconHue: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
+              const object = yield* Agent.makeInitialized({ name: '', spec: '' }, AgentBlueprint.make()).pipe(
                 withComputeRuntime(options.db.spaceId),
               );
               return yield* Operation.invoke(SpaceOperation.AddObject, {

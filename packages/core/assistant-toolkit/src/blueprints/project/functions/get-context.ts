@@ -18,9 +18,9 @@ export default GetContext.pipe(
       return {
         id: agent.id,
         name: agent.name,
-        instructions: yield* agent.instructions.pipe(Database.load).pipe(
+        spec: yield* agent.spec.pipe(Database.load).pipe(
           Effect.map((_) => _.content),
-          Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No instructions found.')),
+          Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
         ),
         plan: yield* (
           agent.plan?.pipe(Database.load).pipe(
