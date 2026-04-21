@@ -15,6 +15,7 @@
 ### Task 1: Add `withColumn` theme utilities
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/src/theme/primitives/column.ts`
 
 - [ ] **Step 1: Add withColumn utility object**
@@ -90,6 +91,7 @@ git commit -m "feat(ui-theme): add withColumn utilities and simplify Column them
 ### Task 2: Update Column React components
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/primitives/Column/Column.tsx`
 
 - [ ] **Step 1: Update ColumnRoot — set --dx-col**
@@ -235,6 +237,7 @@ git commit -m "refactor(react-ui): update Column components for --dx-col cascade
 ### Task 3: Update ScrollArea theme — reset --dx-col
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/src/theme/components/scroll-area.ts`
 
 - [ ] **Step 1: Import withColumn**
@@ -301,6 +304,7 @@ git commit -m "refactor(ui-theme): reset --dx-col in ScrollArea.Viewport"
 ### Task 4: Update Dialog — use withColumn in theme and components
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/src/theme/components/dialog.ts`
 - Modify: `packages/ui/react-ui/src/components/Dialog/Dialog.tsx`
 - Modify: `packages/ui/react-ui/src/components/Dialog/Dialog.stories.tsx`
@@ -382,10 +386,13 @@ Check if `Column` is still imported for Dialog.Content (it is — `Column.Root`)
 - [ ] **Step 6: Fix Dialog.stories.tsx comment**
 
 Change line 27 from:
+
 ```ts
  * Dialog.Body delegates to Column.Center, placing content in the center column between gutters.
 ```
+
 To:
+
 ```ts
  * Dialog.Body propagates the Column grid via subgrid. Children auto-center via --dx-col.
 ```
@@ -411,6 +418,7 @@ git commit -m "refactor(react-ui): Dialog uses withColumn theme utilities"
 ### Task 5: Update Form — add column awareness
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-form/src/components/Form/Form.tsx`
 
 - [ ] **Step 1: Import withColumn**
@@ -470,6 +478,7 @@ git commit -m "feat(react-ui-form): make Form.Content and Form.Actions column-aw
 ### Task 6: Update SearchList — add column awareness
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-search/src/components/SearchList/SearchList.tsx`
 
 - [ ] **Step 1: Import withColumn**
@@ -549,6 +558,7 @@ git commit -m "feat(react-ui-search): make SearchList column-aware"
 ### Task 7: Update Card — use own subgrid CSS
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Card/Card.tsx`
 
 - [ ] **Step 1: Change CardRow — replace Column.Row with own subgrid**
@@ -605,6 +615,7 @@ git commit -m "refactor(react-ui): Card.Row uses own subgrid instead of Column.R
 ### Task 8: Update Column stories
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/primitives/Column/Column.stories.tsx`
 
 - [ ] **Step 1: Update DefaultStory**
@@ -760,11 +771,13 @@ git commit -m "refactor(react-ui): update Column stories for simplified API"
 ### Task 9: Update AUDIT.md
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/primitives/Column/AUDIT.md`
 
 - [ ] **Step 1: Update the document**
 
 Update the AUDIT.md to reflect the new design:
+
 - Document the `withColumn` utilities (center, propagate, consumed)
 - Document the `--dx-col` CSS custom property cascade
 - Update the Column primitives table
@@ -783,6 +796,7 @@ git commit -m "docs(react-ui): update Column AUDIT.md for withColumn refactor"
 ### Task 10: Full build and search for remaining Column.Row center usages
 
 **Files:**
+
 - Potentially modify: any consumer still using `Column.Row center` or `Column.Row fullWidth`
 
 - [ ] **Step 1: Search for remaining Column.Row center/fullWidth usages**

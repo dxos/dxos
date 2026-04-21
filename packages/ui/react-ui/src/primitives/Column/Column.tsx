@@ -85,23 +85,16 @@ type ColumnRowProps = {};
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
  * Must be a direct child of Column.Root.
  */
-const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(
-  ({ children, asChild, role, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
-    return (
-      <Comp
-        {...rest}
-        role={role ?? 'none'}
-        className={tx('column.row', {}, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </Comp>
-    );
-  },
-);
+const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} role={role ?? 'none'} className={tx('column.row', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 ColumnRow.displayName = COLUMN_ROW_NAME;
 

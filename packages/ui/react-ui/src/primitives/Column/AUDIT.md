@@ -60,21 +60,21 @@ Exported from `@dxos/ui-theme`. Components import and call these in their theme 
 participate in the Column grid without importing Column React components.
 
 ```ts
-withColumn.center()
+withColumn.center();
 // → '[grid-column:var(--dx-col,auto)]'
 
-withColumn.propagate()
+withColumn.propagate();
 // → '[.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid'
 
-withColumn.consumed()
+withColumn.consumed();
 // → '[--dx-col:auto]'
 ```
 
-| Utility | Purpose | Where used |
-| :--- | :--- | :--- |
-| `center()` | Place element in col 2 via `--dx-col`. No-op outside Column or inside ScrollArea. | Dialog.Header, Dialog.ActionBar, Form.Content, Form.Actions, SearchList.Input |
-| `propagate()` | Extend Column subgrid to children. No-op outside Column. | Dialog.Body, SearchList.Content |
-| `consumed()` | Reset `--dx-col` after `--gutter` is consumed. | ScrollArea.Viewport |
+| Utility       | Purpose                                                                           | Where used                                                                    |
+| :------------ | :-------------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| `center()`    | Place element in col 2 via `--dx-col`. No-op outside Column or inside ScrollArea. | Dialog.Header, Dialog.ActionBar, Form.Content, Form.Actions, SearchList.Input |
+| `propagate()` | Extend Column subgrid to children. No-op outside Column.                          | Dialog.Body, SearchList.Content                                               |
+| `consumed()`  | Reset `--dx-col` after `--gutter` is consumed.                                    | ScrollArea.Viewport                                                           |
 
 ## CSS custom property cascade
 
@@ -102,26 +102,26 @@ Column.Root
 
 ### Dialog
 
-| Sub-component | withColumn applied | Effect |
-| :--- | :--- | :--- |
-| `Dialog.Content` | `Column.Root` (gutter `'sm'`) | Establishes the 3-col grid. |
-| `Dialog.Header` | `withColumn.center()` | Placed in col 2. |
-| `Dialog.Body` | `withColumn.propagate()` | Children inherit the subgrid. |
-| `Dialog.ActionBar` | `withColumn.center()` | Placed in col 2. |
+| Sub-component      | withColumn applied            | Effect                        |
+| :----------------- | :---------------------------- | :---------------------------- |
+| `Dialog.Content`   | `Column.Root` (gutter `'sm'`) | Establishes the 3-col grid.   |
+| `Dialog.Header`    | `withColumn.center()`         | Placed in col 2.              |
+| `Dialog.Body`      | `withColumn.propagate()`      | Children inherit the subgrid. |
+| `Dialog.ActionBar` | `withColumn.center()`         | Placed in col 2.              |
 
 ### Form
 
-| Sub-component | withColumn applied | Effect |
-| :--- | :--- | :--- |
+| Sub-component  | withColumn applied    | Effect                              |
+| :------------- | :-------------------- | :---------------------------------- |
 | `Form.Content` | `withColumn.center()` | Placed in col 2 when inside Column. |
 | `Form.Actions` | `withColumn.center()` | Placed in col 2 when inside Column. |
 
 ### SearchList
 
-| Sub-component | withColumn applied | Effect |
-| :--- | :--- | :--- |
-| `SearchList.Content` | `withColumn.propagate()` | Extends subgrid to children when inside Column. |
-| `SearchList.Input` wrapper | `withColumn.center()` | Input row placed in col 2. |
+| Sub-component              | withColumn applied       | Effect                                          |
+| :------------------------- | :----------------------- | :---------------------------------------------- |
+| `SearchList.Content`       | `withColumn.propagate()` | Extends subgrid to children when inside Column. |
+| `SearchList.Input` wrapper | `withColumn.center()`    | Input row placed in col 2.                      |
 
 ### Card
 

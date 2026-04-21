@@ -251,20 +251,18 @@ const CARD_ROW_NAME = 'Card.Row';
 
 type CardRowProps = { icon?: string; fullWidth?: boolean };
 
-const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, icon, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
+const CardRow = slottable<HTMLDivElement, CardRowProps>(({ children, asChild, icon, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
 
-    return (
-      <Comp {...rest} className={tx('card.row', {}, className)} ref={forwardedRef}>
-        {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
-        {children}
-      </Comp>
-    );
-  },
-);
+  return (
+    <Comp {...rest} className={tx('card.row', {}, className)} ref={forwardedRef}>
+      {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
+      {children}
+    </Comp>
+  );
+});
 
 CardRow.displayName = CARD_ROW_NAME;
 

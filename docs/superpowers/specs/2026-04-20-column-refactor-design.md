@@ -94,7 +94,7 @@ withColumn = {
 
   /** Resets --dx-col after consuming --gutter. Applied by ScrollArea.Viewport. */
   consumed: () => '[--dx-col:auto]',
-}
+};
 ```
 
 Usage in component theme functions:
@@ -115,14 +115,15 @@ const dialogBody = (_, ...etc) => mx(withColumn.propagate(), ...etc);
 
 ### Column primitives (simplified)
 
-| Primitive          | CSS                                              | Purpose                                  |
-| :----------------- | :----------------------------------------------- | :--------------------------------------- |
-| **Column.Root**    | `grid`, sets `--gutter` + `--dx-col`             | 3-column grid container                  |
-| **Column.Row**     | `col-span-full grid grid-cols-subgrid`           | 3-slot subgrid row (icon/content/action) |
-| **Column.Center**  | `withColumn.center()` convenience wrapper        | Center column placement                  |
-| **Column.Bleed**   | `withColumn.propagate()` convenience wrapper     | Full-width subgrid pass-through          |
+| Primitive         | CSS                                          | Purpose                                  |
+| :---------------- | :------------------------------------------- | :--------------------------------------- |
+| **Column.Root**   | `grid`, sets `--gutter` + `--dx-col`         | 3-column grid container                  |
+| **Column.Row**    | `col-span-full grid grid-cols-subgrid`       | 3-slot subgrid row (icon/content/action) |
+| **Column.Center** | `withColumn.center()` convenience wrapper    | Center column placement                  |
+| **Column.Bleed**  | `withColumn.propagate()` convenience wrapper | Full-width subgrid pass-through          |
 
 Changes from current:
+
 - **Column.Row** loses `center` and `fullWidth` props — always a 3-slot subgrid row.
 - **Column.Center** becomes a thin wrapper over `withColumn.center()` (same behavior, cleaner internals).
 - **Column.Bleed** changes from plain `col-span-full` to `col-span-full grid grid-cols-subgrid` (subgrid propagation).
@@ -132,41 +133,41 @@ Changes from current:
 
 #### Dialog
 
-| Sub-component    | Current                | After                            |
-| :--------------- | :--------------------- | :------------------------------- |
-| Dialog.Content   | Column.Root            | Column.Root (unchanged)          |
-| Dialog.Header    | Column.Row (center)    | withColumn.center() in theme     |
-| Dialog.Body      | Column.Center          | withColumn.propagate() in theme  |
-| Dialog.ActionBar | Column.Row (center)    | withColumn.center() in theme     |
+| Sub-component    | Current             | After                           |
+| :--------------- | :------------------ | :------------------------------ |
+| Dialog.Content   | Column.Root         | Column.Root (unchanged)         |
+| Dialog.Header    | Column.Row (center) | withColumn.center() in theme    |
+| Dialog.Body      | Column.Center       | withColumn.propagate() in theme |
+| Dialog.ActionBar | Column.Row (center) | withColumn.center() in theme    |
 
 #### Form
 
-| Sub-component  | Current               | After                           |
-| :------------- | :-------------------- | :------------------------------ |
-| Form.Viewport  | ScrollArea (unchanged)| ScrollArea (unchanged)          |
-| Form.Content   | No Column awareness   | withColumn.center() in theme    |
-| Form.Actions   | No Column awareness   | withColumn.center() in theme    |
+| Sub-component | Current                | After                        |
+| :------------ | :--------------------- | :--------------------------- |
+| Form.Viewport | ScrollArea (unchanged) | ScrollArea (unchanged)       |
+| Form.Content  | No Column awareness    | withColumn.center() in theme |
+| Form.Actions  | No Column awareness    | withColumn.center() in theme |
 
 #### SearchList
 
-| Sub-component      | Current               | After                        |
-| :----------------- | :-------------------- | :--------------------------- |
-| SearchList.Viewport| ScrollArea (unchanged)| ScrollArea (unchanged)       |
-| SearchList.Input   | No Column awareness   | withColumn.center() in theme |
+| Sub-component       | Current                | After                        |
+| :------------------ | :--------------------- | :--------------------------- |
+| SearchList.Viewport | ScrollArea (unchanged) | ScrollArea (unchanged)       |
+| SearchList.Input    | No Column awareness    | withColumn.center() in theme |
 
 #### Card
 
-| Sub-component | Current     | After                             |
-| :------------ | :---------- | :-------------------------------- |
-| Card.Root     | Column.Root | Column.Root (unchanged)           |
-| Card.Row      | Column.Row  | Own subgrid CSS (no Column.Row)   |
+| Sub-component | Current     | After                           |
+| :------------ | :---------- | :------------------------------ |
+| Card.Root     | Column.Root | Column.Root (unchanged)         |
+| Card.Row      | Column.Row  | Own subgrid CSS (no Column.Row) |
 
 #### ScrollArea
 
-| Sub-component      | Current                           | After                                      |
-| :----------------- | :-------------------------------- | :----------------------------------------- |
-| ScrollArea.Root    | `[.dx-column_&]:col-span-full`   | Unchanged                                  |
-| ScrollArea.Viewport| Consumes `--gutter` for padding  | Also applies `withColumn.consumed()` to reset `--dx-col` |
+| Sub-component       | Current                         | After                                                    |
+| :------------------ | :------------------------------ | :------------------------------------------------------- |
+| ScrollArea.Root     | `[.dx-column_&]:col-span-full`  | Unchanged                                                |
+| ScrollArea.Viewport | Consumes `--gutter` for padding | Also applies `withColumn.consumed()` to reset `--dx-col` |
 
 ### Example: Form inside Dialog (no scroll)
 
@@ -236,6 +237,7 @@ All usages of `Column.Row center` must be migrated to `Column.Center` (or to ele
 apply `withColumn.center()` via their theme).
 
 Known usages:
+
 - Dialog.Header → theme uses `withColumn.center()`
 - Dialog.ActionBar → theme uses `withColumn.center()`
 - Column stories → update to use Column.Center
@@ -244,6 +246,7 @@ Known usages:
 ### Storybook verification
 
 Visually verify after migration:
+
 - Dialog with Form (scrolling and non-scrolling variants)
 - Dialog with SearchList
 - Card layout with icon rows
