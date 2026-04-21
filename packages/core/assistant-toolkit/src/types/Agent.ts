@@ -31,23 +31,18 @@ export const Agent = Schema.Struct({
   /**
    * Instructions for the agent.
    */
-  // TODO(burdon): Rename instructions.
-  spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  instructions: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 
   /**
-   * Input feed.
+   * Primary chat for the agent.
    */
-  // TODO(burdon): Rename to Feed?
-  // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
-  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
-
   // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
   chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
   // TODO(burdon): Is this used?
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
-  // TODO(burdon): Currently Memory.Memory are global to the space.
+  // TODO(burdon): Currently Memory.Memory objects are global to the space.
 
   // TODO(burdon): Create ref to document to manage memories.
   artifacts: Schema.Array(
@@ -58,6 +53,13 @@ export const Agent = Schema.Struct({
       data: Ref.Ref(Obj.Unknown),
     }),
   ).pipe(FormInputAnnotation.set(false)),
+
+  /**
+   * Input feed for subscriptions.
+   */
+  // TODO(burdon): Rename to Feed?
+  // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
+  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
 
   /**
    * References to objects with a canonical queue property.
@@ -93,14 +95,14 @@ export interface Agent extends Schema.Schema.Type<typeof Agent> {}
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
- * @param props - Agent properties including spec, plan, blueprints, and context objects.
+ * @param props - Agent properties including instructions, plan, blueprints, and context objects.
  * @param blueprint - The blueprint to use for the agent context.
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Agent>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
+  props: Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
     Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
-      spec: string;
+      instructions: string;
       blueprints?: Ref.Ref<Blueprint.Blueprint>[];
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
@@ -109,7 +111,7 @@ export const makeInitialized = (
   Effect.gen(function* () {
     const agent = Obj.make(Agent, {
       ...props,
-      spec: Ref.make(Text.make(props.spec)),
+      instructions: Ref.make(Text.make(props.instructions)),
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],

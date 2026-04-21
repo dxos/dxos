@@ -261,8 +261,8 @@ describe('Agent', () => {
 const dumpAgent = async (agent: Agent.Agent) => {
   let text = '';
   text += `============== Agent: ${agent.name} ==============\n\n`;
-  text += `============== Spec ==============\n\n`;
-  text += `${await agent.spec.load().then((_) => _.content)}\n`;
+  text += `============== Instructions ==============\n\n`;
+  text += `${await agent.instructions.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
   text += `${await agent.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
   text += `============== Artifacts ==============\n\n`;

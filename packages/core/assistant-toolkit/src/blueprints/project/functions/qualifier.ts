@@ -30,7 +30,7 @@ export default Qualifier.pipe(
         }
 
         const plan = yield* Database.load(agent.plan);
-        const spec = yield* Database.load(agent.spec);
+        const spec = yield* Database.load(agent.instructions);
 
         const { value } = yield* Effect.scoped(
           LanguageModel.generateObject({

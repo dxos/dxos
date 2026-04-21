@@ -55,7 +55,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
     }
   }, [agent, computeRuntime]);
 
-  const spec = useAtomValue(AtomRef.make(agent.spec));
+  const spec = useAtomValue(AtomRef.make(agent.instructions));
 
   useEffect(() => {
     const db = Obj.getDatabase(agent);
