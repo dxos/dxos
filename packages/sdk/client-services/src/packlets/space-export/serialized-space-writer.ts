@@ -5,10 +5,10 @@
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { Context } from '@dxos/context';
-import { type EchoHost } from '@dxos/echo-pipeline';
-import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
 import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-db';
+import { type EchoHost } from '@dxos/echo-pipeline';
+import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -135,11 +135,7 @@ const objectStructureToObjJson = (objectId: string, structure: ObjectStructure):
   return result;
 };
 
-const exportFeedData = async (
-  space: DataSpace,
-  echoHost: EchoHost,
-  objects: Obj.JSON[],
-): Promise<SerializedFeed[]> => {
+const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj.JSON[]): Promise<SerializedFeed[]> => {
   const feeds: SerializedFeed[] = [];
   const spaceId: SpaceId = space.id;
 
@@ -177,7 +173,8 @@ const collectQueueMessages = async (echoHost: EchoHost, queueDxn: DXN): Promise<
   const parts = queueDxn.asQueueDXN();
   invariant(parts, 'Expected a queue DXN');
 
-  const namespace = parts.subspaceTag === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
+  const namespace =
+    parts.subspaceTag === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
 
   const messages: Obj.JSON[] = [];
   let cursor: string | undefined;

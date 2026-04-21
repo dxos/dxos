@@ -390,7 +390,6 @@ export class SpacesServiceImpl implements SpacesService {
         log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
       }
     }
-
   }
 
   private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
