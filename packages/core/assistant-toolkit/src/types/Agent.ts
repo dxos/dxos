@@ -47,11 +47,14 @@ export const Agent = Schema.Struct({
   // TODO(burdon): Is this used?
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
+  // TODO(burdon): Currently Memory.Memory are global to the space.
+
   // TODO(burdon): Create ref to document to manage memories.
   artifacts: Schema.Array(
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
       name: Schema.String,
+      // TODO(burdon): Rename object.
       data: Ref.Ref(Obj.Unknown),
     }),
   ).pipe(FormInputAnnotation.set(false)),

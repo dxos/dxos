@@ -18,15 +18,23 @@ import { mx } from '../../util';
  *   or do nothing outside Column / inside ScrollArea.
  */
 export const withColumn = {
-  /** Centers element in the Column grid via --dx-col. No-op outside Column or inside ScrollArea. */
+  /**
+   * Centers element in the Column grid via --dx-col.
+   * No-op outside Column or inside ScrollArea.
+   */
   center: () => '[grid-column:var(--dx-col,auto)]',
 
-  /** Propagates the Column grid to children via subgrid. No-op outside Column.
-   *  Direct children default to center column unless they are a dx-container (ScrollArea). */
+  /**
+   * Propagates the Column grid to children via subgrid. No-op outside Column.
+   * Direct children default to center column unless they are a dx-container (ScrollArea).
+   */
   propagate: () =>
     '[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid [.dx-column-root_&]:[&>*:not(.dx-container)]:[grid-column:var(--dx-col,auto)]',
 
-  /** Resets --dx-col after consuming --gutter. Applied by ScrollArea.Viewport. */
+  /**
+   * Resets --dx-col after consuming --gutter.
+   * Applied by ScrollArea.Viewport.
+   */
   consumed: () => '[--dx-col:auto]',
 };
 
@@ -37,12 +45,13 @@ const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 };
 
 /**
- * Center placement: places the element in column 2 (the central track between gutters) of the
- * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
- * Safe to nest arbitrary compound components (including those that render `display: contents`).
+ * Three-column icon-slot row: spans all 3 columns of the parent Column.Root grid.
+ * Uses CSS subgrid to inherit column sizing from the parent Column.
+ * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
+ * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
-const columnCenter: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx(withColumn.center(), 'min-h-0', ...etc);
+const columnRow: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx('col-span-3 grid grid-cols-subgrid', ...etc);
 };
 
 /**
@@ -54,13 +63,12 @@ const columnBleed: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 };
 
 /**
- * Three-column icon-slot row: spans all 3 columns of the parent Column.Root grid.
- * Uses CSS subgrid to inherit column sizing from the parent Column.
- * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
- * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
+ * Center placement: places the element in column 2 (the central track between gutters) of the
+ * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
+ * Safe to nest arbitrary compound components (including those that render `display: contents`).
  */
-const columnRow: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('col-span-3 grid grid-cols-subgrid', ...etc);
+const columnCenter: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx(withColumn.center(), 'min-h-0', ...etc);
 };
 
 export const columnTheme = {
