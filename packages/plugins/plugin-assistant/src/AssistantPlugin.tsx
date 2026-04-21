@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { provideSpaceServices } from '@dxos/app-framework/plugin-runtime';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Agent, AgentBlueprint, Chat, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';

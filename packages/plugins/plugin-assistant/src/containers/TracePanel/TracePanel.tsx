@@ -15,7 +15,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
 import { Process } from '@dxos/functions';
 import { FeedTraceSink } from '@dxos/functions-runtime';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';

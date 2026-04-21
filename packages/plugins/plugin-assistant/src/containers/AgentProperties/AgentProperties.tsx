@@ -46,8 +46,8 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
       yield* Agent.resetChatHistory(agent);
       if (!agent.queue) {
         const queue = yield* QueueService.createQueue();
-        Obj.change(agent, (a) => {
-          a.queue = Ref.fromDXN(queue.dxn);
+        Obj.change(agent, (agent) => {
+          agent.queue = Ref.fromDXN(queue.dxn);
         });
       }
     }),
