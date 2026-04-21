@@ -12,7 +12,7 @@ import { Agent, AgentBlueprint, Chat, Memory, Plan, ResearchGraph } from '@dxos/
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Database, Feed, Obj, Type } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { QueueService, type ServiceNotAvailableError } from '@dxos/functions';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
@@ -224,7 +224,7 @@ const withComputeRuntime =
   (spaceId: SpaceId) =>
   <A, E>(
     effect: Effect.Effect<A, E, QueueService | Feed.FeedService | Database.Service>,
-  ): Effect.Effect<A, E, Capability.Service> =>
+  ): Effect.Effect<A, E | ServiceNotAvailableError, Capability.Service> =>
     Effect.gen(function* () {
       const layer = yield* provideSpaceServices(spaceId, [QueueService, Feed.FeedService, Database.Service] as const);
       return yield* effect.pipe(Effect.provide(layer));

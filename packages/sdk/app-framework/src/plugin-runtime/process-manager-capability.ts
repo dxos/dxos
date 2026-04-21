@@ -80,22 +80,11 @@ export default Capability.makeModule(
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
-    // Dispose the managed runtime — and its scoped process manager, service
-    // resolver, trace sinks, etc. — when this capability module is torn down.
-    // The LayerStack owns keep-alive application/space slices outside of
-    // `managedRuntime`, so we explicitly destroy it after the runtime so that
-    // its cached slice runtimes (and their finalizers) also run.
-    // `try`/`finally` ensures the stack is destroyed even if runtime disposal
-    // throws — otherwise a failed teardown would leak keep-alive slices.
-    yield* Effect.addFinalizer(() =>
-      Effect.promise(async () => {
-        try {
-          await managedRuntime.dispose();
-        } finally {
-          await layerStack.destroy();
-        }
-      }).pipe(Effect.catchAllCause(() => Effect.void)),
-    );
+    // TODO(dmaretskyi): Capability modules don't currently expose a teardown
+    // hook (`makeModule` only allows `Service | Plugin.Service` in the effect's
+    // requirements, ruling out `Effect.addFinalizer`). Once the plugin
+    // framework grows a shutdown lifecycle, dispose `managedRuntime` and then
+    // call `layerStack.destroy()` to tear down keep-alive slices.
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
       runPromise: (effect, options) => managedRuntime.runPromise(effect as Effect.Effect<any, any, any>, options),
