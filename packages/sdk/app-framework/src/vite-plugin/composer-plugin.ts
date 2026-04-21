@@ -4,7 +4,7 @@
 
 import { type Plugin as VitePlugin } from 'vite';
 
-import type * as Plugin from '../core/plugin';
+import { type Plugin } from '../core';
 
 import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
 
