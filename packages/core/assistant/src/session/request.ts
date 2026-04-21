@@ -161,6 +161,7 @@ export class AiRequest {
       Array.takeWhile((_) => _.sender.role === 'assistant'),
       Array.flatMap((_) => _.blocks.filter(ContentBlock.is('toolCall')).map((block) => ({ block, message: _ }))),
       Array.filter((_) => !_.block.providerExecuted),
+      Array.reverse,
     );
 
   /**
@@ -205,7 +206,7 @@ export class AiRequest {
     toolkit: opaqueToolkit,
   }: AiRequestTurnProps<R>): Effect.Effect<AiRequestTurnResult, AiRequestRunError, AiRequestRunRequirements | R> =>
     Effect.gen(this, function* () {
-      log('request', {
+      log.info('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
         history: this._history.length,
@@ -266,6 +267,7 @@ export class AiRequest {
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
+      log.info('messages', { messages });
 
       const toolCalls = this.getToolCalls();
 

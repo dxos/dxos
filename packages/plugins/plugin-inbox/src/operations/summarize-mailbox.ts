@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof SummarizeMailbox> = SummarizeMailbox
         const handlersLayer = Layer.mergeAll(GraphWriterHandler, LocalSearchHandler).pipe(
           Layer.provide(ResearchGraph.contextQueueLayer),
         );
-        const toolkit = OpaqueToolkit.make(mergedToolkit, handlersLayer);
+        const toolkit = yield* OpaqueToolkit.fromContext(mergedToolkit).pipe(Effect.provide(handlersLayer));
 
         const result = yield* new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),

@@ -73,6 +73,9 @@ const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
+const cardRow: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+  mx('dx-card__row col-span-3 grid grid-cols-subgrid', ...etc);
+
 const cardIconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
   mx(
     'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
@@ -85,6 +88,7 @@ export const cardTheme: Theme<CardStyleProps> = {
   toolbar: cardToolbar,
   title: cardTitle,
   content: cardContent,
+  row: cardRow,
   heading: cardHeading,
   text: cardText,
   'text-span': cardTextSpan,

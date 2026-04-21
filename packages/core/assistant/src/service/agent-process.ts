@@ -137,7 +137,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             ),
           ),
           onChildEvent: Effect.fnUntraced(function* (event) {
-            log.info('childEvent', { event });
+            log('childEvent', { event });
             if (event._tag === 'exited') {
               if (!toolCallManager.isToolCall(event.pid)) {
                 log.verbose('childEvent ignored non-tool call', { pid: event.pid });

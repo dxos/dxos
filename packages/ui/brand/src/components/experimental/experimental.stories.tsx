@@ -43,8 +43,8 @@ export const Default: Story = {
       const audio = new Audio(ident);
       try {
         await audio.play();
-      } catch (e) {
-        console.warn('Audio playback failed:', e);
+      } catch (err) {
+        console.warn('Audio playback failed:', err);
       }
       setTimeout(() => {
         setLogo(true);
