@@ -18,23 +18,15 @@ import { mx } from '../../util';
  *   or do nothing outside Column / inside ScrollArea.
  */
 export const withColumn = {
-  /**
-   * Centers element in the Column grid via --dx-col.
-   * No-op outside Column or inside ScrollArea.
-   */
+  /** Centers element in the Column grid via --dx-col. No-op outside Column or inside ScrollArea. */
   center: () => '[grid-column:var(--dx-col,auto)]',
 
-  /**
-   * Propagates the Column grid to children via subgrid. No-op outside Column.
-   * Direct children default to center column unless they are a dx-container (ScrollArea).
-   */
+  /** Propagates the Column grid to children via subgrid. No-op outside Column.
+   *  Direct children default to center column unless they are a dx-container (ScrollArea). */
   propagate: () =>
     '[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid [.dx-column-root_&]:[&>*:not(.dx-container)]:[grid-column:var(--dx-col,auto)]',
 
-  /**
-   * Resets --dx-col after consuming --gutter.
-   * Applied by ScrollArea.Viewport.
-   */
+  /** Resets --dx-col after consuming --gutter. Applied by ScrollArea.Viewport. */
   consumed: () => '[--dx-col:auto]',
 };
 
@@ -42,6 +34,23 @@ export type ColumnStyleProps = {};
 
 const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
   return mx('dx-column-root grid', ...etc);
+};
+
+/**
+ * Center placement: places the element in column 2 (the central track between gutters) of the
+ * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
+ * Safe to nest arbitrary compound components (including those that render `display: contents`).
+ */
+const columnCenter: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx(withColumn.center(), 'min-h-0', ...etc);
+};
+
+/**
+ * Bleed placement: spans all 3 columns of the parent Column.Root grid (gutter-to-gutter).
+ * Use for `ScrollArea`, full-width dividers, tables, or any content that should ignore gutters.
+ */
+const columnBleed: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx('col-span-full grid grid-cols-subgrid min-h-0', ...etc);
 };
 
 /**
@@ -54,26 +63,9 @@ const columnRow: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
   return mx('col-span-3 grid grid-cols-subgrid', ...etc);
 };
 
-/**
- * Bleed placement: spans all 3 columns of the parent Column.Root grid (gutter-to-gutter).
- * Use for `ScrollArea`, full-width dividers, tables, or any content that should ignore gutters.
- */
-const columnBleed: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('col-span-full grid grid-cols-subgrid min-h-0', ...etc);
-};
-
-/**
- * Center placement: places the element in column 2 (the central track between gutters) of the
- * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
- * Safe to nest arbitrary compound components (including those that render `display: contents`).
- */
-const columnCenter: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx(withColumn.center(), 'min-h-0', ...etc);
-};
-
 export const columnTheme = {
   root: columnRoot,
-  row: columnRow,
-  bleed: columnBleed,
   center: columnCenter,
+  bleed: columnBleed,
+  row: columnRow,
 };
