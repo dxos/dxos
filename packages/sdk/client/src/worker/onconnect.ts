@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
