@@ -7574,6 +7574,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

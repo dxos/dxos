@@ -22,13 +22,18 @@ import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { AiConversation } from '../conversation';
+import { type McpServerConfig, AiConversation } from '../conversation';
 import { getOperationFromTool, makeToolExecutionService, makeToolResolverFromOperations } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
   model?: ModelName;
+
+  /**
+   * Provider for space-level MCP server configs, called on each turn.
+   */
+  getMcpServers?: () => McpServerConfig[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -115,6 +120,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
+                  mcpServers: options.getMcpServers?.(),
                 })
                 .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
               log('end request');

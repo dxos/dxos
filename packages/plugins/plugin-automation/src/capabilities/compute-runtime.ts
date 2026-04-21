@@ -20,11 +20,12 @@ import {
   AiConversation,
   AiConversationService,
 } from '@dxos/assistant';
+import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -125,12 +126,24 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
+        // Maintain a live query of space-level MCP server configs.
+        const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
+        mcpQuery.subscribe();
+
         return Layer.mergeAll(
           TriggerDispatcher.layer({ timeControl: 'natural' }),
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         )
           .pipe(
-            Layer.provideMerge(AgentService.layer()),
+            Layer.provideMerge(
+              AgentService.layer({
+                getMcpServers: () =>
+                  mcpQuery.results
+                    .filter(Obj.instanceOf(McpServer.McpServer))
+                    .filter((server) => server.enabled !== false)
+                    .map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
+              }),
+            ),
             Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
             Layer.provideMerge(ProcessManager.layer()),
             // TODO(dmaretskyi): Duped in assistant testing layer.

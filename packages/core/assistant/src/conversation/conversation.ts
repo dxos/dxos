@@ -37,11 +37,22 @@ import {
 } from '../session';
 import { AiContextBinder, AiContextService } from './context';
 
+export interface McpServerConfig {
+  url: string;
+  protocol: 'sse' | 'http';
+  apiKey?: string;
+}
+
 export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
   toolkit?: Toolkit.Toolkit<Tools>;
+
+  /**
+   * Space-level MCP servers to connect alongside blueprint-defined ones.
+   */
+  mcpServers?: readonly McpServerConfig[];
 }
 
 export type AiConversationOptions = {
@@ -156,7 +167,7 @@ export class AiConversation extends Resource {
       do {
         yield* Effect.promise(() => this.context.sync());
         const currentBlueprints = this.context.getBlueprints();
-        const mcps = yield* connectMcpServers(currentBlueprints);
+        const mcps = yield* connectMcpServers(currentBlueprints, params.mcpServers);
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           blueprints: currentBlueprints,
@@ -273,15 +284,27 @@ const aiContextFromConversation = Layer.effect(
 
 const connectMcpServers = (
   blueprints: readonly Blueprint.Blueprint[],
-): Effect.Effect<GenericToolkit.GenericToolkit[]> =>
-  pipe(
+  spaceMcpServers: readonly McpServerConfig[] = [],
+): Effect.Effect<GenericToolkit.GenericToolkit[]> => {
+  const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),
-    Effect.forEach(({ url, protocol }) =>
-      McpToolkit.make({ url, kind: protocol }).pipe(
+    Array.map(({ url, protocol }) => ({ url, kind: protocol })),
+  );
+  const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
+    url,
+    kind: protocol,
+    apiKey,
+  }));
+  const allServers = [...blueprintServers, ...spaceServers];
+
+  return pipe(
+    allServers,
+    Effect.forEach((options) =>
+      McpToolkit.make(options).pipe(
         // NOTE: Type-inference fails here without explicit void return.
         Effect.tap((toolkit): void =>
-          log.info('Connected to MCP server', { url, tools: Object.keys(toolkit.toolkit.tools).length }),
+          log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
         ),
         Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
         Effect.either,
@@ -289,3 +312,4 @@ const connectMcpServers = (
     ),
     Effect.map(Array.filterMap((_) => Either.getRight(_))),
   );
+};

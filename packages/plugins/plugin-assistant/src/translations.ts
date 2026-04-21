@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Agent } from '@dxos/assistant-toolkit';
+import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -56,6 +56,12 @@ export const translations = [
         'rename-object.label': 'Rename AI Chat',
         'delete-object.label': 'Delete AI Chat',
         'object-deleted.label': 'AI Chat deleted',
+      },
+      [McpServer.McpServer.typename]: {
+        'typename.label': 'MCP Server',
+        'typename.label_zero': 'MCP Servers',
+        'typename.label_one': 'MCP Server',
+        'typename.label_other': 'MCP Servers',
       },
       [Agent.Agent.typename]: {
         'typename.label': 'Agent',
@@ -125,6 +131,14 @@ export const translations = [
         'objects-in-context.title': 'Content',
         'remove-object-in-context.label': 'Remove document',
         'chat-model.title': 'Model',
+        'mcp-servers.title': 'MCP Servers',
+        'mcp-server-add.label': 'Add MCP server',
+        'mcp-server-remove.label': 'Remove MCP server',
+        'mcp-server-name.label': 'Server name',
+        'mcp-server-name.placeholder': 'Name',
+        'mcp-server-url.label': 'Server URL',
+        'mcp-server-url.placeholder': 'https://...',
+        'mcp-server-protocol.label': 'Protocol',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',

@@ -18,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 export interface McpToolkitOptions {
   url: string;
   kind: 'sse' | 'http';
+  apiKey?: string;
 }
 
 /**
@@ -28,7 +29,7 @@ export interface McpToolkitOptions {
  */
 export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.GenericToolkit> =>
   Effect.gen(function* () {
-    const transport = createTransport(options.url, options.kind);
+    const transport = createTransport(options.url, options.kind, options.apiKey);
     const client = new Client({ name: '@dxos/mcp-client', version: '0.8.3' });
     yield* Effect.promise(() => client.connect(transport));
 
@@ -95,13 +96,15 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
 const createTransport = (
   url: string,
   kind: McpToolkitOptions['kind'],
+  apiKey?: string,
 ): SSEClientTransport | StreamableHTTPClientTransport => {
   const urlObj = new URL(url);
+  const requestInit: RequestInit | undefined = apiKey ? { headers: { Authorization: `Bearer ${apiKey}` } } : undefined;
   switch (kind) {
     case 'sse':
-      return new SSEClientTransport(urlObj);
+      return new SSEClientTransport(urlObj, { requestInit });
     case 'http':
-      return new StreamableHTTPClientTransport(urlObj);
+      return new StreamableHTTPClientTransport(urlObj, { requestInit });
     default: {
       const _exhaustive: never = kind;
       return invariant(false, `Unsupported MCP transport kind: ${_exhaustive}`) as never;
