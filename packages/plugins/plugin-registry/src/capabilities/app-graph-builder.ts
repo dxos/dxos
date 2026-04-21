@@ -51,14 +51,14 @@ export default Capability.makeModule(
               },
               nodes: [
                 Node.make({
-                  id: registryCategoryId('all'),
+                  id: registryCategoryId('official'),
                   type: 'category',
-                  data: registryCategoryId('all'),
+                  data: registryCategoryId('official'),
                   properties: {
-                    label: ['all-plugins.label', { ns: meta.id }],
+                    label: ['official-plugins.label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
                     key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.all',
+                    testId: 'pluginRegistry.official',
                   },
                 }),
                 Node.make({
@@ -92,6 +92,17 @@ export default Capability.makeModule(
                     icon: 'ph--flask--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.labs',
+                  },
+                }),
+                Node.make({
+                  id: registryCategoryId('community'),
+                  type: 'category',
+                  data: registryCategoryId('community'),
+                  properties: {
+                    label: ['community-plugins.label', { ns: meta.id }],
+                    icon: 'ph--users-three--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.community',
                   },
                 }),
               ],

@@ -9,15 +9,20 @@ import { List } from '@dxos/react-ui';
 
 import { PluginItem, type PluginItemProps } from './PluginItem';
 
-export type PluginListProps = Omit<PluginItemProps, 'plugin'> & {
+export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags'> & {
   plugins?: readonly Plugin.Plugin[];
+  /**
+   * Map from plugin id → extra tags to display (e.g. `community`, `local`).
+   * Computed by the container; not persisted to plugin meta.
+   */
+  extraTagsById?: Record<string, readonly string[]>;
 };
 
-export const PluginList = ({ plugins = [], ...props }: PluginListProps) => {
+export const PluginList = ({ plugins = [], extraTagsById, ...props }: PluginListProps) => {
   return (
     <List classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'>
       {plugins.map((plugin) => (
-        <PluginItem key={plugin.meta.id} plugin={plugin} {...props} />
+        <PluginItem key={plugin.meta.id} plugin={plugin} extraTags={extraTagsById?.[plugin.meta.id]} {...props} />
       ))}
     </List>
   );
