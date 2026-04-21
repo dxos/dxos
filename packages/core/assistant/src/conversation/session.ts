@@ -168,6 +168,7 @@ export class AiSession extends Resource {
           blueprints: currentBlueprints,
           opaqueToolkits: mcps,
         });
+
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
@@ -175,11 +176,7 @@ export class AiSession extends Resource {
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* request.runAgentTurn({
-          system,
-          toolkit,
-        });
-
+        const { done } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
           break;
         }

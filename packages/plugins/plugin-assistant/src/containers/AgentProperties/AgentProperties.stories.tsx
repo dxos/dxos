@@ -64,7 +64,7 @@ const meta = {
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  spec: Ref.make(Text.make('Initiative spec for the story.')),
+                  spec: Ref.make(Text.make()),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
                   subscriptions: [],

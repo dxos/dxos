@@ -28,7 +28,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  documentSlots,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -54,8 +53,6 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
       );
     }
   }, [agent, computeRuntime]);
-
-  const spec = useAtomValue(AtomRef.make(agent.spec));
 
   useEffect(() => {
     const db = Obj.getDatabase(agent);
@@ -86,84 +83,90 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
     return Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
   }, [db]);
-  const subscribableObjects = useQuery(db, feedFilter);
+  const subscribedObjects = useQuery(db, feedFilter);
 
-  const existingSubscripts = useAtomValue(
+  const existingSubscriptions = useAtomValue(
     useMemo(
       () =>
         AtomObj.make(agent).pipe((_) =>
           Atom.make((get) => {
             const agentObj = get(_);
-            const selectedSubscriptions: Obj.Unknown[] = subscribableObjects.filter((object) =>
+            const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
               agentObj.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
             );
 
             return selectedSubscriptions;
           }),
         ),
-      [agent, subscribableObjects],
+      [agent, subscribedObjects],
     ),
   );
 
+  const instructions = useAtomValue(AtomRef.make(agent.spec));
   const extension = useMemo(
     () =>
-      spec && [
-        createBasicExtensions({ placeholder: t('agent.spec.placeholder') }),
+      instructions && [
+        createBasicExtensions({ placeholder: t('instructions.placeholder') }),
         createThemeExtensions({
           syntaxHighlighting: true,
           slots: {
-            ...documentSlots,
-            scroller: {
-              className: 'min-h-[2lh]',
+            content: {
+              className: 'mx-0!',
             },
           },
         }),
-        createDataExtensions({ id: agent.id, text: createDocAccessor(spec, ['content']) }),
+        createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),
       ],
-    [spec, agent.id, t],
+    [instructions, agent.id, t],
   );
 
   return (
     <div role='none' className='dx-expander flex flex-col'>
-      <Input.Root>
-        <Input.Label>{t('subscriptions.label')}</Input.Label>
-      </Input.Root>
+      {subscribedObjects.length > 0 && (
+        <>
+          <Input.Root>
+            <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
+          </Input.Root>
 
-      {subscribableObjects.map((object) => (
-        <Input.Root key={object.id}>
-          <div className='flex items-center gap-2'>
-            <Input.Checkbox
-              checked={existingSubscripts.includes(object)}
-              onCheckedChange={(checked) => {
-                Obj.change(agent, (agent) => {
-                  if (checked) {
-                    agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
-                  } else {
-                    agent.subscriptions = agent.subscriptions.filter(
-                      (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
-                    );
-                  }
-                });
-              }}
-            />
-            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
-          </div>
-        </Input.Root>
-      ))}
+          {subscribedObjects.map((object) => (
+            <Input.Root key={object.id}>
+              <div className='flex items-center gap-2'>
+                <Input.Checkbox
+                  checked={existingSubscriptions.includes(object)}
+                  onCheckedChange={(checked) => {
+                    Obj.change(agent, (agent) => {
+                      if (checked) {
+                        agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
+                      } else {
+                        agent.subscriptions = agent.subscriptions.filter(
+                          (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
+                        );
+                      }
+                    });
+                  }}
+                />
+                <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
+              </div>
+            </Input.Root>
+          ))}
+        </>
+      )}
 
       <Input.Root>
-        <Input.Label>{t('instructions.label')}</Input.Label>
-        {spec && (
+        <Input.Label classNames='mt-form-gap'>{t('instructions.label')}</Input.Label>
+        {instructions && (
           <Editor.Root>
-            <Editor.View classNames='pb-form-gap' extensions={extension} />
+            <Editor.View extensions={extension} />
           </Editor.Root>
         )}
       </Input.Root>
 
       {/* TODO(burdon): Move into toolbar in parent. */}
-      <Button onClick={handleResetHistory}>{t('reset-history.button')}</Button>
+      <Button classNames='mt-form-gap' onClick={handleResetHistory}>
+        {t('reset-history.button')}
+      </Button>
     </div>
   );
 };
