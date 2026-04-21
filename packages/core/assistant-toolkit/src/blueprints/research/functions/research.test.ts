@@ -77,9 +77,8 @@ describe('Research', () => {
         yield* Database.flush();
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
-          const data = yield* Database.load(researchGraph.queue).pipe(
-            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
-          );
+          const feed = yield* Database.load(researchGraph.queue);
+          const data = yield* Feed.runQuery(feed, Filter.everything());
           console.log(inspect(data, { depth: null, colors: true }));
         }
       },

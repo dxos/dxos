@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Entity, Filter } from '@dxos/echo';
+import { Entity, Feed, Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -13,7 +13,8 @@ import { type ComponentProps } from './types';
 
 export const ResearchInputModule = ({ space }: ComponentProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
-  const queue = useQueue(researchInput?.queue.dxn);
+  const feed = researchInput?.queue.target;
+  const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   return (
     <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
