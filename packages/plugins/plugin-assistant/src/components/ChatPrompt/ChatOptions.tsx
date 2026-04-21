@@ -18,7 +18,10 @@ import { getStyles, mx } from '@dxos/ui-theme';
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
 import { meta } from '#meta';
 
-const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-document-width';
+const styles = {
+  panel: 'w-[calc(100dvw-.5rem)] sm:w-max md:w-popover-default-width max-w-document-width',
+  toolbar: 'p-form-chrome border-t border-separator',
+};
 
 export type ChatOptionsProps = {
   db: Database.Database;
@@ -42,7 +45,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
         </Popover.Trigger>
         <Popover.Portal>
-          <Popover.Content side='top' classNames={panelClassNames}>
+          <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
               <ObjectsPanel db={db} context={context} />
             </Popover.Viewport>
@@ -61,9 +64,9 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
           />
         </Popover.Trigger>
         <Popover.Portal>
-          <Popover.Content side='top' classNames={panelClassNames}>
+          <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
-              <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
+              <Tabs.Root orientation='horizontal' defaultValue='model' defaultActivePart='list' tabIndex={-1}>
                 <Tabs.Viewport
                   // TODO(burdon): Simplify styles.
                   classNames={mx(
@@ -73,22 +76,22 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                     '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-form-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
                   )}
                 >
-                  <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
-                  </Tabs.Panel>
                   <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
                   <Tabs.Panel value='mcp-servers' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <McpServersPanel db={db} />
                   </Tabs.Panel>
-                  <Tabs.Tablist classNames='justify-center p-form-chrome border-y border-subdued-separator order-last'>
+                  <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
+                  </Tabs.Panel>
+                  <Tabs.Tablist classNames={styles.toolbar}>
+                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('chat-model.title')} />
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
                       label={t('blueprints-in-context.title')}
                     />
-                    <Tabs.IconTab value='model' label={t('chat-model.title')} icon='ph--cpu--regular' />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
@@ -375,7 +378,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className='grid grid-cols-[min-content_1fr] px-form-chrome mb-form-chrome'>
+      <div role='none' className={mx('flex flex-col', styles.toolbar)}>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
@@ -394,7 +397,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        <SearchList.Input placeholder={t('search.placeholder')} classNames='mb-0' autoFocus />
+        <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
       </div>
     </SearchList.Root>
   );

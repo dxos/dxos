@@ -11,12 +11,12 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import WebSearchBlueprint from './blueprint';
 import { WebSearchHandlers } from './functions';
-import { WebSearchToolkitGeneric } from './toolkit';
+import { WebSearchToolkitOpaque } from './toolkit';
 
 const TestLayer = AssistantTestLayer({
   blueprints: [WebSearchBlueprint.make()],
   operationHandlers: [WebSearchHandlers],
-  toolkits: [WebSearchToolkitGeneric],
+  toolkits: [WebSearchToolkitOpaque],
   tracing: 'pretty',
 });
 

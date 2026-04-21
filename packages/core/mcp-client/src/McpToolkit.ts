@@ -12,7 +12,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 
 export interface McpToolkitOptions {
@@ -22,38 +22,29 @@ export interface McpToolkitOptions {
 }
 
 /**
- * Creates a GenericToolkit that connects to an MCP server and exposes its tools to the assistant.
+ * Creates an OpaqueToolkit that connects to an MCP server and exposes its tools to the assistant.
  *
  * @param options MCP server URL and transport kind ('sse' for SSE, 'http' for Streamable HTTP).
- * @returns A GenericToolkit containing all tools from the MCP server.
+ * @returns An OpaqueToolkit containing all tools from the MCP server.
  */
-export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.GenericToolkit> =>
+export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit> =>
   Effect.gen(function* () {
     const transport = createTransport(options.url, options.kind, options.apiKey);
     const client = new Client({ name: '@dxos/mcp-client', version: '0.8.3' });
     yield* Effect.promise(() => client.connect(transport));
 
     const { tools } = yield* Effect.promise(() => client.listTools());
-
     if (tools.length === 0) {
-      return GenericToolkit.empty;
+      return OpaqueToolkit.empty;
     }
 
     const effectTools = tools.map((mcpTool) => {
       const parameters: any = {};
       for (const [key, value] of Object.entries(mcpTool.inputSchema.properties ?? {})) {
         if (mcpTool.inputSchema.required?.includes(key)) {
-          parameters[key] = Schema.Unknown.pipe(
-            Schema.annotations({
-              jsonSchema: value,
-            }),
-          );
+          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value }));
         } else {
-          parameters[key] = Schema.Unknown.pipe(
-            Schema.annotations({
-              jsonSchema: value,
-            }),
-          ).pipe(Schema.optional);
+          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value })).pipe(Schema.optional);
         }
       }
 
@@ -87,7 +78,7 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
 
     const layer = toolkit.toLayer(handlers);
 
-    return GenericToolkit.make(toolkit, layer);
+    return OpaqueToolkit.make(toolkit, layer);
   }).pipe(Effect.withSpan('McpToolkit.make'));
 
 /**
@@ -130,5 +121,6 @@ const formatToolResult = (result: Awaited<ReturnType<Client['callTool']>>): stri
       .map((part) => part.text)
       .join('\n');
   }
+
   return String(result);
 };

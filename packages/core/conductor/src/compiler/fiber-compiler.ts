@@ -10,14 +10,7 @@ import * as Scope from 'effect/Scope';
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  QueueService,
-  Trace,
-  TracingService,
-  createDefectLogger,
-} from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, QueueService, Trace, createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
@@ -367,7 +360,6 @@ export class GraphExecutor {
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(Operation.Service, yield* Operation.Service),
         Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
-        Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
       );
     });

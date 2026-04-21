@@ -15,18 +15,14 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
-import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
-import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
 
 import { translations } from '../../translations';
 import { ChatOptions, ObjectsPanel, type ChatOptionsProps } from './ChatOptions';
-
-random.seed(1);
 
 const presets = [
   { id: 'edge-claude-sonnet', label: 'Edge · Claude Sonnet' },
@@ -75,13 +71,10 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
 
               // Populate space with sample objects.
-              const factory = createObjectFactory(space.db, random as any);
-              yield* Effect.promise(() =>
-                factory([
-                  { type: Organization.Organization, count: 8 },
-                  { type: Person.Person, count: 8 },
-                ]),
-              );
+              for (let idx = 0; idx < 8; idx++) {
+                space.db.add(Organization.make({ name: `Org ${idx + 1}` }));
+                space.db.add(Person.make({ fullName: `Person ${idx + 1}` }));
+              }
 
               // Create the chat feed used by the context binder.
               space.db.add(Feed.make());

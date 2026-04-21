@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiConversationService, ToolExecutionServices } from '@dxos/assistant';
+import { AiSessionService, ToolExecutionServices } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -36,11 +36,11 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const conversation = yield* AiConversationService;
+        const session = yield* AiSessionService;
 
         yield* Database.add(blueprint);
         yield* Effect.promise(() =>
-          conversation.context.bind({
+          session.context.bind({
             blueprints: [Ref.make(blueprint)],
           }),
         );
@@ -97,9 +97,9 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           },
         ];
 
-        yield* runSteps(conversation, steps);
+        yield* runSteps(session, steps);
       },
-      Effect.provide(AiConversationService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))),
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),

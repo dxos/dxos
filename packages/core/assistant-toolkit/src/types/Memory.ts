@@ -20,4 +20,5 @@ export const Memory = Schema.Struct({
     hue: 'pink',
   }),
 );
+
 export interface Memory extends Schema.Schema.Type<typeof Memory> {}

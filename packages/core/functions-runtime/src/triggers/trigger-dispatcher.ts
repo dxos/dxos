@@ -24,7 +24,7 @@ import * as Struct from 'effect/Struct';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { Process, QueueService, TracingService, Trigger, type TriggerEvent } from '@dxos/functions';
+import { Process, QueueService, Trigger, type TriggerEvent } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -94,7 +94,6 @@ type TriggerDispatcherServices =
   | Registry.AtomRegistry
   | ProcessManager.ProcessManagerService
   | TriggerStateStore
-  | TracingService
   | QueueService
   | Database.Service;
 
@@ -334,16 +333,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const manager = yield* ProcessManager.ProcessManagerService;
         const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
         const handle = yield* manager.spawn(executable, {
-          tracing: {
-            invocationPayload: {
-              trigger: {
-                id: trigger.id,
-                kind: trigger.spec!.kind,
-              },
-              data: event,
-            },
-            invocationTarget: trigger.function?.dxn,
-          },
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
         });
 

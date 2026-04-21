@@ -10,7 +10,7 @@ import { Template } from '@dxos/blueprints';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { type FunctionNotFoundError, type TracingService } from '@dxos/functions';
+import { type FunctionNotFoundError } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Operation, type OperationRegistry } from '@dxos/operation';
@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunError, type AiSessionRunProps } from './session';
+import { type AiRequestRunError, type AiRequestRunProps } from './request';
 
 /**
  * Formats the system prompt.
@@ -29,10 +29,10 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+}: Pick<AiRequestRunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
   FunctionNotFoundError | ObjectNotFoundError,
-  Database.Service | OperationRegistry.Service | Operation.Service | TracingService
+  Database.Service | OperationRegistry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
@@ -81,7 +81,7 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiSessionRunProps<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
+}: Pick<AiRequestRunProps, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiRequestRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 

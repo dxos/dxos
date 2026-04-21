@@ -13,6 +13,7 @@ import { SystemTypeAnnotation } from '@dxos/echo/internal';
 /**
  * Root transcript object created when the user starts a transcription.
  */
+// TODO(dmaretskyi): Convert `queue` to `Ref.Ref(Feed.Feed)` (see plugin-assistant migrations for pattern).
 export const Transcript = Schema.Struct({
   // TODO(wittjosiah): Remove?
   // TODO(burdon): Use Date or string?

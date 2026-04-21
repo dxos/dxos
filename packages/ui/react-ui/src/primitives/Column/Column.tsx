@@ -31,8 +31,9 @@ type ColumnRootProps = { gutter?: GutterSize };
 /**
  * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
  * Sets `--gutter` and `--dx-col` CSS variables for nested components.
- * `--dx-col` defaults to `2 / span 1` (center column), enabling `withColumn` utilities
- * to cascade the correct grid placement to slotted children.
+ *
+ * `--dx-col` defaults to `2 / span 1` (center column),
+ * enabling `withColumn` utilities to cascade the correct grid placement to slotted children.
  *
  * Direct children participate in the grid in one of several ways:
  * - **Column.Center** — places element in the center column (col 2). Preferred for plain content.

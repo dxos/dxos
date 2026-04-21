@@ -24,8 +24,6 @@ import {
   Input,
   ScrollArea,
   type ThemedClassName,
-  useDensityContext,
-  useElevationContext,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
@@ -270,8 +268,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     const { hasIosKeyboard } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
-    const density = useDensityContext(propsDensity);
-    const elevation = useElevationContext(propsElevation);
     const defaultPlaceholder = t('search.placeholder');
 
     const handleChange = useCallback(
@@ -355,6 +351,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
         <Input.TextInput
           {...props}
           variant='subdued'
+          density='fine'
           autoFocus={props.autoFocus && !hasIosKeyboard}
           placeholder={placeholder ?? defaultPlaceholder}
           value={query}

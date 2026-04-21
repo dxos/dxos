@@ -21,10 +21,11 @@ const migrations = [
   }),
   defineObjectMigration({
     from: ResearchGraph.LegacyResearchGraph,
-    to: ResearchGraph.ResearchGraph,
+    to: ResearchGraph.ResearchGraphV1,
     transform: identityTransform,
     onMigration: noopCallback,
   }),
+  ...ResearchGraph.migrations,
 ];
 
 export default Capability.makeModule(

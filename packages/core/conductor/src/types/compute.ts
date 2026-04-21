@@ -9,7 +9,7 @@ import type * as Scope from 'effect/Scope';
 import type { AiService } from '@dxos/ai';
 import type { Database, Feed } from '@dxos/echo';
 import { type ComputeEventLogger } from '@dxos/functions';
-import type { CredentialsService, QueueService, Trace, TracingService } from '@dxos/functions';
+import type { CredentialsService, QueueService, Trace } from '@dxos/functions';
 import type { Operation, OperationRegistry } from '@dxos/operation';
 import { mapValues } from '@dxos/util';
 
@@ -107,7 +107,6 @@ export type ComputeRequirements =
   | QueueService
   | Feed.FeedService
   | Trace.TraceService
-  | TracingService
   | ComputeEventLogger
   | Scope.Scope
   | Operation.Service

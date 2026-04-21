@@ -31,7 +31,7 @@ import { InboxCapabilities, type Mailbox } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
-import { NewMailbox } from './NewMailbox';
+import { InitializeMailbox } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
@@ -275,7 +275,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       )}
       <Panel.Content asChild>
         {isEmpty ? (
-          <NewMailbox mailbox={mailbox} />
+          <InitializeMailbox mailbox={mailbox} />
         ) : (
           <MessageStack
             id={id}
