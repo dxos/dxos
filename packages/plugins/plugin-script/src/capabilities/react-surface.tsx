@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
+import { Feed } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
@@ -103,7 +104,8 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const feed = space?.properties.invocationTraceFeed?.target;
+          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           return (
             <Panel.Root role={role}>
               <Panel.Content>
