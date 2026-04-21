@@ -10,7 +10,7 @@ import { Template } from '@dxos/blueprints';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { type FunctionNotFoundError, type TracingService } from '@dxos/functions';
+import { type FunctionNotFoundError } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Operation, type OperationRegistry } from '@dxos/operation';
@@ -32,7 +32,7 @@ export const formatSystemPrompt = ({
 }: Pick<AiRequestRunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
   FunctionNotFoundError | ObjectNotFoundError,
-  Database.Service | OperationRegistry.Service | Operation.Service | TracingService
+  Database.Service | OperationRegistry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(

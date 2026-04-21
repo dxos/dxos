@@ -7,8 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService, TracingService, TriggerEvent } from '@dxos/functions';
-import { Trace } from '@dxos/functions';
+import { QueueService, Trace, TriggerEvent } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { Agent } from '../../../types';
@@ -31,8 +30,6 @@ export const AgentWorker = Operation.make({
     QueueService,
     Feed.FeedService,
     OperationRegistry.Service,
-    // @deprecated TracingService kept for backward compat with tool handlers.
-    TracingService,
     Trace.TraceService,
     OpaqueToolkit.OpaqueToolkitProvider,
   ],

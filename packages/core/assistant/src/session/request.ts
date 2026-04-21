@@ -25,7 +25,7 @@ import {
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Database, Obj } from '@dxos/echo';
-import { Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { ContentBlock, Message } from '@dxos/types';
@@ -44,12 +44,7 @@ export type AiRequestRunRequirements =
   | Database.Service
   | Operation.Service
   | OperationRegistry.Service
-  | Trace.TraceService
-  /**
-   * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().
-   *   New code should use Trace.TraceService instead.
-   */
-  | TracingService;
+  | Trace.TraceService;
 
 export type AiRequestOptions = {
   /**
@@ -293,15 +288,7 @@ export class AiRequest {
         if (!toolkit) {
           throw new Error('No toolkit provided');
         }
-        return callTool(toolkit, block).pipe(
-          Effect.provide(
-            TracingService.layerSubframe((context) => ({
-              ...context,
-              parentMessage: message.id,
-              toolCallId: block.toolCallId,
-            })),
-          ),
-        );
+        return callTool(toolkit, block);
       });
 
       yield* this._submitMessage(

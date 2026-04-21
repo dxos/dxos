@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { ContextQueueService, QueueService, TracingService } from '@dxos/functions';
+import { ContextQueueService, QueueService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -113,7 +113,6 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           AiService.model('@anthropic/claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
           Trace.writerLayerNoop,
           Database.notAvailable,
           Layer.succeed(Operation.Service, {

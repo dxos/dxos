@@ -16,7 +16,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -52,8 +52,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
-        // @deprecated Required by AiRequestRunRequirements for backward compat with tool handlers.
-        TracingService,
       ],
     },
     (ctx) =>

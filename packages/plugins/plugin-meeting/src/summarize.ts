@@ -16,7 +16,7 @@ import {
 } from '@dxos/ai';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import { Database, Type } from '@dxos/echo';
-import { Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -60,7 +60,6 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       AiService.model('@anthropic/claude-3-5-haiku-latest'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
-      TracingService.layerNoop,
       Trace.writerLayerNoop,
       Database.notAvailable,
       Layer.succeed(Operation.Service, {

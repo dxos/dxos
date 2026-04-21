@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Relation } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -20,7 +20,7 @@ export default DocumentCreate.pipe(
 
       // TODO(burdon): Auto flush before and after calling function?
       yield* Database.flush();
-      yield* TracingService.emitStatus({ message: 'Creating research document...' });
+      yield* Trace.emitStatus('Creating research document...');
 
       const target = yield* Database.load(subject);
 

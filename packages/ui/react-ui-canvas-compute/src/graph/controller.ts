@@ -33,7 +33,6 @@ import {
   type CredentialsService,
   type QueueService,
   Trace,
-  TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import type { Operation, OperationRegistry } from '@dxos/operation';
@@ -265,12 +264,7 @@ export class ComputeGraphController extends Resource {
           const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
             Effect.withSpan('runGraph'),
             Scope.extend(scope),
-            Effect.provide(
-              ComputeEventLogger.layerFromTracing.pipe(
-                Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
-                Layer.provideMerge(Trace.writerLayerNoop),
-              ),
-            ),
+            Effect.provide(Layer.mergeAll(ComputeEventLogger.layerNoop, Trace.writerLayerNoop)),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
             Effect.tap((values) => {
@@ -333,12 +327,7 @@ export class ComputeGraphController extends Resource {
               Effect.withSpan('runGraph'),
               Scope.extend(scope),
               Effect.flatMap(computeValueBag),
-              Effect.provide(
-                ComputeEventLogger.layerFromTracing.pipe(
-                  Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
-                  Layer.provideMerge(Trace.writerLayerNoop),
-                ),
-              ),
+              Effect.provide(Layer.mergeAll(ComputeEventLogger.layerNoop, Trace.writerLayerNoop)),
 
               Effect.withSpan('test'),
               Effect.tap((values) => {

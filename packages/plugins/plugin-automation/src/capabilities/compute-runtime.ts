@@ -16,9 +16,8 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -35,7 +34,6 @@ import {
   ProcessManager,
   RemoteFunctionExecutionService,
   ServiceResolver,
-  TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
@@ -197,7 +195,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
             Layer.provideMerge(
               Layer.mergeAll(
-                TracingServiceLive,
                 FeedTraceSink.layerLive,
                 TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
                 KeyValueStore.layerMemory,
@@ -248,22 +245,3 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     return runtime;
   }
 }
-
-const TracingServiceLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
-    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
-    const [properties] = objects;
-    invariant(properties);
-    // TODO(burdon): Check ref target has loaded?
-    if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
-      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (properties) => {
-        properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
-      });
-    }
-
-    const queue = properties.invocationTraceQueue!.target;
-    invariant(queue);
-    return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
-  }),
-);

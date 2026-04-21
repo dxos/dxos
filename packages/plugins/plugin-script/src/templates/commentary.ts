@@ -17,7 +17,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -212,7 +212,6 @@ export default Commentary.pipe(
           AiService.model('@anthropic/claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
           Trace.writerLayerNoop,
           Database.notAvailable,
           Layer.succeed(Operation.Service, {

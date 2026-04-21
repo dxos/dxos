@@ -20,7 +20,7 @@ import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, type Key } from '@dxos/echo';
-import { ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import { ServiceResolver, Trace } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   ProcessManager,
@@ -37,7 +37,6 @@ export type TriggerRuntimeServices =
   | TriggerStateStore
   | ToolResolverService
   | ToolExecutionService
-  | TracingService
   | AiChatServices;
 
 export type TriggerRuntimeLayerOptions = {
@@ -92,7 +91,6 @@ export const triggerRuntimeLayer = ({
         Layer.provide(ServiceResolver.layerRequirements(Database.Service, OpaqueToolkit.OpaqueToolkitProvider)),
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
-        Layer.provideMerge(TracingService.layerNoop),
         Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),

@@ -15,7 +15,7 @@ import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolv
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Database, Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ComputeEventLogger, QueueService, Trace, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, QueueService, Trace } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -156,7 +156,6 @@ export const gptNode = defineComputeNode({
       // TODO(dmaretskyi): Move them out.
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
-      TracingService.layerNoop,
       Layer.succeed(Trace.TraceService, trace),
       Layer.succeed(Database.Service, yield* Database.Service),
       Layer.succeed(Operation.Service, yield* Operation.Service),

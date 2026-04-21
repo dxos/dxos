@@ -23,7 +23,6 @@ import {
   type ServiceCredential,
   ServiceNotAvailableError,
   Trace,
-  TracingService,
   Trigger,
 } from '@dxos/functions';
 import {
@@ -31,7 +30,6 @@ import {
   Process,
   ProcessManager,
   ServiceResolver,
-  TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
@@ -87,7 +85,6 @@ export type AssistantTestServices =
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
-  | TracingService
   | Trace.TraceService
   | Trace.TraceSink
   | FeedTraceSink.FeedTraceSink;
@@ -195,17 +192,6 @@ export const AssistantTestLayer = ({
           types,
         }),
         CredentialsService.configuredLayer(credentials),
-        Match.value(tracing).pipe(
-          Match.when('noop', () => TracingService.layerNoop),
-          Match.when('console', () => TracingServiceExt.layerLogInfo()),
-          Match.when('pretty', () =>
-            TracingServiceExt.layerConsolePrettyPrint({
-              toolkit: (toolkits.length > 0 ? OpaqueToolkit.merge(...toolkits) : OpaqueToolkit.empty).toolkit as any,
-            }),
-          ),
-          Match.when('feed', () => TracingService.layerNoop),
-          Match.exhaustive,
-        ),
       ),
     ),
     Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
