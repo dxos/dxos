@@ -17,7 +17,7 @@ import {
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
 
 import {
   type FormHandler,
@@ -33,9 +33,9 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 
-// TODO(burdon): Move styles to form.ts.
+// TODO(burdon): Move styles to form.ts (as with ui-theme).
 
-// TODO(burdon): Move to @dxos/schema (re-export here).
+// TODO(burdon): Reconcile with @dxos/echo.
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
@@ -194,7 +194,10 @@ const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ..
 
   return (
     <div
-      {...composableProps(props, { role: 'form', classNames: 'flex flex-col w-full pb-form-gap' })}
+      {...composableProps(props, {
+        role: 'form',
+        classNames: mx(withColumn.center(), 'flex flex-col w-full pb-form-gap'),
+      })}
       data-testid={testId}
       ref={mergedRef}
     >
@@ -245,7 +248,10 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
+    <div
+      role='none'
+      className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}
+    >
       {onCancel && (
         <IconButton
           icon='ph--x--regular'

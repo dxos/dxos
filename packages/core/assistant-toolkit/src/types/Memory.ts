@@ -13,11 +13,12 @@ export const Memory = Schema.Struct({
   title: Schema.String,
   content: Schema.String,
 }).pipe(
-  Type.object({ typename: 'dxos.org/type/Memory', version: '0.1.0' }),
+  Type.object({ typename: 'org.dxos.type.memory', version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--brain--regular',
     hue: 'pink',
   }),
 );
+
 export interface Memory extends Schema.Schema.Type<typeof Memory> {}

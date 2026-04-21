@@ -11,7 +11,7 @@ import {
   type Size,
 } from '@dxos/ui-types';
 
-import { coarseBlockSize, coarseDimensions, fineBlockSize, fineDimensions, staticDisabled } from '../../fragments';
+import { densityDimensions, staticDisabled } from '../../fragments';
 import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '../../util';
 
 export type InputStyleProps = Partial<{
@@ -58,24 +58,24 @@ const inputValence = (valence?: MessageValence) => {
 };
 
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full bg-transparent text-current placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  props.density === 'fine' ? fineBlockSize : coarseBlockSize,
+  'py-0 w-full bg-transparent text-current placeholder-placeholder',
   'dx-focus-subdued',
+  densityDimensions(props.density),
   props.disabled && staticDisabled,
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
-  props.density === 'fine' ? fineDimensions : coarseDimensions,
+  densityDimensions(props.density),
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention-surface',

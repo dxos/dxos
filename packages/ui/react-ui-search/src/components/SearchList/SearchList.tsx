@@ -24,8 +24,6 @@ import {
   Input,
   ScrollArea,
   type ThemedClassName,
-  useDensityContext,
-  useElevationContext,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
@@ -237,8 +235,8 @@ type SearchListContentProps = {};
  * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
  * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
  *
- * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), skip this wrapper and
- * place the `Input` and `Viewport` directly with `<Column.Center>` / `<Column.Bleed>`.
+ * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
+ * handles column placement for SearchList's children automatically.
  */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
@@ -270,8 +268,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     const { hasIosKeyboard } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
-    const density = useDensityContext(propsDensity);
-    const elevation = useElevationContext(propsElevation);
     const defaultPlaceholder = t('search.placeholder');
 
     const handleChange = useCallback(
@@ -355,6 +351,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
         <Input.TextInput
           {...props}
           variant='subdued'
+          density='fine'
           autoFocus={props.autoFocus && !hasIosKeyboard}
           placeholder={placeholder ?? defaultPlaceholder}
           value={query}
