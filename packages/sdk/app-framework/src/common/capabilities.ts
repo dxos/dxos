@@ -13,7 +13,12 @@ import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
 import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
-import type { LayerSpec as LayerSpec$, Process as Process$, ServiceResolver as ServiceResolver$ } from '@dxos/functions';
+import type {
+  LayerSpec as LayerSpec$,
+  Process as Process$,
+  ServiceResolver as ServiceResolver$,
+  Trace as Trace$,
+} from '@dxos/functions';
 import { Operation as Operation$ } from '@dxos/operation';
 import type { OperationInvoker as OperationInvoker$, OperationHandlerSet } from '@dxos/operation';
 
@@ -93,6 +98,18 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app
  * @category Capability
  */
 export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layer-spec');
+
+/**
+ * Trace sink contribution.
+ *
+ * Plugins contribute {@link Trace$.Sink} instances; the process-manager
+ * capability collects them, merges them via {@link Trace$.mergeSinks}, and
+ * installs the result as {@link Trace$.TraceSink} in the runtime layer so
+ * every process writes to every contributed sink.
+ *
+ * @category Capability
+ */
+export const TraceSink = Capability$.make<Trace$.Sink>('org.dxos.app-framework.capability.trace-sink');
 
 /**
  * Service resolver backing the shared {@link ProcessManagerRuntime}.

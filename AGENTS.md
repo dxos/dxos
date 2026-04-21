@@ -47,6 +47,7 @@
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
+- **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.
 - Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
 
@@ -63,6 +64,7 @@
 
 - Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
 - IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
+- **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
 - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
@@ -85,8 +87,9 @@ Examples:
 
 ## CI
 
+- **IMPORTANT**: There is ONE main CI workflow ("Check") and it verifies **build, test, lint, and fmt**. If any of those are red on your branch, treat them as YOUR failures, not pre-existing ones — address the root cause of the failure on the branch rather than shrugging it off. Never merge around a red "Check".
 - **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
-- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
+- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it at the root cause.
 - When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
 
 ## Committing and Pushing

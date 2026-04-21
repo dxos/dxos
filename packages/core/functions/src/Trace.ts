@@ -80,6 +80,12 @@ export const Meta = Schema.Struct({
   processName: Schema.optional(Schema.String),
 
   /**
+   * Space the message was produced in.
+   * Stored as a string to avoid circular dependency on `@dxos/keys`.
+   */
+  space: Schema.optional(Schema.String),
+
+  /**
    * ID of the conversation feed object if present.
    */
   conversationId: Schema.optional(Obj.ID),
@@ -139,15 +145,41 @@ export const noopWriter: TraceWriter = {
 
 export const writerLayerNoop: Layer.Layer<TraceService> = Layer.succeed(TraceService, noopWriter);
 
-export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
+export const noopSink: Sink = {
   write: () => {},
-});
+};
+
+export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, noopSink);
 
 export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
   write: (message) => {
     console.log(message);
   },
 });
+
+/**
+ * Merge a set of sinks into a single sink.
+ *
+ * Each message is forwarded to every sink in order. Failures in one sink do not
+ * prevent downstream sinks from receiving the message.
+ */
+export const mergeSinks = (sinks: readonly Sink[]): Sink => {
+  if (sinks.length === 0) return noopSink;
+  if (sinks.length === 1) return sinks[0]!;
+  return {
+    write: (message) => {
+      for (const sink of sinks) {
+        try {
+          sink.write(message);
+        } catch (err) {
+          // Intentional: do not let one sink break the chain.
+          // eslint-disable-next-line no-console
+          console.error('[trace] sink.write threw', err);
+        }
+      }
+    },
+  };
+};
 
 export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceService, never, TraceSink> =>
   Layer.effect(

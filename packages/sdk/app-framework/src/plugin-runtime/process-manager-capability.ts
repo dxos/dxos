@@ -46,12 +46,15 @@ export default Capability.makeModule(
 
     const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
     const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
+    const traceSinks = yield* Capability.getAll(Capabilities.TraceSink);
 
     const layerStack = new LayerStack({ layers: [...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
     const handlerSet =
       handlerSets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...handlerSets);
+
+    const mergedTraceSink = Trace.mergeSinks(traceSinks);
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative
@@ -65,7 +68,7 @@ export default Capability.makeModule(
       OperationHandlerSet.provide(handlerSet),
       KeyValueStore.layerMemory,
       TracingService.layerNoop,
-      Trace.layerNoop,
+      Layer.succeed(Trace.TraceSink, mergedTraceSink),
     );
 
     const processManagerLayer = ProcessManager.layer().pipe(Layer.provide(baseLayer));

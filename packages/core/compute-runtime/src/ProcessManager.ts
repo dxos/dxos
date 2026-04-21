@@ -888,6 +888,7 @@ export class ProcessManagerImpl implements Manager {
                 pid: id,
                 parentPid: options?.parentProcessId,
                 processName: params.name ?? undefined,
+                space: environment.space ?? options?.traceMeta?.space,
               },
               isEphemeral: event.isEphemeral,
               events: [
@@ -898,11 +899,13 @@ export class ProcessManagerImpl implements Manager {
                 },
               ],
             });
+            // All messages flow to the shared trace sink so downstream sinks
+            // (feed persistence, devtools, etc.) see the complete trace. The
+            // ephemeral subscribers receive a copy for live UI streaming.
             if (message.isEphemeral) {
               handleRef?.pushEphemeral(message);
-            } else {
-              this.#traceSink.write(message);
             }
+            this.#traceSink.write(message);
           },
         }),
       );
