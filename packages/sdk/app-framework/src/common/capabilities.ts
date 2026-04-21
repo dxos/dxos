@@ -4,14 +4,20 @@
 
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 import type * as Command$ from '@effect/cli/Command';
+import type * as Exit$ from 'effect/Exit';
+import type * as Fiber$ from 'effect/Fiber';
 import * as Effect from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
+import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
+import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
+import type { LayerSpec as LayerSpec$, ServiceResolver as ServiceResolver$ } from '@dxos/functions';
+import { Operation as Operation$ } from '@dxos/operation';
 import type { OperationInvoker as OperationInvoker$, OperationHandlerSet } from '@dxos/operation';
 
-import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
@@ -76,6 +82,58 @@ export const Command = Capability$.make<AnyCommand>('org.dxos.app-framework.capa
  * @category Capability
  */
 export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app-framework.capability.layer');
+
+/**
+ * Layer specification contributed by plugins.
+ *
+ * Plugins contribute {@link LayerSpec.LayerSpec} entries that are collected by the
+ * process-manager module and composed into a {@link LayerStack} which backs the
+ * {@link ProcessManagerRuntime}'s service resolver.
+ *
+ * @category Capability
+ */
+export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layer-spec');
+
+/**
+ * Services that are always available when running effects through a {@link ProcessManagerRuntime}.
+ */
+export type ProcessManagerRuntimeServices =
+  | Capability$.Service
+  | Plugin$.Service
+  | ProcessManager$.ProcessManagerService
+  | Operation$.Service
+  | ProcessManager$.ProcessOperationInvoker.Service
+  | ServiceResolver$.ServiceResolver;
+
+/**
+ * Runtime that runs effects requiring a fixed set of capability-manager and
+ * process-manager services.
+ *
+ * The shape mirrors {@link ManagedRuntime$.ManagedRuntime} but deliberately does
+ * not expose `dispose` – lifecycle is driven by the host plugin manager.
+ */
+export interface ProcessManagerRuntime {
+  runPromise<A, E>(
+    effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
+    options?: { readonly signal?: AbortSignal },
+  ): Promise<A>;
+  runPromiseExit<A, E>(
+    effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
+    options?: { readonly signal?: AbortSignal },
+  ): Promise<Exit$.Exit<A, E>>;
+  runFork<A, E>(
+    effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
+    options?: Runtime$.RunForkOptions,
+  ): Fiber$.RuntimeFiber<A, E>;
+  runSync<A, E>(effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>): A;
+}
+
+/**
+ * @category Capability
+ */
+export const ProcessManagerRuntime = Capability$.make<ProcessManagerRuntime>(
+  'org.dxos.app-framework.capability.process-manager-runtime',
+);
 
 export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
 

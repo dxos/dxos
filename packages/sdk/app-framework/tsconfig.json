@@ -45,10 +45,16 @@
       "path": "../../common/web-context-react"
     },
     {
+      "path": "../../core/compute-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../core/operation"

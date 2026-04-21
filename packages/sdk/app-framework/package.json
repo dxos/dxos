@@ -127,10 +127,12 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
@@ -139,7 +141,9 @@
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
+    "@effect/platform": "catalog:",
     "cjs-module-lexer": "catalog:"
   },
   "devDependencies": {
