@@ -31,17 +31,17 @@
 }
 
 /**
- * Column that fills the available space (extends dx-expander with overflow clipping).
- */
-@utility dx-column {
-  @apply flex-1 min-w-0 w-full;
-}
-
-/**
  * Container that fills the available space (extends dx-expander with overflow clipping).
  */
 @utility dx-container {
   @apply dx-expander overflow-hidden;
+}
+
+/**
+ * Column that fills the available space (extends dx-expander with overflow clipping).
+ */
+@utility dx-column {
+  @apply flex-1 min-w-0 w-full;
 }
 
 /**

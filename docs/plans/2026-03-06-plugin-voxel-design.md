@@ -10,7 +10,7 @@ A DXOS plugin providing a collaborative 3D voxel editor. Users can create voxel 
 
 ## Data Type
 
-ECHO schema `dxos.org/type/Voxel` (version 0.1.0) with:
+ECHO schema `org.dxos.type.voxel` (version 0.1.0) with:
 
 - `name`: Optional string label.
 - `voxels`: Record map keyed by `${x}:${y}:${z}` coordinates, values are `{ hue: string }` (ChromaticPalette hue name).

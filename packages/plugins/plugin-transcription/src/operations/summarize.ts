@@ -9,9 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Database } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
@@ -25,7 +24,7 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
-        const result = yield* new AiSession({
+        const result = yield* new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         }).run({
           prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
@@ -53,7 +52,6 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
           AiService.model('@anthropic/claude-sonnet-4-0'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
           Trace.writerLayerNoop,
           Database.notAvailable,
           Layer.succeed(Operation.Service, {

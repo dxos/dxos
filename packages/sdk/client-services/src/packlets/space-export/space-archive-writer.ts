@@ -15,7 +15,7 @@ import {
   type SpaceArchiveMetadata,
   SpaceArchiveVersion,
 } from '@dxos/protocols';
-import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { createFilename } from '@dxos/util';
 
 export type SpaceArchiveBeginProps = {
@@ -115,6 +115,7 @@ export class SpaceArchiveWriter extends Resource {
     return {
       filename: createFilename({ parts: [this._meta.spaceId], ext: 'tar' }),
       contents: binary,
+      format: SpaceArchive.Format.BINARY,
     };
   }
 }

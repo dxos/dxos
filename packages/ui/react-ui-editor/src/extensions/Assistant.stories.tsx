@@ -14,6 +14,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { trim } from '@dxos/util';
 
 import { Editor, type EditorViewProps } from '../components';
 import { translations } from '../translations';
@@ -32,14 +33,16 @@ const useTestGenerate = () => {
     );
 
     if (!disposed) {
-      setGenerate(({ instructions, content }: { instructions: string; content: string }) =>
-        rt.runPromise(
-          Effect.gen(function* () {
-            const prompt = [instructions, content].join('\n\n');
-            const response = yield* LanguageModel.generateText({ prompt });
-            return response.text;
-          }),
-        ),
+      setGenerate(
+        () =>
+          ({ instructions, content }: { instructions: string; content: string }) =>
+            rt.runPromise(
+              Effect.gen(function* () {
+                const prompt = [instructions, content].join('\n\n');
+                const response = yield* LanguageModel.generateText({ prompt });
+                return response.text;
+              }),
+            ),
       );
     }
 
@@ -97,6 +100,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: 'This text has a speling mistake.',
+    value: trim`
+      This text has a speling mistake.
+
+      And it grammatical errors.
+
+      But we can fix it.
+    `,
   },
 };

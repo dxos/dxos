@@ -10,21 +10,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiService, GenericToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import {
-  AgentService,
-  AiContextBinder,
-  AiContextService,
-  AiConversation,
-  AiConversationService,
-} from '@dxos/assistant';
+import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -41,7 +34,6 @@ import {
   ProcessManager,
   RemoteFunctionExecutionService,
   ServiceResolver,
-  TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
@@ -110,10 +102,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ...this.#capabilities.getAll(Capabilities.OperationHandler),
         );
 
-        const genericToolkitProvider = Layer.succeed(GenericToolkit.GenericToolkitProvider, {
+        const opaqueToolkitProvider = Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
           getToolkit: () => {
             const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
-            return GenericToolkit.merge(...toolkits);
+            return OpaqueToolkit.merge(...toolkits);
           },
         });
 
@@ -164,29 +156,29 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                         return { binder };
                       }).pipe(Effect.provide(services)),
                     ),
-                    // AiConversationService.
-                    ServiceResolver.succeed(AiConversationService, (context) =>
+                    // AiSessionService.
+                    ServiceResolver.succeed(AiSessionService, (context) =>
                       Effect.gen(function* () {
                         if (!context.conversation) {
-                          return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
+                          return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
                         }
                         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
                           Effect.orDie,
                         );
                         const runtime = yield* Effect.runtime<Feed.FeedService>();
-                        const conversation = yield* acquireReleaseResource(
+                        const session = yield* acquireReleaseResource(
                           () =>
-                            new AiConversation({
+                            new AiSession({
                               feed,
                               runtime,
                             }),
                         );
-                        return conversation;
+                        return session;
                       }).pipe(Effect.provide(services)),
                     ),
                     yield* ServiceResolver.fromRequirements(
                       Database.Service,
-                      GenericToolkit.GenericToolkitProvider,
+                      OpaqueToolkit.OpaqueToolkitProvider,
                       Feed.FeedService,
                       QueueService,
                       AiService.AiService,
@@ -203,7 +195,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
             Layer.provideMerge(
               Layer.mergeAll(
-                TracingServiceLive,
                 FeedTraceSink.layerLive,
                 TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
                 KeyValueStore.layerMemory,
@@ -237,7 +228,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                 ),
               ),
             ),
-            Layer.provideMerge(genericToolkitProvider),
+            Layer.provideMerge(opaqueToolkitProvider),
             Layer.provideMerge(aiServiceLayer),
             Layer.provideMerge(CredentialsService.layerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
@@ -254,22 +245,3 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     return runtime;
   }
 }
-
-const TracingServiceLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
-    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
-    const [properties] = objects;
-    invariant(properties);
-    // TODO(burdon): Check ref target has loaded?
-    if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
-      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (properties) => {
-        properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
-      });
-    }
-
-    const queue = properties.invocationTraceQueue!.target;
-    invariant(queue);
-    return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
-  }),
-);

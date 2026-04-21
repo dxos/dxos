@@ -15,7 +15,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import { CredentialsService, type QueueService, Trace, TracingService } from '@dxos/functions';
+import { CredentialsService, type QueueService, Trace } from '@dxos/functions';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 export type AiChatServices =
@@ -26,7 +26,6 @@ export type AiChatServices =
   | Operation.Service
   | OperationRegistry.Service
   | QueueService
-  | TracingService
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
@@ -84,7 +83,6 @@ export const chatLayer = ({
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
-    Layer.provideMerge(TracingService.layerNoop),
     Layer.provideMerge(Trace.writerLayerNoop),
     Layer.provideMerge(Feed.notAvailable),
   );

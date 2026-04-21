@@ -5,14 +5,18 @@
 import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { SpaceId } from '@dxos/keys';
+import { type SerializedSpace } from '@dxos/echo-db';
+import { ObjectId, SpaceId } from '@dxos/keys';
 import {
   FEED_ARCHIVE_BLOCKS_PER_CHUNK,
   type FeedArchiveBlock,
   SpaceArchiveFileStructure,
   SpaceArchiveVersion,
 } from '@dxos/protocols';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
+import { detectSpaceArchiveFormat } from './archive-format';
+import { buildDatabaseDirectoryFromObjects, readSerializedSpaceArchive } from './serialized-space-reader';
 import { extractSpaceArchive } from './space-archive-reader';
 import { SpaceArchiveWriter } from './space-archive-writer';
 
@@ -282,6 +286,116 @@ describe('SpaceArchive', () => {
 
     test('blocks per chunk constant is set', () => {
       expect(FEED_ARCHIVE_BLOCKS_PER_CHUNK).toBe(100);
+    });
+  });
+
+  describe('detectSpaceArchiveFormat', () => {
+    test('detects JSON via .dx.json extension', () => {
+      const format = detectSpaceArchiveFormat({ filename: 'space.dx.json', contents: new Uint8Array() });
+      expect(format).toBe(SpaceArchive.Format.JSON);
+    });
+
+    test('detects JSON via .json extension', () => {
+      const format = detectSpaceArchiveFormat({ filename: 'backup.json', contents: new Uint8Array() });
+      expect(format).toBe(SpaceArchive.Format.JSON);
+    });
+
+    test('detects BINARY via .tar extension', () => {
+      const format = detectSpaceArchiveFormat({ filename: 'space.tar', contents: new Uint8Array() });
+      expect(format).toBe(SpaceArchive.Format.BINARY);
+    });
+
+    test('detects BINARY via .tar.gz extension', () => {
+      const format = detectSpaceArchiveFormat({ filename: 'space.tar.gz', contents: new Uint8Array() });
+      expect(format).toBe(SpaceArchive.Format.BINARY);
+    });
+
+    test('falls back to JSON via leading { byte', () => {
+      const contents = new TextEncoder().encode('{"version":1}');
+      const format = detectSpaceArchiveFormat({ filename: 'unknown', contents });
+      expect(format).toBe(SpaceArchive.Format.JSON);
+    });
+
+    test('skips leading whitespace before sniffing', () => {
+      const contents = new TextEncoder().encode('  \n\t{"version":1}');
+      const format = detectSpaceArchiveFormat({ filename: 'unknown', contents });
+      expect(format).toBe(SpaceArchive.Format.JSON);
+    });
+
+    test('falls back to BINARY on non-JSON bytes', () => {
+      const format = detectSpaceArchiveFormat({
+        filename: 'unknown',
+        contents: new Uint8Array([0x00, 0x01, 0x02]),
+      });
+      expect(format).toBe(SpaceArchive.Format.BINARY);
+    });
+  });
+
+  describe('SerializedSpace reader', () => {
+    test('parses a minimal JSON archive', () => {
+      const serialized: SerializedSpace = {
+        version: 1,
+        objects: [],
+      };
+      const contents = new TextEncoder().encode(JSON.stringify(serialized));
+      const archive: SpaceArchive = {
+        filename: 'test.dx.json',
+        contents,
+        format: SpaceArchive.Format.JSON,
+      };
+      const result = readSerializedSpaceArchive(archive);
+      expect(result.version).toBe(1);
+      expect(result.objects).toEqual([]);
+    });
+
+    test('rejects archives missing required fields', () => {
+      const bogus = new TextEncoder().encode(JSON.stringify({ objects: [] }));
+      expect(() =>
+        readSerializedSpaceArchive({
+          filename: 'bad.json',
+          contents: bogus,
+          format: SpaceArchive.Format.JSON,
+        }),
+      ).toThrow();
+    });
+
+    test('buildDatabaseDirectoryFromObjects round-trips data and type info', () => {
+      const id = ObjectId.random();
+      const objects = [
+        {
+          id,
+          '@type': 'dxn:type:example.Thing',
+          '@meta': { keys: [] },
+          title: 'hello',
+        },
+      ];
+      const directory = buildDatabaseDirectoryFromObjects(objects as any);
+      expect(directory.objects).toBeDefined();
+      const structure = directory.objects![id];
+      expect(structure).toBeDefined();
+      expect(structure.data).toEqual({ title: 'hello' });
+      expect(structure.system?.type).toEqual({ '/': 'dxn:type:example.Thing' });
+      expect(structure.system?.kind).toBe('object');
+    });
+
+    test('buildDatabaseDirectoryFromObjects flags relations', () => {
+      const id = ObjectId.random();
+      const sourceId = ObjectId.random();
+      const targetId = ObjectId.random();
+      const objects = [
+        {
+          id,
+          '@type': 'dxn:type:example.Link',
+          '@meta': { keys: [] },
+          '@relationSource': sourceId,
+          '@relationTarget': targetId,
+        },
+      ];
+      const directory = buildDatabaseDirectoryFromObjects(objects as any);
+      const structure = directory.objects![id];
+      expect(structure.system?.kind).toBe('relation');
+      expect(structure.system?.source).toEqual({ '/': sourceId });
+      expect(structure.system?.target).toEqual({ '/': targetId });
     });
   });
 });
