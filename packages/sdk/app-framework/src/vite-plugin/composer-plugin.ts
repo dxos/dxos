@@ -5,7 +5,6 @@
 import { type Plugin as VitePlugin } from 'vite';
 
 import { type Plugin } from '../core';
-
 import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
