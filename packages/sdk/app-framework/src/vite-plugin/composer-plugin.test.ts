@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { emitManifest } from './emit-manifest';
+import { serializeManifest } from './composer-plugin';
 
-describe('emitManifest', () => {
+describe('serializeManifest', () => {
   test('serializes plugin meta plus moduleFile', ({ expect }) => {
-    const json = emitManifest(
+    const json = serializeManifest(
       { id: 'org.example.plugin', name: 'Example', description: 'Demo', tags: ['new'] },
       { moduleFile: 'plugin.mjs' },
     );
