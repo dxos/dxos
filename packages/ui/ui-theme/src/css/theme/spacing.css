@@ -9,12 +9,11 @@
   /** Minimum inset from the viewport edge for floating surfaces. */
   --spacing-screen-border: 2rem;
 
-  --spacing-popover-min-width: 12rem;
+  --spacing-popover-default-width: 20rem;
+  --spacing-popover-min-width: 16rem;
 
   --spacing-document-max-width: 50rem;
   --spacing-document-width: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
-
-  --spacing-popover-min-width: 16rem;
 
   --spacing-card-default-width: 20rem;
   --spacing-card-min-width: 18rem;

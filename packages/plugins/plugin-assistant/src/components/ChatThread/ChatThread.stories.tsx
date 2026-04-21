@@ -8,12 +8,15 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Filter } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { random } from '@dxos/random';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { type Queue, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { Card, Popover } from '@dxos/react-ui';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -97,10 +100,17 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types: [Organization.Organization, Person.Person],
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Organization.Organization, Person.Person],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+            }),
+        }),
+      ],
     }),
   ],
   parameters: {
