@@ -9,7 +9,7 @@ import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Operation } from '@dxos/operation';
 
-import { type Label, UndoOperation } from '../../common';
+import { type Label } from '../../common';
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
 import { resolveMessage } from './undo-mapping';
