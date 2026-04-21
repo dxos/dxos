@@ -148,6 +148,9 @@
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   },

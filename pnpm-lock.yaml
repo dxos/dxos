@@ -4817,6 +4817,10 @@ importers:
       effect:
         specifier: 3.20.0
         version: 3.20.0
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
 
   packages/core/echo/echo-atom:
     dependencies:
