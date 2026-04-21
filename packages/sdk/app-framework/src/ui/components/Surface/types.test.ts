@@ -107,19 +107,13 @@ describe('isSurfaceAvailable typing', () => {
   });
 
   test('typed overload rejects data missing required fields', () => {
-    isSurfaceAvailable(capabilityManager, {
-      type: sectionToken,
-      // @ts-expect-error — `data` is missing `attendableId` required by the token.
-      data: { subject: 'x' },
-    });
+    // @ts-expect-error — `data` is missing `attendableId` required by the token.
+    isSurfaceAvailable(capabilityManager, { type: sectionToken, data: { subject: 'x' } });
   });
 
   test('typed overload rejects data with wrong field type', () => {
-    isSurfaceAvailable(capabilityManager, {
-      type: sectionToken,
-      // @ts-expect-error — `attendableId` must be a string, not a number.
-      data: { attendableId: 123, subject: 'x' },
-    });
+    // @ts-expect-error — `attendableId` must be a string, not a number.
+    isSurfaceAvailable(capabilityManager, { type: sectionToken, data: { attendableId: 123, subject: 'x' } });
   });
 
   test('legacy overload accepts loose data when `role` is a string', () => {
