@@ -17,8 +17,10 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bot',
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Discord.Bot),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Discord.Bot),
+          AppSurface.object(AppSurface.Section, Discord.Bot),
+        ),
         component: ({ data, role }) => (
           <BotArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

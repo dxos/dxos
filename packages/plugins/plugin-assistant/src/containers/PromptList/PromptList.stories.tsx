@@ -60,7 +60,7 @@ const DefaultStory = () => {
   return (
     <Panel.Root>
       <Panel.Toolbar className='flex p-1 items-center'>
-        <PromptList subject={subject} role='toolbar-input' />
+        <PromptList subject={subject} role='toolbar-input' attendableId='story' />
       </Panel.Toolbar>
       <Panel.Content>
         <TracePanel space={space} />

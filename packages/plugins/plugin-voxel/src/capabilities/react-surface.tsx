@@ -18,16 +18,17 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'world',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Voxel.World),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Voxel.World),
+          AppSurface.object(AppSurface.Section, Voxel.World),
+        ),
         component: ({ data, role }) => (
           <VoxelArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'world-card',
-        role: ['card--content'],
-        filter: AppSurface.objectCard(Voxel.World),
+        filter: AppSurface.object(AppSurface.Card, Voxel.World),
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,
       }),
     ]),

@@ -20,18 +20,16 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'root',
-        role: 'article',
-        filter: AppSurface.objectArticle(Pipeline.Pipeline),
+        filter: AppSurface.object(AppSurface.Article, Pipeline.Pipeline),
         component: ({ data, role }) => (
           <PipelineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'companion.invocations',
-        role: 'article',
-        filter: AppSurface.and(
-          AppSurface.literalArticle('invocations'),
-          AppSurface.companionArticle(Pipeline.Pipeline),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'invocations'),
+          AppSurface.companion(AppSurface.Article, Pipeline.Pipeline),
         ),
         component: ({ data, role }) => {
           const db = Obj.getDatabase(data.companionTo);
@@ -47,8 +45,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'object-properties',
-        role: 'object-properties',
-        filter: AppSurface.objectProperties(Pipeline.Pipeline),
+        filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
         component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
       }),
     ]),

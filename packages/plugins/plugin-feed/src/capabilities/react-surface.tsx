@@ -18,8 +18,7 @@ export default Capability.makeModule(() =>
       // Main subscription feed list view.
       Surface.create({
         id: 'subscription-feed',
-        role: ['article'],
-        filter: AppSurface.literalArticle('feeds-root'),
+        filter: AppSurface.literal(AppSurface.Article, 'feeds-root'),
         component: ({ data, role }) => (
           <SubscriptionsArticle role={role} attendableId={data.attendableId} subject={data.subject} />
         ),
@@ -27,9 +26,16 @@ export default Capability.makeModule(() =>
       // Companion view: FeedArticle shown alongside the feeds-root.
       Surface.create({
         id: 'feed-article',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.and(AppSurface.objectArticle(Subscription.Feed), AppSurface.companionArticle('feeds-root')),
+        filter: AppSurface.oneOf(
+          AppSurface.allOf(
+            AppSurface.object(AppSurface.Article, Subscription.Feed),
+            AppSurface.companion(AppSurface.Article, 'feeds-root'),
+          ),
+          AppSurface.allOf(
+            AppSurface.object(AppSurface.Section, Subscription.Feed),
+            AppSurface.companion(AppSurface.Section, 'feeds-root'),
+          ),
+        ),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

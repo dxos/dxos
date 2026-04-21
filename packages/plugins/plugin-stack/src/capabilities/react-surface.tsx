@@ -18,8 +18,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'article',
-        role: 'article',
-        filter: AppSurface.objectArticle(Collection.Collection),
+        filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ role, data }) => {
           return <StackContainer attendableId={data.attendableId} role={role} subject={data.subject} />;
         },
