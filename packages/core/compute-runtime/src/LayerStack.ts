@@ -3,6 +3,8 @@ import { Effect, Context, ManagedRuntime, type Scope, Layer, Option } from 'effe
 import { ServiceNotAvailableError, ServiceResolver, type LayerSpec } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
+import { LayerDependencyCycleError } from './errors';
+
 interface LayerStackOpts {
   readonly layers: LayerSpec.LayerSpec[];
 }
@@ -37,6 +39,18 @@ export class LayerStack {
     tag: Context.Tag<any, any>,
     context: LayerSpec.LayerContext,
   ): Effect.Effect<unknown, ServiceNotAvailableError, Scope.Scope> {
+    // Cycle errors from slice initialisation are a configuration bug, not a
+    // recoverable resolver failure; surface them as defects so the typed error
+    // channel stays narrowed to `ServiceNotAvailableError`.
+    return this.#resolveServiceInner(tag, context).pipe(
+      Effect.catchTag('LayerDependencyCycleError', (err) => Effect.die(err)),
+    );
+  }
+
+  #resolveServiceInner(
+    tag: Context.Tag<any, any>,
+    context: LayerSpec.LayerContext,
+  ): Effect.Effect<unknown, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen(this, function* () {
       // Initialise slices top-down (dependencies first) so that higher-affinity slices
       // can use the services provided by lower-affinity ones.
@@ -58,16 +72,18 @@ export class LayerStack {
       }
 
       const services = this.#resolveServices(topAffinity, context, [tag]);
-      return yield* Context.getOption(services, tag).pipe(
-        Effect.catchTag('NoSuchElementException', () => Effect.fail(new ServiceNotAvailableError(tag.key))),
-      );
+      const service = Context.getOption(services, tag);
+      if (Option.isNone(service)) {
+        return yield* Effect.fail(new ServiceNotAvailableError(tag.key));
+      }
+      return service.value;
     }).pipe(this.#semapphore.withPermits(1));
   }
 
   #getOrInitSlice(
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<Slice, ServiceNotAvailableError, Scope.Scope> {
+  ): Effect.Effect<Slice, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen(this, function* () {
       let slice = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, context));
 
@@ -196,6 +212,8 @@ class Slice {
 
   #services: Context.Context<unknown> = Context.empty() as Context.Context<unknown>;
 
+  #sortError: LayerDependencyCycleError | undefined;
+
   constructor(opts: SliceOpts) {
     this.#affinity = opts.affinity;
     this.#context = opts.context;
@@ -221,7 +239,18 @@ class Slice {
         break;
     }
 
-    this.#sortLayers();
+    // Eagerly compute the topological sort so that `requires`/`provides` are
+    // populated for dependency resolution. A cycle is remembered and surfaced
+    // through the Effect error channel when `init()` runs.
+    try {
+      this.#sortLayers();
+    } catch (err) {
+      if (err instanceof LayerDependencyCycleError) {
+        this.#sortError = err;
+      } else {
+        throw err;
+      }
+    }
   }
 
   get affinity(): LayerSpec.Affinity {
@@ -260,7 +289,12 @@ class Slice {
     this.#refCount--;
   }
 
-  init(requirements: Context.Context<unknown>): Effect.Effect<void, ServiceNotAvailableError> {
+  init(
+    requirements: Context.Context<unknown>,
+  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+    if (this.#sortError) {
+      return Effect.fail(this.#sortError);
+    }
     const missing = this.#requires.find((id) => Option.isNone(Context.getOption(requirements, id)));
     if (missing) {
       return Effect.fail(new ServiceNotAvailableError(missing.key));
@@ -351,7 +385,7 @@ class Slice {
         break;
       }
       if (next === -1) {
-        throw new Error('Cycle in layer dependency graph (requires / provides)');
+        throw new LayerDependencyCycleError('Cycle in layer dependency graph (requires / provides)');
       }
       sorted.push(next);
       placed[next] = true;

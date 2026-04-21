@@ -17,6 +17,14 @@ import type { UndoRegistry } from './undo-registry';
 
 const HISTORY_LIMIT = 100;
 
+/**
+ * Bound on in-flight {@link Pending} records, keyed by `${pid}:${operationKey}`.
+ * Entries are normally removed on `Trace.OperationEnd`, but we cap the map to
+ * avoid unbounded memory retention when the terminal event is never observed
+ * (trace transport loss, aborted process, etc.).
+ */
+const PENDING_LIMIT = 1000;
+
 //
 // Public Interface
 //
@@ -97,6 +105,16 @@ export const make = (opts: HistoryTrackerOptions): HistoryTracker => {
     const mapKey = pendingKey(pid, key);
     let pending = pendingByPidAndKey.get(mapKey);
     if (!pending) {
+      // Drop oldest entries when we exceed the cap. `Map` iterates in
+      // insertion order, so the first key is the oldest — good enough to
+      // prevent unbounded growth when `Trace.OperationEnd` events are lost.
+      while (pendingByPidAndKey.size >= PENDING_LIMIT) {
+        const oldest = pendingByPidAndKey.keys().next().value;
+        if (oldest === undefined) {
+          break;
+        }
+        pendingByPidAndKey.delete(oldest);
+      }
       pending = { pid, key, inputSeen: false, outputSeen: false };
       pendingByPidAndKey.set(mapKey, pending);
     }

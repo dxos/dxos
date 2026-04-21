@@ -128,14 +128,17 @@ export const make = (opts: {
       });
       log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
 
-      yield* handle.submitInput(input);
-      log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
+      // Subscribe (via `fiberFromProcess`) and cache before submitting input
+      // so that a handler producing output synchronously on the first input
+      // can never race the collector.
       const fiber = yield* fiberFromProcess(handle);
       // TODO(dmaretskyi): Bound `fiberCache` lifetime without breaking attach
       // of completed processes. We keep cached fibers indefinitely today so
       // that `attachFiber` can still return the collected exit after the
       // spawn-side `await` has resolved.
       fiberCache.set(handle.pid, fiber);
+      yield* handle.submitInput(input);
+      log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(
       Effect.onInterrupt(() =>
@@ -148,11 +151,15 @@ export const make = (opts: {
   const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
     Effect.gen(function* () {
       log('lifecycle: attach to operation process', { pid });
-      const handle = yield* opts.manager.attach<any, T>(pid);
-      const fiber = fiberCache.get(pid);
-      if (fiber) {
-        return fiber;
+      // Cache hit short-circuits the manager attach so that attaching to an
+      // already-completed process still returns a fiber with the collected
+      // exit — even if the manager would fail to attach (e.g. after the
+      // manager dropped its handle).
+      const cached = fiberCache.get(pid);
+      if (cached) {
+        return cached;
       }
+      const handle = yield* opts.manager.attach<any, T>(pid);
       const newFiber = yield* fiberFromProcess(handle);
       fiberCache.set(pid, newFiber);
       return newFiber;

@@ -83,8 +83,14 @@ export default Capability.makeModule(
 
     // Dispose the managed runtime — and its scoped process manager, service
     // resolver, trace sinks, etc. — when this capability module is torn down.
+    // The LayerStack owns keep-alive application/space slices outside of
+    // `managedRuntime`, so we explicitly destroy it after the runtime so that
+    // its cached slice runtimes (and their finalizers) also run.
     yield* Effect.addFinalizer(() =>
-      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.catchAllCause(() => Effect.void)),
+      Effect.promise(async () => {
+        await managedRuntime.dispose();
+        await layerStack.destroy();
+      }).pipe(Effect.catchAllCause(() => Effect.void)),
     );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
