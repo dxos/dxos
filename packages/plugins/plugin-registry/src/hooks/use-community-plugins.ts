@@ -7,11 +7,11 @@ import { useEffect, useState } from 'react';
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
-import { type CommunityPluginEntry } from '@dxos/protocols';
+import { type PluginEntry } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';
 
 export type CommunityPluginsState = {
-  entries: readonly CommunityPluginEntry[];
+  entries: readonly PluginEntry[];
   loading: boolean;
   error: Error | null;
 };
@@ -20,20 +20,20 @@ export type CommunityPluginsState = {
  * Session-level cache keyed by Edge base URL. One fetch per page load, shared across every
  * surface that asks. Reset via {@link resetCommunityPluginsCache} (tests).
  */
-const cachedByBaseUrl = new Map<string, Promise<readonly CommunityPluginEntry[]>>();
+const cachedByBaseUrl = new Map<string, Promise<readonly PluginEntry[]>>();
 
 export const resetCommunityPluginsCache = (): void => {
   cachedByBaseUrl.clear();
 };
 
-const loadOnce = (client: EdgeHttpClient): Promise<readonly CommunityPluginEntry[]> => {
+const loadOnce = (client: EdgeHttpClient): Promise<readonly PluginEntry[]> => {
   const baseUrl = client.baseUrl;
   const existing = cachedByBaseUrl.get(baseUrl);
   if (existing) {
     return existing;
   }
   const promise = client
-    .getCommunityPlugins(Context.default())
+    .getRegistryPlugins(Context.default())
     .then((body) => body.plugins.filter((entry) => entry.health === 'ok'))
     .catch((error: unknown) => {
       cachedByBaseUrl.delete(baseUrl);

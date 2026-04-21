@@ -27,24 +27,6 @@ describe('UrlLoader', () => {
     });
   });
 
-  describe('isGitHubReleaseAssetApiUrl', () => {
-    it('matches GitHub REST release asset URLs', ({ expect }) => {
-      expect(
-        UrlLoader.isGitHubReleaseAssetApiUrl('https://api.github.com/repos/dxos/plugin-zen/releases/assets/12345'),
-      ).toBe(true);
-    });
-
-    it('rejects download/blob URLs and other hosts', ({ expect }) => {
-      expect(
-        UrlLoader.isGitHubReleaseAssetApiUrl('https://github.com/dxos/plugin-zen/releases/download/v0.1.0/plugin.mjs'),
-      ).toBe(false);
-      expect(UrlLoader.isGitHubReleaseAssetApiUrl('https://api.github.com/repos/dxos/plugin-zen/releases/latest')).toBe(
-        false,
-      );
-      expect(UrlLoader.isGitHubReleaseAssetApiUrl('not a url')).toBe(false);
-    });
-  });
-
   describe('getRemoteEntries', () => {
     it('returns persisted entries from storage', ({ expect }) => {
       const storage: UrlLoader.Storage = {

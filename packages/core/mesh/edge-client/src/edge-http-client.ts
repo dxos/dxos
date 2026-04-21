@@ -28,7 +28,7 @@ import {
   type ExportBundleResponse,
   type FeedProtocol,
   type GetAgentStatusResponseBody,
-  type GetCommunityPluginsResponseBody,
+  type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -417,10 +417,10 @@ export class EdgeHttpClient {
   //
 
   /**
-   * Fetches the hydrated community plugin directory from the Edge registry service.
+   * Fetches the hydrated plugin directory from the Edge registry service.
    * Unauthenticated; safe to call without an identity.
    */
-  public async getCommunityPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetCommunityPluginsResponseBody> {
+  public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 

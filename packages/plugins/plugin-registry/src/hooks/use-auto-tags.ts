@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 import { UrlLoader } from '@dxos/app-framework';
-import { type CommunityPluginEntry } from '@dxos/protocols';
+import { type PluginEntry } from '@dxos/protocols';
 
 /**
  * Auto-tags that are derived at display time rather than persisted to `Plugin.Meta`.
@@ -20,7 +20,7 @@ export type AutoTagsMap = Record<string, readonly string[]>;
  * Reads the persisted remote-plugin entries synchronously to derive `local`, and
  * adds `community` for any plugin id found in the supplied community manifest entries.
  */
-export const useAutoTags = (communityEntries: readonly CommunityPluginEntry[]): AutoTagsMap =>
+export const useAutoTags = (communityEntries: readonly PluginEntry[]): AutoTagsMap =>
   useMemo(() => {
     const byId: Record<string, string[]> = {};
     const addTag = (id: string, tag: string) => {

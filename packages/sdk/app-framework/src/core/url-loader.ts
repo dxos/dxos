@@ -73,42 +73,6 @@ const isUrl = (locator: string): boolean => {
   }
 };
 
-const GITHUB_RELEASE_ASSET_PATH = /\/repos\/[^/]+\/[^/]+\/releases\/assets\/\d+$/;
-
-/**
- * True when `locator` is a GitHub REST release-asset URL (`GET` + `Accept: application/octet-stream`
- * returns the file and is CORS-enabled). Plain `browser_download_url` values are not importable in
- * the browser because blob storage omits `Access-Control-Allow-Origin`.
- */
-export const isGitHubReleaseAssetApiUrl = (locator: string): boolean => {
-  try {
-    const url = new URL(locator);
-    return url.hostname === 'api.github.com' && GITHUB_RELEASE_ASSET_PATH.test(url.pathname);
-  } catch {
-    return false;
-  }
-};
-
-const importGitHubReleaseAssetModule = async (assetApiUrl: string): Promise<Record<string, unknown>> => {
-  const response = await fetch(assetApiUrl, {
-    headers: {
-      Accept: 'application/octet-stream',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`GitHub release asset request failed: ${response.status} ${response.statusText}`);
-  }
-  const source = await response.text();
-  const blob = new Blob([source], { type: 'text/javascript' });
-  const objectUrl = URL.createObjectURL(blob);
-  try {
-    return (await import(/* @vite-ignore */ objectUrl)) as Record<string, unknown>;
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-};
-
 /**
  * Returns true when the URL's hostname is the local host (localhost, 127.0.0.1, or ::1).
  */
@@ -149,9 +113,7 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
 
 const loadRemotePlugin = async (url: string): Promise<Plugin.Plugin> => {
   log.info('loading remote plugin', { url });
-  const mod = isGitHubReleaseAssetApiUrl(url)
-    ? await importGitHubReleaseAssetModule(url)
-    : ((await import(/* @vite-ignore */ url)) as Record<string, unknown>);
+  const mod = (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
   const plugin = normalizePluginExport(mod);
   if (!plugin.meta.id || !plugin.meta.name) {
     throw new Error(`Remote plugin at ${url} is missing required meta.id or meta.name.`);

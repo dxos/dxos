@@ -11,7 +11,7 @@ import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/ap
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
-import { type CommunityPluginEntry } from '@dxos/protocols';
+import { type PluginEntry } from '@dxos/protocols';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -20,7 +20,7 @@ import { getPluginPath, meta } from '#meta';
 
 import { useAutoTags, useCommunityPlugins } from '../../hooks';
 
-const sortEntries = (a: CommunityPluginEntry, b: CommunityPluginEntry) =>
+const sortEntries = (a: PluginEntry, b: PluginEntry) =>
   (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
 
 /**
@@ -28,7 +28,7 @@ const sortEntries = (a: CommunityPluginEntry, b: CommunityPluginEntry) =>
  * {@link PluginList} for rendering. The synthesized plugin has no modules — it
  * exists only for display until the user installs it.
  */
-const toDisplayPlugin = (entry: CommunityPluginEntry): Plugin.Plugin =>
+const toDisplayPlugin = (entry: PluginEntry): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: entry.meta,
