@@ -16,7 +16,7 @@ import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { DXN, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/echo';
 import { LayerSpec, Process, ServiceResolver, StorageService, Trace, TracingService } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,10 +24,13 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
 import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
+import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessHandleImpl, type OutputItem } from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
+import { createProcessTraceService } from './process-trace';
 import { layer as storageServiceLayer } from './storage-service-layer';
-import { detachData } from './trace-buffer';
+
+export { type ProcessIdGenerator, UUIDProcessIdGenerator, SequentialProcessIdGenerator } from './process-id';
 
 export { ProcessOperationInvoker };
 
@@ -454,45 +457,18 @@ export class ProcessManagerImpl implements Manager {
         Context.add(StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(TracingService, processTracingService),
-        Context.add(Trace.TraceService, {
-          write: (event, data) => {
-            try {
-              // TODO(dmaretskyi): Batching.
-              // Detach `data` from any ECHO proxy state — nested reactive
-              // objects would otherwise cause `Obj.make` to fail when it
-              // recurses through the Schema.Unknown event payload and tries
-              // to re-attach schema metadata to non-configurable proxies.
-              const detachedData = detachData(data);
-              const message = Obj.make(Trace.Message, {
-                meta: {
-                  ...(options?.traceMeta ?? {}),
-                  pid: id,
-                  parentPid: options?.parentProcessId,
-                  processName: params.name ?? undefined,
-                  space: environment.space ?? options?.traceMeta?.space,
-                },
-                isEphemeral: event.isEphemeral,
-                events: [
-                  {
-                    type: event.key,
-                    timestamp: Date.now(),
-                    data: detachedData,
-                  },
-                ],
-              });
-              // Ephemeral events are streamed live to subscribers and never
-              // persisted; non-ephemeral events are forwarded to the shared
-              // trace sink (feed persistence, devtools, etc.).
-              if (message.isEphemeral) {
-                handleRef?.pushEphemeral(message);
-              } else {
-                this.#traceSink.write(message);
-              }
-            } catch (err) {
-              log.warn('trace write failed', { pid: id, event: event.key, err });
-            }
-          },
-        }),
+        Context.add(
+          Trace.TraceService,
+          createProcessTraceService({
+            pid: id,
+            parentPid: options?.parentProcessId,
+            processName: params.name ?? undefined,
+            traceMeta: options?.traceMeta,
+            space: environment.space,
+            sink: this.#traceSink,
+            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+          }),
+        ),
       );
 
       // Provide Operation.Service that spawns child processes with parentProcessId set.
@@ -667,21 +643,6 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 }
-
-export type ProcessIdGenerator = () => Process.ID;
-
-/**
- * Generates a random process id (UUID string).
- */
-export const UUIDProcessIdGenerator: ProcessIdGenerator = () => Process.ID.make(crypto.randomUUID());
-
-/**
- * Generates sequential string process ids (`0`, `1`, …); useful in tests.
- */
-export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
-  let nextId = 0;
-  return () => Process.ID.make(String(nextId++));
-})();
 
 /**
  * Scoped layer that provides ProcessManager and ProcessMonitorService.
