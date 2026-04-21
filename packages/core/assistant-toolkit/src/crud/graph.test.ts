@@ -6,7 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiSession, ToolExecutionServices } from '@dxos/assistant';
+import { OpaqueToolkit } from '@dxos/ai';
+import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
@@ -20,12 +21,6 @@ const TestLayer = Layer.empty.pipe(
 );
 
 describe('graph', () => {
-  // let builder: EchoTestBuilder;
-  // test('findRelatedSchema', async () => {
-  //   const db = await createEchoDatabase();
-  //   const relatedSchemas = await findRelatedSchema(db, Schema.Struct({}));
-  // });
-
   const Toolkit = makeGraphWriterToolkit({ schema: [Pipeline.Pipeline] });
   const ToolkitLayer = makeGraphWriterHandler(Toolkit);
 
@@ -33,9 +28,9 @@ describe('graph', () => {
     'calculator',
     Effect.fn(
       function* (_) {
-        const session = new AiSession();
-        const toolkit = yield* Toolkit;
-        const response = yield* session.run({
+        const request = new AiRequest();
+        const toolkit = yield* OpaqueToolkit.fromContext(Toolkit);
+        const response = yield* request.run({
           toolkit,
           prompt: 'What is 10 + 20?',
         });

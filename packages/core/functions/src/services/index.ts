@@ -8,4 +8,4 @@ export * from './event-logger';
 export { createEventLogger, createDefectLogger } from './event-logger';
 export * from './function-invocation-service';
 export * from './queues';
-export * from './tracing';
+export { MESSAGE_PROPERTY_TOOL_CALL_ID } from './tracing';

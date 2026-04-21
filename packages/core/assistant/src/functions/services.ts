@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -22,21 +22,21 @@ import { Operation, OperationRegistry } from '@dxos/operation';
 import { RefFromLLM } from '../types';
 
 export const makeToolResolverFromOperations = <R = never>({
-  toolkit: extraToolkit = GenericToolkit.empty,
-}: { toolkit?: GenericToolkit.GenericToolkit<never, never, R> } = {}): Layer.Layer<
+  toolkit: extraToolkit = OpaqueToolkit.empty,
+}: { toolkit?: OpaqueToolkit.OpaqueToolkit<never, never, R> } = {}): Layer.Layer<
   ToolResolverService,
   never,
-  GenericToolkit.GenericToolkitProvider | OperationRegistry.Service | R
+  OpaqueToolkit.OpaqueToolkitProvider | OperationRegistry.Service | R
 > => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
-      const toolkitProvider = yield* GenericToolkit.GenericToolkitProvider;
+      const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
       const operationRegistry = yield* OperationRegistry.Service;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
-            const toolkit = GenericToolkit.merge(extraToolkit, toolkitProvider.getToolkit());
+            const toolkit = OpaqueToolkit.merge(extraToolkit, toolkitProvider.getToolkit());
 
             const tool = toolkit.toolkit.tools[id];
             if (tool) {
@@ -59,11 +59,11 @@ export const makeToolResolverFromOperations = <R = never>({
 
 export const makeToolExecutionService = <E, R>(opts: {
   invoke: (tool: Tool.Any, input: unknown) => Effect.Effect<unknown>;
-}): Layer.Layer<ToolExecutionService, never, GenericToolkit.GenericToolkitProvider> =>
+}): Layer.Layer<ToolExecutionService, never, OpaqueToolkit.OpaqueToolkitProvider> =>
   Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
-      const toolkitProvider = yield* GenericToolkit.GenericToolkitProvider;
+      const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
       const toolkit = toolkitProvider.getToolkit();
 
       const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
@@ -98,7 +98,7 @@ export const makeToolExecutionService = <E, R>(opts: {
 export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
   ToolExecutionService,
   never,
-  Operation.Service | GenericToolkit.GenericToolkitProvider
+  Operation.Service | OpaqueToolkit.OpaqueToolkitProvider
 > => {
   return Layer.unwrapEffect(
     Effect.gen(function* () {

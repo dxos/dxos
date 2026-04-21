@@ -34,25 +34,33 @@ export const Agent = Schema.Struct({
   // TODO(burdon): Rename instructions.
   spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 
+  /**
+   * Primary chat for the agent.
+   */
+  // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
+  chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
+
+  // TODO(burdon): Is this used?
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
+  // TODO(burdon): Currently Memory.Memory objects are global to the space.
+
+  // TODO(burdon): Create ref to document to manage memories.
   artifacts: Schema.Array(
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
       name: Schema.String,
+      // TODO(burdon): Rename object.
       data: Ref.Ref(Obj.Unknown),
     }),
   ).pipe(FormInputAnnotation.set(false)),
 
   /**
-   * Incoming queue that the agent processes.
+   * Input feed for subscriptions.
    */
   // TODO(burdon): Rename to Feed?
   // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
   queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
-
-  // TODO(dmaretskyi): Multiple chats.
-  chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
   /**
    * References to objects with a canonical queue property.
@@ -76,11 +84,11 @@ export const Agent = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  QueueAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--drone--regular',
     hue: 'sky',
   }),
-  QueueAnnotation.set(true),
 );
 
 export interface Agent extends Schema.Schema.Type<typeof Agent> {}

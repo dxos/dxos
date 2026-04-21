@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { AiService } from '@dxos/ai';
 import { Context as DxosContext } from '@dxos/context';
-import { FunctionInvocationService, type InvocationServices } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { LocalFunctionExecutionService } from './local-function-execution';
@@ -28,10 +28,7 @@ export const FunctionInvocationServiceLayer = Layer.effect(
     const remoteExecutionService = yield* RemoteFunctionExecutionServiceTag;
 
     return {
-      invokeFunction: <I, O>(
-        functionDef: Operation.Definition<I, O, any>,
-        input: I,
-      ): Effect.Effect<O, never, InvocationServices> =>
+      invokeFunction: <I, O>(functionDef: Operation.Definition<I, O, any>, input: I): Effect.Effect<O> =>
         Effect.gen(function* () {
           if (functionDef.meta?.deployedId) {
             return yield* remoteExecutionService.callFunction<I, O>(

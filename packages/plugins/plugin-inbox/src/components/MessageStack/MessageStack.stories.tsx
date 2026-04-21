@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -115,6 +116,7 @@ export const WithCompanion = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

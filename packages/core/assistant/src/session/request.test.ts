@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { OpaqueToolkit } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
@@ -16,7 +17,7 @@ import { Message } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
 import { AssistantTestLayer } from '../testing';
-import { AiSession } from './session';
+import { AiRequest } from './request';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -76,13 +77,13 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-describe('AiSession', () => {
+describe('AiRequest', () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession();
-        const response = yield* session.run({
+        const request = new AiRequest();
+        const response = yield* request.run({
           prompt: 'Hello world!',
           history: [],
         });
@@ -97,9 +98,9 @@ describe('AiSession', () => {
     'calculator',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession();
-        const toolkit = yield* TestToolkit;
-        const response = yield* session.run({
+        const request = new AiRequest();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const response = yield* request.run({
           toolkit,
           prompt: 'What is 10 + 30?',
           history: [],
@@ -115,9 +116,9 @@ describe('AiSession', () => {
     'tool schema error',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession();
-        const toolkit = yield* TestToolkit;
-        const response = yield* session.run({
+        const request = new AiRequest();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const response = yield* request.run({
           toolkit,
           prompt:
             'I am testing error handling in tool paramter parsing. I want you to call the calculator tool but omit the input parameter to intentionally differ from the tool schema.',
@@ -134,8 +135,8 @@ describe('AiSession', () => {
     'summarization',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession({ summarizationThreshold: 0 }); // Force summarization.
-        const response = yield* session.run({
+        const request = new AiRequest({ summarizationThreshold: 0 }); // Force summarization.
+        const response = yield* request.run({
           prompt: 'What did we talk about?',
           history: [
             Obj.make(Message.Message, {

@@ -9,8 +9,8 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiService, ConsolePrinter, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import {
   LocalSearchHandler,
   LocalSearchToolkit,
@@ -19,7 +19,6 @@ import {
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
 import * as Trace from '@dxos/functions/Trace';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
@@ -53,17 +52,13 @@ const handler: Operation.WithHandler<typeof SummarizeMailbox> = SummarizeMailbox
         });
         const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 
-        const toolkit = yield* Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              //
-              GraphWriterHandler,
-              LocalSearchHandler,
-            ).pipe(Layer.provide(ResearchGraph.contextQueueLayer)),
-          ),
+        const mergedToolkit = Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit);
+        const handlersLayer = Layer.mergeAll(GraphWriterHandler, LocalSearchHandler).pipe(
+          Layer.provide(ResearchGraph.contextQueueLayer),
         );
+        const toolkit = yield* OpaqueToolkit.fromContext(mergedToolkit).pipe(Effect.provide(handlersLayer));
 
-        const result = yield* new AiSession({
+        const result = yield* new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         }).run({
           prompt: messages,
@@ -92,7 +87,6 @@ const handler: Operation.WithHandler<typeof SummarizeMailbox> = SummarizeMailbox
           AiService.model('@anthropic/claude-sonnet-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
           Trace.writerLayerNoop,
           Database.notAvailable,
           Layer.succeed(Operation.Service, {
