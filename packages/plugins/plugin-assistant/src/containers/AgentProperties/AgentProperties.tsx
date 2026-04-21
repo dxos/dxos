@@ -23,7 +23,6 @@ import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
 import {
-  compactSlots,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -111,10 +110,9 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         createThemeExtensions({
           syntaxHighlighting: true,
           slots: {
-            ...compactSlots,
-            // scroller: {
-            //   className: 'min-h-[2lh]',
-            // },
+            content: {
+              className: 'mx-0!',
+            },
           },
         }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
@@ -126,43 +124,49 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
   return (
     <div role='none' className='dx-expander flex flex-col'>
-      <Input.Root>
-        <Input.Label>{t('subscriptions.label')}</Input.Label>
-      </Input.Root>
+      {subscribedObjects.length > 0 && (
+        <>
+          <Input.Root>
+            <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
+          </Input.Root>
 
-      {subscribedObjects.map((object) => (
-        <Input.Root key={object.id}>
-          <div className='flex items-center gap-2'>
-            <Input.Checkbox
-              checked={existingSubscriptions.includes(object)}
-              onCheckedChange={(checked) => {
-                Obj.change(agent, (agent) => {
-                  if (checked) {
-                    agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
-                  } else {
-                    agent.subscriptions = agent.subscriptions.filter(
-                      (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
-                    );
-                  }
-                });
-              }}
-            />
-            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
-          </div>
-        </Input.Root>
-      ))}
+          {subscribedObjects.map((object) => (
+            <Input.Root key={object.id}>
+              <div className='flex items-center gap-2'>
+                <Input.Checkbox
+                  checked={existingSubscriptions.includes(object)}
+                  onCheckedChange={(checked) => {
+                    Obj.change(agent, (agent) => {
+                      if (checked) {
+                        agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
+                      } else {
+                        agent.subscriptions = agent.subscriptions.filter(
+                          (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
+                        );
+                      }
+                    });
+                  }}
+                />
+                <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
+              </div>
+            </Input.Root>
+          ))}
+        </>
+      )}
 
       <Input.Root>
-        <Input.Label>{t('instructions.label')}</Input.Label>
+        <Input.Label classNames='mt-form-gap'>{t('instructions.label')}</Input.Label>
         {instructions && (
           <Editor.Root>
-            <Editor.View classNames='pb-form-gap' extensions={extension} />
+            <Editor.View extensions={extension} />
           </Editor.Root>
         )}
       </Input.Root>
 
       {/* TODO(burdon): Move into toolbar in parent. */}
-      <Button onClick={handleResetHistory}>{t('reset-history.button')}</Button>
+      <Button classNames='mt-form-gap' onClick={handleResetHistory}>
+        {t('reset-history.button')}
+      </Button>
     </div>
   );
 };
