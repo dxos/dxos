@@ -27,7 +27,7 @@ import { ProcessNotFoundError, ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessHandleImpl, type OutputItem } from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { createProcessTraceService } from './process-trace';
+import { createProcessTraceService, prepareProcessTracing } from './process-trace';
 import { layer as storageServiceLayer } from './storage-service-layer';
 
 export { type ProcessIdGenerator, UUIDProcessIdGenerator, SequentialProcessIdGenerator } from './process-id';
@@ -399,59 +399,25 @@ export class ProcessManagerImpl implements Manager {
       };
 
       // Build tracing context for this process.
-      const traceContext = yield* this.#buildTraceContext(id, options);
-      this.#traceContexts.set(id, traceContext);
+      const baseTraceContext = yield* this.#buildTraceContext(id, options);
+      this.#traceContexts.set(id, baseTraceContext);
 
       const isRoot = !options?.parentProcessId;
 
-      // Trace invocation start for root processes (no parent).
-      let invocationTrace: TracingService.InvocationTraceData | undefined;
-      if (isRoot) {
-        const processPayload = {
-          pid: id,
-          key: definition.key,
-          name: params.name ?? undefined,
-          target: params.target != null ? String(params.target) : undefined,
-        };
-        const mergedPayload: TracingService.FunctionInvocationPayload = {
-          ...options?.tracing?.invocationPayload,
-          process: processPayload,
-        };
-        invocationTrace = yield* this.#tracingService.traceInvocationStart({
-          payload: mergedPayload,
-          target: options?.tracing?.invocationTarget,
-        });
-        this.#traceContexts.set(id, { ...traceContext, currentInvocation: invocationTrace });
+      const tracingSetup = yield* prepareProcessTracing({
+        pid: id,
+        definitionKey: definition.key,
+        params,
+        invocationPayload: options?.tracing?.invocationPayload,
+        invocationTarget: options?.tracing?.invocationTarget,
+        traceContext: baseTraceContext,
+        isRoot,
+        parentTracingService: this.#tracingService,
+      });
+      const { invocationTrace, traceContext, tracingService: processTracingService } = tracingSetup;
+      if (isRoot && invocationTrace) {
+        this.#traceContexts.set(id, traceContext);
       }
-
-      // Create TracingService scoped to this process's trace context.
-      log('process trace config', { pid: id, invocationTrace });
-      const invocationTracingService = invocationTrace?.invocationTraceQueue
-        ? yield* TracingService.pipe(
-            Effect.provide(
-              TracingService.layerInvocation(invocationTrace).pipe(
-                Layer.provide(Layer.succeed(TracingService, this.#tracingService)),
-              ),
-            ),
-          )
-        : this.#tracingService;
-      const processTracingService: Context.Tag.Service<TracingService> = {
-        getTraceContext: () => traceContext,
-        write: (event, traceCtx) => {
-          log('trace event', { pid: id, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
-          invocationTracingService.write(event, traceCtx);
-        },
-        ephemeral: (event, traceCtx) => {
-          log('ephemeral trace event (deprecated)', {
-            pid: id,
-            event: JSON.stringify(event).slice(0, 50),
-            traceCtx: JSON.stringify(traceCtx),
-          });
-          // handleRef?.pushEphemeral(event);
-        },
-        traceInvocationStart: (opts) => invocationTracingService.traceInvocationStart(opts),
-        traceInvocationEnd: (opts) => invocationTracingService.traceInvocationEnd(opts),
-      };
 
       let builtinCtx = Context.empty().pipe(
         Context.add(StorageService, storage),

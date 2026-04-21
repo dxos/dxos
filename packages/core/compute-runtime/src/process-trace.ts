@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Obj } from '@dxos/echo';
-import { Process, Trace } from '@dxos/functions';
+import { Process, Trace, TracingService } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -79,3 +81,100 @@ export const createProcessTraceService = (
     }
   },
 });
+
+export interface ProcessTracingSetupOptions {
+  /** Id of the process being set up. */
+  readonly pid: Process.ID;
+  /** Process definition key — copied into the invocation payload. */
+  readonly definitionKey: string;
+  /** Process params (name, target) — copied into the invocation payload. */
+  readonly params: Process.Params;
+  /** Trace invocation payload/target overrides from the spawn request. */
+  readonly invocationPayload?: Partial<TracingService.FunctionInvocationPayload>;
+  readonly invocationTarget?: import('@dxos/echo').DXN;
+  /** Pre-built base trace context (inherited from parent + spawn options). */
+  readonly traceContext: TracingService.TraceContext;
+  /** Whether this is a root process (no parent). Only root processes emit a `traceInvocationStart`. */
+  readonly isRoot: boolean;
+  /** The manager-level tracing service that backs invocation start/end. */
+  readonly parentTracingService: Context.Tag.Service<typeof TracingService>;
+}
+
+export interface ProcessTracingSetup {
+  /** The invocation trace (if the process is root and tracing is enabled). */
+  readonly invocationTrace: TracingService.InvocationTraceData | undefined;
+  /**
+   * The trace context to use for this process — includes `currentInvocation`
+   * when the root process opens a new invocation.
+   */
+  readonly traceContext: TracingService.TraceContext;
+  /** Per-process `TracingService` implementation, ready to go into the context. */
+  readonly tracingService: Context.Tag.Service<typeof TracingService>;
+}
+
+/**
+ * Prepare the per-process {@link TracingService} wiring:
+ *
+ * 1. For root processes, call `traceInvocationStart` on the parent tracing
+ *    service to open a new invocation trace; attach it to the trace context.
+ * 2. When an invocation trace is open, wrap the parent tracing service in
+ *    `TracingService.layerInvocation` so that `write`/`traceInvocationStart`/
+ *    `traceInvocationEnd` record against that invocation's queue.
+ * 3. Return a `TracingService` whose `getTraceContext` snapshots the
+ *    process's trace context and whose other methods forward to the inner
+ *    (possibly layered) tracing service.
+ */
+export const prepareProcessTracing = (
+  opts: ProcessTracingSetupOptions,
+): Effect.Effect<ProcessTracingSetup> =>
+  Effect.gen(function* () {
+    let traceContext = opts.traceContext;
+
+    let invocationTrace: TracingService.InvocationTraceData | undefined;
+    if (opts.isRoot) {
+      const mergedPayload: TracingService.FunctionInvocationPayload = {
+        ...opts.invocationPayload,
+        process: {
+          pid: opts.pid,
+          key: opts.definitionKey,
+          name: opts.params.name ?? undefined,
+          target: opts.params.target != null ? String(opts.params.target) : undefined,
+        },
+      };
+      invocationTrace = yield* opts.parentTracingService.traceInvocationStart({
+        payload: mergedPayload,
+        target: opts.invocationTarget,
+      });
+      traceContext = { ...traceContext, currentInvocation: invocationTrace };
+    }
+
+    log('process trace config', { pid: opts.pid, invocationTrace });
+    const invocationTracingService = invocationTrace?.invocationTraceQueue
+      ? yield* TracingService.pipe(
+          Effect.provide(
+            TracingService.layerInvocation(invocationTrace).pipe(
+              Layer.provide(Layer.succeed(TracingService, opts.parentTracingService)),
+            ),
+          ),
+        )
+      : opts.parentTracingService;
+
+    const tracingService: Context.Tag.Service<typeof TracingService> = {
+      getTraceContext: () => traceContext,
+      write: (event, traceCtx) => {
+        log('trace event', { pid: opts.pid, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
+        invocationTracingService.write(event, traceCtx);
+      },
+      ephemeral: (event, traceCtx) => {
+        log('ephemeral trace event (deprecated)', {
+          pid: opts.pid,
+          event: JSON.stringify(event).slice(0, 50),
+          traceCtx: JSON.stringify(traceCtx),
+        });
+      },
+      traceInvocationStart: (startOpts) => invocationTracingService.traceInvocationStart(startOpts),
+      traceInvocationEnd: (endOpts) => invocationTracingService.traceInvocationEnd(endOpts),
+    };
+
+    return { invocationTrace, traceContext, tracingService };
+  });
