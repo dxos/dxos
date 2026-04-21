@@ -162,6 +162,7 @@ export class AiConversation extends Resource {
           blueprints: currentBlueprints,
           genericToolkits: mcps,
         });
+
         log('toolkit', { tools: Record.keys(toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
@@ -169,11 +170,7 @@ export class AiConversation extends Resource {
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* session.runAgentTurn({
-          system,
-          toolkit,
-        });
-
+        const { done } = yield* session.runAgentTurn({ system, toolkit });
         if (done) {
           break;
         }

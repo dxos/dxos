@@ -210,6 +210,7 @@
         "@dxos/plugin-search": "workspace:*",
         "@dxos/plugin-settings": "workspace:*",
         "@dxos/plugin-sheet": "workspace:*",
+        "@dxos/plugin-sidekick": "workspace:*",
         "@dxos/plugin-simple-layout": "workspace:*",
         "@dxos/plugin-sketch": "workspace:*",
         "@dxos/plugin-space": "workspace:*",
@@ -4782,6 +4783,41 @@
         "@effect-atom/atom-react": "catalog:",
         "@effect/platform": "catalog:",
         "effect": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+    },
+    "packages/plugins/plugin-sidekick": {
+      "name": "@dxos/plugin-sidekick",
+      "version": "0.8.3",
+      "dependencies": {
+        "@dxos/app-framework": "workspace:*",
+        "@dxos/app-toolkit": "workspace:*",
+        "@dxos/assistant-toolkit": "workspace:*",
+        "@dxos/blueprints": "workspace:*",
+        "@dxos/echo": "workspace:*",
+        "@dxos/invariant": "workspace:*",
+        "@dxos/operation": "workspace:*",
+        "@dxos/plugin-outliner": "workspace:*",
+        "@dxos/plugin-space": "workspace:*",
+        "@dxos/react-client": "workspace:*",
+        "@dxos/react-ui": "workspace:*",
+        "@dxos/react-ui-form": "workspace:*",
+        "@dxos/types": "workspace:*",
+        "@dxos/util": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@dxos/storybook-utils": "workspace:*",
+        "@dxos/ui-theme": "workspace:*",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "vite": "catalog:",
+      },
+      "peerDependencies": {
+        "@dxos/ui-theme": "workspace:*",
         "react": "catalog:",
         "react-dom": "catalog:",
       },
@@ -10274,6 +10310,8 @@
     "@dxos/plugin-settings": ["@dxos/plugin-settings@workspace:packages/plugins/plugin-settings"],
 
     "@dxos/plugin-sheet": ["@dxos/plugin-sheet@workspace:packages/plugins/plugin-sheet"],
+
+    "@dxos/plugin-sidekick": ["@dxos/plugin-sidekick@workspace:packages/plugins/plugin-sidekick"],
 
     "@dxos/plugin-simple-layout": ["@dxos/plugin-simple-layout@workspace:packages/plugins/plugin-simple-layout"],
 

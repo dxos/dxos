@@ -700,6 +700,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sidekick/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-simple-layout/package.json",
           "jsonpath": "$.version"
         },
