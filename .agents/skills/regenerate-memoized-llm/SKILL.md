@@ -14,15 +14,16 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 
 ## Regenerate all memoized-llm caches
 
-1. **Check if `ANTHROPIC_API_KEY` is already in env**. Memoized LLM tests in this repo only need `ANTHROPIC_API_KEY` (including `edge-remote` preset, which proxies to Anthropic). Most harnesses (Cursor Cloud, CI, devcontainers, local shells with `.envrc`) already inject it:
+1. **Check if `ANTHROPIC_API_KEY` is already in env with a non-empty value**. Memoized LLM tests in this repo only need `ANTHROPIC_API_KEY` (including `edge-remote` preset, which proxies to Anthropic). Most harnesses (Cursor Cloud, CI, devcontainers, local shells with `.envrc`) already inject it. Some harnesses set the variable to an empty string, so presence of the name is not enough — check the value length:
 
    ```bash
-   env | grep -E '^ANTHROPIC_API_KEY='
+   env | grep -E '^ANTHROPIC_API_KEY=' | awk -F= '{print "len=" length($2)}'
+   # or: test -n "$ANTHROPIC_API_KEY" && echo set || echo empty
    ```
 
-   **If `ANTHROPIC_API_KEY` is already set, DO NOT run `1p-credentials` — it triggers a 1Password auth prompt that interrupts the user unnecessarily.** Skip straight to step 3.
+   **If `ANTHROPIC_API_KEY` is non-empty, DO NOT run `1p-credentials` — it triggers a 1Password auth prompt that interrupts the user unnecessarily.** Skip straight to step 3.
 
-2. **Only if `ANTHROPIC_API_KEY` is NOT in env**, load it from 1Password:
+2. **Only if `ANTHROPIC_API_KEY` is missing or empty**, load it from 1Password:
 
    ```fish
    eval (pnpm -ws 1p-credentials)
@@ -40,13 +41,13 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 
 ## Regenerate one package
 
-To refresh cache for a single package, run that package's tests with generation enabled. Check env first; only run `1p-credentials` if `ANTHROPIC_API_KEY` is NOT already set (to avoid interrupting the user with a 1Password prompt):
+To refresh cache for a single package, run that package's tests with generation enabled. Check env first; only run `1p-credentials` if `ANTHROPIC_API_KEY` is missing or empty (to avoid interrupting the user with a 1Password prompt):
 
 ```bash
-# Check env first; if ANTHROPIC_API_KEY is set, skip the 1p step entirely.
-env | grep -E '^ANTHROPIC_API_KEY='
+# Check env first; if ANTHROPIC_API_KEY has a non-empty value, skip the 1p step entirely.
+env | grep -E '^ANTHROPIC_API_KEY=' | awk -F= '{print "len=" length($2)}'
 
-# Only if NOT in env — otherwise skip this line:
+# Only if missing or empty — otherwise skip this line:
 eval (pnpm -ws 1p-credentials)
 
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
