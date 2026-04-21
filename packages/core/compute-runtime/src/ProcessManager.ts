@@ -881,31 +881,41 @@ export class ProcessManagerImpl implements Manager {
         Context.add(TracingService, processTracingService),
         Context.add(Trace.TraceService, {
           write: (event, data) => {
-            // TODO(dmaretskyi): Batching.
-            const message = Obj.make(Trace.Message, {
-              meta: {
-                ...(options?.traceMeta ?? {}),
-                pid: id,
-                parentPid: options?.parentProcessId,
-                processName: params.name ?? undefined,
-                space: environment.space ?? options?.traceMeta?.space,
-              },
-              isEphemeral: event.isEphemeral,
-              events: [
-                {
-                  type: event.key,
-                  timestamp: Date.now(),
-                  data,
+            try {
+              // TODO(dmaretskyi): Batching.
+              // Detach `data` from any ECHO proxy state — nested reactive
+              // objects would otherwise cause `Obj.make` to fail when it
+              // recurses through the Schema.Unknown event payload and tries
+              // to re-attach schema metadata to non-configurable proxies.
+              const detachedData = detachData(data);
+              const message = Obj.make(Trace.Message, {
+                meta: {
+                  ...(options?.traceMeta ?? {}),
+                  pid: id,
+                  parentPid: options?.parentProcessId,
+                  processName: params.name ?? undefined,
+                  space: environment.space ?? options?.traceMeta?.space,
                 },
-              ],
-            });
-            // All messages flow to the shared trace sink so downstream sinks
-            // (feed persistence, devtools, etc.) see the complete trace. The
-            // ephemeral subscribers receive a copy for live UI streaming.
-            if (message.isEphemeral) {
-              handleRef?.pushEphemeral(message);
+                isEphemeral: event.isEphemeral,
+                events: [
+                  {
+                    type: event.key,
+                    timestamp: Date.now(),
+                    data: detachedData,
+                  },
+                ],
+              });
+              // Ephemeral events are streamed live to subscribers and never
+              // persisted; non-ephemeral events are forwarded to the shared
+              // trace sink (feed persistence, devtools, etc.).
+              if (message.isEphemeral) {
+                handleRef?.pushEphemeral(message);
+              } else {
+                this.#traceSink.write(message);
+              }
+            } catch (err) {
+              log.warn('trace write failed', { pid: id, event: event.key, err });
             }
-            this.#traceSink.write(message);
           },
         }),
       );
@@ -1201,6 +1211,27 @@ class EphemralTraceBuffer {
     this.#buffer.length = 0;
   }
 }
+
+/**
+ * Detach a value from any ECHO proxy state so it can be safely embedded as
+ * `Schema.Unknown` payload inside a freshly-created {@link Trace.Message}.
+ *
+ * ECHO objects already carry non-configurable schema metadata on nested
+ * properties; `Obj.make` recurses into `Schema.Unknown` children and fails
+ * trying to re-define them. We convert the value via JSON round-trip when
+ * possible, falling back to the original reference if the value isn't
+ * JSON-safe (circular refs, functions, etc.).
+ */
+const detachData = (data: unknown): unknown => {
+  if (data === null || typeof data !== 'object') {
+    return data;
+  }
+  try {
+    return JSON.parse(JSON.stringify(data));
+  } catch {
+    return data;
+  }
+};
 
 // =============================================================================
 // ProcessOperationInvoker (merged to avoid circular dependency)

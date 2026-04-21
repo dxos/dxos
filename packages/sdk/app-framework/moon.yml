@@ -21,6 +21,7 @@ tasks:
       - '--entryPoint=src/ui/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/core/url-loader.ts'
+      - '--entryPoint=src/plugin-runtime/index.ts'
     deps:
       - compile-plugin
   compile-plugin:
