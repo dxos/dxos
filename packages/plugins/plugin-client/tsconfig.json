@@ -42,6 +42,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/operation"
     },
     {

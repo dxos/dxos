@@ -8,7 +8,10 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
+import * as Layer from 'effect/Layer';
+
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
+import { Capabilities } from '@dxos/app-framework';
 import {
   AiContextService,
   type AiConversation,
@@ -25,7 +28,6 @@ import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { Trace, type CredentialsService, type QueueService, type TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
 import { UpdateChatName } from '../operations/definitions';
@@ -108,8 +110,15 @@ export class AiChatProcessor {
 
   constructor(
     private readonly _conversation: AiConversation,
-    private readonly _runtime: AutomationCapabilities.ComputeRuntime,
+    private readonly _runtime: Capabilities.ProcessManagerRuntime,
     private readonly _feed: Feed.Feed,
+    /**
+     * Pre-built layer that materializes space-scoped services (e.g. from
+     * {@link ServiceResolver.provide}). Provided to every effect run by the
+     * processor so the underlying {@link ProcessManagerRuntime} has access to
+     * space-affinity services.
+     */
+    private readonly _spaceLayer: Layer.Layer<any, any, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? Registry.make();
@@ -136,7 +145,11 @@ export class AiChatProcessor {
   }
 
   async getTools(): Promise<Record<string, any>> {
-    return this._runtime.runPromise(Effect.provide(this._conversation.getTools(), ToolExecutionServices));
+    return this._runtime.runPromise(
+      Effect.provide(this._conversation.getTools(), ToolExecutionServices).pipe(
+        Effect.provide(this._spaceLayer),
+      ) as any,
+    );
   }
 
   async getSystemPrompt(): Promise<string> {
@@ -145,7 +158,11 @@ export class AiChatProcessor {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
+      }).pipe(
+        Effect.provideService(AiContextService, { binder: this.context }),
+        Effect.provide(this._spaceLayer),
+        Effect.orDie,
+      ) as any,
     );
   }
 
@@ -190,7 +207,7 @@ export class AiChatProcessor {
         yield* this.#maybeUpdateChatName();
       });
 
-      this.#requestFiber = this._runtime.runFork(effect);
+      this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)) as any);
 
       try {
         await this._runtime.runPromise(Fiber.join(this.#requestFiber));
@@ -243,7 +260,11 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
+    unwrapExit(
+      await this._runtime.runPromiseExit(
+        Operation.invoke(UpdateChatName, { chat }).pipe(Effect.provide(this._spaceLayer)) as any,
+      ),
+    );
   }
 
   /**

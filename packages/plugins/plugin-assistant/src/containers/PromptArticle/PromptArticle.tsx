@@ -10,7 +10,7 @@ import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
+import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
@@ -35,8 +35,9 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
     [subject, db],
   );
 
-  const handleRun = useComputeRuntimeCallback(
+  const handleRun = useSpaceCallback(
     db?.spaceId,
+    [] as const,
     () => {
       invariant(inputData);
       return Operation.invoke(AgentPrompt, inputData);

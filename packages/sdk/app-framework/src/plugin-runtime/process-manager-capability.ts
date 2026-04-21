@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
-import { ServiceResolver, Trace, TracingService } from '@dxos/functions';
+import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
@@ -85,6 +85,16 @@ export default Capability.makeModule(
       runSync: (effect) => managedRuntime.runSync(effect as Effect.Effect<any, any, any>),
     };
 
-    return Capability.contributes(Capabilities.ProcessManagerRuntime, processManagerRuntime);
+    // Eagerly extract the process monitor. Safe because it does not require a
+    // fresh scope and is a stable reference for the lifetime of the runtime.
+    const processMonitor = managedRuntime.runSync(
+      Effect.flatMap(Process.ProcessMonitorService, Effect.succeed) as Effect.Effect<Process.Monitor, never, never>,
+    );
+
+    return [
+      Capability.contributes(Capabilities.ProcessManagerRuntime, processManagerRuntime),
+      Capability.contributes(Capabilities.ServiceResolver, serviceResolver),
+      Capability.contributes(Capabilities.ProcessMonitor, processMonitor),
+    ];
   }),
 );

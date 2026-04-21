@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
@@ -14,7 +15,6 @@ import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Text } from '@dxos/schema';
 
@@ -72,14 +72,15 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
                 )
               : prompt;
           yield* Database.flush();
-          const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-          const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
-          yield* Operation.invoke(AgentPrompt, {
-            prompt: promptRef,
-            input: {},
-            chat: Ref.make(chat),
-          }).pipe(
-            Effect.provide(runtime),
+          yield* runInSpace(
+            db.spaceId,
+            [] as const,
+            Operation.invoke(AgentPrompt, {
+              prompt: promptRef,
+              input: {},
+              chat: Ref.make(chat),
+            }),
+          ).pipe(
             Effect.catchAll((error) => {
               log.catch(error);
               return Effect.void;

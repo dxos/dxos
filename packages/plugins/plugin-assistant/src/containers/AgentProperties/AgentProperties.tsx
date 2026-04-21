@@ -8,16 +8,15 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
 import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -38,35 +37,45 @@ export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>
 export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
 
-  // TODO(burdon): Factor out.
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const spaceId = Obj.getDatabase(agent)?.spaceId;
+
+  const resetHistory = useSpaceCallback(
+    spaceId,
+    [QueueService, Feed.FeedService, Database.Service] as const,
+    Effect.fnUntraced(function* () {
+      yield* Agent.resetChatHistory(agent);
+      if (!agent.queue) {
+        const queue = yield* QueueService.createQueue();
+        Obj.change(agent, (a) => {
+          a.queue = Ref.fromDXN(queue.dxn);
+        });
+      }
+    }),
+    [agent],
+  );
+
   const handleResetHistory = useCallback(async () => {
-    const runtime = computeRuntime.getRuntime(Obj.getDatabase(agent)!.spaceId);
-    await runtime.runPromise(Agent.resetChatHistory(agent));
-    if (!agent.queue) {
-      await runtime.runPromise(
-        Effect.gen(function* () {
-          const queue = yield* QueueService.createQueue();
-          Obj.change(agent, (agent) => {
-            agent.queue = Ref.fromDXN(queue.dxn);
-          });
-        }),
-      );
-    }
-  }, [agent, computeRuntime]);
+    await resetHistory();
+  }, [resetHistory]);
 
   const spec = useAtomValue(AtomRef.make(agent.spec));
+
+  const syncTriggers = useSpaceCallback(
+    spaceId,
+    [] as const,
+    () => Operation.invoke(SyncTriggers, { agent: Ref.make(agent) }),
+    [agent],
+  );
 
   useEffect(() => {
     const db = Obj.getDatabase(agent);
     if (!db) return;
     return Obj.subscribe(agent, () => {
       queueMicrotask(() => {
-        const runtime = computeRuntime.getRuntime(db.spaceId);
-        runtime.runPromise(Operation.invoke(SyncTriggers, { agent: Ref.make(agent) })).catch((err) => log.catch(err));
+        syncTriggers().catch((err) => log.catch(err));
       });
     });
-  }, [agent, computeRuntime]);
+  }, [agent, syncTriggers]);
 
   const db = Obj.getDatabase(agent);
   const feedFilter = useMemo(() => {

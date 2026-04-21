@@ -7,7 +7,8 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
@@ -15,7 +16,6 @@ import { Trace } from '@dxos/functions';
 import { Process } from '@dxos/functions';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { DXN, SpaceId } from '@dxos/keys';
-import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
@@ -26,13 +26,13 @@ import { buildExecutionGraph } from './execution-graph';
 
 export const TracePanel = ({ space }: { space: Space }) => {
   const { invokePromise } = useOperationInvoker();
-  const activeProcesses = useActiveProcesses(space.id);
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
+  const activeProcesses = useActiveProcesses();
+  const monitor = useCapability(Capabilities.ProcessMonitor);
 
   const { branches, commits } = useAtomValue(
     useMemo(
-      () => getExecutionGraph(space, runtime?.processTreeAtom ?? Atom.make(() => [])),
-      [space, runtime?.processTreeAtom],
+      () => getExecutionGraph(space, monitor?.processTreeAtom ?? Atom.make(() => [])),
+      [space, monitor?.processTreeAtom],
     ),
   );
 
@@ -96,7 +96,7 @@ const getExecutionGraph = (
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
 
-const useActiveProcesses = (id?: SpaceId) => {
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, id);
-  return useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+const useActiveProcesses = () => {
+  const monitor = useCapability(Capabilities.ProcessMonitor);
+  return useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 };

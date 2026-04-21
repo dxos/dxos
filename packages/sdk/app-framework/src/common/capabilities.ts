@@ -13,7 +13,7 @@ import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
 import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
-import type { LayerSpec as LayerSpec$, ServiceResolver as ServiceResolver$ } from '@dxos/functions';
+import type { LayerSpec as LayerSpec$, Process as Process$, ServiceResolver as ServiceResolver$ } from '@dxos/functions';
 import { Operation as Operation$ } from '@dxos/operation';
 import type { OperationInvoker as OperationInvoker$, OperationHandlerSet } from '@dxos/operation';
 
@@ -93,6 +93,40 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app
  * @category Capability
  */
 export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layer-spec');
+
+/**
+ * Service resolver backing the shared {@link ProcessManagerRuntime}.
+ *
+ * Contributed by the process-manager capability module. Consumers can combine
+ * it with {@link ServiceResolver$.provide} to build space-scoped layers without
+ * having to go through the process-manager runtime:
+ *
+ * @example
+ * ```ts
+ * const resolver = yield* Capability.get(Capabilities.ServiceResolver);
+ * yield* effect.pipe(
+ *   Effect.provide(
+ *     ServiceResolver.provide({ space }, Database.Service, QueueService).pipe(
+ *       Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, resolver)),
+ *     ),
+ *   ),
+ * );
+ * ```
+ *
+ * @category Capability
+ */
+export const ServiceResolver = Capability$.make<ServiceResolver$.ServiceResolver>(
+  'org.dxos.app-framework.capability.service-resolver',
+);
+
+/**
+ * Process monitor backing the shared {@link ProcessManagerRuntime}. Exposes the
+ * live process tree (including inactive/terminated entries) via
+ * {@link Process$.Monitor#processTreeAtom}.
+ *
+ * @category Capability
+ */
+export const ProcessMonitor = Capability$.make<Process$.Monitor>('org.dxos.app-framework.capability.process-monitor');
 
 /**
  * Services that are always available when running effects through a {@link ProcessManagerRuntime}.

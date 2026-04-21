@@ -82,6 +82,12 @@
       "browser": "./dist/lib/browser/ui/index.mjs",
       "node": "./dist/lib/node-esm/ui/index.mjs",
       "types": "./dist/types/src/ui/index.d.ts"
+    },
+    "./plugin-runtime": {
+      "source": "./src/plugin-runtime/index.ts",
+      "browser": "./dist/lib/browser/plugin-runtime/index.mjs",
+      "node": "./dist/lib/node-esm/plugin-runtime/index.mjs",
+      "types": "./dist/types/src/plugin-runtime/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -119,6 +125,9 @@
       ],
       "ui": [
         "dist/types/src/ui/index.d.ts"
+      ],
+      "plugin-runtime": [
+        "dist/types/src/plugin-runtime/index.d.ts"
       ]
     }
   },

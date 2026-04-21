@@ -4,13 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
 import { meta } from '#meta';
 
@@ -19,17 +18,15 @@ import { SyncMailbox } from './definitions';
 const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox }) {
-      const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
       const db = Obj.getDatabase(mailbox);
       invariant(db);
-      const runtime = computeRuntime.getRuntime(db.spaceId);
       const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
-      yield* Effect.tryPromise(() =>
-        runtime.runPromise(
-          Operation.invoke(GmailFunctions.Sync, {
-            mailbox: Ref.make(mailbox),
-          }),
-        ),
+      yield* runInSpace(
+        db.spaceId,
+        [] as const,
+        Operation.invoke(GmailFunctions.Sync, {
+          mailbox: Ref.make(mailbox),
+        }),
       ).pipe(
         Effect.catchAll((error) => {
           log.catch(error);

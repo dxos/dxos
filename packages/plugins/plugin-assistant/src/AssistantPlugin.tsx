@@ -5,15 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { provideSpaceServices } from '@dxos/app-framework/plugin-runtime';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Agent, AgentBlueprint, Chat, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Annotation, Feed, Obj, Type } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Type } from '@dxos/echo';
+import { QueueService } from '@dxos/functions';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
@@ -221,12 +222,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
 // TODO(dmaretskyi): Extract to a helper module.
 const withComputeRuntime =
   (spaceId: SpaceId) =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
+  <A, E>(
+    effect: Effect.Effect<A, E, QueueService | Feed.FeedService | Database.Service>,
+  ): Effect.Effect<A, E, Capability.Service> =>
     Effect.gen(function* () {
-      // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
-      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
-      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
-      return yield* effect.pipe(Effect.provide(runtime));
+      const layer = yield* provideSpaceServices(spaceId, [QueueService, Feed.FeedService, Database.Service] as const);
+      return yield* effect.pipe(Effect.provide(layer), Effect.orDie);
     });

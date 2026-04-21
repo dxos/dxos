@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { Feed, Filter } from '@dxos/echo';
 import { Assistant, Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
-import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
@@ -21,7 +21,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();
-  const runtime = useComputeRuntime(space.id);
+  const runtime = useProcessManagerRuntime();
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;

@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type CleanupFn, debounce } from '@dxos/async';
 import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import type { Operation } from '@dxos/operation';
 import type { RawInterpreterValue, SimpleCellAddress } from '@dxos/vendor-hyperformula';
 import type { InterpreterState } from '@dxos/vendor-hyperformula';
 import type { InterpreterValue } from '@dxos/vendor-hyperformula';
 import type { ProcedureAst } from '@dxos/vendor-hyperformula';
 import { CellError, EmptyValue, ErrorType, FunctionPlugin, type HyperFormula } from '@dxos/vendor-hyperformula';
+
+import type { SpaceComputeRuntime } from '../compute-graph-registry';
 
 // TODO(burdon): Create API gateways:
 //  https://publicapis.io
@@ -77,7 +77,7 @@ export class FunctionContext {
 
   constructor(
     private readonly _hf: HyperFormula,
-    private readonly _runtime: ManagedRuntime.ManagedRuntime<Operation.Service, never>,
+    private readonly _runtime: SpaceComputeRuntime,
     private readonly _space: Space | undefined,
     _options?: Partial<FunctionContextOptions>,
   ) {

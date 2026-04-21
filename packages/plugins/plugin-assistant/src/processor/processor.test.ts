@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiConversation } from '@dxos/assistant';
@@ -29,7 +30,7 @@ describe('Chat processor', () => {
         const managedRuntime = ManagedRuntime.make(
           Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
         );
-        const processor = new AiChatProcessor(conversation, managedRuntime as any, feed);
+        const processor = new AiChatProcessor(conversation, managedRuntime as any, feed, Layer.empty as any);
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },

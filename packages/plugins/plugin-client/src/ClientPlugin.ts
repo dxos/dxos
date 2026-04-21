@@ -8,6 +8,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import {
   AppGraphBuilder,
   Client,
+  LayerSpecs,
   Migrations,
   NavigationHandler,
   OperationHandler,
@@ -46,6 +47,11 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activatesOn: ClientEvents.ClientReady,
     activatesBefore: [ClientEvents.SetupMigration],
     activate: Migrations,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activatesBefore: [ActivationEvents.SetupLayer],
+    activate: LayerSpecs,
   }),
   Plugin.addModule(
     ({

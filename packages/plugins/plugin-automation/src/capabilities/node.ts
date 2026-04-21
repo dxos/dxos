@@ -4,4 +4,4 @@
 
 import { Capability } from '@dxos/app-framework';
 
-export const ComputeRuntime = Capability.lazy('ComputeRuntime', () => import('./compute-runtime'));
+export const LayerSpecs = Capability.lazy<void, Capability.Any[]>('LayerSpecs', () => import('./layer-specs'));

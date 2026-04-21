@@ -2,47 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
-
-import { type AiService, type GenericToolkit } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
-import { AgentService } from '@dxos/assistant';
-import type { Blueprint } from '@dxos/blueprints';
-import { type Database, type Feed } from '@dxos/echo';
-import type { CredentialsService, Process, QueueService, TracingService } from '@dxos/functions';
-import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
-import type { SpaceId } from '@dxos/keys';
-import type { Operation, OperationRegistry } from '@dxos/operation';
-
-import { meta } from '#meta';
-
 export namespace AutomationCapabilities {
-  /**
-   * Service stack for executing agents, functions, and triggers.
-   */
-  export type ComputeServices =
-    | TriggerDispatcher
-    | TriggerStateStore
-    | AiService.AiService
-    | Database.Service
-    | Feed.FeedService
-    | QueueService
-    | CredentialsService
-    | Blueprint.RegistryService
-    | AgentService.AgentService
-    | Process.ProcessMonitorService
-    | TracingService // TODO(dmaretskyi): Probably should not be provided here.
-    | Operation.Service
-    | OperationRegistry.Service
-    | GenericToolkit.GenericToolkitProvider;
-
-  export type ComputeRuntime = ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>;
-  export interface ComputeRuntimeProvider {
-    getRuntime(spaceId: SpaceId): ComputeRuntime;
-  }
-
-  /**
-   * Runtime for executing agents, functions, and triggers.
-   */
-  export const ComputeRuntime = Capability.make<ComputeRuntimeProvider>(`${meta.id}.capability.compute-runtime`);
+  // Intentionally empty: the former `ComputeRuntime` capability has been
+  // dissolved into per-service `Capabilities.LayerSpec` contributions resolved
+  // via the shared `Capabilities.ProcessManagerRuntime`.
 }
