@@ -17405,6 +17405,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
