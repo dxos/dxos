@@ -5,7 +5,6 @@
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react-swc';
 import { playwright } from '@vitest/browser-playwright';
-import { readFileSync } from 'node:fs';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
@@ -62,7 +61,6 @@ const createStorybookProject = (dirname: string) =>
       include: ['react', 'react-dom', 'react/jsx-runtime'],
     },
     plugins: [
-      latin1FixPlugin(),
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
         // The --ci flag will skip prompts and not open a browser.
@@ -309,21 +307,6 @@ const normalizeBrowserOptions = (
 
   return options.browsers.map((browser) => ({ browserName: browser, ...options }));
 };
-
-/**
- * Re-encodes Latin-1 encoded JS files as UTF-8 so rolldown can process them.
- * js-clipper@1.0.1 contains Latin-1 superscript characters in comments that are not valid UTF-8.
- */
-function latin1FixPlugin(): Plugin {
-  return {
-    name: 'latin1-fix',
-    load(id) {
-      if (id.includes('js-clipper') && id.endsWith('.js')) {
-        return readFileSync(id, 'latin1');
-      }
-    },
-  };
-}
 
 /**
  * Replaces node built-in modules with their browser equivalents.

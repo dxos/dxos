@@ -4,10 +4,9 @@
 //
 
 import { type StorybookConfig } from '@storybook/react-vite';
-import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type InlineConfig, type Plugin } from 'vite';
+import { type InlineConfig } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
@@ -20,19 +19,6 @@ const __dirname = dirname(__filename);
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-
-/**
- * Re-encodes Latin-1 encoded JS files as UTF-8 so rolldown can process them.
- * js-clipper@1.0.1 contains Latin-1 superscript characters in comments that are not valid UTF-8.
- */
-const latin1FixPlugin = (): Plugin => ({
-  name: 'latin1-fix',
-  load(id) {
-    if (id.includes('js-clipper') && id.endsWith('.js')) {
-      return readFileSync(id, 'latin1');
-    }
-  },
-});
 
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
@@ -237,8 +223,6 @@ export const createConfig = ({
           //
           // NOTE: Order matters.
           //
-
-          latin1FixPlugin(),
 
           // RSS proxy middleware for CORS-free feed fetching.
           {
