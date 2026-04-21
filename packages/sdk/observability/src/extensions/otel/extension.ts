@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 
-import { type Config } from '@dxos/config';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
 import { isNode, isNonNullable } from '@dxos/util';
 
@@ -79,6 +79,23 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
+  // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
+  // when it reads the `X-DXOS-Client-Tag` header, see
+  // /edge/packages/services/edge/src/log-middleware.ts).
+  //
+  // Stamped in TWO places:
+  //   1. Resource attribute — so logs and metrics emitted from this extension
+  //      also carry it, and for zero per-span cost.
+  //   2. Span attribute via `tags` — because edge puts `ctx.tag` in the span-
+  //      attribute context (not resource), and SigNoz indexes the two contexts
+  //      separately. Stamping it on span attributes here keeps a single
+  //      `ctx.tag = <value>` filter matching spans from both tiers in SigNoz
+  //      without requiring qualified `attribute.ctx.tag`/`resource.ctx.tag` syntax.
+  const clientTag = resolveTelemetryTag(config);
+  if (clientTag) {
+    tags.set('ctx.tag', clientTag);
+  }
+
   const resource = defaultResource().merge(
     resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
@@ -86,6 +103,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       'session.id': crypto.randomUUID(),
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
+      ...(clientTag ? { 'ctx.tag': clientTag } : {}),
     }),
   );
 
@@ -141,13 +159,31 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     }),
     close: () =>
       Effect.promise(async () => {
-        await logs?.close();
-        await metrics?.close();
+        // Run logs/metrics close concurrently and swallow their failures so the
+        // tracer provider shutdown below ALWAYS runs. Without this, a rejection
+        // from logs or metrics would drop the tracer provider's BatchSpanProcessor
+        // queue on process exit, manifesting as "Missing Span" in SigNoz for any
+        // already-exported children.
+        const results = await Promise.allSettled([logs?.close(), metrics?.close()]);
+        for (const result of results) {
+          if (result.status === 'rejected') {
+            log.catch(result.reason);
+          }
+        }
+        // Critical: shut down the tracer provider so BatchSpanProcessor drains its
+        // queue. Otherwise spans enqueued in the last 5s (close/teardown spans)
+        // are dropped on process exit.
+        await traces?.close();
       }),
     flush: () =>
       Effect.promise(async () => {
-        await logs?.flush();
-        await metrics?.flush();
+        const results = await Promise.allSettled([logs?.flush(), metrics?.flush()]);
+        for (const result of results) {
+          if (result.status === 'rejected') {
+            log.catch(result.reason);
+          }
+        }
+        await traces?.flush();
       }),
     setTags: (incomingTags) => {
       for (const [key, value] of Object.entries(incomingTags)) {

@@ -264,10 +264,18 @@ export type ManualSpanParams = {
 
 /**
  * Creates a span that must be ended manually.
+ *
+ * Returns a child Context that carries the new span's `TRACE_SPAN_ATTRIBUTE`.
+ * Callers should use the returned ctx for downstream work so that nested
+ * `@trace.span` methods and RPC calls inherit this span as their parent
+ * and land in the same trace (rather than starting a new root).
+ *
+ * When the new span cannot be created (duplicate id, no backend, or
+ * `showInRemoteTracing: false`), the parentCtx is returned unchanged.
  */
-const spanStart = (params: ManualSpanParams) => {
+const spanStart = (params: ManualSpanParams): Context | null => {
   if (manualSpans.has(params.id) || manualSpanTimestamps.has(params.id)) {
-    return;
+    return params.parentCtx;
   }
 
   const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(params.instance);
@@ -279,7 +287,7 @@ const spanStart = (params: ManualSpanParams) => {
   }
 
   if (params.showInRemoteTracing === false || !TRACE_PROCESSOR.tracingBackend) {
-    return;
+    return params.parentCtx;
   }
 
   const parentSpanContext = params.parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
@@ -302,6 +310,11 @@ const spanStart = (params: ManualSpanParams) => {
     parentContext: parentSpanContext,
   });
   manualSpans.set(params.id, remoteSpan);
+
+  if (params.parentCtx && remoteSpan.spanContext != null) {
+    return params.parentCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext } });
+  }
+  return params.parentCtx;
 };
 
 /**

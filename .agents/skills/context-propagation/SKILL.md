@@ -133,7 +133,33 @@ async initializeAll(ctx: Context): Promise<void> {
 }
 ```
 
-### 5. Complete call chain: every method between entry point and @trace.span must forward ctx
+### 5. Reassign `ctx` to the return value of `trace.spanStart()`
+
+The manual span API `trace.spanStart()` returns a **derived `Context`** carrying the new span on `TRACE_SPAN_ATTRIBUTE`. Callers MUST reassign the local `ctx` to the returned value so that downstream `@trace.span()` methods see this span as their parent.
+
+```typescript
+// ✅ CORRECT — ctx reassigned, downstream @trace.span methods nest under the manual span.
+ctx = trace.spanStart({
+  id: spanId,
+  instance: this,
+  methodName: 'acceptInvitation',
+  parentCtx: ctx,
+  op: 'invitation.guest',
+}) ?? ctx;
+ctx.onDispose(() => trace.spanEnd(spanId));
+await this._handleGuestFlow(ctx, ...); // inherits the manual span as parent
+```
+
+```typescript
+// ❌ WRONG — return value ignored; downstream spans don't see this one.
+trace.spanStart({ id: spanId, instance: this, methodName: 'acceptInvitation', parentCtx: ctx, ... });
+ctx.onDispose(() => trace.spanEnd(spanId));
+await this._handleGuestFlow(ctx, ...); // ctx unchanged → handleGuestFlow's @trace.span attaches to ctx's parent, becoming a sibling of the manual span (or a new root if ctx had no parent)
+```
+
+When `parentCtx` is not `null` and the span is actually created, the returned ctx is a `parentCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: newSpanContext } })` — i.e., the original `parentCtx` with `TRACE_SPAN_ATTRIBUTE` overridden to the new span. Leaving `ctx` unchanged means downstream `@trace.span` methods read the OLD `TRACE_SPAN_ATTRIBUTE` from `parentCtx` and attach to _that_ span, so they end up as siblings of the manual span rather than children. They only become a new root trace when the old `ctx` had no parent span at all. Either way, the `onDispose(spanEnd)` pattern remains correct — disposing the original `parentCtx` cascades to the derived one.
+
+### 6. Complete call chain: every method between entry point and @trace.span must forward ctx
 
 **Critical rule**: every intermediate method between an entry point and a `@trace.span()` method must accept and forward `ctx`, even if the intermediate method itself has no `@trace.span()`. Otherwise the trace chain is broken.
 
@@ -233,16 +259,17 @@ Callback / detached async work:
 
 ## Quick Reference
 
-| Situation                                | What ctx to use             |
-| ---------------------------------------- | --------------------------- |
-| Direct call inside a method              | Forward the method's `ctx`  |
-| Public API entry point                   | `Context.default()`         |
-| RPC service method (proto-generated)     | `options.ctx` (from RPC)    |
-| Event / callback subscription            | Lifecycle `this._ctx`       |
-| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx`       |
-| queueMicrotask                           | Lifecycle `this._ctx`       |
-| Promise.all fan-out                      | Same `ctx` for all branches |
-| No caller ctx available                  | Lifecycle `this._ctx`       |
+| Situation                                | What ctx to use                     |
+| ---------------------------------------- | ----------------------------------- |
+| Direct call inside a method              | Forward the method's `ctx`          |
+| Public API entry point                   | `Context.default()`                 |
+| RPC service method (proto-generated)     | `options.ctx` (from RPC)            |
+| Event / callback subscription            | Lifecycle `this._ctx`               |
+| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx`               |
+| queueMicrotask                           | Lifecycle `this._ctx`               |
+| Promise.all fan-out                      | Same `ctx` for all branches         |
+| No caller ctx available                  | Lifecycle `this._ctx`               |
+| After `trace.spanStart()`                | `ctx = trace.spanStart(...) ?? ctx` |
 
 ## No Orphaned Internal Spans
 
@@ -272,6 +299,7 @@ If none of these hold, the span will be orphaned. Either fix the call chain or d
 - **Breaking the chain with `Context.default()` in an intermediate method** — if a method calls `child(Context.default())` where `child` has `@trace.span()`, the span is an orphaned root. The intermediate method must accept `ctx` from its caller and forward it.
 - **Passing `this._ctx` in a direct call** when the method has `ctx` in scope — breaks trace hierarchy, creates a new root instead of a child span.
 - **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended. However, `this._ctx` from lifecycle contexts still works as a parent because `TRACE_SPAN_ATTRIBUTE` stores W3C strings that remain valid after the span ends.
+- **Ignoring the return value of `trace.spanStart()`** — `spanStart` returns a derived ctx carrying the new span. Downstream `@trace.span` methods called with the unchanged `ctx` will see the span's parent, not the span itself, making them siblings of the manual span (or, if the parent ctx had no span, a new root). Reassign `ctx = trace.spanStart(...) ?? ctx;` before forwarding.
 - **Adding `ctx` to Node.js protocol methods** (e.g., `[Symbol.for('nodejs.util.inspect.custom')]`) — fixed-signature methods that don't support extra parameters.
 - **Adding `ctx` to public APIs** — user-facing methods should not expose `Context`; create `Context.default()` internally.
 - **Ignoring `options.ctx` in RPC service methods** — `RpcPeer` provides `options.ctx` with the caller's trace context decoded from W3C headers. Use `options?.ctx ?? Context.default()`, not `this._ctx` or a bare `Context.default()`. Using `this._ctx` breaks the cross-process trace hierarchy; using `Context.default()` discards the propagated trace.
