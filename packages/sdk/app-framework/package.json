@@ -77,6 +77,12 @@
       "node": "./dist/lib/node-esm/testing/index.mjs",
       "types": "./dist/types/src/testing/index.d.ts"
     },
+    "./testing/react": {
+      "source": "./src/testing/react.tsx",
+      "browser": "./dist/lib/browser/testing/react.mjs",
+      "node": "./dist/lib/node-esm/testing/react.mjs",
+      "types": "./dist/types/src/testing/react.d.ts"
+    },
     "./ui": {
       "source": "./src/ui/index.ts",
       "browser": "./dist/lib/browser/ui/index.mjs",
@@ -117,6 +123,9 @@
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ],
+      "testing/react": [
+        "dist/types/src/testing/react.d.ts"
+      ],
       "ui": [
         "dist/types/src/ui/index.d.ts"
       ]
@@ -152,6 +161,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
@@ -162,9 +172,15 @@
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@testing-library/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@testing-library/react": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"
