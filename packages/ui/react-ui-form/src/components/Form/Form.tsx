@@ -33,9 +33,9 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 
-// TODO(burdon): Move styles to form.ts.
+// TODO(burdon): Move styles to form.ts (as with ui-theme).
 
-// TODO(burdon): Move to @dxos/schema (re-export here).
+// TODO(burdon): Reconcile with @dxos/echo.
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).

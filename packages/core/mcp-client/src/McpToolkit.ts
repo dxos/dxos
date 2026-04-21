@@ -33,7 +33,6 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
     yield* Effect.promise(() => client.connect(transport));
 
     const { tools } = yield* Effect.promise(() => client.listTools());
-
     if (tools.length === 0) {
       return GenericToolkit.empty;
     }
@@ -42,17 +41,9 @@ export const make = (options: McpToolkitOptions): Effect.Effect<GenericToolkit.G
       const parameters: any = {};
       for (const [key, value] of Object.entries(mcpTool.inputSchema.properties ?? {})) {
         if (mcpTool.inputSchema.required?.includes(key)) {
-          parameters[key] = Schema.Unknown.pipe(
-            Schema.annotations({
-              jsonSchema: value,
-            }),
-          );
+          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value }));
         } else {
-          parameters[key] = Schema.Unknown.pipe(
-            Schema.annotations({
-              jsonSchema: value,
-            }),
-          ).pipe(Schema.optional);
+          parameters[key] = Schema.Unknown.pipe(Schema.annotations({ jsonSchema: value })).pipe(Schema.optional);
         }
       }
 
@@ -127,5 +118,6 @@ const formatToolResult = (result: Awaited<ReturnType<Client['callTool']>>): stri
       .map((part) => part.text)
       .join('\n');
   }
+
   return String(result);
 };

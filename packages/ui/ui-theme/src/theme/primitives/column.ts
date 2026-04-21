@@ -37,12 +37,13 @@ const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 };
 
 /**
- * Center placement: places the element in column 2 (the central track between gutters) of the
- * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
- * Safe to nest arbitrary compound components (including those that render `display: contents`).
+ * Three-column icon-slot row: spans all 3 columns of the parent Column.Root grid.
+ * Uses CSS subgrid to inherit column sizing from the parent Column.
+ * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
+ * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
-const columnCenter: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx(withColumn.center(), 'min-h-0', ...etc);
+const columnRow: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx('col-span-3 grid grid-cols-subgrid', ...etc);
 };
 
 /**
@@ -54,18 +55,17 @@ const columnBleed: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 };
 
 /**
- * Three-column icon-slot row: spans all 3 columns of the parent Column.Root grid.
- * Uses CSS subgrid to inherit column sizing from the parent Column.
- * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
- * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
+ * Center placement: places the element in column 2 (the central track between gutters) of the
+ * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
+ * Safe to nest arbitrary compound components (including those that render `display: contents`).
  */
-const columnRow: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('col-span-3 grid grid-cols-subgrid', ...etc);
+const columnCenter: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx(withColumn.center(), 'min-h-0', ...etc);
 };
 
 export const columnTheme = {
   root: columnRoot,
-  center: columnCenter,
-  bleed: columnBleed,
   row: columnRow,
+  bleed: columnBleed,
+  center: columnCenter,
 };
