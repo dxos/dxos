@@ -1,4 +1,4 @@
-#!/usr/bin/env pnpm --silent vite-node
+#!/usr/bin/env bun
 
 //
 // Copyright 2024 DXOS.org

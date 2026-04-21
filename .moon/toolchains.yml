@@ -1,12 +1,12 @@
 # https://moonrepo.dev/docs/config/toolchain
 
 javascript:
-  packageManager: pnpm
+  packageManager: bun
   dedupeOnLockfileChange: false
 
 node: {}
 
-pnpm: {}
+bun: {}
 
 typescript:
   rootOptionsConfigFileName: 'tsconfig.base.json'

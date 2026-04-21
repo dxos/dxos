@@ -197,6 +197,6 @@ if [[ -n "$packages_needing_types" ]]; then
   echo
   echo "Run the following commands to add the dependency:"
   for pkg in $(echo "$packages_needing_types" | tr ' ' '\n' | sort -u); do
-    echo "  cd $pkg && pnpm add @dxos/types"
+    echo "  cd $pkg && bun add @dxos/types@workspace:*"
   done
 fi

@@ -97,8 +97,8 @@ jobs:
           POSTHOG_CLI_HOST: https://eu.posthog.com
         run: |
           BUILD_DIR="packages/apps/composer-app/out/composer"
-          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap inject --directory "$BUILD_DIR"
-          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap upload --directory "$BUILD_DIR" \
+          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" bunx posthog-cli sourcemap inject --directory "$BUILD_DIR"
+          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" bunx posthog-cli sourcemap upload --directory "$BUILD_DIR" \
             --release-name composer \
             --release-version "$GITHUB_SHA"
 

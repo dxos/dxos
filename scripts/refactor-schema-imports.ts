@@ -1,4 +1,4 @@
-#!/usr/bin/env -S pnpm tsx
+#!/usr/bin/env bun
 //
 // Copyright 2024 DXOS.org
 //

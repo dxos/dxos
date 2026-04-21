@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   compile:
-    command: pnpm exec dx-build
+    command: bunx dx-build
     deps:
       - dx-build:compile
       - ^:build

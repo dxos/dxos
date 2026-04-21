@@ -39,8 +39,8 @@ Technologies to consider:
 Monorepo tools:
 
 - moon for monorepo management.
-- pnpm for package management.
-- vitest (use "pnpm vitest" to run tests)
+- bun for package management.
+- vitest (use "bunx vitest" to run tests)
 - vite
 
 Testing:

@@ -328,7 +328,7 @@ export class Toolbox {
    * - Update references.
    */
   async updateTsConfig(): Promise<void> {
-    // NOTE: Rerun `pnpm toolbox` when updating config.
+    // NOTE: Rerun `bun run toolbox` when updating config.
     const { noProjectReferences = process.env.DX_NO_PROJECT_REFERENCES } = this.config.tsconfig ?? {};
     console.log('Updating all tsconfig.json', { noProjectReferences });
 

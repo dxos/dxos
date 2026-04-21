@@ -8,7 +8,7 @@
 
 - TypeScript
 - React
-- pnpm (package manager)
+- bun (package manager)
 - moon (build system)
 - Vitest (testing)
 - Playwright (e2e testing)
@@ -34,7 +34,7 @@ dxos/
 
 ## Development
 
-When building, linting, or testing, do not use `npm`, `npx`, or `pnpm`. Only use `moon`.
+When building, linting, or testing, do not use `npm`, `npx`, or `bun run`. Only use `moon`.
 
 When referring to a package, run the command from the root of the repository and refer to the package only by name, e.g. to build the package located at `packages/ui/react-ui-table`, simply `cd` to the root of this repository and run `moon react-ui-table:build`.
 
@@ -75,15 +75,15 @@ moon <package>:e2e -- --debug # Debug with Playwright inspector
 
 ### Development
 
-- Always run `pnpm i` and `moon :build` when switching branches.
+- Always run `bun install` and `moon run :build` when switching branches.
 - Run tests before committing changes.
 - When writing comments, use proper punctuation, especially ending full sentences with a full stop, ‘.’, even if the comment doesn’t have another sentence.
 - Always memoize any functions or values computed in the closure of a React component’s render function by using `useMemo`, `useCallback`, etc.
 
 ### Dependencies
 
-- Use `npm-check-updates` for updates, not `pnpm up`.
-- Re-run `pnpm i` after dependency changes.
+- Use `npm-check-updates` for updates, not `bun update`.
+- Re-run `bun install` after dependency changes.
 
 ### Testing
 

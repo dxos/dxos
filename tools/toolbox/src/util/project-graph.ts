@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { execSync } from 'node:child_process';
-import { join } from 'node:path';
+import { globSync } from 'glob';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 import { loadJson } from './file';
 
@@ -45,8 +46,17 @@ export class ProjectGraph {
   }
 
   async init(): Promise<void> {
-    // TODO(dmaretskyi): Async.
-    const projects: Project[] = JSON.parse(execSync('pnpm ls -r --depth -1 --json').toString());
+    const projects: Project[] = globSync(
+      ['packages/**/package.json', 'vendor/**/package.json', 'tools/**/package.json'],
+      {
+        cwd: this._rootDir,
+        ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'],
+      },
+    ).map((file) => {
+      const absPath = join(this._rootDir, file);
+      const pkg = JSON.parse(readFileSync(absPath, 'utf-8'));
+      return { name: pkg.name, version: pkg.version, private: !!pkg.private, path: dirname(absPath) };
+    });
     this.projects = projects.filter(
       (project: Project) =>
         (project.name?.startsWith('@dxos') || project.name?.startsWith('@braneframe')) &&

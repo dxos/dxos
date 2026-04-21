@@ -2,21 +2,28 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 
-const { existsSync } = require('fs');
+const { existsSync, readFileSync } = require('fs');
 const { execSync } = require('child_process');
-const { join, basename, relative } = require('path');
+const { dirname, join, basename, relative } = require('path');
+const { globSync } = require('glob');
 const execa = require('execa');
 
 const MAIN_BRANCH = 'origin/main';
 
 (async () => {
-  const projects = JSON.parse(execSync('pnpm ls -r --depth -1 --json').toString());
+  const repoRoot = execSync('git rev-parse --show-toplevel').toString().trim();
+  const projects = globSync(['packages/**/package.json', 'vendor/**/package.json', 'tools/**/package.json'], {
+    cwd: repoRoot,
+    ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'],
+  }).map((file) => {
+    const absPath = join(repoRoot, file);
+    const pkg = JSON.parse(readFileSync(absPath, 'utf-8'));
+    return { name: pkg.name, path: dirname(absPath) };
+  });
 
   const rePkg = /(packages\/([\w\-_]+))\/?/;
   const { stdout: diff } = await execa('git', ['diff', `${MAIN_BRANCH}...HEAD`, '--name-only']);
   const changedFiles = diff.split('\n').filter((line) => rePkg.test(line) && existsSync(join(__dirname, '..', line)));
-
-  const repoRoot = execSync('git rev-parse --show-toplevel').toString().trim();
 
   const changedProjects = projects
     .filter(({ name, path }) => changedFiles.some((file) => file.includes(relative(repoRoot, path))))

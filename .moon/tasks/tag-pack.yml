@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   pack:
-    script: pnpm pack --pack-destination "$(git rev-parse --show-toplevel)/dist/tarballs/$project"
+    script: bun pm pack --destination "$(git rev-parse --show-toplevel)/dist/tarballs/$project"
     deps:
       - target: build
         optional: true

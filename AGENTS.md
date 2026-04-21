@@ -9,8 +9,8 @@
 
 ## Dependencies
 
-- All dependency versions are managed in the default pnpm catalog.
-- To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`.
+- All dependency versions are managed in the default catalog (root `package.json` under `workspaces.catalog`).
+- To add a new dependency, `cd` into the target package (`cd packages/<project>`) and run `bun add "<package>"`, then pin the version in the root catalog and set the workspace entry to `"catalog:"`. (Bun's `--filter` is not supported on `bun add`.)
 - **IMPORTANT**: Any `@dxos` package that lives within this repo must be added as `workspace:*`, never from the catalog. The catalog is only for external (non-workspace) packages.
 
 ## Build, Test, Lint Commands
@@ -68,7 +68,7 @@
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
-- If updating `pnpm-workspace.yaml` make sure to preserve comments.
+- The workspace catalog lives in the root `package.json` under `workspaces.catalog`. Preserve ordering when editing.
 
 ## PR Naming Convention
 
@@ -85,7 +85,7 @@ Examples:
 
 ## CI
 
-- **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
+- **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `bun run gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
 - If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
 - When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
 
@@ -98,11 +98,11 @@ Examples:
 - When the user asks you to submit a PR:
   - Use `gh` CLI to create and manage PRs.
   - Merge `origin/main` in to current branch and resolve conflicts.
-  - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
+  - Format code with `bun run format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
   - Commit and push all pending changes.
   - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
-  - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
+  - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `bun run gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
   - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
@@ -113,7 +113,7 @@ Examples:
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
+This project requires Node.js 24.x, Bun 1.3.4, and moon 2.1.4. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
 
 ### Running services
 
@@ -124,8 +124,8 @@ This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are manage
 
 ### Gotchas
 
-- `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git hooks setup prompt.
+- `bun install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git hooks setup prompt.
 - The `DEPOT_TOKEN` warning from moon is expected and harmless (remote caching auth token).
-- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- The `trustedDependencies` allowlist in root `package.json` controls which native addons are allowed to run install scripts; warnings about untrusted build scripts for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

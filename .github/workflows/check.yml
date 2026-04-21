@@ -67,10 +67,10 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Check for import cycles
-        run: pnpm run check-cycles
+        run: bun run check-cycles
 
       - name: Check formatting
-        run: pnpm run format-check
+        run: bun run format-check
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
@@ -81,7 +81,16 @@ jobs:
         run: moon run :lint :build
 
       - name: Check for peer dependency issues
-        run: pnpm install --resolution-only --no-frozen-lockfile
+        run: |
+          find packages tools vendor -path '*/dist/*/package.json' -delete
+          # `bun install --dry-run` warns on unmet/incorrect peer deps but exits 0,
+          # so we capture its output and fail explicitly if a warning is emitted.
+          output=$(bun install --dry-run 2>&1)
+          echo "$output"
+          if echo "$output" | grep -E "^(warn|error):"; then
+            echo "::error::bun install emitted warnings; see output above"
+            exit 1
+          fi
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
@@ -128,7 +137,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Install Playwright
-        run: pnpm run install-playwright
+        run: bun run install-playwright
 
       - name: Clean stale test results
         run: rm -rf test-results
@@ -218,7 +227,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Install Playwright
-        run: pnpm run install-playwright
+        run: bun run install-playwright
 
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}

@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test-browser:
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project="browser-*"
+    command: bunx dx-killorphans vitest run --passWithNoTests --project="browser-*"
     deps:
       - esbuild-plugins:compile
       - node-std:compile

@@ -7,8 +7,8 @@ import { $, cd, chalk, fs, question } from 'zx';
  * 1. If there are any uncommitted changes, abort with error.
  * 2. Run circular dependency check.
  * 3. Merge the latest origin/main.
- * 4. Run pnpm install and commit the changes if any.
- * 5. Run pnpm run format and commit changes if any.
+ * 4. Run bun install and commit the changes if any.
+ * 5. Run bun run format and commit changes if any.
  * 6. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
  * 7. Push
  * 8. Run moon run :build :test
@@ -71,7 +71,7 @@ async function main() {
   // Step 2: Run cycle check
   console.log(chalk.blue('Step 2: Running circular dependency check...'));
   try {
-    await $`pnpm run check-cycles`;
+    await $`bun run check-cycles`;
     console.log(chalk.green('No circular dependencies found.'));
   } catch (error) {
     console.error(chalk.red('Circular dependency check failed:'), error.message);
@@ -95,25 +95,25 @@ async function main() {
         await $`git merge origin/main --no-edit`;
         console.log(chalk.green('Successfully merged origin/main into the current branch.'));
       } catch (mergeError) {
-        // Check if the only conflict is in pnpm-lock.yaml
+        // Check if the only conflict is in bun.lock
         try {
           // Get list of files with merge conflicts
           const { stdout: conflictOutput } = await $`git diff --name-only --diff-filter=U`;
           const conflictedFiles = conflictOutput.trim().split('\n').filter(Boolean);
 
-          // If only pnpm-lock.yaml has conflicts
-          if (conflictedFiles.length === 1 && conflictedFiles[0] === 'pnpm-lock.yaml') {
-            console.log(chalk.yellow('Only pnpm-lock.yaml has conflicts. Letting pnpm resolve it...'));
+          // If only bun.lock has conflicts
+          if (conflictedFiles.length === 1 && conflictedFiles[0] === 'bun.lock') {
+            console.log(chalk.yellow('Only bun.lock has conflicts. Letting bun resolve it...'));
 
-            // Run pnpm install to resolve the conflict
-            // (pnpm will see the conflict markers and regenerate the lock file)
-            console.log(chalk.blue('Running pnpm install to resolve the lock file conflict...'));
-            await $`pnpm install`;
+            // Run bun install to resolve the conflict
+            // (bun will see the conflict markers and regenerate the lock file)
+            console.log(chalk.blue('Running bun install to resolve the lock file conflict...'));
+            await $`bun install`;
 
             // Add the resolved lock file and complete the merge
-            await $`git add pnpm-lock.yaml`;
-            await $`git commit -m "chore: merge origin/main with pnpm-resolved lock file"`;
-            console.log(chalk.green('Successfully merged origin/main with pnpm-resolved lock file.'));
+            await $`git add bun.lock`;
+            await $`git commit -m "chore: merge origin/main with bun-resolved lock file"`;
+            console.log(chalk.green('Successfully merged origin/main with bun-resolved lock file.'));
           } else {
             // Handle other conflicts
             console.error(chalk.red('Merge conflict occurred:'), mergeError);
@@ -143,25 +143,25 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 4: Run pnpm install and commit changes if any
-  console.log(chalk.blue('Step 4: Running pnpm install...'));
+  // Step 4: Run bun install and commit changes if any
+  console.log(chalk.blue('Step 4: Running bun install...'));
   try {
-    await $`pnpm install`;
+    await $`bun install`;
 
     if (await hasUncommittedChanges()) {
-      await commitChanges('chore: update dependencies after pnpm install');
+      await commitChanges('chore: update dependencies after bun install');
     } else {
-      console.log(chalk.green('No changes after pnpm install.'));
+      console.log(chalk.green('No changes after bun install.'));
     }
   } catch (error) {
-    console.error(chalk.red('Error during pnpm install:'), error.message);
+    console.error(chalk.red('Error during bun install:'), error.message);
     process.exit(1);
   }
 
   // Step 5: Run oxfmt formatting and commit changes if any
   console.log(chalk.blue('Step 5: Running oxfmt formatting...'));
   try {
-    await $`pnpm run format`;
+    await $`bun run format`;
 
     if (await hasUncommittedChanges()) {
       await commitChanges('style: format with oxfmt');

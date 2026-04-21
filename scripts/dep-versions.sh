@@ -8,9 +8,12 @@ fi
 
 package_name="$1"
 
-# Run pnpm why and extract version numbers using regex
-# The regex looks for the package name followed by an @ and version number
-pnpm why -r "$package_name" |
-  grep -o "$package_name [~^]\?[0-9][0-9.]*" |
-  sed "s|$package_name ||g" |
+# Run bun why and extract version numbers using regex.
+# Escape regex-special chars (e.g., slashes in scoped names) before interpolating.
+# The regex matches "<name>@<version>" where version accepts digits, dots, hyphens (prereleases), and +build metadata.
+escaped_name=$(printf '%s\n' "$package_name" | sed 's|[][\\.^$*/]|\\&|g')
+
+bun why "$package_name" |
+  grep -oE "${escaped_name}@[0-9][0-9A-Za-z.+-]*" |
+  sed "s|${package_name}@||g" |
   sort -u -V

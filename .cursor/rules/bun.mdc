@@ -3,4 +3,4 @@ description:
 globs: package.json
 alwaysApply: false
 ---
-Use `pnpm install` to install new packages.
+Use `bun install` to install new packages.

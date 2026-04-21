@@ -15,7 +15,7 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
   prebuild-lezer:
-    command: pnpm exec lezer-generator --typeScript ./src/extension/mdl.grammar -o ./src/extension/gen/mdl.ts
+    command: bunx lezer-generator --typeScript ./src/extension/mdl.grammar -o ./src/extension/gen/mdl.ts
     inputs:
       - src/extension/mdl.grammar
     outputs:

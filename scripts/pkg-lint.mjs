@@ -1,8 +1,9 @@
 import 'zx/globals';
 
 import chalk from 'chalk';
+import { globSync } from 'glob';
 import { existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import YAML from 'yaml';
 import { $, fs } from 'zx';
 
@@ -15,9 +16,23 @@ const SEVERITY_ICONS = {
 };
 const HIDE_SEVERITIES = ['conventional'];
 
-const packages = await $`pnpm -r ls --depth=-1 --json`.json();
-
 const repoRoot = await $`git rev-parse --show-toplevel`.text().then((text) => text.trim());
+
+const packages = globSync(['packages/**/package.json', 'vendor/**/package.json', 'tools/**/package.json'], {
+  cwd: repoRoot,
+  ignore: [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/out/**',
+    'packages/deprecated/**',
+    'packages/sdk/examples/src/template/**',
+  ],
+}).map((file) => {
+  const absPath = join(repoRoot, file);
+  const pkg = JSON.parse(fs.readFileSync(absPath, 'utf-8'));
+  return { name: pkg.name, path: dirname(absPath) };
+});
 
 for (const { name, path: pkgPath } of packages) {
   let diagnostics = [];

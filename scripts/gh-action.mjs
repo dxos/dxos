@@ -9,8 +9,8 @@
  * Uses the `gh` CLI (must be authenticated via `gh auth login` or GITHUB_TOKEN).
  *
  * Usage:
- *   pnpm -w gh-action            # Show current CI status and failures.
- *   pnpm -w gh-action --watch    # Poll until all runs complete, then show failures.
+ *   bun run gh-action            # Show current CI status and failures.
+ *   bun run gh-action --watch    # Poll until all runs complete, then show failures.
  */
 
 import chalk from 'chalk';

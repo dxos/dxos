@@ -31,12 +31,10 @@ RUN ARCH=$(uname -m) \
 ENV NPM_CONFIG_PREFIX=/usr/local
 ENV PATH=$PATH:/usr/local/bin
 
-# Install pnpm.
-RUN npm install -g pnpm@10.13.1 \
-  # Install playwright native dependencies.
-  # NOTE: Keep playwright version in sync with the one in package.json.
-  # https://playwright.dev/docs/docker#build-your-own-image
-  && npx -y playwright@1.57.0 install-deps \
+# Install playwright native dependencies.
+# NOTE: Keep playwright version in sync with the one in package.json.
+# https://playwright.dev/docs/docker#build-your-own-image
+RUN npx -y playwright@1.57.0 install-deps \
   # Cleanup apt cache.
   && rm -rf /var/lib/apt/lists/*
 
@@ -49,6 +47,7 @@ RUN ARCH=$(uname -m) \
   && unzip /tmp/bun.zip -d /tmp \
   && mv /tmp/bun-linux-$ARCH/bun /usr/local/bin/bun \
   && chmod +x /usr/local/bin/bun \
+  && ln -s /usr/local/bin/bun /usr/local/bin/bunx \
   && rm -rf /tmp/bun.zip /tmp/bun-linux-$ARCH
 
 # Create a user with a fixed UID:GID and add to sudo group.
