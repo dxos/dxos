@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { type CapabilityManager } from '../../../core';
+import { isSurfaceAvailable } from './SurfaceComponent';
 import { type RoleToken, type SurfaceFilter, create, isSurfaceFilter, makeType } from './types';
 
 describe('Surface.makeType', () => {
@@ -86,5 +88,45 @@ describe('role token typing', () => {
     // phantom should not impose a runtime constraint.
     const token: RoleToken<{ subject: number }> = makeType('numeric');
     expect(token.role).toBe('numeric');
+  });
+});
+
+describe('isSurfaceAvailable typing', () => {
+  // These tests double as static assertions: the `@ts-expect-error` comments
+  // fail to compile if the surrounding expression typechecks, so they verify
+  // the typed overload narrows `data` to the token's declared contract.
+  const sectionToken = makeType<{ attendableId: string; subject: string }>('section');
+  const capabilityManager = { getAll: () => [] } as unknown as CapabilityManager.CapabilityManager;
+
+  test('typed overload accepts data matching the token contract', () => {
+    // No error — data has all required fields.
+    isSurfaceAvailable(capabilityManager, {
+      type: sectionToken,
+      data: { attendableId: 'id', subject: 'x' },
+    });
+  });
+
+  test('typed overload rejects data missing required fields', () => {
+    isSurfaceAvailable(capabilityManager, {
+      type: sectionToken,
+      // @ts-expect-error — `data` is missing `attendableId` required by the token.
+      data: { subject: 'x' },
+    });
+  });
+
+  test('typed overload rejects data with wrong field type', () => {
+    isSurfaceAvailable(capabilityManager, {
+      type: sectionToken,
+      // @ts-expect-error — `attendableId` must be a string, not a number.
+      data: { attendableId: 123, subject: 'x' },
+    });
+  });
+
+  test('legacy overload accepts loose data when `role` is a string', () => {
+    // No error — legacy overload's `data` is untyped (`Record<string, unknown>`).
+    isSurfaceAvailable(capabilityManager, {
+      role: 'article',
+      data: { anything: 'goes' },
+    });
   });
 });

@@ -27,7 +27,14 @@ import { usePluginManager } from '../PluginManager/PluginManagerProvider';
 import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import { type Definition, type Props, type RoleToken, type TypedProps, type WebComponentDefinition } from './types';
+import {
+  type Definition,
+  type Props,
+  type RoleToken,
+  type TokenData,
+  type TypedProps,
+  type WebComponentDefinition,
+} from './types';
 
 const DEBUG = import.meta.env.VITE_DEBUG;
 
@@ -265,16 +272,32 @@ export const useSurfaces = () => {
 
 /**
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
+ *
+ * Two overloads:
+ * - Typed: pass a `type` role token and `data` is constrained to the token's
+ *   declared contract (e.g. `AppSurface.Section` requires `attendableId`).
+ * - Legacy: pass a string `role` and `data` is untyped.
  */
-export const isSurfaceAvailable = (
+export function isSurfaceAvailable<TToken extends RoleToken<any>>(
   capabilityManager: CapabilityManager.CapabilityManager,
-  { role, type, data }: Pick<Props, 'role' | 'data'> & { type?: RoleToken<any> },
-) => {
+  args: { type: TToken; data?: TokenData<TToken>; role?: never },
+): boolean;
+export function isSurfaceAvailable(
+  capabilityManager: CapabilityManager.CapabilityManager,
+  args: Pick<Props, 'role' | 'data'> & { type?: undefined },
+): boolean;
+export function isSurfaceAvailable(
+  capabilityManager: CapabilityManager.CapabilityManager,
+  { role, type, data }: { role?: string; type?: RoleToken<any>; data?: unknown },
+): boolean {
   const effectiveRole = role ?? type?.role;
   if (effectiveRole == null) {
     return false;
   }
   const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
-  const candidates = findCandidates(surfaces.flat(), { role: effectiveRole, data });
+  const candidates = findCandidates(surfaces.flat(), {
+    role: effectiveRole,
+    data: data as Props['data'],
+  });
   return candidates.length > 0;
-};
+}
