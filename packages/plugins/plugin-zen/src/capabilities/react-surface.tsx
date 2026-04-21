@@ -18,8 +18,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Dream.Dream),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Dream.Dream),
+          AppSurface.object(AppSurface.Section, Dream.Dream),
+        ),
         component: ({ data, role }) => (
           <ZenArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

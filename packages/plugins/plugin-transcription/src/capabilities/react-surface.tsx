@@ -18,8 +18,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'article.transcript',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Transcript.Transcript),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Transcript.Transcript),
+          AppSurface.object(AppSurface.Section, Transcript.Transcript),
+        ),
         component: ({ data, role }) => (
           <TranscriptionContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

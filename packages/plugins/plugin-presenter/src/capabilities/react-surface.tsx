@@ -22,40 +22,42 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'document',
-        role: 'article',
         position: 'hoist',
-        filter: (data): data is { subject: { type: typeof meta.id; object: Markdown.Document } } =>
-          !!data.subject &&
-          typeof data.subject === 'object' &&
-          'type' in data.subject &&
-          'object' in data.subject &&
-          data.subject.type === meta.id &&
-          Obj.instanceOf(Markdown.Document, data.subject.object),
+        filter: AppSurface.predicate(
+          AppSurface.Article,
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Markdown.Document }> =>
+            !!data.subject &&
+            typeof data.subject === 'object' &&
+            'type' in data.subject &&
+            'object' in data.subject &&
+            data.subject.type === meta.id &&
+            Obj.instanceOf(Markdown.Document, data.subject.object),
+        ),
         component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
       }),
       Surface.create({
         id: 'collection',
-        role: 'article',
         position: 'hoist',
-        filter: (data): data is { subject: { type: typeof meta.id; object: Collection.Collection } } =>
-          !!data.subject &&
-          typeof data.subject === 'object' &&
-          'type' in data.subject &&
-          'object' in data.subject &&
-          data.subject.type === meta.id &&
-          Obj.instanceOf(Collection.Collection, data.subject.object),
+        filter: AppSurface.predicate(
+          AppSurface.Article,
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Collection.Collection }> =>
+            !!data.subject &&
+            typeof data.subject === 'object' &&
+            'type' in data.subject &&
+            'object' in data.subject &&
+            data.subject.type === meta.id &&
+            Obj.instanceOf(Collection.Collection, data.subject.object),
+        ),
         component: ({ role, data }) => <CollectionPresenterContainer role={role} subject={data.subject.object} />,
       }),
       Surface.create({
         id: 'slide',
-        role: 'slide',
-        filter: AppSurface.objectSection(Markdown.Document),
+        filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;

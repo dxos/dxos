@@ -6,7 +6,7 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
@@ -200,7 +200,7 @@ export const PlankComponent = memo(
             )}
             <Surface.Surface
               key={node.id}
-              role='article'
+              type={AppSurface.Article}
               data={data}
               limit={1}
               fallback={PlankErrorFallback}

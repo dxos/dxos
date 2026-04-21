@@ -20,8 +20,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle([Masonry.Masonry, View.View]),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, [Masonry.Masonry, View.View]),
+          AppSurface.object(AppSurface.Section, [Masonry.Masonry, View.View]),
+        ),
         component: ({ data, role }) => {
           const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view;
           return <MasonryContainer view={view} role={role} />;

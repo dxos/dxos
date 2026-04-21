@@ -9,11 +9,11 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Surface } from '@dxos/app-framework/ui';
 import {
+  AppSurface,
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -75,7 +75,7 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
 
   return (
     <Surface.Surface
-      role='card--content'
+      type={AppSurface.Card}
       data={{
         subject: item,
         projection: projectionModel,

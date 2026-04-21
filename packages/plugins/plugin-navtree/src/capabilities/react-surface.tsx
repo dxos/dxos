@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -18,8 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: COMMANDS_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(COMMANDS_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof CommandsDialogContent>>(AppSurface.Dialog, COMMANDS_DIALOG),
         component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
       }),
       Surface.create({
