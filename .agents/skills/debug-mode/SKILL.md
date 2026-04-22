@@ -123,6 +123,7 @@ When the user has reproduced:
    ```
 
    Output columns: `timestamp`, level letter, `file:line`, scope, message, context, error — everything you need to map back to the hypothesis.
+
 3. Map logs to hypotheses — confirmed vs ruled out.
 4. Present diagnosis with evidence:
 
