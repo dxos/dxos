@@ -5,7 +5,7 @@
 import * as Chat from '@effect/ai/Chat';
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
-import { describe, it, test } from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -26,7 +26,7 @@ const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking:
 );
 
 describe('connectWithFallback', () => {
-  test.skipIf(!process.env.LINEAR_API_KEY)(
+  it.effect(
     'connects to Linear MCP (SSE kind falls back to HTTP)',
     async () => {
       const toolkit = await Effect.runPromise(
@@ -38,7 +38,10 @@ describe('connectWithFallback', () => {
       );
       log.info('connected', { tools: Object.keys(toolkit.toolkit.tools).length });
     },
-    { timeout: 30_000 },
+    {
+      skip: !process.env.LINEAR_API_KEY,
+      timeout: 30_000,
+    },
   );
 });
 
@@ -76,7 +79,9 @@ describe('Browser Automation', () => {
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    {
+      timeout: 120_000,
+    },
   );
 
   it.effect(
@@ -135,6 +140,8 @@ describe('Browser Automation', () => {
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    {
+      timeout: 120_000,
+    },
   );
 });
