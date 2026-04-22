@@ -31,16 +31,6 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  const inputQueue = useAtomValue(
-    AtomObj.make(agent).pipe((_) =>
-      Atom.make((get) =>
-        Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
-      ),
-    ),
-  );
-
-  const inputQueueObjects = useQuery(inputQueue, Query.select(Filter.everything()));
-
   const artifacts = useAtomValue(
     useMemo(
       () =>
@@ -55,23 +45,23 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     ),
   );
 
+  const inputQueue = useAtomValue(
+    AtomObj.make(agent).pipe((_) =>
+      Atom.make((get) =>
+        Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+      ),
+    ),
+  );
+
+  const inputObjects = useQuery(inputQueue, Query.select(Filter.everything()));
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.ToggleGroup type='single' value={tab} onValueChange={(value) => value && setTab(value as Tab)}>
-            <Toolbar.ToggleGroupIconItem
-              value='artifacts'
-              label={t('artifacts.label')}
-              icon='ph--cube--regular'
-              iconOnly
-            />
-            <Toolbar.ToggleGroupIconItem
-              value='inputs'
-              label={t('input-queue.label')}
-              icon='ph--queue--regular'
-              iconOnly
-            />
+            <Toolbar.ToggleGroupIconItem value='artifacts' label={t('artifacts.label')} icon='ph--cube--regular' />
+            <Toolbar.ToggleGroupIconItem value='inputs' label={t('input-queue.label')} icon='ph--queue--regular' />
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
       </Panel.Toolbar>
@@ -84,15 +74,16 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
                 <Message.Content>{t('project-empty-spec.description')}</Message.Content>
               </Message.Root>
             )}
+
             <Masonry.Root Tile={MasonryArtifactTile}>
-              <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} />
+              <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} padding thin centered />
             </Masonry.Root>
           </>
         )}
 
         {tab === 'inputs' && (
-          <Mosaic.Container asChild withFocus autoScroll={viewport}>
-            <ScrollArea.Root orientation='vertical' padding thin>
+          <Mosaic.Container asChild withFocus autoScroll={viewport} classNames='dx-document'>
+            <ScrollArea.Root orientation='vertical' padding thin centered>
               <ScrollArea.Viewport ref={setViewport}>
                 <Mosaic.VirtualStack
                   Tile={StackTile}
@@ -102,7 +93,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
                   gap={8}
                   getId={(item: Obj.Unknown) => item.id}
                   getScrollElement={() => viewport}
-                  items={inputQueueObjects}
+                  items={inputObjects}
                 />
               </ScrollArea.Viewport>
             </ScrollArea.Root>

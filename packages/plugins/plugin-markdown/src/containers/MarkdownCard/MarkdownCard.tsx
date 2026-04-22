@@ -21,7 +21,7 @@ export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = useTranslation(meta.id);
   const snippet = useMemo(() => getSnippet(subject), [subject]);
-  const extensions = useMemo(() => [snippetExtension({ height: 240, scale: 0.8 })], []);
+  const extensions = useMemo(() => [snippetExtension({ height: 240, scale: 1 })], []);
   const info = getInfo(subject);
 
   return (

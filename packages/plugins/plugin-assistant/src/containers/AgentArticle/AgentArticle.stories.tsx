@@ -17,7 +17,7 @@ import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { createObjectFactory } from '@dxos/schema/testing';
+import { createObjectFactory, TypeSpec } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
@@ -27,7 +27,10 @@ import { AgentArticle } from './AgentArticle';
 
 random.seed(1);
 
-type DefaultStoryProps = {};
+type DefaultStoryProps = {
+  spec?: TypeSpec[];
+  inputs?: boolean;
+};
 
 const DefaultStory = (_: DefaultStoryProps) => {
   const [space] = useSpaces();
@@ -44,7 +47,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager({
+    withPluginManager<DefaultStoryProps>(({ args: { spec = [], inputs } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -56,29 +59,26 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
 
               const factory = createObjectFactory(space.db, random as any);
-              const created = yield* Effect.promise(() =>
-                factory([
-                  { type: Organization.Organization, count: 10 },
-                  { type: Person.Person, count: 10 },
-                ]),
-              );
+              const artifacts = yield* Effect.promise(() => factory(spec));
 
               const inputQueue = space.queues.create();
-              yield* Effect.promise(() =>
-                inputQueue.append([
-                  createMessage('user', [{ _tag: 'text', text: 'Summarize the current artifacts.' }]),
-                  createMessage('assistant', [
-                    { _tag: 'text', text: 'Here is a quick overview of the organizations and contacts in context.' },
+              if (inputs) {
+                yield* Effect.promise(() =>
+                  inputQueue.append([
+                    createMessage('user', [{ _tag: 'text', text: 'Summarize the current artifacts.' }]),
+                    createMessage('assistant', [
+                      { _tag: 'text', text: 'Here is a quick overview of the organizations and contacts in context.' },
+                    ]),
+                    createMessage('user', [{ _tag: 'text', text: 'Flag anything that needs follow-up.' }]),
                   ]),
-                  createMessage('user', [{ _tag: 'text', text: 'Flag anything that needs follow-up.' }]),
-                ]),
-              );
+                );
+              }
 
               space.db.add(
                 Obj.make(Agent.Agent, {
                   instructions: Ref.make(Text.make()),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
-                  artifacts: created.map((obj) => ({
+                  artifacts: artifacts.map((obj) => ({
                     name: Obj.getLabel(obj) ?? 'Artifact',
                     data: Ref.make(obj),
                   })),
@@ -91,7 +91,7 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
       ],
-    }),
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -103,4 +103,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    inputs: true,
+    spec: [
+      { type: Organization.Organization, count: 10 },
+      { type: Person.Person, count: 10 },
+    ],
+  },
+};
+
+export const Empty: Story = {};

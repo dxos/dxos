@@ -172,8 +172,8 @@ export const translations: Resource[] = [
         'trigger-duration.label': 'Duration',
 
         // AgentArticle.
-        'project-empty-spec.message': 'Open Properties to configure the agent.',
-        'project-empty-spec.description': 'Open Assistant to interact with the agent.',
+        'project-empty-spec.message': 'Open the Properties companion to configure the agent.',
+        'project-empty-spec.description': 'Open the Assistant companion to interact with the agent.',
         'artifacts.label': 'Artifacts',
         'input-queue.label': 'Inputs',
 
