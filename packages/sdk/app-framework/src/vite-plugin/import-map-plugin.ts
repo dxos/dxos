@@ -262,6 +262,14 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
       return [];
     }
 
+    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text
+    // (e.g. `@dxos/echo-query/api.d.ts?raw` for in-editor type hints), not as
+    // ES modules. Enumerating them here would have vite try to bundle the
+    // declaration file's imports (protobufjs, effect, etc.), which breaks.
+    if (key.endsWith('.d.ts')) {
+      return [];
+    }
+
     if (key.includes('*')) {
       // Expand wildcard patterns like `./proto/*` into concrete specifiers.
       return expandWildcardExport(packageName, packageJsonDir, key, (exportsField as Record<string, unknown>)[key]);
