@@ -23,7 +23,14 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 
    **If `ANTHROPIC_API_KEY` is non-empty, DO NOT run `1p-credentials` — it triggers a 1Password auth prompt that interrupts the user unnecessarily.** Skip straight to step 3.
 
-2. **Only if `ANTHROPIC_API_KEY` is missing or empty**, load it from 1Password:
+2. **If the shell env is empty, fall back to Claude Code's `~/.claude/settings.json`** before reaching for 1Password — Claude Code often stores the key there and only injects it into its own runtime, not into the shell spawned by Bash tool calls. Extract and export it inline:
+
+   ```bash
+   export ANTHROPIC_API_KEY=$(jq -r '.env.ANTHROPIC_API_KEY // empty' ~/.claude/settings.json)
+   test -n "$ANTHROPIC_API_KEY" && echo "loaded from ~/.claude/settings.json, len=${#ANTHROPIC_API_KEY}"
+   ```
+
+   If that also comes up empty, then load from 1Password:
 
    ```fish
    eval (pnpm -ws 1p-credentials)
@@ -31,24 +38,28 @@ Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 
    (In bash/zsh, use the equivalent way to load 1Password credentials for the workspace. If multiple 1Password accounts are configured, prefix with `OP_ACCOUNT=<your-account>`.)
 
-3. **Run tests with generation enabled**:
+3. **Run tests with generation enabled**. Inline the `export` in the same command chain so the key survives into the `moon` invocation (Bash tool calls don't persist exports across turns):
 
    ```bash
-   ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'
+   export ANTHROPIC_API_KEY=$(jq -r '.env.ANTHROPIC_API_KEY // empty' ~/.claude/settings.json) && \
+     ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'
    ```
 
 4. **Commit updated conversation files** (e.g. `*.conversations.json`).
 
 ## Regenerate one package
 
-To refresh cache for a single package, run that package's tests with generation enabled. Check env first; only run `1p-credentials` if `ANTHROPIC_API_KEY` is missing or empty (to avoid interrupting the user with a 1Password prompt):
+To refresh cache for a single package, run that package's tests with generation enabled. Follow the same credential order as above — shell env → `~/.claude/settings.json` → 1Password — and only reach for `1p-credentials` as a last resort:
 
 ```bash
-# Check env first; if ANTHROPIC_API_KEY has a non-empty value, skip the 1p step entirely.
+# Check env first; if ANTHROPIC_API_KEY has a non-empty value, skip the fallbacks.
 env | grep -E '^ANTHROPIC_API_KEY=' | awk -F= '{print "len=" length($2)}'
 
-# Only if missing or empty — otherwise skip this line:
-eval "$(pnpm -ws 1p-credentials)"
+# Fallback 1: Claude Code settings (silent — safe to try first).
+export ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-$(jq -r '.env.ANTHROPIC_API_KEY // empty' ~/.claude/settings.json)}
+
+# Fallback 2 (only if still empty): 1Password — may prompt for auth.
+[ -z "$ANTHROPIC_API_KEY" ] && eval "$(pnpm -ws 1p-credentials)"
 
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
