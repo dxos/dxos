@@ -67,10 +67,10 @@ export const createClientServices = async (
 
   switch (servicesMode) {
     case Runtime.Client.ServicesMode.HOST: {
-      // Derive sqlitePath from dataRoot when not explicitly provided (matches CLI behavior).
+      // Derive sqlitePath from dataRoot when not explicitly provided (only meaningful when the
+      // config selects FILE sqlite mode — LocalClientServices ignores sqlitePath otherwise).
       const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
-      const isPersistant = config.values.runtime?.client?.storage?.persistent;
-      const effectiveSqlitePath = sqlitePath ?? (isPersistant && dataRoot ? `${dataRoot}/sqlite.db` : undefined);
+      const effectiveSqlitePath = sqlitePath ?? (dataRoot ? `${dataRoot}/sqlite.db` : undefined);
       return fromHost(config, { createOpfsWorker, sqlitePath: effectiveSqlitePath });
     }
 

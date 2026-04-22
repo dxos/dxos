@@ -109,6 +109,20 @@ message Runtime {
         JSONDOWN = 12;
       }
 
+      /// Storage backing for SQLite (indexes & persistent state). The caller must supply the
+      /// matching worker factory / path — `createClientServices` does not pick a mode from the
+      /// presence of options.
+      enum SqliteMode {
+        UNSPECIFIED_SQLITE_MODE = 0;
+        /// Ephemeral in-memory SQLite. Indexes are rebuilt on each start.
+        MEMORY = 1;
+        /// OPFS-backed SQLite running in a dedicated worker (browser).
+        /// Requires `createOpfsWorker` to be passed to `createClientServices`.
+        OPFS = 2;
+        /// File-backed SQLite (Node/Bun). Uses `data_root` to locate the database file.
+        FILE = 3;
+      }
+
       optional bool persistent = 1;
       optional StorageDriver key_store = 2;
       optional StorageDriver data_store = 3;
@@ -118,6 +132,9 @@ message Runtime {
        * @deprecated
        */
       optional bool space_fragmentation = 5;
+
+      /// Backing store for SQLite runtimes. Defaults to MEMORY when unset.
+      optional SqliteMode sqlite_mode = 6;
     }
 
     message Log {

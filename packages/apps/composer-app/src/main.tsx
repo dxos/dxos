@@ -175,7 +175,8 @@ const main = async () => {
 
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
-  // env / platform constraints and then supplying the matching worker factory below.
+  // env / platform constraints. Worker factories are passed unconditionally; the factory only
+  // invokes the one required by the configured mode.
   const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
   const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
   // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
@@ -190,6 +191,13 @@ const main = async () => {
         : defs.Runtime.Client.ServicesMode.HOST
       : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
+  // Host mode uses OPFS SQLite in a dedicated worker; worker modes run their own in-memory SQLite
+  // (OPFS does not yet work from inside a SharedWorker per the TODO in `worker-runtime.ts`).
+  const sqliteMode =
+    servicesMode === defs.Runtime.Client.ServicesMode.HOST
+      ? defs.Runtime.Client.Storage.SqliteMode.OPFS
+      : defs.Runtime.Client.Storage.SqliteMode.MEMORY;
+
   config = new Config(
     {
       runtime: {
@@ -198,36 +206,28 @@ const main = async () => {
           signalTelemetryEnabled: !observabilityDisabled,
           singleClientMode: useSingleClientMode,
           servicesMode,
+          storage: { sqliteMode },
         },
       },
     },
     config.values,
   );
   const services = await createClientServices(config, {
-    createWorker:
-      servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
-        ? () =>
-            new SharedWorker(new URL('./shared-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            })
-        : undefined,
-    createDedicatedWorker:
-      servicesMode === defs.Runtime.Client.ServicesMode.DEDICATED_WORKER
-        ? () =>
-            new Worker(new URL('./dedicated-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            })
-        : undefined,
-    createCoordinatorWorker:
-      servicesMode === defs.Runtime.Client.ServicesMode.DEDICATED_WORKER && !useSingleClientMode
-        ? () =>
-            new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-coordinator-worker',
-            })
-        : undefined,
+    createWorker: () =>
+      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+    createDedicatedWorker: () =>
+      new Worker(new URL('./dedicated-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+    createCoordinatorWorker: () =>
+      new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-coordinator-worker',
+      }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
   });

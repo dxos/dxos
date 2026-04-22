@@ -368,11 +368,26 @@ export class Client {
     if (!this._options.services) {
       // Default services mode when not explicitly set in config. The Client entrypoint only exposes
       // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
-      if (!this._config.values.runtime?.client?.servicesMode && !this._config.values.runtime?.client?.remoteSource) {
-        const mode = this._options.createWorker
+      const clientCfg = this._config.values.runtime?.client;
+      if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
+        const servicesMode = this._options.createWorker
           ? Runtime.Client.ServicesMode.SHARED_WORKER
           : Runtime.Client.ServicesMode.HOST;
-        this._config = new Config({ runtime: { client: { servicesMode: mode } } }, this._config.values);
+        // Default SQLite backing when the caller didn't set one:
+        // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
+        // - FILE when a sqlitePath was supplied (Node/Bun CLI)
+        // - MEMORY otherwise
+        const sqliteMode = clientCfg?.storage?.sqliteMode
+          ? undefined
+          : this._options.createOpfsWorker
+            ? Runtime.Client.Storage.SqliteMode.OPFS
+            : this._options.sqlitePath
+              ? Runtime.Client.Storage.SqliteMode.FILE
+              : Runtime.Client.Storage.SqliteMode.MEMORY;
+        this._config = new Config(
+          { runtime: { client: { servicesMode, ...(sqliteMode !== undefined && { storage: { sqliteMode } }) } } },
+          this._config.values,
+        );
       }
     }
 
