@@ -120,6 +120,10 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   '@dxos/react-ui-stack': new Set(['playwright']),
   '@dxos/react-ui-table': new Set(['playwright']),
   '@dxos/ui-theme': new Set(['plugin']),
+  // `solid-js/web/storage` is a server-only helper that pulls
+  // `node:async_hooks` (AsyncLocalStorage) and has no browser shim. Client
+  // code imports `solid-js`, `solid-js/store`, and `solid-js/web` only.
+  'solid-js': new Set(['web/storage']),
 };
 
 /**
