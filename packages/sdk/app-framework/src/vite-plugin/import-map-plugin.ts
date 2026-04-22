@@ -90,8 +90,21 @@ const resolvePackageJsonPath = (packageName: string): string | undefined => {
  */
 const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
   '@dxos/app-framework': new Set(['vite-plugin']),
+  // `@dxos/lit-grid/testing` re-exports a playwright page-object manager and pulls
+  // `@playwright/test` (and transitive playwright-core) into the browser bundle.
+  '@dxos/lit-grid': new Set(['testing']),
+  '@dxos/react-ui-mosaic': new Set(['playwright']),
+  '@dxos/react-ui-stack': new Set(['playwright']),
+  '@dxos/react-ui-table': new Set(['playwright']),
   '@dxos/ui-theme': new Set(['plugin']),
 };
+
+/**
+ * Subpaths common to many packages that should always be excluded.
+ * `./playwright` subdirectories house e2e test harnesses that pull in
+ * `@playwright/test` (a node-only package that breaks the browser bundle).
+ */
+const GLOBALLY_EXCLUDED_SUBPATHS = new Set(['playwright']);
 
 /**
  * Asset subpaths (CSS, PCSS, images, etc.) that the host already loads via its own
@@ -138,7 +151,7 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
     }
 
     const subpath = key.slice(2);
-    if (excluded?.has(subpath)) {
+    if (excluded?.has(subpath) || GLOBALLY_EXCLUDED_SUBPATHS.has(subpath)) {
       return [];
     }
 
@@ -234,17 +247,11 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         for (const specifier of modules) {
           if (isAssetSubpath(specifier)) {
             // Host already loaded the real asset; remote plugins need the specifier to
-            // resolve to *something* that behaves as an ES module. Emit a no-op wrapper
-            // (prod) or a small data URL (dev) and skip file resolution entirely.
-            if (importMapIsDev) {
-              imports[specifier] = 'data:text/javascript;charset=utf-8,export%20%7B%7D%3B';
-            } else {
-              chunkRefIds[specifier] = this.emitFile({
-                type: 'chunk',
-                id: `${WRAPPER_PREFIX}${specifier}`,
-                preserveSignature: 'strict',
-              });
-            }
+            // resolve to *something* that behaves as an ES module. A data URL is the
+            // cheapest option — no chunk to emit (rolldown tree-shakes an empty wrapper
+            // even with `preserveSignature: 'strict'`, so the referenced file wouldn't
+            // exist at runtime), no extra network request, and the same path in dev and prod.
+            imports[specifier] = 'data:text/javascript;charset=utf-8,export%20%7B%7D%3B';
             continue;
           }
 
@@ -255,8 +262,12 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           }
 
           if (importMapIsDev) {
-            // Dev: map bare specifier directly to the resolved file path.
-            imports[specifier] = trimQueryString(resolved.id);
+            // Dev: map bare specifier to the resolved file path, prefixed with vite's
+            // `/@fs/` escape hatch so absolute node_modules paths (including
+            // `.vite/deps/*` pre-bundled chunks) round-trip through the dev server
+            // instead of being resolved against the document origin as a 404.
+            const filePath = trimQueryString(resolved.id);
+            imports[specifier] = filePath.startsWith('/') ? `/@fs${filePath}` : filePath;
           } else {
             // Prod: emit a virtual wrapper chunk that re-exports from the real module.
             resolvedIds[specifier] = resolved.id;
@@ -284,10 +295,6 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           return;
         }
         const specifier = id.slice(WRAPPER_PREFIX.length);
-        if (isAssetSubpath(specifier)) {
-          // No-op — the asset is already loaded by the host bundle.
-          return 'export {};\n';
-        }
         const resolvedId = resolvedIds[specifier];
         if (!resolvedId) {
           return `export * from ${JSON.stringify(specifier)};\n`;
@@ -305,17 +312,22 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         return `export * from ${JSON.stringify(specifier)};\n`;
       },
 
-      // After bundling, map each specifier to the URL of its emitted chunk.
+      // After bundling, map each specifier to the URL of its emitted chunk. Preserves
+      // asset-subpath entries already written to `imports` during `buildStart` (those
+      // use an inline data URL rather than an emitted chunk).
       generateBundle() {
         if (importMapIsDev) {
           return;
         }
 
-        imports = Object.fromEntries(
-          modules
-            .filter((specifier) => chunkRefIds[specifier] !== undefined)
-            .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
-        );
+        imports = {
+          ...imports,
+          ...Object.fromEntries(
+            modules
+              .filter((specifier) => chunkRefIds[specifier] !== undefined)
+              .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
+          ),
+        };
       },
     },
 
