@@ -187,6 +187,26 @@ export class WorkerRuntime {
   }
 
   /**
+   * Update signaling telemetry tags from a client-supplied config overlay.
+   *
+   * The worker services outlive individual client connections, so the first client seeds the
+   * worker's core config (storage, signaling, edge features). For fields that can legitimately
+   * differ per tab — `observabilityGroup` and `signalTelemetryEnabled` — this method lets later
+   * connections refresh the signal metadata the worker attaches to its signaling requests
+   * (last-writer-wins, matching the pre-DX-930 per-session RPC behaviour).
+   */
+  updateSignalMetadata(config: Config): void {
+    const observabilityGroup = config.get('runtime.client.observabilityGroup');
+    if (observabilityGroup) {
+      this._signalMetadataTags.group = observabilityGroup;
+    }
+    const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
+    if (signalTelemetryEnabled !== undefined) {
+      this._signalTelemetryEnabled = signalTelemetryEnabled;
+    }
+  }
+
+  /**
    * Create a new session.
    */
   async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {

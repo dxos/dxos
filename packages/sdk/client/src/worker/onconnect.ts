@@ -81,8 +81,13 @@ export const onconnect = async (event: MessageEvent<any>) => {
   // TODO(nf): block worker initialization until this is set? we usually win the race.
   port.onmessage = (event) => {
     (globalThis as any).localStorage_dxlog = event.data.dxlog;
-    // NOTE: Trigger.wake is a NOOP once resolved; only the first client seeds the overlay.
+    // Only the first client's overlay seeds the worker's core config (Trigger.wake is a NOOP once
+    // resolved). Subsequent clients refresh the signal metadata tags only, preserving the
+    // pre-DX-930 per-session semantics.
     clientConfigOverlay.wake(event.data.config);
+    if (event.data.config) {
+      void workerRuntimePromise.then((runtime) => runtime.updateSignalMetadata(new Config(event.data.config)));
+    }
   };
   // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
   port.postMessage(
