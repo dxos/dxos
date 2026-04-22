@@ -5,7 +5,6 @@
 import { type Plugin as VitePlugin } from 'vite';
 
 import { type Plugin } from '../core';
-import { debugLogPlugin } from './debug-log-plugin';
 import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
@@ -71,11 +70,6 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   let base = '/';
 
   const plugins: VitePlugin[] = [
-    // Dev-only debug-log sink shared with host apps. Gives hosted plugin code
-    // (which runs in the host's origin) and standalone plugin dev servers the
-    // same `/__debug_log` endpoint the `debug-mode` agent skill targets.
-    debugLogPlugin(),
-
     // Configure vite for library-mode builds with externalized deps.
     {
       name: 'composer-plugin',

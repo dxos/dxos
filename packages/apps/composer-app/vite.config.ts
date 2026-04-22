@@ -15,7 +15,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { debugLogPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -215,9 +215,6 @@ export default defineConfig((env) => ({
   },
   plugins: [
     ...sharedPlugins(env),
-
-    // Debug log sink for the debug-mode agent skill (dev-only; see `.agents/skills/debug-mode`).
-    debugLogPlugin(),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {
