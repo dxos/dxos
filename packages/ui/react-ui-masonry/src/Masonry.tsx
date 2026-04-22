@@ -123,9 +123,11 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
   },
 );
 
-const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }) => {
-  return <VirtuosoMasonry {...props} />;
-});
+const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(
+  ({ ...props }, _forwardedRef) => {
+    return <VirtuosoMasonry {...props} />;
+  },
+);
 
 MasonryContentInner.displayName = 'Masonry.Content';
 

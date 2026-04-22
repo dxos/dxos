@@ -14,11 +14,11 @@ import { CreateAgent, SyncTriggers } from './definitions';
 
 export default CreateAgent.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, spec, blueprints, subscriptions }) {
+    Effect.fnUntraced(function* ({ name, instructions, blueprints, subscriptions }) {
       const agent = yield* Agent.makeInitialized(
         {
           name,
-          spec,
+          instructions,
           blueprints: yield* Effect.forEach(blueprints, (key) =>
             Blueprint.upsert(key).pipe(Effect.map(Ref.make), Effect.orDie),
           ),

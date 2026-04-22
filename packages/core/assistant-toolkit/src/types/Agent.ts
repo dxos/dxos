@@ -31,8 +31,7 @@ export const Agent = Schema.Struct({
   /**
    * Instructions for the agent.
    */
-  // TODO(burdon): Rename instructions.
-  spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  instructions: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 
   /**
    * Primary chat for the agent.
@@ -101,9 +100,9 @@ export interface Agent extends Schema.Schema.Type<typeof Agent> {}
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Agent>, 'spec' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
+  props: Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
     Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
-      spec: string;
+      instructions: string;
       blueprints?: Ref.Ref<Blueprint.Blueprint>[];
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
@@ -112,7 +111,7 @@ export const makeInitialized = (
   Effect.gen(function* () {
     const agent = Obj.make(Agent, {
       ...props,
-      spec: Ref.make(Text.make(props.spec)),
+      instructions: Ref.make(Text.make(props.instructions)),
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
