@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, type OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
+import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
@@ -24,6 +25,26 @@ const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking:
     }),
   ),
 );
+
+describe('connectWithFallback', () => {
+  it(
+    'connects to Linear MCP (SSE kind falls back to HTTP)',
+    {
+      skip: !process.env.LINEAR_API_KEY,
+      timeout: 30_000,
+    },
+    async () => {
+      const toolkit = await runAndForwardErrors(
+        McpToolkit.make({
+          url: 'https://mcp.linear.app/mcp',
+          kind: 'sse',
+          apiKey: process.env.LINEAR_API_KEY,
+        }),
+      );
+      log.info('connected', { tools: Object.keys(toolkit.toolkit.tools) });
+    },
+  );
+});
 
 describe('Browser Automation', () => {
   it.effect(
@@ -59,7 +80,9 @@ describe('Browser Automation', () => {
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    {
+      timeout: 120_000,
+    },
   );
 
   it.effect(
@@ -118,6 +141,8 @@ describe('Browser Automation', () => {
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    {
+      timeout: 120_000,
+    },
   );
 });

@@ -3,17 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type ComponentProps } from 'react';
+import React, { useCallback, type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Feed, Obj } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
+import { QueueService } from '@dxos/functions';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -64,7 +66,28 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'agent-properties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: ({ data }) => <AgentProperties subject={data.subject} />,
+        component: ({ data }) => {
+          const agent = data.subject;
+
+          // TODO(burdon): Move into container?
+          const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+          const handleResetHistory = useCallback(async () => {
+            const runtime = computeRuntime.getRuntime(Obj.getDatabase(agent)!.spaceId);
+            await runtime.runPromise(Agent.resetChatHistory(agent));
+            if (!agent.queue) {
+              await runtime.runPromise(
+                Effect.gen(function* () {
+                  const queue = yield* QueueService.createQueue();
+                  Obj.change(agent, (agent) => {
+                    agent.queue = Ref.fromDXN(queue.dxn);
+                  });
+                }),
+              );
+            }
+          }, [agent, computeRuntime]);
+
+          return <AgentProperties subject={agent} onReset={handleResetHistory} />;
+        },
       }),
       Surface.create({
         id: 'companion-chat',
@@ -95,6 +118,7 @@ export default Capability.makeModule(() =>
           const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
+
           return (
             <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>

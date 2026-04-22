@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Agent, AgentBlueprint, Chat, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Feed, Obj, Type } from '@dxos/echo';
@@ -126,7 +126,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           iconHue: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = yield* Agent.makeInitialized({ name: '', spec: '' }, AgentBlueprint.make()).pipe(
+              const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
                 withComputeRuntime(options.db.spaceId),
               );
               return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -151,6 +151,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,
       Agent.Agent,
+      McpServer.McpServer,
       Plan.Plan,
       Sequence,
       Memory.Memory,
