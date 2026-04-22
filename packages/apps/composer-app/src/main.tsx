@@ -173,8 +173,23 @@ const main = async () => {
 
   profiler?.mark('services:start');
 
-  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
-  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  // Decide the deployment mode for client services. The factory is a dumb switch on
+  // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
+  // env / platform constraints and then supplying the matching worker factory below.
+  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
+  // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
+  // transparently fall back to in-process host mode instead of letting the factory throw later.
+  const isIos = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
+  const sharedWorkerSupported = typeof SharedWorker !== 'undefined' && !isIos;
+  const servicesMode = useLocalServices
+    ? defs.Runtime.Client.ServicesMode.HOST
+    : useSharedWorker
+      ? sharedWorkerSupported
+        ? defs.Runtime.Client.ServicesMode.SHARED_WORKER
+        : defs.Runtime.Client.ServicesMode.HOST
+      : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+
   config = new Config(
     {
       runtime: {
@@ -182,6 +197,7 @@ const main = async () => {
           observabilityGroup,
           signalTelemetryEnabled: !observabilityDisabled,
           singleClientMode: useSingleClientMode,
+          servicesMode,
         },
       },
     },
@@ -189,29 +205,29 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createWorker:
-      useLocalServices || !useSharedWorker
-        ? undefined
-        : () =>
+      servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
+        ? () =>
             new SharedWorker(new URL('./shared-worker', import.meta.url), {
               type: 'module',
               name: 'dxos-client-worker',
-            }),
+            })
+        : undefined,
     createDedicatedWorker:
-      useLocalServices || useSharedWorker
-        ? undefined
-        : () =>
+      servicesMode === defs.Runtime.Client.ServicesMode.DEDICATED_WORKER
+        ? () =>
             new Worker(new URL('./dedicated-worker', import.meta.url), {
               type: 'module',
               name: 'dxos-client-worker',
-            }),
+            })
+        : undefined,
     createCoordinatorWorker:
-      useLocalServices || useSharedWorker || useSingleClientMode
-        ? undefined
-        : () =>
+      servicesMode === defs.Runtime.Client.ServicesMode.DEDICATED_WORKER && !useSingleClientMode
+        ? () =>
             new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
               type: 'module',
               name: 'dxos-coordinator-worker',
-            }),
+            })
+        : undefined,
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
   });

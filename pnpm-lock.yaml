@@ -15382,9 +15382,6 @@ importers:
       lodash.isequalwith:
         specifier: 'catalog:'
         version: 4.4.0
-      ua-parser-js:
-        specifier: 'catalog:'
-        version: 1.0.39
       web-worker:
         specifier: 1.5.0
         version: 1.5.0
@@ -15395,9 +15392,6 @@ importers:
       '@types/lodash.isequalwith':
         specifier: 'catalog:'
         version: 4.4.7
-      '@types/ua-parser-js':
-        specifier: 'catalog:'
-        version: 0.7.39
       fast-check:
         specifier: 'catalog:'
         version: 3.23.2

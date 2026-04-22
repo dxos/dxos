@@ -84,6 +84,17 @@ message Module {
 
 message Runtime {
   message Client {
+    /// Where client services run. Drives `createClientServices` routing.
+    enum ServicesMode {
+      UNSPECIFIED_SERVICES_MODE = 0;
+      /// Run services in the same thread as the client.
+      HOST = 1;
+      /// Run services in a SharedWorker (single instance shared across tabs).
+      SHARED_WORKER = 2;
+      /// Run services in a dedicated Worker elected via a lock (leader/follower).
+      DEDICATED_WORKER = 3;
+    }
+
     message Storage {
       enum StorageDriver {
         RAM = 0;
@@ -169,6 +180,11 @@ message Runtime {
     /// Use in-process (single-client) coordinator for dedicated-worker mode.
     /// Bypasses SharedWorker; used for WKWebView where the coordinator SharedWorker port is unreliable.
     optional bool single_client_mode = 15;
+
+    /// Deployment mode for client services. Read by `createClientServices` to select between
+    /// in-process (HOST), SharedWorker, and dedicated Worker runtimes. Required when no
+    /// `remote_source` is configured.
+    optional ServicesMode services_mode = 16;
   }
 
   message App {

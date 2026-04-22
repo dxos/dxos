@@ -360,9 +360,21 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
+    const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
+
+    if (!this._options.services) {
+      // Default services mode when not explicitly set in config. The Client entrypoint only exposes
+      // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
+      if (!this._config.values.runtime?.client?.servicesMode && !this._config.values.runtime?.client?.remoteSource) {
+        const mode = this._options.createWorker
+          ? Runtime.Client.ServicesMode.SHARED_WORKER
+          : Runtime.Client.ServicesMode.HOST;
+        this._config = new Config({ runtime: { client: { servicesMode: mode } } }, this._config.values);
+      }
+    }
 
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ??

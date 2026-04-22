@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -23,9 +23,9 @@ void navigator.locks.request(STORAGE_LOCK_KEY, (_lock: Lock | null) => {
   return lockPromise;
 });
 
-// Config supplied by the first connecting client. Used as an overlay on top of the worker's own
-// Storage/Envs/Local/Defaults so fields like observabilityGroup (sourced from localStorage in the
-// app) can reach the worker without RPC parameter threading.
+// The worker does not load config itself — all config comes from the first connecting client.
+// Subsequent client connections can still refresh a small set of last-writer-wins fields via
+// `WorkerRuntime.updateSignalMetadata`.
 const clientConfigOverlay = new Trigger<ConfigProto | undefined>();
 
 const setupRuntime = async () => {
@@ -34,7 +34,7 @@ const setupRuntime = async () => {
   const workerRuntime = new WorkerRuntime({
     configProvider: async () => {
       const overlay = await clientConfigOverlay.wait();
-      const config = new Config(overlay ?? {}, await Storage(), Envs(), Local(), Defaults());
+      const config = new Config(overlay ?? {});
       log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
       return config;
     },
@@ -109,3 +109,16 @@ export const onconnect = async (event: MessageEvent<any>) => {
 };
 
 export const getWorkerServiceHost = async () => (await workerRuntimePromise).host;
+
+/**
+ * Returns the config seeded by the first connecting client.
+ *
+ * Waits until at least one client has connected and supplied its config, so callers that need to
+ * bootstrap observability / telemetry inside the shared worker do not have to independently
+ * re-read Storage/Envs/Local/Defaults (which would duplicate what the main thread already did and
+ * could drift from the client's view).
+ */
+export const getWorkerConfig = async (): Promise<Config> => {
+  const overlay = await clientConfigOverlay.wait();
+  return new Config(overlay ?? {});
+};
