@@ -86,7 +86,9 @@ export const onconnect = async (event: MessageEvent<any>) => {
     // pre-DX-930 per-session semantics.
     clientConfigOverlay.wake(event.data.config);
     if (event.data.config) {
-      void workerRuntimePromise.then((runtime) => runtime.updateSignalMetadata(new Config(event.data.config)));
+      void workerRuntimePromise
+        .then((runtime) => runtime.updateSignalMetadata(new Config(event.data.config)))
+        .catch((err) => log.catch(err));
     }
   };
   // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.

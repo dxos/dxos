@@ -57,8 +57,9 @@ export const createClientServices = async (
     }
   }
 
+  // UNSPECIFIED_SERVICES_MODE == 0, so falsy check also catches it.
   const servicesMode = config.values.runtime?.client?.servicesMode;
-  if (!servicesMode || servicesMode === Runtime.Client.ServicesMode.UNSPECIFIED_SERVICES_MODE) {
+  if (!servicesMode) {
     throw new Error(
       'createClientServices: runtime.client.services_mode is not set; required when no remote_source is configured.',
     );
