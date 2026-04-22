@@ -86,6 +86,22 @@ export const SEEDERS: readonly PluginSeeder[] = [
       };
     },
   },
+  {
+    name: 'telegram',
+    key: 'org.dxos.plugin.telegram',
+    hasCreds: (existing) => typeof existing.botToken === 'string' && existing.botToken.length > 0,
+    build: (env) => {
+      const botToken = env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) {
+        return undefined;
+      }
+      return {
+        botToken,
+        respondToMentions: true,
+        respondToDMs: true,
+      };
+    },
+  },
 ];
 
 /**

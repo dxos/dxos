@@ -63,6 +63,7 @@ import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
+import { TelegramPlugin } from '@dxos/plugin-telegram';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
@@ -159,6 +160,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       InspectorPlugin.meta.id,
       ResearchPlugin.meta.id,
       SlackPlugin.meta.id,
+      TelegramPlugin.meta.id,
       TrelloPlugin.meta.id,
       DailySummaryPlugin.meta.id,
       FeedPlugin.meta.id,
@@ -252,6 +254,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SlackPlugin(),
+    TelegramPlugin(),
     SketchPlugin(),
     SpacetimePlugin(),
     SpacePlugin({

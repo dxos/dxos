@@ -1,0 +1,62 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-atom"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-graph"
+    }
+  ]
+}
