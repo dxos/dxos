@@ -27,11 +27,11 @@ export interface McpToolkitOptions {
  * @param options MCP server URL and transport kind ('sse' for SSE, 'http' for Streamable HTTP).
  * @returns An OpaqueToolkit containing all tools from the MCP server.
  */
+const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
+
 export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit> =>
   Effect.gen(function* () {
-    const transport = createTransport(options.url, options.kind, options.apiKey);
-    const client = new Client({ name: '@dxos/mcp-client', version: '0.8.3' });
-    yield* Effect.promise(() => client.connect(transport));
+    const client = yield* connectWithFallback(options);
 
     const { tools } = yield* Effect.promise(() => client.listTools());
     if (tools.length === 0) {
@@ -80,6 +80,40 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
 
     return OpaqueToolkit.make(toolkit, layer);
   }).pipe(Effect.withSpan('McpToolkit.make'));
+
+/**
+ * Returns true when the error (or its wrapped cause) contains a 405 status code.
+ * `Effect.tryPromise` wraps thrown errors in `UnknownException`, so we unwrap first.
+ */
+export const is405 = (error: unknown): boolean => {
+  const cause = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
+  return cause instanceof Error && cause.message.includes('405');
+};
+
+/**
+ * Connects to an MCP server, falling back to the alternate transport on 405 errors.
+ * Per the MCP spec, a 405 indicates the server uses the other transport protocol.
+ * Returns the connected Client (a fresh instance is created for the fallback attempt).
+ */
+const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client> =>
+  Effect.gen(function* () {
+    const fallbackKind = options.kind === 'sse' ? 'http' : 'sse';
+    const primary = yield* connectClient(options.url, options.kind, options.apiKey).pipe(Effect.either);
+    if (primary._tag === 'Right') {
+      return primary.right;
+    }
+    if (is405(primary.left)) {
+      return yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.orDie);
+    }
+    return yield* Effect.die(primary.left);
+  });
+
+const connectClient = (url: string, kind: McpToolkitOptions['kind'], apiKey?: string) =>
+  Effect.tryPromise(() => {
+    const client = new Client(CLIENT_INFO);
+    const transport = createTransport(url, kind, apiKey);
+    return client.connect(transport).then(() => client);
+  });
 
 /**
  * Creates a transport for the given MCP server URL and kind.

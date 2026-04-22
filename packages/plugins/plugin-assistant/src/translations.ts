@@ -131,7 +131,7 @@ export const translations = [
         'objects-in-context.title': 'Content',
         'remove-object-in-context.label': 'Remove document',
         'chat-model.title': 'Models',
-        'mcp-servers.title': 'MCP Servers',
+        'mcp-servers.title': 'MCP',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',

@@ -123,7 +123,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
   },
 );
 
-const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }) => {
+const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }, _forwardedRef) => {
   return <VirtuosoMasonry {...props} />;
 });
 

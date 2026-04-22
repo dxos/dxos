@@ -25,6 +25,25 @@ const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking:
   ),
 );
 
+describe('connectWithFallback', () => {
+  it.effect(
+    'connects to Linear MCP (SSE kind falls back to HTTP)',
+    Effect.fnUntraced(
+      function* (_) {
+        const toolkit = yield* McpToolkit.make({
+          url: 'https://mcp.linear.app/mcp',
+          kind: 'sse',
+          apiKey: process.env.LINEAR_API_KEY,
+        });
+        log.info('connected', { tools: Object.keys(toolkit.toolkit.tools).length });
+      },
+      TestHelpers.provideTestContext,
+      TestHelpers.runIf(process.env.LINEAR_API_KEY),
+    ),
+    { timeout: 30_000 },
+  );
+});
+
 describe('Browser Automation', () => {
   it.effect(
     'smoke',

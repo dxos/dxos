@@ -72,6 +72,7 @@ const isDev = import.meta.env.DEV ?? false;
  */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
+  readonly #subscriptions = new Map<SpaceId, () => void>();
   readonly #capabilities: CapabilityManager.CapabilityManager;
 
   constructor(capabilities: CapabilityManager.CapabilityManager) {
@@ -82,6 +83,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   protected override async _open() {}
 
   protected override async _close() {
+    for (const unsubscribe of this.#subscriptions.values()) {
+      unsubscribe();
+    }
+    this.#subscriptions.clear();
     await Promise.all(Array.from(this.#runtimes.values()).map((rt) => rt.dispose()));
     this.#runtimes.clear();
   }
@@ -119,9 +124,8 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         yield* Effect.promise(() => space.waitUntilReady());
 
         // Maintain a live query of space-level MCP server configs.
-        // TODO: Unsubscribe when runtime is disposed (currently tied to space lifecycle).
         const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
-        mcpQuery.subscribe();
+        this.#subscriptions.set(spaceId, mcpQuery.subscribe());
 
         return Layer.mergeAll(
           TriggerDispatcher.layer({ timeControl: 'natural' }),
