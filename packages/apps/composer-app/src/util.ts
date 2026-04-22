@@ -18,12 +18,12 @@ const DANGEROUSLY_RESET_STORAGE_VERSION = 'v1';
  * Performs a one-time full storage reset for production and staging environments.
  * Returns true if a reset was performed (caller should redirect and halt boot).
  */
-export const runStorageResetMigration = async (environment?: string): Promise<boolean> => {
+export const shouldRunStorageResetMigration = (environment?: string): boolean => {
   const isProductionOrStaging = ['production', 'staging'].includes(environment ?? '');
-  if (!isProductionOrStaging || localStorage.getItem(DANGEROUSLY_RESET_STORAGE_KEY) === DANGEROUSLY_RESET_STORAGE_VERSION) {
-    return false;
-  }
+  return isProductionOrStaging && localStorage.getItem(DANGEROUSLY_RESET_STORAGE_KEY) !== DANGEROUSLY_RESET_STORAGE_VERSION;
+};
 
+export const runStorageResetMigration = async (): Promise<void> => {
   log.info('Performing one-time storage reset.');
 
   const run = async (label: string, fn: () => Promise<void>) => {
@@ -44,7 +44,6 @@ export const runStorageResetMigration = async (environment?: string): Promise<bo
 
   // Set flag AFTER clearing localStorage so this migration does not re-run.
   localStorage.setItem(DANGEROUSLY_RESET_STORAGE_KEY, DANGEROUSLY_RESET_STORAGE_VERSION);
-  return true;
 };
 
 export const isTrue = (str?: string | null, strict = true): boolean =>
