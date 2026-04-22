@@ -81,7 +81,7 @@ const DEFAULT_TIMEOUT_MS = 5_000;
  * capabilities, and invoke operations.
  *
  * For React tests, pass the returned harness to `render` or `renderSurface`
- * from `@dxos/app-framework/testing/react`.
+ * from `@dxos/app-framework/testing-react`.
  */
 export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> => {
   const {

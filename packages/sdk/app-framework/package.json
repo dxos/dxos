@@ -77,7 +77,7 @@
       "node": "./dist/lib/node-esm/testing/index.mjs",
       "types": "./dist/types/src/testing/index.d.ts"
     },
-    "./testing/react": {
+    "./testing-react": {
       "source": "./src/testing/react.tsx",
       "browser": "./dist/lib/browser/testing/react.mjs",
       "node": "./dist/lib/node-esm/testing/react.mjs",
@@ -123,7 +123,7 @@
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ],
-      "testing/react": [
+      "testing-react": [
         "dist/types/src/testing/react.d.ts"
       ],
       "ui": [
@@ -176,11 +176,6 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "peerDependenciesMeta": {
-    "@testing-library/react": {
-      "optional": true
-    }
   },
   "publishConfig": {
     "access": "public"

@@ -13,7 +13,7 @@
 Two-layer split mirrors the existing boundary between `@dxos/app-framework` (low-level) and `@dxos/plugin-testing` (Composer-flavored presets):
 
 - `@dxos/app-framework/testing` — primitive `TestHarness` + `createTestApp()`. No plugin dependencies. Reuses the existing subpath (already exported by `packages/sdk/app-framework/package.json`). Lives alongside `fromPlugins`/`withPluginManager` in `packages/sdk/app-framework/src/testing/`.
-- `@dxos/app-framework/testing/react` — optional subpath for the RTL-dependent helpers (`render`, `renderSurface`), so Node-only tests don't pull in `react-dom`/RTL.
+- `@dxos/app-framework/testing-react` — optional subpath for the RTL-dependent helpers (`render`, `renderSurface`), so Node-only tests don't pull in `react-dom`/RTL.
 - `@dxos/plugin-testing` — already exports `corePlugins()`. Adds a `createComposerTestApp()` preset that layers `corePlugins()` + optional `ClientPlugin` on top of `createTestApp()`.
 
 ## API Surface
@@ -66,7 +66,7 @@ Internals (small file, no new deps):
 - `waitForCapability` = subscribe to `manager.capabilities` via the existing `Atom`/`Registry` mechanism or `manager.activation` PubSub with a promise race against a timeout.
 - `dispose` = `runAndForwardErrors(manager.shutdown())` — already exercised by `packages/sdk/app-framework/src/ui/hooks/useApp.test.tsx`.
 
-### React helpers: `@dxos/app-framework/testing/react`
+### React helpers: `@dxos/app-framework/testing-react`
 
 ```ts
 import type { RenderOptions, RenderResult } from '@testing-library/react';
@@ -146,7 +146,7 @@ await harness.dispose();
 ### Surface render (jsdom)
 
 ```ts
-import { render, renderSurface } from '@dxos/app-framework/testing/react';
+import { render, renderSurface } from '@dxos/app-framework/testing-react';
 const harness = await createComposerTestApp({ client: true, plugins: [ChessPlugin()] });
 const view = renderSurface(harness, { role: 'article', data: { subject: chessGame } });
 expect(await view.findByRole('grid')).toBeInTheDocument();
