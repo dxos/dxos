@@ -5,7 +5,7 @@
 import * as Chat from '@effect/ai/Chat';
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -26,20 +26,18 @@ const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking:
 );
 
 describe('connectWithFallback', () => {
-  it.effect(
+  test.skipIf(!process.env.LINEAR_API_KEY)(
     'connects to Linear MCP (SSE kind falls back to HTTP)',
-    Effect.fnUntraced(
-      function* (_) {
-        const toolkit = yield* McpToolkit.make({
+    async () => {
+      const toolkit = await Effect.runPromise(
+        McpToolkit.make({
           url: 'https://mcp.linear.app/mcp',
           kind: 'sse',
           apiKey: process.env.LINEAR_API_KEY,
-        });
-        log.info('connected', { tools: Object.keys(toolkit.toolkit.tools).length });
-      },
-      TestHelpers.provideTestContext,
-      TestHelpers.runIf(process.env.LINEAR_API_KEY),
-    ),
+        }),
+      );
+      log.info('connected', { tools: Object.keys(toolkit.toolkit.tools).length });
+    },
     { timeout: 30_000 },
   );
 });
