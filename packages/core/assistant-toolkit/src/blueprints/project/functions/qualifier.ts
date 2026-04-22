@@ -30,7 +30,7 @@ export default Qualifier.pipe(
         }
 
         const plan = yield* Database.load(agent.plan);
-        const spec = yield* Database.load(agent.spec);
+        const instructions = yield* Database.load(agent.instructions);
 
         const { value } = yield* Effect.scoped(
           LanguageModel.generateObject({
@@ -45,9 +45,9 @@ export default Qualifier.pipe(
                   If you are not sure, return true.
                   The qualified events will be forwarded to the larger agent that will process them.
                   <agent id="${id}" name="${name}">
-                    <spec>
-                    ${spec.content}
-                    </spec>
+                    <instructions>
+                    ${instructions.content}
+                    </instructions>
                     <plan>
                       ${Plan.formatPlan(plan)}
                     </plan>

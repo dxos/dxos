@@ -64,7 +64,12 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'agent-properties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: ({ data }) => <AgentProperties subject={data.subject} />,
+        component: ({ data }) => {
+          // Reset logic now lives inside `AgentProperties` via
+          // `useSpaceCallback`. Pass a no-op `onReset` so the button still
+          // renders; the container handles state updates internally.
+          return <AgentProperties subject={data.subject} onReset={() => {}} />;
+        },
       }),
       Surface.create({
         id: 'companion-chat',
@@ -94,6 +99,7 @@ export default Capability.makeModule(() =>
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
+
           return (
             <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
