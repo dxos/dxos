@@ -24,6 +24,7 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
       '&': {
         maxHeight: `${height}px`,
         overflow: 'hidden',
+        boxSizing: 'border-box',
         ...(scale !== 1 && { zoom: `${scale}` }),
       },
       '.cm-content': {
@@ -36,6 +37,7 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
       },
       '.cm-scroller': {
         overflow: 'hidden !important',
+        padding: '0',
       },
     }),
   ];
