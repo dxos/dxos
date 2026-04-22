@@ -393,11 +393,19 @@ const reset = async () => {
     log.info('Cleared local storage');
   }
 
-  await clearIndexedDB();
-  log.info('Cleared IndexedDB');
+  try {
+    await clearIndexedDB();
+    log.info('Cleared IndexedDB');
+  } catch (err) {
+    log.catch(err);
+  }
 
-  await clearOPFS();
-  log.info('Cleared OPFS');
+  try {
+    await clearOPFS();
+    log.info('Cleared OPFS');
+  } catch (err) {
+    log.catch(err);
+  }
 
   if (typeof location !== 'undefined' && typeof location.reload === 'function') {
     location.reload();

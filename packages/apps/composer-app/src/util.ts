@@ -7,6 +7,45 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
+import { clearCaches, clearIndexedDB, clearOPFS, clearServiceWorkers } from '@dxos/util';
+
+// Danger: Deleting this localStorage key will cause all storage (including identity) to be
+// wiped on the next page load. Do not clear it unless you intend to trigger a full reset.
+const DANGEROUSLY_RESET_STORAGE_KEY = 'org.dxos.composer.dangerouslyResetStorage';
+const DANGEROUSLY_RESET_STORAGE_VERSION = 'v1';
+
+/**
+ * Performs a one-time full storage reset for production and staging environments.
+ * Returns true if a reset was performed (caller should redirect and halt boot).
+ */
+export const runStorageResetMigration = async (environment?: string): Promise<boolean> => {
+  const isProductionOrStaging = ['production', 'staging'].includes(environment ?? '');
+  if (!isProductionOrStaging || localStorage.getItem(DANGEROUSLY_RESET_STORAGE_KEY) === DANGEROUSLY_RESET_STORAGE_VERSION) {
+    return false;
+  }
+
+  log.info('Performing one-time storage reset.');
+
+  const run = async (label: string, fn: () => Promise<void>) => {
+    try {
+      await fn();
+    } catch (err) {
+      log.catch(err, { label });
+    }
+  };
+
+  await run('clearIndexedDB', clearIndexedDB);
+  await run('clearOPFS', clearOPFS);
+  await run('clearServiceWorkers', clearServiceWorkers);
+  await run('clearCaches', clearCaches);
+
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // Set flag AFTER clearing localStorage so this migration does not re-run.
+  localStorage.setItem(DANGEROUSLY_RESET_STORAGE_KEY, DANGEROUSLY_RESET_STORAGE_VERSION);
+  return true;
+};
 
 export const isTrue = (str?: string | null, strict = true): boolean =>
   strict ? str === 'true' || str === '1' : str != null && !isFalse(str);

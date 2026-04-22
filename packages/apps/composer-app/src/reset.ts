@@ -20,22 +20,24 @@ if (
 
 print('Clearing all storage...');
 
+const attempt = async (label: string, fn: () => Promise<void>) => {
+  try {
+    await fn();
+    print(label + ' cleared');
+  } catch (err) {
+    print(label + ' error: ' + String(err));
+  }
+};
+
 void (async () => {
   localStorage.clear();
   sessionStorage.clear();
   print('localStorage and sessionStorage cleared');
 
-  await clearIndexedDB();
-  print('IndexedDB cleared');
-
-  await clearOPFS();
-  print('OPFS cleared');
-
-  await clearServiceWorkers();
-  print('Service workers unregistered');
-
-  await clearCaches();
-  print('Caches cleared');
+  await attempt('IndexedDB', clearIndexedDB);
+  await attempt('OPFS', clearOPFS);
+  await attempt('Service workers', clearServiceWorkers);
+  await attempt('Caches', clearCaches);
 
   document.cookie.split(';').forEach((c) => {
     const name = c.trim().split('=')[0];
