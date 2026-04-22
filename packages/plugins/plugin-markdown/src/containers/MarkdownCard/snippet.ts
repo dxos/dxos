@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginValue, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 
 export type SnippetOptions = {
   /** Maximum height of the editor in pixels. Content is clipped to whole lines within this height. */
@@ -19,44 +19,10 @@ export type SnippetOptions = {
  * varying line heights from headings and other decorated blocks.
  */
 export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
-  // Internal height is divided by scale so the visible area matches the requested height.
-  const internalHeight = Math.round(height / scale);
-
-  const clipPlugin = ViewPlugin.fromClass(
-    class SnippetPlugin implements PluginValue {
-      private clipHeight = 0;
-
-      update(update: ViewUpdate) {
-        update.view.requestMeasure({
-          // key deduplicates concurrent requests within the same animation frame.
-          key: this,
-          read: (view) => {
-            const contentHeight = view.contentHeight;
-            if (contentHeight === 0) {
-              return 0;
-            }
-            const clipLimit = Math.min(internalHeight, contentHeight);
-            // Find the block (line) at the very bottom of the visible area.
-            const block = view.lineBlockAtHeight(clipLimit - 1);
-            // If the block overflows the clip limit, clip at the block's top edge.
-            return block.top + block.height > clipLimit ? block.top : clipLimit;
-          },
-          write: (clipHeight, view) => {
-            if (clipHeight > 0 && clipHeight !== this.clipHeight) {
-              this.clipHeight = clipHeight;
-              view.dom.style.maxHeight = `${clipHeight}px`;
-            }
-          },
-        });
-      }
-    },
-  );
-
   return [
-    clipPlugin,
     EditorView.theme({
       '&': {
-        maxHeight: `${internalHeight}px`,
+        maxHeight: `${height}px`,
         overflow: 'hidden',
         ...(scale !== 1 && { zoom: `${scale}` }),
       },
