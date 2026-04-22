@@ -126,8 +126,11 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
  * Subpaths common to many packages that should always be excluded.
  * `./playwright` subdirectories house e2e test harnesses that pull in
  * `@playwright/test` (a node-only package that breaks the browser bundle).
+ * `./testing` subpaths similarly expose node-only test helpers (e.g.
+ * `@dxos/edge-client/testing` pulls `@dxos/node-std/http` which has no
+ * browser analogue) and aren't part of the plugin-facing surface.
  */
-const GLOBALLY_EXCLUDED_SUBPATHS = new Set(['playwright']);
+const GLOBALLY_EXCLUDED_SUBPATHS = new Set(['playwright', 'testing']);
 
 /**
  * Regex for subpaths that are always node-only build tooling — vite, esbuild, and
