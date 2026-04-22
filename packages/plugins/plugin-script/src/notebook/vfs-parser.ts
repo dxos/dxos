@@ -42,9 +42,6 @@ export class VirtualTypeScriptParser {
   protected compilerOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2020,
     module: ts.ModuleKind.ESNext,
-    // TypeScript 7 deprecates the default `Node10` resolution when `module` is not set to
-    // the legacy node module kinds; explicitly specify a non-deprecated resolution.
-    moduleResolution: ts.ModuleResolutionKind.Bundler,
     strict: true,
     esModuleInterop: true,
     skipLibCheck: true,
