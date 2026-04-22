@@ -37,7 +37,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
    * Creates a new space.
    */
   create(
-    props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>,
+    props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceFeed'>,
     options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
   ): Promise<Space>;
 
