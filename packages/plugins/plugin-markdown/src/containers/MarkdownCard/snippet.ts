@@ -61,7 +61,7 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
         ...(scale !== 1 && { zoom: `${scale}` }),
       },
       '.cm-content': {
-        whiteSpace: 'pre',
+        whiteSpace: 'pre-wrap',
         margin: '0',
         padding: '0',
       },
