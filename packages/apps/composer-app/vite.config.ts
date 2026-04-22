@@ -106,12 +106,7 @@ export default defineConfig((env) => ({
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
       // and its CJS-only chromium-bidi deps. These are dev-only, must not be in the app bundle,
       // and cannot be resolved cleanly as ESM, so mark them external.
-      external: [
-        'playwright',
-        'playwright-core',
-        /^chromium-bidi(\/|$)/,
-        '@vitest/browser-playwright',
-      ],
+      external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
         // NOTE: rolldown (Vite 8) only accepts the function form of manualChunks.
@@ -222,7 +217,10 @@ export default defineConfig((env) => ({
       { find: '@dxos/effect-atom-solid', replacement: path.resolve(rootDir, 'packages/common/effect-atom-solid/src') },
       { find: '@dxos/echo-solid', replacement: path.resolve(rootDir, 'packages/core/echo/echo-solid/src') },
       // Worker entry point for OPFS SQLite.
-      { find: '@dxos/client/opfs-worker', replacement: path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts') },
+      {
+        find: '@dxos/client/opfs-worker',
+        replacement: path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+      },
     ],
   },
   worker: {
