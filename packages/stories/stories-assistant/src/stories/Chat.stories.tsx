@@ -590,10 +590,12 @@ export const WithTranscription: Story = {
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const feed = space.db.add(Feed.make());
+      const queueDxn = Feed.getQueueDxn(feed);
+      invariant(queueDxn);
       const messages = createTestTranscription();
-      await queue.append(messages);
-      space.db.add(Transcript.make(queue.dxn));
+      await space.queues.get(queueDxn).append(messages);
+      space.db.add(Transcript.make(Ref.make(feed)));
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
@@ -707,7 +709,7 @@ export const WithResearchQueue: Story = {
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { queue: Ref.make(feed) }));
+      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
       const feedQueueDxn = Feed.getQueueDxn(feed);
       invariant(feedQueueDxn);
@@ -731,7 +733,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: Trigger.specQueue(researchInputQueue.queue.dxn.toString()),
+          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
