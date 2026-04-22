@@ -21,6 +21,7 @@ import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
 import {
+  compactSlots,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -120,11 +121,7 @@ export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProp
         createBasicExtensions({ placeholder: t('instructions.placeholder') }),
         createThemeExtensions({
           syntaxHighlighting: true,
-          slots: {
-            content: {
-              className: 'mx-0!',
-            },
-          },
+          slots: compactSlots,
         }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
         createMarkdownExtensions(),

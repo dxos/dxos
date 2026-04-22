@@ -12,7 +12,6 @@ const COL_WIDTH = 3;
 
 /**
  * Renders commits as a monospace ASCII graph with rounded box-drawing arcs and vertical rails.
- *
  * Commits must be ordered chronologically (oldest first, newest last). Parents must refer to older commits.
  */
 export const renderTimelineAscii = (commits: Commit[], branches: string[]): string => {
@@ -75,7 +74,6 @@ const renderRow = (
   }
 
   chars[commitLane * COL_WIDTH] = merge ? MERGE_NODE : NODE;
-
   if (connectLane >= 0) {
     const connectPos = connectLane * COL_WIDTH;
     if (fork) {
@@ -112,15 +110,61 @@ const formatLabel = (commit: Commit): string => {
   return icon ? `[${icon}] ${commit.message}` : commit.message;
 };
 
+/**
+ * Assigns each commit to a lane (column), reusing lanes once a branch has been merged.
+ * A branch is considered "merged" when a commit on another branch references it as a parent.
+ * Unmerged branches keep their lane active (they may still be in progress).
+ * Lane 0 is reserved for the first branch (typically 'main').
+ */
 const assignLanes = (commits: Commit[], branches: string[]): Map<string, number> => {
-  const branchOrder = new Map<string, number>();
-  for (let idx = 0; idx < branches.length; idx++) {
-    branchOrder.set(branches[idx]!, idx);
-  }
-  const laneById = new Map<string, number>();
+  // Build commit-id to branch lookup.
+  const commitBranch = new Map<string, string>();
   for (const commit of commits) {
-    laneById.set(commit.id, branchOrder.get(commit.branch) ?? 0);
+    commitBranch.set(commit.id, commit.branch);
   }
+
+  // Find the row at which each branch is merged (closed) by another branch.
+  const mergeRow = new Map<string, number>();
+  for (let row = 0; row < commits.length; row++) {
+    const commit = commits[row]!;
+    for (const parentId of commit.parents ?? []) {
+      const parentBranch = commitBranch.get(parentId);
+      if (parentBranch && parentBranch !== commit.branch) {
+        mergeRow.set(parentBranch, Math.max(mergeRow.get(parentBranch) ?? row, row));
+      }
+    }
+  }
+
+  const branchLane = new Map<string, number>();
+  if (branches.length > 0) {
+    branchLane.set(branches[0]!, 0);
+  }
+
+  const activeLanes = new Set<number>([0]);
+  const laneById = new Map<string, number>();
+
+  for (let row = 0; row < commits.length; row++) {
+    const commit = commits[row]!;
+
+    if (!branchLane.has(commit.branch)) {
+      let lane = 1;
+      while (activeLanes.has(lane)) {
+        lane++;
+      }
+      branchLane.set(commit.branch, lane);
+      activeLanes.add(lane);
+    }
+
+    laneById.set(commit.id, branchLane.get(commit.branch)!);
+
+    // Release lanes for branches that have been merged at this row.
+    for (const [branch, endRow] of mergeRow) {
+      if (endRow === row && branch !== branches[0] && branchLane.has(branch)) {
+        activeLanes.delete(branchLane.get(branch)!);
+      }
+    }
+  }
+
   return laneById;
 };
 

@@ -7,11 +7,13 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
 
 import { meta } from '#meta';
 
 // TODO(burdon): Standardize translation names.
-export const translations = [
+export const translations: Resource[] = [
+  ...componentsTranslations,
   {
     'en-US': {
       // TODO(burdon): From assistant.
@@ -183,4 +185,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+];
