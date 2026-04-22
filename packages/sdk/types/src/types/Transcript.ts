@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -21,9 +20,9 @@ export const Transcript = Schema.Struct({
   ended: Schema.optional(Schema.String),
 
   /**
-   * Queue containing TranscriptBlock objects.
+   * Feed containing TranscriptBlock objects.
    */
-  queue: Ref.Ref(Queue),
+  feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.transcript',
@@ -50,4 +49,4 @@ const TranscriptHeader = Schema.Struct({
 
 export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;
 
-export const make = (queueDxn: DXN): Transcript => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });
+export const make = (feed: Ref.Ref<Feed.Feed>): Transcript => Obj.make(Transcript, { feed });
