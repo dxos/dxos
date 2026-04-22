@@ -15,7 +15,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Loading } from '@dxos/react-ui/testing';
+import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
@@ -43,6 +43,7 @@ const meta = {
   title: 'plugins/plugin-assistant/containers/AgentArticle',
   render: DefaultStory,
   decorators: [
+    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

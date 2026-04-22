@@ -13,7 +13,7 @@ import { type Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Input, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -24,8 +24,11 @@ import { meta } from '#meta';
 
 export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
+type Tab = 'artifacts' | 'inputs';
+
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const { t } = useTranslation(meta.id);
+  const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const inputQueue = useAtomValue(
@@ -55,48 +58,56 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
-        <Toolbar.Root />
+        <Toolbar.Root>
+          <Toolbar.ToggleGroup type='single' value={tab} onValueChange={(value) => value && setTab(value as Tab)}>
+            <Toolbar.ToggleGroupIconItem
+              value='artifacts'
+              label={t('artifacts.label')}
+              icon='ph--cube--regular'
+              iconOnly
+            />
+            <Toolbar.ToggleGroupIconItem
+              value='inputs'
+              label={t('input-queue.label')}
+              icon='ph--queue--regular'
+              iconOnly
+            />
+          </Toolbar.ToggleGroup>
+        </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content className='dx-container flex flex-col'>
-        {artifacts.length === 0 && (
-          <Message.Root classNames='m-2' valence='info'>
-            <Message.Title>{t('project-empty-spec.message')}</Message.Title>
-            <Message.Content>{t('project-empty-spec.description')}</Message.Content>
-          </Message.Root>
-        )}
-
-        {/* TODO(burdon): Add popovers for documentation. */}
-        <div role='none' className='dx-container grid grid-cols-2 gap-2 px-2'>
-          <div role='none' className='dx-container flex flex-col'>
-            <Input.Root>
-              <Input.Label>{t('artifacts.label')}</Input.Label>
-            </Input.Root>
+        {tab === 'artifacts' && (
+          <>
+            {artifacts.length === 0 && (
+              <Message.Root classNames='m-2' valence='info'>
+                <Message.Title>{t('project-empty-spec.message')}</Message.Title>
+                <Message.Content>{t('project-empty-spec.description')}</Message.Content>
+              </Message.Root>
+            )}
             <Masonry.Root Tile={MasonryArtifactTile}>
               <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} />
             </Masonry.Root>
-          </div>
-          <div role='none' className='dx-container flex flex-col'>
-            <Input.Root>
-              <Input.Label>{t('input-queue.label')}</Input.Label>
-            </Input.Root>
-            <Mosaic.Container asChild withFocus autoScroll={viewport}>
-              <ScrollArea.Root orientation='vertical' padding thin>
-                <ScrollArea.Viewport ref={setViewport}>
-                  <Mosaic.VirtualStack
-                    Tile={StackTile}
-                    classNames='gap-2'
-                    draggable={false}
-                    estimateSize={() => 160}
-                    gap={8}
-                    getId={(item: Obj.Unknown) => item.id}
-                    getScrollElement={() => viewport}
-                    items={inputQueueObjects}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </div>
-        </div>
+          </>
+        )}
+
+        {tab === 'inputs' && (
+          <Mosaic.Container asChild withFocus autoScroll={viewport}>
+            <ScrollArea.Root orientation='vertical' padding thin>
+              <ScrollArea.Viewport ref={setViewport}>
+                <Mosaic.VirtualStack
+                  Tile={StackTile}
+                  classNames='gap-2'
+                  draggable={false}
+                  estimateSize={() => 160}
+                  gap={8}
+                  getId={(item: Obj.Unknown) => item.id}
+                  getScrollElement={() => viewport}
+                  items={inputQueueObjects}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
+        )}
       </Panel.Content>
     </Panel.Root>
   );
