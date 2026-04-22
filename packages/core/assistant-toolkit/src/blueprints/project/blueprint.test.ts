@@ -69,7 +69,7 @@ describe('Agent', () => {
         const agent = yield* Agent.makeInitialized(
           {
             name: 'Test Project',
-            spec: 'A test project for adding artifacts.',
+            instructions: 'A test project for adding artifacts.',
             blueprints: [Ref.make(MarkdownBlueprint.make())],
           },
           blueprint,
@@ -118,7 +118,7 @@ describe('Agent', () => {
         const agent = yield* Agent.makeInitialized(
           {
             name: 'Shopping list',
-            spec: 'Keep a shopping list of items to buy.',
+            instructions: 'Keep a shopping list of items to buy.',
             blueprints: [Ref.make(MarkdownBlueprint.make())],
           },
           blueprint,
@@ -152,7 +152,7 @@ describe('Agent', () => {
         const agent = yield* Agent.makeInitialized(
           {
             name: 'Expense tracking',
-            spec: trim`
+            instructions: trim`
               Keep a list of expenses in a markdown document (create artifact "Expenses").
               Process incoming emails, add the relevant ones to the list.
 
@@ -206,7 +206,7 @@ describe('Agent', () => {
         const agent = yield* Agent.makeInitialized(
           {
             name: 'Egg making',
-            spec: trim`
+            instructions: trim`
               I'm testing how planning (task management) works.
               Create tasks to make scrambled eggs.
 
@@ -261,8 +261,8 @@ describe('Agent', () => {
 const dumpAgent = async (agent: Agent.Agent) => {
   let text = '';
   text += `============== Agent: ${agent.name} ==============\n\n`;
-  text += `============== Spec ==============\n\n`;
-  text += `${await agent.spec.load().then((_) => _.content)}\n`;
+  text += `============== Instructions ==============\n\n`;
+  text += `${await agent.instructions.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
   text += `${await agent.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
   text += `============== Artifacts ==============\n\n`;

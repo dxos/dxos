@@ -60,7 +60,7 @@ export const GetContext = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     name: Schema.String,
-    spec: Schema.String,
+    instructions: Schema.String,
     plan: Schema.String,
     artifacts: Schema.Array(
       Schema.Struct({

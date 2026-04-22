@@ -40,7 +40,7 @@ const DefaultStory = (_: DefaultStoryProps) => {
       <Button
         classNames='mt-form-gap'
         onClick={() => {
-          log.info('agent', { agent, instructions: agent.spec.target });
+          log.info('agent', { agent, instructions: agent.instructions.target });
         }}
       >
         Debug
@@ -74,7 +74,7 @@ const meta = {
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  spec: Ref.make(Text.make()),
+                  instructions: Ref.make(Text.make()),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: [{ name: 'Organization', data: Ref.make(organization) }],
                   subscriptions: [],

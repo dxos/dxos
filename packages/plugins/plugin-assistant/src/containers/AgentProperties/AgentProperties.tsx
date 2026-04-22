@@ -113,7 +113,7 @@ export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProp
     [agent],
   );
 
-  const instructions = useAtomValue(AtomRef.make(agent.spec));
+  const instructions = useAtomValue(AtomRef.make(agent.instructions));
   const extension = useMemo(
     () =>
       instructions && [
