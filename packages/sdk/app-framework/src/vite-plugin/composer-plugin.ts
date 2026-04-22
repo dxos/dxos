@@ -208,6 +208,45 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
             ].join('\n')
           : undefined,
     },
+
+    // React Refresh preamble stub.
+    //
+    // @vitejs/plugin-react's JSX transform prepends a runtime check to every module:
+    //   if (!window.$RefreshReg$) throw new Error("@vitejs/plugin-react can't detect preamble…");
+    // In a normal single-origin app, vite injects a `<script type="module">` preamble
+    // into `index.html` that sets up `$RefreshReg$` / `$RefreshSig$` on `window` before any
+    // app code runs. When a community plugin is dev-served at its own origin and then
+    // dynamic-imported into the Composer host at a different origin, the host's window
+    // never receives that preamble, so every JSX module throws on first import.
+    //
+    // Inject a no-op refresh shim on the host's window from the plugin's entrypoint: fast-
+    // refresh itself doesn't work cross-origin anyway, so silencing the check lets the
+    // plugin load and ordinary page reloads take care of picking up edits. Production
+    // builds are untouched (`apply: 'serve'`).
+    {
+      name: 'composer-plugin:react-refresh-shim',
+      enforce: 'pre',
+      apply: 'serve',
+      transform(code, id) {
+        // Only patch the plugin entrypoint (an absolute path ending in the configured entry).
+        // Matching by suffix keeps us from prepending the shim to every transformed module,
+        // which would both bloat the output and defeat vite's caching.
+        if (!id.endsWith(entry.replace(/^\.?\//, '/'))) {
+          return;
+        }
+        const shim = [
+          '// composer-plugin: no-op React Refresh shim so cross-origin plugin modules',
+          "// don't throw the @vitejs/plugin-react preamble check at dynamic-import time.",
+          'if (typeof window !== "undefined") {',
+          '  window.$RefreshReg$ = window.$RefreshReg$ || (() => {});',
+          '  window.$RefreshSig$ = window.$RefreshSig$ || (() => (type) => type);',
+          '  window.__vite_plugin_react_preamble_installed__ = true;',
+          '}',
+          '',
+        ].join('\n');
+        return { code: shim + code, map: null };
+      },
+    },
   ];
 
   if (meta) {
