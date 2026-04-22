@@ -101,6 +101,7 @@
       "@dxos/plugin-wnfs/types": ["packages/plugins/plugin-wnfs/src/types/index.ts"],
       "@dxos/app-framework": ["packages/sdk/app-framework/src/index.ts"],
       "@dxos/app-framework/testing": ["packages/sdk/app-framework/src/testing/index.ts"],
+      "@dxos/app-framework/testing-react": ["packages/sdk/app-framework/src/testing/react.tsx"],
       "@dxos/app-framework/worker": ["packages/sdk/app-framework/src/worker.ts"],
       "@dxos/app-graph": ["packages/sdk/app-graph/src/index.ts"],
       "@dxos/migrations": ["packages/sdk/migrations/src/index.ts"],
