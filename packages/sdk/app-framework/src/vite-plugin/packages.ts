@@ -29,6 +29,7 @@ const THIRD_PARTY_SHARED_PACKAGES = [
   'lit',
   'react',
   'react-dom',
+  'solid-js',
 ];
 
 export const DEFAULT_PACKAGES = [
@@ -40,6 +41,7 @@ export const DEFAULT_PACKAGES = [
   '@dxos/debug',
   '@dxos/display-name',
   '@dxos/effect',
+  '@dxos/effect-atom-solid',
   '@dxos/errors',
   '@dxos/feed-store',
   '@dxos/graph',
@@ -57,6 +59,37 @@ export const DEFAULT_PACKAGES = [
   '@dxos/util',
   '@dxos/web-context',
   '@dxos/web-context-react',
+  '@dxos/web-context-solid',
+
+  // packages/core/echo
+  '@dxos/echo',
+  '@dxos/echo-atom',
+  '@dxos/echo-db',
+  '@dxos/echo-pipeline',
+  '@dxos/echo-protocol',
+  '@dxos/echo-query',
+  '@dxos/echo-react',
+  '@dxos/echo-solid',
+  '@dxos/feed',
+  '@dxos/index-core',
+
+  // packages/core/halo
+  '@dxos/credentials',
+  '@dxos/keyring',
+
+  // packages/core/mesh
+  '@dxos/edge-client',
+  '@dxos/messaging',
+  '@dxos/network-manager',
+  '@dxos/rpc',
+  '@dxos/rpc-tunnel',
+  '@dxos/signal',
+  '@dxos/teleport',
+  '@dxos/teleport-extension-automerge-replicator',
+  '@dxos/teleport-extension-gossip',
+  '@dxos/teleport-extension-object-sync',
+  '@dxos/teleport-extension-replicator',
+  '@dxos/websocket-rpc',
 
   // packages/core
   '@dxos/ai',
@@ -65,16 +98,19 @@ export const DEFAULT_PACKAGES = [
   '@dxos/blueprints',
   '@dxos/compute',
   '@dxos/conductor',
-  '@dxos/echo',
   '@dxos/functions',
   '@dxos/functions-runtime',
   '@dxos/mcp-client',
   '@dxos/operation',
   '@dxos/protocols',
 
+  // packages/devtools
+  '@dxos/devtools',
+
   // packages/sdk
   '@dxos/app-framework',
   '@dxos/app-graph',
+  '@dxos/app-solid',
   '@dxos/app-toolkit',
   '@dxos/client',
   '@dxos/client-protocol',
@@ -85,11 +121,13 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-client',
   '@dxos/react-edge-client',
   '@dxos/schema',
+  '@dxos/shell',
   '@dxos/types',
 
   // packages/ui
   '@dxos/lit-grid',
   '@dxos/lit-ui',
+  '@dxos/react-hooks',
   '@dxos/react-ui',
   '@dxos/react-ui-attention',
   '@dxos/react-ui-board',
@@ -120,6 +158,8 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-tabs',
   '@dxos/react-ui-text-tooltip',
   '@dxos/react-ui-thread',
+  '@dxos/solid-ui',
+  '@dxos/solid-ui-geo',
   '@dxos/ui',
   '@dxos/ui-editor',
   '@dxos/ui-theme',

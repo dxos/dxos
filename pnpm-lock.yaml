@@ -2627,6 +2627,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/app-solid':
+        specifier: workspace:*
+        version: link:../../sdk/app-solid
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -2651,6 +2654,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../core/halo/credentials
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../common/crypto
@@ -2660,12 +2666,39 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/echo-solid':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-solid
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/effect-atom-solid':
+        specifier: workspace:*
+        version: link:../../common/effect-atom-solid
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../../core/echo/feed
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
@@ -2681,9 +2714,15 @@ importers:
       '@dxos/hypercore':
         specifier: workspace:*
         version: link:../../common/hypercore
+      '@dxos/index-core':
+        specifier: workspace:*
+        version: link:../../core/echo/index-core
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/keyring':
+        specifier: workspace:*
+        version: link:../../core/halo/keyring
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
@@ -2702,6 +2741,12 @@ importers:
       '@dxos/merkle-search-tree':
         specifier: workspace:*
         version: link:../../common/merkle-search-tree
+      '@dxos/messaging':
+        specifier: workspace:*
+        version: link:../../core/mesh/messaging
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -2714,6 +2759,9 @@ importers:
       '@dxos/react-edge-client':
         specifier: workspace:*
         version: link:../../sdk/react-edge-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -2795,9 +2843,36 @@ importers:
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
+      '@dxos/signal':
+        specifier: workspace:*
+        version: link:../../core/mesh/signal
+      '@dxos/solid-ui':
+        specifier: workspace:*
+        version: link:../../ui/solid-ui
+      '@dxos/solid-ui-geo':
+        specifier: workspace:*
+        version: link:../../ui/solid-ui-geo
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../../core/mesh/teleport
+      '@dxos/teleport-extension-automerge-replicator':
+        specifier: workspace:*
+        version: link:../../core/mesh/teleport-extension-automerge-replicator
+      '@dxos/teleport-extension-gossip':
+        specifier: workspace:*
+        version: link:../../core/mesh/teleport-extension-gossip
+      '@dxos/teleport-extension-object-sync':
+        specifier: workspace:*
+        version: link:../../core/mesh/teleport-extension-object-sync
+      '@dxos/teleport-extension-replicator':
+        specifier: workspace:*
+        version: link:../../core/mesh/teleport-extension-replicator
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -2828,6 +2903,12 @@ importers:
       '@dxos/web-context-react':
         specifier: workspace:*
         version: link:../../common/web-context-react
+      '@dxos/web-context-solid':
+        specifier: workspace:*
+        version: link:../../common/web-context-solid
+      '@dxos/websocket-rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/websocket-rpc
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
