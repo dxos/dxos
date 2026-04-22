@@ -5,13 +5,14 @@
 import {
   AuthenticatedTransport,
   BlobMeta,
+  CommitId,
   Digest,
   MemorySigner,
   MemoryStorage,
   Nonce,
   SedimentreeId,
   Subduction,
-  digestOfBase58Id,
+  commitIdOfBase58Id,
   type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
 import {
@@ -131,6 +132,12 @@ class SubductionServer {
   }
 }
 
+/**
+ * Build a deterministic {@link CommitId} seeded by a small integer. Values are arbitrary;
+ * used in tests only to satisfy the `head` parameter of `Subduction.addCommit`.
+ */
+const commitIdOf = (seed: number): CommitId => CommitId.fromBytes(new Uint8Array(32).fill(seed));
+
 describe('automerge-subduction', () => {
   test('creates signer and signs payloads', async ({ expect }) => {
     const signer = MemorySigner.generate();
@@ -184,7 +191,7 @@ describe('automerge-subduction', () => {
     const id = SedimentreeId.fromBytes(new Uint8Array(32).fill(9));
     const blob = new Uint8Array([10, 11, 12]);
 
-    const requestedFragment = await subduction.addCommit(id, [], blob);
+    const requestedFragment = await subduction.addCommit(id, commitIdOf(1), [], blob);
     const commits = await subduction.getCommits(id);
     const blobs = await subduction.getBlobs(id);
 
@@ -196,7 +203,7 @@ describe('automerge-subduction', () => {
   });
 
   test('throws on invalid base58 input', ({ expect }) => {
-    expect(() => digestOfBase58Id('contains-0')).toThrow();
+    expect(() => commitIdOfBase58Id('contains-0')).toThrow();
   });
 
   test('automerge-repo URL helpers round-trip document IDs', ({ expect }) => {
@@ -247,7 +254,7 @@ describe('automerge-subduction', () => {
     expect(peersB).toHaveLength(1);
 
     const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(42));
-    await subductionA.addCommit(sid, [], new Uint8Array([1, 2, 3]));
+    await subductionA.addCommit(sid, commitIdOf(2), [], new Uint8Array([1, 2, 3]));
 
     const result = await subductionA.syncWithAllPeers(sid, true);
     expect(result.entries().length).toBeGreaterThan(0);
@@ -273,7 +280,7 @@ describe('automerge-subduction', () => {
     expect(peerIdA.toString()).toBe(signerA.peerId().toString());
 
     const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(99));
-    await subductionA.addCommit(sid, [], new Uint8Array([4, 5, 6]));
+    await subductionA.addCommit(sid, commitIdOf(3), [], new Uint8Array([4, 5, 6]));
 
     await subductionA.syncWithAllPeers(sid, false);
 
@@ -289,7 +296,7 @@ describe('automerge-subduction', () => {
     const signerA = MemorySigner.generate();
     const subductionA = new Subduction(signerA, new MemoryStorage());
     const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(42));
-    await subductionA.addCommit(sid, [], new Uint8Array([1, 2, 3]));
+    await subductionA.addCommit(sid, commitIdOf(4), [], new Uint8Array([1, 2, 3]));
 
     const clientAuthA = await server.openSession(signerA);
     await subductionA.addConnection(clientAuthA);
@@ -336,8 +343,8 @@ describe('automerge-subduction', () => {
     // Add commits on both sides before connecting.
     const sidA = SedimentreeId.fromBytes(new Uint8Array(32).fill(1));
     const sidB = SedimentreeId.fromBytes(new Uint8Array(32).fill(2));
-    await subductionA.addCommit(sidA, [], new Uint8Array([10, 20]));
-    await subductionB.addCommit(sidB, [], new Uint8Array([30, 40]));
+    await subductionA.addCommit(sidA, commitIdOf(5), [], new Uint8Array([10, 20]));
+    await subductionB.addCommit(sidB, commitIdOf(6), [], new Uint8Array([30, 40]));
 
     const [transportA, transportB] = createMemoryTransportPair();
     const [authA, authB] = await Promise.all([

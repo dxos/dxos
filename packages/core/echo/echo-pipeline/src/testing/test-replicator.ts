@@ -13,8 +13,6 @@ import type {
   AutomergeReplicator,
   AutomergeReplicatorConnection,
   AutomergeReplicatorContext,
-  ShouldAdvertiseProps,
-  ShouldSyncCollectionProps,
 } from '../automerge';
 
 export type TestReplicatorNetworkOptions = {
@@ -162,18 +160,6 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     public readonly readable: ReadableStream<AutomergeProtocolMessage>,
     public readonly writable: WritableStream<AutomergeProtocolMessage>,
   ) {}
-
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
-  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
-    return true;
-  }
-
-  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
-    return true;
-  }
 }
 
 export const testAutomergeReplicatorFactory: TeleportAutomergeReplicator.AutomergeReplicatorFactory = (params) => {
