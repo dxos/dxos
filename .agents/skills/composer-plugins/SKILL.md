@@ -231,6 +231,68 @@ moon run plugin-foo:test
 moon run plugin-foo:test-storybook
 ```
 
+## Activation Tests (required)
+
+Every plugin MUST have a `FooPlugin.test.ts` next to `FooPlugin.tsx` that contains **one activation test per module** declared in the plugin, plus end-to-end plugin tests. This is a regression test suite: if a module is removed, renamed, or rewired to the wrong activation event, the matching test will fail.
+
+Exemplar: [`plugin-chess/src/ChessPlugin.test.ts`](../../../packages/plugins/plugin-chess/src/ChessPlugin.test.ts).
+
+### Required structure
+
+```ts
+describe('FooPlugin', () => {
+  describe('modules', () => {
+    // One `test(...)` per addXModule call in FooPlugin.tsx.
+    // Each test:
+    //   1. Creates a harness with `autoStart: false`.
+    //   2. Asserts the contributed capability is absent before firing.
+    //   3. Fires the module's activation event.
+    //   4. Asserts the expected capability is now contributed.
+    // Include a "modules activate only on their own events" cross-check that
+    // fires a single event and asserts no other capabilities appeared.
+  });
+
+  describe('plugin', () => {
+    // End-to-end tests: full activation, waitForEvent, operation invocation, etc.
+  });
+});
+```
+
+### Module → event → capability cheat sheet
+
+Match each `AppPlugin.addXModule` call in your plugin file to exactly one module-level test using the table below.
+
+| AppPlugin method               | Activation event (default)                   | Capability to assert                     |
+| ------------------------------ | -------------------------------------------- | ---------------------------------------- |
+| `addSchemaModule`              | `AppActivationEvents.SetupSchema`            | `AppCapabilities.Schema`                 |
+| `addTranslationsModule`        | `AppActivationEvents.SetupTranslations`      | `AppCapabilities.Translations`           |
+| `addMetadataModule`            | `AppActivationEvents.SetupMetadata`          | `AppCapabilities.Metadata`               |
+| `addBlueprintDefinitionModule` | `AppActivationEvents.SetupArtifactDefinition`| `AppCapabilities.BlueprintDefinition`    |
+| `addSettingsModule`            | `AppActivationEvents.SetupSettings`          | `AppCapabilities.Settings`               |
+| `addAppGraphModule`            | `AppActivationEvents.SetupAppGraph`          | `AppCapabilities.AppGraphBuilder`        |
+| `addOperationHandlerModule`    | `ActivationEvents.SetupOperationHandler`     | `Capabilities.OperationHandler`          |
+| `addSurfaceModule`             | `ActivationEvents.SetupReactSurface`         | `Capabilities.ReactSurface`              |
+| `addCommandModule`             | `ActivationEvents.Startup`                   | `Capabilities.Command`                   |
+| `addReactContextModule`        | `ActivationEvents.Startup`                   | `Capabilities.ReactContext`              |
+| `addNavigationResolverModule`  | `ActivationEvents.OperationInvokerReady`     | `AppCapabilities.NavigationTargetResolver` |
+| `addNavigationHandlerModule`   | `ActivationEvents.OperationInvokerReady`     | `AppCapabilities.NavigationHandler`      |
+
+### Minimal per-module test
+
+```ts
+test('schema module contributes Foo.Bar on SetupSchema', async ({ expect }) => {
+  await using harness = await createTestApp({ plugins: [FooPlugin()], autoStart: false });
+  expect(harness.getAll(AppCapabilities.Schema)).toHaveLength(0);
+  await harness.fire(AppActivationEvents.SetupSchema);
+  const schemas = harness.getAll(AppCapabilities.Schema).flat();
+  expect(schemas).toContain(Foo.Bar);
+});
+```
+
+### When adding a new module
+
+When you add or remove an `addXModule` call in `FooPlugin.tsx`, update `FooPlugin.test.ts` in the same change. The module test list must stay 1:1 with the plugin's module list.
+
 ## General Rules
 
 - `src/components/` and `src/containers/` should contain only index files and subdirectories.
