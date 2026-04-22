@@ -2846,9 +2846,6 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@dxos/signal':
-        specifier: workspace:*
-        version: link:../../core/mesh/signal
       '@dxos/solid-ui':
         specifier: workspace:*
         version: link:../../ui/solid-ui

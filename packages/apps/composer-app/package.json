@@ -204,7 +204,6 @@
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
-    "@dxos/signal": "workspace:*",
     "@dxos/solid-ui": "workspace:*",
     "@dxos/solid-ui-geo": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

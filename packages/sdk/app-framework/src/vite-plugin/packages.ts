@@ -83,7 +83,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/network-manager',
   '@dxos/rpc',
   '@dxos/rpc-tunnel',
-  '@dxos/signal',
   '@dxos/teleport',
   '@dxos/teleport-extension-automerge-replicator',
   '@dxos/teleport-extension-gossip',
@@ -121,7 +120,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-client',
   '@dxos/react-edge-client',
   '@dxos/schema',
-  '@dxos/shell',
   '@dxos/types',
 
   // packages/ui

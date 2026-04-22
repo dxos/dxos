@@ -200,9 +200,6 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
-      "path": "../../core/mesh/signal"
-    },
-    {
       "path": "../../core/mesh/teleport"
     },
     {
