@@ -10,21 +10,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiService, GenericToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import {
-  AgentService,
-  AiContextBinder,
-  AiContextService,
-  AiConversation,
-  AiConversationService,
-} from '@dxos/assistant';
+import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -41,7 +35,6 @@ import {
   ProcessManager,
   RemoteFunctionExecutionService,
   ServiceResolver,
-  TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
@@ -79,6 +72,7 @@ const isDev = import.meta.env.DEV ?? false;
  */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
+  readonly #subscriptions = new Map<SpaceId, () => void>();
   readonly #capabilities: CapabilityManager.CapabilityManager;
 
   constructor(capabilities: CapabilityManager.CapabilityManager) {
@@ -89,6 +83,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   protected override async _open() {}
 
   protected override async _close() {
+    for (const unsubscribe of this.#subscriptions.values()) {
+      unsubscribe();
+    }
+    this.#subscriptions.clear();
     await Promise.all(Array.from(this.#runtimes.values()).map((rt) => rt.dispose()));
     this.#runtimes.clear();
   }
@@ -110,10 +108,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ...this.#capabilities.getAll(Capabilities.OperationHandler),
         );
 
-        const genericToolkitProvider = Layer.succeed(GenericToolkit.GenericToolkitProvider, {
+        const opaqueToolkitProvider = Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
           getToolkit: () => {
             const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
-            return GenericToolkit.merge(...toolkits);
+            return OpaqueToolkit.merge(...toolkits);
           },
         });
 
@@ -125,12 +123,24 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
+        // Maintain a live query of space-level MCP server configs.
+        const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
+        this.#subscriptions.set(spaceId, mcpQuery.subscribe());
+
         return Layer.mergeAll(
           TriggerDispatcher.layer({ timeControl: 'natural' }),
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         )
           .pipe(
-            Layer.provideMerge(AgentService.layer()),
+            Layer.provideMerge(
+              AgentService.layer({
+                getMcpServers: () =>
+                  mcpQuery.results
+                    .filter(Obj.instanceOf(McpServer.McpServer))
+                    .filter((server) => server.enabled !== false)
+                    .map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
+              }),
+            ),
             Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
             Layer.provideMerge(ProcessManager.layer()),
             // TODO(dmaretskyi): Duped in assistant testing layer.
@@ -164,29 +174,29 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                         return { binder };
                       }).pipe(Effect.provide(services)),
                     ),
-                    // AiConversationService.
-                    ServiceResolver.succeed(AiConversationService, (context) =>
+                    // AiSessionService.
+                    ServiceResolver.succeed(AiSessionService, (context) =>
                       Effect.gen(function* () {
                         if (!context.conversation) {
-                          return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
+                          return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
                         }
                         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
                           Effect.orDie,
                         );
                         const runtime = yield* Effect.runtime<Feed.FeedService>();
-                        const conversation = yield* acquireReleaseResource(
+                        const session = yield* acquireReleaseResource(
                           () =>
-                            new AiConversation({
+                            new AiSession({
                               feed,
                               runtime,
                             }),
                         );
-                        return conversation;
+                        return session;
                       }).pipe(Effect.provide(services)),
                     ),
                     yield* ServiceResolver.fromRequirements(
                       Database.Service,
-                      GenericToolkit.GenericToolkitProvider,
+                      OpaqueToolkit.OpaqueToolkitProvider,
                       Feed.FeedService,
                       QueueService,
                       AiService.AiService,
@@ -203,7 +213,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
             Layer.provideMerge(
               Layer.mergeAll(
-                TracingServiceLive,
                 FeedTraceSink.layerLive,
                 TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
                 KeyValueStore.layerMemory,
@@ -237,7 +246,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                 ),
               ),
             ),
-            Layer.provideMerge(genericToolkitProvider),
+            Layer.provideMerge(opaqueToolkitProvider),
             Layer.provideMerge(aiServiceLayer),
             Layer.provideMerge(CredentialsService.layerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
@@ -254,22 +263,3 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     return runtime;
   }
 }
-
-const TracingServiceLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
-    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
-    const [properties] = objects;
-    invariant(properties);
-    // TODO(burdon): Check ref target has loaded?
-    if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
-      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (properties) => {
-        properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
-      });
-    }
-
-    const queue = properties.invocationTraceQueue!.target;
-    invariant(queue);
-    return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
-  }),
-);

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Diagnostic, linter } from '@codemirror/lint';
-import { type Extension } from '@codemirror/state';
+import { type Diagnostic, forEachDiagnostic, linter, setDiagnostics } from '@codemirror/lint';
+import { ChangeSet, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
@@ -25,6 +25,14 @@ export type AssistantOptions = {
    * Instructions to use for the language model.
    */
   instructions?: string;
+  /**
+   * Show panel automatically.
+   */
+  autoPanel?: boolean;
+  /**
+   * Debounce delay.
+   */
+  delay?: number;
 };
 
 const underline = (color: string) => {
@@ -48,21 +56,52 @@ export const assistant = (options: AssistantOptions): Extension[] => {
   return [
     assistantLinter(options),
     EditorView.baseTheme({
-      // '.cm-lintRange': {
-      // backgroundImage: 'none !important',
-      // textDecorationSkipInk: 'none',
-      // },
       '.cm-lintRange-info': {
         backgroundImage: underline(style.info),
-        // textDecoration: 'underline wavy var(--color-info-text)',
       },
       '.cm-lintRange-warning': {
         backgroundImage: underline(style.warning),
-        // textDecoration: 'underline wavy var(--color-warning-text)',
       },
       '.cm-lintRange-error': {
         backgroundImage: underline(style.error),
-        // textDecoration: 'underline wavy var(--color-error-text)',
+      },
+
+      '.cm-panels-bottom': {
+        borderTop: '1px solid var(--color-separator) !important',
+      },
+      '.cm-panel-lint .cm-panel': {
+        outline: 'none !important',
+      },
+      /** @apply dx-button */
+      '.cm-panel button': {
+        color: 'var(--color-base-surface-text) !important',
+      },
+      '.cm-panel.cm-panel-lint ul': {
+        color: 'var(--color-base-surface-text) !important',
+        backgroundColor: 'var(--color-base-surface) !important',
+        marginRight: '2rem !important',
+      },
+      '.cm-panel.cm-panel-lint ul [aria-selected]': {
+        color: 'var(--color-base-surface-text) !important',
+        backgroundColor: 'var(--color-base-surface) !important',
+      },
+      '.cm-panel.cm-panel-lint ul li': {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        alignItems: 'center',
+      },
+      '.cm-panel.cm-panel-lint ul li .cm-diagnosticText': {
+        paddingRight: '8px !important',
+      },
+      '.cm-panel.cm-panel-lint ul li button.cm-diagnosticAction': {
+        margin: 'none !important',
+      },
+      '.cm-diagnostic': {
+        padding: '0px 8px !important',
+        whiteSpace: 'pre-wrap !important',
+      },
+      '.cm-diagnostic-info': {
+        border: 'none !important',
       },
     }),
   ];
@@ -112,7 +151,32 @@ const findSuggestionIndex = (content: string, suggestion: Suggestion): number =>
   return firstIdx;
 };
 
-const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: AssistantOptions) =>
+const replaceTextAndDropLintAtRange = (view: EditorView, from: number, to: number, insert: string) => {
+  const kept: Diagnostic[] = [];
+  forEachDiagnostic(view.state, (diagnostic, diagnosticFrom, diagnosticTo) => {
+    if (diagnosticFrom < to && diagnosticTo > from) {
+      return;
+    }
+    kept.push({ ...diagnostic, from: diagnosticFrom, to: diagnosticTo });
+  });
+  const changeSet = ChangeSet.of({ from, to, insert }, view.state.doc.length);
+  const next = kept.map((d) => ({
+    ...d,
+    from: changeSet.mapPos(d.from, 1),
+    to: changeSet.mapPos(d.to, -1),
+  }));
+  view.dispatch({
+    changes: { from, to, insert },
+    ...setDiagnostics(view.state, next),
+  });
+};
+
+const assistantLinter = ({
+  generate,
+  instructions = DEFAULT_INSTRUCTIONS,
+  autoPanel = true,
+  delay = 2_000,
+}: AssistantOptions) =>
   linter(
     async (view) => {
       try {
@@ -123,7 +187,6 @@ const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: Assi
         const parsed = match ? safeParseJson<unknown[]>(match, []) : [];
         const suggestions = Array.isArray(parsed) ? parsed.filter(isSuggestion) : [];
         if (suggestions && suggestions.length > 0) {
-          log.debug('assistant suggestions', { count: suggestions.length });
           const diagnostics: Diagnostic[] = [];
           for (const suggestion of suggestions) {
             const idx = findSuggestionIndex(content, suggestion);
@@ -137,13 +200,7 @@ const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: Assi
                   {
                     name: 'Apply',
                     apply: (view, from, to) => {
-                      view.dispatch({
-                        changes: {
-                          from,
-                          to,
-                          insert: suggestion.replacement,
-                        },
-                      });
+                      replaceTextAndDropLintAtRange(view, from, to, suggestion.replacement);
                     },
                   },
                 ],
@@ -160,7 +217,7 @@ const assistantLinter = ({ generate, instructions = DEFAULT_INSTRUCTIONS }: Assi
       return [];
     },
     {
-      // Debounce.
-      delay: 3_000,
+      delay,
+      autoPanel,
     },
   );

@@ -487,4 +487,46 @@ describe('Database Blueprint', () => {
     ),
     { timeout: 60_000 },
   );
+
+  it.effect(
+    'query operation: in param can be passed as string',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed1 = Feed.make({ name: 'inbox-1' });
+        yield* Database.add(feed1);
+        yield* Feed.append(feed1, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Alpha',
+            description: 'Mock email in-param-invoke-token-a1b2c3.',
+          }),
+        ]);
+
+        const feed2 = Feed.make({ name: 'inbox-2' });
+        yield* Database.add(feed2);
+        yield* Feed.append(feed2, [
+          Obj.make(Organization.Organization, {
+            name: 'Email Corp Beta',
+            description: 'Mock email in-param-invoke-token-d4e5f6.',
+          }),
+        ]);
+        yield* Database.flush();
+
+        const agent = yield* AgentService.createSession({
+          blueprints: [DatabaseBlueprint.make()],
+        });
+        yield* agent.submitPrompt(
+          `Call query tool with precisely ${JSON.stringify({
+            includeContent: false,
+            limit: 10,
+            typename: Organization.Organization.typename,
+            in: [Obj.getDXN(feed1).toString()],
+          })}`,
+        );
+        yield* agent.waitForCompletion();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
 });

@@ -248,19 +248,49 @@ const convertUserMessagePart: (
   },
 );
 
+const parseToolJson = (
+  raw: string,
+  context: { field: 'result' | 'input'; toolCallId: string },
+): Effect.Effect<unknown, PromptPreprocesorError, never> =>
+  Effect.try({
+    try: () => JSON.parse(raw),
+    catch: (cause) =>
+      new PromptPreprocesorError({
+        message: `Failed to parse tool ${context.field} JSON for tool call ${context.toolCallId}: ${(cause as Error)?.message ?? cause}`,
+        cause,
+      }),
+  });
+
+/**
+ * Build a `tool-result` prompt part from a `toolResult` content block, validating the JSON
+ * payload and preserving the `isFailure` flag when the block carries an error.
+ */
+const buildToolResultPart = (
+  block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
+): Effect.Effect<Prompt.ToolMessagePart, PromptPreprocesorError, never> =>
+  Effect.gen(function* () {
+    const hasError = block.error != null;
+    const result = hasError
+      ? block.error
+      : block.result != null
+        ? yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
+        : {};
+    return Prompt.makePart('tool-result', {
+      id: block.toolCallId,
+      name: block.name,
+      result,
+      isFailure: hasError,
+      providerExecuted: false,
+    });
+  });
+
 export const convertToolMessagePart: (
   block: ContentBlock.Any,
 ) => Effect.Effect<Prompt.ToolMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
     switch (block._tag) {
       case 'toolResult':
-        return Prompt.makePart('tool-result', {
-          id: block.toolCallId,
-          name: block.name,
-          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
-          isFailure: false,
-          providerExecuted: false,
-        });
+        return yield* buildToolResultPart(block);
       default:
         return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid tool content block: ${block._tag}` }));
     }
@@ -271,7 +301,6 @@ const convertAssistantMessagePart: (
   block: ContentBlock.Any,
 ) => Effect.Effect<Prompt.AssistantMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
-    log('parse', { block });
     switch (block._tag) {
       case 'text':
         return Prompt.makePart('text', {
@@ -289,21 +318,18 @@ const convertAssistantMessagePart: (
         });
       }
 
-      case 'toolCall':
+      case 'toolCall': {
+        const params =
+          block.input === '' ? {} : yield* parseToolJson(block.input, { field: 'input', toolCallId: block.toolCallId });
         return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,
-          params: block.input === '' ? {} : JSON.parse(block.input),
+          params,
           providerExecuted: block.providerExecuted,
         });
+      }
       case 'toolResult':
-        return Prompt.makePart('tool-result', {
-          id: block.toolCallId,
-          name: block.name,
-          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
-          isFailure: false,
-          providerExecuted: false,
-        });
+        return yield* buildToolResultPart(block);
 
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.

@@ -17,16 +17,17 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(TicTacToe.Game),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, TicTacToe.Game),
+          AppSurface.object(AppSurface.Section, TicTacToe.Game),
+        ),
         component: ({ data, role }) => (
           <TicTacToeArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'game-card',
-        role: ['card--content'],
-        filter: AppSurface.objectCard(TicTacToe.Game),
+        filter: AppSurface.object(AppSurface.Card, TicTacToe.Game),
         component: ({ data, role }) => <TicTacToeCard role={role} subject={data.subject} />,
       }),
     ]),

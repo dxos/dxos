@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -138,7 +138,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
                 <Board.Content>
                   {items?.map((item, index) => (
                     <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                      <Surface.Surface role='card--content' data={{ subject: item }} limit={1} />
+                      <Surface.Surface type={AppSurface.Card} data={{ subject: item }} limit={1} />
                     </Board.Cell>
                   ))}
                 </Board.Content>

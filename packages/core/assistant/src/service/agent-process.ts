@@ -13,22 +13,27 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { AiConversation } from '../conversation';
+import { type McpServerConfig, AiSession } from '../conversation';
 import { getOperationFromTool, makeToolExecutionService, makeToolResolverFromOperations } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
   model?: ModelName;
+
+  /**
+   * Provider for space-level MCP server configs, called on each turn.
+   */
+  getMcpServers?: () => McpServerConfig[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -45,15 +50,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       output: Schema.Void,
       services: [
         Database.Service,
-        GenericToolkit.GenericToolkitProvider,
+        OpaqueToolkit.OpaqueToolkitProvider,
         Operation.Service,
         OperationRegistry.Service,
         StorageService.StorageService,
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
-        // @deprecated Required by AiSessionRunRequirements for backward compat with tool handlers.
-        TracingService,
       ],
     },
     (ctx) =>
@@ -64,7 +67,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         }
         const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
@@ -109,12 +112,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
               log('begin request', { prompt });
               yield* Trace.write(AgentRequestBegin, {});
-              yield* conversation
+              yield* session
                 .createRequest({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
+                  mcpServers: options.getMcpServers?.(),
                 })
                 .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
               log('end request');
@@ -137,7 +141,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             ),
           ),
           onChildEvent: Effect.fnUntraced(function* (event) {
-            log.info('childEvent', { event });
+            log('childEvent', { event });
             if (event._tag === 'exited') {
               if (!toolCallManager.isToolCall(event.pid)) {
                 log.verbose('childEvent ignored non-tool call', { pid: event.pid });

@@ -626,6 +626,65 @@ describe('Spaces', () => {
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
   });
 
+  test('export space archive (JSON)', { timeout: 3_000 }, async () => {
+    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    const space = await client.spaces.create();
+    space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    expect(archive.contents.length).to.be.greaterThan(0);
+    expect(archive.format).toBe(SpaceArchive.Format.JSON);
+    expect(archive.filename.endsWith('.dx.json')).toBe(true);
+
+    // JSON must be parseable.
+    const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
+    expect(parsed).toHaveProperty('objects');
+    expect(Array.isArray(parsed.objects)).toBe(true);
+  });
+
+  test('export space archive with feeds (JSON)', { timeout: 5_000 }, async () => {
+    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    const space = await client.spaces.create();
+    space.db.add(createDocument());
+
+    const feedObj = space.db.add(Obj.make(Feed.Feed, { name: 'test-feed' }));
+    await space.db.flush();
+    const feedDxn = Feed.getQueueDxn(feedObj);
+    expect(feedDxn).toBeDefined();
+    const queue = space.queues.get(feedDxn!);
+    await queue.append([createObject({ name: 'queue-item-1' }), createObject({ name: 'queue-item-2' })]);
+
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
+    expect(parsed.feeds).toBeDefined();
+    expect(parsed.feeds.length).toBeGreaterThan(0);
+    const feedEntry = parsed.feeds.find((f: any) => f.feedObjectId === feedObj.id);
+    expect(feedEntry).toBeDefined();
+    expect(feedEntry.messages.length).toBe(2);
+  });
+
+  test('import space archive (JSON)', { timeout: 5_000, retry: 1 }, async () => {
+    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    const space = await client1.spaces.create();
+    const doc1 = space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    expect(archive.contents.length).to.be.greaterThan(0);
+
+    const importedSpace = await client2.spaces.import(archive);
+    expect(importedSpace.id).not.toEqual(space.id);
+    expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
+  });
+
   test('import JSON into existing space', { timeout: 5_000 }, async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     await registerTypes(client);

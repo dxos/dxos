@@ -9,6 +9,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
@@ -175,8 +176,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   const download = useFileDownload();
-  const handleBackup = useCallback(async () => {
-    const archive = await space.internal.export();
+  const handleBackupBinary = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
+    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
+  }, [space, download]);
+  const handleBackupJson = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
     download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
   }, [space, download]);
 
@@ -219,7 +224,10 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           </div>
         </Settings.Item>
         <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
-          <Button onClick={handleBackup}>{t('download-backup.label')}</Button>
+          <div className='flex items-center gap-2'>
+            <Button onClick={handleBackupBinary}>{t('download-backup-binary.label')}</Button>
+            <Button onClick={handleBackupJson}>{t('download-backup-json.label')}</Button>
+          </div>
         </Settings.Item>
         <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
           <Button onClick={handleRepair}>{t('repair-space.label')}</Button>

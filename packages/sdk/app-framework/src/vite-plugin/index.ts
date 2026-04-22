@@ -4,3 +4,4 @@
 
 export * from './composer-plugin';
 export * from './import-map-plugin';
+export * from './packages';

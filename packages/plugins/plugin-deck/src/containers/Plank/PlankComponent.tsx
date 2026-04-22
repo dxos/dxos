@@ -6,12 +6,12 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { DEFAULT_HORIZONTAL_SIZE, StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
+import { StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';
@@ -44,7 +44,8 @@ const smoothScrollTo = (element: HTMLElement, target: number, duration: number) 
   requestAnimationFrame(step);
 };
 
-export const DEFAULT_SIZE = DEFAULT_HORIZONTAL_SIZE;
+// NOTE: Calibrated to show PLANK + COMPANION on MBP 16" screen.
+export const DEFAULT_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_COMPANION_SIZE = 35 satisfies StackItemSize;
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
@@ -199,7 +200,7 @@ export const PlankComponent = memo(
             )}
             <Surface.Surface
               key={node.id}
-              role='article'
+              type={AppSurface.Article}
               data={data}
               limit={1}
               fallback={PlankErrorFallback}

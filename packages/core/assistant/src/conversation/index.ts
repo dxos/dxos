@@ -3,4 +3,4 @@
 //
 
 export * from './context';
-export * from './conversation';
+export * from './session';

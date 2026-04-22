@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
@@ -255,7 +255,7 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
-      const clientTag = config?.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
+      const clientTag = resolveTelemetryTag(config);
       this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
       this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
@@ -362,6 +362,7 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
+        this._serviceContext.echoHost,
         dataSpaceManagerProvider,
       ),
 

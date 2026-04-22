@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems, type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Annotation, Entity, Obj } from '@dxos/echo';
 import { Card, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -72,7 +72,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
           <Menu.Content items={menuItems} />
         </Card.Toolbar>
         <Card.Content>
-          <Surface.Surface role='card--content' data={data} limit={1} />
+          <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
         </Card.Content>
       </Card.Root>
     </Menu.Root>

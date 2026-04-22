@@ -17,8 +17,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'space-settings-daily-summary',
-        role: 'article',
-        filter: AppSurface.literalSection(`${meta.id}.space-settings-daily-summary`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-daily-summary`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

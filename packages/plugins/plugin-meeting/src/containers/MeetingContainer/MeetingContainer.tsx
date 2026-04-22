@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
@@ -45,7 +45,7 @@ export const MeetingContainer = ({ attendableId, role, subject: meeting }: Meeti
               </StackItem.HeadingStickyContent>
             </StackItem.Heading>
             <StackItem.Content>
-              <Surface.Surface role='section' data={notesData} />
+              <Surface.Surface type={AppSurface.Section} data={notesData} />
             </StackItem.Content>
           </StackItem.Root>
           <StackItem.Root item={summary} role='section'>
@@ -67,7 +67,7 @@ export const MeetingContainer = ({ attendableId, role, subject: meeting }: Meeti
             </StackItem.Heading>
             <StackItem.Content>
               {summaryData ? (
-                <Surface.Surface role='section' data={summaryData} />
+                <Surface.Surface type={AppSurface.Section} data={summaryData} />
               ) : (
                 <div className='grid place-items-center min-h-32'>
                   <IconButton

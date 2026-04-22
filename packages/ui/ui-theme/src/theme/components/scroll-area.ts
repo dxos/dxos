@@ -5,6 +5,7 @@
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
+import { withColumn } from '../primitives/column';
 
 export const scrollbar = {
   thin: {
@@ -41,8 +42,8 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     orientation === 'horizontal' && 'group/scroll-h flex',
     orientation === 'all' && 'group/scroll-all',
 
-    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
-    '[.dx-column_&]:col-span-full',
+    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column-root marker).
+    '[.dx-column-root_&]:col-span-full',
 
     ...etc,
   );
@@ -51,13 +52,17 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
  * NOTE: The browser reserves space for scrollbars.
  */
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, centered, padding, snap, thin, autoHide },
+  { orientation, centered, padding, snap, autoHide },
   ...etc
 ) => {
   return mx(
-    'h-full w-full',
+    'flex-1 min-h-0 w-full',
 
-    orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
+    // Reset --dx-col so nested components don't try to grid-position themselves.
+    // ScrollArea has already consumed --gutter for padding.
+    withColumn.consumed(),
+
+    orientation === 'vertical' && 'overflow-y-scroll',
     orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',
     orientation === 'all' && 'overflow-scroll',
 

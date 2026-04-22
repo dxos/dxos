@@ -557,6 +557,107 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       ]);
     }),
   );
+
+  it.effect(
+    'fails gracefully when a tool-result has malformed JSON in the result field',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            result: '{not valid json',
+            providerExecuted: false,
+          },
+        ]),
+      ];
+
+      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      }
+    }),
+  );
+
+  it.effect(
+    'fails gracefully when an assistant tool-call has malformed JSON in the input field',
+    Effect.fn(function* ({ expect }) {
+      const message = makeMessage('assistant', [
+        { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{not valid', providerExecuted: false },
+      ]);
+
+      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isLeft(result)) {
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
+      }
+    }),
+  );
+
+  it.effect(
+    'marks tool-result as isFailure when block.error is set (tool message)',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{}', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'calculator',
+            error: 'division by zero',
+            providerExecuted: false,
+          },
+        ]),
+      ];
+
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
+      const toolMsg = input.content[1] as Prompt.ToolMessage;
+      expect(toolMsg.content[0]).toEqual(
+        Prompt.makePart('tool-result', {
+          id: 'call_1',
+          name: 'calculator',
+          result: 'division by zero',
+          isFailure: true,
+          providerExecuted: false,
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'marks tool-result as isFailure when block.error is set (provider-executed in assistant message)',
+    Effect.fn(function* ({ expect }) {
+      const message = makeMessage('assistant', [
+        { _tag: 'toolCall', toolCallId: 'call_1', name: 'web_search', input: '{}', providerExecuted: true },
+        {
+          _tag: 'toolResult',
+          toolCallId: 'call_1',
+          name: 'web_search',
+          error: 'rate limited',
+          providerExecuted: true,
+        },
+      ]);
+
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
+      const assistantMsg = input.content[0] as Prompt.AssistantMessage;
+      expect(assistantMsg.content[1]).toEqual(
+        Prompt.makePart('tool-result', {
+          id: 'call_1',
+          name: 'web_search',
+          result: 'rate limited',
+          isFailure: true,
+          providerExecuted: false,
+        }),
+      );
+    }),
+  );
 });
 
 describe('AiPreprocessor.estimateTokens', () => {

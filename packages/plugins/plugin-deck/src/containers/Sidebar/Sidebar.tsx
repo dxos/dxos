@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Label, Main } from '@dxos/react-ui';
 
 import { useBreakpoints, useDeckState, useHoistStatusbar } from '#hooks';
@@ -38,7 +38,7 @@ export const Sidebar = () => {
         hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
-      <Surface.Surface role='navigation' data={navigationData} limit={1} />
+      <Surface.Surface type={AppSurface.Navigation} data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

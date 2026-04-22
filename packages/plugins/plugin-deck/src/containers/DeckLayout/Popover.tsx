@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import {
   Card,
@@ -122,8 +122,8 @@ export const PopoverContent = () => {
       >
         <Popover.Viewport>
           {/* Base popover */}
-          {state.popoverKind === 'base' && (
-            <Surface.Surface role='popover' data={state.popoverContent ?? undefined} limit={1} />
+          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
+            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
           )}
 
           {/* Card popover */}
@@ -147,7 +147,9 @@ export const PopoverContent = () => {
                   </Card.IconBlock>
                 </Card.Toolbar>
 
-                <Surface.Surface role='card--content' data={state.popoverContent ?? undefined} limit={1} />
+                {state.popoverContent && 'subject' in state.popoverContent && (
+                  <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
+                )}
               </Card.Root>
             </Menu.Root>
           )}

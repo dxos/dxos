@@ -75,7 +75,7 @@ const meta = {
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  spec: Ref.make(Text.make()),
+                  instructions: Ref.make(Text.make()),
                   plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: created.map((obj) => ({
                     name: Obj.getLabel(obj) ?? 'Artifact',
