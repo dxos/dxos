@@ -1,5 +1,6 @@
 .worktrees/
 .claude/worktrees/
+.claude/debug.log
 
 .dev.vars
 
