@@ -3,7 +3,7 @@
 //
 
 import { init as initCjsLexer, parse as parseCjs } from 'cjs-module-lexer';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
 import { type Plugin } from 'vite';
@@ -85,6 +85,29 @@ const resolvePackageJsonPath = (packageName: string): string | undefined => {
 };
 
 /**
+ * Resolves a package name to its package.json via vite's own resolver, which handles
+ * workspace-linked packages whose `exports` field omits `./package.json` (so
+ * `require.resolve` can't find it). Falls back to `require.resolve`.
+ */
+const resolvePackageJsonPathViaContext = async (
+  ctx: { resolve: (id: string) => Promise<{ id: string } | null> },
+  packageName: string,
+): Promise<string | undefined> => {
+  try {
+    const resolved = await ctx.resolve(packageName);
+    if (resolved) {
+      const viaResolved = findPackageJsonPath(resolved.id, packageName);
+      if (viaResolved) {
+        return viaResolved;
+      }
+    }
+  } catch {
+    // fall through
+  }
+  return resolvePackageJsonPath(packageName);
+};
+
+/**
  * Subpath exports that should be excluded from the import map.
  * These are node-only entrypoints (vite plugins, native addons) that shouldn't be pre-bundled for the browser.
  */
@@ -107,6 +130,13 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
 const GLOBALLY_EXCLUDED_SUBPATHS = new Set(['playwright']);
 
 /**
+ * Regex for subpaths that are always node-only build tooling — vite, esbuild, and
+ * rollup plugins. These use `node:*` imports and will blow up the browser bundle if
+ * they end up in the import map.
+ */
+const BUILD_TOOL_SUBPATH = /^(vite-plugin|esbuild-plugin|rollup-plugin|plugin)$/;
+
+/**
  * Asset subpaths (CSS, PCSS, images, etc.) that the host already loads via its own
  * bundle — for example `@dxos/react-ui-form` pulls in `@dxos/lit-ui/dx-tag-picker.pcss`
  * on startup, so the stylesheet is already attached to the DOM by the time a remote
@@ -120,10 +150,88 @@ const ASSET_SUBPATH = /\.(css|pcss|scss|sass|less|json|node|wasm|html|svg|png|jp
 const isAssetSubpath = (specifier: string) => ASSET_SUBPATH.test(specifier);
 
 /**
+ * Walks `baseDir` and returns every file that matches the pattern `${baseDir}/<rest>${extension}`.
+ * Used to expand wildcard exports like `./proto/*` → `./dist/src/proto/gen/*.js` into their
+ * full set of bare specifiers.
+ */
+const walkDirectoryForExtension = (baseDir: string, extension: string): string[] => {
+  if (!existsSync(baseDir)) {
+    return [];
+  }
+  const results: string[] = [];
+  const walk = (dir: string) => {
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry);
+      let stat;
+      try {
+        stat = statSync(full);
+      } catch {
+        continue;
+      }
+      if (stat.isDirectory()) {
+        walk(full);
+      } else if (entry.endsWith(extension)) {
+        results.push(path.relative(baseDir, full).slice(0, -extension.length));
+      }
+    }
+  };
+  walk(baseDir);
+  return results;
+};
+
+/** Resolves an `exports` value to a single target path for pattern expansion. */
+const pickPatternTarget = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    const preferred = obj.browser ?? obj.import ?? obj.default ?? obj.module;
+    return typeof preferred === 'string' ? preferred : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Expands a wildcard export like `./proto/*` into concrete subpath specifiers by walking
+ * the target directory. Returns `<packageName>/<subpath>` strings.
+ */
+const expandWildcardExport = (
+  packageName: string,
+  packageJsonDir: string,
+  exportKey: string,
+  exportValue: unknown,
+): string[] => {
+  const target = pickPatternTarget(exportValue);
+  if (!target || !target.includes('*')) {
+    return [];
+  }
+  // Split on `*` — at most one supported (node's exports pattern semantics).
+  const keyStarIndex = exportKey.indexOf('*');
+  const targetStarIndex = target.indexOf('*');
+  if (keyStarIndex === -1 || targetStarIndex === -1) {
+    return [];
+  }
+  const keyPrefix = exportKey.slice(2, keyStarIndex); // drop leading './'
+  const targetPrefix = target.slice(2, targetStarIndex); // drop leading './'
+  const targetSuffix = target.slice(targetStarIndex + 1);
+  const baseDir = path.resolve(packageJsonDir, targetPrefix);
+  const files = walkDirectoryForExtension(baseDir, targetSuffix || '.js');
+  return files.map((relativeNoExt) => `${packageName}/${keyPrefix}${relativeNoExt}`);
+};
+
+/**
  * Reads a package's `exports` field and returns all subpath entrypoints as bare specifiers
- * (e.g. `@dxos/client`, `@dxos/client/echo`, `@dxos/lit-ui/dx-tag-picker.pcss`). Skips
- * wildcard patterns and excluded subpaths. Falls back to just the package name if
- * exports is absent or simple.
+ * (e.g. `@dxos/client`, `@dxos/client/echo`, `@dxos/lit-ui/dx-tag-picker.pcss`,
+ * `@dxos/protocols/proto/dxos/echo/metadata`). Wildcard patterns are expanded by walking
+ * the corresponding output directory. Falls back to just the package name if exports is
+ * absent or simple.
  */
 const getPackageEntrypoints = (packageName: string, packageJsonPath: string): string[] => {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
@@ -141,17 +249,23 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
   }
 
   const excluded = importMapExcludedSubpaths[packageName];
+  const packageJsonDir = path.dirname(packageJsonPath);
   const modules = exportKeys.flatMap((key) => {
     if (key === '.') {
       return [packageName];
     }
 
-    if (!key.startsWith('./') || key === './package.json' || key.includes('*')) {
+    if (!key.startsWith('./') || key === './package.json') {
       return [];
     }
 
+    if (key.includes('*')) {
+      // Expand wildcard patterns like `./proto/*` into concrete specifiers.
+      return expandWildcardExport(packageName, packageJsonDir, key, (exportsField as Record<string, unknown>)[key]);
+    }
+
     const subpath = key.slice(2);
-    if (excluded?.has(subpath) || GLOBALLY_EXCLUDED_SUBPATHS.has(subpath)) {
+    if (excluded?.has(subpath) || GLOBALLY_EXCLUDED_SUBPATHS.has(subpath) || BUILD_TOOL_SUBPATH.test(subpath)) {
       return [];
     }
 
@@ -231,7 +345,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             (
               await Promise.all(
                 packages.map(async (packageName) => {
-                  const packageJsonPath = resolvePackageJsonPath(packageName);
+                  const packageJsonPath = await resolvePackageJsonPathViaContext(this, packageName);
                   if (!packageJsonPath) {
                     this.warn(`Unable to locate package.json for import map package: ${packageName}`);
                     return [packageName];
