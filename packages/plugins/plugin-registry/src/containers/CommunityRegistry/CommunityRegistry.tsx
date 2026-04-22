@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { Plugin } from '@dxos/app-framework';
+import { Plugin, UrlLoader } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -52,7 +52,6 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     const extraTagsById = useAutoTags(entries);
 
     const sortedEntries = useMemo(() => [...entries].sort(sortEntries), [entries]);
-    const displayPlugins = useMemo(() => sortedEntries.map(toDisplayPlugin), [sortedEntries]);
     const moduleUrlById = useMemo(() => {
       const map: Record<string, string> = {};
       for (const entry of sortedEntries) {
@@ -60,6 +59,17 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       }
       return map;
     }, [sortedEntries]);
+
+    // Plugins the user loaded by URL that aren't in the Edge catalog belong in
+    // the community section — otherwise they'd be invisible (they're filtered
+    // out of Official/Recommended by `useRemotePluginIds`).
+    const displayPlugins = useMemo(() => {
+      const catalogIds = new Set(sortedEntries.map((entry) => entry.meta.id));
+      const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
+      const fromCatalog = sortedEntries.map(toDisplayPlugin);
+      const fromUrl = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
+      return [...fromCatalog, ...fromUrl].sort((a, b) => (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id));
+    }, [sortedEntries, plugins]);
 
     const handleChange = useCallback(
       (pluginId: string, nextEnabled: boolean) =>
@@ -109,13 +119,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          {error ? (
-            <div className='p-4 text-description'>Failed to load community plugins: {error.message}</div>
-          ) : loading ? (
-            <div className='p-4 text-description'>{t('loading.label')}</div>
-          ) : displayPlugins.length === 0 ? (
-            <div className='p-4 text-description'>No community plugins available.</div>
-          ) : (
+          {displayPlugins.length > 0 ? (
             <PluginList
               plugins={displayPlugins}
               enabled={enabled}
@@ -125,6 +129,12 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
               hasSettings={hasSettings}
               onSettings={handleSettings}
             />
+          ) : error ? (
+            <div className='p-4 text-description'>Failed to load community plugins: {error.message}</div>
+          ) : loading ? (
+            <div className='p-4 text-description'>{t('loading.label')}</div>
+          ) : (
+            <div className='p-4 text-description'>No community plugins available.</div>
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>

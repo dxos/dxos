@@ -110,6 +110,11 @@ const resolvePackageJsonPathViaContext = async (
 /**
  * Subpath exports that should be excluded from the import map.
  * These are node-only entrypoints (vite plugins, native addons) that shouldn't be pre-bundled for the browser.
+ *
+ * TODO(wittjosiah): Replace these hand-maintained lists (plus {@link GLOBALLY_EXCLUDED_SUBPATHS}
+ * and {@link BUILD_TOOL_SUBPATH}) with a structural check — e.g. honour an `agent`/`node`-only
+ * export condition in package.json, or probe each subpath's resolved file for `node:*` imports
+ * at build time — so every new server-only entrypoint doesn't require a code change here.
  */
 const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
   '@dxos/app-framework': new Set(['vite-plugin']),

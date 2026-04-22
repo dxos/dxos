@@ -113,7 +113,7 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
 
 const loadRemotePlugin = async (url: string): Promise<Plugin.Plugin> => {
   log.info('loading remote plugin', { url });
-  const mod = (await import(/* @vite-ignore */ url)) as Record<string, unknown>;
+  const mod = await import(/* @vite-ignore */ url);
   const plugin = normalizePluginExport(mod);
   if (!plugin.meta.id || !plugin.meta.name) {
     throw new Error(`Remote plugin at ${url} is missing required meta.id or meta.name.`);

@@ -3,6 +3,7 @@
 //
 
 import { type Plugin as VitePlugin } from 'vite';
+import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 
 import { type Plugin } from '../core';
 import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
@@ -59,7 +60,11 @@ const REQUIRE_SHIM_BANNER = [
   "  ['react-dom', __composerReactDom.default ?? __composerReactDom],",
   "  ['react/jsx-runtime', __composerReactJsxRuntime],",
   ']);',
-  'globalThis.require ??= (id) => {',
+  '// Module-local binding: rolldown\'s CJS fallback does a `typeof require` check',
+  '// and uses whichever `require` is in lexical scope. Declaring this as `const`',
+  '// (instead of `globalThis.require ??=`) keeps each bundle\'s shim isolated from',
+  '// the host page and from other plugins sharing the window.',
+  'const require = (id) => {',
   '  if (__composerRequireShim.has(id)) return __composerRequireShim.get(id);',
   "  throw new Error('composer-plugin: unsupported CJS require at runtime: ' + id);",
   '};',
@@ -111,6 +116,15 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   let base = '/';
 
   const plugins: VitePlugin[] = [
+    // Inline every imported stylesheet into the bundled module. Each community plugin
+    // is distributed as a single GitHub Release asset (per {@link moduleFile}); a sibling
+    // `.css` file would silently be dropped at runtime because Composer only fetches the
+    // module URL the registry advertises.
+    // TODO(wittjosiah): Once the registry supports multi-asset releases, move CSS (and
+    // fonts/images/wasm) back to sibling assets so plugins don't ship stylesheets inside
+    // their JS bundle.
+    cssInjectedByJs(),
+
     // Configure vite for library-mode builds with externalized deps.
     {
       name: 'composer-plugin',
@@ -123,13 +137,25 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         preview: { port },
         build: {
           sourcemap: true,
+          // Transitively-bundled WASM modules (automerge, tiktoken, …) emit top-level
+          // await; `esnext` lets rolldown pass that through without an explicit polyfill.
+          target: 'esnext',
           lib: {
             entry,
             formats: ['es'],
+            fileName: () => moduleFile,
           },
+          // Inline every asset as a data URL. GitHub Releases sign each asset with a
+          // per-file URL, so sibling-file imports from the plugin module can't resolve.
+          // TODO(wittjosiah): Drop once the registry can serve multi-asset releases and
+          // plugins can ship fonts/images/wasm as siblings of plugin.mjs.
+          assetsInlineLimit: () => true,
           rolldownOptions: {
             external: (id: string) => isExternal(id),
             output: {
+              // Produce a single bundle per plugin for GitHub Release distribution.
+              // TODO(wittjosiah): Drop once the registry can serve multi-asset releases.
+              inlineDynamicImports: true,
               // Install the CJS require shim at the top of plugin.mjs so transitively
               // bundled CJS helpers (that call `require('react')` et al. at runtime) can
               // resolve against the host-provided externals instead of throwing.
