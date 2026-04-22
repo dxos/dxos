@@ -24,7 +24,15 @@ import { observabilityTranslations } from '@dxos/plugin-observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
-import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import {
+  clearCaches,
+  clearIndexedDB,
+  clearOPFS,
+  clearServiceWorkers,
+  getHostPlatform,
+  isMobile as isMobile$,
+  isTauri as isTauri$,
+} from '@dxos/util';
 
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
@@ -105,6 +113,36 @@ const main = async () => {
   profiler?.mark('config:start');
 
   let config = await setupConfig();
+
+  // One-time storage reset for production and staging environments.
+  // Danger: Deleting the localStorage key below will cause all storage (including identity) to be
+  // wiped on the next page load. Do not clear this key unless you intend to trigger a full reset.
+  const DANGEROUSLY_RESET_STORAGE_KEY = 'org.dxos.composer.dangerouslyResetStorage';
+  const DANGEROUSLY_RESET_STORAGE_VERSION = 'v1';
+  const isProductionOrStaging = ['production', 'staging'].includes(
+    config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? '',
+  );
+  if (
+    isProductionOrStaging &&
+    localStorage.getItem(DANGEROUSLY_RESET_STORAGE_KEY) !== DANGEROUSLY_RESET_STORAGE_VERSION
+  ) {
+    log.info('Performing one-time storage reset.');
+
+    await clearIndexedDB();
+    await clearOPFS();
+    await clearServiceWorkers();
+    await clearCaches();
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Set flag AFTER clearing localStorage so this migration does not re-run.
+    localStorage.setItem(DANGEROUSLY_RESET_STORAGE_KEY, DANGEROUSLY_RESET_STORAGE_VERSION);
+
+    window.location.href = window.location.origin;
+    return;
+  }
+
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))

@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
-import { joinTables } from '@dxos/util';
+import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
 import { SpaceState } from '../echo';
@@ -384,9 +384,7 @@ const port: RpcPort = {
   },
 };
 
-/**
- * Delete all data in the browser without depending on other packages.
- */
+/** Delete all data in the browser and reload. */
 const reset = async () => {
   log.info(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
 
@@ -395,26 +393,16 @@ const reset = async () => {
     log.info('Cleared local storage');
   }
 
-  if (
-    typeof navigator !== 'undefined' &&
-    typeof navigator.storage !== 'undefined' &&
-    typeof navigator.storage.getDirectory === 'function'
-  ) {
-    const root = await navigator.storage.getDirectory();
-    for await (const entry of (root as any).keys() as Iterable<string>) {
-      try {
-        await root.removeEntry(entry, { recursive: true });
-      } catch (err) {
-        log.error(`Failed to delete ${entry}: ${err}`);
-      }
-    }
-    log.info('Cleared OPFS');
+  await clearIndexedDB();
+  log.info('Cleared IndexedDB');
 
-    if (typeof location !== 'undefined' && typeof location.reload === 'function') {
-      location.reload();
-    } else if (typeof close === 'function') {
-      close(); // For web workers.
-    }
+  await clearOPFS();
+  log.info('Cleared OPFS');
+
+  if (typeof location !== 'undefined' && typeof location.reload === 'function') {
+    location.reload();
+  } else if (typeof close === 'function') {
+    close(); // For web workers.
   }
 };
 

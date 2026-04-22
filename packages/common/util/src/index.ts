@@ -3,6 +3,7 @@
 //
 
 export * from './array-to-hex';
+export * from './browser-storage';
 export * from './array';
 export * from './assume';
 export * from './binder';
