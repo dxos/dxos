@@ -13,7 +13,16 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, IconButton, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Input,
+  useFileDownload,
+  useMulticastObservable,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -224,10 +233,24 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           </div>
         </Settings.Item>
         <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
-          <div className='flex items-center gap-2'>
-            <Button onClick={handleBackupBinary}>{t('download-backup-binary.label')}</Button>
-            <Button onClick={handleBackupJson}>{t('download-backup-json.label')}</Button>
-          </div>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button>
+                {t('download-backup.label')}
+                <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={handleBackupBinary}>
+                  {t('download-backup-binary.label')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleBackupJson}>
+                  {t('download-backup-json.label')}
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </Settings.Item>
         <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
           <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
