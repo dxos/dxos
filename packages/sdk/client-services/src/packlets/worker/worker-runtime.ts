@@ -199,6 +199,10 @@ export class WorkerRuntime {
     const observabilityGroup = config.get('runtime.client.observabilityGroup');
     if (observabilityGroup) {
       this._signalMetadataTags.group = observabilityGroup;
+    } else {
+      // Clear stale group so a later config that removes observabilityGroup stops attributing
+      // telemetry to the previous client's group (last-writer-wins).
+      delete this._signalMetadataTags.group;
     }
     const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
     if (signalTelemetryEnabled !== undefined) {
