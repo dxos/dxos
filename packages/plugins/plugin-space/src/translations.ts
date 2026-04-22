@@ -262,6 +262,7 @@ export const translations = [
         'backup-space.title': 'Backup Space',
         'backup-space.description':
           'Download a backup of the space. Contains all data in the space in an unencrypted format.',
+        'download-backup.label': 'Download backup',
         'download-backup-binary.label': 'Download (.tar)',
         'download-backup-json.label': 'Download (.dx.json)',
         'repair-space.title': 'Repair Space',
