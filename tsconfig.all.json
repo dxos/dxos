@@ -463,7 +463,7 @@
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-telegram/tsconfig.json"
+      "path": "packages/plugins/plugin-telegram-bot/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-template/tsconfig.json"

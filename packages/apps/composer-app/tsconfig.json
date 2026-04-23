@@ -254,7 +254,7 @@
       "path": "../../plugins/plugin-table"
     },
     {
-      "path": "../../plugins/plugin-telegram"
+      "path": "../../plugins/plugin-telegram-bot"
     },
     {
       "path": "../../plugins/plugin-template"

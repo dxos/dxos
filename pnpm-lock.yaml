@@ -2530,9 +2530,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
-      '@dxos/plugin-telegram':
+      '@dxos/plugin-telegram-bot':
         specifier: workspace:*
-        version: link:../../plugins/plugin-telegram
+        version: link:../../plugins/plugin-telegram-bot
       '@dxos/plugin-template':
         specifier: workspace:*
         version: link:../../plugins/plugin-template
@@ -13911,7 +13911,7 @@ importers:
         specifier: '>=7.1.11'
         version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/plugins/plugin-telegram:
+  packages/plugins/plugin-telegram-bot:
     dependencies:
       '@dxos/app-framework':
         specifier: workspace:*

@@ -87,8 +87,8 @@ export const SEEDERS: readonly PluginSeeder[] = [
     },
   },
   {
-    name: 'telegram',
-    key: 'org.dxos.plugin.telegram',
+    name: 'telegram-bot',
+    key: 'org.dxos.plugin.telegram.bot',
     hasCreds: (existing) => typeof existing.botToken === 'string' && existing.botToken.length > 0,
     build: (env) => {
       const botToken = env.TELEGRAM_BOT_TOKEN;

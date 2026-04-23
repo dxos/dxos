@@ -8,11 +8,11 @@ import { Button, Icon, Input } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useTelegramApi } from '#hooks';
-import { type TelegramCapabilities, type TelegramChat } from '#types';
+import { type TelegramBotCapabilities, type TelegramChat } from '#types';
 
 export type TelegramSettingsProps = {
-  settings: TelegramCapabilities.Settings;
-  onSettingsChange: (fn: (current: TelegramCapabilities.Settings) => TelegramCapabilities.Settings) => void;
+  settings: TelegramBotCapabilities.Settings;
+  onSettingsChange: (fn: (current: TelegramBotCapabilities.Settings) => TelegramBotCapabilities.Settings) => void;
   discoveredChats?: TelegramChat[];
 };
 
@@ -21,7 +21,7 @@ export const TelegramSettings = ({ settings, onSettingsChange, discoveredChats =
   const { status, botInfo, error, testConnection } = useTelegramApi(settings.botToken);
 
   const updatePartial = useCallback(
-    (partial: Partial<TelegramCapabilities.Settings>) => {
+    (partial: Partial<TelegramBotCapabilities.Settings>) => {
       onSettingsChange((current) => ({ ...current, ...partial }));
     },
     [onSettingsChange],

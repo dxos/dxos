@@ -13,21 +13,21 @@ import { createKvsStore } from '@dxos/effect';
 import { TelegramFeed, TelegramSettings } from '#components';
 import { useTelegramMessages } from '#hooks';
 import { meta } from '#meta';
-import { TelegramCapabilities } from '#types';
+import { TelegramBotCapabilities } from '#types';
 
 const TelegramFeedWithSettings = () => {
-  const capabilities = useCapabilities(TelegramCapabilities.Settings);
+  const capabilities = useCapabilities(TelegramBotCapabilities.Settings);
   const fallbackAtom = useMemo(
     () =>
       createKvsStore({
         key: `${meta.id}.fallback`,
-        schema: TelegramCapabilities.SettingsSchema,
+        schema: TelegramBotCapabilities.SettingsSchema,
         defaultValue: () => ({}),
       }),
     [],
   );
   const settingsAtom = capabilities[0] ?? fallbackAtom;
-  const { settings } = useSettingsState<TelegramCapabilities.Settings>(settingsAtom);
+  const { settings } = useSettingsState<TelegramBotCapabilities.Settings>(settingsAtom);
   const space = useActiveSpace();
 
   if (!space) {
@@ -38,7 +38,7 @@ const TelegramFeedWithSettings = () => {
 };
 
 const TelegramSettingsWithChats = ({ subject }: { subject: { atom: any } }) => {
-  const { settings, updateSettings } = useSettingsState<TelegramCapabilities.Settings>(subject.atom);
+  const { settings, updateSettings } = useSettingsState<TelegramBotCapabilities.Settings>(subject.atom);
   const { discoveredChats } = useTelegramMessages(settings.botToken, settings.monitoredChats ?? []);
 
   return (
@@ -56,9 +56,9 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => <TelegramSettingsWithChats subject={subject} />,
       }),
       Surface.create({
-        id: 'telegram-feed',
-        role: 'deck-companion--telegram',
-        filter: AppSurface.literalSection('telegram'),
+        id: 'telegram-bot-feed',
+        role: 'deck-companion--telegram-bot',
+        filter: AppSurface.literalSection('telegram-bot'),
         component: () => <TelegramFeedWithSettings />,
       }),
     ]),

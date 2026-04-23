@@ -795,7 +795,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-telegram/package.json",
+          "path": "packages/plugins/plugin-telegram-bot/package.json",
           "jsonpath": "$.version"
         },
         {

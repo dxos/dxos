@@ -3,4 +3,4 @@
 //
 
 export { meta } from './meta';
-export { TelegramPlugin } from './TelegramPlugin';
+export { TelegramBotPlugin } from './TelegramBotPlugin';

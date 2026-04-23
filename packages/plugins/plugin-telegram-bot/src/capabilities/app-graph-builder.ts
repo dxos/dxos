@@ -19,10 +19,10 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'telegram',
+              id: 'telegram-bot',
               label: ['plugin.name', { ns: meta.id }],
               icon: meta.icon ?? 'ph--telegram-logo--regular',
-              data: 'telegram',
+              data: 'telegram-bot',
               position: 'fallback',
             }),
           ]),

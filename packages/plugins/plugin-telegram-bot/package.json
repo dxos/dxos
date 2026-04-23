@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/plugin-telegram",
+  "name": "@dxos/plugin-telegram-bot",
   "version": "0.8.3",
   "private": true,
-  "description": "Telegram integration for Composer Agent.",
+  "description": "Telegram Bot API integration for Composer Agent — the agent sends and receives messages via a Telegram bot. For syncing your personal Telegram DMs and groups, see @dxos/plugin-telegram-user.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

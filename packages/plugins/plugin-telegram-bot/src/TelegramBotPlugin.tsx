@@ -9,7 +9,7 @@ import { AppGraphBuilder, ReactSurface, Settings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from './translations';
 
-export const TelegramPlugin = Plugin.define(meta).pipe(
+export const TelegramBotPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

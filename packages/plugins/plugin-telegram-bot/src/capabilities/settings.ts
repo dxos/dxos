@@ -9,13 +9,13 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { TelegramCapabilities } from '#types';
+import { TelegramBotCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.id,
-      schema: TelegramCapabilities.SettingsSchema,
+      schema: TelegramBotCapabilities.SettingsSchema,
       defaultValue: () => ({
         respondToMentions: true,
         respondToDMs: true,
@@ -23,10 +23,10 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(TelegramCapabilities.Settings, settingsAtom),
+      Capability.contributes(TelegramBotCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
-        schema: TelegramCapabilities.SettingsSchema,
+        schema: TelegramBotCapabilities.SettingsSchema,
         atom: settingsAtom,
       }),
     ];

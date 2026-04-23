@@ -92,7 +92,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
-    "@dxos/plugin-telegram": "workspace:*",
+    "@dxos/plugin-telegram-bot": "workspace:*",
     "@dxos/plugin-template": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",

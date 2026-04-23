@@ -19,7 +19,7 @@ export type TelegramChat = {
 };
 
 /** Telegram settings persisted per-plugin. */
-export namespace TelegramCapabilities {
+export namespace TelegramBotCapabilities {
   export const SettingsSchema = Schema.mutable(
     Schema.Struct({
       /** Bot token for Telegram Bot API access. */

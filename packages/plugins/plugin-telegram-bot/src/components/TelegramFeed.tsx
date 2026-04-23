@@ -10,10 +10,10 @@ import { Button, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type TelegramMessage, useTelegramApi, useTelegramMessages } from '#hooks';
-import { type TelegramCapabilities } from '#types';
+import { type TelegramBotCapabilities } from '#types';
 
 export type TelegramFeedProps = {
-  settings: TelegramCapabilities.Settings;
+  settings: TelegramBotCapabilities.Settings;
   db: Database.Database;
 };
 
