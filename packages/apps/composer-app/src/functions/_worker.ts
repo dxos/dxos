@@ -22,7 +22,7 @@ const ALLOWED_ORIGINS = new Set([
 const corsHeaders = (origin: string | null): Record<string, string> => ({
   'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
   'Vary': 'Origin',
 });
 
@@ -87,13 +87,28 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     return new Response('OTel proxy not configured', { status: 503 });
   }
 
-  const upstream = `${env.SIGNOZ_INGEST_URL}${signal}`;
+  const contentLength = Number(request.headers.get('content-length') ?? 0);
+  if (contentLength > MAX_BODY_SIZE) {
+    return new Response('Payload too large', { status: 413 });
+  }
+
+  const upstreamHeaders: Record<string, string> = {
+    'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
+    'signoz-ingestion-key': env.SIGNOZ_INGESTION_KEY,
+  };
+  const contentEncoding = request.headers.get('Content-Encoding');
+  if (contentEncoding) {
+    upstreamHeaders['Content-Encoding'] = contentEncoding;
+  }
+  const contentLengthHeader = request.headers.get('Content-Length');
+  if (contentLengthHeader) {
+    upstreamHeaders['Content-Length'] = contentLengthHeader;
+  }
+
+  const upstream = `${env.SIGNOZ_INGEST_URL.replace(/\/$/, '')}${signal}`;
   const response = await fetch(upstream, {
     method: 'POST',
-    headers: {
-      'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
-      'signoz-ingestion-key': env.SIGNOZ_INGESTION_KEY,
-    },
+    headers: upstreamHeaders,
     body: request.body,
   });
 
