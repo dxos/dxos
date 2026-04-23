@@ -10,7 +10,7 @@ type Env = {
   SIGNOZ_INGESTION_KEY?: string;
 };
 
-const MAX_BODY_SIZE = 2 * 1024 * 1024; // 2MB.
+const MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
 
 const ALLOWED_ORIGINS = new Set([
   "https://composer.space",
