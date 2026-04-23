@@ -12,23 +12,25 @@ type Env = {
 
 const MAX_BODY_SIZE = 2 * 1024 * 1024; // 2MB.
 
-const OTEL_CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+const ALLOWED_ORIGINS = new Set([
+  'https://composer.space',
+  'https://staging.composer.space',
+  'https://labs.composer.space',
+  'https://main.composer.space',
+]);
+
+const corsHeaders = (origin: string | null): Record<string, string> => ({
+  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
-};
+  'Vary': 'Origin',
+});
 
 /** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
+  const origin = request.headers.get('Origin');
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    });
+    return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
 
   if (request.method !== 'POST') {
@@ -72,8 +74,9 @@ const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
 /** Reverse-proxy OTel ingestion to SigNoz, injecting the access token server-side. */
 const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
+  const origin = request.headers.get('Origin');
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: OTEL_CORS_HEADERS });
+    return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
 
   if (request.method !== 'POST') {
@@ -98,7 +101,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     status: response.status,
     headers: {
       'Content-Type': response.headers.get('Content-Type') ?? 'application/json',
-      ...OTEL_CORS_HEADERS,
+      ...corsHeaders(origin),
     },
   });
 };
