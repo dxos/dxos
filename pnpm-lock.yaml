@@ -7939,6 +7939,9 @@ importers:
         specifier: 'catalog:'
         version: 0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0)
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8420,6 +8423,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8520,6 +8526,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8725,6 +8734,9 @@ importers:
         specifier: 'catalog:'
         version: 2.0.2(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.27.3))
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8982,6 +8994,12 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -9115,6 +9133,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -9327,6 +9348,9 @@ importers:
         specifier: 'catalog:'
         version: 1.10.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -9796,6 +9820,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -10038,6 +10065,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -10701,6 +10731,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -10798,6 +10831,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -11019,6 +11055,9 @@ importers:
         specifier: 'catalog:'
         version: 1.10.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -11140,6 +11179,9 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -11421,6 +11463,9 @@ importers:
         specifier: 'catalog:'
         version: 5.1.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -11597,6 +11642,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -11697,6 +11745,9 @@ importers:
         specifier: 'catalog:'
         version: 2.8.2
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -12265,6 +12316,9 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
     devDependencies:
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -12564,6 +12618,12 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -12812,6 +12872,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -13293,6 +13356,9 @@ importers:
         specifier: 'catalog:'
         version: 2.10.1
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -13396,6 +13462,9 @@ importers:
       '@babel/core':
         specifier: 'catalog:'
         version: 7.28.0
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -13469,6 +13538,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -13578,6 +13650,9 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -14048,6 +14123,12 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -14178,6 +14259,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -14480,6 +14564,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -14562,6 +14649,12 @@ importers:
         specifier: 'catalog:'
         version: 0.178.0
     devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
@@ -14701,6 +14794,9 @@ importers:
         specifier: 'catalog:'
         version: 0.2.2
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -14916,6 +15012,12 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

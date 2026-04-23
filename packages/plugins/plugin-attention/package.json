@@ -65,6 +65,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-graph": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -106,6 +106,9 @@
       "path": "../plugin-stack"
     },
     {
+      "path": "../plugin-testing"
+    },
+    {
       "path": "../plugin-thread"
     }
   ]

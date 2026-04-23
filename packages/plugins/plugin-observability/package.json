@@ -86,6 +86,7 @@
     "localforage": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

@@ -171,6 +171,9 @@
       "path": "../plugin-table"
     },
     {
+      "path": "../plugin-testing"
+    },
+    {
       "path": "../plugin-theme"
     }
   ]

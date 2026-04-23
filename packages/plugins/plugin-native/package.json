@@ -50,6 +50,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "vite": "catalog:"
   },
