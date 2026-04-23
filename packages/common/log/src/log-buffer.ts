@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { CircularBuffer, getDebugName } from '@dxos/util';
+import { CircularBuffer } from '@dxos/util';
 
 import { type LogConfig, LogLevel, shortLevelName } from './config';
 import { type LogEntry, type LogProcessor } from './context';
@@ -51,38 +51,39 @@ export class LogBuffer {
       return;
     }
 
+    const { filename, line, context: scopeName } = entry.computedMeta;
+
     const record: LogRecord = {
-      t: new Date().toISOString(),
+      t: new Date(entry.timestamp).toISOString(),
       l: shortLevelName[entry.level] ?? '?',
       m: entry.message ?? '',
     };
 
-    if (entry.meta) {
-      record.f = getRelativeFilename(entry.meta.F);
-      record.n = entry.meta.L;
+    if (filename !== undefined) {
+      record.f = filename;
+    }
+    if (line !== undefined) {
+      record.n = line;
+    }
+    if (scopeName !== undefined) {
+      record.o = scopeName;
     }
 
-    if (entry.error) {
-      record.e = entry.error.stack ?? entry.error.message;
+    if (entry.computedError !== undefined) {
+      record.e = entry.computedError;
     }
 
-    if (entry.context != null) {
+    const computedContext = entry.computedContext;
+    if (Object.keys(computedContext).length > 0) {
       try {
-        const ctx = typeof entry.context === 'function' ? entry.context() : entry.context;
-        if (ctx != null && !(ctx instanceof Error)) {
-          let json = JSON.stringify(ctx);
-          if (json.length > MAX_CONTEXT_LENGTH) {
-            json = json.slice(0, MAX_CONTEXT_LENGTH);
-          }
-          record.c = json;
+        let json = JSON.stringify(computedContext);
+        if (json.length > MAX_CONTEXT_LENGTH) {
+          json = json.slice(0, MAX_CONTEXT_LENGTH);
         }
+        record.c = json;
       } catch {
         // Skip context that throws or is non-serializable.
       }
-    }
-    const scope = entry.meta?.S;
-    if (typeof scope === 'object' && scope !== null && Object.getPrototypeOf(scope) !== Object.prototype) {
-      record.o = getDebugName(scope);
     }
 
     this._buffer.push(record);
@@ -107,11 +108,3 @@ export class LogBuffer {
     return lines.join('\n');
   }
 }
-
-const getRelativeFilename = (filename: string): string => {
-  const match = filename.match(/.+\/(packages\/.+\/.+)/);
-  if (match) {
-    return match[1];
-  }
-  return filename;
-};
