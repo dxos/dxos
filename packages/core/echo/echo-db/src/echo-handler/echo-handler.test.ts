@@ -145,7 +145,9 @@ describe('without database', () => {
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
     const NestedSchema = TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
-    expect(prepareAstForCompare(Obj.getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
+    expect(prepareAstForCompare(Obj.getSchema(obj.nested as Obj.Unknown)!.ast)).to.deep.eq(
+      prepareAstForCompare(NestedSchema.ast),
+    );
   });
 
   test('create', () => {
