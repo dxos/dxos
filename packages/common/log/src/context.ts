@@ -77,6 +77,8 @@ export class LogEntry {
   #computedError: string | undefined;
   #computedErrorComputed = false;
   #computedMeta: ComputedLogMeta | undefined;
+  #resolvedContext: unknown;
+  #resolvedContextComputed = false;
 
   constructor(init: LogEntryInit) {
     this.level = init.level;
@@ -85,6 +87,18 @@ export class LogEntry {
     this.meta = init.meta;
     this.error = init.error;
     this.timestamp = init.timestamp ?? Date.now();
+  }
+
+  /**
+   * Resolve a function-valued {@link context} once and cache, so getters that
+   * independently consult the raw context don't trigger duplicate evaluation.
+   */
+  #resolveContext(): unknown {
+    if (!this.#resolvedContextComputed) {
+      this.#resolvedContext = typeof this.context === 'function' ? this.context() : this.context;
+      this.#resolvedContextComputed = true;
+    }
+    return this.#resolvedContext;
   }
 
   /**
@@ -100,7 +114,7 @@ export class LogEntry {
    */
   get computedContext(): Record<string, unknown> {
     if (!this.#computedContextComputed) {
-      this.#computedContext = computeContext(this);
+      this.#computedContext = computeContext(this, this.#resolveContext());
       this.#computedContextComputed = true;
     }
     return this.#computedContext ?? {};
@@ -118,7 +132,7 @@ export class LogEntry {
    */
   get computedError(): string | undefined {
     if (!this.#computedErrorComputed) {
-      this.#computedError = computeError(this);
+      this.#computedError = computeError(this, this.#resolveContext());
       this.#computedErrorComputed = true;
     }
     return this.#computedError;
@@ -242,7 +256,7 @@ const stringifyOneLevel = (value: unknown): unknown => {
   }
 };
 
-const computeContext = (entry: LogEntry): Record<string, unknown> => {
+const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
 
   const mergeInto = (source: unknown): void => {
@@ -261,7 +275,6 @@ const computeContext = (entry: LogEntry): Record<string, unknown> => {
     mergeInto(gatherLogInfoFromScope(entry.meta.S));
   }
 
-  const rawContext = typeof entry.context === 'function' ? entry.context() : entry.context;
   if (rawContext instanceof Error) {
     // Structured debug info attached to thrown errors lives on `.context`.
     mergeInto((rawContext as any).context);
@@ -286,12 +299,11 @@ const stringifyError = (err: unknown): string | undefined => {
   return String(err);
 };
 
-const computeError = (entry: LogEntry): string | undefined => {
+const computeError = (entry: LogEntry, rawContext: unknown): string | undefined => {
   if (entry.error !== undefined) {
     return stringifyError(entry.error);
   }
 
-  const rawContext = typeof entry.context === 'function' ? entry.context() : entry.context;
   if (rawContext instanceof Error) {
     return stringifyError(rawContext);
   }
@@ -313,7 +325,12 @@ const computeMeta = (entry: LogEntry): ComputedLogMeta => {
   const scope = entry.meta.S;
   // Skip globalThis and plain object scopes (module-level logs); only report class instances.
   let scopeContext: string | undefined;
-  if (typeof scope === 'object' && scope !== null && Object.getPrototypeOf(scope) !== Object.prototype) {
+  if (
+    typeof scope === 'object' &&
+    scope !== null &&
+    scope !== globalThis &&
+    Object.getPrototypeOf(scope) !== Object.prototype
+  ) {
     scopeContext = getDebugName(scope);
   }
 
