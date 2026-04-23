@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { PERSONAL_SPACE_TAG, setPersonalSpace } from '@dxos/app-toolkit';
+import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
@@ -22,8 +22,7 @@ export default Capability.makeModule(
     );
     yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
 
-    // Flag as personal space and create root collection structure.
-    setPersonalSpace(personalSpace);
+    // Create root collection structure.
     yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
     Obj.change(personalSpace.properties, (properties) => {
       properties[Collection.Collection.typename] = Ref.make(Collection.make());
