@@ -105,6 +105,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                   iconOnly
                   tooltipSide='left'
                   data-value={getLinkedVariant(companion.id)}
+                  {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
                   variant={
                     activeId === getLinkedVariant(companion.id)
                       ? state.complementarySidebarState === 'expanded'
