@@ -135,7 +135,7 @@ export const useTelegramUserMessages = (client: any | null) => {
 };
 
 /** Produce a minimal chat descriptor from a gramjs entity (User / Chat / Channel). */
-const extractChatInfo = (entity: any): TelegramUserChat | undefined => {
+export const extractChatInfo = (entity: any): TelegramUserChat | undefined => {
   if (!entity) {
     return undefined;
   }
@@ -162,12 +162,18 @@ const extractChatInfo = (entity: any): TelegramUserChat | undefined => {
 };
 
 /** Flatten a gramjs Message into the feed's shape. */
-const normalizeMessage = (msg: any, chat: TelegramUserChat | undefined): TelegramUserMessage | undefined => {
+export const normalizeMessage = (msg: any, chat: TelegramUserChat | undefined): TelegramUserMessage | undefined => {
   const text = typeof msg?.message === 'string' ? msg.message : '';
   if (!text) {
     return undefined;
   }
-  const chatId = chat?.id ?? String(msg?.chatId ?? msg?.peerId?.userId ?? '');
+  // Fall back to msg.chatId, then to whichever field peerId happens to carry
+  // (PeerUser→userId, PeerChat→chatId, PeerChannel→channelId). Missing any of
+  // these meant group/channel messages were silently dropped from the feed
+  // whenever the entity wasn't resolvable via access hash.
+  const peerFallback =
+    msg?.chatId ?? msg?.peerId?.userId ?? msg?.peerId?.chatId ?? msg?.peerId?.channelId;
+  const chatId = chat?.id ?? (peerFallback != null ? String(peerFallback) : '');
   if (!chatId) {
     return undefined;
   }
