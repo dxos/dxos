@@ -15,20 +15,36 @@ const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
 const MAX_RESPONSE_BYTES_HEADER = 5_000_000;
 
-/** Throws unless `link` is an http(s) URL. */
+/** Exact-match hostname denylist. Defense-in-depth against trivial SSRF when this handler runs
+ * in a trusted/worker context. Not a substitute for DNS-level egress filtering when available. */
+const BLOCKED_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '::1',
+  '169.254.169.254', // AWS/GCP/Azure instance metadata endpoint
+  'metadata.google.internal',
+]);
+
+/** Throws unless `link` is an http(s) URL targeting a non-loopback, non-metadata host. */
 const validateUrl = (link: string): URL => {
   const url = new URL(link);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     throw new Error(`Unsupported protocol: ${url.protocol}`);
   }
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (BLOCKED_HOSTS.has(host)) {
+    throw new Error(`Blocked host: ${host}`);
+  }
   return url;
 };
 
-/** Read the body with a hard byte cap; prevents unbounded memory use on adversarial responses. */
+/** Read the body with a hard byte cap; prevents unbounded memory use on adversarial responses.
+ * Throws if the stream API is unavailable so we never silently bypass the cap. */
 const readCapped = async (response: Response, limit: number): Promise<string> => {
   const reader = response.body?.getReader();
   if (!reader) {
-    return (await response.text()).slice(0, limit);
+    throw new Error('Response body stream unavailable.');
   }
   const decoder = new TextDecoder('utf-8');
   let received = 0;
@@ -48,7 +64,7 @@ const readCapped = async (response: Response, limit: number): Promise<string> =>
   } catch {
     // Ignore cancel errors.
   }
-  return out + decoder.decode();
+  return (out + decoder.decode()).slice(0, limit);
 };
 
 const handler: Operation.WithHandler<typeof FetchArticleContent> = FetchArticleContent.pipe(
@@ -72,7 +88,8 @@ const handler: Operation.WithHandler<typeof FetchArticleContent> = FetchArticleC
           }
           return readCapped(response, MAX_RESPONSE_BYTES);
         },
-        catch: (error) => new Error(String(error)),
+        catch: (error) =>
+          new Error(`Failed to fetch article: ${String(error)}`, { cause: error instanceof Error ? error : undefined }),
       });
       return {
         text: stripHtml(html),

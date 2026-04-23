@@ -69,11 +69,15 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
           }
         }),
       );
-      await Promise.allSettled(
-        feeds
-          .filter((feed): feed is Subscription.Feed => Boolean(feed?.url))
-          .map((feed) => invokePromise(FeedOperation.SyncFeed, { feed })),
+      const validFeeds = feeds.filter((feed): feed is Subscription.Feed => Boolean(feed?.url));
+      const syncResults = await Promise.allSettled(
+        validFeeds.map((feed) => invokePromise(FeedOperation.SyncFeed, { feed })),
       );
+      syncResults.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          log.catch(result.reason, { feedUrl: validFeeds[index]?.url });
+        }
+      });
       setState('curating');
       await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
     } catch (err) {
