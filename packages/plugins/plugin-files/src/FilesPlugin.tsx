@@ -22,7 +22,7 @@ const SettingsReady = AppActivationEvents.createSettingsEvent(FileCapabilities.S
 export const FilesPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSettingsModule({ activate: FileSettings, activatesAfter: [SettingsReady] }),
+  AppPlugin.addSettingsModule({ activate: FileSettings, firesAfterActivation: [SettingsReady] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

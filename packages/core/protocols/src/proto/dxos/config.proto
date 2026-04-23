@@ -84,6 +84,17 @@ message Module {
 
 message Runtime {
   message Client {
+    /// Where client services run. Drives `createClientServices` routing.
+    enum ServicesMode {
+      UNSPECIFIED_SERVICES_MODE = 0;
+      /// Run services in the same thread as the client.
+      HOST = 1;
+      /// Run services in a SharedWorker (single instance shared across tabs).
+      SHARED_WORKER = 2;
+      /// Run services in a dedicated Worker elected via a lock (leader/follower).
+      DEDICATED_WORKER = 3;
+    }
+
     message Storage {
       enum StorageDriver {
         RAM = 0;
@@ -98,6 +109,20 @@ message Runtime {
         JSONDOWN = 12;
       }
 
+      /// Storage backing for SQLite (indexes & persistent state). The caller must supply the
+      /// matching worker factory / path — `createClientServices` does not pick a mode from the
+      /// presence of options.
+      enum SqliteMode {
+        UNSPECIFIED_SQLITE_MODE = 0;
+        /// Ephemeral in-memory SQLite. Indexes are rebuilt on each start.
+        MEMORY = 1;
+        /// OPFS-backed SQLite running in a dedicated worker (browser).
+        /// Requires `createOpfsWorker` to be passed to `createClientServices`.
+        OPFS = 2;
+        /// File-backed SQLite (Node/Bun). Uses `data_root` to locate the database file.
+        FILE = 3;
+      }
+
       optional bool persistent = 1;
       optional StorageDriver key_store = 2;
       optional StorageDriver data_store = 3;
@@ -107,6 +132,9 @@ message Runtime {
        * @deprecated
        */
       optional bool space_fragmentation = 5;
+
+      /// Backing store for SQLite runtimes. Defaults to MEMORY when unset.
+      optional SqliteMode sqlite_mode = 6;
     }
 
     message Log {
@@ -155,6 +183,25 @@ message Runtime {
     optional bool enable_vector_indexing = 12;
 
     optional EdgeFeatures edge_features = 11;
+
+    /// Observability group attached as metadata to signaling requests.
+    /// NOTE: When running through a shared worker, subsequent client connections can refresh this
+    /// value (last-writer-wins); the first client still determines the worker's other config.
+    optional string observability_group = 13;
+
+    /// Enable telemetry metadata attached to signaling requests.
+    /// NOTE: When running through a shared worker, subsequent client connections can refresh this
+    /// value (last-writer-wins); the first client still determines the worker's other config.
+    optional bool signal_telemetry_enabled = 14;
+
+    /// Use in-process (single-client) coordinator for dedicated-worker mode.
+    /// Bypasses SharedWorker; used for WKWebView where the coordinator SharedWorker port is unreliable.
+    optional bool single_client_mode = 15;
+
+    /// Deployment mode for client services. Read by `createClientServices` to select between
+    /// in-process (HOST), SharedWorker, and dedicated Worker runtimes. Required when no
+    /// `remote_source` is configured.
+    optional ServicesMode services_mode = 16;
   }
 
   message App {

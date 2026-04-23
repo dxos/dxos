@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { serializeManifest } from './composer-plugin';
+import { serializeManifest } from './manifest';
 
 describe('serializeManifest', () => {
   test('serializes plugin meta plus moduleFile', ({ expect }) => {

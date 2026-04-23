@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
@@ -82,7 +82,6 @@ const meta = {
               );
             }),
         }),
-        StorybookPlugin({}),
         AutomationPlugin(),
         AssistantPlugin(),
       ],

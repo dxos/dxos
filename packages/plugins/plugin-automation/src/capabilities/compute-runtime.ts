@@ -239,10 +239,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
                 Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
                 Layer.provideMerge(
-                  RemoteFunctionExecutionService.fromClient(
-                    client,
-                    client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                  ),
+                  client.config.values.runtime?.services?.edge?.url
+                    ? RemoteFunctionExecutionService.fromClient(
+                        client,
+                        client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
+                      )
+                    : RemoteFunctionExecutionService.layerMock,
                 ),
               ),
             ),

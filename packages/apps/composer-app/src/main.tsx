@@ -89,7 +89,7 @@ const main = async () => {
 
   profiler?.mark('dynamic-imports:start');
 
-  const { defs, SaveConfig } = await import('@dxos/config');
+  const { Config, defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
@@ -173,38 +173,63 @@ const main = async () => {
 
   profiler?.mark('services:start');
 
-  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
-  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  // Decide the deployment mode for client services. The factory is a dumb switch on
+  // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
+  // env / platform constraints. Worker factories are passed unconditionally; the factory only
+  // invokes the one required by the configured mode.
+  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
+  // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
+  // transparently fall back to in-process host mode instead of letting the factory throw later.
+  const isIos = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
+  const sharedWorkerSupported = typeof SharedWorker !== 'undefined' && !isIos;
+  const servicesMode = useLocalServices
+    ? defs.Runtime.Client.ServicesMode.HOST
+    : useSharedWorker
+      ? sharedWorkerSupported
+        ? defs.Runtime.Client.ServicesMode.SHARED_WORKER
+        : defs.Runtime.Client.ServicesMode.HOST
+      : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+
+  // Host mode uses OPFS SQLite in a dedicated worker; worker modes run their own in-memory SQLite
+  // (OPFS does not yet work from inside a SharedWorker per the TODO in `worker-runtime.ts`).
+  const sqliteMode =
+    servicesMode === defs.Runtime.Client.ServicesMode.HOST
+      ? defs.Runtime.Client.Storage.SqliteMode.OPFS
+      : defs.Runtime.Client.Storage.SqliteMode.MEMORY;
+
+  config = new Config(
+    {
+      runtime: {
+        client: {
+          observabilityGroup,
+          signalTelemetryEnabled: !observabilityDisabled,
+          singleClientMode: useSingleClientMode,
+          servicesMode,
+          storage: { sqliteMode },
+        },
+      },
+    },
+    config.values,
+  );
   const services = await createClientServices(config, {
-    createWorker:
-      useLocalServices || !useSharedWorker
-        ? undefined
-        : () =>
-            new SharedWorker(new URL('./shared-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createDedicatedWorker:
-      useLocalServices || useSharedWorker
-        ? undefined
-        : () =>
-            new Worker(new URL('./dedicated-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createCoordinatorWorker:
-      useLocalServices || useSharedWorker || useSingleClientMode
-        ? undefined
-        : () =>
-            new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-coordinator-worker',
-            }),
+    createWorker: () =>
+      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+    createDedicatedWorker: () =>
+      new Worker(new URL('./dedicated-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+    createCoordinatorWorker: () =>
+      new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-coordinator-worker',
+      }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    singleClientMode: useSingleClientMode,
-    observabilityGroup,
-    signalTelemetryEnabled: !observabilityDisabled,
   });
 
   profiler?.mark('services:end');
