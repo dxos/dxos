@@ -16,6 +16,7 @@ import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
+import { CrxBridgePlugin } from '@dxos/plugin-crx-bridge';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
@@ -104,6 +105,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
+    CrxBridgePlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     layoutPluginId,
@@ -205,6 +207,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    CrxBridgePlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
     DiscordPlugin(),

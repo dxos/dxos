@@ -535,6 +535,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-crx-bridge/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-daily-summary/package.json",
           "jsonpath": "$.version"
         },
