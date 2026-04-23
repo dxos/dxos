@@ -13,7 +13,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { LayerSpec } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
 
-import { LayerStack } from './LayerStack';
+import * as LayerStack from './LayerStack';
 
 //
 // Test service tags.
@@ -44,7 +44,7 @@ describe('LayerStack', () => {
           () => Layer.succeed(ServiceA, { value: 'a' }),
         );
 
-        const stack = new LayerStack({ layers: [layer] });
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
         const resolver = stack.getServiceResolver();
 
         const resolved = yield* resolveWithScope(resolver.resolve(ServiceA, {}));
@@ -55,7 +55,7 @@ describe('LayerStack', () => {
     it.effect(
       'fails with ServiceNotAvailableError for unknown service',
       Effect.fn(function* ({ expect }) {
-        const stack = new LayerStack({ layers: [] });
+        const stack = new LayerStack.LayerStack({ layers: [] });
         const resolver = stack.getServiceResolver();
 
         const exit = yield* resolveWithScope(resolver.resolve(ServiceA, {})).pipe(Effect.exit);
@@ -100,7 +100,7 @@ describe('LayerStack', () => {
         );
 
         // Intentionally register layerB before layerA: the topological sort should reorder them.
-        const stack = new LayerStack({ layers: [layerB, layerA] });
+        const stack = new LayerStack.LayerStack({ layers: [layerB, layerA] });
         const resolver = stack.getServiceResolver();
 
         const resolved = yield* resolveWithScope(resolver.resolve(ServiceB, {}));
@@ -128,7 +128,7 @@ describe('LayerStack', () => {
             ),
         );
 
-        const stack = new LayerStack({ layers: [layer] });
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
         const resolver = stack.getServiceResolver();
 
         const first = yield* resolveWithScope(resolver.resolve(ServiceA, {}));
@@ -153,7 +153,7 @@ describe('LayerStack', () => {
           (ctx) => Layer.succeed(ServiceA, { value: `space:${ctx.space}` }),
         );
 
-        const stack = new LayerStack({ layers: [layer] });
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
         const resolver = stack.getServiceResolver();
 
         const space = SpaceId.random();
@@ -182,7 +182,7 @@ describe('LayerStack', () => {
             ),
         );
 
-        const stack = new LayerStack({ layers: [layer] });
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
         const resolver = stack.getServiceResolver();
 
         const spaceA = SpaceId.random();
@@ -223,7 +223,7 @@ describe('LayerStack', () => {
             ),
         );
 
-        const stack = new LayerStack({ layers: [appLayer, spaceLayer] });
+        const stack = new LayerStack.LayerStack({ layers: [appLayer, spaceLayer] });
         const resolver = stack.getServiceResolver();
 
         const space = SpaceId.random();
@@ -261,7 +261,7 @@ describe('LayerStack', () => {
             ),
         );
 
-        const stack = new LayerStack({ layers: [spaceLayer, processLayer] });
+        const stack = new LayerStack.LayerStack({ layers: [spaceLayer, processLayer] });
         const resolver = stack.getServiceResolver();
 
         const space = SpaceId.random();
@@ -324,7 +324,7 @@ describe('LayerStack', () => {
             ),
         );
 
-        const stack = new LayerStack({ layers: [appLayer, spaceLayer, processLayer] });
+        const stack = new LayerStack.LayerStack({ layers: [appLayer, spaceLayer, processLayer] });
         const resolver = stack.getServiceResolver();
 
         const space = SpaceId.random();
@@ -375,7 +375,7 @@ describe('LayerStack', () => {
           ),
       );
 
-      const stack = new LayerStack({ layers: [layerA, layerB] });
+      const stack = new LayerStack.LayerStack({ layers: [layerA, layerB] });
       const resolver = stack.getServiceResolver();
 
       // Cycle is detected eagerly inside the Slice constructor (which runs during resolution).
@@ -443,7 +443,7 @@ describe('LayerStack', () => {
         );
 
         // Shuffle the order: D, B, A, C.
-        const stack = new LayerStack({ layers: [layerD, layerB, layerA, layerC] });
+        const stack = new LayerStack.LayerStack({ layers: [layerD, layerB, layerA, layerC] });
         const resolver = stack.getServiceResolver();
 
         const resolved = yield* resolveWithScope(resolver.resolve(ServiceD, {}));
@@ -465,7 +465,7 @@ describe('LayerStack', () => {
           (ctx) => Layer.succeed(ServiceA, { value: `space:${ctx.space}` }),
         );
 
-        const stack = new LayerStack({ layers: [layer] });
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
         const resolver = stack.getServiceResolver();
 
         // No `space` in the context — the resolver should not find the service.
@@ -487,7 +487,7 @@ describe('LayerStack', () => {
         () => Layer.succeed(ServiceA, { value: 'a' }),
       );
 
-      const stack = new LayerStack({ layers: [layer] });
+      const stack = new LayerStack.LayerStack({ layers: [layer] });
       const resolver = stack.getServiceResolver();
 
       // ServiceB is not provided by any registered layer.
