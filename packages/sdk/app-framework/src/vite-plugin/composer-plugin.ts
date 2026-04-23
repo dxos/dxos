@@ -123,7 +123,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     // TODO(wittjosiah): Once the registry supports multi-asset releases, move CSS (and
     // fonts/images/wasm) back to sibling assets so plugins don't ship stylesheets inside
     // their JS bundle.
-    cssInjectedByJs(),
+    ...cssInjectedByJs(),
 
     // Configure vite for library-mode builds with externalized deps.
     {
