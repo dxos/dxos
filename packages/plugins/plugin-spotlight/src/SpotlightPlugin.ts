@@ -17,7 +17,7 @@ export const SpotlightPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [SpotlightEvents.StateReady, AppActivationEvents.LayoutReady],
+    firesAfterActivation: [SpotlightEvents.StateReady, AppActivationEvents.LayoutReady],
     activate: State,
   }),
   Plugin.addModule({

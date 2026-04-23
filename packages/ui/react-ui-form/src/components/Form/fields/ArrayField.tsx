@@ -80,7 +80,11 @@ export const ArrayField = ({
       <div role='none' className='flex flex-col gap-form-gap'>
         {values?.map((_, index) => {
           return (
-            <div role='none' key={index} className='flex gap-form-gap last:mb-form-gap items-center'>
+            <div
+              role='none'
+              key={index}
+              className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'
+            >
               <FormField
                 autoFocus={index === values.length - 1}
                 type={elementType}
@@ -114,7 +118,7 @@ export const ArrayField = ({
         <IconButton
           classNames='flex w-full'
           icon='ph--plus--regular'
-          label={t('add-field.button')}
+          label={t('add-item.button')}
           onClick={handleAdd}
         />
       )}

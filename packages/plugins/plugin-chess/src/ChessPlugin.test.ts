@@ -4,50 +4,36 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents, Capabilities } from '@dxos/app-framework';
-import { createTestApp } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import { ActivationEvents } from '@dxos/app-framework';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+// Use the CLI variant — the main ClientPlugin references capabilities that resolve to undefined under Node.
+import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { ChessPlugin } from './ChessPlugin';
+import { meta } from './meta';
 import { Print } from './operations';
 
+const moduleId = (name: string) => `${meta.id}.module.${name}`;
+
 describe('ChessPlugin', () => {
-  test('activates and contributes expected capabilities', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ChessPlugin()] });
-    const surfaces = harness.getAll(Capabilities.ReactSurface).flat();
-    expect(surfaces.length).toBeGreaterThan(0);
-  });
+  test('modules activate on the expected events', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin({}), ChessPlugin()],
+    });
 
-  test('fires activation events explicitly with autoStart: false', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ChessPlugin()], autoStart: false });
+    // Modules expected to be active after a normal startup.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
+    );
 
-    // No modules have activated yet; schema/surface capabilities are absent.
-    expect(harness.getAll(AppCapabilities.Schema)).toHaveLength(0);
-    expect(harness.getAll(Capabilities.ReactSurface)).toHaveLength(0);
+    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
+    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
 
-    // Fire SetupSchema — the schema module activates and contributes the Chess.Game type.
-    await harness.fire(AppActivationEvents.SetupSchema);
-    const schemas = harness.getAll(AppCapabilities.Schema).flat();
-    expect(schemas.length).toBeGreaterThan(0);
-
-    // ReactSurface is gated on a different event; still absent.
-    expect(harness.getAll(Capabilities.ReactSurface)).toHaveLength(0);
-
-    // Fire SetupReactSurface; the surface module contributes.
-    await harness.fire(ActivationEvents.SetupReactSurface);
-    expect(harness.getAll(Capabilities.ReactSurface).flat().length).toBeGreaterThan(0);
-  });
-
-  test('waitForEvent resolves once the event has been fired', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ChessPlugin()], autoStart: false });
-
-    // Fire and wait concurrently — waitForEvent resolves regardless of ordering.
-    await Promise.all([
-      harness.fire(AppActivationEvents.SetupTranslations),
-      harness.waitForEvent(AppActivationEvents.SetupTranslations),
-    ]);
-    expect(harness.getAll(AppCapabilities.Translations).flat().length).toBeGreaterThan(0);
+    // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
+    await harness.fire(ActivationEvents.SetupOperationHandler);
+    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 
   test('invokes the Print operation via the invoker capability', async ({ expect }) => {

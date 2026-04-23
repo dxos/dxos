@@ -26,7 +26,13 @@ export type Options = {
   key?: string;
 };
 
-type RemotePluginEntry = { id: string; url: string };
+/**
+ * Persisted record of a remote plugin that has been loaded previously.
+ */
+export type RemotePluginEntry = {
+  id: string;
+  url: string;
+};
 
 const defaultStorage = (): Storage => ({
   get: (key) => localStorage.getItem(key),
@@ -65,6 +71,30 @@ const isUrl = (locator: string): boolean => {
   } catch {
     return false;
   }
+};
+
+/**
+ * Returns true when the URL's hostname is the local host (localhost, 127.0.0.1, or ::1).
+ */
+export const isLocalUrl = (locator: string): boolean => {
+  try {
+    const hostname = new URL(locator).hostname.toLowerCase();
+    // WHATWG URL returns '::1' without brackets in Node; some browsers return '[::1]'.
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Returns the list of remote plugin entries previously persisted by {@link make}.
+ * Useful for UI code that needs to know which loaded plugins were installed from a URL
+ * (e.g. to surface a tag on remote or localhost-hosted plugins).
+ */
+export const getRemoteEntries = (options: Options = {}): readonly RemotePluginEntry[] => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  return getPersistedRemotePlugins(storage, key);
 };
 
 const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {

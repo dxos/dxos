@@ -28,6 +28,7 @@ import {
   type ExportBundleResponse,
   type FeedProtocol,
   type GetAgentStatusResponseBody,
+  type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -409,6 +410,18 @@ export class EdgeHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<QueryResponseProto> {
     return this._call(ctx, new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  //
+  // Registry
+  //
+
+  /**
+   * Fetches the hydrated plugin directory from the Edge registry service.
+   * Unauthenticated; safe to call without an identity.
+   */
+  public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
+    return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 
   //

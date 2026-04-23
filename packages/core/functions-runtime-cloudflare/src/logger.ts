@@ -16,27 +16,29 @@ const functionLogProcessor: LogProcessor = (config, entry) => {
     return;
   }
 
+  const context = entry.computedContext;
+  const error = entry.computedError;
+  const extras = [Object.keys(context).length > 0 ? context : undefined, error].filter((value) => value !== undefined);
+
   switch (entry.level) {
     case LogLevel.DEBUG:
-      console.debug(entry.message, entry.context);
-      break;
     case LogLevel.TRACE:
-      console.debug(entry.message, entry.context);
+      console.debug(entry.message, ...extras);
       break;
     case LogLevel.VERBOSE:
-      console.log(entry.message, entry.context);
+      console.log(entry.message, ...extras);
       break;
     case LogLevel.INFO:
-      console.info(entry.message, entry.context);
+      console.info(entry.message, ...extras);
       break;
     case LogLevel.WARN:
-      console.warn(entry.message, entry.context);
+      console.warn(entry.message, ...extras);
       break;
     case LogLevel.ERROR:
-      console.error(entry.message, entry.context);
+      console.error(entry.message, ...extras);
       break;
     default:
-      console.log(entry.message, entry.context);
+      console.log(entry.message, ...extras);
       break;
   }
 };
