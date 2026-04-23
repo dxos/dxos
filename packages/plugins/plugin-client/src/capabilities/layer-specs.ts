@@ -43,7 +43,7 @@ const ClientLayerSpec = LayerSpec.make(
       Effect.gen(function* () {
         const client = yield* Capability.get(ClientCapabilities.Client);
         return ClientService.fromClient(client);
-      }),
+      }).pipe(Effect.orDie),
     ),
 );
 
