@@ -19,6 +19,7 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#sources": "./src/sources/index.ts",
+    "#testing": "./src/testing/index.ts",
     "#types": "./src/types/index.ts",
     "#util": "./src/util/index.ts"
   },
@@ -47,6 +48,12 @@
       "browser": "./dist/lib/browser/sources/index.mjs",
       "node": "./dist/lib/node-esm/sources/index.mjs"
     },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -65,6 +72,9 @@
       ],
       "sources": [
         "dist/types/src/sources/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
       ],
       "types": [
         "dist/types/src/types/index.d.ts"

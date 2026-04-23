@@ -82,9 +82,9 @@ type ResearchSource
     id: string                     # stable identifier, e.g. "linkedin-crx"
     description: string            # human-readable; referenced in blueprint instructions
     tools: ToolDefinition[]        # tool defs contributed to the blueprint
-    note: >
-      The CRM blueprint's instructions explicitly mention the sources that
-      are registered, so the agent knows to prefer them when appropriate.
+  note: >
+    The CRM blueprint's instructions explicitly mention the sources that
+    are registered, so the agent knows to prefer them when appropriate.
 ```
 
 ## Blueprint

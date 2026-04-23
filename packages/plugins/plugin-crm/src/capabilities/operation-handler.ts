@@ -9,8 +9,6 @@ import type { OperationHandlerSet } from '@dxos/operation';
 
 import { CrmHandlers } from '#operations';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
-  Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, CrmHandlers);
-  }),
+export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(() =>
+  Effect.succeed(Capability.contributes(Capabilities.OperationHandler, CrmHandlers)),
 );

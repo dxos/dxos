@@ -45,10 +45,11 @@ export const FREE_MAIL_DOMAINS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Permissive phone regex. Matches common international and US formats.
+ * Permissive phone regex. Matches common international and US formats,
+ * including US-style numbers with a leading parenthesised area code.
  * Intentionally loose — callers should treat the result as a candidate.
  */
-const PHONE_REGEX = /(\+?\d[\d\s().-]{7,}\d)/;
+const PHONE_REGEX = /(\+?\(?\d[\d\s().-]{7,}\d)/;
 
 /**
  * URL regex (without a leading scheme requirement so that bare www.example.com
@@ -63,6 +64,35 @@ const URL_REGEX = /(?:https?:\/\/|www\.)[^\s<>"']+/gi;
  */
 const LOCATION_SPLIT_REGEX = /[,;|]/;
 
+/**
+ * Known multi-label public suffixes. Exhaustive coverage requires a full
+ * public-suffix list, but this handles the common cases so that
+ * `pickOrgNameFromDomain` walks past them to the actual organization label.
+ */
+const KNOWN_PUBLIC_SUFFIXES: ReadonlySet<string> = new Set([
+  'co.uk',
+  'co.jp',
+  'co.kr',
+  'co.nz',
+  'co.za',
+  'com.au',
+  'com.br',
+  'com.mx',
+  'com.sg',
+  'com.tr',
+  'ac.uk',
+  'gov.uk',
+  'org.uk',
+  'net.au',
+  'org.au',
+]);
+
+/**
+ * Regional labels that commonly precede a parenthesised office/city list
+ * in corporate signature blocks ("Americas (New York, ...)").
+ */
+const REGIONAL_LABELS_REGEX = /\b(americas?|apac|asia[-\s]?pacific|emea|europe|offshore|latam|na|eu)\b/i;
+
 const extractTextFromMessage = (msg: Message.Message): string => {
   const parts: string[] = [];
   for (const block of msg.blocks ?? []) {
@@ -74,15 +104,23 @@ const extractTextFromMessage = (msg: Message.Message): string => {
 };
 
 const pickOrgNameFromDomain = (domain: string): string | undefined => {
-  if (FREE_MAIL_DOMAINS.has(domain.toLowerCase())) {
+  const lower = domain.toLowerCase();
+  if (FREE_MAIL_DOMAINS.has(lower)) {
     return undefined;
   }
-  // Best-effort: use the second-level label, title-cased.
-  const labels = domain.split('.');
-  if (labels.length === 0) {
+  const labels = lower.split('.').filter((label) => label.length > 0);
+  if (labels.length < 2) {
     return undefined;
   }
-  const base = labels[0];
+  // Walk from the right, skipping the TLD and any known multi-label suffix.
+  let skip = 1;
+  if (labels.length >= 3) {
+    const lastTwo = labels.slice(-2).join('.');
+    if (KNOWN_PUBLIC_SUFFIXES.has(lastTwo)) {
+      skip = 2;
+    }
+  }
+  const base = labels[labels.length - 1 - skip];
   if (!base) {
     return undefined;
   }
@@ -90,22 +128,36 @@ const pickOrgNameFromDomain = (domain: string): string | undefined => {
 };
 
 const extractLocationsFromBody = (body: string): string[] => {
-  // Match "Americas (A, B, C)" / "Offices: A, B, C" style groupings.
+  // Match "Americas (New York, Buenos Aires, ...)" style groupings where a
+  // parenthesised list is preceded by a regional label (Americas, EMEA, ...).
+  // Falls back to unprefixed parentheses only if the contents look like a
+  // list of ≥2 city-like tokens (starts uppercase, ≥2 characters).
   const groupings: string[] = [];
-  const parenthesised = body.match(/\(([^()]+)\)/g) ?? [];
-  for (const group of parenthesised) {
-    const inner = group.slice(1, -1);
-    // Heuristic: treat as a location list if it contains at least one comma
-    // and at least one capitalised word that looks like a city.
-    if (!inner.includes(',')) {
+  const regex = /([A-Za-z][\w-\s]*)?\(([^()]+)\)/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(body)) !== null) {
+    const prefix = match[1]?.trim() ?? '';
+    const inner = match[2];
+    if (!inner || !inner.includes(',')) {
       continue;
     }
+    const hasRegionalLabel = REGIONAL_LABELS_REGEX.test(prefix);
+    const candidates: string[] = [];
     for (const token of inner.split(LOCATION_SPLIT_REGEX)) {
       const trimmed = token.trim();
       if (trimmed.length > 1 && /^[A-Z]/.test(trimmed) && !/^https?:/i.test(trimmed)) {
-        groupings.push(trimmed);
+        candidates.push(trimmed);
       }
     }
+    if (candidates.length === 0) {
+      continue;
+    }
+    // Without a regional prefix, require ≥2 city-like candidates to avoid
+    // absorbing parenthetical asides such as "(Deel, Mykola)".
+    if (!hasRegionalLabel && candidates.length < 2) {
+      continue;
+    }
+    groupings.push(...candidates);
   }
   // Dedupe, preserving order.
   return Array.from(new Set(groupings));
