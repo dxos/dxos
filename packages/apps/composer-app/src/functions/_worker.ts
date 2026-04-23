@@ -83,13 +83,17 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     return new Response("Method not allowed", { status: 405 });
   }
 
+  // Reject requests from disallowed origins server-side, not just via CORS headers.
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
   if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
     return new Response("OTel proxy not configured", { status: 503 });
   }
 
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > MAX_BODY_SIZE) {
-    return new Response("Payload too large", { status: 413 });
+  if (!request.body) {
+    return new Response("Empty body", { status: 400 });
   }
 
   const upstreamHeaders: Record<string, string> = {
@@ -105,17 +109,51 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     upstreamHeaders["Content-Length"] = contentLengthHeader;
   }
 
-  const upstream = `${env.SIGNOZ_INGEST_URL.replace(/\/$/, "")}${signal}`;
-  const response = await fetch(upstream, {
-    method: "POST",
-    headers: upstreamHeaders,
-    body: request.body,
+  // Count bytes as they stream; abort and return 413 if MAX_BODY_SIZE is exceeded.
+  // This guards against missing or falsified Content-Length headers.
+  let byteCount = 0;
+  let sizeExceeded = false;
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      byteCount += chunk.byteLength;
+      if (byteCount > MAX_BODY_SIZE) {
+        sizeExceeded = true;
+        controller.error(new Error("Payload too large"));
+      } else {
+        controller.enqueue(chunk);
+      }
+    },
   });
 
-  return new Response(response.body, {
-    status: response.status,
+  // Pipe incoming body through the size-checking transform concurrently with the upstream fetch.
+  const pipePromise = request.body.pipeTo(writable).catch(() => {});
+
+  const upstream = `${env.SIGNOZ_INGEST_URL.replace(/\/$/, "")}${signal}`;
+  let upstreamResponse: Response | null = null;
+  try {
+    upstreamResponse = await fetch(upstream, {
+      method: "POST",
+      headers: upstreamHeaders,
+      body: readable,
+    });
+  } catch {
+    // fetch throws when the readable stream is aborted (e.g. size limit exceeded).
+  }
+
+  await pipePromise;
+
+  if (sizeExceeded) {
+    return new Response("Payload too large", { status: 413 });
+  }
+
+  if (!upstreamResponse) {
+    return new Response("Bad gateway", { status: 502 });
+  }
+
+  return new Response(upstreamResponse.body, {
+    status: upstreamResponse.status,
     headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
+      "Content-Type": upstreamResponse.headers.get("Content-Type") ?? "application/json",
       ...corsHeaders(origin),
     },
   });
