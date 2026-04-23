@@ -242,12 +242,8 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Viewport>
-                <DropdownMenu.Item onClick={handleBackupBinary}>
-                  {t('download-backup-binary.label')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={handleBackupJson}>
-                  {t('download-backup-json.label')}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
