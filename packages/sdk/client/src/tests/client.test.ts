@@ -245,7 +245,7 @@ describe('Client', () => {
     });
     await space2.db.flush();
 
-    await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);
+  await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);
     await expect
       .poll(() => thread1.messages[0].target!.blocks[0].content?.target?.content, { timeout: 1_000 })
       .toEqual(text);
