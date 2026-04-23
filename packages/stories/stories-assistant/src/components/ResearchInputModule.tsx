@@ -13,7 +13,7 @@ import { type ComponentProps } from './types';
 
 export const ResearchInputModule = ({ space }: ComponentProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
-  const feed = researchInput?.queue.target;
+  const feed = researchInput?.feed.target;
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   return (

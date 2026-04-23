@@ -9,6 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -53,8 +54,11 @@ const CompanionStory = () => {
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
   )[0];
 
-  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id }), [mailbox]);
-  const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: feed }), [message, feed]);
+  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id ?? 'story' }), [mailbox]);
+  const companionData = useMemo(
+    () => ({ subject: message ?? 'message', attendableId: 'story-companion', companionTo: feed }),
+    [message, feed],
+  );
 
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);
@@ -65,8 +69,8 @@ const CompanionStory = () => {
 
   return (
     <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
-      <Surface.Surface role='article' data={mailboxData} />
-      <Surface.Surface role='article' data={companionData} />
+      <Surface.Surface type={AppSurface.Article} data={mailboxData} />
+      <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>
   );
 };

@@ -10,8 +10,7 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { ContextQueueService, QueueService } from '@dxos/functions';
+import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import * as Trace from '@dxos/functions/Trace';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -85,11 +84,11 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         log.info('queueDXNInfo', queueDXNInfo);
 
         if (!queueDXNInfo) {
-          return yield* Effect.fail(new Error('Message is not in a queue'));
+          return yield* Effect.fail(new Error('Message is not in a feed'));
         }
 
-        const queueDXN = DXN.fromQueue(queueDXNInfo.subspaceTag, queueDXNInfo.spaceId, queueDXNInfo.queueId);
-        const queue = yield* QueueService.getQueue(queueDXN);
+        const feedDxn = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
+        const feed = yield* Database.load(Ref.fromDXN(feedDxn));
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,
@@ -100,7 +99,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           completedAt: new Date().toISOString(),
         });
 
-        yield* QueueService.append(queue, [relation]).pipe(Effect.provide(ContextQueueService.layer(queue)));
+        yield* Feed.append(feed, [relation]);
         yield* Database.flush();
 
         return {
@@ -115,6 +114,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
           Database.notAvailable,
+          Feed.notAvailable,
           Layer.succeed(Operation.Service, {
             invoke: () => Effect.die('Not available.'),
             schedule: () => Effect.die('Not available.'),

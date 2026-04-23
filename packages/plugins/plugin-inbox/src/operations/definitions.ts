@@ -279,7 +279,7 @@ export const ClassifyEmail = Operation.make({
     }),
     Schema.Void,
   ),
-  services: [AiService.AiService, Database.Service, QueueService],
+  services: [AiService.AiService, Database.Service, Feed.FeedService],
 });
 
 export const ExtractContact = Operation.make({

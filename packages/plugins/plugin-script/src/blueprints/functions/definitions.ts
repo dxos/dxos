@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
-import { Database, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
@@ -263,7 +262,7 @@ export const InspectInvocations = Operation.make({
       description: 'Total number of invocations found.',
     }),
   }),
-  services: [Database.Service, QueueService],
+  services: [Database.Service, Feed.FeedService],
 });
 
 const DeployedFunctionSchema = Schema.Struct({

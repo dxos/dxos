@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Obj, Type } from '@dxos/echo';
+import { Feed, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -159,10 +159,13 @@ export default Capability.makeModule(
 
                 const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
+                const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
+                const transcriptQueueDxn = Feed.getQueueDxn(transcriptFeed);
+                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
                   meetingId: Obj.getDXN(meeting).toString(),
-                  transcriptDxn: transcript.queue.dxn.toString(),
+                  transcriptDxn: transcriptQueueDxn.toString(),
                   transcriptionEnabled,
                 });
 

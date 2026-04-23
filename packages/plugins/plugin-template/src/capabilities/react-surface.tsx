@@ -18,8 +18,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'root',
-        role: 'article',
-        filter: AppSurface.objectArticle(Template.Data),
+        filter: AppSurface.object(AppSurface.Article, Template.Data),
         component: ({ data, role }) => (
           <TemplatePanel role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

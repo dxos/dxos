@@ -14,10 +14,11 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -71,6 +72,7 @@ const isDev = import.meta.env.DEV ?? false;
  */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
+  readonly #subscriptions = new Map<SpaceId, () => void>();
   readonly #capabilities: CapabilityManager.CapabilityManager;
 
   constructor(capabilities: CapabilityManager.CapabilityManager) {
@@ -81,6 +83,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   protected override async _open() {}
 
   protected override async _close() {
+    for (const unsubscribe of this.#subscriptions.values()) {
+      unsubscribe();
+    }
+    this.#subscriptions.clear();
     await Promise.all(Array.from(this.#runtimes.values()).map((rt) => rt.dispose()));
     this.#runtimes.clear();
   }
@@ -117,12 +123,24 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
+        // Maintain a live query of space-level MCP server configs.
+        const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
+        this.#subscriptions.set(spaceId, mcpQuery.subscribe());
+
         return Layer.mergeAll(
           TriggerDispatcher.layer({ timeControl: 'natural' }),
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         )
           .pipe(
-            Layer.provideMerge(AgentService.layer()),
+            Layer.provideMerge(
+              AgentService.layer({
+                getMcpServers: () =>
+                  mcpQuery.results
+                    .filter(Obj.instanceOf(McpServer.McpServer))
+                    .filter((server) => server.enabled !== false)
+                    .map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
+              }),
+            ),
             Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
             Layer.provideMerge(ProcessManager.layer()),
             // TODO(dmaretskyi): Duped in assistant testing layer.
@@ -221,10 +239,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
                 Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
                 Layer.provideMerge(
-                  RemoteFunctionExecutionService.fromClient(
-                    client,
-                    client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
-                  ),
+                  client.config.values.runtime?.services?.edge?.url
+                    ? RemoteFunctionExecutionService.fromClient(
+                        client,
+                        client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
+                      )
+                    : RemoteFunctionExecutionService.layerMock,
                 ),
               ),
             ),

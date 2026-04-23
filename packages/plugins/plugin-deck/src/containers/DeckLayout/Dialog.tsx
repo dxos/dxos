@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
 import { useDeckState } from '#hooks';
@@ -30,7 +31,7 @@ export const Dialog = () => {
       {dialogBlockAlign === 'end' ? (
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
         <Surface.Surface
-          role='dialog'
+          type={AppSurface.Dialog}
           data={dialogContent ?? undefined}
           limit={1}
           fallback={PlankErrorFallback}
@@ -38,7 +39,12 @@ export const Dialog = () => {
         />
       ) : (
         <Overlay blockAlign={dialogBlockAlign} classNames={dialogOverlayClasses} style={dialogOverlayStyle}>
-          <Surface.Surface role='dialog' data={dialogContent ?? undefined} limit={1} fallback={PlankErrorFallback} />
+          <Surface.Surface
+            type={AppSurface.Dialog}
+            data={dialogContent ?? undefined}
+            limit={1}
+            fallback={PlankErrorFallback}
+          />
         </Overlay>
       )}
     </Root>

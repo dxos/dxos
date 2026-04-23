@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -19,8 +19,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'official',
-        role: 'article',
-        filter: AppSurface.literalSection(registryCategoryId('official')),
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('official')),
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
@@ -35,15 +34,12 @@ export default Capability.makeModule(() =>
             [manager, remoteIds],
           );
 
-          return (
-            <PluginRegistry id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />
-          );
+          return <PluginRegistry id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />;
         },
       }),
       Surface.create({
         id: 'installed',
-        role: 'article',
-        filter: AppSurface.literalSection(registryCategoryId('installed')),
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('installed')),
         component: () => {
           const manager = usePluginManager();
           const { entries } = useCommunityPlugins();
@@ -64,8 +60,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'recommended',
-        role: 'article',
-        filter: AppSurface.literalSection(registryCategoryId('recommended')),
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('recommended')),
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
@@ -88,8 +83,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'labs',
-        role: 'article',
-        filter: AppSurface.literalSection(registryCategoryId('labs')),
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
         component: () => {
           const manager = usePluginManager();
           const { entries } = useCommunityPlugins();
@@ -104,22 +98,19 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'community',
-        role: 'article',
-        filter: AppSurface.literalSection(registryCategoryId('community')),
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('community')),
         component: () => <CommunityRegistry id={registryCategoryId('community')} />,
       }),
       Surface.create({
         id: 'plugin-details',
-        role: 'article',
-        filter: AppSurface.pluginSection(),
+        filter: AppSurface.subject(AppSurface.Article, Plugin.isPlugin),
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
         },
       }),
       Surface.create({
         id: LOAD_PLUGIN_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(LOAD_PLUGIN_DIALOG),
+        filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
         component: () => <LoadPluginDialog />,
       }),
     ]),

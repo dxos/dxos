@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
@@ -212,7 +212,7 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown
       ref={forwardedRef}
     >
       <Surface.Surface
-        role='card--content'
+        type={AppSurface.Card}
         limit={1}
         data={{ subject } satisfies AppSurface.ObjectCardData}
         fallback={title}
