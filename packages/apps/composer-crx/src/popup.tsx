@@ -95,7 +95,17 @@ const Root = () => {
         {!thumbnailUrl && (
           <>
             <ClipAction />
-            {host && <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />}
+            {/*
+              Chat lives behind its own ErrorBoundary: the chat-agent endpoint
+              can be unreachable (e.g., dev worker not running) and a fetch
+              failure inside useAgentChat would otherwise take down the whole
+              popup — including the Clip flow, which is independent of chat.
+            */}
+            {host && (
+              <ErrorBoundary name='popup/chat' fallbackRender={() => null}>
+                <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} />
+              </ErrorBoundary>
+            )}
           </>
         )}
       </Container>

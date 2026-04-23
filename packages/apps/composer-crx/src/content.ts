@@ -8,7 +8,7 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 
 import { CLIP_ACK_EVENT, CLIP_EVENT, type Clip, type ClipAck } from './clip/types';
-import { CLIP_DEBUG_PROP, getProp } from './config';
+import { DEVELOPER_MODE_PROP, getProp } from './config';
 import { pickAndHarvest } from './picker';
 import { showDebugPreview } from './picker/debug-preview';
 
@@ -109,11 +109,11 @@ const main = async () => {
 
     log.info('clip harvested', { kind: clip.kind, url: clip.source.url });
 
-    // When the `clip-debug` option is on, show the serialized JSON before
+    // When `developer-mode` is on, show the serialized JSON before
     // attempting delivery. Gives the user a chance to inspect (and copy)
     // the payload, and proves the picker + harvest flow independently of
     // the Composer delivery path.
-    const debug = Boolean(await getProp(CLIP_DEBUG_PROP));
+    const debug = Boolean(await getProp(DEVELOPER_MODE_PROP));
     if (debug) {
       const confirmed = await showDebugPreview(clip);
       if (!confirmed) {

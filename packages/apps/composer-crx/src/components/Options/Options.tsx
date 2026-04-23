@@ -10,7 +10,7 @@ import { SpaceId } from '@dxos/keys';
 import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { CLIP_DEBUG_PROP, DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
+import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Use subgrid.
@@ -26,13 +26,11 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
   const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
-  const [clipDebug, setClipDebug] = useState(false);
   const [spaceId, setSpaceId] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
       setDeveloperMode(Boolean(await getProp(DEVELOPER_MODE_PROP)));
-      setClipDebug(Boolean(await getProp(CLIP_DEBUG_PROP)));
     })();
   }, []);
 
@@ -55,12 +53,6 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
     const next = checked === 'indeterminate' ? false : Boolean(checked);
     await browser.storage.sync.set({ [SPACE_MODE_PROP]: next });
     setSpaceMode(next);
-  };
-
-  const handleClipDebugChange = async (checked: boolean | 'indeterminate') => {
-    const next = checked === 'indeterminate' ? false : Boolean(checked);
-    await browser.storage.sync.set({ [CLIP_DEBUG_PROP]: next });
-    setClipDebug(next);
   };
 
   const handleSpaceIdChange = async (ev: ChangeEvent<HTMLInputElement>) => {
@@ -109,15 +101,6 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Input.Label>{t('settings.space-mode.label')}</Input.Label>
             <div className='text-end'>
               <Input.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
-            </div>
-          </Input.Root>
-        </div>
-        <div className={styles.propertiesGrid}>
-          <div />
-          <Input.Root>
-            <Input.Label>{t('settings.clip-debug.label')}</Input.Label>
-            <div className='text-end'>
-              <Input.Switch checked={clipDebug} onCheckedChange={handleClipDebugChange} />
             </div>
           </Input.Root>
         </div>

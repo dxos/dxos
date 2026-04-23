@@ -8,7 +8,6 @@ export const DEVELOPER_MODE_PROP = 'developer-mode';
 export const SPACE_MODE_PROP = 'space-mode';
 export const THUMBNAIL_PROP = 'thumbnail-url';
 export const SPACE_ID_PROP = 'space-id';
-export const CLIP_DEBUG_PROP = 'clip-debug';
 
 export const HOME_URL = 'https://labs.composer.space';
 
