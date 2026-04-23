@@ -8,6 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
@@ -27,24 +28,21 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Content>
       {snippet && (
-        <Card.Section className='px-1'>
+        <Card.Section className='relative px-1'>
           <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
             {(editorRootProps) => (
               <Editor.Root {...editorRootProps}>
                 <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
-                <div
-                  role='none'
-                  data-visible={overflow}
-                  className={mx(
-                    // NOTE: Gradients may not be visible with dark reader extensions.
-                    'z-10 absolute top-0 inset-x-0 h-24 w-full',
-                    'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
-                    'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
-                  )}
-                />
               </Editor.Root>
             )}
           </MarkdownEditorProvider>
+          <div
+            role='none'
+            className={mx(
+              'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
+              'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
+            )}
+          />
         </Card.Section>
       )}
       <Card.Section>
