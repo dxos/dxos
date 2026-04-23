@@ -13,10 +13,10 @@ import React, { useCallback, useEffect, useRef } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { Process, ServiceResolver, Trace } from '@dxos/functions';
-import { ProcessManager } from '@dxos/compute-runtime';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { OperationHandlerSet } from '@dxos/operation';
