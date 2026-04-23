@@ -68,7 +68,9 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
       const fromCatalog = sortedEntries.map(toDisplayPlugin);
       const fromUrl = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
-      return [...fromCatalog, ...fromUrl].sort((a, b) => (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id));
+      return [...fromCatalog, ...fromUrl].sort((a, b) =>
+        (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id),
+      );
     }, [sortedEntries, plugins]);
 
     const handleChange = useCallback(

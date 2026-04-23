@@ -34,7 +34,9 @@ export default Capability.makeModule(() =>
             [manager, remoteIds],
           );
 
-          return <PluginRegistry id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />;
+          return (
+            <PluginRegistry id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />
+          );
         },
       }),
       Surface.create({
