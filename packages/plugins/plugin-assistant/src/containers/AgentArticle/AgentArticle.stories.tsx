@@ -9,10 +9,11 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Plan, Agent } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
+import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins, StorybookPlugin } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
@@ -22,6 +23,7 @@ import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
 
+import { AssistantPlugin } from '../../AssistantPlugin';
 import { translations } from '../../translations';
 import { AgentArticle } from './AgentArticle';
 
@@ -88,8 +90,10 @@ const meta = {
               );
             }),
         }),
-        StorybookPlugin({}),
+        AutomationPlugin(),
+        AssistantPlugin(),
         PreviewPlugin(),
+        StorybookPlugin({}),
       ],
     })),
   ],

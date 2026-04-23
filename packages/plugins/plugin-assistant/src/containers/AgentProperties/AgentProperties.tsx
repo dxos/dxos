@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
 import {
@@ -31,14 +31,9 @@ import {
 
 import { meta } from '#meta';
 
-export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<
-  Agent.Agent,
-  {
-    onReset?: () => void;
-  }
->;
+export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>;
 
-export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProps) => {
+export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(agent);
 
@@ -162,13 +157,6 @@ export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProp
           </Editor.Root>
         )}
       </Input.Root>
-
-      {/* TODO(burdon): Move into toolbar in parent. */}
-      {onReset && (
-        <Button classNames='mt-form-gap' onClick={onReset}>
-          {t('reset-history.button')}
-        </Button>
-      )}
     </div>
   );
 };

@@ -8,12 +8,14 @@ import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
 // TODO(burdon): Standardize translation names.
 export const translations: Resource[] = [
   ...componentsTranslations,
+  ...formTranslations,
   {
     'en-US': {
       // TODO(burdon): From assistant.
