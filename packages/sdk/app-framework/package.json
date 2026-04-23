@@ -162,7 +162,8 @@
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "cjs-module-lexer": "catalog:",
+    "vite-plugin-css-injected-by-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",

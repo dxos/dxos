@@ -11,6 +11,39 @@ import * as UrlLoader from './url-loader';
 const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
 
 describe('UrlLoader', () => {
+  describe('isLocalUrl', () => {
+    it('matches localhost, 127.0.0.1, and ::1', ({ expect }) => {
+      expect(UrlLoader.isLocalUrl('http://localhost:5173/plugin.mjs')).toBe(true);
+      expect(UrlLoader.isLocalUrl('https://LOCALHOST/plugin.mjs')).toBe(true);
+      expect(UrlLoader.isLocalUrl('http://127.0.0.1:8080/plugin.mjs')).toBe(true);
+      expect(UrlLoader.isLocalUrl('http://[::1]:8080/plugin.mjs')).toBe(true);
+    });
+
+    it('rejects public and malformed URLs', ({ expect }) => {
+      expect(UrlLoader.isLocalUrl('https://example.com/plugin.mjs')).toBe(false);
+      expect(UrlLoader.isLocalUrl('https://192.168.1.10/plugin.mjs')).toBe(false);
+      expect(UrlLoader.isLocalUrl('not a url')).toBe(false);
+      expect(UrlLoader.isLocalUrl('')).toBe(false);
+    });
+  });
+
+  describe('getRemoteEntries', () => {
+    it('returns persisted entries from storage', ({ expect }) => {
+      const storage: UrlLoader.Storage = {
+        get: () => '[{"id":"p1","url":"http://localhost:5173/p.mjs"}]',
+        set: () => {},
+      };
+      expect(UrlLoader.getRemoteEntries({ storage })).toEqual([{ id: 'p1', url: 'http://localhost:5173/p.mjs' }]);
+    });
+
+    it('returns an empty array when storage is empty or malformed', ({ expect }) => {
+      const empty: UrlLoader.Storage = { get: () => null, set: () => {} };
+      const malformed: UrlLoader.Storage = { get: () => '{not json', set: () => {} };
+      expect(UrlLoader.getRemoteEntries({ storage: empty })).toEqual([]);
+      expect(UrlLoader.getRemoteEntries({ storage: malformed })).toEqual([]);
+    });
+  });
+
   describe('make', () => {
     it.effect('resolves built-in plugins by meta.id', () =>
       Effect.gen(function* () {

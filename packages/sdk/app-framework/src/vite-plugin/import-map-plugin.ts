@@ -3,7 +3,7 @@
 //
 
 import { init as initCjsLexer, parse as parseCjs } from 'cjs-module-lexer';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
 import { type Plugin } from 'vite';
@@ -85,27 +85,165 @@ const resolvePackageJsonPath = (packageName: string): string | undefined => {
 };
 
 /**
- * Subpath exports that should be excluded from the import map.
- * These are node-only entrypoints (vite plugins, native addons) that shouldn't be pre-bundled for the browser.
+ * Resolves a package name to its package.json via vite's own resolver, which handles
+ * workspace-linked packages whose `exports` field omits `./package.json` (so
+ * `require.resolve` can't find it). Falls back to `require.resolve`.
  */
-const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
-  '@dxos/app-framework': new Set(['vite-plugin']),
-  '@dxos/ui-theme': new Set(['plugin']),
+const resolvePackageJsonPathViaContext = async (
+  ctx: { resolve: (id: string) => Promise<{ id: string } | null> },
+  packageName: string,
+): Promise<string | undefined> => {
+  try {
+    const resolved = await ctx.resolve(packageName);
+    if (resolved) {
+      const viaResolved = findPackageJsonPath(resolved.id, packageName);
+      if (viaResolved) {
+        return viaResolved;
+      }
+    }
+  } catch {
+    // fall through
+  }
+  return resolvePackageJsonPath(packageName);
 };
 
 /**
- * Subpaths common to many packages that should always be excluded from the import map.
- * `./playwright` and `./testing` subpaths are e2e / unit test helpers — by convention they
- * are not part of the runtime plugin surface and may transitively pull node-only packages
- * (e.g. `@dxos/lit-grid/testing` imports `@playwright/test`) into the browser bundle via
- * vite-plugin-pwa's module scan, which breaks the Composer production bundle.
+ * Subpath exports that should be excluded from the import map.
+ * These are node-only entrypoints (vite plugins, native addons) that shouldn't be pre-bundled for the browser.
+ *
+ * TODO(wittjosiah): Replace these hand-maintained lists (plus {@link GLOBALLY_EXCLUDED_SUBPATHS}
+ * and {@link BUILD_TOOL_SUBPATH}) with a structural check — e.g. honour an `agent`/`node`-only
+ * export condition in package.json, or probe each subpath's resolved file for `node:*` imports
+ * at build time — so every new server-only entrypoint doesn't require a code change here.
  */
-const GLOBALLY_EXCLUDED_SUBPATHS: ReadonlySet<string> = new Set(['playwright', 'testing']);
+const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
+  '@dxos/app-framework': new Set(['vite-plugin']),
+  // `@dxos/lit-grid/testing` re-exports a playwright page-object manager and pulls
+  // `@playwright/test` (and transitive playwright-core) into the browser bundle.
+  '@dxos/lit-grid': new Set(['testing']),
+  '@dxos/react-ui-mosaic': new Set(['playwright']),
+  '@dxos/react-ui-stack': new Set(['playwright']),
+  '@dxos/react-ui-table': new Set(['playwright']),
+  '@dxos/ui-theme': new Set(['plugin']),
+  // `solid-js/web/storage` is a server-only helper that pulls
+  // `node:async_hooks` (AsyncLocalStorage) and has no browser shim. Client
+  // code imports `solid-js`, `solid-js/store`, and `solid-js/web` only.
+  'solid-js': new Set(['web/storage']),
+};
 
 /**
- * Reads a package's `exports` field and returns all JS subpath entrypoints as bare specifiers
- * (e.g. `@dxos/client`, `@dxos/client/echo`). Skips wildcard patterns, non-JS assets,
- * and excluded subpaths. Falls back to just the package name if exports is absent or simple.
+ * Subpaths common to many packages that should always be excluded.
+ * `./playwright` subdirectories house e2e test harnesses that pull in
+ * `@playwright/test` (a node-only package that breaks the browser bundle).
+ * `./testing` subpaths similarly expose node-only test helpers (e.g.
+ * `@dxos/edge-client/testing` pulls `@dxos/node-std/http` which has no
+ * browser analogue) and aren't part of the plugin-facing surface.
+ */
+const GLOBALLY_EXCLUDED_SUBPATHS = new Set(['playwright', 'testing']);
+
+/**
+ * Regex for subpaths that are always node-only build tooling — vite, esbuild, and
+ * rollup plugins. These use `node:*` imports and will blow up the browser bundle if
+ * they end up in the import map.
+ */
+const BUILD_TOOL_SUBPATH = /^(vite-plugin|esbuild-plugin|rollup-plugin|plugin)$/;
+
+/**
+ * Asset subpaths (CSS, PCSS, images, etc.) that the host already loads via its own
+ * bundle — for example `@dxos/react-ui-form` pulls in `@dxos/lit-ui/dx-tag-picker.pcss`
+ * on startup, so the stylesheet is already attached to the DOM by the time a remote
+ * plugin runs. Community plugins should still be able to _import_ those specifiers
+ * (rolldown leaves the `import "…"` statements in the output when the package is
+ * externalized), so the import map maps them to a no-op empty ES module. The
+ * resulting browser fetch is a cheap no-op; the styles are never re-downloaded
+ * and never re-injected.
+ */
+const ASSET_SUBPATH = /\.(css|pcss|scss|sass|less|json|node|wasm|html|svg|png|jpe?g|gif|webp|ico)$/;
+const isAssetSubpath = (specifier: string) => ASSET_SUBPATH.test(specifier);
+
+/**
+ * Walks `baseDir` and returns every file that matches the pattern `${baseDir}/<rest>${extension}`.
+ * Used to expand wildcard exports like `./proto/*` → `./dist/src/proto/gen/*.js` into their
+ * full set of bare specifiers.
+ */
+const walkDirectoryForExtension = (baseDir: string, extension: string): string[] => {
+  if (!existsSync(baseDir)) {
+    return [];
+  }
+  const results: string[] = [];
+  const walk = (dir: string) => {
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry);
+      let stat;
+      try {
+        stat = statSync(full);
+      } catch {
+        continue;
+      }
+      if (stat.isDirectory()) {
+        walk(full);
+      } else if (entry.endsWith(extension)) {
+        results.push(path.relative(baseDir, full).slice(0, -extension.length));
+      }
+    }
+  };
+  walk(baseDir);
+  return results;
+};
+
+/** Resolves an `exports` value to a single target path for pattern expansion. */
+const pickPatternTarget = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    const preferred = obj.browser ?? obj.import ?? obj.default ?? obj.module;
+    return typeof preferred === 'string' ? preferred : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Expands a wildcard export like `./proto/*` into concrete subpath specifiers by walking
+ * the target directory. Returns `<packageName>/<subpath>` strings.
+ */
+const expandWildcardExport = (
+  packageName: string,
+  packageJsonDir: string,
+  exportKey: string,
+  exportValue: unknown,
+): string[] => {
+  const target = pickPatternTarget(exportValue);
+  if (!target || !target.includes('*')) {
+    return [];
+  }
+  // Split on `*` — at most one supported (node's exports pattern semantics).
+  const keyStarIndex = exportKey.indexOf('*');
+  const targetStarIndex = target.indexOf('*');
+  if (keyStarIndex === -1 || targetStarIndex === -1) {
+    return [];
+  }
+  const keyPrefix = exportKey.slice(2, keyStarIndex); // drop leading './'
+  const targetPrefix = target.slice(2, targetStarIndex); // drop leading './'
+  const targetSuffix = target.slice(targetStarIndex + 1);
+  const baseDir = path.resolve(packageJsonDir, targetPrefix);
+  const files = walkDirectoryForExtension(baseDir, targetSuffix || '.js');
+  return files.map((relativeNoExt) => `${packageName}/${keyPrefix}${relativeNoExt}`);
+};
+
+/**
+ * Reads a package's `exports` field and returns all subpath entrypoints as bare specifiers
+ * (e.g. `@dxos/client`, `@dxos/client/echo`, `@dxos/lit-ui/dx-tag-picker.pcss`,
+ * `@dxos/protocols/proto/dxos/echo/metadata`). Wildcard patterns are expanded by walking
+ * the corresponding output directory. Falls back to just the package name if exports is
+ * absent or simple.
  */
 const getPackageEntrypoints = (packageName: string, packageJsonPath: string): string[] => {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
@@ -123,21 +261,31 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
   }
 
   const excluded = importMapExcludedSubpaths[packageName];
+  const packageJsonDir = path.dirname(packageJsonPath);
   const modules = exportKeys.flatMap((key) => {
     if (key === '.') {
       return [packageName];
     }
 
-    if (!key.startsWith('./') || key === './package.json' || key.includes('*')) {
+    if (!key.startsWith('./') || key === './package.json') {
       return [];
+    }
+
+    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text
+    // (e.g. `@dxos/echo-query/api.d.ts?raw` for in-editor type hints), not as
+    // ES modules. Enumerating them here would have vite try to bundle the
+    // declaration file's imports (protobufjs, effect, etc.), which breaks.
+    if (key.endsWith('.d.ts')) {
+      return [];
+    }
+
+    if (key.includes('*')) {
+      // Expand wildcard patterns like `./proto/*` into concrete specifiers.
+      return expandWildcardExport(packageName, packageJsonDir, key, (exportsField as Record<string, unknown>)[key]);
     }
 
     const subpath = key.slice(2);
-    if (excluded?.has(subpath) || GLOBALLY_EXCLUDED_SUBPATHS.has(subpath)) {
-      return [];
-    }
-
-    if (/\.(css|pcss|scss|less|json|node|wasm|html|svg|png|jpg)$/.test(subpath)) {
+    if (excluded?.has(subpath) || GLOBALLY_EXCLUDED_SUBPATHS.has(subpath) || BUILD_TOOL_SUBPATH.test(subpath)) {
       return [];
     }
 
@@ -217,7 +365,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             (
               await Promise.all(
                 packages.map(async (packageName) => {
-                  const packageJsonPath = resolvePackageJsonPath(packageName);
+                  const packageJsonPath = await resolvePackageJsonPathViaContext(this, packageName);
                   if (!packageJsonPath) {
                     this.warn(`Unable to locate package.json for import map package: ${packageName}`);
                     return [packageName];
@@ -231,6 +379,16 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         ];
 
         for (const specifier of modules) {
+          if (isAssetSubpath(specifier)) {
+            // Host already loaded the real asset; remote plugins need the specifier to
+            // resolve to *something* that behaves as an ES module. A data URL is the
+            // cheapest option — no chunk to emit (rolldown tree-shakes an empty wrapper
+            // even with `preserveSignature: 'strict'`, so the referenced file wouldn't
+            // exist at runtime), no extra network request, and the same path in dev and prod.
+            imports[specifier] = 'data:text/javascript;charset=utf-8,export%20%7B%7D%3B';
+            continue;
+          }
+
           const resolved = await this.resolve(specifier);
           if (!resolved) {
             this.warn(`Import map: unable to resolve "${specifier}"; omitting from import map.`);
@@ -238,8 +396,12 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           }
 
           if (importMapIsDev) {
-            // Dev: map bare specifier directly to the resolved file path.
-            imports[specifier] = trimQueryString(resolved.id);
+            // Dev: map bare specifier to the resolved file path, prefixed with vite's
+            // `/@fs/` escape hatch so absolute node_modules paths (including
+            // `.vite/deps/*` pre-bundled chunks) round-trip through the dev server
+            // instead of being resolved against the document origin as a 404.
+            const filePath = trimQueryString(resolved.id);
+            imports[specifier] = filePath.startsWith('/') ? `/@fs${filePath}` : filePath;
           } else {
             // Prod: emit a virtual wrapper chunk that re-exports from the real module.
             resolvedIds[specifier] = resolved.id;
@@ -284,17 +446,22 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         return `export * from ${JSON.stringify(specifier)};\n`;
       },
 
-      // After bundling, map each specifier to the URL of its emitted chunk.
+      // After bundling, map each specifier to the URL of its emitted chunk. Preserves
+      // asset-subpath entries already written to `imports` during `buildStart` (those
+      // use an inline data URL rather than an emitted chunk).
       generateBundle() {
         if (importMapIsDev) {
           return;
         }
 
-        imports = Object.fromEntries(
-          modules
-            .filter((specifier) => chunkRefIds[specifier] !== undefined)
-            .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
-        );
+        imports = {
+          ...imports,
+          ...Object.fromEntries(
+            modules
+              .filter((specifier) => chunkRefIds[specifier] !== undefined)
+              .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
+          ),
+        };
       },
     },
 
