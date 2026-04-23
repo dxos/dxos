@@ -11,7 +11,7 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { type Subscription } from '#types';
 
-import { formatDate } from '../../util/format-date';
+import { formatDate } from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 

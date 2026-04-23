@@ -51,6 +51,7 @@ export const useShowItem = () => {
             subject: companion,
             state: 'expanded',
           });
+
         case 'multi':
           if (path) {
             return invokePromise(LayoutOperation.Open, {

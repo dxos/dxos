@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { useShowItem } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
@@ -32,6 +32,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const showItem = useShowItem();
   useObject(subject);
   const id = attendableId ?? Obj.getDXN(subject).toString();
+  const currentId = useSelected(id, 'single');
   const [state, setState] = useState<CurateState>('idle');
   const [error, setError] = useState<string>();
 
@@ -136,7 +137,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     [id, showItem],
   );
 
-  const tileItems = useMemo(() => posts.map((post) => ({ post, onOpen: handleOpen })), [posts, handleOpen]);
+  const tileItems = useMemo(
+    () => posts.map((post) => ({ post, current: post.id === currentId, onOpen: handleOpen })),
+    [posts, currentId, handleOpen],
+  );
 
   const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
   const curateTooltip =
@@ -189,8 +193,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 };
 
-type TileData = { post: Subscription.Post; onOpen: (post: Subscription.Post) => void };
+type TileData = { post: Subscription.Post; current: boolean; onOpen: (post: Subscription.Post) => void };
 
 const TileAdapter = ({ data }: { data: TileData; index: number }) => (
-  <MagazineTile post={data.post} onOpen={data.onOpen} />
+  <MagazineTile post={data.post} current={data.current} onOpen={data.onOpen} />
 );

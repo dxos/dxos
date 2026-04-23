@@ -12,10 +12,11 @@ import { formatDate } from '../../util/format-date';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
+  current?: boolean;
   onOpen?: (post: Subscription.Post) => void;
 };
 
-export const MagazineTile = ({ post, onOpen }: MagazineTileProps) => {
+export const MagazineTile = ({ post, current, onOpen }: MagazineTileProps) => {
   const read = Boolean(post.readAt);
   const date = formatDate(post.published);
   const metaParts = [post.author, date].filter((value): value is string => Boolean(value));
@@ -28,10 +29,11 @@ export const MagazineTile = ({ post, onOpen }: MagazineTileProps) => {
   return (
     <button
       type='button'
+      aria-current={current ? 'true' : undefined}
       onClick={handleClick}
       className={mx(
-        'flex flex-col gap-2 p-3 rounded-md text-start bg-input hover:bg-hoverSurface transition-opacity',
-        read && 'opacity-60',
+        'dx-current dx-hover flex flex-col gap-2 p-3 rounded-md text-start bg-input transition-opacity',
+        read && !current && 'opacity-60',
       )}
     >
       {post.imageUrl && (

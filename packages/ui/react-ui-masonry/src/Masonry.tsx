@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { VirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
@@ -92,6 +93,14 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
       gutter,
     );
 
+    // Arrow-key navigation across tiles. Uses Tabster's grid axis so
+    // Up/Down/Left/Right move focus two-dimensionally through the items.
+    const arrowNavigationAttrs = useArrowNavigationGroup({
+      axis: 'grid',
+      memorizeCurrent: true,
+      tabbable: true,
+    });
+
     const TileAdapter = useMemo(() => {
       const Adapter = ({ data, index }: { data: any; index: number }) => {
         return (
@@ -111,6 +120,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
         {width > 0 && (
           <ScrollArea.Viewport asChild>
             <ComposableVirtuosoMasonry
+              {...arrowNavigationAttrs}
               style={{ gap: `${gutter}rem` }}
               data={items}
               columnCount={columnCount}

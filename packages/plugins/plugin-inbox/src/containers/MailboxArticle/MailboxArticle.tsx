@@ -128,9 +128,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
-        // 'current' fires when a specific message is clicked; 'current-thread'
-        // fires when the enclosing thread is clicked (with its latest message).
-        // Either way the detail dispatch is the same.
+        // 'current' fires when a specific message is clicked;
+        // 'current-thread' fires when the enclosing thread is clicked (with its latest message).
         case 'current':
         case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
