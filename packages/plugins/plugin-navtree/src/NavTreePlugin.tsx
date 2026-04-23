@@ -41,7 +41,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: AppActivationEvents.LayoutReady,
-    activatesAfter: [NavTreeEvents.StateReady],
+    firesAfterActivation: [NavTreeEvents.StateReady],
     activate: State,
   }),
   Plugin.addModule({
