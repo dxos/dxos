@@ -22,95 +22,108 @@ import { ClientCapabilities } from '#types';
 //   - {@link Database.Service}, {@link QueueService}, {@link Feed.FeedService},
 //     {@link CredentialsService} (space affinity).
 //
+// Specs are declared at module level and resolve the underlying
+// {@link ClientCapabilities.Client} through the Effect layer graph (via
+// {@link Capability.Service}) rather than capturing it from an outer scope.
+//
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+/**
+ * Provides the Effect-level {@link ClientService} backed by the
+ * {@link ClientCapabilities.Client} capability contributed by the plugin
+ * runtime.
+ */
+const ClientLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [Capability.Service],
+    provides: [ClientService],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        return ClientService.fromClient(client);
+      }),
+    ),
+);
 
-    const clientSpec = LayerSpec.make(
-      {
-        affinity: 'application',
-        requires: [],
-        provides: [ClientService],
-      },
-      () => ClientService.fromClient(client),
-    );
+/**
+ * Space-scoped {@link Database.Service} resolved from the `Client`'s space
+ * registry. Fails hard if the context is missing a `space` id or the client
+ * cannot resolve it — both indicate a configuration bug in the layer graph.
+ */
+const DatabaseLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [Database.Service],
+  },
+  (context) =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for Database layer');
+        const client = yield* ClientService;
+        const space = client.spaces.get(context.space);
+        invariant(space, `space not found on client: ${context.space}`);
+        yield* Effect.promise(() => space.waitUntilReady());
+        return Database.layer(space.db);
+      }),
+    ),
+);
 
-    const databaseSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [ClientService],
-        provides: [Database.Service],
-      },
-      (context) =>
-        Layer.unwrapEffect(
-          Effect.gen(function* () {
-            invariant(context.space, 'space context required for Database layer');
-            const space = client.spaces.get(context.space);
-            if (!space) {
-              return Database.notAvailable;
-            }
-            yield* Effect.promise(() => space.waitUntilReady());
-            return Database.layer(space.db);
-          }),
-        ),
-    );
+const QueueServiceLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [QueueService],
+  },
+  (context) =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for QueueService layer');
+        const client = yield* ClientService;
+        const space = client.spaces.get(context.space);
+        invariant(space, `space not found on client: ${context.space}`);
+        yield* Effect.promise(() => space.waitUntilReady());
+        return QueueService.layer(space.queues);
+      }),
+    ),
+);
 
-    const queueServiceSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [ClientService],
-        provides: [QueueService],
-      },
-      (context) =>
-        Layer.unwrapEffect(
-          Effect.gen(function* () {
-            invariant(context.space, 'space context required for QueueService layer');
-            const space = client.spaces.get(context.space);
-            if (!space) {
-              return QueueService.notAvailable;
-            }
-            yield* Effect.promise(() => space.waitUntilReady());
-            return QueueService.layer(space.queues);
-          }),
-        ),
-    );
+const FeedLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [Feed.FeedService],
+  },
+  (context) =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for Feed layer');
+        const client = yield* ClientService;
+        const space = client.spaces.get(context.space);
+        invariant(space, `space not found on client: ${context.space}`);
+        yield* Effect.promise(() => space.waitUntilReady());
+        return createFeedServiceLayer(space.queues);
+      }),
+    ),
+);
 
-    const feedSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [ClientService],
-        provides: [Feed.FeedService],
-      },
-      (context) =>
-        Layer.unwrapEffect(
-          Effect.gen(function* () {
-            invariant(context.space, 'space context required for Feed layer');
-            const space = client.spaces.get(context.space);
-            if (!space) {
-              return Feed.notAvailable;
-            }
-            yield* Effect.promise(() => space.waitUntilReady());
-            return createFeedServiceLayer(space.queues);
-          }),
-        ),
-    );
+const CredentialsLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [Database.Service],
+    provides: [CredentialsService],
+  },
+  () => CredentialsService.layerFromDatabase(),
+);
 
-    const credentialsSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [Database.Service],
-        provides: [CredentialsService],
-      },
-      () => CredentialsService.layerFromDatabase(),
-    );
-
-    return [
-      Capability.contributes(Capabilities.LayerSpec, clientSpec),
-      Capability.contributes(Capabilities.LayerSpec, databaseSpec),
-      Capability.contributes(Capabilities.LayerSpec, queueServiceSpec),
-      Capability.contributes(Capabilities.LayerSpec, feedSpec),
-      Capability.contributes(Capabilities.LayerSpec, credentialsSpec),
-    ];
-  }),
+export default Capability.makeModule(() =>
+  Effect.succeed([
+    Capability.contributes(Capabilities.LayerSpec, ClientLayerSpec),
+    Capability.contributes(Capabilities.LayerSpec, DatabaseLayerSpec),
+    Capability.contributes(Capabilities.LayerSpec, QueueServiceLayerSpec),
+    Capability.contributes(Capabilities.LayerSpec, FeedLayerSpec),
+    Capability.contributes(Capabilities.LayerSpec, CredentialsLayerSpec),
+  ]),
 );

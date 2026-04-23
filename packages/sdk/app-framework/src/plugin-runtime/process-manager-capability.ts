@@ -49,7 +49,7 @@ export default Capability.makeModule(
     const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
     const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
 
-    const layerStack = new LayerStack({ layers: [...layerSpecs] });
+    const layerStack = new LayerStack.LayerStack({ layers: [...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
     const handlerSet = handlerSets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...handlerSets);

@@ -31,16 +31,12 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
   const runtime = useProcessManagerRuntime();
   const spaceId = db?.spaceId;
 
-  const spaceLayer = useMemo(
-    () => (spaceId ? ServiceResolver.provide({ space: spaceId }, AiService.AiService) : undefined),
-    [spaceId],
-  );
-
   const extensions = useMemo(() => {
-    if (!spaceLayer) {
+    if (!spaceId) {
       return [];
     }
 
+    const spaceLayer = ServiceResolver.provide({ space: spaceId }, AiService.AiService);
     const generate: AssistantOptions['generate'] = ({ instructions, content }) =>
       runtime.runPromise(
         Effect.gen(function* () {
@@ -54,7 +50,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
       );
 
     return [assistant({ generate }), email()];
-  }, [runtime, spaceLayer]);
+  }, [runtime, spaceId]);
 
   const handleSend = useCallback<NonNullable<EditMessageProps['onSend']>>(
     async (message) => {

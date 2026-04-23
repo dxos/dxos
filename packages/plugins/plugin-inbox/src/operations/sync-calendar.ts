@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -21,13 +20,7 @@ const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
       const db = Obj.getDatabase(calendar);
       invariant(db);
       const { CalendarFunctions } = yield* Effect.promise(() => import('./google/calendar'));
-      yield* runInSpace(
-        db.spaceId,
-        [] as const,
-        Operation.invoke(CalendarFunctions.Sync, {
-          calendar: Ref.make(calendar),
-        }),
-      ).pipe(
+      yield* Operation.invoke(CalendarFunctions.Sync, { calendar: Ref.make(calendar) }, { spaceId: db.spaceId }).pipe(
         Effect.catchAll((error) => {
           log.catch(error);
           return Operation.invoke(LayoutOperation.AddToast, {

@@ -29,7 +29,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
 
   const init = useSpaceCallback(
     db?.spaceId,
-    [TriggerDispatcher] as const,
+    [TriggerDispatcher],
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       setDispatcher(dispatcher);
@@ -44,7 +44,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
 
   const start = useSpaceCallback(
     db?.spaceId,
-    [TriggerDispatcher] as const,
+    [TriggerDispatcher],
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.start();
@@ -53,7 +53,7 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
 
   const stop = useSpaceCallback(
     db?.spaceId,
-    [TriggerDispatcher] as const,
+    [TriggerDispatcher],
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.stop();
