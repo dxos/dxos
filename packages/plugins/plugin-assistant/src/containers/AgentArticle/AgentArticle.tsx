@@ -3,15 +3,18 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { forwardRef, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { type Agent } from '@dxos/assistant-toolkit';
-import { Annotation, Filter, Obj, Query } from '@dxos/echo';
+import { Agent } from '@dxos/assistant-toolkit';
+import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { QueueService } from '@dxos/functions';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -30,6 +33,27 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const handleResetHistory = useCallback(async () => {
+    const space = Obj.getDatabase(agent);
+    if (!space) {
+      return;
+    }
+
+    const runtime = computeRuntime.getRuntime(space.spaceId);
+    await runtime.runPromise(Agent.resetChatHistory(agent));
+    if (!agent.queue) {
+      await runtime.runPromise(
+        Effect.gen(function* () {
+          const queue = yield* QueueService.createQueue();
+          Obj.change(agent, (agent) => {
+            agent.queue = Ref.fromDXN(queue.dxn);
+          });
+        }),
+      );
+    }
+  }, [agent, computeRuntime]);
 
   const artifacts = useAtomValue(
     useMemo(
@@ -62,6 +86,12 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
           <Toolbar.ToggleGroup type='single' value={tab} onValueChange={(value) => value && setTab(value as Tab)}>
             <Toolbar.ToggleGroupIconItem value='artifacts' label={t('artifacts.label')} icon='ph--cube--regular' />
             <Toolbar.ToggleGroupIconItem value='inputs' label={t('input-queue.label')} icon='ph--queue--regular' />
+            <Toolbar.Separator />
+            <Toolbar.IconButton
+              icon='ph--trash--regular'
+              label={t('reset-history.button')}
+              onCanPlay={handleResetHistory}
+            />
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
       </Panel.Toolbar>
