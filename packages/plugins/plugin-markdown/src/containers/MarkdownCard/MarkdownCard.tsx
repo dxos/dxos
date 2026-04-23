@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { drawSelection } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -21,7 +22,7 @@ export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = useTranslation(meta.id);
   const snippet = useMemo(() => getSnippet(subject), [subject]);
-  const extensions = useMemo(() => [snippetExtension({ height: 240, scale: 1 })], []);
+  const extensions = useMemo(() => [snippetExtension({ height: 200, scale: 0.7 })], []);
   const info = getInfo(subject);
 
   return (
@@ -46,13 +47,11 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   );
 };
 
-const MAX_LINES = 5;
-
-const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string) => {
+const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 5) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
-    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback, MAX_LINES);
+    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback, maxLines);
   } else if (Obj.instanceOf(Text.Text, subject)) {
-    return getContentSnippet(subject.content ?? fallback, MAX_LINES);
+    return getContentSnippet(subject.content ?? fallback, maxLines);
   }
 };
 

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 export type SnippetOptions = {
@@ -15,28 +16,35 @@ export type SnippetOptions = {
  * CodeMirror extension for rendering a non-scrollable snippet of editor content.
  * Constrains the editor to the given height, clips to whole line boundaries,
  * and disables scrolling entirely.
- * Uses requestMeasure to read post-layout heights and lineBlockAtHeight to handle
- * varying line heights from headings and other decorated blocks.
+ *
+ * NOTE: Uses CSS `zoom` rather than `transform: scale` because `zoom` affects
+ * layout, so line wrapping fills the full visual width of the container.
+ * `transform: scale` only scales paint output, leaving empty space on the right.
  */
 export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
   return [
+    EditorState.readOnly.of(true),
+    EditorView.editable.of(false),
+    EditorState.transactionFilter.of((tr) => {
+      if (tr.selection) return []; // Drop any selection changes.
+      return tr;
+    }),
     EditorView.theme({
+      // Outer editor element: clip to the caller-specified height.
       '&': {
         maxHeight: `${height}px`,
         overflow: 'hidden',
-        boxSizing: 'border-box',
-        ...(scale !== 1 && { zoom: `${scale}` }),
-      },
-      '.cm-content': {
-        whiteSpace: 'pre-wrap',
-        margin: '0',
-        padding: '0',
-      },
-      '.cm-line': {
-        padding: '0',
       },
       '.cm-scroller': {
+        // Prevent scroll; scale up the inner clip so the final pixel height matches `height`.
+        maxHeight: `${height / scale}px`,
         overflow: 'hidden !important',
+        padding: '0',
+      },
+      '.cm-content': {
+        // zoom (unlike transform: scale) affects layout, so line-wrapping fills the full visual width of the container.
+        zoom: scale,
+        margin: '0',
         padding: '0',
       },
     }),
