@@ -13,7 +13,6 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
-import * as Obj from './Obj';
 import type * as Relation from './Relation';
 
 // Re-export KindId and SnapshotKindId from internal.
@@ -203,7 +202,7 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
  *   Returns an empty array when the entity is valid or when no schema is attached.
  */
 export const getValidationErrors = (entity: Unknown | Snapshot): readonly ParseResult.ArrayFormatterIssue[] => {
-  const schema = Obj.getSchema(entity as unknown);
+  const schema = internal.getSchema(entity as unknown);
   if (schema == null) {
     return [];
   }

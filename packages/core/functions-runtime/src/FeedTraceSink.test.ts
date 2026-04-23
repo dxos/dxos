@@ -16,7 +16,7 @@ import { TestDatabaseLayer } from './testing';
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
   Layer.provideMerge(FeedTraceSink.layerLive),
-  Layer.provideMerge(TestDatabaseLayer()),
+  Layer.provideMerge(TestDatabaseLayer({ types: [Trace.Message] })),
 );
 
 const TestEvent = Trace.EventType('test', { schema: Schema.String, isEphemeral: false });

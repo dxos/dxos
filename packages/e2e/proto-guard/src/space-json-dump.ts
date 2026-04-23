@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { type Obj, Type } from '@dxos/echo';
+import { type Obj, Query, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
 import { type SpaceId } from '@dxos/keys';
@@ -33,7 +33,11 @@ export class SpacesDumper {
 
     for (const space of client.spaces.get()) {
       await space.waitUntilReady();
-      const objects = await space.db.query(Filter.everything()).run();
+      // Skip schema validation: snapshots may contain objects whose schemas are no longer
+      // registered in this client's runtime registry, but we still want to export their raw data.
+      const objects = await space.db
+        .query(Query.select(Filter.everything()).options({ skipSchemaValidation: true }))
+        .run();
 
       dump[space.id] = {};
       for (const object of objects) {
