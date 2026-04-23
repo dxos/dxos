@@ -740,6 +740,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-telegram-user/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-template/package.json",
           "jsonpath": "$.version"
         },

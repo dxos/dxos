@@ -56,6 +56,7 @@ import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
 import { TablePlugin } from '@dxos/plugin-table';
+import { TelegramUserPlugin } from '@dxos/plugin-telegram-user';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
@@ -150,6 +151,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
+      TelegramUserPlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
@@ -241,6 +243,7 @@ export const getPlugins = ({
     StackPlugin(),
     StatusBarPlugin(),
     TablePlugin(),
+    TelegramUserPlugin(),
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,

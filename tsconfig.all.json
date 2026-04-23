@@ -430,6 +430,9 @@
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-telegram-user/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-template/tsconfig.json"
     },
     {
