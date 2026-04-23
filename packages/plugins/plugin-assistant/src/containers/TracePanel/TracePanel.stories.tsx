@@ -210,7 +210,7 @@ export const WithSnapshot: Story = {
     console.log({ feed });
     const traceMessages = useQuery(
       space?.db,
-      feed ? Query.type(Trace.Message).from(feed) : Query.select(Filter.nothing()),
+      feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
     );
     dbg(traceMessages);
     const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
