@@ -10,7 +10,7 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
-import { Feed, Post } from './Subscription';
+import * as Subscription from './Subscription';
 
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
@@ -22,11 +22,11 @@ export const Magazine = Schema.Struct({
   /** User-facing title of the magazine. */
   name: Schema.String.pipe(Schema.optional),
   /** Feeds to pull content from. */
-  feeds: Schema.Array(Ref.Ref(Feed)),
+  feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
   /** Long-form brief describing what content the Magazine should gather. */
   instructions: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
-  posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false)),
+  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.magazine',
@@ -48,8 +48,8 @@ export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(
 export const make = (
   props: Omit<Obj.MakeProps<typeof Magazine>, 'instructions' | 'feeds' | 'posts'> & {
     instructions?: string;
-    feeds?: Ref.Ref<Feed>[];
-    posts?: Ref.Ref<Post>[];
+    feeds?: Ref.Ref<Subscription.Feed>[];
+    posts?: Ref.Ref<Subscription.Post>[];
   } = {},
 ): Magazine =>
   Obj.make(Magazine, {

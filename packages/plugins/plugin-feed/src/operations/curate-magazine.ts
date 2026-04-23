@@ -33,8 +33,8 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
         const snippet = makeSnippet(text);
         const imageUrl = extractImageUrls(source)[0];
 
-        Obj.change(post, (obj) => {
-          const mutable = obj as Obj.Mutable<typeof obj>;
+        Obj.change(post, (post) => {
+          const mutable = post as Obj.Mutable<typeof post>;
           mutable.snippet = snippet;
           if (imageUrl) {
             mutable.imageUrl = imageUrl;
@@ -44,8 +44,8 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
       }
 
       if (added.length > 0) {
-        Obj.change(magazine, (obj) => {
-          const mutable = obj as Obj.Mutable<typeof obj>;
+        Obj.change(magazine, (magazine) => {
+          const mutable = magazine as Obj.Mutable<typeof magazine>;
           mutable.posts = [...mutable.posts, ...added];
         });
       }

@@ -74,8 +74,8 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
   const handleOpen = useCallback((post: Subscription.Post) => {
     setReaderPost(post);
     if (!post.readAt) {
-      Obj.change(post, (obj) => {
-        const mutable = obj as Obj.Mutable<typeof obj>;
+      Obj.change(post, (post) => {
+        const mutable = post as Obj.Mutable<typeof post>;
         mutable.readAt = new Date().toISOString();
       });
     }
@@ -89,7 +89,13 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
 
   const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
   const curateTooltip =
-    subject.feeds.length === 0 ? t('no-feeds.tooltip') : state === 'idle' ? undefined : t(`${state}.tooltip`);
+    subject.feeds.length === 0
+      ? t('no-feeds.label')
+      : state === 'syncing'
+        ? t('syncing-feeds.label')
+        : state === 'curating'
+          ? t('curating-articles.label')
+          : undefined;
 
   return (
     <Panel.Root role={role} className='dx-document'>
