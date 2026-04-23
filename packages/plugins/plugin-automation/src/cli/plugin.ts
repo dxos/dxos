@@ -15,7 +15,7 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommandModule({ commands: [trigger] }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [ActivationEvents.SetupLayer],
+    firesBeforeActivation: [ActivationEvents.SetupLayer],
     activate: LayerSpecs,
   }),
   Plugin.make,

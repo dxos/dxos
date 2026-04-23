@@ -15,7 +15,7 @@ export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
   Plugin.addModule((options: ThemePluginOptions) => ({
     id: Capability.getModuleTag(ReactContext),
     activatesOn: ActivationEvents.Startup,
-    activatesBefore: [AppActivationEvents.SetupTranslations],
+    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
     activate: () => ReactContext(options),
   })),
   Plugin.make,

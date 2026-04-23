@@ -645,7 +645,7 @@ class ManagerImpl implements PluginManager {
   ): ActivationEvent.ActivationEvent[] {
     return Function.pipe(
       modules,
-      Array.flatMap((module) => module.activatesBefore ?? []),
+      Array.flatMap((module) => module.firesBeforeActivation ?? []),
       HashSet.fromIterable,
       HashSet.toValues,
       Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
@@ -658,7 +658,7 @@ class ManagerImpl implements PluginManager {
   ): ActivationEvent.ActivationEvent[] {
     return Function.pipe(
       modules,
-      Array.flatMap((module) => module.activatesAfter ?? []),
+      Array.flatMap((module) => module.firesAfterActivation ?? []),
       HashSet.fromIterable,
       HashSet.toValues,
       Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
@@ -670,7 +670,7 @@ class ManagerImpl implements PluginManager {
     events: ActivationEvent.ActivationEvent[],
     phase: 'before' | 'after',
   ): Effect.Effect<void, Error> {
-    const logLabel = phase === 'before' ? 'activatesBefore' : 'activatesAfter';
+    const logLabel = phase === 'before' ? 'firesBeforeActivation' : 'firesAfterActivation';
     const eventKey = phase === 'before' ? 'beforeEvents' : 'afterEvents';
     return Function.pipe(
       events,

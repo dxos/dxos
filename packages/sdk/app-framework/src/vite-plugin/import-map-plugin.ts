@@ -94,6 +94,15 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
 };
 
 /**
+ * Subpaths common to many packages that should always be excluded from the import map.
+ * `./playwright` and `./testing` subpaths are e2e / unit test helpers — by convention they
+ * are not part of the runtime plugin surface and may transitively pull node-only packages
+ * (e.g. `@dxos/lit-grid/testing` imports `@playwright/test`) into the browser bundle via
+ * vite-plugin-pwa's module scan, which breaks the Composer production bundle.
+ */
+const GLOBALLY_EXCLUDED_SUBPATHS: ReadonlySet<string> = new Set(['playwright', 'testing']);
+
+/**
  * Reads a package's `exports` field and returns all JS subpath entrypoints as bare specifiers
  * (e.g. `@dxos/client`, `@dxos/client/echo`). Skips wildcard patterns, non-JS assets,
  * and excluded subpaths. Falls back to just the package name if exports is absent or simple.
@@ -124,7 +133,7 @@ const getPackageEntrypoints = (packageName: string, packageJsonPath: string): st
     }
 
     const subpath = key.slice(2);
-    if (excluded?.has(subpath)) {
+    if (excluded?.has(subpath) || GLOBALLY_EXCLUDED_SUBPATHS.has(subpath)) {
       return [];
     }
 
