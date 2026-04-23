@@ -160,7 +160,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,
-    activatesBefore: [AppActivationEvents.SetupArtifactDefinition],
+    firesBeforeActivation: [AppActivationEvents.SetupArtifactDefinition],
   }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -194,7 +194,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: LocalModelResolver,
   }),
   Plugin.addModule({
-    activatesBefore: [AssistantEvents.SetupAiServiceProviders],
+    firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: ActivationEvents.Startup,
     activate: AiService,

@@ -121,7 +121,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [InboxEvents.SettingsReady],
+    firesAfterActivation: [InboxEvents.SettingsReady],
     activate: InboxSettings,
   }),
   Plugin.addModule({

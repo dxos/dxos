@@ -22,7 +22,7 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesAfter: [AutomationEvents.ComputeRuntimeReady],
+    firesAfterActivation: [AutomationEvents.ComputeRuntimeReady],
     activate: ComputeRuntime,
   }),
   Plugin.make,

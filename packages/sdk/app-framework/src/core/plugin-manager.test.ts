@@ -572,7 +572,7 @@ describe('PluginManager', () => {
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
-          activatesBefore: [CountEvent],
+          firesBeforeActivation: [CountEvent],
           activate: Effect.fnUntraced(function* () {
             const capabilityManager = yield* Capability.Service;
             computeTotal(capabilityManager);

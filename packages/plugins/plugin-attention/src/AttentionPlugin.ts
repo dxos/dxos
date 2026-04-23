@@ -18,7 +18,7 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'attention',
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [AttentionEvents.AttentionReady],
+    firesAfterActivation: [AttentionEvents.AttentionReady],
     activate: () =>
       Effect.gen(function* () {
         const registry = yield* Capability.get(Capabilities.AtomRegistry);

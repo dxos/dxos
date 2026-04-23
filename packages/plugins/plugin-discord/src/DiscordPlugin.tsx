@@ -46,7 +46,7 @@ export const DiscordPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [DiscordEvents.SettingsReady],
+    firesAfterActivation: [DiscordEvents.SettingsReady],
     activate: DiscordSettings,
   }),
   Plugin.make,
