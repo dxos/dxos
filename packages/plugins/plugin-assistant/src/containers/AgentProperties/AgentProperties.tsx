@@ -4,21 +4,19 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
-import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
-import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
 import {
@@ -31,37 +29,13 @@ import {
 
 import { meta } from '#meta';
 
-export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<
-  Agent.Agent,
-  {
-    onReset?: () => void;
-  }
->;
+export type AgentPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>;
 
-export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProps) => {
+export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(agent);
 
   const spaceId = Obj.getDatabase(agent)?.spaceId;
-
-  const resetHistory = useSpaceCallback(
-    spaceId,
-    [QueueService, Feed.FeedService, Database.Service] as const,
-    Effect.fnUntraced(function* () {
-      yield* Agent.resetChatHistory(agent);
-      if (!agent.queue) {
-        const queue = yield* QueueService.createQueue();
-        Obj.change(agent, (agent) => {
-          agent.queue = Ref.fromDXN(queue.dxn);
-        });
-      }
-    }),
-    [agent],
-  );
-
-  const handleResetHistory = useCallback(async () => {
-    await resetHistory();
-  }, [resetHistory]);
 
   const syncTriggers = useSpaceCallback(
     spaceId,
@@ -138,14 +112,7 @@ export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProp
     () =>
       instructions && [
         createBasicExtensions({ placeholder: t('instructions.placeholder') }),
-        createThemeExtensions({
-          syntaxHighlighting: true,
-          slots: {
-            content: {
-              className: 'mx-0!',
-            },
-          },
-        }),
+        createThemeExtensions({ syntaxHighlighting: true }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),
@@ -181,23 +148,10 @@ export const AgentProperties = ({ subject: agent, onReset }: AgentPropertiesProp
         <Input.Label classNames='mt-form-gap'>{t('instructions.label')}</Input.Label>
         {instructions && (
           <Editor.Root>
-            <Editor.View extensions={extension} />
+            <Editor.View classNames='border border-subdued-separator rounded-xs p-1 px-2' extensions={extension} />
           </Editor.Root>
         )}
       </Input.Root>
-
-      {/* TODO(burdon): Move into toolbar in parent. */}
-      {onReset && (
-        <Button
-          classNames='mt-form-gap'
-          onClick={async () => {
-            await handleResetHistory();
-            onReset();
-          }}
-        >
-          {t('reset-history.button')}
-        </Button>
-      )}
     </div>
   );
 };

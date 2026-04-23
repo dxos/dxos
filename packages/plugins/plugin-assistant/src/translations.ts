@@ -7,11 +7,15 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
 // TODO(burdon): Standardize translation names.
-export const translations = [
+export const translations: Resource[] = [
+  ...componentsTranslations,
+  ...formTranslations,
   {
     'en-US': {
       // TODO(burdon): From assistant.
@@ -170,8 +174,8 @@ export const translations = [
         'trigger-duration.label': 'Duration',
 
         // AgentArticle.
-        'project-empty-spec.message': 'Open Properties to configure the agent.',
-        'project-empty-spec.description': 'Open Assistant to interact with the agent.',
+        'project-empty-spec.message': 'Open the Properties companion to configure the agent.',
+        'project-empty-spec.description': 'Open the Assistant companion to interact with the agent.',
         'artifacts.label': 'Artifacts',
         'input-queue.label': 'Inputs',
 
@@ -183,4 +187,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+];

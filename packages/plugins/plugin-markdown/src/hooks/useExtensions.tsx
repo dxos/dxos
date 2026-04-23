@@ -51,6 +51,7 @@ export type ExtensionsOptions = {
   settings?: Markdown.Settings;
   compact?: boolean;
   viewMode?: EditorViewMode;
+  editable?: boolean;
   selectionManager?: SelectionManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
@@ -97,8 +98,8 @@ export const useExtensions = ({
         viewMode,
         selectionManager,
         previewOptions,
-        onSelectObject,
         platform,
+        onSelectObject,
       }),
     [
       id,
@@ -107,14 +108,14 @@ export const useExtensions = ({
       viewMode,
       selectionManager,
       previewOptions,
-      onSelectObject,
       settings,
       settings?.debug,
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
-      platform,
       settings?.typewriter,
+      platform,
+      onSelectObject,
     ],
   );
 

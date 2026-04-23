@@ -64,12 +64,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'agent-properties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: ({ data }) => {
-          // Reset logic now lives inside `AgentProperties` via
-          // `useSpaceCallback`. Pass a no-op `onReset` so the button still
-          // renders; the container handles state updates internally.
-          return <AgentProperties subject={data.subject} onReset={() => {}} />;
-        },
+        component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion-chat',
