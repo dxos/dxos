@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
+import { LogLevel, type LogProcessor, log } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
@@ -257,19 +257,20 @@ export class TraceProcessor {
           return;
         }
 
-        const context = getContextFromEntry(entry) ?? {};
-        for (const key of Object.keys(context)) {
-          context[key] = sanitizeValue(context[key], 0, this);
+        const context: Record<string, any> = { ...entry.computedContext };
+        if (entry.computedError !== undefined) {
+          context.error = entry.computedError;
         }
 
+        const { filename, line } = entry.computedMeta;
         const entryToPush: LogEntry = {
           level: entry.level,
-          message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
+          message: entry.message ?? entry.computedError ?? '',
           context,
-          timestamp: new Date(),
+          timestamp: new Date(entry.timestamp),
           meta: {
-            file: entry.meta?.F ?? '',
-            line: entry.meta?.L ?? 0,
+            file: filename ?? '',
+            line: line ?? 0,
             resourceId: resource.data.id,
           },
         };
