@@ -5,7 +5,7 @@
 /** Delete all IndexedDB databases for this origin. */
 export const clearIndexedDB = async (): Promise<void> => {
   const dbs = await indexedDB.databases();
-  await Promise.all(
+  const results = await Promise.allSettled(
     dbs
       .filter((db) => db.name != null)
       .map(
@@ -18,13 +18,28 @@ export const clearIndexedDB = async (): Promise<void> => {
           }),
       ),
   );
+  const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures.map((r) => r.reason),
+      'Failed to delete some IndexedDB databases',
+    );
+  }
 };
 
 /** Remove all entries from the Origin Private File System. */
 export const clearOPFS = async (): Promise<void> => {
   const root = await navigator.storage.getDirectory();
+  const errors: unknown[] = [];
   for await (const [name] of root.entries()) {
-    await root.removeEntry(name, { recursive: true });
+    try {
+      await root.removeEntry(name, { recursive: true });
+    } catch (err) {
+      errors.push(err);
+    }
+  }
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'Failed to remove some OPFS entries');
   }
 };
 

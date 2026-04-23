@@ -114,7 +114,7 @@ const main = async () => {
 
   if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
     await runStorageResetMigration();
-    window.location.replace(window.location.origin);
+    window.location.replace(window.location.href);
     return;
   }
 

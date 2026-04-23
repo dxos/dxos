@@ -15,8 +15,7 @@ const DANGEROUSLY_RESET_STORAGE_KEY = 'org.dxos.composer.dangerouslyResetStorage
 const DANGEROUSLY_RESET_STORAGE_VERSION = 'v1';
 
 /**
- * Performs a one-time full storage reset for production and staging environments.
- * Returns true if a reset was performed (caller should redirect and halt boot).
+ * Returns true if the one-time full storage reset migration should run for the given environment.
  */
 export const shouldRunStorageResetMigration = (environment?: string): boolean => {
   const isProductionOrStaging = ['production', 'staging'].includes(environment ?? '');
@@ -25,14 +24,22 @@ export const shouldRunStorageResetMigration = (environment?: string): boolean =>
   );
 };
 
+/**
+ * Performs the one-time full storage reset: clears IndexedDB, OPFS, service workers, caches,
+ * localStorage, and sessionStorage, then records the version flag so the migration does not re-run.
+ * Only sets the flag when all cleanup steps succeed; failed runs can be retried on next load.
+ * Caller should redirect and halt boot after this resolves.
+ */
 export const runStorageResetMigration = async (): Promise<void> => {
   log.info('Performing one-time storage reset.');
 
-  const run = async (label: string, fn: () => Promise<void>) => {
+  const errors: Array<{ label: string; error: unknown }> = [];
+  const run = async (label: string, fn: () => Promise<void> | void): Promise<void> => {
     try {
       await fn();
-    } catch (err) {
-      log.catch(err, { label });
+    } catch (error) {
+      log.catch(error, { label });
+      errors.push({ label, error });
     }
   };
 
@@ -40,9 +47,12 @@ export const runStorageResetMigration = async (): Promise<void> => {
   await run('clearOPFS', clearOPFS);
   await run('clearServiceWorkers', clearServiceWorkers);
   await run('clearCaches', clearCaches);
+  await run('clearLocalStorage', () => localStorage.clear());
+  await run('clearSessionStorage', () => sessionStorage.clear());
 
-  localStorage.clear();
-  sessionStorage.clear();
+  if (errors.length > 0) {
+    throw new Error(`Storage reset migration failed: ${errors.map(({ label }) => label).join(', ')}`);
+  }
 
   // Set flag AFTER clearing localStorage so this migration does not re-run.
   localStorage.setItem(DANGEROUSLY_RESET_STORAGE_KEY, DANGEROUSLY_RESET_STORAGE_VERSION);
