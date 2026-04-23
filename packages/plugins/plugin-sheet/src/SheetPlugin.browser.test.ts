@@ -9,8 +9,9 @@ import { createTestApp } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
-import { SheetPlugin } from './SheetPlugin';
 import { SheetCapabilities } from '#types';
+
+import { SheetPlugin } from './SheetPlugin';
 
 describe('SheetPlugin', () => {
   test('activates and contributes expected capabilities', async ({ expect }) => {
