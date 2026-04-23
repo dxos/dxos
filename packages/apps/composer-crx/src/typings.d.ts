@@ -12,7 +12,6 @@ declare module 'webext-bridge' {
     config: ProtocolWithReturn<{ debug?: boolean }, { debug: boolean }>;
     ping: ProtocolWithReturn<{ debug?: boolean }, string>;
     'start-picker': ProtocolWithReturn<Record<string, never>, { clip: Clip | null }>;
-    clip: ProtocolWithReturn<{ clip: Clip }, DeliverResult>;
     'open-composer': ProtocolWithReturn<Record<string, never>, void>;
   }
 }

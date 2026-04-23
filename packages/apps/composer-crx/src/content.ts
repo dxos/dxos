@@ -8,7 +8,9 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 
 import { CLIP_ACK_EVENT, CLIP_EVENT, type Clip, type ClipAck } from './clip/types';
+import { CLIP_DEBUG_PROP, getProp } from './config';
 import { pickAndHarvest } from './picker';
+import { showDebugPreview } from './picker/debug-preview';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
@@ -26,6 +28,7 @@ import { pickAndHarvest } from './picker';
  */
 
 const BRIDGE_MSG_TYPE = 'composer-crx:clip';
+const BACKGROUND_CLIP_MSG_TYPE = 'composer-crx:deliver-clip';
 const PAGE_ACK_TIMEOUT_MS = 4_000;
 
 /**
@@ -65,6 +68,22 @@ const installBridge = () => {
   });
 };
 
+/**
+ * Send the clip to the background worker. Uses `browser.runtime.sendMessage`
+ * directly rather than webext-bridge because the popup has already closed by
+ * this point and webext-bridge's routing depends on its initial connection
+ * being alive — native `runtime.sendMessage` reliably reaches the service
+ * worker regardless of popup lifecycle.
+ */
+const deliverToBackground = async (clip: Clip): Promise<void> => {
+  try {
+    const response = await browser.runtime.sendMessage({ type: BACKGROUND_CLIP_MSG_TYPE, clip });
+    log.info('clip delivered to background', { response });
+  } catch (err) {
+    log.catch(err);
+  }
+};
+
 const main = async () => {
   log.info('content-script');
 
@@ -84,13 +103,26 @@ const main = async () => {
   onMessage('start-picker', async () => {
     const clip = await pickAndHarvest();
     if (!clip) {
+      log.info('picker cancelled');
       return { clip: null };
     }
-    try {
-      await sendMessage('clip', { clip }, 'background');
-    } catch (err) {
-      log.catch(err);
+
+    log.info('clip harvested', { kind: clip.kind, url: clip.source.url });
+
+    // When the `clip-debug` option is on, show the serialized JSON before
+    // attempting delivery. Gives the user a chance to inspect (and copy)
+    // the payload, and proves the picker + harvest flow independently of
+    // the Composer delivery path.
+    const debug = Boolean(await getProp(CLIP_DEBUG_PROP));
+    if (debug) {
+      const confirmed = await showDebugPreview(clip);
+      if (!confirmed) {
+        log.info('clip delivery cancelled by user (debug)');
+        return { clip };
+      }
     }
+
+    await deliverToBackground(clip);
     return { clip };
   });
 };
