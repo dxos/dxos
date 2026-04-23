@@ -340,11 +340,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Copy-on-assign: If the value is a nested record owned by a different ECHO object, deep copy it.
+    // Copy-on-assign: If the value or any of its nested objects are owned by a different ECHO object, deep copy it.
+    // Uses deep check (hasForeignOwner) to catch ownership violations in nested structures,
+    // not just the top-level value (matching the behavior in init()).
     if (isValidProxyTarget(value) || isProxy(value)) {
-      const actualValue = getRawTarget(value);
-      const existingOwner = getOwner(actualValue);
-      if (existingOwner != null && existingOwner !== echoRoot) {
+      if (hasForeignOwner(value, echoRoot)) {
         value = deepCopy(value);
       }
     }
