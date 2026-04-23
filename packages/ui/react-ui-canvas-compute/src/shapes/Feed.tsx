@@ -74,7 +74,7 @@ export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
 };
 
 export const feedShape: ShapeDef<FeedShape> = {
-  type: 'feed',
+  type: 'queue',
   name: 'Feed',
   icon: 'ph--queue--regular',
   component: FeedComponent,
