@@ -8,12 +8,12 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -25,17 +25,21 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
-
 type Tab = 'artifacts' | 'inputs';
+
+export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const [computeRuntime] = useCapabilities(AutomationCapabilities.ComputeRuntime);
   const handleResetHistory = useCallback(async () => {
+    if (!computeRuntime) {
+      return;
+    }
+
     const space = Obj.getDatabase(agent);
     if (!space) {
       return;
