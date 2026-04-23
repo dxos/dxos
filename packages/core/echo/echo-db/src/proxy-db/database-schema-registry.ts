@@ -102,6 +102,35 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
+  /**
+   * Resolves a schema by its type or echo DXN.
+   * Checks for a matching PersistentSchema in the space.
+   */
+  public getSchemaByDXN(dxn: DXN): Type.RuntimeType | undefined {
+    switch (dxn.kind) {
+      case DXN.kind.ECHO: {
+        const id = dxn.asEchoDXN()?.echoId;
+        return id ? this.getSchemaById(id) : undefined;
+      }
+      case DXN.kind.TYPE: {
+        const components = dxn.asTypeDXN();
+        if (!components) return undefined;
+        const { type, version } = components;
+        // Check in-memory cache first.
+        const cached = [...this._schemaById.values()].filter((schema) => schema.typename === type);
+        const cachedMatch = version ? cached.find((schema) => schema.version === version) : cached[0];
+        if (cachedMatch) {
+          return cachedMatch;
+        }
+        // Fall through to live db query for persistent schemas not yet cached.
+        const results = this.query({ typename: type, version }).runSync();
+        return (results[0] as Type.RuntimeType | undefined) ?? undefined;
+      }
+      default:
+        return undefined;
+    }
+  }
+
   // TODO(burdon): Refactor: this is too complex and untestable.
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     _query?: Q & SchemaRegistry.Query,

@@ -313,7 +313,11 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
+      // The object's schema is not yet registered -- use skipSchemaValidation to bypass
+      // the default filtering of objects with unresolvable schemas.
+      const obj = (await db
+        .query(Query.select(Filter.id(id)).options({ skipSchemaValidation: true }))
+        .first()) as TestSchema.Example;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');

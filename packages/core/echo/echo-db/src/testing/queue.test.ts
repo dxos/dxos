@@ -107,7 +107,7 @@ describe('queues', () => {
 
   test('relations in queues', async () => {
     await using peer = await builder.createPeer({
-      types: [TestSchema.Person, TestSchema.EmployedBy],
+      types: [TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
     });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
@@ -136,7 +136,7 @@ describe('queues', () => {
 
   test('relation between queue object and a database object', async () => {
     await using peer = await builder.createPeer({
-      types: [TestSchema.Person, TestSchema.EmployedBy],
+      types: [TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
     });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -214,7 +214,7 @@ describe('queues', () => {
     });
 
     test('queries local queue with TestSchema.Person schema', async ({ expect }) => {
-      await using peer = await builder.createPeer();
+      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();

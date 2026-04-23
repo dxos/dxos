@@ -467,7 +467,8 @@ describe('Integration tests', () => {
           reactiveSchemaQuery: false,
           preloadSchemaOnOpen: false,
         });
-        const [obj] = await db.query(Filter.id(relationId)).run();
+        // The relation's schema is not registered in this peer -- bypass schema validation.
+        const [obj] = await db.query(Query.select(Filter.id(relationId)).options({ skipSchemaValidation: true })).run();
         assert(Relation.isRelation(obj), 'Query did not return a relation');
         const source = Relation.getSource(obj);
         const target = Relation.getTarget(obj);
@@ -559,7 +560,9 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [obj] = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
+      // Dynamic schema is not preloaded -- bypass query-time schema validation since the schema
+      // resolves lazily as part of the query result hydration.
+      const [obj] = await db.query(Query.select(Filter.typeDXN(typeDXN)).options({ skipSchemaValidation: true })).run();
       expect(Obj.getSchema(obj)).toBeDefined();
       expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);
     }

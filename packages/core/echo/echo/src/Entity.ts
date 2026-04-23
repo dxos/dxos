@@ -4,10 +4,16 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as ParseResult from 'effect/ParseResult';
+import * as Schema from 'effect/Schema';
+
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
+import * as Obj from './Obj';
 import type * as Relation from './Relation';
 
 // Re-export KindId and SnapshotKindId from internal.
@@ -184,6 +190,49 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSO
  */
 export const subscribe = (entity: Unknown, callback: () => void): (() => void) => {
   return internal.subscribe(entity, callback);
+};
+
+/**
+ * Validate an entity against its schema.
+ *
+ * The schema used is the one returned by `Obj.getSchema(entity)`. If the entity has no schema
+ * associated with it (either via runtime registry or persistent schema registry), returns an
+ * empty array.
+ *
+ * @returns An array of {@link ParseResult.ArrayFormatterIssue} describing each validation error.
+ *   Returns an empty array when the entity is valid or when no schema is attached.
+ */
+export const getValidationErrors = (entity: Unknown | Snapshot): readonly ParseResult.ArrayFormatterIssue[] => {
+  const schema = Obj.getSchema(entity as unknown);
+  if (schema == null) {
+    return [];
+  }
+
+  const decode = Schema.decodeUnknownEither(schema as Schema.Schema.AnyNoContext, {
+    errors: 'all',
+    onExcessProperty: 'preserve',
+  });
+  const json = internal.objectToJSON(entity);
+  const { id, ...rest } = json as Record<string, unknown> & { id: string };
+  const input = { id, ...stripInternalKeys(rest) };
+
+  const result = decode(input);
+  if (Either.isRight(result)) {
+    return [];
+  }
+
+  return Effect.runSync(ParseResult.ArrayFormatter.formatError(result.left));
+};
+
+const stripInternalKeys = (obj: Record<string, unknown>): Record<string, unknown> => {
+  const stripped: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key.startsWith('@')) {
+      continue;
+    }
+    stripped[key] = value;
+  }
+  return stripped;
 };
 
 //
