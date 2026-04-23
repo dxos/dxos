@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './extract';
 export * from './feed-fetcher';
 export * from './fetch-atproto';
 export * from './fetch-rss';

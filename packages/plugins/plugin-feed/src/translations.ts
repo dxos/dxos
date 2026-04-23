@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Subscription } from '#types';
+import { Magazine, Subscription } from '#types';
 
 export const translations = [
   {
@@ -28,6 +28,17 @@ export const translations = [
         'typename.label_other': 'Posts',
         'post-title.placeholder': 'Untitled',
       },
+      [Magazine.Magazine.typename]: {
+        'typename.label': 'Magazine',
+        'typename.label_zero': 'Magazines',
+        'typename.label_one': 'Magazine',
+        'typename.label_other': 'Magazines',
+        'object-name.placeholder': 'New magazine',
+        'add-object.label': 'Add magazine',
+        'rename-object.label': 'Rename magazine',
+        'delete-object.label': 'Delete magazine',
+        'object-deleted.label': 'Magazine deleted',
+      },
       [meta.id]: {
         'plugin.name': 'Feed',
         'empty-feed.message': 'No posts yet',
@@ -35,6 +46,14 @@ export const translations = [
         'sync-feed.label': 'Sync feed',
         'sync-feed-error.title': 'Failed to sync feed',
         'add-feed.label': 'Add feed',
+        'curate.label': 'Curate',
+        'syncing.tooltip': 'Syncing feeds...',
+        'curating.tooltip': 'Curating articles...',
+        'no-feeds.tooltip': 'Add at least one feed first',
+        'empty-magazine.message': 'No articles yet. Add feeds and press Curate.',
+        'post-title.placeholder': 'Untitled',
+        'open-original.label': 'Open original',
+        'close.label': 'Close',
       },
     },
   },

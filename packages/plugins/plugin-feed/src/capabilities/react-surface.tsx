@@ -9,8 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { FeedArticle, SubscriptionsArticle } from '#containers';
-import { Subscription } from '#types';
+import { FeedArticle, MagazineArticle, SubscriptionsArticle } from '#containers';
+import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -38,6 +38,14 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      // Magazine article surface.
+      Surface.create({
+        id: 'magazine-article',
+        filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
+        component: ({ data, role }) => (
+          <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
     ]),

@@ -77,6 +77,14 @@ export const Post = Schema.Struct({
   published: Schema.String.pipe(Schema.optional),
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
+  /** Agent/curation-extracted snippet of the article body. */
+  snippet: Schema.String.pipe(Schema.optional),
+  /** Hero image URL extracted from the article page. */
+  imageUrl: Schema.String.pipe(Schema.optional),
+  /** ISO 8601 timestamp when the Post was first read; absence = unread. */
+  readAt: Schema.String.pipe(Schema.optional),
+  /** Agent-assigned tags (populated by a future tagging feature). */
+  tags: Schema.Array(Schema.String).pipe(Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.subscription.post',

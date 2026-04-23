@@ -1,0 +1,578 @@
+---
+id: org.dxos.plugin.feed
+name: FeedPlugin
+version: 0.2.0
+---
+
+A Composer plugin for syndicated content. Today it supports RSS and ATproto
+Feeds whose Posts are synced into the space as ECHO objects. This revision
+adds **Magazines** — agent-curated collections of articles drawn from one or
+more Feeds and displayed as a Masonry grid. The user describes in natural
+language what content a Magazine should gather; pressing *Curate* triggers
+feed sync followed by an agent that selects matching articles, fetches their
+text and hero images, and appends them to the Magazine.
+
+The design also scaffolds (schema-only) a future tagging feature in which the
+agent assigns tags to curated Posts to enable navigation, filtering, and
+feed-discovery flows.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## Types
+
+```mdl
+type FeedType
+  literals: atproto | rss
+```
+
+```mdl
+type Feed
+  desc: >
+    A subscription source. Existing type — documented here for context.
+    SyncFeed pulls Posts from the URL into the space.
+  fields:
+    name?: string
+    url?: string
+    type?: FeedType
+    description?: string
+    link?: string
+    iconUrl?: string
+    cursor?: string                 # sync state
+    feed?: Ref<Queue>               # backing ECHO feed
+```
+
+```mdl
+type Post
+  desc: >
+    An individual syndicated article. Existing fields are unchanged.
+    This revision adds four optional fields populated by the Magazine
+    curation flow. All additions are optional — existing Posts remain valid.
+  fields:
+    title?: string
+    link?: string                   # URL of the original article
+    description?: string            # feed-provided summary (as-is)
+    author?: string
+    published?: string              # ISO 8601 publication date
+    guid?: string                   # feed-provided unique id
+
+    # --- Additions ---
+    snippet?: string                # agent-extracted short text (~200 chars)
+    imageUrl?: string               # hero image URL extracted from the article page
+    readAt?: string                 # ISO 8601; presence = read, absence = unread
+    tags?: string[]                 # agent-assigned tags (future tagging feature; always [] today)
+```
+
+```mdl
+type Magazine
+  desc: >
+    An agent-curated collection of articles drawn from one or more Feeds.
+    The user describes what content the Magazine should gather via a
+    long-form instructions Text. The agent reads the instructions, selects
+    matching Posts from the referenced Feeds, enriches them with snippet
+    and hero image, and appends their refs to `posts`.
+  fields:
+    name?: string
+    feeds: Ref<Feed>[]              # Feeds to pull from
+    instructions: Ref<Text>         # long-form curation brief (not rendered as form input)
+    posts: Ref<Post>[]              # curated Post refs (insertion order; UI displays newest-last reversed)
+  annotations:
+    icon: ph--newspaper--regular
+    hue: indigo
+    label: name
+```
+
+## Components
+
+```mdl
+component MagazineArticle
+  desc: >
+    Article surface bound to a Magazine object. Shows curated articles in a
+    Masonry grid and offers a Curate button that triggers feed sync plus
+    agent curation.
+  props:
+    magazine: Magazine
+  state:
+    running: boolean                # Curate flow in progress
+    phase?: 'syncing' | 'curating'  # shown as button tooltip while running
+    readerPost?: Post               # open article in the inline reader when set
+  slots:
+    header?: ReactNode
+  actions:
+    curate()                        # run syncFeeds → invoke MagazineBlueprint agent
+    openReader(post: Post)          # show ArticleReader; sets post.readAt if unset
+    closeReader()
+  emits:
+    onCurateComplete(added: number)
+  layout: |
+    ┌─────────────────────────────────────────────┐
+    │ [header slot]                 [✨ Curate]   │
+    ├─────────────────────────────────────────────┤
+    │ ┌─────┐ ┌─────┐ ┌─────┐                     │
+    │ │tile │ │tile │ │tile │   (Masonry grid)    │
+    │ └─────┘ └─────┘ └─────┘                     │
+    │ ┌─────┐ ┌─────┐                             │
+    │ │tile │ │tile │                             │
+    │ └─────┘ └─────┘                             │
+    └─────────────────────────────────────────────┘
+```
+
+```mdl
+component MagazineTile
+  desc: >
+    Single masonry cell rendering a curated Post. Dimmed when post.readAt is set.
+    Click opens the ArticleReader. Tags row appears only when tags.length > 0.
+  props:
+    post: Post
+    feed: Feed                      # resolved parent feed for name/icon
+  emits:
+    onOpen(post: Post)
+  layout: |
+    ┌─────────────────────────┐
+    │ [hero image if present] │
+    ├─────────────────────────┤
+    │ Title (2-line clamp)    │
+    │ Snippet (3-line clamp)  │
+    │ ─────────────────────── │
+    │ Feed · Author · Date    │
+    │ [#tag] [#tag]           │   (only when tags.length > 0)
+    └─────────────────────────┘
+```
+
+```mdl
+component ArticleReader
+  desc: >
+    Inline overlay (dialog/sheet) inside the MagazineArticle surface.
+    Displays the extracted snippet and a link-out to the original article.
+    Sets post.readAt on open if not already set.
+  props:
+    post: Post
+    feed: Feed
+  emits:
+    onClose()
+  layout: |
+    ┌───────────────────────────────────────┐
+    │ [hero image]                     [✕]  │
+    ├───────────────────────────────────────┤
+    │ Title                                 │
+    │ Feed · Author · Date                  │
+    ├───────────────────────────────────────┤
+    │ Snippet (full)                        │
+    │                                       │
+    ├───────────────────────────────────────┤
+    │              [Open original ↗]        │
+    └───────────────────────────────────────┘
+```
+
+## Services
+
+```mdl
+service MagazineBlueprint
+  desc: |
+    Agent blueprint invoked by the MagazineArticle Curate button.
+    Registered as a BlueprintDefinition capability. The agent reads the
+    Magazine's instructions Text and referenced feeds, selects matching
+    Posts, and enriches them.
+  key: org.dxos.blueprint.magazine
+  ops:
+    # All operations are exposed as tools:
+    # - ListCandidatePosts
+    # - FetchArticleContent
+    # - AddPostToMagazine
+  note: >
+    Uses Template.make() for its prompt. The prompt instructs the agent to
+    call ListCandidatePosts, then for each selected Post call
+    FetchArticleContent and AddPostToMagazine. Dedup is enforced by the tools,
+    not the prompt.
+```
+
+## Operations
+
+```mdl
+op SyncFeed
+  desc: Existing operation. Pulls new Posts from a Feed's source URL.
+  input:
+    feedId: DXN
+  output: number                   # number of Posts added
+  effects: [http, echo:write]
+  note: Documented here for context; unchanged by this revision.
+```
+
+```mdl
+op ListCandidatePosts
+  desc: >
+    Returns lightweight summaries of Posts from the Magazine's referenced
+    feeds that have NOT yet been added to the Magazine. Excludes Posts whose
+    refs already appear in magazine.posts.
+  input:
+    magazineId: DXN
+  output:
+    Array<{
+      postId: DXN,
+      feedName?: string,
+      title?: string,
+      description?: string,
+      author?: string,
+      published?: string
+    }>
+  effects: [echo:read]
+  note: >
+    Deliberately excludes the full article body and image — the agent
+    decides from summaries whether to call FetchArticleContent.
+```
+
+```mdl
+op FetchArticleContent
+  desc: >
+    Fetches post.link over HTTP and returns extracted plain text plus any
+    image URLs found (og:image and <img> tags). Pure read — does not mutate
+    the Post. Reusable by the future tagging feature.
+  input:
+    postId: DXN
+  output:
+    {
+      text: string,
+      imageUrls: string[]
+    }
+  errors:
+    FetchFailed: HTTP error or network failure
+    NoLink: the Post has no `link` field
+  effects: [http, echo:read]
+```
+
+```mdl
+op AddPostToMagazine
+  desc: >
+    Writes snippet and imageUrl onto the Post and appends the Post's ref to
+    magazine.posts. Idempotent — no-op if the Post ref is already present.
+  input:
+    magazineId: DXN
+    postId: DXN
+    snippet: string
+    imageUrl?: string
+  output: Post
+  effects: [echo:write]
+```
+
+```mdl
+op CurateMagazine
+  desc: >
+    Deterministic one-shot curation invoked by the Curate button. For each
+    uncurated candidate Post, derives a snippet and hero image from the Post's
+    existing `description` (no HTTP) and appends the enriched Post ref to
+    `magazine.posts`. Skips Posts with empty descriptions.
+  input:
+    magazineId: DXN
+  output:
+    added: number
+  effects: [echo:write]
+  note: >
+    Exists alongside the blueprint. The deterministic path gives the button
+    an immediate, reliable result without needing an LLM. The agent path
+    (via the blueprint's fine-grained tools) delivers instruction-driven,
+    higher-quality curation through chat.
+```
+
+## Features
+
+```mdl
+feat F-1: Magazine Type
+  desc: Introduce the Magazine ECHO type with feeds, instructions, and curated posts.
+
+  req F-1.1: User can create a Magazine object via the plugin's create menu.
+  req F-1.2: Magazine.name is optional; magazine is labeled by name when set.
+  req F-1.3: Magazine.feeds is an array of Ref<Feed>; empty by default.
+  req F-1.4: Magazine.instructions is a Ref<Text>; hidden from the standard form input.
+  req F-1.5: Magazine.posts is an array of Ref<Post>; empty by default; insertion order preserved.
+```
+
+```mdl
+feat F-2: Post Extensions
+  desc: Add optional snippet, imageUrl, readAt, and tags to existing Post type.
+
+  req F-2.1: All new fields are optional; existing Post objects load unchanged.
+  req F-2.2: snippet is a plain string; no max length enforced at schema level.
+  req F-2.3: imageUrl is a plain string URL.
+  req F-2.4: readAt is an ISO 8601 timestamp; presence = read, absence = unread.
+  req F-2.5: tags is a string array; defaults to empty; not populated in this revision.
+```
+
+```mdl
+feat F-3: Magazine Curate Flow
+  desc: Sync referenced feeds then invoke the agent to curate articles.
+
+  req F-3.1: MagazineArticle toolbar includes a Curate button.
+  req F-3.2:
+    when: user clicks Curate
+    then: button shows spinner, is disabled, tooltip shows phase ('Syncing feeds...' / 'Curating articles...')
+  req F-3.3:
+    when: Curate runs
+    then: SyncFeed invoked in parallel for each Ref in magazine.feeds; per-feed failures are collected but do not abort the flow
+  req F-3.4:
+    when: all feed syncs resolve (success or failure)
+    then: CurateMagazine operation is invoked with the Magazine ref
+  req F-3.5:
+    when: CurateMagazine completes
+    then: button returns to idle; reactive UI renders the new tiles
+  req F-3.6:
+    when: magazine.feeds is empty
+    then: Curate button is disabled with tooltip 'Add at least one feed first'
+  req F-3.7: Re-clicking Curate while running is a no-op (button disabled; in-memory running flag).
+```
+
+```mdl
+feat F-4: Agent Curation Behavior
+  desc: Agent uses tools to select, fetch, and add Posts.
+
+  req F-4.1: Agent reads magazine.instructions Text and magazine.feeds refs from context.
+  req F-4.2: Agent calls ListCandidatePosts(magazineId) to receive unenriched candidates.
+  req F-4.3: Agent filters candidates against the instructions and skips low-relevance posts.
+  req F-4.4: For each selected Post, agent calls FetchArticleContent(postId) to obtain text and images.
+  req F-4.5: Agent produces a concise snippet (target ~200 chars) and selects the best image URL.
+  req F-4.6: Agent calls AddPostToMagazine(magazineId, postId, snippet, imageUrl).
+  req F-4.7: AddPostToMagazine is idempotent; re-invocation with the same postId is a no-op append.
+```
+
+```mdl
+feat F-5: Masonry Display
+  desc: Render curated Posts in a Masonry grid with rich tiles.
+
+  req F-5.1: MagazineArticle renders magazine.posts in reverse insertion order (newest first) in a Masonry grid.
+  req F-5.2: Each tile shows imageUrl (if present), title, snippet, feed name, author, published date.
+  req F-5.3: Tile tags row renders only when post.tags.length > 0.
+  req F-5.4: Tiles where post.readAt is set are visually dimmed.
+  req F-5.5: Clicking a tile opens the ArticleReader for that Post.
+  req F-5.6: Opening the reader sets post.readAt to the current ISO timestamp if not already set.
+  req F-5.7: Empty state — when magazine.posts is empty — shows: 'No articles yet. Add feeds and press Curate.'
+  req F-5.8: Grid uses the @dxos/react-ui-masonry Masonry component.
+```
+
+```mdl
+feat F-6: Inline Article Reader
+  desc: Lightweight reader for curated snippets.
+
+  req F-6.1: ArticleReader is rendered as an overlay inside MagazineArticle; no route change.
+  req F-6.2: Reader shows hero image, title, feed name, author, date, full snippet.
+  req F-6.3: Reader includes an 'Open original' button linking to post.link (new tab/window).
+  req F-6.4: Closing the reader restores focus to the tile that opened it.
+```
+
+```mdl
+feat F-7: Future Tagging (schema scaffolding only)
+  desc: Schema fields in place so the tagging feature composes without migration.
+
+  req F-7.1: Post.tags exists as Schema.Array(Schema.String).pipe(Schema.optional).
+  req F-7.2: MagazineTile renders a tags row conditionally on tags.length > 0.
+  req F-7.3: FetchArticleContent is reusable as the input stage for a future TagPosts operation.
+  note: >
+    Later features (out of scope): TagPosts operation, a MagazineTagger blueprint
+    (or extension of MagazineBlueprint), tag-filter chips in the toolbar,
+    'Find more like this' action, and 'Suggest feeds' action proposing new Feed
+    URLs based on accumulated tag distribution.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create Magazine
+  given: user is in a space in Composer
+  when: user creates a Magazine via the plugin's create menu
+  then:
+    - Magazine object created in space
+    - Magazine.feeds is an empty array
+    - Magazine.posts is an empty array
+    - Magazine.instructions is a Ref to an empty Text object
+```
+
+```mdl
+test T-2: Post schema backward compatibility
+  given: a Post created before this revision exists in the space
+  when: the new plugin version loads
+  then:
+    - Post loads without schema error
+    - Post.snippet, Post.imageUrl, Post.readAt, Post.tags are all undefined / empty
+```
+
+```mdl
+test T-3: Curate button disabled without feeds
+  given: a Magazine with magazine.feeds.length === 0
+  when: MagazineArticle renders
+  then:
+    - Curate button is disabled
+    - tooltip text === 'Add at least one feed first'
+```
+
+```mdl
+test T-4: Curate flow runs sync then agent
+  given: a Magazine with two referenced feeds, each with unsynced remote posts
+  when: user clicks Curate
+  then:
+    - SyncFeed invoked once per referenced feed
+    - After all SyncFeed calls resolve, MagazineBlueprint agent is invoked
+    - Agent calls ListCandidatePosts, FetchArticleContent, AddPostToMagazine in that order
+    - Magazine.posts grows by the agent-selected count
+    - Button returns to idle
+```
+
+```mdl
+test T-5: Partial feed sync failure is non-fatal
+  given: a Magazine with two feeds; one feed's URL returns 500
+  when: user clicks Curate
+  then:
+    - Agent still invoked with posts from the successful feed
+    - Toast summary mentions the failed feed
+```
+
+```mdl
+test T-6: ListCandidatePosts excludes curated
+  given: a Magazine whose posts array already contains refs to two Posts from feed A
+  when: ListCandidatePosts(magazineId) is called
+  then: returned list contains no entries whose postId matches an existing magazine.posts ref
+```
+
+```mdl
+test T-7: AddPostToMagazine is idempotent
+  given: a Magazine already containing a Post ref
+  when: AddPostToMagazine invoked with the same postId
+  then:
+    - magazine.posts length unchanged
+    - Post.snippet and Post.imageUrl left unchanged (no overwrite on duplicate)
+```
+
+```mdl
+test T-8: FetchArticleContent surfaces images
+  given: a Post whose link resolves to an HTML page with og:image and two <img> tags
+  when: FetchArticleContent(postId) is called
+  then:
+    - output.text contains the page's main text
+    - output.imageUrls includes the og:image URL
+    - output.imageUrls includes URLs from <img> tags
+```
+
+```mdl
+test T-9: Tile dimming on read
+  given: a Magazine with one Post where readAt is unset
+  when: user clicks the tile
+  then:
+    - ArticleReader opens for that Post
+    - Post.readAt is set to an ISO timestamp
+    - On reader close, the tile renders dimmed
+```
+
+```mdl
+test T-10: Tile metadata
+  given: a curated Post with title, snippet, imageUrl, author, published, and a feed with name
+  when: MagazineTile renders
+  then:
+    - hero image rendered from imageUrl
+    - title rendered with 2-line clamp
+    - snippet rendered with 3-line clamp
+    - metadata row shows feed name, author, and a formatted date
+    - tags row is NOT rendered (tags is empty)
+```
+
+---
+
+## Design Notes
+
+### Content Flow
+
+Two curation paths exist side-by-side:
+
+- **Button path (deterministic).** The Curate toolbar button runs `SyncFeed`
+  per referenced feed, then invokes `CurateMagazine`. Snippets and images are
+  derived from each Post's existing `description` field (no HTTP, no LLM).
+  Chosen for the user-initiated button because it is fast, reliable, and does
+  not depend on an LLM runtime being present.
+- **Agent path (blueprint).** The `MagazineBlueprint` exposes three fine-grained
+  tools (`ListCandidatePosts`, `FetchArticleContent`, `AddPostToMagazine`) and
+  an instruction template that tells an agent to consult `Magazine.instructions`
+  when selecting Posts. Triggered when an agent chat references the Magazine —
+  not when the button is clicked. Delivers higher-quality curation (full-article
+  fetch + LLM-driven selection) at the cost of latency and LLM availability.
+
+`SyncFeed` is always run deterministically (either by the button or outside
+the scope of this feature). Neither curation path fetches feed indices on its
+own — that is `SyncFeed`'s job.
+
+### Tool Granularity
+
+Three tools rather than one combined `curateMagazine` tool:
+
+- `ListCandidatePosts` returns lightweight summaries so the agent can triage
+  cheaply without loading article bodies.
+- `FetchArticleContent` is a read-only HTTP fetch + extract; it is reusable by
+  the future `TagPosts` operation which will need the same inputs.
+- `AddPostToMagazine` is the sole mutation. Idempotence lives in this tool
+  (by ref-set membership check) rather than in the prompt.
+
+Quality of selection is the agent's job; the tools deliberately don't try to
+rank or filter on the agent's behalf.
+
+### Snippet Storage
+
+`Post.snippet` is a plain inline string, not a `Ref<Text>`. Snippets are
+short (~200 chars target) and read-only to the user; the `Ref<Text>` indirection
+used for `Agent.instructions` and `Magazine.instructions` is appropriate for
+long-form, user-editable content and is not needed here.
+
+### Read State
+
+Represented as an optional ISO timestamp `readAt`, not a boolean or enum.
+Absence = unread; presence = read (at that time). This leaves room to show
+"read 2 days ago" or to expire reads without a schema change.
+
+### Image Extraction
+
+`FetchArticleContent` returns a list of candidate image URLs; the agent picks
+the "best" one for the Post's `imageUrl`. The prompt should prefer `og:image`
+when present. If no suitable image exists the Post is still added with
+`imageUrl` undefined — `MagazineTile` renders without the image region.
+
+HTML parsing uses whatever parser the existing codebase already uses for
+similar tasks. If no parser is in use, `linkedom` is the proposed addition —
+small, no-DOM-globals footprint, works in Node and browser. Addition of a
+parser dependency is a decision point flagged during implementation planning.
+
+### Deduplication Policy
+
+Deduplication is keyed on Post ref identity, not on URL or guid. If a Post is
+removed from the Magazine and later re-curated, the agent will re-add it.
+Dedup across a Feed's historical sync is out of scope — `Feed` already
+deduplicates on `guid` when syncing.
+
+### Relationship to Future Tagging
+
+The tagging feature is strictly additive to this design:
+
+- `Post.tags` already exists as an optional string array.
+- `FetchArticleContent` is the reusable read-stage for tagging.
+- `MagazineTile` renders a tags row when non-empty — no UI change needed.
+- A `TagPosts` operation and either an extended prompt in `MagazineBlueprint`
+  or a second `MagazineTagger` blueprint will complete the feature in a later
+  revision.
+
+Further future work enabled by tags (all out of scope here): tag-filter chips
+in the Magazine toolbar; a "Find more like this" action prompting the agent
+to curate Posts with overlapping tags; a "Suggest feeds" action proposing new
+Feed URLs based on accumulated tag distribution.
+
+### Out of Scope
+
+- Rendering the full original article body inside the reader (would require
+  storing full extracted text; current design stores only the snippet).
+- Scheduled / background Curate runs — this revision only supports the
+  explicit toolbar-triggered flow.
+- Cross-Magazine deduplication — two Magazines may both curate the same Post.
+- Editing or regenerating a snippet after curation — re-curation is the path
+  to different content.
