@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import type { DXN, ObjectId } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -51,24 +51,15 @@ export namespace QueryPlan {
   export type SelectStep = {
     _tag: 'SelectStep';
 
-    // TODO(dmaretskyi): Extract the object container spec into a separate type in ECHO-protocol that we can share with the indexer.
-
     /**
-     * Select from specific spaces.
+     * What to select from the scope.
      */
-    spaces: readonly SpaceId[];
-
-    /**
-     * If true, select from all queues in the spaces specified by `spaces`.
-     */
-    allQueuesFromSpaces: boolean;
-
-    /**
-     * Select from specific queues.
-     */
-    queues: readonly DXN.String[];
-
     selector: Selector;
+
+    /**
+     * Where to select from.
+     */
+    scope: QueryAST.Scope;
 
     /**
      * Optional limit on the number of results to select.
@@ -81,7 +72,7 @@ export namespace QueryPlan {
    * Specifier to scan the database for objects.
    * Optimized to utilize database indexes.
    */
-  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector;
+  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector | TimestampSelector;
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';
@@ -120,6 +111,19 @@ export namespace QueryPlan {
      * Optionally select only objects of the given typenames.
      */
     typename: DXN.String[] | null;
+  };
+
+  /**
+   * Select objects by timestamp range (createdAt / updatedAt).
+   * Uses the ObjectMetaIndex timestamp columns.
+   */
+  export type TimestampSelector = {
+    _tag: 'TimestampSelector';
+
+    updatedAfter?: number;
+    updatedBefore?: number;
+    createdAfter?: number;
+    createdBefore?: number;
   };
 
   /**

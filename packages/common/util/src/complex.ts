@@ -214,6 +214,38 @@ export class ComplexMap<K, V> implements Map<K, V> {
     return this;
   }
 
+  /**
+   * Returns the value for the given key if present, otherwise inserts and returns the default value.
+   * @param key - The key to look up or insert.
+   * @param defaultValue - The value to insert if the key is not present.
+   * @returns The existing or newly inserted value.
+   */
+  getOrInsert(key: K, defaultValue: V): V {
+    const primitive = this._keyProjection(key);
+    if (this._values.has(primitive)) {
+      return this._values.get(primitive)!;
+    }
+    this.set(key, defaultValue);
+    return defaultValue;
+  }
+
+  /**
+   * Returns the value for the given key if present, otherwise computes, inserts, and returns a new value.
+   * The callback is only invoked when the key is missing.
+   * @param key - The key to look up or insert.
+   * @param callbackfn - Function to compute the value if the key is not present.
+   * @returns The existing or newly computed value.
+   */
+  getOrInsertComputed(key: K, callbackfn: (key: K) => V): V {
+    const primitive = this._keyProjection(key);
+    if (this._values.has(primitive)) {
+      return this._values.get(primitive)!;
+    }
+    const value = callbackfn(key);
+    this.set(key, value);
+    return value;
+  }
+
   get size(): number {
     return this._keys.size;
   }

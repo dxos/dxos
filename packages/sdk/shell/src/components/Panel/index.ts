@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Remove these/port to react-ui.
+
 export * from './Action';
-export * from './Actions';
 export * from './CloseButton';
 export * from './Emoji';
 export * from './Heading';
+export * from './InputLabel';
 export * from './Label';
-export * from './Input';
-export * from './StepHeading';
+export * from './TextInput';

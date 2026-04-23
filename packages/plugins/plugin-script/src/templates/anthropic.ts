@@ -9,23 +9,30 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
-import { defineFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'dxos.org/script/anthropic',
-  name: 'Anthropic Chat',
-  description: 'Chat with Anthropic',
-  inputSchema: Schema.Struct({
+const Anthropic = Operation.make({
+  meta: {
+    key: 'org.dxos.script.anthropic',
+    name: 'Anthropic Chat',
+    description: 'Chat with Anthropic',
+  },
+  input: Schema.Struct({
     message: Schema.String,
   }),
+  output: Schema.Any,
   services: [AiService.AiService],
-  handler: ({ data }) => {
-    return Effect.gen(function* () {
+});
+
+export default Anthropic.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ message }) {
       const model = (yield* AiService.AiService).model('@anthropic/claude-sonnet-4-5');
+
       //
       // Basic example.
       //
-      const { text } = yield* LanguageModel.generateText({ prompt: data.message }).pipe(Effect.provide(model));
+      const { text } = yield* LanguageModel.generateText({ prompt: message }).pipe(Effect.provide(model));
 
       //
       // Streaming example.
@@ -37,6 +44,6 @@ export default defineFunction({
       const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
 
       return { response: text, streamText: fullText };
-    });
-  },
-});
+    }),
+  ),
+);

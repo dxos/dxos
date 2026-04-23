@@ -3,5 +3,7 @@
 //
 
 export * as Chat from './Chat';
-export * as Project from './Project';
+export * as Agent from './Agent';
+export * as McpServer from './McpServer';
 export * as Plan from './Plan';
+export * as Memory from './Memory';

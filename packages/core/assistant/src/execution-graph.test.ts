@@ -71,7 +71,7 @@ describe('ExecutionGraph', () => {
         blocks: [
           {
             _tag: 'text',
-            text: '{"id":"01K6AXZKK79H4E54RKP1YZDARK","@type":"dxn:type:dxos.org/type/Organization:0.1.0","@meta":{"keys":[]},"name":"Blue Yard","website":"https://blueyard.com"}',
+            text: '{"id":"01K6AXZKK79H4E54RKP1YZDARK","@type":"dxn:type:org.dxos.type.organization:0.1.0","@meta":{"keys":[]},"name":"Blue Yard","website":"https://blueyard.com"}',
           },
         ],
         properties: {},

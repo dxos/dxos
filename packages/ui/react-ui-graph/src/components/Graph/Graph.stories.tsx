@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import '../../../styles/graph.css';
+
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
@@ -9,9 +11,9 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
+import { Json, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-mosaic';
-import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withRegistry } from '@dxos/storybook-utils';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -32,10 +34,7 @@ import {
 import { type SVGContext } from '../../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
-
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
-
-import '../../../styles/graph.css';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 
@@ -50,7 +49,7 @@ const projectorTypes: Record<ProjectorType, Factory> = {
   relational: GraphRelationalProjector as Factory,
 };
 
-type StoryProps = GraphProps & {
+type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
@@ -73,13 +72,13 @@ const DefaultStory = ({
   projectorType: _projectorType = 'force',
   projectorOptions,
   ...props
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
   const registry = useContext(RegistryContext);
 
   // Models.
-  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
+  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel(registry, graph) : undefined;
   });
@@ -287,7 +286,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel.GraphModel;
+  model?: GraphModel.ReactiveGraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
@@ -320,7 +319,12 @@ const Debug = ({
         <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
         <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
-      <JsonFilter data={data} classNames='text-sm' />
+      <Json.Root data={data}>
+        <Json.Content>
+          <Json.Filter />
+          <Json.Data classNames='text-sm' />
+        </Json.Content>
+      </Json.Root>
     </div>
   );
 };

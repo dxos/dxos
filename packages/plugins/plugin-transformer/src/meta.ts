@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/transformer',
+  id: 'org.dxos.plugin.transformer',
   name: 'Transformer',
   description: trim`
     Execute local machine learning transformers and AI models directly in your browser.

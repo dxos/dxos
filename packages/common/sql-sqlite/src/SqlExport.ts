@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';

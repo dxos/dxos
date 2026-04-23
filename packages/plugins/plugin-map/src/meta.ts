@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/map',
+  id: 'org.dxos.plugin.map',
   name: 'Maps',
   description: trim`
     Interactive mapping visualization that plots table records containing latitude and longitude coordinates.

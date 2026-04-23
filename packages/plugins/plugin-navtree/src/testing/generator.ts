@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { type Node } from '@dxos/app-graph';
 import { Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { range } from '@dxos/util';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
@@ -17,12 +17,12 @@ import { range } from '@dxos/util';
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
 type ObjectDataGenerator = {
-  createSchema?: () => Type.Obj.Any;
+  createSchema?: () => Type.AnyObj;
   createData: () => any;
 };
 
 type ObjectFactory<T> = {
-  schema?: Type.Obj.Any; // TODO(burdon): Support both typed and expando schema.
+  schema?: Type.AnyObj; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
 
@@ -43,16 +43,16 @@ export const Priority = [1, 2, 3, 4, 5];
 export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
   document: {
     createData: () => ({
-      title: faker.lorem.sentence(3),
-      body: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
+      title: random.lorem.sentence(3),
+      body: random.lorem.sentences({ min: 1, max: random.number.int({ min: 1, max: 3 }) }),
     }),
   },
 
   image: {
     createData: () => ({
-      title: faker.lorem.sentence(3),
-      image: faker.helpers.arrayElement(data.images),
-      body: faker.datatype.boolean() ? faker.lorem.sentences() : undefined,
+      title: random.lorem.sentence(3),
+      image: random.helpers.arrayElement(data.images),
+      body: random.datatype.boolean() ? random.lorem.sentences() : undefined,
     }),
   },
 
@@ -65,16 +65,16 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
         priority: Schema.Number,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Project',
+          typename: 'com.example.type.project',
           version: '0.1.0',
         }),
       ),
 
     createData: () => ({
-      title: faker.commerce.productName(),
-      repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
-      status: faker.helpers.arrayElement(Status),
-      priority: faker.helpers.arrayElement(Priority),
+      title: random.commerce.productName(),
+      repo: random.datatype.boolean({ probability: 0.3 }) ? random.internet.url() : undefined,
+      status: random.helpers.arrayElement(Status),
+      priority: random.helpers.arrayElement(Priority),
     }),
   },
 };
@@ -94,12 +94,12 @@ export class TestObjectGenerator {
       }, {});
   }
 
-  get schema(): Type.Obj.Any[] {
+  get schema(): Type.AnyObj[] {
     return Object.values(this.factories).map((f) => f.schema!);
   }
 
   createObject({ types }: { types?: string[] } = {}) {
-    const type = faker.helpers.arrayElement(types ?? Object.keys(this.factories));
+    const type = random.helpers.arrayElement(types ?? Object.keys(this.factories));
     const factory = this.factories[type];
     return factory?.createObject();
   }
@@ -136,7 +136,7 @@ export const createTree = () => {
     nodes: [...Array(4)].map(() => {
       const l0 = generator.createObject();
       return {
-        id: faker.string.uuid(),
+        id: random.string.uuid(),
         data: null,
         type: 'category',
         properties: {
@@ -148,7 +148,7 @@ export const createTree = () => {
           ...[...Array(4)].map(() => {
             const l1 = generator.createObject();
             return {
-              id: faker.string.uuid(),
+              id: random.string.uuid(),
               data: null,
               type: 'document',
               properties: {
@@ -157,20 +157,20 @@ export const createTree = () => {
               },
               nodes: [
                 {
-                  id: `${faker.string.uuid()}__a1`,
+                  id: `${random.string.uuid()}__a1`,
                   data: () => {},
                   type: 'action',
                   properties: {
-                    label: faker.lorem.words(2),
+                    label: random.lorem.words(2),
                     icon: 'ph--boat--regular',
                   },
                 },
                 {
-                  id: `${faker.string.uuid()}__a2`,
+                  id: `${random.string.uuid()}__a2`,
                   data: () => {},
                   type: 'action',
                   properties: {
-                    label: faker.lorem.words(2),
+                    label: random.lorem.words(2),
                     icon: 'ph--train-simple--regular',
                   },
                 },
@@ -178,20 +178,20 @@ export const createTree = () => {
             } satisfies Node.NodeArg<any>;
           }),
           {
-            id: `${faker.string.uuid()}__a1`,
+            id: `${random.string.uuid()}__a1`,
             data: () => {},
             type: 'action',
             properties: {
-              label: faker.lorem.words(2),
+              label: random.lorem.words(2),
               icon: 'ph--boat--regular',
             },
           },
           {
-            id: `${faker.string.uuid()}__a2`,
+            id: `${random.string.uuid()}__a2`,
             data: () => {},
             type: 'action',
             properties: {
-              label: faker.lorem.words(2),
+              label: random.lorem.words(2),
               icon: 'ph--train-simple--regular',
             },
           },

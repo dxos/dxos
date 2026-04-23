@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type SpecSelectorProps = FormFieldComponentProps;
 
@@ -22,20 +22,15 @@ export const SpecSelector = (props: SpecSelectorProps) => {
       const getDefaultTriggerSpec = (kind: string) => {
         switch (kind) {
           case 'timer':
-            return { kind: 'timer', cron: '' };
+            return Trigger.specTimer('');
           case 'subscription':
-            return {
-              kind: 'subscription',
-              query: {
-                ast: Query.select(Filter.nothing()).ast,
-              },
-            };
+            return Trigger.specSubscription(Query.select(Filter.nothing()));
           case 'queue':
-            return { kind: 'queue', queue: 'dxn:queue:default' };
+            return Trigger.specQueue('dxn:queue:default');
           case 'email':
-            return { kind: 'email' };
+            return Trigger.specEmail();
           case 'webhook':
-            return { kind: 'webhook' };
+            return Trigger.specWebhook();
           default:
             return undefined;
         }
@@ -52,11 +47,20 @@ export const SpecSelector = (props: SpecSelectorProps) => {
     [props.type, specProps],
   );
 
+  const kindLabels: Record<string, string> = {
+    timer: t('trigger-type.timer.label'),
+    webhook: t('trigger-type.webhook.label'),
+    websocket: t('trigger-type.websocket.label'),
+    subscription: t('trigger-type.subscription.label'),
+    email: t('trigger-type.email.label'),
+    queue: t('trigger-type.queue.label'),
+  };
+
   const options = useMemo(
     () =>
       Trigger.Kinds.map((kind) => ({
         value: kind,
-        label: t(`trigger type ${kind}`),
+        label: kindLabels[kind],
       })),
     [t],
   );

@@ -5,73 +5,55 @@
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { ToggleContainer } from '@dxos/react-ui-components';
+import { ContentBlock, type Message } from '@dxos/types';
+import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+
+import { type BlockRenderer, type MessageThreadContext } from './sync';
+import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
+  FallbackWidget,
   PromptWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
   SuggestionWidget,
+  StatsWidget,
   SummaryWidget,
-} from '@dxos/react-ui-components';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { ContentBlock, type Message } from '@dxos/types';
-import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
-
-import { ToolBlock } from '../ToolBlock';
-
-import { type BlockRenderer, type MessageThreadContext } from './sync';
-
-const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
-  return (
-    <ToggleContainer.Root classNames='rounded-xs'>
-      <ToggleContainer.Header classNames='bg-group-surface'>{_tag}</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modal-surface'>
-        <Json classNames='p-2! text-sm' data={props} />
-      </ToggleContainer.Content>
-    </ToggleContainer.Root>
-  );
-};
-
-const Summary = ({ text }: { text: string }) => {
-  return (
-    <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-group-surface'>Conversation summarized</ToggleContainer.Header>
-      <ToggleContainer.Content classNames='bg-modal-surface'>{text}</ToggleContainer.Content>
-    </ToggleContainer.Root>
-  );
-};
+  ToolWidget,
+  StatusWidget,
+} from './widgets';
 
 /**
  * Custom XML tags registry.
  */
 export const componentRegistry: XmlWidgetRegistry = {
   //
-  // Widgets
+  // DOM Widgets
   //
 
-  ['prompt' as const]: {
+  prompt: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
   },
-  ['reasoning' as const]: {
+  reasoning: {
     block: true,
-    factory: ({ children }) => {
+    streaming: true,
+    factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
-      return text ? new ReasoningWidget(text) : null;
+      return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
-  ['reference' as const]: {
+  reference: {
     block: false,
     factory: ({ children, ref }) => {
       const text = getXmlTextChild(children);
       return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
-  ['select' as const]: {
+  select: {
     block: true,
     factory: ({ children }) => {
       const options = children
@@ -80,49 +62,61 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  ['suggestion' as const]: {
+  suggestion: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  ['stats' as const]: {
+  stats: {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
-      return text ? new SummaryWidget(text) : null;
+      return text ? new StatsWidget(text) : null;
+    },
+  },
+  status: {
+    block: true,
+    streaming: true,
+    factory: ({ children, range }) => {
+      const text = getXmlTextChild(children);
+      return text ? new StatusWidget(text, range.from) : null;
     },
   },
 
   //
-  // React
+  // React Widgets (portaled outside of the editor)
   //
 
-  ['toolCall' as const]: {
+  summary: {
     block: true,
-    Component: ToolBlock,
+    Component: SummaryWidget,
   },
-  ['toolResult' as const]: {
+  toolCall: {
     block: true,
-    Component: Fallback,
+    Component: (props) => (
+      <div role='none' className='py-2'>
+        <ToolWidget {...props} />
+      </div>
+    ),
   },
-  ['toolkit' as const]: {
+  toolResult: {
     block: true,
-    Component: Fallback,
+    Component: FallbackWidget,
   },
-  ['summary' as const]: {
+  toolkit: {
     block: true,
-    Component: Summary,
+    Component: FallbackWidget,
   },
 
   //
   // Fallback
   //
 
-  ['json' as const]: {
+  json: {
     block: true,
-    Component: Fallback,
+    Component: FallbackWidget,
   },
 };
 
@@ -156,52 +150,89 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       }
       break;
     }
+
     case 'reference': {
+      if (block.pending) {
+        return;
+      }
       const dxn = block.reference.dxn;
       return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
     }
+
     case 'suggestion': {
       if (block.pending) {
         return;
       }
       return `<suggestion>${block.text}</suggestion>`;
     }
+
     case 'select': {
       if (block.pending || block.options.length === 0) {
         return;
       }
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
+
     case 'toolCall': {
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, {
-        blocks: [block],
-      });
+      applyToolBlockToWidgetState(context, block);
       return `<toolCall id="${block.toolCallId}" />`;
     }
+
     case 'toolResult': {
       // TODO(dmaretskyi): the parameter could be undefined, perhaps tool blocks are not arriving in order.
-      context.updateWidget<{ blocks: ContentBlock.Any[] }>(block.toolCallId, ({ blocks = [] } = { blocks: [] }) => ({
-        blocks: [...blocks, block],
-      }));
+      applyToolBlockToWidgetState(context, block);
       break;
     }
+
     case 'stats': {
-      return `<stats>${ContentBlock.createStatsMessage(block)}</stats>`;
+      return '';
     }
+
     case 'reasoning': {
-      const text = block.reasoningText ?? block.redactedText;
+      let text = block.reasoningText ?? block.redactedText;
       if (!text) {
         return;
       }
-      // TODO(dmaretskyi): The mixed Markdown/XML parser does not support parsing multi-line XML tags.
-      return `<reasoning>${text.replace(/\n/g, ' ').trim()}</reasoning>`;
+      return renderXMLBlock('reasoning', { content: text, pending: block.pending });
     }
+
     case 'summary': {
-      return `<summary>${block.content}</summary>`;
+      return renderXMLBlock('summary', { content: block.content, pending: block.pending });
     }
+
+    case 'status': {
+      return renderXMLBlock('status', { content: block.statusText, pending: block.pending });
+    }
+
     default: {
       // TODO(burdon): Needs stable ID.
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
     }
+  }
+};
+
+/**
+ * Escape text embedded in generated XML so the mixed XML parser does not treat `&`, `<`, `>` as markup.
+ */
+const escapeXmlTextContent = (raw: string): string =>
+  raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Strip actual list-marker prefixes without removing meaningful leading content.
+ */
+const stripBulletLikeLinePrefixes = (raw: string): string =>
+  raw
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*(?:[-*+•]|\d+[.)]\s)/, ''))
+    .join('\n');
+
+const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
+  // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
+  const content = escapeXmlTextContent(stripBulletLikeLinePrefixes((opts.content ?? '').replace(/\n\n/g, ' ').trim()));
+
+  if (opts.pending) {
+    return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}`;
+  } else {
+    return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}</${tag}>`;
   }
 };

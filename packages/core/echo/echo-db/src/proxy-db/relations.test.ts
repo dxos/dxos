@@ -8,7 +8,6 @@ import { Filter, type Hypergraph, Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
-
 import { type EchoDatabase } from './database';
 
 describe('Relations', () => {
@@ -42,7 +41,7 @@ describe('Relations', () => {
     expect(Relation.getSource(manager) === person).to.be.true;
     expect(Relation.getTarget(manager) === org).to.be.true;
 
-    await db.flush({ indexes: true });
+    await db.flush();
     await testBuilder.lastPeer!.reload();
     {
       const db = await testBuilder.lastPeer!.openLastDatabase();

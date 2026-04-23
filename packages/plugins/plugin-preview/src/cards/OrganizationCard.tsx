@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Card } from '@dxos/react-ui';
 import { type Organization } from '@dxos/types';
 
-export const OrganizationCard = ({ subject }: SurfaceComponentProps<Organization.Organization>) => {
-  const { image, description, website } = subject;
+export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organization.Organization>) => {
+  const { name, image, description, website } = subject;
 
   return (
     <Card.Content>

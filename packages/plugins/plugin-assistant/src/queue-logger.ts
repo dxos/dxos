@@ -4,7 +4,7 @@
 
 import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
-import { DXN, Key, Obj } from '@dxos/echo';
+import { DXN, Feed, Obj } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
@@ -20,15 +20,26 @@ export class QueueLogger implements SequenceLogger {
     const space = getSpace(sequence);
     invariant(space, 'Space not found');
     this._space = space;
-    let dxn = this._space.properties.invocationTraceQueue?.dxn;
-    if (!dxn) {
-      dxn = DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
-      const newDxn = dxn;
-      Obj.change(this._space.properties, (p) => {
-        p.invocationTraceQueue = Ref.fromDXN(newDxn);
+
+    const existingFeedRef = this._space.properties.invocationTraceFeed;
+    let queueDxn: DXN | undefined;
+
+    if (existingFeedRef) {
+      // A feed reference exists; resolve its queue DXN. If the target isn't loaded yet,
+      // fail loudly rather than silently creating a new feed and orphaning existing traces.
+      invariant(existingFeedRef.target, 'invocationTraceFeed reference is not yet loaded');
+      queueDxn = Feed.getQueueDxn(existingFeedRef.target) ?? undefined;
+      invariant(queueDxn, 'invocationTraceFeed has no queue DXN');
+    } else {
+      const feed = space.db.add(Feed.make({ namespace: 'trace' }));
+      queueDxn = Feed.getQueueDxn(feed) ?? undefined;
+      invariant(queueDxn, 'New invocationTraceFeed has no queue DXN');
+      Obj.change(this._space.properties, (obj) => {
+        obj.invocationTraceFeed = Ref.make(feed);
       });
     }
-    this._invocationTraceQueue = this._space.queues.get(dxn);
+
+    this._invocationTraceQueue = this._space.queues.get(queueDxn);
   }
 
   log(event: SequenceEvent) {

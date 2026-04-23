@@ -6,12 +6,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
-import {
-  type Space,
-  useQuery,
-  useSpace,
-  useSpaces,
-} from '@dxos/react-client/echo';
+import { type Space, useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 export const App = () => {
   // Usually space IDs are in the URL like in params.spaceKey.

@@ -9,7 +9,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
+import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -17,11 +18,9 @@ import { IconButton, Input, Message, type ThemedClassName, useTranslation } from
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import {
-  FieldSchema,
-  type FieldType,
+  ParentLabelAnnotation,
   ProjectionModel,
   VIEW_FIELD_LIMIT,
-  type View,
   createEchoChangeCallback,
   getTypenameFromQuery,
 } from '@dxos/schema';
@@ -97,16 +96,20 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
 
     const queueTarget = Match.value(view.query.ast).pipe(
-      Match.when({ type: 'options' }, ({ options }) => {
-        return Option.fromNullable(options.queues).pipe(
+      Match.when({ type: 'from' }, ({ from }) => {
+        if (from._tag !== 'scope') {
+          return undefined;
+        }
+        return Option.fromNullable(from.scope.queues).pipe(
           Option.flatMap((queues) => Array.head(queues)),
+          Option.map(String),
           Option.getOrUndefined,
         );
       }),
       Match.orElse(() => undefined),
     );
 
-    const feeds = useQuery(db, Filter.type(Type.Feed));
+    const feeds = useQuery(db, Filter.type(Feed.Feed));
 
     const targetRef = useMemo(() => {
       if (!queueTarget) {
@@ -127,7 +130,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Type.Ref(Type.Feed).annotations({ title: 'Target Feed' })),
+          // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
+          target: Ref.Ref(Feed.Feed).pipe(
+            Schema.annotations({ title: 'Target Feed' }),
+            ParentLabelAnnotation.set(true),
+            Schema.optional,
+          ),
         }).pipe(Schema.mutable);
       }
 
@@ -185,7 +193,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
           <Message.Root valence='info' classNames='my-form-padding'>
-            <Message.Title>{t('system schema description')}</Message.Title>
+            <Message.Title>{t('system-schema.description')}</Message.Title>
           </Message.Root>
         )}
 
@@ -193,7 +201,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
           <Form.FieldSet />
 
-          <FormFieldLabel label={t('fields label')} asChild />
+          <FormFieldLabel label={t('fields.label')} asChild />
           <FieldList
             schema={schema}
             view={view}
@@ -236,7 +244,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     return model;
   }, [atomRegistry, schema, view]);
 
-  const [expandedField, setExpandedField] = useState<FieldType['id']>();
+  const [expandedField, setExpandedField] = useState<View.FieldType['id']>();
 
   const handleAdd = useCallback(() => {
     invariant(!readonly);
@@ -245,7 +253,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   }, [projectionModel, readonly]);
 
   const handleToggleField = useCallback(
-    (field: FieldType) => {
+    (field: View.FieldType) => {
       setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
     },
     [readonly],
@@ -266,12 +274,12 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      Obj.change(view, (v) => {
+      Obj.change(view, (view) => {
         // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-        const fields = [...v.projection.fields];
+        const fields = [...view.projection.fields];
         const [moved] = fields.splice(fromIndex, 1);
         fields.splice(toIndex, 0, moved);
-        v.projection.fields = fields;
+        view.projection.fields = fields;
       });
     },
     [view, readonly],
@@ -300,21 +308,21 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   }
 
   return (
-    <List.Root<FieldType>
-      items={viewSnapshot.projection.fields as FieldType[]}
-      isItem={Schema.is(FieldSchema)}
+    <List.Root<View.FieldType>
+      items={viewSnapshot.projection.fields as View.FieldType[]}
+      isItem={Schema.is(View.FieldSchema)}
       getId={(field) => field.id}
       onMove={readonly ? undefined : handleMove}
       readonly={readonly}
     >
       {({ items: fields }) => (
         <>
-          {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
+          {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
           <div role='list' className='grid grid-cols-[min-content_1fr_min-content_min-content_min-content]'>
             {fields?.map((field) => {
               const hidden = field.visible === false;
               return (
-                <List.Item<FieldType>
+                <List.Item<View.FieldType>
                   key={field.id}
                   item={field}
                   classNames={'grid grid-cols-subgrid col-span-5'}
@@ -332,7 +340,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
                     </List.ItemTitle>
-                    <List.ItemButton
+                    <List.ItemIconButton
                       label={t(hidden ? 'show field label' : 'hide field label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
@@ -343,16 +351,16 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     {!readonly && (
                       <>
                         <List.ItemDeleteButton
-                          label={t('delete field label')}
+                          label={t('delete-field.label')}
                           autoHide={false}
                           disabled={readonly || schemaReadonly || viewSnapshot.projection.fields.length <= 1}
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
-                        <IconButton
+                        <List.ItemIconButton
                           iconOnly
                           variant='ghost'
-                          label={t('toggle expand label', { ns: osTranslations })}
+                          label={t('toggle-expand.label', { ns: osTranslations })}
                           icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleToggleField(field)}
                           data-testid='field.toggle'
@@ -361,7 +369,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     )}
                   </div>
                   {expandedField === field.id && !readonly && (
-                    <div role='none' className='col-span-5 mt-1 mb-1 border border-separator rounded-md'>
+                    <div role='none' className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}
                         registry={registry}
@@ -379,7 +387,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             <div role='none' className='my-form-padding'>
               <IconButton
                 icon='ph--plus--regular'
-                label={t('add property button label')}
+                label={t('add-property-button.label')}
                 onClick={handleAdd}
                 disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
                 classNames='w-full'

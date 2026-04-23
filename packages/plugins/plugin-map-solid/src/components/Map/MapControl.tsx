@@ -26,7 +26,7 @@ export const MapControl = (props: MapControlProps) => {
   };
 
   return (
-    <Map.Root ref={setController} center={props.center} zoom={props.zoom} onChange={props.onChange}>
+    <Map.Root center={props.center} zoom={props.zoom} onChange={props.onChange} ref={setController}>
       <Map.Tiles />
       <Map.Markers markers={props.markers} />
       {props.onToggle && <Map.Action onAction={handleAction} />}

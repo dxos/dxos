@@ -72,6 +72,7 @@ export const createGapSeparator = (id: string = 'gap', source: string = 'root') 
     {
       source,
       target: id,
+      relation: 'child' as const,
     },
   ],
 });
@@ -85,5 +86,5 @@ export const createLineSeparator = (id: string = 'line', source: string = 'root'
       data: undefined as never,
     } satisfies MenuSeparator,
   ],
-  edges: [{ source, target: id }],
+  edges: [{ source, target: id, relation: 'child' as const }],
 });

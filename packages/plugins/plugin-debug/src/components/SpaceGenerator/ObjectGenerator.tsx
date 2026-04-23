@@ -7,19 +7,20 @@ import type * as Schema from 'effect/Schema';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, type Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { type OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
-import { Diagram } from '@dxos/plugin-sketch/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
-import { faker } from '@dxos/random';
+import { Sketch } from '@dxos/plugin-sketch/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 const findViewByTypename = async (views: View.View[], typename: string) => {
   return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
@@ -27,7 +28,7 @@ const findViewByTypename = async (views: View.View[], typename: string) => {
 
 export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <S extends Type.Obj.Any>(
+export const createGenerator = <S extends Type.AnyObj>(
   client: Client,
   invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   schema: S,
@@ -41,8 +42,6 @@ export const createGenerator = <S extends Type.Obj.Any>(
     const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
       await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
-    } else if (!view && staticSchema) {
-      await invokePromise(SpaceOperation.UseStaticSchema, { db: space.db, typename, show: false });
     }
 
     // Create objects.
@@ -58,8 +57,8 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       const objects = range(n).map(() => {
         return space.db.add(
           Markdown.make({
-            name: faker.commerce.productName(),
-            content: faker.lorem.sentences(5),
+            name: random.commerce.productName(),
+            content: random.lorem.sentences(5),
           }),
         );
       });
@@ -69,10 +68,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    Diagram.Diagram.typename,
+    Sketch.Sketch.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(Diagram.make({ name: faker.commerce.productName() }));
+        const obj = space.db.add(Sketch.make({ name: random.commerce.productName() }));
         return obj;
       });
 
@@ -108,7 +107,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         // TODO(burdon): Set formatting for columns.
         return space.db.add(
           Sheet.make({
-            name: faker.commerce.productName(),
+            name: random.commerce.productName(),
             cells,
           }),
         );

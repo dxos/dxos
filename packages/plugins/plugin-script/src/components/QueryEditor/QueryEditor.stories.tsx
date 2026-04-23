@@ -8,17 +8,16 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createDocAccessor } from '@dxos/echo-db';
 import { QuerySandbox } from '@dxos/echo-query';
 import { createObject } from '@dxos/react-client/echo';
-import { Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Panel, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const SCRIPT = trim`
-  Query.select(Filter.type('dxos.org/type/Person'))
+  Query.select(Filter.type('org.dxos.type.person'))
 `;
 
 const DefaultStory = (props: QueryEditorProps) => {
@@ -63,16 +62,19 @@ const DefaultStory = (props: QueryEditorProps) => {
   }, [object, sandbox]);
 
   return (
-    <Container.Main toolbar>
-      {/* <ScriptToolbar script={script} state={{}} /> */}
-      <Toolbar.Root>
-        <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
-      </Toolbar.Root>
-      <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
-        <QueryEditor {...props} initialValue={object.content} extensions={extensions} />
-        <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
-      </div>
-    </Container.Main>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
+          <QueryEditor {...props} initialValue={object.content} extensions={extensions} />
+          <Json.Data data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -80,13 +82,7 @@ const meta = {
   title: 'plugins/plugin-script/components/QueryEditor',
   component: QueryEditor,
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({
-      layout: 'column',
-      classNames: 'w-prose-max-width',
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-document-max-width' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

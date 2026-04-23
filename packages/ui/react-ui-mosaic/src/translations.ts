@@ -10,8 +10,9 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'add item label': 'Add item',
-        'delete menu label': 'Delete',
+        'action-menu.label': 'Actions',
+        'add-item.label': 'Add item',
+        'delete-menu.label': 'Delete',
       },
     },
   },

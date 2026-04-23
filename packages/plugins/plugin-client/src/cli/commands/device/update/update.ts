@@ -16,8 +16,6 @@ import { printDevice } from '../util';
 export const handler = Effect.fn(function* ({ label }: { label: string }) {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
-  yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-
   const device = client.halo.device;
   if (!device) {
     if (json) {

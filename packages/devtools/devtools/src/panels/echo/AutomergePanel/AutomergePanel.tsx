@@ -4,8 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Format } from '@dxos/echo/internal';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { Format } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

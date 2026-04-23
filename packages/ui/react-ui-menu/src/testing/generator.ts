@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuItem, type MenuItemGroup } from '../types';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
 export type CreateActionsProps = Partial<{
   type?: typeof Node.ActionType | typeof Node.ActionGroupType;
@@ -38,15 +38,15 @@ const icons = {
 
 export const createActions = (params?: CreateActionsProps) => {
   const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
-  return faker.helpers.multiple(
+  return random.helpers.multiple(
     () => ({
-      id: faker.string.uuid(),
+      id: random.string.uuid(),
       type,
       data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
       properties: {
-        label: faker.lorem.words(2),
-        icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
-        disabled: faker.helpers.arrayElement([true, false]),
+        label: random.lorem.words(2),
+        icon: random.helpers.arrayElement(icons[random.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
+        disabled: random.helpers.arrayElement([true, false]),
         ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
       },
     }),
@@ -61,8 +61,8 @@ const buildNestedActions = (): ActionGraphProps => {
     const actions = createActions();
     result.nodes.push(group, ...actions);
     result.edges.push(
-      { source: 'root', target: group.id },
-      ...actions.map((action) => ({ source: group.id, target: action.id })),
+      { source: 'root', target: group.id, relation: 'child' },
+      ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
     );
   });
   return result;
@@ -70,23 +70,28 @@ const buildNestedActions = (): ActionGraphProps => {
 
 export const createNestedActions = Atom.make(buildNestedActions()).pipe(Atom.keepAlive);
 
-export const createNestedActionsResolver = (groupParams?: CreateActionsProps, params?: CreateActionsProps) => {
-  const graph = Graph.make();
+export const createNestedActionsResolver = (props?: {
+  groupParams?: CreateActionsProps;
+  params?: CreateActionsProps;
+  registry?: Registry.Registry;
+}) => {
+  const { groupParams, params, registry } = props ?? {};
+  const graph = Graph.make({ ...(registry && { registry }) });
   const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
     graph.pipe(
       Graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]),
       Graph.addEdges([
-        { source: 'root', target: group.id },
-        ...actions.map((action) => ({ source: group.id, target: action.id })),
+        { source: 'root', target: group.id, relation: 'child' },
+        ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
       ]),
-      Graph.expand(group.id),
+      Graph.expand(group.id, 'child'),
     );
   });
-  const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (Graph.getActions(graph, groupNode?.id ?? Node.RootId) || null) as MenuItem[] | null;
-  return { resolveGroupItems };
+  const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
+    graph.connections(group?.id ?? Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+  return { items };
 };
 
 /**
@@ -107,7 +112,7 @@ export const useMutateActions = (actionsAtom: Atom.Writable<ActionGraphProps>) =
           ...node,
           properties: {
             ...node.properties,
-            icon: faker.helpers.arrayElement(node.properties?.icon?.endsWith('regular') ? icons.fill : icons.regular),
+            icon: random.helpers.arrayElement(node.properties?.icon?.endsWith('regular') ? icons.fill : icons.regular),
             disabled: !node.properties?.disabled,
           },
         };

@@ -8,7 +8,7 @@ import { StackManager } from '@dxos/react-ui-stack/playwright';
 
 export const StackPlugin = {
   meta: {
-    id: 'dxos.org/plugin/stack',
+    id: 'org.dxos.plugin.stack',
   },
 };
 
@@ -17,10 +17,9 @@ export const Stack = {
   getStack: (page: Page) => new StackManager(page.getByTestId('main.stack')),
 
   addSection: async (page: Page, type: string) => {
-    // TODO(wittjosiah): This currently helps reduce flakiness with waiting for the button to appear.
-    await page.waitForTimeout(100);
-    const dialogTrigger = await page.$('[data-testid="stack.addSection"]');
-    await dialogTrigger!.click();
+    const addSectionLocator = page.getByTestId('stack.addSection');
+    await addSectionLocator.waitFor({ state: 'visible', timeout: 5_000 });
+    await addSectionLocator.click();
     await page.getByRole('listbox').getByText(type).first().click();
 
     const objectForm = page.getByTestId('create-object-form');

@@ -15,7 +15,7 @@ import React, {
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';
@@ -28,8 +28,7 @@ import {
   mosaicStyles,
   useMosaic,
 } from '../Mosaic';
-
-import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
+import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
 
 //
@@ -97,8 +96,8 @@ type BoardContentProps<TColumn = any> = ThemedClassName<{
   Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
-const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
-  ({ classNames, id: _id, debug, eventHandler, Tile = DefaultBoardColumn }, forwardedRef) => {
+const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
+  ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -106,7 +105,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div ref={forwardedRef} className={mx('flex h-full w-full overflow-hidden', classNames)}>
+      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -116,7 +115,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
             eventHandler={eventHandler}
             debug={debugHandler}
           >
-            <ScrollArea.Root orientation='horizontal' classNames='md:pt-3' margin padding>
+            <ScrollArea.Root orientation='horizontal' centered padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>
@@ -163,7 +162,7 @@ export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNa
   const { containers, dragging } = useMosaic(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (
-    <Json
+    <Json.Data
       data={{ containers, dragging, count: counter.current++ }}
       classNames={mx('text-xs', classNames)}
       ref={forwardedRef}
@@ -186,5 +185,6 @@ export const Board = {
   Debug: BoardDebug,
 };
 
-export { useBoard };
+export { useBoard, useBoardColumn };
+
 export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };

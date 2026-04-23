@@ -7,12 +7,11 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Input } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client';
 import { useSpace } from '../echo';
-
 import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater';
 
 const meta = {
@@ -47,8 +46,8 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
           placeholder='Name'
           value={space.properties.name}
           onChange={(event) =>
-            Obj.change(space.properties, (p) => {
-              p.name = event.target.value;
+            Obj.change(space.properties, (obj) => {
+              obj.name = event.target.value;
             })
           }
         />

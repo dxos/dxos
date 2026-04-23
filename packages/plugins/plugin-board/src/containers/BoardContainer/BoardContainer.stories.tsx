@@ -9,20 +9,21 @@ import React, { useEffect, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { translations } from '../../translations';
-import { Board } from '../../types';
+import { Board } from '#types';
 
+import { translations } from '../../translations';
 import { BoardContainer } from './BoardContainer';
 
-faker.seed(0);
+random.seed(0);
 
 const createBoard = () =>
   Obj.make(Board.Board, {
@@ -36,12 +37,12 @@ const createBoard = () =>
 
 const createOrg = () =>
   Obj.make(Organization.Organization, {
-    name: faker.commerce.productName(),
-    description: faker.lorem.paragraph(),
-    image: faker.image.url(),
-    website: faker.internet.url(),
+    name: random.commerce.productName(),
+    description: random.lorem.paragraph(),
+    image: random.image.url(),
+    website: random.internet.url(),
     // TODO(burdon): Fix.
-    // status: faker.helpers.arrayElement(Organization.StatusOptions).id,
+    // status: random.helpers.arrayElement(Organization.StatusOptions).id,
   });
 
 const DefaultStory = () => {
@@ -61,7 +62,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <BoardContainer role='board' subject={board} />;
+  return <BoardContainer role='board' subject={board} attendableId='test' />;
 };
 
 //
@@ -72,7 +73,6 @@ const meta = {
   title: 'plugins/plugin-board/containers/BoardContainer',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -81,18 +81,18 @@ const meta = {
           types: [Organization.Organization, Person.Person, Board.Board],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
               const board = space.db.add(createBoard());
 
-              Obj.change(board, (b) => {
+              Obj.change(board, (board) => {
                 // Add some sample items
                 Array.from({ length: 10 }).map(() => {
                   const org = createOrg();
                   space.db.add(org);
-                  b.items.push(Ref.make(org));
-                  b.layout.cells[org.id] = {
+                  board.items.push(Ref.make(org));
+                  board.layout.cells[org.id] = {
                     x: Math.floor(Math.random() * 5) - 2,
                     y: Math.floor(Math.random() * 5) - 2,
                     width: 1,

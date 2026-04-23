@@ -21,6 +21,7 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type ServiceBundle } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -45,9 +46,9 @@ export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'>
 export const fromHost = async (
   config = new Config(),
   params?: LocalClientServicesParams,
-  observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
+  const observabilityGroup = config.get('runtime.client.observabilityGroup');
+  const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
   const networking = await setupNetworking(config, {}, () =>
     signalTelemetryEnabled
       ? {
@@ -174,22 +175,53 @@ export class LocalClientServices implements ClientServicesProvider {
     const { ClientServicesHost } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
-    // Create SQLite runtime layer.
+    // Create SQLite runtime layer. The choice is driven by `runtime.client.storage.sqlite_mode`
+    // in config — the presence of `createOpfsWorker` or `sqlitePath` options does not influence
+    // the decision. Missing prerequisites throw instead of silently falling back.
+    //
     // TODO(mykola): Worker and runtime leak if _host.open() fails below.
     //   If _host.open() throws, _isOpen remains false, and close() returns early without
     //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
+    const sqliteMode =
+      this._params.config?.get('runtime.client.storage.sqliteMode') ??
+      Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE;
+    log('initiatlizing sqlite', {
+      sqliteMode,
+      createOpfsWorker: !!this._createOpfsWorker,
+      sqlitePath: this._sqlitePath,
+    });
     let sqliteLayer;
-    if (this._createOpfsWorker) {
-      // Browser: use OPFS worker for persistent storage.
-      this._opfsWorker = this._createOpfsWorker();
-      sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
-    } else if (this._sqlitePath) {
-      // Node/Bun: use file-based SQLite for persistent indexing.
-      sqliteLayer = layerFile(this._sqlitePath);
-    } else {
-      // Fallback to in-memory SQLite (indexes lost on restart).
-      log.warn('Using in-memory SQLite; indexes will be lost on restart. Consider setting sqlitePath for Node/Bun.');
-      sqliteLayer = layerMemory;
+    switch (sqliteMode) {
+      case Runtime.Client.Storage.SqliteMode.OPFS: {
+        if (!this._createOpfsWorker) {
+          throw new Error(
+            'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
+          );
+        }
+        this._opfsWorker = this._createOpfsWorker();
+        sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
+        log('using sqlite opfs worker');
+        break;
+      }
+      case Runtime.Client.Storage.SqliteMode.FILE: {
+        if (!this._sqlitePath) {
+          throw new Error(
+            'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
+          );
+        }
+        sqliteLayer = layerFile(this._sqlitePath);
+        log('using sqlite file', { sqlitePath: this._sqlitePath });
+        break;
+      }
+      case Runtime.Client.Storage.SqliteMode.MEMORY:
+      case Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE:
+      default: {
+        if (sqliteMode === Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE) {
+          log.warn('runtime.client.storage.sqlite_mode not set, using in-memory SQLite');
+        }
+        sqliteLayer = layerMemory;
+        break;
+      }
     }
 
     this._runtime = ManagedRuntime.make(
@@ -230,13 +262,14 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._host?.close();
+    await this._host?.close(this._ctx);
 
+    log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
+    await this._runtime?.dispose();
+    this._runtime = undefined;
     // Clean up OPFS worker and runtime.
     this._opfsWorker?.terminate();
     this._opfsWorker = undefined;
-    await this._runtime?.dispose();
-    this._runtime = undefined;
 
     this._isOpen = false;
   }

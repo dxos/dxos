@@ -54,7 +54,7 @@ Loading and unloading plugins at runtime from external sources.
 
 Discovery and installation of plugins from a registry.
 
-***
+---
 
 ::: note Under Development
 

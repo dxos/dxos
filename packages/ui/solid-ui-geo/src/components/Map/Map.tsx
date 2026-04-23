@@ -55,6 +55,7 @@ const useMapContext = (displayName: string) => {
   if (!context) {
     throw new Error(`${displayName} must be used within Map.Root`);
   }
+
   return context;
 };
 
@@ -63,8 +64,8 @@ const useMapContext = (displayName: string) => {
 //
 
 type MapRootProps = {
-  children: JSX.Element;
   ref?: (controller: MapController) => void;
+  children: JSX.Element;
   class?: string;
   scrollWheelZoom?: boolean;
   doubleClickZoom?: boolean;

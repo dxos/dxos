@@ -42,6 +42,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     }
   ]
 }

@@ -6,17 +6,18 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
+import { type Collection } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { type Collection } from '@dxos/schema';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { type MaybePromise } from '@dxos/util';
 
-import { useInputSurfaceLookup } from '../../hooks';
-import { meta } from '../../meta';
-import { type CreateObject } from '../../types';
+import { useInputSurfaceLookup } from '#hooks';
+import { meta } from '#meta';
+import { type CreateObject } from '#types';
+
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */
@@ -29,7 +30,6 @@ export type CreateObjectOption = {
 export type Metadata = {
   createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
-  addToCollectionOnCreate?: boolean;
   icon?: string;
 };
 
@@ -85,40 +85,88 @@ export const CreateObjectPanel = ({
     [resolve, onCreateObject],
   );
 
+  const inputSchema = useMemo(
+    () => (metadata && typeof metadata === 'object' && metadata.inputSchema ? omitId(metadata.inputSchema) : undefined),
+    [metadata],
+  );
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
-  return !metadata ? (
-    <SelectType options={sortedOptions} onChange={handleSelectOption} />
-  ) : !target ? (
-    <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
-  ) : metadata.inputSchema ? (
-    <Form.Root
-      testId='create-object-form'
-      autoFocus
-      schema={omitId(metadata.inputSchema)}
-      defaultValues={initialFormValues}
-      db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
-      fieldProvider={inputSurfaceLookup}
-      onSave={handleCreateObject}
-    >
-      <Form.Viewport>
-        <Form.Content>
-          <Form.FieldSet />
-          <Form.Submit />
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
-  ) : null;
+  if (!metadata) {
+    return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
+  }
+
+  // TODO(burdon): Remove.
+  if (!target) {
+    return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+  }
+
+  if (metadata.inputSchema) {
+    return (
+      <Form.Root
+        autoFocus
+        schema={inputSchema}
+        defaultValues={initialFormValues}
+        fieldProvider={inputSurfaceLookup}
+        db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
+        onSave={handleCreateObject}
+        testId='create-object-form'
+      >
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  }
+
+  return null;
 };
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
 
-const SelectSpace = ({
-  spaces,
-  defaultSpaceId,
-  onChange,
-}: { onChange?: (db: Database.Database) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
+type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
+  onChange: (id: string) => void;
+};
+
+const SelectType = ({ options, onChange }: SelectTypeProps) => {
+  const { t } = useTranslation(meta.id);
+
+  const { results, handleSearch } = useSearchListResults({
+    items: options,
+    extract: (option) => option.label,
+  });
+
+  return (
+    <SearchList.Root onSearch={handleSearch}>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.schema-input'
+        placeholder={t('schema-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((option) => (
+          <SearchList.Item
+            key={option.id}
+            value={option.id}
+            label={option.label}
+            icon={option.icon ?? 'ph--placeholder--regular'}
+            onSelect={() => onChange(option.id)}
+          />
+        ))}
+      </SearchList.Viewport>
+    </SearchList.Root>
+  );
+};
+
+type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'> & {
+  onChange?: (db: Database.Database) => void;
+};
+
+const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => {
   const { t } = useTranslation(meta.id);
 
   const sortedSpaces = useMemo(
@@ -152,65 +200,26 @@ const SelectSpace = ({
       ),
   });
 
-  // TODO(burdon): Replace with Combobox.
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.space-input'
-          placeholder={t('space input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((space) => (
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((space) => {
+          return (
             <SearchList.Item
               key={space.id}
               value={space.id}
-              label={toLocalizedString(
-                getSpaceDisplayName(space, {
-                  personal: space.id === defaultSpaceId,
-                }),
-                t,
-              )}
+              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
               onSelect={() => onChange?.(space.db)}
-              classNames='flex items-center gap-2'
             />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Content>
-    </SearchList.Root>
-  );
-};
-
-const SelectType = ({ options, onChange }: { options: CreateObjectOption[]; onChange: (id: string) => void }) => {
-  const { t } = useTranslation(meta.id);
-
-  const { results, handleSearch } = useSearchListResults({
-    items: options,
-    extract: (option) => option.label,
-  });
-
-  return (
-    <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.schema-input'
-          placeholder={t('schema input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((option) => (
-            <SearchList.Item
-              key={option.id}
-              value={option.id}
-              label={option.label}
-              icon={option.icon ?? 'ph--placeholder--regular'}
-              classNames='flex items-center gap-2'
-              onSelect={() => onChange(option.id)}
-            />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Content>
+          );
+        })}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };

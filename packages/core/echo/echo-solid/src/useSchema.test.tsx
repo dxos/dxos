@@ -7,8 +7,8 @@ import { type JSX, createMemo } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Type } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { useSchema } from './useSchema';
 
@@ -100,7 +100,7 @@ describe('useSchema', () => {
     // The runtime registry query subscription doesn't fire when schemas are registered.
     // See: packages/core/echo/echo-db/src/proxy-db/runtime-schema-registry.ts:57
     let schemaAccessor: (() => any) | undefined;
-    const typename = 'example.com/type/Person';
+    const typename = 'com.example.type.person';
 
     function TestComponent() {
       const schema = useSchema(db, typename);

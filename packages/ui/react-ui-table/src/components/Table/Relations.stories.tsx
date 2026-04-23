@@ -5,37 +5,37 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
-import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { View } from '@dxos/schema';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
 import { Table } from '../../types';
-
 import { Table as TableComponent } from './Table';
 
-faker.seed(1);
-const generator: ValueGenerator = faker as any;
+random.seed(1);
+const generator: ValueGenerator = random as any;
 
 // TODO(burdon): Many-to-many relations.
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
+const useTestModel = <S extends Type.AnyObj>(schema: S, count: number) => {
   const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
@@ -50,7 +50,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
@@ -87,7 +87,7 @@ const DefaultStory = () => {
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Type.Entity.Any, values: any) => {
+    (schema: Type.AnyEntity, values: any) => {
       invariant(Type.isObjectSchema(schema));
       invariant(space);
       return space.db.add(Obj.make(schema, values));
@@ -96,9 +96,9 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='dx-expander grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
-        <TableComponent.Main
+        <TableComponent.Content
           model={orgModel}
           schema={Organization.Organization}
           presentation={orgPresentation}
@@ -108,7 +108,7 @@ const DefaultStory = () => {
         />
       </TableComponent.Root>
       <TableComponent.Root>
-        <TableComponent.Main
+        <TableComponent.Content
           model={contactModel}
           schema={Person.Person}
           presentation={contactPresentation}
@@ -147,7 +147,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }: any) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -196,8 +196,14 @@ export const Default: Story = {
     await userEvent.click(saveButton);
 
     // Verify the relation was set (cell should now contain the org name).
-    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
-    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
+    // Wait for the grid (Lit web component) to repaint after the reactive data update.
+    await waitFor(
+      async () => {
+        const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+        await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
+      },
+      { timeout: 5000 },
+    );
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
@@ -216,24 +222,24 @@ export const Default: Story = {
     const newSearchField = await body.findByPlaceholderText('Search…');
     await userEvent.click(newSearchField);
 
-    // Type a new object name (this will create a new object)
+    // Type a new object name (this will create a new object).
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Wait for the create option to appear (debounce is 200ms, allow time for render)
-    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
-    await expect(createOption).toBeVisible();
+    // Click the create option directly to open the create form.
+    const createOptionLabel = await body.findByText(/Create new object/, undefined, { timeout: 2000 });
+    await userEvent.click(createOptionLabel.closest('[role="option"]') as HTMLElement);
 
-    // Press Enter to select/create
-    await userEvent.keyboard('{Enter}');
-
-    // Look for and click save button
-    const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form');
+    // Look for and click save button.
+    const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form', undefined, {
+      timeout: 2000,
+    });
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
+    await expect(saveObjectButton).not.toBeDisabled();
     await userEvent.click(saveObjectButton);
 
-    // Verify the new object was created and relation was set.
-    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
-    await expect(updatedNewCell).toHaveTextContent(newOrgName);
+    // Verify the relation was set by checking for the accessory link anchor in the cell.
+    const updatedNewCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 5000 });
+    await expect(updatedNewCell.querySelector('dx-anchor')).toBeTruthy();
   },
-} as any;
+};

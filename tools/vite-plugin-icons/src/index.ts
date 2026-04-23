@@ -6,10 +6,9 @@
 
 // TODO(burdon): Replace with https://github.com/vnphanquang/phosphor-icons-tailwindcss
 
+import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
 import { join, resolve } from 'path';
-
-import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 

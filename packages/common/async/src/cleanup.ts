@@ -10,11 +10,11 @@ export type CleanupFn = () => void;
  * Combine multiple cleanup functions into a single cleanup function.
  * Can be used in effect hooks in conjunction with `addEventListener`.
  */
-export const combine = (...cleanupFns: (CleanupFn | CleanupFn[])[]): CleanupFn => {
+export const combine = (...cleanupFns: (boolean | undefined | CleanupFn | CleanupFn[])[]): CleanupFn => {
   return () => {
     cleanupFns
       .flat()
-      .filter(Boolean)
+      .filter((f): f is CleanupFn => typeof f === 'function')
       .forEach((cleanupFn) => cleanupFn());
   };
 };
@@ -40,7 +40,6 @@ type EventMap<T> = T extends Window
 /**
  * Add the event listener and return a cleanup function.
  * Can be used in effect hooks in conjunction with `combine`.
- * @deprecated use bind-event-listener
  */
 export const addEventListener = <T extends EventTarget, K extends keyof EventMap<T>>(
   target: T,

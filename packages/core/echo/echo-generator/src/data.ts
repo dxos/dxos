@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { type Space } from '@dxos/client/echo';
 import { Ref, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types';
@@ -25,10 +25,10 @@ export const Priority = [1, 2, 3, 4, 5];
  * @deprecated
  */
 export enum TestSchemaType {
-  document = 'example.com/type/Document',
-  organization = 'example.com/type/Organization',
-  contact = 'example.com/type/Person',
-  project = 'example.com/type/Project',
+  document = 'com.example.type.document',
+  organization = 'com.example.type.organization',
+  contact = 'com.example.type.person',
+  project = 'com.example.type.project',
 }
 
 /**
@@ -49,7 +49,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const contact = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the person' }),
     email: Schema.optional(Schema.String),
-    org: Schema.optional(Type.Ref(organization)),
+    org: Schema.optional(Ref.Ref(organization)),
     lat: Schema.optional(Schema.Number),
     lng: Schema.optional(Schema.Number),
   }).pipe(Type.object({ typename: TestSchemaType.contact, version: '0.1.0' }));
@@ -62,7 +62,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     status: Schema.String,
     priority: Schema.Number,
     active: Schema.Boolean,
-    org: Schema.optional(Type.Ref(organization)),
+    org: Schema.optional(Ref.Ref(organization)),
   }).pipe(Type.object({ typename: TestSchemaType.project, version: '0.1.0' }));
 
   return {
@@ -75,39 +75,39 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
 
 const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
   [TestSchemaType.document]: async () => ({
-    title: faker.lorem.sentence(3),
-    content: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
+    title: random.lorem.sentence(3),
+    content: random.lorem.sentences({ min: 1, max: random.number.int({ min: 1, max: 3 }) }),
   }),
 
   [TestSchemaType.organization]: async () => ({
-    name: faker.company.name(),
-    website: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
-    description: faker.lorem.sentences(),
+    name: random.company.name(),
+    website: random.datatype.boolean({ probability: 0.3 }) ? random.internet.url() : undefined,
+    description: random.lorem.sentences(),
   }),
 
   [TestSchemaType.contact]: async (provider) => {
     const organizations = await provider?.(TestSchemaType.organization);
-    const location = faker.datatype.boolean() ? faker.geo.airport() : {};
+    const location = random.datatype.boolean() ? random.geo.airport() : {};
 
     return {
-      name: faker.person.fullName(),
-      email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,
+      name: random.person.fullName(),
+      email: random.datatype.boolean({ probability: 0.5 }) ? random.internet.email() : undefined,
       org:
-        organizations?.length && faker.datatype.boolean({ probability: 0.8 })
-          ? Ref.make(faker.helpers.arrayElement(organizations))
+        organizations?.length && random.datatype.boolean({ probability: 0.8 })
+          ? Ref.make(random.helpers.arrayElement(organizations))
           : undefined,
       ...location,
     };
   },
 
   [TestSchemaType.project]: async () => ({
-    name: faker.commerce.productName(),
-    repo: faker.internet.url(),
-    status: faker.helpers.arrayElement(Status),
-    description: faker.lorem.sentences(),
-    website: faker.internet.url(),
-    priority: faker.helpers.arrayElement(Priority),
-    active: faker.datatype.boolean(),
+    name: random.commerce.productName(),
+    repo: random.internet.url(),
+    status: random.helpers.arrayElement(Status),
+    description: random.lorem.sentences(),
+    website: random.internet.url(),
+    priority: random.helpers.arrayElement(Priority),
+    active: random.datatype.boolean(),
   }),
 };
 

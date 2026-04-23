@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CanvasContainer } from './CanvasContainer';
-
-export default CanvasContainer;
+export { CanvasContainer as default } from './CanvasContainer';

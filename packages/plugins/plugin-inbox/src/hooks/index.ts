@@ -4,3 +4,4 @@
 
 export * from './useActorContact';
 export * from './useShadowObject';
+export * from './useSyncTrigger';

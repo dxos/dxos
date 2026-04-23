@@ -43,4 +43,3 @@ tasks:
     inputs:
       - scripts/publish.ts
       - dist/**/*
-    preset: server

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type FC, type ForwardRefExoticComponent, forwardRef } from 'react';
 
@@ -23,24 +24,25 @@ import {
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { Icon } from '../Icon';
-
 import { ListDropIndicator } from './ListDropIndicator';
 
-type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };
+type ListProps = ThemedClassName<ListPrimitiveProps & { density?: Density }>;
 
-const List = forwardRef<HTMLOListElement, ListProps>(({ classNames, children, ...props }, forwardedRef) => {
+const List = composable<HTMLOListElement, ListProps>(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const density = useDensityContext(props.density);
+  const { className, ...rest } = composableProps(props);
 
   return (
     <DensityProvider density={density}>
-      <ListPrimitive {...props} className={tx('list.root', {}, classNames)} ref={forwardedRef}>
+      <ListPrimitive {...rest} className={tx('list.root', {}, className)} ref={forwardedRef}>
         {children}
       </ListPrimitive>
     </DensityProvider>
@@ -51,18 +53,18 @@ type ListItemEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { 
 
 const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
   ({ children, classNames, asChild, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
     const density = useDensityContext();
     const { tx } = useThemeContext();
     return (
-      <Root
+      <Comp
         {...(!asChild && { role: 'none' })}
         {...props}
         className={tx('list.item.endcap', { density }, classNames)}
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -88,7 +90,7 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
         className={tx('list.item.heading', { density }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <span>{children}</span>
       </ListPrimitiveItemHeading>
     );
   },

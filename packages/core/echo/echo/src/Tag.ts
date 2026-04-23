@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { LabelAnnotation, SystemTypeAnnotation } from './internal';
+import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
 
@@ -13,18 +15,17 @@ export const Tag = Schema.Struct({
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Tag',
+    typename: 'org.dxos.type.tag',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['label']),
-  SystemTypeAnnotation.set(true),
+  internal.LabelAnnotation.set(['label']),
+  internal.SystemTypeAnnotation.set(true),
 );
 
 export type Tag = Schema.Schema.Type<typeof Tag>;
 
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
-// TODO(burdon): Rename Map.
 export type Map = Record<string, Tag>;
 
 export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);

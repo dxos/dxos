@@ -7,7 +7,7 @@ import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 
 export class QueueServiceImpl implements FeedProtocol.QueueService {
   constructor(
-    protected _ctx: EdgeFunctionEnv.ExecutionContext,
+    protected _ctx: EdgeFunctionEnv.TraceContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
 

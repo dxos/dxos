@@ -55,6 +55,16 @@
       "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
       "types": "./dist/types/src/plugin-manager/index.d.ts"
     },
+    "./UrlLoader": {
+      "source": "./src/core/url-loader.ts",
+      "browser": "./dist/lib/browser/url-loader/index.mjs",
+      "node": "./dist/lib/node-esm/url-loader/index.mjs",
+      "types": "./dist/types/src/url-loader/index.d.ts"
+    },
+    "./vite-plugin": {
+      "import": "./dist/plugin/node-esm/index.mjs",
+      "types": "./dist/types/src/vite-plugin/index.d.ts"
+    },
     "./cli": {
       "source": "./src/cli/index.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
@@ -66,6 +76,12 @@
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs",
       "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./testing-react": {
+      "source": "./src/testing/react.tsx",
+      "browser": "./dist/lib/browser/testing/react.mjs",
+      "node": "./dist/lib/node-esm/testing/react.mjs",
+      "types": "./dist/types/src/testing/react.d.ts"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
@@ -95,11 +111,20 @@
       "PluginManager": [
         "dist/types/src/plugin-manager/index.d.ts"
       ],
+      "UrlLoader": [
+        "dist/types/src/url-loader/index.d.ts"
+      ],
+      "vite-plugin": [
+        "dist/types/src/vite-plugin/index.d.ts"
+      ],
       "cli": [
         "dist/types/src/cli/index.d.ts"
       ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "testing-react": [
+        "dist/types/src/testing/react.d.ts"
       ],
       "ui": [
         "dist/types/src/ui/index.d.ts"
@@ -114,34 +139,41 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
-    "@effect/cli": "catalog:"
+    "@effect/cli": "catalog:",
+    "cjs-module-lexer": "catalog:",
+    "vite-plugin-css-injected-by-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "typedoc": "catalog:"
+    "typedoc": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@testing-library/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

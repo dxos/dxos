@@ -3,18 +3,18 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Relation, type Type } from '@dxos/echo';
+import { type Entity, Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
 
-export const testTypes: Type.Entity.Any[] = [
+export const testTypes: Type.AnyEntity[] = [
   Organization.Organization,
   Person.Person,
   Employer.Employer,
   HasConnection.HasConnection,
 ];
 
-export const organizations: (Type.Properties<Organization.Organization> & { id: string })[] = [
+export const organizations: (Entity.Properties<Organization.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },
@@ -31,7 +31,7 @@ export const organizations: (Type.Properties<Organization.Organization> & { id: 
   { id: 'deshaw', name: 'D. E. Shaw & Co.', website: 'https://deshaw.com' },
 ];
 
-export const people: (Type.Properties<Person.Person> & { id: string })[] = [
+export const people: (Entity.Properties<Person.Person> & { id: string })[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
   { id: 'dima_maretskyi', fullName: 'Dima Maretskyi' },

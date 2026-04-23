@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 import { Format, Type } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/internal';
 import { setValue } from '@dxos/effect';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
 export const TestSchema = Schema.Struct({
@@ -19,7 +19,7 @@ export const TestSchema = Schema.Struct({
   netWorth: Schema.optional(Schema.Number),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Test',
+    typename: 'com.example.type.test',
     version: '0.1.0',
   }),
 );
@@ -37,10 +37,10 @@ export type TestItem = {
 export const createItemsAtom = (n: number) => {
   return Atom.make<{ data: TestItem[] }>({
     data: Array.from({ length: n }, () => ({
-      name: faker.person.fullName(),
-      age: faker.number.int({ min: 20, max: 70 }),
-      active: faker.datatype.boolean(),
-      netWorth: faker.number.int(),
+      name: random.person.fullName(),
+      age: random.number.int({ min: 20, max: 70 }),
+      active: random.datatype.boolean(),
+      netWorth: random.number.int(),
     })),
   }).pipe(Atom.keepAlive);
 };
@@ -50,10 +50,10 @@ export const createItemsAtom = (n: number) => {
  */
 export const createItems = (n: number): TestItem[] => {
   return Array.from({ length: n }, () => ({
-    name: faker.person.fullName(),
-    age: faker.number.int({ min: 20, max: 70 }),
-    active: faker.datatype.boolean(),
-    netWorth: faker.number.int(),
+    name: random.person.fullName(),
+    age: random.number.int({ min: 20, max: 70 }),
+    active: random.datatype.boolean(),
+    netWorth: random.number.int(),
   }));
 };
 

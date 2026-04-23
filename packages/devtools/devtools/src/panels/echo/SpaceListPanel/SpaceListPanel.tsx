@@ -2,23 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { SpaceProperties } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { createFilename } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
-
-import { exportData, importData } from './backup';
+import { importData } from './backup';
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 
 type SpaceData = {
@@ -34,6 +33,7 @@ const rowActions = [
   { id: 'toggleOpen', label: 'Toggle space open closed' },
   { id: 'snapshot', label: 'Download space snapshot' },
   { id: 'archive', label: 'Download space archive' },
+  { id: 'import', label: 'Import data into space' },
 ];
 
 export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | undefined) => void }) => {
@@ -41,6 +41,14 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const spaces = useSpaces({ all: true });
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
+  const [importTargetSpaceId, setImportTargetSpaceId] = useState<string | null>(null);
+
+  const importTargetSpace = useMemo(() => {
+    if (!importTargetSpaceId) {
+      return null;
+    }
+    return spaces.find((space) => space.id === importTargetSpaceId) ?? null;
+  }, [importTargetSpaceId, spaces]);
 
   const rows = useMemo(() => {
     return spaces.map((space) => {
@@ -48,10 +56,10 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       return {
         id: space.id.toString(),
         name: space.isOpen ? space.properties.name : undefined,
+        tags: space.tags.join(', '),
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
         startup: open && ready ? ready.getTime() - open.getTime() : -1,
-        isDefault: client.spaces.default === space,
         isOpen: space.isOpen,
       };
     });
@@ -87,8 +95,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     async (spaceId: string) => {
       const space = spaces.find((space) => space.id === spaceId)!;
       await space.waitUntilReady();
-      const backupBlob = await exportData(space);
-      download(backupBlob, createFilename({ parts: [space.id], ext: 'json' }));
+      const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+      download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
   );
@@ -96,7 +104,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const handleArchive = useCallback(
     async (spaceId: string) => {
       const space = spaces.find((space) => space.id === spaceId)!;
-      const archive = await space.internal.export();
+      const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
       download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
@@ -105,40 +113,13 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const handleImport = useCallback(
     async (backup: File | Blob) => {
       try {
-        if (backup instanceof File) {
-          if (backup.type === 'application/json') {
-            // Validate backup.
-            const backupString = await backup.text();
-            JSON.parse(backupString);
-
-            // Import space.
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
-            await importData(space, backup);
-            Obj.change(space.properties, (p) => {
-              p.name = p.name + ' - IMPORTED';
-            });
-          } else if (backup.type === 'application/x-tar') {
-            const archive = {
-              filename: backup.name,
-              contents: new Uint8Array(await backup.arrayBuffer()),
-            } satisfies SpaceArchive;
-            await client.spaces.import(archive);
-          } else {
-            throw new Error('Invalid backup type');
-          }
-        } else {
-          // For Blob type
-          const backupString = await backup.text();
-          JSON.parse(backupString);
-
-          const space = await client.spaces.create();
-          await space.waitUntilReady();
-          await importData(space, backup);
-          Obj.change(space.properties, (p) => {
-            p.name = p.name + ' - IMPORTED';
-          });
-        }
+        const filename = backup instanceof File ? backup.name : 'archive';
+        const contents = new Uint8Array(await backup.arrayBuffer());
+        const archive = { filename, contents } satisfies SpaceArchive;
+        const imported = await client.spaces.import(archive);
+        Obj.change(imported.properties, (obj) => {
+          obj.name = (obj.name ?? '') + ' - IMPORTED';
+        });
       } catch (err) {
         log.catch(err);
       }
@@ -146,14 +127,30 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     [client],
   );
 
+  const handleImportIntoSpace = useCallback(
+    async (backup: File) => {
+      try {
+        if (importTargetSpace) {
+          await importTargetSpace.waitUntilReady();
+          await importData(importTargetSpace, backup, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
+        }
+      } catch (err) {
+        log.catch(err);
+      } finally {
+        setImportTargetSpaceId(null);
+      }
+    },
+    [importTargetSpace],
+  );
+
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'id', format: Format.TypeFormat.DID },
       { name: 'name', format: Format.TypeFormat.String },
+      { name: 'tags', format: Format.TypeFormat.String },
       { name: 'objects', format: Format.TypeFormat.Number, size: 120 },
       { name: 'members', format: Format.TypeFormat.Number, size: 120 },
       { name: 'startup', format: Format.TypeFormat.Number, size: 120 },
-      { name: 'isDefault', format: Format.TypeFormat.Boolean, title: 'default?', size: 120 },
       { name: 'isOpen', format: Format.TypeFormat.Boolean, title: 'open?', size: 120 },
     ],
     [],
@@ -167,6 +164,11 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       void handleSnapshot(spaceId);
     } else if (actionId === 'archive') {
       void handleArchive(spaceId);
+    } else if (actionId === 'import') {
+      const space = spaces.find((space) => space.id === spaceId);
+      if (space?.isOpen) {
+        setImportTargetSpaceId(spaceId);
+      }
     }
   };
 
@@ -174,7 +176,25 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
-      <DialogRestoreSpace handleFile={handleImport} />
+      {/* TODO(burdon): This should not be a dialog. */}
+      <DialogRestoreSpace
+        {...(importTargetSpaceId !== null
+          ? {
+              open: true,
+              onOpenChange: (nextOpen: boolean) => {
+                if (!nextOpen) {
+                  setImportTargetSpaceId(null);
+                }
+              },
+              spaceName: importTargetSpace?.isOpen
+                ? (importTargetSpace.properties.name ?? importTargetSpace.id)
+                : undefined,
+              handleFile: handleImportIntoSpace,
+            }
+          : {
+              handleFile: handleImport,
+            })}
+      />
       <DynamicTable
         properties={properties}
         rows={rows}

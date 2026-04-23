@@ -3,7 +3,6 @@
 //
 
 import { Transform, pipeline } from 'node:stream';
-
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';

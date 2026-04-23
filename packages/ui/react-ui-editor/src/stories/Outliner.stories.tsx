@@ -5,19 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-
 import { EditorStory } from './components';
 
-type StoryProps = {
+type DefaultStoryProps = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: DefaultStoryProps) => {
   const [controller, setController] = useState<EditorController | null>(null);
 
   const extensions = useMemo(() => [outliner(), hashtag()], []);

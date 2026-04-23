@@ -12,18 +12,32 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { App } from '../components/App';
-import { DefaultFallback } from '../components/DefaultFallback';
-import { ErrorBoundary } from '../components/ErrorBoundary';
-import { PluginManagerProvider } from '../components/PluginManagerProvider';
+import { App, PluginManagerProvider } from '../components';
 
-const ENABLED_KEY = 'dxos.org/app-framework/enabled';
+const ENABLED_KEY = 'org.dxos.app-framework.enabled';
+
+export type StartupProgress = {
+  /** Number of modules that have been activated. */
+  activated: number;
+  /** Total number of modules registered. */
+  total: number;
+  /** Fractional progress (0-1). */
+  progress: number;
+  /** Human-readable label for the currently activating module. */
+  status?: string;
+};
+
+export type PlaceholderProps = {
+  stage?: number;
+  progress?: StartupProgress;
+};
 
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
@@ -36,12 +50,12 @@ export type UseAppOptions = {
    * These are fired alongside SetupReactSurface before the Startup event.
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
-  placeholder?: FC<{ stage: number }>;
-  fallback?: ErrorBoundary['props']['fallback'];
   cacheEnabled?: boolean;
   safeMode?: boolean;
   debounce?: number;
   timeout?: number;
+  fallback?: FC<FallbackProps>;
+  placeholder?: FC<PlaceholderProps>;
 };
 
 /**
@@ -64,10 +78,10 @@ export type UseAppOptions = {
  * @param params.plugins All plugins available to the application.
  * @param params.core Core plugins which will always be enabled.
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
- * @param params.placeholder Placeholder component to render during startup.
- * @param params.fallback Fallback component to render if an error occurs during startup.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
+ * @param params.fallback Fallback component to render if an error occurs during startup.
+ * @param params.placeholder Placeholder component to render during startup.
  */
 export const useApp = ({
   pluginManager,
@@ -77,7 +91,7 @@ export const useApp = ({
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
   placeholder,
-  fallback = DefaultFallback,
+  fallback = ErrorFallback,
   cacheEnabled = false,
   safeMode = false,
   debounce = 0,
@@ -88,7 +102,6 @@ export const useApp = ({
   const defaults = useDefaultValue(defaultsProp, () => []);
   const setupEvents = useDefaultValue(setupEventsProp, () => []);
 
-  // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader = useMemo(
     () =>
       pluginLoaderProp ??
@@ -105,16 +118,23 @@ export const useApp = ({
   const [ready, setReady] = useState(false);
   const errorRef = useRef<unknown>(null);
   const [error, setError] = useState<unknown>(null);
+  const [startupProgress, setStartupProgress] = useState<StartupProgress>({
+    activated: 0,
+    total: 0,
+    progress: 0,
+  });
   // TODO(wittjosiah): Migrate to Atom.kvs for isomorphic storage.
   const cached: string[] = useMemo(() => JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]'), []);
   const enabled = useMemo(
     () => (safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults),
     [safeMode, cacheEnabled, cached, defaults],
   );
-  const manager = useMemo(
-    () => pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled }),
-    [pluginManager, pluginLoader, plugins, core, enabled],
-  );
+  const isExternalManager = !!pluginManager;
+  const manager = useMemo(() => {
+    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled });
+    log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
+    return mgr;
+  }, [pluginManager, pluginLoader, plugins, core, enabled]);
 
   useEffect(() => {
     if (!cacheEnabled) {
@@ -130,17 +150,38 @@ export const useApp = ({
   }, [manager]);
 
   useAsyncEffect(async () => {
+    log('useApp: effect mount');
+
     manager.capabilities.contribute({
       interface: Capabilities.PluginManager,
       implementation: manager,
-      module: 'dxos.org/app-framework/plugin-manager',
+      module: 'org.dxos.app-framework.plugin-manager',
     });
 
     manager.capabilities.contribute({
       interface: Capabilities.AtomRegistry,
       implementation: manager.registry,
-      module: 'dxos.org/app-framework/atom-registry',
+      module: 'org.dxos.app-framework.atom-registry',
     });
+
+    // Poll manager atoms for progress (avoids PubSub subscription race).
+    const progressInterval = setInterval(() => {
+      if (readyRef.current) {
+        clearInterval(progressInterval);
+        return;
+      }
+      const active = manager.getActive();
+      const modules = manager.getModules();
+      const total = modules.length;
+      const activated = active.length;
+      const lastModule = active.length > 0 ? active[active.length - 1] : undefined;
+      setStartupProgress({
+        activated,
+        total,
+        progress: total > 0 ? activated / total : 0,
+        status: lastModule ? humanizeModuleId(lastModule) : undefined,
+      });
+    }, 100);
 
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
@@ -150,8 +191,11 @@ export const useApp = ({
             Effect.sync(() => {
               if (event === ActivationEvents.Startup.id && state === 'activated') {
                 clearTimeout(timeoutId);
+                clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
+                // Trigger startup profiler dump if available.
+                (globalThis as any).composer?.profiler?.dump();
               }
               if (error$ && !readyRef.current) {
                 setError(error$);
@@ -186,20 +230,29 @@ export const useApp = ({
     }, timeout);
 
     return () => {
+      log('useApp: effect cleanup');
       clearTimeout(timeoutId);
+      clearInterval(progressInterval);
       void runAndForwardErrors(Fiber.interrupt(fiber));
-      manager.capabilities.remove(Capabilities.PluginManager, manager);
-      manager.capabilities.remove(Capabilities.AtomRegistry, manager.registry);
+      if (!isExternalManager) {
+        void runAndForwardErrors(manager.shutdown());
+      }
     };
   }, [manager]);
 
   return useCallback(
     () => (
-      <ErrorBoundary fallback={fallback}>
+      <ErrorBoundary name='app' FallbackComponent={fallback}>
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
-              <App placeholder={placeholder} ready={ready} error={error} debounce={debounce} />
+              <App
+                placeholder={placeholder}
+                ready={ready}
+                error={error}
+                debounce={debounce}
+                progress={startupProgress}
+              />
             </RegistryContext.Provider>
           </ContextProtocolProvider>
         </PluginManagerProvider>
@@ -212,4 +265,25 @@ export const useApp = ({
 const setupDevtools = (manager: PluginManager.PluginManager) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.manager = manager;
+};
+
+/**
+ * Extracts a human-readable label from a module ID.
+ * E.g., "org.dxos.plugin.markdown.module.ReactSurface" → "Markdown".
+ */
+const humanizeModuleId = (moduleId: string): string => {
+  // Extract plugin name from pattern: org.dxos.plugin.<name>.module.<capability>
+  const pluginMatch = moduleId.match(/\.plugin\.([^.]+)\./);
+  if (pluginMatch) {
+    const name = pluginMatch[1];
+    // Convert kebab-case to title case.
+    return name
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  // Fallback: use the last segment.
+  const parts = moduleId.split('.');
+  return parts[parts.length - 1];
 };

@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
-import { log } from '@dxos/log';
+import { LogBuffer, log } from '@dxos/log';
 
-import { LogBuffer } from '../../log-buffer';
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
 
@@ -19,6 +18,8 @@ export type ExtensionsOptions = {
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
   posthog?: Partial<PostHogConfig>;
+  /** Shared log buffer for debug log dumps. Creates a local one if not provided. */
+  logBuffer?: LogBuffer;
 };
 
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
@@ -47,6 +48,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   release,
   environment,
   posthog: posthogConfig,
+  logBuffer: externalLogBuffer,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -63,8 +65,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
-  const logBuffer = new LogBuffer();
+  const logBuffer = externalLogBuffer ?? new LogBuffer();
   let feedbackSurveyAvailable: boolean | null = null;
+  let unregisterPosthogProcessors: (() => void) | undefined;
 
   const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
     feedbackSurveyId
@@ -98,17 +101,18 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             ...(environment ? { environment } : {}),
           });
         }
-        log.runtimeConfig.processors.push(logProcessor);
-        log.runtimeConfig.processors.push(logBuffer.logProcessor);
+        unregisterPosthogProcessors?.();
+        const removePosthogLog = log.addProcessor(logProcessor);
+        const removeLogBuffer = log.addProcessor(logBuffer.logProcessor);
+        unregisterPosthogProcessors = () => {
+          removePosthogLog();
+          removeLogBuffer();
+        };
       }),
     close: () =>
       Effect.sync(() => {
-        for (const processor of [logProcessor, logBuffer.logProcessor]) {
-          const index = log.runtimeConfig.processors.indexOf(processor);
-          if (index !== -1) {
-            log.runtimeConfig.processors.splice(index, 1);
-          }
-        }
+        unregisterPosthogProcessors?.();
+        unregisterPosthogProcessors = undefined;
       }),
     enable: () => Effect.sync(() => posthog.opt_in_capturing()),
     disable: () => Effect.sync(() => posthog.opt_out_capturing()),
@@ -150,9 +154,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
               return;
             }
 
-            let debugLogDumpKey: string | undefined;
+            let debugLogDumpKey: string | null = null;
             if (form.includeLogs !== false && logBuffer.size > 0) {
-              debugLogDumpKey = await uploadLogs(logBuffer.serialize());
+              debugLogDumpKey = (await uploadLogs(logBuffer.serialize())) ?? 'failed';
             }
 
             // https://posthog.com/docs/surveys/implementing-custom-surveys
@@ -161,7 +165,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
               $survey_id: survey.id,
               $survey_questions: [{ id: question.id, question: question.question }],
               [`$survey_response_${question.id}`]: form.message,
-              ...(debugLogDumpKey ? { debug_log_dump_key: debugLogDumpKey } : {}),
+              debug_log_dump_key: debugLogDumpKey,
             });
           });
         },

@@ -5,8 +5,9 @@
 // This script is used to test whether the esbuild config plugin is properly injecting config constants.
 // TODO(wittjosiah): Automate this test.
 
-const { build } = require('esbuild');
 const { join } = require('node:path');
+
+const { build } = require('esbuild');
 
 // eslint-disable-next-line
 // @ts-ignore

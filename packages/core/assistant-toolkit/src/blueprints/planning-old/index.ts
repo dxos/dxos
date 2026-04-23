@@ -3,3 +3,4 @@
 //
 
 export { default as PlanningOldBlueprint } from './blueprint';
+export { ReadTasks, UpdateTasks as PlanningOldUpdateTasks, TaskHandlers } from './functions';

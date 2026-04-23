@@ -62,7 +62,8 @@ export const useEditorMenu = ({
   const getMenuOptions = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger, ...props }) => {
       const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
-      return filter
+      // The "@" menu can use "@@" as syntax for block embeds, so it owns its own query filtering.
+      return filter && trigger !== '@'
         ? filterMenuGroups(groups, (item) =>
             text ? (item.label as string).toLowerCase().startsWith(text.toLowerCase()) : true,
           )
@@ -108,7 +109,13 @@ export const useEditorMenu = ({
   );
 
   const handleSelect = useCallback<NonNullable<UseEditorMenu['onSelect']>>(({ view, item }) => {
+    // Delete trigger range (e.g., "/" and any typed filter text).
+    const { range } = view.state.field(popoverStateField) ?? {};
+    if (range) {
+      view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
+    }
     void item.onSelect?.({ view, head: view.state.selection.main.head });
+    view.focus();
   }, []);
 
   const handleCancel = useCallback<NonNullable<UseEditorMenu['onCancel']>>(({ view }) => {

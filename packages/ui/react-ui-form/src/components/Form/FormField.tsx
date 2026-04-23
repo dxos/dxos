@@ -25,7 +25,6 @@ import { type ProjectionModel } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { getRefProps } from '../../util';
-
 import {
   ArrayField,
   BooleanField,
@@ -78,14 +77,21 @@ export type FormFieldProps = {
    * Function to lookup custom renderers for specific properties.
    */
   fieldProvider?: FormFieldProvider;
+  /**
+   * Typename of the ref type that the create props apply to.
+   * When set, createOptionLabel/createOptionIcon/createInitialValuePath/createFieldMap/onCreate
+   * are only passed to ref fields whose typename matches.
+   */
+  createTypename?: string;
 } & Pick<FormFieldComponentProps, 'autoFocus' | 'readonly' | 'layout'> &
   Pick<
     RefFieldProps,
     | 'createOptionLabel'
     | 'createOptionIcon'
     | 'createInitialValuePath'
+    | 'createFieldMap'
     | 'db'
-    | 'schemaHook'
+    | 'useSchema'
     | 'getOptions'
     | 'onCreate'
   >;
@@ -102,12 +108,14 @@ export const FormField = (props: FormFieldProps) => {
     layout,
 
     // RefFieldProps
+    createTypename,
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    createFieldMap,
     db,
-    schemaHook,
-    getOptions: getRefOptions,
+    useSchema: schemaHook,
+    getOptions,
     onCreate,
   } = props;
   const { t } = useTranslation(translationKey);
@@ -117,7 +125,7 @@ export const FormField = (props: FormFieldProps) => {
 
   const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
+    () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
   );
 
@@ -169,7 +177,7 @@ export const FormField = (props: FormFieldProps) => {
   // Select field.
   //
 
-  const options = getOptions(type);
+  const options = getSelectOptions(type);
   if (options) {
     // Resolve labels from projection metadata when available.
     const fieldProjections = projection?.getFieldProjections();
@@ -196,16 +204,18 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
+    const isCreateTarget = !createTypename || refProps.typename === createTypename;
     return (
       <RefField
         {...fieldProps}
         {...refProps}
-        createOptionLabel={createOptionLabel}
-        createOptionIcon={createOptionIcon}
-        createInitialValuePath={createInitialValuePath}
+        createOptionLabel={isCreateTarget ? createOptionLabel : undefined}
+        createOptionIcon={isCreateTarget ? createOptionIcon : undefined}
+        createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
+        createFieldMap={isCreateTarget ? createFieldMap : undefined}
         db={db}
-        schemaHook={schemaHook}
-        getOptions={getRefOptions}
+        useSchema={schemaHook}
+        getOptions={getOptions}
         onCreate={onCreate}
       />
     );
@@ -237,8 +247,8 @@ export const FormField = (props: FormFieldProps) => {
           createOptionIcon={createOptionIcon}
           createInitialValuePath={createInitialValuePath}
           db={db}
-          schemaHook={schemaHook}
-          getOptions={getRefOptions}
+          useSchema={schemaHook}
+          getOptions={getOptions}
           onCreate={onCreate}
         />
       );
@@ -285,7 +295,7 @@ const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldCompo
   }
 };
 
-const getOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
+const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
   if (isLiteralUnion(ast)) {
     return ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
   }

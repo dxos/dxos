@@ -6,8 +6,8 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { SurfaceContext } from '../components/surface/context';
+import { Surface } from '../components';
 
-export const useSurface = (): SurfaceContext => {
-  return useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext'));
+export const useSurface = (): Surface.Context => {
+  return useContext(Surface.Context) ?? raise(new Error('Missing SurfaceContext'));
 };

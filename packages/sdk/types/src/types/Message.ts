@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
@@ -19,9 +21,10 @@ import * as ContentBlock from './ContentBlock';
 //  - Read receipts don't need to be added to schema until they being implemented.
 export const Message = Schema.Struct({
   id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
-  // TODO(dmaretskyi): Consider adding a channelId too.
   parentMessage: Schema.optional(Obj.ID),
-  // TODO(burdon): Rename sent (don't clash with metadata for created).
+  /** Optional grouping identifier for related messages. */
+  threadId: Schema.optional(Schema.String),
+  /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
@@ -39,13 +42,13 @@ export const Message = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Message',
-    version: '0.2.0',
+    typename: 'org.dxos.type.message',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['properties.subject']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--envelope--regular',
-    hue: 'red',
+    icon: 'ph--note--regular',
+    hue: 'rose',
   }),
 );
 
@@ -56,6 +59,7 @@ export const make = ({
   sender,
   blocks = [],
   properties,
+  ...rest
 }: MakeOptional<Omit<Obj.MakeProps<typeof Message>, 'sender'>, 'created' | 'blocks'> & {
   sender: Actor.Actor | Actor.Role;
 }) => {
@@ -64,5 +68,6 @@ export const make = ({
     sender: typeof sender === 'string' ? { role: sender } : sender,
     blocks,
     properties,
+    ...rest,
   });
 };

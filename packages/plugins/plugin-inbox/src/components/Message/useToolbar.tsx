@@ -7,21 +7,23 @@ import { useMemo } from 'react';
 
 import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
 export type UseMessageToolbarActionsProps = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
 };
 
-export const useMessageToolbarActions = ({
+export const useMessageActions = ({
   viewMode,
   setViewMode,
+  onOpen,
   onReply,
   onReplyAll,
   onForward,
@@ -36,41 +38,50 @@ export const useMessageToolbarActions = ({
         {
           nodes.push(
             createMenuItemGroup('root', {
-              label: ['message toolbar label', { ns: meta.id }],
+              label: ['message-toolbar.label', { ns: meta.id }],
             }),
           );
         }
 
+        if (onOpen) {
+          const action = createMenuAction('open', onOpen, {
+            label: ['message-toolbar-open.menu', { ns: meta.id }],
+            icon: 'ph--arrow-square-out--regular',
+          });
+          nodes.push(action);
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
+        }
+
         const gap = createGapSeparator();
         nodes.push(gap.nodes[0]);
-        edges.push({ source: 'root', target: gap.nodes[0].id });
+        edges.push({ source: 'root', target: gap.nodes[0].id, relation: 'child' });
 
         // Reply actions.
         if (onReply) {
           const action = createMenuAction('reply', onReply, {
-            label: ['message toolbar reply', { ns: meta.id }],
+            label: ['message-toolbar-reply.menu', { ns: meta.id }],
             icon: 'ph--arrow-bend-up-left--regular',
           });
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         if (onReplyAll) {
           const action = createMenuAction('replyAll', onReplyAll, {
-            label: ['message toolbar reply all', { ns: meta.id }],
+            label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
             icon: 'ph--arrow-bend-double-up-left--regular',
           });
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         if (onForward) {
           const action = createMenuAction('forward', onForward, {
-            label: ['message toolbar forward', { ns: meta.id }],
+            label: ['message-toolbar-forward.menu', { ns: meta.id }],
             icon: 'ph--arrow-bend-up-right--regular',
           });
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         {
@@ -92,12 +103,12 @@ export const useMessageToolbarActions = ({
             },
           );
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         return { nodes, edges };
       }),
-    [viewMode, setViewMode, onReply, onReplyAll, onForward],
+    [viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward],
   );
 
   return useMenuActions(creator);

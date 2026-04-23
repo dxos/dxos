@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace HelpCapabilities {
   export const StateSchema = Schema.mutable(
@@ -20,5 +20,5 @@ export namespace HelpCapabilities {
 
   export type State = Schema.Schema.Type<typeof StateSchema>;
 
-  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
 }

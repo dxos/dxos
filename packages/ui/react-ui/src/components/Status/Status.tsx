@@ -4,14 +4,17 @@
 
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
+import { type StatusStyleProps } from '@dxos/ui-theme';
+
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-type StatusProps = ThemedClassName<ComponentPropsWithRef<'span'>> & {
-  indeterminate?: boolean;
-  variant?: 'default' | 'main-bottom';
-  progress?: number;
-};
+type StatusProps = ThemedClassName<
+  ComponentPropsWithRef<'span'> &
+    StatusStyleProps & {
+      progress?: number;
+    }
+>;
 
 const Status = forwardRef<HTMLSpanElement, StatusProps>(
   ({ classNames, children, progress = 0, indeterminate, variant, ...props }, forwardedRef) => {

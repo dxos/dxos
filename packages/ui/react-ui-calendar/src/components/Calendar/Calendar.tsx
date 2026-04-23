@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { type Day, addDays, differenceInWeeks, format, startOfWeek } from 'date-fns';
+import { type Day, addDays, differenceInWeeks, format, startOfDay, startOfWeek } from 'date-fns';
 import React, {
   type Dispatch,
   type PropsWithChildren,
@@ -20,11 +20,10 @@ import { useResizeDetector } from 'react-resize-detector';
 import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { getDate, isSameDay } from './util';
 
 const maxRows = 50 * 100;
@@ -98,32 +97,14 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 );
 
 //
-// Viewport
-//
-
-const CALENDAR_VIEWPORT_NAME = 'CalendarContent';
-
-type CalendarViewportProps = PropsWithChildren<ThemedClassName>;
-
-const CalendarViewport = ({ children, classNames }: CalendarViewportProps) => {
-  return (
-    <div role='none' className={mx('flex flex-col items-center overflow-hidden bg-input-surface', classNames)}>
-      {children}
-    </div>
-  );
-};
-
-CalendarViewport.displayName = CALENDAR_VIEWPORT_NAME;
-
-//
 // Header
 //
 
 const CALENDAR_TOOLBAR_NAME = 'CalendarHeader';
 
-type CalendarToolbarProps = ThemedClassName;
+type CalendarToolbarProps = {};
 
-const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
+const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ classNames, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
   const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
@@ -135,18 +116,20 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
 
   return (
     <div
-      role='none'
-      className={mx('shrink-0 w-full grid grid-cols-3 items-center bg-toolbar-surface', classNames)}
+      {...composableProps(props, {
+        role: 'none',
+        classNames: ['shrink-0 grid! grid-cols-3 items-center bg-toolbar-surface', classNames],
+      })}
+      ref={forwardedRef}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
         <IconButton
           variant='ghost'
-          size={5}
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
-          label={t('today button')}
+          label={t('today.button')}
           onClick={handleToday}
         />
       </div>
@@ -154,7 +137,7 @@ const CalendarToolbar = ({ classNames }: CalendarToolbarProps) => {
       <div className='flex justify-end p-2 text-description'>{(selected ?? top).getFullYear()}</div>
     </div>
   );
-};
+});
 
 CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
@@ -166,147 +149,145 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
 
-type CalendarGridProps = ThemedClassName<{
+type CalendarGridProps = {
   rows?: number;
+  /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
+  dates?: Date[];
   onSelect?: (event: { date: Date }) => void;
-}>;
+};
 
-const CalendarGrid = ({ classNames, rows, onSelect }: CalendarGridProps) => {
-  const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
-  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
-  const maxHeight = rows ? rows * size : undefined;
-  const listRef = useRef<List>(null);
-  const today = useMemo(() => new Date(), []);
+const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
+  ({ classNames, rows, dates = [], onSelect, ...props }, forwardedRef) => {
+    const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
+    const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
+    const maxHeight = rows ? rows * size : undefined;
+    const listRef = useRef<List>(null);
+    const today = useMemo(() => new Date(), []);
 
-  const [initialized, setInitialized] = useState(false);
-  useEffect(() => {
-    const index = differenceInWeeks(today, start);
-    listRef.current?.scrollToRow(index);
-  }, [initialized, start, today]);
+    // Build a set of ISO date strings (YYYY-MM-DD) for O(1) per-cell lookup.
+    const dateSet = useMemo(() => new Set(dates.map((date) => startOfDay(date).toISOString())), [dates]);
 
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'scroll': {
-          const index = differenceInWeeks(event.date, start);
-          listRef.current?.scrollToRow(index);
-          break;
+    const hasDate = useCallback((date: Date) => dateSet.has(startOfDay(date).toISOString()), [dateSet]);
+
+    const [initialized, setInitialized] = useState(false);
+    useEffect(() => {
+      const index = differenceInWeeks(today, start);
+      listRef.current?.scrollToRow(index);
+    }, [initialized, start, today]);
+
+    useEffect(() => {
+      return event.on((event) => {
+        switch (event.type) {
+          case 'scroll': {
+            const index = differenceInWeeks(event.date, start);
+            listRef.current?.scrollToRow(index);
+            break;
+          }
         }
-      }
-    });
-  }, [event]);
+      });
+    }, [event]);
 
-  const days = useMemo(() => {
-    const weekStart = startOfWeek(new Date(), { weekStartsOn });
-    return Array.from({ length: 7 }, (_, i) => {
-      const day = addDays(weekStart, i);
-      return format(day, 'EEE'); // Short day name (Mon, Tue, etc.)
-    });
-  }, []);
+    const days = useMemo(() => {
+      const weekStart = startOfWeek(new Date(), { weekStartsOn });
+      return Array.from({ length: 7 }, (_, i) => {
+        const day = addDays(weekStart, i);
+        return format(day, 'EEE'); // Short day name (Mon, Tue, etc.)
+      });
+    }, []);
 
-  // TODO(burdon): Get info by range.
-  // TODO(burdon): Border marker for "all day events?"
-  const getNumAppointments = useCallback((_date: Date) => {
-    // return Math.floor(Math.random() * 10);
-    return 0;
-  }, []);
+    // TODO(burdon): Get info by range.
 
-  const handleDaySelect = useCallback(
-    (date: Date) => {
-      setSelected((current) => (isSameDay(date, current) ? undefined : date));
-      onSelect?.({ date });
-    },
-    [onSelect],
-  );
+    const handleDaySelect = useCallback(
+      (date: Date) => {
+        setSelected((current) => (isSameDay(date, current) ? undefined : date));
+        onSelect?.({ date });
+      },
+      [onSelect],
+    );
 
-  const handleScroll = useCallback<NonNullable<ListProps['onScroll']>>((info) => {
-    setIndex(Math.round(info.scrollTop / size));
-  }, []);
+    const handleScroll = useCallback<NonNullable<ListProps['onScroll']>>((info) => {
+      setIndex(Math.round(info.scrollTop / size));
+    }, []);
 
-  const rowRenderer = useCallback<ListRowRenderer>(
-    ({ key, index, style }) => {
-      const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
-      return (
-        <div key={key} role='none' style={style} className='w-full grid grid-cols-[1fr_max-content_1fr] snap-center'>
-          <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
-          <div role='none' className='grid grid-cols-7' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
-            {Array.from({ length: 7 }).map((_, i) => {
-              const date = getDate(start, index, i, weekStartsOn);
-              const num = getNumAppointments(date);
-              const border = isSameDay(date, selected)
-                ? 'border-primary-500'
-                : isSameDay(date, today)
-                  ? 'border-amber-500'
-                  : undefined;
+    const rowRenderer = useCallback<ListRowRenderer>(
+      ({ key, index, style }) => {
+        const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
+        return (
+          <div key={key} role='none' style={style} className='grid'>
+            <div
+              role='none'
+              className='grid grid-cols-7 bg-input-surface'
+              style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}
+            >
+              {Array.from({ length: 7 }).map((_, i) => {
+                const date = getDate(start, index, i, weekStartsOn);
+                const border = isSameDay(date, selected)
+                  ? 'border-primary-500'
+                  : isSameDay(date, today)
+                    ? 'border-amber-500'
+                    : hasDate(date)
+                      ? 'border-neutral-700 border-dashed'
+                      : undefined;
 
-              return (
-                <div
-                  key={i}
-                  role='none'
-                  className={mx('relative flex justify-center items-center cursor-pointer', getBgColor(date))}
-                  onClick={() => handleDaySelect(date)}
-                >
-                  <span className='text-description'>{date.getDate()}</span>
-                  {!border && date.getDate() === 1 && (
-                    <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
-                  )}
-                  {border && (
-                    <div
-                      role='none'
-                      className={mx('absolute top-0 left-0 w-full h-full border-2 rounded-full', border)}
-                    />
-                  )}
-                  {num > 0 && (
-                    <Icon
-                      classNames='absolute bottom-0'
-                      icon={num > 3 ? 'ph--dots-three--regular' : 'ph--dot--regular'}
-                      size={5}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                return (
+                  <div
+                    key={i}
+                    role='none'
+                    className={mx('relative flex justify-center items-center cursor-pointer', getBgColor(date))}
+                    onClick={() => handleDaySelect(date)}
+                  >
+                    <span className='text-description'>{date.getDate()}</span>
+                    {!border && date.getDate() === 1 && (
+                      <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
+                    )}
+                    {border && <div role='none' className={mx('absolute inset-1 border-2 rounded-full', border)} />}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className={mx(getBgColor(getDate(start, index, 6, weekStartsOn)))} />
-        </div>
-      );
-    },
-    [handleDaySelect, getNumAppointments, selected, weekStartsOn],
-  );
+        );
+      },
+      [handleDaySelect, hasDate, selected, weekStartsOn],
+    );
 
-  return (
-    <div role='none' className={mx('flex flex-col h-full w-full justify-center overflow-hidden', classNames)}>
-      {/* Day labels */}
-      <div role='none' className='flex justify-center bg-group-surface'>
-        <div role='none' className='flex w-full grid grid-cols-7' style={{ width: defaultWidth }}>
+    return (
+      <div
+        {...composableProps(props, {
+          role: 'none',
+          classNames: ['flex flex-col h-full w-full justify-center overflow-hidden', classNames],
+        })}
+        ref={forwardedRef}
+      >
+        {/* Day of week labels */}
+        <div role='none' className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
             <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
               {date}
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Grid */}
-      <div role='none' className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
-        <List
-          ref={listRef}
-          role='none'
-          // TODO(burdon): Snap isn't working.
-          className='[&>div]:snap-y scrollbar-none outline-hidden'
-          width={width}
-          height={maxHeight ?? height}
-          rowCount={maxRows}
-          rowHeight={size}
-          rowRenderer={rowRenderer}
-          scrollToAlignment='start'
-          onScroll={handleScroll}
-          onRowsRendered={() => setInitialized(true)}
-        />
+        {/* Grid */}
+        <div role='none' className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
+          <List
+            ref={listRef}
+            role='none'
+            className='scrollbar-none outline-hidden'
+            width={width}
+            height={maxHeight ?? height}
+            rowCount={maxRows}
+            rowHeight={size}
+            rowRenderer={rowRenderer}
+            scrollToAlignment='start'
+            onScroll={handleScroll}
+            onRowsRendered={() => setInitialized(true)}
+          />
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
 
 CalendarGrid.displayName = CALENDAR_GRID_NAME;
 
@@ -316,9 +297,8 @@ CalendarGrid.displayName = CALENDAR_GRID_NAME;
 
 export const Calendar = {
   Root: CalendarRoot,
-  Viewport: CalendarViewport,
   Toolbar: CalendarToolbar,
   Grid: CalendarGrid,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarViewportProps, CalendarToolbarProps, CalendarGridProps };
+export type { CalendarController, CalendarRootProps, CalendarToolbarProps, CalendarGridProps };

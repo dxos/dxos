@@ -8,7 +8,6 @@ import React from 'react';
 import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
 import { Toolbar } from '../Toolbar';
-
 import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
@@ -44,7 +43,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
       <Main.NavigationSidebar label='Navigation'>
         <Toolbar.Root>
           <h1>Navigation</h1>
-          <Toolbar.Separator variant='gap' classNames='grow' />
+          <Toolbar.Separator />
           <NavigationSidebarToggle close />
         </Toolbar.Root>
       </Main.NavigationSidebar>
@@ -58,7 +57,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
       <Main.ComplementarySidebar label='Complementary'>
         <Toolbar.Root>
           <ComplementarySidebarToggle close />
-          <Toolbar.Separator variant='gap' classNames='grow' />
+          <Toolbar.Separator />
           <h1>Complementary</h1>
         </Toolbar.Root>
       </Main.ComplementarySidebar>

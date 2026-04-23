@@ -12,8 +12,8 @@ import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
+  ActionBar,
   type ActionMenuItem,
-  Actions,
   BifurcatedAction,
   InvitationList,
   type InvitationListProps,
@@ -21,7 +21,6 @@ import {
   type SpaceMemberListProps,
 } from '../../components';
 import { translationKey } from '../../translations';
-
 import { type SpacePanelStepProps } from './SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
@@ -54,8 +53,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
 
   const inviteActions = {
     inviteOne: {
-      label: t('invite one label'),
-      description: t('invite one description'),
+      label: t('invite-one.label'),
+      description: t('invite-one.description'),
       icon: 'ph--user-plus--regular',
       testId: 'spaces-panel.invite-one',
       onClick: useCallback(() => {
@@ -73,8 +72,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       }, [space, target]),
     },
     inviteMany: {
-      label: t('invite many label'),
-      description: t('invite many description'),
+      label: t('invite-many.label'),
+      description: t('invite-many.description'),
       icon: 'ph--users-three--regular',
       testId: 'spaces-panel.invite-many',
       onClick: useCallback(() => {
@@ -116,7 +115,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     propsInviteActions ??
     ({
       noopInvite: {
-        label: t('create space invitation label'),
+        label: t('create-space-invitation.label'),
         description: '',
         icon: 'ph--placeholder--regular',
         onClick: () => {},
@@ -140,7 +139,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
         <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>
-              <h3 className={mx(headingFragment, 'text-description')}>{t('invitation list heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-description')}>{t('invitation-list.heading')}</h3>
               <InvitationListComponent
                 className='mb-2'
                 send={send}
@@ -148,13 +147,13 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
                 onClickRemove={(invitation) => invitation.cancel()}
                 createInvitationUrl={createInvitationUrl}
               />
-              <h3 className={mx(headingFragment, 'text-description', 'mt-2')}>{t('space member list heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-description', 'mt-2')}>{t('space-member-list.heading')}</h3>
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <Actions>
+      <ActionBar>
         <BifurcatedAction
           disabled={!active}
           actions={inviteActions}
@@ -162,7 +161,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
           onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
           data-testid='spaces-panel.create-invitation'
         />
-      </Actions>
+      </ActionBar>
     </>
   );
 };

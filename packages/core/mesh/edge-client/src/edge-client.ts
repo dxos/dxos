@@ -10,6 +10,7 @@ import {
   scheduleMicroTask,
   scheduleTaskInterval,
 } from '@dxos/async';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -35,6 +36,8 @@ export type MessengerConfig = {
   timeout?: number;
   protocol?: Protocol;
   disableAuth?: boolean;
+  /** Sent as `X-DXOS-Client-Tag` on the WebSocket upgrade (Node/`ws` only; ignored in browsers). */
+  clientTag?: string;
 };
 
 export interface EdgeConnection extends Required<Lifecycle> {
@@ -45,7 +48,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
-  send(message: Message): Promise<void>;
+  send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   onReconnected(listener: ReconnectListener): () => void;
 }
@@ -126,7 +129,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Send message.
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
-  public async send(message: Message) {
+  public async send(ctx: Context, message: Message) {
     if (this._ready.state !== TriggerState.RESOLVED) {
       log('waiting for websocket');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
@@ -141,6 +144,15 @@ export class EdgeClient extends Resource implements EdgeConnection {
       (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
     ) {
       throw new EdgeIdentityChangedError();
+    }
+
+    const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
+    if (traceCtx) {
+      message.traceContext = {
+        $typeName: 'dxos.edge.messenger.TraceContext',
+        traceparent: traceCtx.traceparent,
+        tracestate: traceCtx.tracestate,
+      };
     }
 
     this._currentConnection.send(message);
@@ -219,7 +231,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
     log('Opening websocket', { url: url.toString(), protocolHeader });
     const connection = new EdgeWsConnection(
       identity,
-      { url, protocolHeader },
+      {
+        url,
+        protocolHeader,
+        headers: this._config.clientTag ? { 'X-DXOS-Client-Tag': this._config.clientTag } : undefined,
+      },
       {
         onConnected: () => {
           if (this._isActive(connection)) {

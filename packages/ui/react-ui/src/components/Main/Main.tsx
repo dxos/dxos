@@ -25,12 +25,11 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
-import { type MainStyleProps } from '@dxos/ui-theme';
+import { type MainStyleProps, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider';
-
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_NAME = 'Main';
@@ -281,7 +280,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ) => {
     const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
-    const { t } = useTranslation();
+    const { t } = useTranslation(osTranslations);
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
 
@@ -393,14 +392,14 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : role ? 'div' : 'main';
+    const Comp = asChild ? Slot : role ? Primitive.div : 'main';
     const mover = useLandmarkMover(props.onKeyDown, '1');
 
     return (
-      <Root
-        role={role}
+      <Comp
         {...(handlesFocus && { ...mover })}
         {...props}
+        role={role}
         data-sidebar-left-state={navigationSidebarState}
         data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
@@ -408,7 +407,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

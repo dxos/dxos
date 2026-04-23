@@ -2,21 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
+import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { addEventListener, combine, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
+import { getSize } from '@dxos/ui-theme';
 
 import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
 
-export type AutoScrollToProps = {};
+/** Enable or disable autoscroll. */
+export const autoScrollEffect = StateEffect.define<boolean>();
+
+export type AutoScrollProps = {};
 
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-export const autoScroll = (_: AutoScrollToProps = {}) => {
+export const autoScroll = (_: AutoScrollProps = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
   let isPinned = true;
+  let jumpPending = false;
+  let enabled = true;
+  let firstUpdate = true;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
@@ -24,8 +32,51 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
   };
 
   return [
-    // Update listener for logging when scrolling is needed.
-    EditorView.updateListener.of(({ view, heightChanged, state }) => {
+    // Update listener for scrolling when content changes.
+    EditorView.updateListener.of((update) => {
+      const { view, heightChanged, state, startState } = update;
+
+      // Handle enable/disable effect.
+      for (const tr of update.transactions) {
+        for (const effect of tr.effects) {
+          if (effect.is(autoScrollEffect)) {
+            enabled = effect.value;
+            if (enabled) {
+              setPinned(true);
+              view.dispatch({
+                effects: scrollerCrawlEffect.of(true),
+              });
+            } else {
+              view.dispatch({
+                effects: scrollerCrawlEffect.of(false),
+              });
+            }
+          }
+        }
+      }
+
+      if (!enabled) {
+        return;
+      }
+
+      // Jump to bottom instantly when content first appears (either inserted into
+      // an empty doc, or present as initialValue when the editor is created).
+      if (isPinned && (firstUpdate || startState.doc.length === 0) && state.doc.length > 0) {
+        firstUpdate = false;
+        jumpPending = true;
+        requestAnimationFrame(() => {
+          view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+          jumpPending = false;
+        });
+        return;
+      }
+      firstUpdate = false;
+
+      // Suppress crawl while the initial jump is pending.
+      if (jumpPending) {
+        return;
+      }
+
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
       if (heightChanged) {
@@ -33,12 +84,12 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
           // NOTE: Use scroll geometry instead of coordsAtPos to avoid forced layout/scroll side-effects.
           const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
           const delta = scrollHeight - scrollTop - clientHeight;
-          if (delta > 0 && scrollTop > 0) {
+          if (delta > 0) {
             setPinned(true);
             view.dispatch({
               effects: scrollerCrawlEffect.of(true),
             });
-          } else if (delta < 0) {
+          } else if (delta < -1) {
             setPinned(false);
           }
         } else {
@@ -80,11 +131,13 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          const icon = Domino.of('dx-icon' as any).attributes({ icon: 'ph--arrow-down--regular' });
+          const icon = Domino.of('dx-icon' as any)
+            .classNames(getSize(4))
+            .attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
             .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })
-            .children(icon)
+            .append(icon)
             .on('click', () => {
               setPinned(true);
               view.dispatch({
@@ -94,7 +147,7 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
 
           buttonContainer = Domino.of('div')
             .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
-            .children(button).root as HTMLDivElement;
+            .append(button).root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

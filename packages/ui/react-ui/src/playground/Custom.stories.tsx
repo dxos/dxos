@@ -20,15 +20,14 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' size={7} density='coarse' />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='coarse' />
           </div>
           <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               iconOnly
-              size={7}
               density='coarse'
               classNames='px-1.5'
             />
@@ -43,13 +42,13 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' density='fine' classNames='px-2' />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='fine' classNames='px-2' />
           </div>
           <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               iconOnly
               density='fine'
               classNames='py-1 px-1.5'
@@ -68,9 +67,8 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               density='fine'
-              size={4}
               classNames={'!h-[24px] !text-[14px] p-1 min-h-0 gap-0.5'}
             />
           </div>
@@ -78,10 +76,9 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               iconOnly
               density='fine'
-              size={4}
               classNames={'!h-[24px] !text-[14px] p-1 min-h-0'}
             />
           </div>

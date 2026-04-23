@@ -21,9 +21,8 @@ describe('spaces query', () => {
       // TODO(wittjosiah): Create test runtime so that client service can be shared with `beforeEach`.
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-      yield* Effect.tryPromise(() => client.spaces.default.waitUntilReady());
-      const space = client.spaces.default;
+      const space = yield* Effect.tryPromise(() => client.spaces.create());
+      yield* Effect.tryPromise(() => space.waitUntilReady());
       yield* handler({ typename: Option.some(Task.Task.typename) }).pipe(
         Effect.provide(spaceLayer(Option.some(space.id))),
       );
@@ -38,8 +37,7 @@ describe('spaces query', () => {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.addTypes([Task.Task]));
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-      const space = client.spaces.default;
+      const space = yield* Effect.tryPromise(() => client.spaces.create());
       yield* Effect.tryPromise(() => space.waitUntilReady());
       space.db.add(Obj.make(Task.Task, { title: 'Task 1' }));
       space.db.add(Obj.make(Task.Task, { title: 'Task 2' }));

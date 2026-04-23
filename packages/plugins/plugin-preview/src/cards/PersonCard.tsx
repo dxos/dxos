@@ -2,25 +2,47 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useCallback } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Avatar } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
-export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) => {
+export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
+  const { invoke } = useOperationInvoker();
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
 
+  const handleOrganizationClick = useCallback(() => {
+    if (!organization) {
+      return;
+    }
+
+    return Effect.gen(function* () {
+      const organizationPath = getObjectPathFromObject(organization);
+      const db = Obj.getDatabase(organization);
+      yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+      yield* invoke(LayoutOperation.Open, {
+        subject: [organizationPath],
+        workspace: db ? getSpacePath(db.spaceId) : undefined,
+      });
+    }).pipe(runAndForwardErrors);
+  }, [invoke, organization]);
+
   return (
-    <Avatar.Root>
-      <Card.Content>
+    <Card.Content>
+      <Avatar.Root>
         {image && (
           <Card.Row className='py-1'>
             <Avatar.Content
               imgSrc={image}
               icon='ph--user--regular'
-              size={16}
+              size={20}
               classNames={!image && 'opacity-50'}
               hue='neutral'
               variant='square'
@@ -28,11 +50,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
           </Card.Row>
         )}
         {organization?.name && (
-          <Card.Action
-            icon='ph--buildings--regular'
-            label={organization.name}
-            // onClick={onSelect ? () => onSelect(organization) : undefined}
-          />
+          <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
         )}
         {emails.map(({ value }) => (
           <Card.Row key={value} icon='ph--at--regular'>
@@ -41,7 +59,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
             </Card.Text>
           </Card.Row>
         ))}
-      </Card.Content>
-    </Avatar.Root>
+      </Avatar.Root>
+    </Card.Content>
   );
 };

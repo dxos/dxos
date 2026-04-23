@@ -19,7 +19,7 @@ export const handler = ({ spaceId }: { spaceId: Key.SpaceId }) =>
     const space = yield* getSpace(spaceId);
 
     // Flush and sync before closing
-    yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+    yield* Effect.tryPromise(() => space.db.flush());
     yield* waitForSync(space);
 
     yield* Effect.tryPromise(() => space.close());

@@ -11,10 +11,9 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
+import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
 
-import { meta } from '../../meta';
-import { type ClientPluginOptions } from '../../types';
+import { type ClientPluginOptions } from '#types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   Pick<ClientPluginOptions, 'onReset'> & {
@@ -22,14 +21,14 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   };
 
 export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(translationKey);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
 
   const handleReset = useCallback(async () => {
     await client.reset();
     const target =
-      mode === 'join new identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
+      mode === 'join-new-identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
     if (onReset) {
       await runAndForwardErrors(onReset({ target }).pipe(Effect.provideService(Capability.Service, capabilityManager)));
     }
@@ -39,15 +38,15 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
     void invokePromise(LayoutOperation.UpdateDialog, { state: false });
   }, [invokePromise]);
 
-  // TODO(wittjosiah): Add the sr-only translations.
-  // TODO(wittjosiah): Add missing descriptions to other dialogs.
   return (
     <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>{t('reset-dialog.title')}</Dialog.Title>
+      </Dialog.Header>
       <Dialog.Body>
-        <Dialog.Title classNames='sr-only'>{t('reset dialog title')}</Dialog.Title>
-        <Dialog.Description classNames='sr-only'>{t('reset dialog description')}</Dialog.Description>
+        <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
+        <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
       </Dialog.Body>
-      <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
     </Dialog.Content>
   );
 };

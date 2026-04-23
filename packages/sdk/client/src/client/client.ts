@@ -12,11 +12,12 @@ import {
   type Echo,
   type Halo,
   STATUS_TIMEOUT,
+  LegacySpaceProperties,
   SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
-import { Config, SaveConfig } from '@dxos/config';
+import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
@@ -43,7 +44,6 @@ import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-
 import { ClientRuntime } from './client-runtime';
 
 /**
@@ -56,7 +56,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -65,7 +65,7 @@ export type ClientOptions = {
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
 
-  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
   sqlitePath?: string;
 };
 
@@ -146,7 +146,7 @@ export class Client {
     // TODO(wittjosiah): This is ill-advised.
     //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
     //   Moving this to `initialize` causes issues with re-initialization.
-    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties, LegacySpaceProperties]);
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
@@ -254,7 +254,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  async addTypes(types: Type.Entity.Any[]) {
+  async addTypes(types: Type.AnyEntity[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -341,7 +341,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000 });
+      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000, ctx: this._ctx });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -360,21 +360,49 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
+    const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
+
+    if (!this._options.services) {
+      // Default services mode when not explicitly set in config. The Client entrypoint only exposes
+      // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
+      const clientCfg = this._config.values.runtime?.client;
+      if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
+        const servicesMode = this._options.createWorker
+          ? Runtime.Client.ServicesMode.SHARED_WORKER
+          : Runtime.Client.ServicesMode.HOST;
+        // Default SQLite backing when the caller didn't set one:
+        // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
+        // - FILE when a sqlitePath was supplied (Node/Bun CLI)
+        // - MEMORY otherwise
+        const sqliteMode = clientCfg?.storage?.sqliteMode
+          ? undefined
+          : this._options.createOpfsWorker
+            ? Runtime.Client.Storage.SqliteMode.OPFS
+            : this._options.sqlitePath
+              ? Runtime.Client.Storage.SqliteMode.FILE
+              : Runtime.Client.Storage.SqliteMode.MEMORY;
+        this._config = new Config(
+          { runtime: { client: { servicesMode, ...(sqliteMode !== undefined && { storage: { sqliteMode } }) } } },
+          this._config.values,
+        );
+      }
+    }
+
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ??
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
-        sqlitePath: this._options.sqlitePath,
+        sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
-    await this._open();
+    await this._open(this._ctx);
     invariant(this._runtime, 'Client runtime initialization failed.');
 
     // TODO(dmaretskyi): Refactor devtools init.
@@ -388,7 +416,8 @@ export class Client {
     return this;
   }
 
-  private async _open(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
     const { SpaceList } = await import('../echo/space-list');
@@ -411,29 +440,35 @@ export class Client {
       }
       if (!this._resetting) {
         await this._close();
-        await this._open();
+        await this._open(this._ctx);
         this.reloaded.emit();
       }
     });
+    log('client._open: opening services...');
     await this._services.open();
+    log('client._open: services opened');
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
     if (edgeUrl) {
       const { EdgeHttpClient } = await import('@dxos/edge-client');
-      this._edgeHttpClient = new EdgeHttpClient(edgeUrl);
+      const clientTag = resolveTelemetryTag(this._config);
+      this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
 
+    log('client._open: connecting echo client to service...');
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
       queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
     });
-    await this._echoClient.open(this._ctx);
+    log('client._open: opening echo client...');
+    await this._echoClient.open(ctx);
+    log('client._open: echo client opened');
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._instanceId);
 
     const shell = this._shellManager
       ? new Shell({
@@ -446,9 +481,11 @@ export class Client {
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
-    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
+    log('client._open: subscribing to system status...');
+    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx });
     this._statusStream.subscribe(
       async ({ status }) => {
+        log('client._open: status received', { status });
         this._statusTimeout && clearTimeout(this._statusTimeout);
         trigger.wake(undefined);
 
@@ -458,6 +495,7 @@ export class Client {
         }, STATUS_TIMEOUT);
       },
       (err) => {
+        log('client._open: status error', { err });
         trigger.wake(err);
         if (err) {
           this._statusUpdate.emit(null);
@@ -465,12 +503,16 @@ export class Client {
       },
     );
 
+    log('client._open: waiting for status trigger...');
     const err = await trigger.wait();
     if (err) {
       throw err;
     }
+    log('client._open: status trigger resolved');
 
-    await this._runtime.open();
+    log('client._open: opening runtime...');
+    await this._runtime.open(ctx);
+    log('client._open: runtime opened');
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
     await this._iframeManager?.open();
@@ -508,6 +550,7 @@ export class Client {
    */
   @synchronized
   async destroy(): Promise<void> {
+    log.info('client.destroy: destroying client', { initialized: this._initialized });
     if (!this._initialized) {
       return;
     }
@@ -525,11 +568,12 @@ export class Client {
   }
 
   private async _close(): Promise<void> {
-    log('closing...');
+    log.info('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
-    await this._runtime?.close();
+    await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
+    log.info('client._close: closing services...');
     await this._services?.close();
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;
@@ -543,7 +587,7 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE });
+    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE }, { ctx: this._ctx });
   }
 
   /**
@@ -560,7 +604,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    await this._services?.services.SystemService.reset();
+    await this._services?.services.SystemService.reset(undefined, { ctx: this._ctx });
     await this._close();
 
     // TODO(wittjosiah): Re-open after reset.

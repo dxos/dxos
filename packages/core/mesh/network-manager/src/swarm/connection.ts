@@ -118,7 +118,7 @@ export class Connection {
   public readonly transportStats = new Event<TransportStats>();
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
-    await this._flushSignalBuffer();
+    await this._flushSignalBuffer(this._ctx);
   });
 
   private _signallingDelay = STARTING_SIGNALLING_DELAY;
@@ -366,21 +366,21 @@ export class Connection {
     this._signalSendTask.schedule();
   }
 
-  private async _flushSignalBuffer(): Promise<void> {
+  private async _flushSignalBuffer(ctx: Context): Promise<void> {
     if (this._outgoingSignalBuffer.length === 0) {
       return;
     }
 
     try {
       if (process.env.NODE_ENV !== 'test') {
-        await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+        await cancelWithContext(ctx, sleep(this._signallingDelay));
         this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
       }
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;
 
-      await this._signalMessaging.signal({
+      await this._signalMessaging.signal(ctx, {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
@@ -406,7 +406,7 @@ export class Connection {
   /**
    * Receive a signal from the remote peer.
    */
-  async signal(msg: SignalMessage): Promise<void> {
+  async signal(_ctx: Context, msg: SignalMessage): Promise<void> {
     invariant(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');

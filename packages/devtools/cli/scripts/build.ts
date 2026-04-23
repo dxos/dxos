@@ -51,7 +51,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     target: 'bun',
     plugins: [solidPlugin],
     // TODO(wittjosiah): These aren't used by any cli plugins so why is this needed?
-    external: ['@dxos/react-ui-*'],
+    external: ['@dxos/react-ui-*', 'esbuild-wasm/esbuild.wasm?url'],
     compile: {
       target,
       outfile,
@@ -86,10 +86,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     },
   };
 
-  await writeFile(
-    join(outDir, 'package.json'),
-    JSON.stringify(platformPackage, null, 2),
-  );
+  await writeFile(join(outDir, 'package.json'), JSON.stringify(platformPackage, null, 2));
 
   console.log(`[Build] ✓ ${packageName}`);
 });
@@ -172,10 +169,7 @@ const mainPackage = {
   },
 };
 
-await writeFile(
-  join(mainDir, 'package.json'),
-  JSON.stringify(mainPackage, null, 2),
-);
+await writeFile(join(mainDir, 'package.json'), JSON.stringify(mainPackage, null, 2));
 
 console.log('[Build] ✓ Main package generated');
 console.log('[Build] Build completed successfully!');

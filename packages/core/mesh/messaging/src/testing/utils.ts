@@ -7,7 +7,6 @@ import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 
 import { type Message, type PeerInfo, type SignalMethods } from '../signal-methods';
-
 import { PAYLOAD_1 } from './test-messages';
 
 export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>

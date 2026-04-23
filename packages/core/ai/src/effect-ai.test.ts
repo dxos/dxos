@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Chat from '@effect/ai/Chat';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
+import * as Chat from '@effect/ai/Chat';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
@@ -21,7 +20,6 @@ import * as Effect from 'effect/Effect';
 import * as EffectFunction from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
-import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
@@ -30,7 +28,14 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import * as AiService from './AiService';
-import { AiServiceTestingPreset, MemoizedAiService, hasToolCall, testingLayer } from './testing';
+import {
+  AiServiceTestingPreset,
+  CalculatorLayer,
+  CalculatorToolkit,
+  MemoizedAiService,
+  hasToolCall,
+  testingLayer,
+} from './testing';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -46,7 +51,7 @@ const AnthropicLayer = AnthropicClient.layerConfig({
 
 const createChat = Effect.fn(function* (prompt: string) {
   const chat = yield* Chat.empty;
-  const toolkit = yield* TestToolkit;
+  const toolkit = yield* CalculatorToolkit;
 
   // Initial request.
   // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
@@ -61,53 +66,6 @@ const createChat = Effect.fn(function* (prompt: string) {
 
   // Done.
   return output.text;
-});
-
-// Tool definitions.
-const TestToolkit = Toolkit.make(
-  Tool.make('calculator', {
-    description: 'Basic calculator tool',
-    parameters: {
-      input: Schema.String.annotations({
-        description: 'The calculation to perform.',
-      }),
-    },
-    success: Schema.Struct({
-      result: Schema.Number,
-    }),
-    failure: Schema.Never,
-  }),
-  Tool.make('get-date', {
-    description: 'Get the current date',
-    parameters: {
-      // TODO(burdon): This isn't working.
-      // location: Format.GeoPoint,
-    },
-    success: Schema.DateFromString,
-  }),
-);
-
-// Tool handlers.
-const toolkitLayer = TestToolkit.toLayer({
-  ['calculator' as const]: ({ input }) =>
-    Effect.gen(function* () {
-      const result = (() => {
-        // Restrict to basic arithmetic operations for safety.
-        const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
-        log.info('calculate', { sanitizedInput });
-
-        // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        return Function(`"use strict"; return (${sanitizedInput})`)();
-      })();
-
-      // TODO(burdon): How to return an error.
-      yield* Console.log(`Executing calculation: ${input} = ${result}`);
-      return { result };
-    }),
-  ['get-date' as const]: () =>
-    Effect.gen(function* () {
-      return new Date('2025-10-01');
-    }),
 });
 
 /**
@@ -145,7 +103,7 @@ describe('LanguageModel', () => {
       function* ({ expect }) {
         const createProgram = (prompt: string) =>
           LanguageModel.generateText({
-            toolkit: TestToolkit,
+            toolkit: CalculatorToolkit,
             prompt,
           }).pipe(
             // Effect.tap((response) => Console.log(response)),
@@ -159,7 +117,7 @@ describe('LanguageModel', () => {
         );
         expect(result).toBeDefined();
       },
-      Effect.provide([toolkitLayer, OpenAiLayer]),
+      Effect.provide([CalculatorLayer, OpenAiLayer]),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
       TestHelpers.taggedTest('llm'),
     ),
@@ -173,7 +131,7 @@ describe('LanguageModel', () => {
         createChat(prompt).pipe(
           Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
           Effect.provide(OpenAiLayer),
-          Effect.provide(toolkitLayer),
+          Effect.provide(CalculatorLayer),
         );
 
       const result = yield* createProgram('What is six times seven?');
@@ -191,7 +149,7 @@ describe('LanguageModel', () => {
           createChat(prompt).pipe(
             Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
             Effect.provide(AnthropicLayer),
-            Effect.provide(toolkitLayer),
+            Effect.provide(CalculatorLayer),
           );
 
         const result = yield* createProgram('What is six times seven?');
@@ -224,11 +182,33 @@ describe('LanguageModel', () => {
   );
 
   it.effect(
+    'adaptive thinking',
+    Effect.fn(
+      function* (_) {
+        const stream = LanguageModel.streamText({
+          prompt: 'I am testing adaptive thinking. Think for a bit, and then output a nowvel',
+        });
+        yield* Stream.runForEach(
+          stream,
+          Effect.fnUntraced(function* (item) {
+            log.info('item', { item, time: new Date().toISOString() });
+          }),
+        );
+      },
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  );
+
+  it.effect(
     'streaming with tools',
     Effect.fn(
       function* (_) {
         const chat = yield* Chat.empty;
-        const toolkit = yield* TestToolkit;
+        const toolkit = yield* CalculatorToolkit;
 
         let prompt: Prompt.RawInput = 'What is six times seven?';
         do {
@@ -247,8 +227,42 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(toolkitLayer),
+      Effect.provide(CalculatorLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  ); //
+
+  it.effect(
+    'iterleaved thinking',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* Chat.empty;
+        const toolkit = yield* CalculatorToolkit;
+
+        let prompt: Prompt.RawInput =
+          'I am testing iterleaved thinking. Perform 5 example calculations with the calculator tool. Call them in series and think about the next call between each tool call.';
+        do {
+          const stream = chat.streamText({ toolkit, prompt });
+          prompt = Prompt.empty;
+
+          yield* Stream.runForEach(
+            stream,
+            Effect.fnUntraced(function* (item) {
+              log.info('item', { item, time: new Date().toISOString() });
+            }),
+          );
+
+          log.break();
+        } while (yield* hasToolCall(chat));
+
+        console.log(JSON.stringify(yield* chat.export, null, 2));
+      },
+      Effect.provide(CalculatorLayer),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
       TestHelpers.taggedTest('llm'),
@@ -266,7 +280,7 @@ describe('LanguageModel', () => {
         `;
 
         const chat = yield* Chat.empty;
-        const toolkit = yield* TestToolkit;
+        const toolkit = yield* CalculatorToolkit;
 
         let prompt: Prompt.RawInput = Prompt.fromMessages([
           Prompt.makeMessage('system', { content: system }),
@@ -284,7 +298,7 @@ describe('LanguageModel', () => {
 
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
-      Effect.provide(toolkitLayer),
+      Effect.provide(CalculatorLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
@@ -319,7 +333,7 @@ describe('LanguageModel', () => {
   ); //
 });
 
-const TestLayer = Layer.mergeAll(testingLayer, toolkitLayer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+const TestLayer = Layer.mergeAll(testingLayer, CalculatorLayer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
   Layer.provideMerge(MemoizedAiService.layerTest()),
   Layer.provide(AiServiceTestingPreset('direct')),
 );
@@ -335,7 +349,7 @@ describe('Toolkit', () => {
         while (true) {
           const response = yield* chat.generateText({
             prompt: Prompt.empty,
-            toolkit: yield* TestToolkit,
+            toolkit: yield* CalculatorToolkit,
           });
           if (response.finishReason === 'tool-calls') {
             continue;

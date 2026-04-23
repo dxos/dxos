@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
@@ -11,7 +13,7 @@ import { Annotation, Obj, Type } from '@dxos/echo';
  */
 export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Expando',
+    typename: 'org.dxos.type.expando',
     version: '0.1.0',
   }),
   Annotation.SystemTypeAnnotation.set(true),

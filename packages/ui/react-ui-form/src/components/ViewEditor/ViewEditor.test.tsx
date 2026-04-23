@@ -6,11 +6,11 @@ import { composeStories } from '@storybook/react';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { View } from '@dxos/echo';
 import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
-import { ProjectionModel, View } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
-
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
 

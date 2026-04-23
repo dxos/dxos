@@ -7,11 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { LogLevel, log } from '@dxos/log';
-
-import { TracingService } from './tracing';
 
 export const ComputeEventPayload = Schema.Union(
   Schema.Struct({
@@ -52,7 +50,7 @@ export type ComputeEventPayload = Schema.Schema.Type<typeof ComputeEventPayload>
 
 export const ComputeEvent = Schema.Struct({
   payload: ComputeEventPayload,
-}).pipe(Type.object({ typename: 'dxos.org/type/ComputeEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'org.dxos.type.computeEvent', version: '0.1.0' }));
 
 /**
  * Logs event for the compute workflows.
@@ -66,21 +64,7 @@ export class ComputeEventLogger extends Context.Tag('@dxos/functions/ComputeEven
     nodeId: undefined,
   };
 
-  /**
-   * Implements ComputeEventLogger using TracingService.
-   */
-  static layerFromTracing = Layer.effect(
-    ComputeEventLogger,
-    Effect.gen(function* () {
-      const tracing = yield* TracingService;
-      return {
-        log: (event: ComputeEventPayload) => {
-          tracing.write(Obj.make(ComputeEvent, { payload: event }), tracing.getTraceContext());
-        },
-        nodeId: undefined,
-      };
-    }),
-  );
+  static layerNoop: Layer.Layer<ComputeEventLogger> = Layer.succeed(ComputeEventLogger, ComputeEventLogger.noop);
 }
 
 export const logCustomEvent = (data: any) =>

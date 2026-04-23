@@ -11,7 +11,6 @@ import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '
 import { type LatLngLiteral } from '../../types';
 import { type StyleSet, closestPoint } from '../../util';
 import { type ControlProps } from '../Toolbar';
-
 import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
 
 // TODO(burdon): Load from JSON at runtime?
@@ -122,7 +121,7 @@ const createTrip = (
   );
 };
 
-type StoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
+type DefaultStoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
   Pick<GlobeCanvasProps, 'projection' | 'styles'> & {
     drag?: boolean;
     spin?: boolean;
@@ -140,7 +139,7 @@ const DefaultStory = ({
   spin = false,
   tour = false,
   xAxis = false,
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const [controller, setController] = createSignal<GlobeController | null>(null);
 
   const [dots] = createResource(async () => {

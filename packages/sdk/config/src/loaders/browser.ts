@@ -51,7 +51,7 @@ export const Defaults = (_basePath?: string): Partial<ConfigProto> => {
  */
 export const Storage = async (): Promise<Partial<ConfigProto>> => {
   try {
-    const config = await localforage.getItem<Partial<ConfigProto>>('dxos.org/settings/config');
+    const config = await localforage.getItem<Partial<ConfigProto>>('org.dxos.settings.config');
     if (config) {
       return config;
     }

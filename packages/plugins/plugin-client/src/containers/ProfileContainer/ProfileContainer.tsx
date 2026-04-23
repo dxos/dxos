@@ -13,7 +13,7 @@ import { Form, type FormFieldMap, type FormUpdateMeta, Settings } from '@dxos/re
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 // TOOD(burdon): Factor out?
 // TODO(wittjosiah): Integrate annotations with translations.
@@ -101,14 +101,14 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Settings.ItemInput title={label} description={t('display name description')}>
+          <Settings.Item title={label} description={t('display-name.description')}>
             <Input.TextInput
               value={getValue()}
               onChange={handleChange}
-              placeholder={t('display name input placeholder')}
+              placeholder={t('display-name-input.placeholder')}
               classNames='min-w-64'
             />
-          </Settings.ItemInput>
+          </Settings.Item>
         );
       },
       emoji: ({ type, label, getValue, onValueChange }) => {
@@ -119,7 +119,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Settings.Item title={label} description={t('icon description')}>
+          <Settings.Item title={label} description={t('icon.description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
@@ -138,7 +138,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Settings.Item title={label} description={t('hue description')}>
+          <Settings.Item title={label} description={t('hue.description')}>
             <div role='none' className='flex justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </div>
@@ -148,12 +148,12 @@ export const ProfileContainer = () => {
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ label, getValue }) => {
         return (
-          <Settings.ItemInput title={label} description={t('did description')}>
+          <Settings.Item title={label} description={t('did.description')}>
             <ButtonGroup classNames='w-full'>
               <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
               <Clipboard.IconButton value={getValue() ?? ''} />
             </ButtonGroup>
-          </Settings.ItemInput>
+          </Settings.Item>
         );
       },
     }),
@@ -162,15 +162,15 @@ export const ProfileContainer = () => {
 
   return (
     <Clipboard.Provider>
-      <Settings.Root>
-        <Settings.Section title={t('profile label')} description={t('profile description')}>
+      <Settings.Viewport>
+        <Settings.Section title={t('profile.label')} description={t('profile.description')}>
           <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
-            <Form.Content>
-              <Form.FieldSet classNames='space-y-trim-md' />
+            <Form.Content classNames='gap-form-gap'>
+              <Form.FieldSet />
             </Form.Content>
           </Form.Root>
         </Settings.Section>
-      </Settings.Root>
+      </Settings.Viewport>
     </Clipboard.Provider>
   );
 };

@@ -6,8 +6,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
+import { Filter } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { Filter } from '@dxos/echo-db';
 import { DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -17,7 +17,6 @@ import { mx } from '@dxos/ui-theme';
 import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-
 import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
 
 export const WorkflowPanel = (props: { space?: Space }) => {

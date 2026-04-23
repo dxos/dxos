@@ -2,13 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 
+import { Context } from '@dxos/context';
 import { type Script } from '@dxos/functions';
-import { Container } from '@dxos/react-ui';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { getSpace } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 
-import { TestPanel } from '../../components/TestPanel';
-import { useDeployState, useToolbarState } from '../../hooks';
+import { TestPanel } from '#components';
+import { useDeployDeps } from '#hooks';
 
 export type TestContainerProps = {
   role: string;
@@ -16,11 +19,26 @@ export type TestContainerProps = {
 };
 
 export const TestContainer = ({ role, script }: TestContainerProps) => {
-  const state = useToolbarState();
-  useDeployState({ state, script });
+  const { client, fn, existingFunctionId } = useDeployDeps({ script });
+  const space = getSpace(script);
+
+  const functionsClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
+
+  const handleInvoke = useCallback(
+    async (input: unknown) => {
+      if (!fn) {
+        throw new Error('Function not deployed');
+      }
+      return functionsClient.invoke(Context.default(), fn, input, { spaceId: space?.id });
+    },
+    [fn, functionsClient, space?.id],
+  );
+
   return (
-    <Container.Main role={role}>
-      <TestPanel functionUrl={state.value.functionUrl} />
-    </Container.Main>
+    <Panel.Root role={role} className='dx-document'>
+      <Panel.Content asChild>
+        <TestPanel onInvoke={existingFunctionId ? handleInvoke : undefined} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

@@ -11,7 +11,6 @@ import { type Anchor, type ShapeLayout, defaultAnchorSize } from '../components'
 import { createNormalsFromRectangles, findClosestIntersection, getDistance, getRect, pointAdd } from '../layout';
 import { createAnchorId, createPath, parseAnchorId } from '../shapes';
 import { type CanvasBoard, type CanvasGraphModel, type PathShape, type Polygon, isPolygon } from '../types';
-
 import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
 

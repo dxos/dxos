@@ -5,12 +5,11 @@
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react-swc';
 import path, { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
-import { defineConfig, defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
-import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
+import WasmPlugin from 'vite-plugin-wasm';
+import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
@@ -36,6 +35,8 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
+      // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
+      ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
@@ -176,7 +177,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
     // http://localhost:51204/__inspect/#/
     plugins: [
       ...plugins,
-      PluginImportSource(),
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Add react plugin to enable SWC transfors.
       react({
@@ -272,7 +273,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   if (xmlReport) {
     return {
       passWithNoTests: true,
-      reporters: ['junit', 'verbose'],
+      reporters: [['junit', { addFileAttribute: true }], 'verbose'],
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,

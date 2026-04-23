@@ -24,7 +24,7 @@ describe('Expando', () => {
   });
 
   test('typename and version are accessible', ({ expect }) => {
-    expect(Expando.Expando.typename).to.eq('dxos.org/type/Expando');
+    expect(Expando.Expando.typename).to.eq('org.dxos.type.expando');
     expect(Expando.Expando.version).to.eq('0.1.0');
   });
 });

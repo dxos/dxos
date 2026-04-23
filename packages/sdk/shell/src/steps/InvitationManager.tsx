@@ -10,24 +10,15 @@ import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, Actions, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
+import { Action, ActionBar, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
 import { translationKey } from '../translations';
 import { invitationStatusValue } from '../util';
-
 import { type StepProps } from './StepProps';
 
 export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
     invitationUrl?: string;
   };
-
-const InvitationManagerView = ({ children, ...props }: ViewportViewProps & { emoji?: string }) => {
-  return (
-    <Viewport.View {...props} classNames='grow flex flex-col justify-around items-center'>
-      {children}
-    </Viewport.View>
-  );
-};
 
 export const InvitationManager = ({
   invitationUrl,
@@ -45,16 +36,16 @@ export const InvitationManager = ({
   const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
     if (multiUse) {
-      return 'showing qr';
+      return 'showing-qr';
     }
     switch (true) {
       case statusValue === 5:
       case statusValue < 0:
-        return 'showing final';
+        return 'showing-final';
       case statusValue === 3:
-        return 'showing auth code';
+        return 'showing-auth-code';
       default:
-        return 'showing qr';
+        return 'showing-qr';
     }
   }, [statusValue]);
 
@@ -62,7 +53,7 @@ export const InvitationManager = ({
     <>
       <Viewport.Root activeView={activeView} classNames='grow py-1'>
         <Viewport.Views>
-          <InvitationManagerView id='showing qr' emoji={emoji}>
+          <InvitationManagerView id='showing-qr' emoji={emoji}>
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
@@ -71,7 +62,7 @@ export const InvitationManager = ({
                 rounding={100}
                 backgroundColor='transparent'
                 color='currentColor'
-                className={mx('w-full h-full p-2', showAuthCode && 'invisible')}
+                className={mx('h-full w-full p-2', showAuthCode && 'invisible')}
                 aria-labelledby={qrLabel}
                 errorCorrectionLevel='Q'
                 cutout={true}
@@ -83,17 +74,17 @@ export const InvitationManager = ({
               </Centered>
             </div>
             <span id={qrLabel} className='sr-only'>
-              {t('qr label')}
+              {t('qr.label')}
             </span>
             <Clipboard.Button variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
-          <InvitationManagerView id='showing auth code'>
-            <Label>{t('auth code message')}</Label>
+          <InvitationManagerView id='showing-auth-code'>
+            <Label>{t('auth-code.message')}</Label>
             <AuthCode code={authCode} large classNames='text-black dark:text-white' />
-            <Label>{t('auth other device emoji message')}</Label>
+            <Label>{t('auth-other-device-emoji.message')}</Label>
             {emoji && <Emoji text={emoji} />}
           </InvitationManagerView>
-          <InvitationManagerView id='showing final'>
+          <InvitationManagerView id='showing-final'>
             {statusValue > 0 ? (
               <Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
             ) : (
@@ -102,11 +93,19 @@ export const InvitationManager = ({
           </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      <Actions classNames='mt-4'>
+      <ActionBar classNames='mt-4'>
         <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
-          {t('back label')}
+          {t('back.label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
+  );
+};
+
+const InvitationManagerView = ({ children, ...props }: ViewportViewProps & { emoji?: string }) => {
+  return (
+    <Viewport.View {...props} classNames='grow flex flex-col justify-around items-center'>
+      {children}
+    </Viewport.View>
   );
 };

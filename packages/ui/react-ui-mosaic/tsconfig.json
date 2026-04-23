@@ -57,6 +57,9 @@
       "path": "../react-ui-dnd"
     },
     {
+      "path": "../react-ui-menu"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

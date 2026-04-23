@@ -8,24 +8,17 @@ import React, { memo, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
-import {
-  type ActionGraphProps,
-  type MenuAction,
-  MenuProvider,
-  ToolbarMenu,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { createLists } from './actions';
-import { createBlocks } from './blocks';
-import { createFormatting } from './formatting';
-import { createHeadings } from './headings';
-import { createImageUpload } from './image';
-import { createSearch } from './search';
-import { type EditorToolbarState } from './useEditorToolbar';
-import { createViewMode } from './view-mode';
+import { addBlocks } from './blocks';
+import { addFormatting } from './formatting';
+import { addHeadings } from './headings';
+import { addImageUpload } from './image';
+import { addLists } from './lists';
+import { addSearch } from './search';
+import { type EditorToolbarState } from './types';
+import { addViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{
   showHeadings: boolean;
@@ -56,13 +49,13 @@ export type EditorToolbarProps = ThemedClassName<
 >;
 
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
-  const menuProps = useEditorToolbarActionGraph(props);
+  const menuActions = useEditorToolbarActionGraph(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menuProps} attendableId={attendableId} onAction={onAction}>
-        <ToolbarMenu classNames={classNames} textBlockWidth />
-      </MenuProvider>
+      <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
+        <Menu.Toolbar classNames={classNames} />
+      </Menu.Root>
     </ElevationProvider>
   );
 });
@@ -73,6 +66,7 @@ type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getVie
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
+// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 const useEditorToolbarActionGraph = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
     () => createToolbarActions({ state, getView, customActions, ...features }),
@@ -100,48 +94,18 @@ const createToolbarActions = ({
   ...features
 }: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
-    const graph: ActionGraphProps = {
-      nodes: [],
-      edges: [],
-    };
-
-    // TODO(burdon): Builder pattern?
-    const addSubGraph = (graph: ActionGraphProps, subGraph: ActionGraphProps) => {
-      graph.nodes.push(...subGraph.nodes);
-      graph.edges.push(...subGraph.edges);
-    };
-
     // Subscribe to state changes.
     const stateSnapshot = get(state);
-
-    if (features?.showHeadings ?? true) {
-      addSubGraph(graph, createHeadings(stateSnapshot, getView));
-    }
-    if (features?.showFormatting ?? true) {
-      addSubGraph(graph, createFormatting(stateSnapshot, getView));
-    }
-    if (features?.showLists ?? true) {
-      addSubGraph(graph, createLists(stateSnapshot, getView));
-    }
-    if (features?.showBlocks ?? true) {
-      addSubGraph(graph, createBlocks(stateSnapshot, getView));
-    }
-    if (features?.onImageUpload) {
-      addSubGraph(graph, createImageUpload(features.onImageUpload!));
-    }
-
-    addSubGraph(graph, createGapSeparator());
-
-    if (customActions) {
-      addSubGraph(graph, get(customActions));
-    }
-    if (features?.showSearch ?? true) {
-      addSubGraph(graph, createSearch(getView));
-    }
-    if (features?.onViewModeChange) {
-      addSubGraph(graph, createViewMode(stateSnapshot, features.onViewModeChange!));
-    }
-
-    return graph;
+    return MenuBuilder.make()
+      .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
+      .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
+      .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
+      .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
+      .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload))
+      .separator('gap')
+      .subgraph(customActions && get(customActions))
+      .subgraph(features?.showSearch !== false && addSearch(getView))
+      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange))
+      .build();
   });
 };

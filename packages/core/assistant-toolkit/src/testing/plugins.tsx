@@ -8,14 +8,14 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Format, type Obj, Type } from '@dxos/echo';
-import { Card } from '@dxos/react-ui-mosaic';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Card } from '@dxos/react-ui';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Map',
+    typename: 'com.example.type.map',
     version: '0.1.0',
   }),
 );
@@ -64,7 +64,12 @@ export const capabilities: Capability.Any[] = [
       position: 'fallback',
       component: ({ data }) => (
         <Card.Content>
-          <JsonFilter data={data} />
+          <Json.Root data={data}>
+            <Json.Content>
+              <Json.Filter />
+              <Json.Data />
+            </Json.Content>
+          </Json.Root>
         </Card.Content>
       ),
     }),

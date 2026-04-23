@@ -10,10 +10,12 @@ import { type Plugin } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/ui-theme';
 
-import { PluginList } from '../../components';
+import { PluginList } from '#components';
+import { getPluginPath } from '#meta';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
@@ -21,66 +23,76 @@ const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { n
 export type PluginRegistryProps = {
   id: string;
   plugins: Plugin.Plugin[];
+  /**
+   * Map from plugin id → display-only tags (e.g. `community`, `local`) computed by the caller.
+   */
+  extraTagsById?: Record<string, readonly string[]>;
 };
 
-export const PluginRegistry = ({ id, plugins: pluginsProp }: PluginRegistryProps) => {
-  const manager = usePluginManager();
-  const { invoke, invokePromise } = useOperationInvoker();
-  const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
-  const enabled = useAtomValue(manager.enabled);
-  const allSettings = useCapabilities(AppCapabilities.Settings);
+export const PluginRegistry = composable<HTMLDivElement, PluginRegistryProps>(
+  ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
+    const manager = usePluginManager();
+    const { invoke, invokePromise } = useOperationInvoker();
+    const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
+    const enabled = useAtomValue(manager.enabled);
+    const allSettings = useCapabilities(AppCapabilities.Settings);
 
-  // TODO(wittjosiah): Factor out to an intent?
-  const handleChange = useCallback(
-    (id: string, enabled: boolean) =>
-      Effect.gen(function* () {
-        if (enabled) {
-          yield* manager.enable(id);
-        } else {
-          yield* manager.disable(id);
-        }
+    const handleChange = useCallback(
+      (id: string, enabled: boolean) =>
+        Effect.gen(function* () {
+          if (enabled) {
+            yield* manager.enable(id);
+          } else {
+            yield* manager.disable(id);
+          }
 
-        yield* invoke(ObservabilityOperation.SendEvent, {
-          name: 'plugins.toggle',
-          properties: {
-            plugin: id,
-            enabled,
-          },
-        });
-      }).pipe(runAndForwardErrors),
-    [invoke, manager],
-  );
+          yield* invoke(ObservabilityOperation.SendEvent, {
+            name: 'plugins.toggle',
+            properties: {
+              plugin: id,
+              enabled,
+            },
+          });
+        }).pipe(runAndForwardErrors),
+      [invoke, manager],
+    );
 
-  const handleClick = useCallback(
-    (pluginId: string) =>
-      invokePromise(LayoutOperation.Open, {
-        // TODO(wittjosiah): `/` currently is not supported in ids.
-        subject: [pluginId.replaceAll('/', ':')],
-        pivotId: id,
-        positioning: 'end',
-      }),
-    [invokePromise, id],
-  );
+    const handleClick = useCallback(
+      (pluginId: string) =>
+        invokePromise(LayoutOperation.Open, {
+          subject: [getPluginPath(pluginId)],
+          pivotId: id,
+          positioning: 'end',
+        }),
+      [invokePromise, id],
+    );
 
-  const hasSettings = useCallback((pluginId: string) => allSettings.some((s) => s.prefix === pluginId), [allSettings]);
+    const hasSettings = useCallback(
+      (pluginId: string) => allSettings.some((s) => s.prefix === pluginId),
+      [allSettings],
+    );
 
-  const handleSettings = useCallback(
-    (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),
-    [invokePromise],
-  );
+    const handleSettings = useCallback(
+      (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),
+      [invokePromise],
+    );
 
-  return (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport>
-        <PluginList
-          plugins={plugins}
-          enabled={enabled}
-          onClick={handleClick}
-          onChange={handleChange}
-          hasSettings={hasSettings}
-          onSettings={handleSettings}
-        />
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-};
+    return (
+      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
+          <PluginList
+            plugins={plugins}
+            enabled={enabled}
+            extraTagsById={extraTagsById}
+            onClick={handleClick}
+            onChange={handleChange}
+            hasSettings={hasSettings}
+            onSettings={handleSettings}
+          />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+PluginRegistry.displayName = 'PluginRegistry';

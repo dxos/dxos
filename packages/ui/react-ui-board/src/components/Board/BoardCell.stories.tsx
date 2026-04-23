@@ -5,12 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { Board, type BoardCellProps } from './Board';
 import { defaultGrid } from './defs';
 

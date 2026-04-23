@@ -3,17 +3,10 @@
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "dist/types",
-    "types": [
-      "node",
-      "sharedworker"
-    ]
+    "types": ["node", "sharedworker"]
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "vite.config.ts"
-  ],
+  "include": ["src"],
+  "exclude": ["vite.config.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"

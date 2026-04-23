@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
@@ -27,23 +27,23 @@ export class InvitationsServiceImpl implements InvitationsService {
     };
   }
 
-  createInvitation(options: Invitation): Stream<Invitation> {
-    return new Stream<Invitation>(({ next, close }) => {
+  createInvitation(request: Invitation, options?: RequestOptions): Stream<Invitation> {
+    return new Stream<Invitation>(({ ctx, next, close }) => {
       void this._invitationsManager
-        .createInvitation(options)
+        .createInvitation(ctx, request)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
           invitation.subscribe(next, close, close);
         })
         .catch(close);
-    });
+    }, options?.ctx);
   }
 
-  acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
-    const invitation = this._invitationsManager.acceptInvitation(request);
-    return new Stream<Invitation>(({ next, close }) => {
+  acceptInvitation(request: AcceptInvitationRequest, options?: RequestOptions): Stream<Invitation> {
+    return new Stream<Invitation>(({ ctx, next, close }) => {
+      const invitation = this._invitationsManager.acceptInvitation(ctx, request);
       invitation.subscribe(next, close, close);
-    });
+    }, options?.ctx);
   }
 
   async authenticate(request: AuthenticationRequest): Promise<void> {

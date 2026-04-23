@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
 import { log } from '@dxos/log';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { faker } from '@dxos/random';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { random } from '@dxos/random';
 
 export const storybookGraphBuilders = (): BuilderExtensions => {
   const propertiesCache = new Map<string, Record<string, unknown>>();
@@ -31,13 +31,13 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
-              id: `app-menu/action-${i}`,
+              id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
                 log.info('action', { id: 'app-menu', index: i });
               }),
               properties: {
                 label: `Action ${i}`,
-                icon: faker.properties.icon(),
+                icon: random.properties.icon(),
                 disposition: 'menu',
               },
             })),
@@ -49,7 +49,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
-            {
+            Node.make({
               id: 'user-account',
               type: 'user-account',
               properties: {
@@ -57,37 +57,37 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 icon: 'ph--user--regular',
                 disposition: 'user-account',
                 userId: '1234567890ABCDEF',
-                hue: faker.properties.hue(),
-                emoji: faker.properties.emoji(),
+                hue: random.properties.hue(),
+                emoji: random.properties.emoji(),
                 status: 'active',
               },
               nodes: [
-                {
+                Node.make({
                   id: 'profile',
                   type: 'profile',
                   properties: {
                     label: 'Profile',
                     icon: 'ph--user--regular',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: 'devices',
                   type: 'devices',
                   properties: {
                     label: 'Devices',
                     icon: 'ph--devices--regular',
                   },
-                },
-                {
+                }),
+                Node.make({
                   id: 'security',
                   type: 'security',
                   properties: {
                     label: 'Security',
                     icon: 'ph--key--regular',
                   },
-                },
+                }),
               ],
-            },
+            }),
           ]),
       }),
       // Create space (workspace) nodes directly under root.
@@ -111,16 +111,18 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               return value;
             });
 
-            return Array.from({ length: get(count) }, (_, i) => ({
-              id: `space-${i}`,
-              type: 'space',
-              properties: getProperties(`space-${i}`, {
-                label: `Space ${i}`,
-                icon: faker.properties.icon(),
-                hue: faker.properties.hue(),
-                disposition: 'workspace',
+            return Array.from({ length: get(count) }, (_, i) =>
+              Node.make({
+                id: `space-${i}`,
+                type: 'space',
+                properties: getProperties(`space-${i}`, {
+                  label: `Space ${i}`,
+                  icon: random.properties.icon(),
+                  hue: random.properties.hue(),
+                  disposition: 'workspace',
+                }),
               }),
-            }));
+            );
           }),
       }),
       // Create space actions.
@@ -130,13 +132,13 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
-              id: `space-actions/action-${i}`,
+              id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
                 log.info('action', { id: 'space-actions', index: i });
               }),
-              properties: getProperties(`space-actions/action-${i}`, {
+              properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
-                icon: faker.properties.icon(),
+                icon: random.properties.icon(),
               }),
             })),
           ),
@@ -162,14 +164,16 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               return value;
             });
 
-            return Array.from({ length: get(count) }, (_, i) => ({
-              id: `object-${i}`,
-              type: 'object',
-              properties: getProperties(`object-${i}`, {
-                label: `Object ${i}`,
-                icon: faker.properties.icon(),
+            return Array.from({ length: get(count) }, (_, i) =>
+              Node.make({
+                id: `object-${i}`,
+                type: 'object',
+                properties: getProperties(`object-${i}`, {
+                  label: `Object ${i}`,
+                  icon: random.properties.icon(),
+                }),
               }),
-            }));
+            );
           }),
       }),
       // Create object actions.
@@ -179,13 +183,13 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
-              id: `object-actions/action-${i}`,
+              id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
                 log.info('action', { id: 'object-actions', index: i });
               }),
-              properties: getProperties(`object-actions/action-${i}`, {
+              properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
-                icon: faker.properties.icon(),
+                icon: random.properties.icon(),
               }),
             })),
           ),

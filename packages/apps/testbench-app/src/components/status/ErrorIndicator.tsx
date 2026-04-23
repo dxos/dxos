@@ -39,6 +39,7 @@ export const ErrorIndicator = () => {
   return (
     <IconButton
       classNames={mx(errorRef.current ? styles.error : styles.default)}
+      variant='ghost'
       icon='ph--circle--fill'
       iconOnly
       label={errorRef.current?.message ?? 'No errors.'}
@@ -46,8 +47,6 @@ export const ErrorIndicator = () => {
         errorRef.current = null;
         forceUpdate({});
       }}
-      size={3}
-      variant='ghost'
     />
   );
 };

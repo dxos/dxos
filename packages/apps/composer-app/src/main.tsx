@@ -2,31 +2,57 @@
 // Copyright 2020 DXOS.org
 //
 
+// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
+(globalThis as any).litIssuedWarnings ??= new Set();
+(globalThis as any).litIssuedWarnings.add('dev-mode');
+
 import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode } from 'react';
+import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { type Plugin, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogLevel, log } from '@dxos/log';
+import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
+import { observabilityTranslations } from '@dxos/plugin-observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { Placeholder, ResetDialog } from './components';
-import { initializeObservability, setupConfig } from './config';
+import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
+import { startupProfiler } from './profiler';
 import { translations } from './translations';
-import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
+import {
+  defaultStorageIsEmpty,
+  isFalse,
+  isTrue,
+  runStorageResetMigration,
+  shouldRunStorageResetMigration,
+} from './util';
+
+declare global {
+  interface ImportMeta {
+    env: ImportMetaEnv;
+  }
+
+  interface ImportMetaEnv {
+    DEV: string;
+  }
+
+  // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
+  var downloadLogs: () => void;
+}
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -35,6 +61,9 @@ const main = async () => {
     log.info('SAFE MODE');
     setSafeModeUrl(false);
   }
+
+  const profiler = isTrue(url.searchParams.get(PARAM_PROFILER), false) ? startupProfiler() : undefined;
+
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
     const level = LogLevel[logLevel.toUpperCase() as keyof typeof LogLevel];
@@ -43,17 +72,52 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const { defs, SaveConfig } = await import('@dxos/config');
+  const logBuffer = new LogBuffer();
+  log.addProcessor(logBuffer.logProcessor);
+
+  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
+  const downloadFile = (data: Blob | string, filename: string) => {
+    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+    const element = document.createElement('a');
+    element.setAttribute('href', url);
+    element.setAttribute('download', filename);
+    element.setAttribute('target', 'download');
+    element.click();
+  };
+
+  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
+  globalThis.downloadLogs = () => {
+    const ndjson = logBuffer.serialize();
+    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    downloadFile(file, fileName);
+  };
+
+  profiler?.mark('dynamic-imports:start');
+
+  const { Config, defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  profiler?.mark('dynamic-imports:end');
+  profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
-  (window as any).composer = {};
+  (window as any).composer = { profiler };
+
+  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+
+  profiler?.mark('config:start');
 
   let config = await setupConfig();
+
+  if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
+    await runStorageResetMigration();
+    window.location.replace(window.location.href);
+    return;
+  }
+
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
@@ -70,14 +134,18 @@ const main = async () => {
     config = await setupConfig();
   }
 
+  profiler?.mark('config:end');
+  profiler?.measure('config', 'config:start', 'config:end');
+
   const isTauri = isTauri$();
   if (isTauri) {
     const platform = getHostPlatform();
     document.body.setAttribute('data-platform', platform);
   }
 
-  // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config, isTauri);
+  // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
+  // early spans and replays them once the real OTEL backend registers.
+  const observability = initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
@@ -111,48 +179,83 @@ const main = async () => {
     runAndForwardErrors,
   );
 
-  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
+  // separate SharedWorker crash bug (Apple FB11723920) unrelated to origin. Desktop Tauri uses
+  // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
   const useSingleClientMode = isTauri && isMobile;
 
-  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
-  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  profiler?.mark('services:start');
+
+  // Decide the deployment mode for client services. The factory is a dumb switch on
+  // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
+  // env / platform constraints. Worker factories are passed unconditionally; the factory only
+  // invokes the one required by the configured mode.
+  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
+  // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
+  // transparently fall back to in-process host mode instead of letting the factory throw later.
+  const isIos = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
+  const sharedWorkerSupported = typeof SharedWorker !== 'undefined' && !isIos;
+  const servicesMode = useLocalServices
+    ? defs.Runtime.Client.ServicesMode.HOST
+    : useSharedWorker
+      ? sharedWorkerSupported
+        ? defs.Runtime.Client.ServicesMode.SHARED_WORKER
+        : defs.Runtime.Client.ServicesMode.HOST
+      : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+
+  // Host mode uses OPFS SQLite in a dedicated worker; worker modes run their own in-memory SQLite
+  // (OPFS does not yet work from inside a SharedWorker per the TODO in `worker-runtime.ts`).
+  const sqliteMode =
+    servicesMode === defs.Runtime.Client.ServicesMode.HOST
+      ? defs.Runtime.Client.Storage.SqliteMode.OPFS
+      : defs.Runtime.Client.Storage.SqliteMode.MEMORY;
+
+  config = new Config(
+    {
+      runtime: {
+        client: {
+          observabilityGroup,
+          signalTelemetryEnabled: !observabilityDisabled,
+          singleClientMode: useSingleClientMode,
+          servicesMode,
+          storage: { sqliteMode },
+        },
+      },
+    },
+    config.values,
+  );
   const services = await createClientServices(config, {
-    createWorker:
-      useLocalServices || !useSharedWorker
-        ? undefined
-        : () =>
-            new SharedWorker(new URL('./shared-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createDedicatedWorker:
-      useLocalServices || useSharedWorker
-        ? undefined
-        : () =>
-            new Worker(new URL('./dedicated-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-client-worker',
-            }),
-    createCoordinatorWorker:
-      useLocalServices || useSharedWorker || useSingleClientMode
-        ? undefined
-        : () =>
-            new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
-              type: 'module',
-              name: 'dxos-coordinator-worker',
-            }),
+    createWorker: () =>
+      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+    createDedicatedWorker: () =>
+      new Worker(new URL('./dedicated-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-client-worker',
+      }),
+    createCoordinatorWorker: () =>
+      new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+        type: 'module',
+        name: 'dxos-coordinator-worker',
+      }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    singleClientMode: useSingleClientMode,
-    observabilityGroup,
-    signalTelemetryEnabled: !observabilityDisabled,
   });
+
+  profiler?.mark('services:end');
+  profiler?.measure('services', 'services:start', 'services:end');
+
+  profiler?.mark('plugins:start');
 
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
     services,
     observability,
+    logBuffer,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -163,10 +266,21 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const plugins = getPlugins(conf);
+  const builtinPlugins = getPlugins(conf);
+  let remotePlugins: Plugin.Plugin[] = [];
+  try {
+    remotePlugins = await UrlLoader.preload();
+  } catch (error) {
+    log.warn('failed to preload remote plugins', { error });
+  }
+  const plugins = [...builtinPlugins, ...remotePlugins];
+  const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
+
+  profiler?.mark('plugins:end');
+  profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
 
   const Fallback = ({ error }: { error: Error }) => {
     const {
@@ -174,15 +288,22 @@ const main = async () => {
       updateServiceWorker,
     } = useRegisterSW();
 
+    const handleReset = useCallback(async () => {
+      localStorage.clear();
+      await services.services.SystemService?.reset();
+      window.location.href = window.location.origin;
+    }, [services]);
+
     return (
-      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+      <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
         <Tooltip.Provider>
           <ResetDialog
-            isDev={conf.isDev}
             error={error}
+            logBuffer={logBuffer}
+            observability={observability}
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-            observability={observability}
+            onReset={import.meta.env.DEV ? handleReset : undefined}
           />
         </Tooltip.Provider>
       </ThemeProvider>
@@ -193,6 +314,7 @@ const main = async () => {
     const App = useApp({
       fallback: Fallback,
       placeholder: Placeholder,
+      pluginLoader,
       plugins,
       core,
       defaults,

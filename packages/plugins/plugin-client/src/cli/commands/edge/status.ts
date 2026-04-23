@@ -10,13 +10,14 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { Context } from '@dxos/context';
 
 export const getStatus = () =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     const identity = createEdgeIdentity(client);
     client.edge.http.setIdentity(identity);
-    const status = yield* Effect.tryPromise(() => client.edge.http.getStatus());
+    const status = yield* Effect.tryPromise(() => client.edge.http.getStatus(Context.default()));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(status, null, 2));

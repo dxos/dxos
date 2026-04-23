@@ -4,20 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, type Plugin } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
-import { defaultTx } from '@dxos/ui-theme';
+
+import { Channel } from '#types';
 
 import { ThreadPlugin } from '../ThreadPlugin';
-import { Channel } from '../types';
 
 export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
-  ThemePlugin({ tx: defaultTx }),
+  ...corePlugins(),
   ClientPlugin({
     onClientInitialized: ({ client }) =>
       Effect.gen(function* () {
@@ -25,8 +23,8 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
       }),
     onSpacesReady: ({ client }) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-        client.spaces.default.db.add(Channel.make());
+        const space = client.spaces.get()[0];
+        space.db.add(Channel.make());
       }),
     config: new Config({
       runtime: {
@@ -49,8 +47,5 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
     }),
   }),
   SpacePlugin({}),
-  OperationPlugin(),
-  SettingsPlugin(),
-  GraphPlugin(),
   ThreadPlugin(),
 ];

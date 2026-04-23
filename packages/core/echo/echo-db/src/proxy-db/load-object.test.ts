@@ -13,7 +13,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder, createTmpPath } from '../testing';
-
 import { loadObjectReferences } from './load-object';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
@@ -166,12 +165,12 @@ describe.skip('loadObjectReferences', () => {
 
   test('loads as array of non-nullable items', async () => {
     const Nested = Schema.Struct({ value: Schema.Number }).pipe(
-      Type.object({ typename: 'example.com/Nested', version: '0.1.0' }),
+      Type.object({ typename: 'com.example.nested', version: '0.1.0' }),
     );
 
     const TestSchema = Schema.Struct({
-      nested: Schema.Array(Type.Ref(Nested)),
-    }).pipe(Type.object({ typename: 'example.com/Test', version: '0.1.0' }));
+      nested: Schema.Array(Ref.Ref(Nested)),
+    }).pipe(Type.object({ typename: 'com.example.test', version: '0.1.0' }));
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);

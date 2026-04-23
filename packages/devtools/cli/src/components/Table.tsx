@@ -7,7 +7,6 @@ import { useKeyboard } from '@opentui/solid';
 import { For, createEffect, createSignal, useContext } from 'solid-js';
 
 import { type Theme } from '../theme';
-
 import { AppContext } from './App';
 
 export type Column<T> = {

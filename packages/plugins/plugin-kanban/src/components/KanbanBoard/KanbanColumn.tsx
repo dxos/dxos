@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useRef } from 'react';
+import React, { FC, forwardRef, RefObject, useRef } from 'react';
 
 import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
-import { useKanbanItemEventHandler } from '../../hooks';
-import { type ColumnStructure, UNCATEGORIZED_VALUE } from '../../types';
+import { useKanbanItemEventHandler } from '#hooks';
+import { type ColumnStructure, UNCATEGORIZED_VALUE } from '#types';
 
 import { useKanbanBoard } from './KanbanBoard';
 
@@ -39,29 +39,28 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
       <Board.Column.Root
         data={column}
         location={location}
+        classNames='grid grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
         debug={debug}
         dragHandleRef={dragHandleRef}
         ref={forwardedRef}
       >
-        <Board.Column.Grid classNames='grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'>
-          {uncategorized ? (
-            <div className='border-b border-separator p-2' data-testid='board-column-header'>
-              <span className='font-medium'>{title}</span>
-            </div>
-          ) : (
-            <Board.Column.Header label={title} dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>} />
-          )}
-          <Board.Column.Body
-            data={column}
-            eventHandler={eventHandler}
-            Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
+        {uncategorized ? (
+          <div className='border-b border-separator p-2' data-testid='board-column-header'>
+            <span className='font-medium'>{title}</span>
+          </div>
+        ) : (
+          <Board.Column.Header label={title} dragHandleRef={dragHandleRef as RefObject<HTMLButtonElement>} />
+        )}
+        <Board.Column.Body
+          data={column}
+          eventHandler={eventHandler}
+          Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
+        />
+        {onCardAdd && (
+          <Board.Column.Footer
+            onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
           />
-          {onCardAdd && (
-            <Board.Column.Footer
-              onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
-            />
-          )}
-        </Board.Column.Grid>
+        )}
       </Board.Column.Root>
     );
   },

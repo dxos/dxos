@@ -2,89 +2,66 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/ui-theme';
-import { type SlottableClassName, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { composable, composableProps, mx, slottable } from '@dxos/ui-theme';
 
 import { withTheme } from '../testing';
+import { ThemedClassName } from '../util';
 
 /**
- * Composition
- *
+ * Radix-style composition.
  * All Radix primitive parts that render a DOM element accept an asChild prop.
- * When asChild is set to true, Radix will not render a default DOM element, instead cloning the part's child and passing it the props and behavior required to make it functional.
+ * When asChild is set to true, Radix will not render a default DOM element,
+ * instead cloning the part's child and passing it the props and behavior required to make it functional.
  * https://www.radix-ui.com/primitives/docs/guides/composition
  */
 
-// Outer primitive (like Tooltip.Trigger or Focus.Group).
-const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, className, classNames, asChild, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+const Outer = slottable<HTMLDivElement, { priority?: number }>(
+  ({ children, asChild, priority, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={mx(className, classNames)} data-outer='true' ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
-// Middle primitive (like Dialog.Trigger or Mosaic.Cell).
-const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, className, classNames, asChild, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    return (
-      <Root {...props} className={mx(className, classNames)} data-middle='true' ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
-// Leaf component (like Card.Root).
-const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>>(
-  ({ className, classNames, children, ...props }, forwardedRef) => {
-    return (
-      <button
-        {...props}
-        className={mx('p-2 outline-hidden border rounded-sm', className, classNames)}
+      <Comp
+        {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
         ref={forwardedRef}
       >
         {children}
-      </button>
+      </Comp>
     );
   },
 );
 
-// Test 1: Single asChild.
-const TestSingle = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => (
-  <Outer asChild {...props} className={mx('p-2', classNames)}>
-    <Leaf>Single asChild</Leaf>
-  </Outer>
-);
-
-// Test 2: Nested asChild.
-const TestNested = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => {
+const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Outer asChild {...props} className={mx('p-2', classNames)}>
-      <Middle asChild>
-        <Leaf>Nested asChild</Leaf>
-      </Middle>
-    </Outer>
+    <Comp
+      {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
+      ref={forwardedRef}
+    >
+      {children}
+    </Comp>
   );
-};
+});
 
-// Test 3: Complex.
-const TestInner = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => (
-  <Outer asChild {...props} className={mx('p-2', classNames)}>
-    <Middle asChild>
-      <Leaf>
-        <div role='none'>Leaf</div>
-      </Leaf>
-    </Middle>
-  </Outer>
+const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {
+  return (
+    <button
+      {...composableProps<HTMLButtonElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
+      ref={forwardedRef}
+    >
+      {children}
+    </button>
+  );
+});
+
+/** This isn't a valid child for a `slottable` component. */
+const Simple = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => (
+  <div role='none' className={mx(classNames)}>
+    {children}
+  </div>
 );
 
 const meta = {
@@ -100,13 +77,41 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Single: Story = {
-  render: () => <TestSingle role='listitem' classNames='border-red-500' />,
+  render: () => (
+    <Outer asChild role='article' classNames='border-green-500' priority={1}>
+      <Leaf>Single asChild (non-compliant — see console)</Leaf>
+    </Outer>
+  ),
 };
 
 export const Nested: Story = {
-  render: () => <TestNested role='listitem' classNames='border-green-500' />,
+  render: () => (
+    <Outer asChild role='article' classNames='border-blue-500'>
+      <Middle asChild>
+        <Leaf>Nested asChild</Leaf>
+      </Middle>
+    </Outer>
+  ),
 };
 
 export const Inner: Story = {
-  render: () => <TestInner role='listitem' classNames='border-blue-500' />,
+  render: () => (
+    <Outer asChild role='article' classNames='border-orange-500'>
+      <Middle asChild>
+        <Leaf>
+          <div role='none'>Leaf</div>
+        </Leaf>
+      </Middle>
+    </Outer>
+  ),
+};
+
+export const Error: Story = {
+  render: () => (
+    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+      <Middle asChild>
+        <Simple>Simple</Simple>
+      </Middle>
+    </Outer>
+  ),
 };

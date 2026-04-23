@@ -27,10 +27,14 @@ export const ThemeContext = createContext<{ color: string }>('theme');
 ```typescript
 import { ContextRequestEvent } from '@dxos/web-context';
 
-const event = new ContextRequestEvent(ThemeContext, (value, unsubscribe) => {
-  console.log('Context value:', value);
-  // Optional: unsubscribe()
-}, { subscribe: true });
+const event = new ContextRequestEvent(
+  ThemeContext,
+  (value, unsubscribe) => {
+    console.log('Context value:', value);
+    // Optional: unsubscribe()
+  },
+  { subscribe: true },
+);
 
 element.dispatchEvent(event);
 ```

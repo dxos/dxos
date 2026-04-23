@@ -16,7 +16,7 @@ import type { DXN, ObjectId } from '@dxos/keys';
 // TODO(wittjosiah): The `export * as ...` syntax causes tsdown to genereate multiple files which breaks the sandbox.
 
 class OrderClass implements Order$.Any {
-  private static variance: Order$.Any['~Order'] = {} as Order$.Any['~Order'];
+  private static 'variance': Order$.Any['~Order'] = {} as Order$.Any['~Order'];
 
   static is(value: unknown): value is Order$.Any {
     return typeof value === 'object' && value !== null && '~Order' in value;
@@ -46,7 +46,7 @@ const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
 
 class FilterClass implements Filter$.Any {
-  private static variance: Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
+  private static 'variance': Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
 
   static is(value: unknown): value is Filter$.Any {
     return typeof value === 'object' && value !== null && '~Filter' in value;
@@ -221,7 +221,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static in<T>(...values: T[]): Filter$.Filter<T | undefined> {
+  static in<T>(...values: T[]): Filter$.Filter<T> {
     return new FilterClass({
       type: 'in',
       values,
@@ -235,12 +235,53 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static between<T>(from: T, to: T): Filter$.Filter<unknown> {
+  static between<T>(from: T, to: T): Filter$.Filter<T> {
     return new FilterClass({
       type: 'range',
       from,
       to,
     });
+  }
+
+  static updated(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+    return FilterClass._timeRangeFilter('updatedAt', range);
+  }
+
+  static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+    return FilterClass._timeRangeFilter('createdAt', range);
+  }
+
+  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+    const items = Array.isArray(parents) ? parents : [parents];
+    const dxns = items.map((item) => {
+      if (isDxnLike(item)) {
+        return item.toString();
+      }
+      throw new TypeError('childOf requires DXN values in query-lite');
+    });
+    return new FilterClass({
+      type: 'child-of',
+      parents: dxns,
+      transitive: options?.transitive ?? true,
+    });
+  }
+
+  private static _timeRangeFilter(
+    field: 'updatedAt' | 'createdAt',
+    range: { after?: Date | number; before?: Date | number },
+  ): Filter$.Any {
+    const toMs = (d: Date | number) => (typeof d === 'number' ? d : d.getTime());
+    const filters: Filter$.Any[] = [];
+    if (range.after != null) {
+      filters.push(new FilterClass({ type: 'timestamp', field, operator: 'gte', value: toMs(range.after) }));
+    }
+    if (range.before != null) {
+      filters.push(new FilterClass({ type: 'timestamp', field, operator: 'lte', value: toMs(range.before) }));
+    }
+    if (filters.length === 0) {
+      return FilterClass.everything();
+    }
+    return filters.length === 1 ? filters[0] : FilterClass.and(...filters);
   }
 
   static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
@@ -266,6 +307,11 @@ class FilterClass implements Filter$.Any {
       type: 'or',
       filters: filters.map((f) => f.ast),
     });
+  }
+
+  /** Returns a human-readable string representation of a Filter AST. */
+  static pretty(filter: Filter$.Any): string {
+    return prettyFilter(filter.ast);
   }
 
   private constructor(public readonly ast: QueryAST.Filter) {}
@@ -328,7 +374,7 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
 };
 
 class QueryClass implements Query$.Any {
-  private static variance: Query$.Any['~Query'] = {} as Query$.Any['~Query'];
+  private static 'variance': Query$.Any['~Query'] = {} as Query$.Any['~Query'];
 
   static is(value: unknown): value is Query$.Any {
     return typeof value === 'object' && value !== null && '~Query' in value;
@@ -343,6 +389,22 @@ class QueryClass implements Query$.Any {
       type: 'select',
       filter: filter.ast,
     });
+  }
+
+  select(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
+    if (FilterClass.is(filter)) {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: filter.ast,
+      });
+    } else {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: FilterClass.props(filter).ast,
+      });
+    }
   }
 
   static type(schema: Schema.Schema.All | string, predicates?: Filter$.Props<unknown>): Query$.Any {
@@ -372,25 +434,48 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  static from(source: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    const baseQuery: QueryAST.Query = {
+      type: 'select',
+      filter: FilterClass.everything().ast,
+    };
+    const wrapper = new QueryClass(baseQuery);
+    return wrapper.from(source, options);
+  }
+
+  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: {
+          _tag: 'scope',
+          scope: {
+            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+          },
+        },
+      });
+    }
+
+    if (_isScopeLike(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scope: arg },
+      });
+    }
+
+    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
+  }
+
+  /** Returns a human-readable string representation of a Query AST. */
+  static pretty(query: Query$.Any): string {
+    return prettyQuery(query.ast);
+  }
+
   constructor(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
-
-  select(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
-    if (FilterClass.is(filter)) {
-      return new QueryClass({
-        type: 'filter',
-        selection: this.ast,
-        filter: filter.ast,
-      });
-    } else {
-      return new QueryClass({
-        type: 'filter',
-        selection: this.ast,
-        filter: FilterClass.props(filter).ast,
-      });
-    }
-  }
 
   reference(key: string): Query$.Any {
     return new QueryClass({
@@ -481,20 +566,6 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
-    if (arg === 'all-accessible-spaces') {
-      return new QueryClass({
-        type: 'options',
-        query: this.ast,
-        options: {
-          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
-        },
-      });
-    }
-
-    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
-  }
-
   options(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -516,4 +587,140 @@ const makeTypeDxn = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
   return `dxn:type:${typename}`;
+};
+
+const isDxnLike = (value: unknown): value is DXN => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    value.toString().startsWith('dxn:')
+  );
+};
+
+const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+
+const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
+};
+
+const prettyFilter = (filter: QueryAST.Filter): string => {
+  switch (filter.type) {
+    case 'object': {
+      const parts: string[] = [];
+      if (filter.typename !== null) {
+        parts.push(JSON.stringify(filter.typename));
+      }
+      const propEntries = Object.entries(filter.props);
+      if (propEntries.length > 0) {
+        const propsStr = propEntries.map(([k, v]) => `${k}: ${prettyFilter(v)}`).join(', ');
+        parts.push(`{ ${propsStr} }`);
+      }
+      if (filter.id !== undefined) {
+        parts.push(`id: [${filter.id.join(', ')}]`);
+      }
+      return parts.length > 0 ? `Filter.type(${parts.join(', ')})` : 'Filter.everything()';
+    }
+    case 'compare':
+      return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
+    case 'in':
+      return `Filter.in(${filter.values.map((v) => JSON.stringify(v)).join(', ')})`;
+    case 'contains':
+      return `Filter.contains(${JSON.stringify(filter.value)})`;
+    case 'range':
+      return `Filter.between(${JSON.stringify(filter.from)}, ${JSON.stringify(filter.to)})`;
+    case 'text-search':
+      return `Filter.text(${JSON.stringify(filter.text)})`;
+    case 'tag':
+      return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
+    case 'timestamp':
+      return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'not':
+      return `Filter.not(${prettyFilter(filter.filter)})`;
+    case 'and':
+      return `Filter.and(${filter.filters.map(prettyFilter).join(', ')})`;
+    case 'or':
+      return `Filter.or(${filter.filters.map(prettyFilter).join(', ')})`;
+  }
+};
+
+const prettyQuery = (query: QueryAST.Query): string => {
+  switch (query.type) {
+    case 'select':
+      return `Query.select(${prettyFilter(query.filter)})`;
+    case 'filter':
+      return `${prettyQuery(query.selection)}.select(${prettyFilter(query.filter)})`;
+    case 'reference-traversal':
+      return `${prettyQuery(query.anchor)}.reference(${JSON.stringify(query.property)})`;
+    case 'incoming-references': {
+      const args: string[] = [];
+      if (query.typename !== null) {
+        args.push(JSON.stringify(query.typename));
+      }
+      if (query.property !== null) {
+        args.push(JSON.stringify(query.property));
+      }
+      return `${prettyQuery(query.anchor)}.referencedBy(${args.join(', ')})`;
+    }
+    case 'relation': {
+      const method =
+        query.direction === 'outgoing' ? 'sourceOf' : query.direction === 'incoming' ? 'targetOf' : 'relationOf';
+      const filterStr = query.filter !== undefined ? prettyFilter(query.filter) : '';
+      return `${prettyQuery(query.anchor)}.${method}(${filterStr})`;
+    }
+    case 'relation-traversal':
+      return `${prettyQuery(query.anchor)}.${query.direction}()`;
+    case 'hierarchy-traversal':
+      return query.direction === 'to-parent'
+        ? `${prettyQuery(query.anchor)}.parent()`
+        : `${prettyQuery(query.anchor)}.children()`;
+    case 'union':
+      return `Query.all(${query.queries.map(prettyQuery).join(', ')})`;
+    case 'set-difference':
+      return `Query.without(${prettyQuery(query.source)}, ${prettyQuery(query.exclude)})`;
+    case 'order': {
+      const orders = query.order.map((o) => {
+        if (o.kind === 'natural') {
+          return 'Order.natural';
+        }
+        if (o.kind === 'rank') {
+          return `Order.rank(${JSON.stringify(o.direction)})`;
+        }
+        return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
+      });
+      return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
+    }
+    case 'options': {
+      const parts: string[] = [];
+      if (query.options.deleted !== undefined) {
+        parts.push(`deleted: ${JSON.stringify(query.options.deleted)}`);
+      }
+      return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
+    }
+    case 'from': {
+      if (query.from._tag === 'scope') {
+        const scope = query.from.scope;
+        const parts: string[] = [];
+        if (scope.spaceIds !== undefined) {
+          parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
+        }
+        if (scope.queues !== undefined) {
+          parts.push(`queues: [${scope.queues.join(', ')}]`);
+        }
+        if (scope.allQueuesFromSpaces !== undefined) {
+          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        }
+        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+      }
+      return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
+    }
+    case 'limit':
+      return `${prettyQuery(query.query)}.limit(${query.limit})`;
+  }
 };

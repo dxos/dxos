@@ -6,20 +6,21 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { AppPlugin } from '../../plugin';
 
-export const Number = Capability.make<number>('dxos.org/test/generator/number');
+export const Number = Capability.make<number>('org.dxos.test.generator.number');
 
-export const CountEvent = ActivationEvent.make('dxos.org/test/generator/count');
+export const CountEvent = ActivationEvent.make('org.dxos.test.generator.count');
 
-export const createPluginId = (id: string) => `dxos.org/test/generator/${id}`;
+export const createPluginId = (id: string) => `org.dxos.test.generator.${id}`;
 
 export const createAlertOperation = (id: string) =>
   Operation.make({
-    meta: { key: `${createPluginId(id)}/operation/alert`, name: 'Alert' },
-    schema: { input: Schema.Void, output: Schema.Void },
+    meta: { key: `${createPluginId(id)}.operation.alert`, name: 'Alert' },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
 export const createNumberPlugin = (id: string) => {
@@ -27,15 +28,15 @@ export const createNumberPlugin = (id: string) => {
   const AlertOperation = createAlertOperation(id);
 
   return Plugin.define({ id, name: `Plugin ${id}` }).pipe(
-    AppPlugin.addOperationResolverModule({
+    AppPlugin.addOperationHandlerModule({
       activate: () =>
         Effect.succeed(
-          Capability.contributes(Capabilities.OperationResolver, [
-            OperationResolver.make({
-              operation: AlertOperation,
-              handler: () => Effect.sync(() => window.alert(JSON.stringify({ number }))),
-            }),
-          ]),
+          Capability.contributes(
+            Capabilities.OperationHandler,
+            OperationHandlerSet.make(
+              Operation.withHandler(AlertOperation, () => Effect.sync(() => window.alert(JSON.stringify({ number })))),
+            ),
+          ),
         ),
     }),
     Plugin.addModule({

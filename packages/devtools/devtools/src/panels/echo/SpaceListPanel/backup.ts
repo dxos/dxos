@@ -2,20 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { importSpace } from '@dxos/client/echo';
-import { type SerializedSpace, Serializer } from '@dxos/echo-db';
+import { importSpace, type ImportSpaceOptions } from '@dxos/client/echo';
+import { type SerializedSpace } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
-export const exportData = async (space: Space): Promise<Blob> => {
-  const backup = await new Serializer().export(space.internal.db);
-  return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-};
-
-export const importData = async (space: Space, backup: Blob) => {
+/**
+ * Import a JSON backup into an existing space (merging into its database).
+ * For creating a new space from an archive use {@link Client.spaces.import} instead.
+ */
+export const importData = async (space: Space, backup: Blob, options?: ImportSpaceOptions) => {
   try {
     const backupString = await backup.text();
-    await importSpace(space.internal.db, JSON.parse(backupString) as SerializedSpace);
+    const data = JSON.parse(backupString) as SerializedSpace;
+
+    await importSpace(space.internal.db, data, options);
   } catch (err) {
     log.catch(err);
   }

@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import Read from './read';
-import Update from './update';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const TaskFunctions = {
-  Read,
-  Update,
-};
+export * from './definitions';
+
+export const TaskHandlers = OperationHandlerSet.lazy(
+  () => import('./read'),
+  () => import('./update'),
+);

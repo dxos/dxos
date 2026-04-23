@@ -5,17 +5,22 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx, textBlockWidth } from '@dxos/ui-theme';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { composableProps, slottable } from '@dxos/ui-theme';
 
-type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
+type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 
-export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
+export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div className='w-full h-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
-      <TestPanel classNames={['flex flex-col h-full overflow-y-auto', classNames]}>{children}</TestPanel>
-      <TestPanel classNames={'overflow-hidden'}>
-        <JsonFilter testId='debug' data={json} classNames='h-full text-xs' />
+    <div role='none' className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
+      <TestPanel>{children}</TestPanel>
+      <TestPanel>
+        <Json.Root data={json}>
+          <Json.Content>
+            <Json.Filter />
+            <Json.Data testId='debug' classNames='text-xs' />
+          </Json.Content>
+        </Json.Root>
       </TestPanel>
     </div>
   );
@@ -23,13 +28,13 @@ export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
 
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
-const TestPanel = ({ classNames, children }: TestPanelProps) => {
+const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
-    <div role='none' className={mx(['h-full bg-modal-surface rounded-md', textBlockWidth, classNames])}>
+    <div {...composableProps({ classNames: 'dx-container bg-modal-surface rounded-md' })} ref={forwardedRef}>
       {children}
     </div>
   );
-};
+});
 
 // Symbol for accessing debug objects in tests.
 export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');

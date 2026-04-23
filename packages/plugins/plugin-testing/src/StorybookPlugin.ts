@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationResolver, State } from './capabilities';
-import { Layout } from './components';
-import { meta } from './meta';
-import { type LayoutStateProps } from './types';
+import { OperationHandler, State } from '#capabilities';
+import { Layout } from '#components';
+import { meta } from '#meta';
+import { type LayoutStateProps } from '#types';
 
 export type StorybookPluginOptions = {
   initialState?: Partial<LayoutStateProps>;
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  AppPlugin.addOperationResolverModule({
-    activate: OperationResolver,
+  AppPlugin.addOperationHandlerModule({
+    activate: OperationHandler,
   }),
   AppPlugin.addReactContextModule({
     activate: () =>
@@ -32,7 +32,7 @@ export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
   Plugin.addModule(({ initialState }) => ({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [AppActivationEvents.LayoutReady],
+    firesAfterActivation: [AppActivationEvents.LayoutReady],
     activate: () => State({ initialState }),
   })),
   Plugin.make,

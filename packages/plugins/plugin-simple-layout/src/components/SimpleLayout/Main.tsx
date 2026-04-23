@@ -5,17 +5,16 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
+import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/ui-theme';
 
-import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
-import { ContentError } from '../ContentError';
-import { ContentLoading } from '../ContentLoading';
-import { useLoadDescendents } from '../hooks';
-import { useMobileLayout } from '../MobileLayout/MobileLayout';
+import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
 
+import { useExpandPath } from '../hooks';
+import { Loading } from '../Loading';
+import { useMobileLayout } from '../MobileLayout';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
@@ -32,7 +31,7 @@ export const Main = () => {
   const { actions, onAction } = useNavbarActions();
   const appBarProps = useAppBarProps();
 
-  const placeholder = useMemo(() => <ContentLoading />, []);
+  const placeholder = useMemo(() => <Loading />, []);
 
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
@@ -47,36 +46,32 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  // Ensures that children are loaded so that they are available to navigate to.
-  useLoadDescendents(id);
+  useExpandPath(id);
 
   // TODO(burdon): BUG: When showing ANY statusbar the size progressively shrinks when the keyboard opens/closes.
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <div
-      role='none'
-      className={mx(
-        'h-full grid overflow-hidden bg-toolbar-surface',
-        showNavBar
-          ? 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-toolbar-size)]'
-          : 'grid-rows-[var(--dx-rail-action)_1fr]',
-      )}
-      {...attentionAttrs}
-    >
-      <AppBar {...appBarProps} />
-      <article className='h-full overflow-hidden bg-base-surface'>
+    <Panel.Root {...attentionAttrs} className='dx-document'>
+      <Panel.Toolbar asChild>
+        <AppBar {...appBarProps} />
+      </Panel.Toolbar>
+      <Panel.Content role='article' className='bg-base-surface'>
         <Surface.Surface
           key={id}
-          role='article'
+          type={AppSurface.Article}
           data={data}
           limit={1}
-          fallback={ContentError}
+          fallback={ErrorFallback}
           placeholder={placeholder}
         />
-      </article>
-      {showNavBar && <NavBar classNames='border-y border-subdued-separator' actions={actions} onAction={onAction} />}
-    </div>
+      </Panel.Content>
+      {showNavBar && (
+        <Panel.Statusbar asChild>
+          <NavBar actions={actions} onAction={onAction} />
+        </Panel.Statusbar>
+      )}
+    </Panel.Root>
   );
 };
 

@@ -13,11 +13,11 @@ type LabelProps = ComponentPropsWithRef<typeof Primitive.label> & { asChild?: bo
 const Label = forwardRef<HTMLLabelElement, LabelProps>(
   ({ __inputScope, asChild, children, ...props }: InputScopedProps<LabelProps>, forwardedRef) => {
     const { id } = useInputContext(INPUT_NAME, __inputScope);
-    const Root = asChild ? Slot : Primitive.label;
+    const Comp = asChild ? Slot : Primitive.label;
     return (
-      <Root {...props} htmlFor={id} ref={forwardedRef}>
+      <Comp {...props} htmlFor={id} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -27,11 +27,11 @@ type DescriptionProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
   ({ __inputScope, asChild, children, ...props }: InputScopedProps<DescriptionProps>, forwardedRef) => {
     const { descriptionId, validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     return (
-      <Root {...props} {...(validationValence === 'error' && { id: descriptionId })} ref={forwardedRef}>
+      <Comp {...props} {...(validationValence === 'error' && { id: descriptionId })} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -41,11 +41,11 @@ type ErrorMessageProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'
 const ErrorMessage = forwardRef<HTMLSpanElement, ErrorMessageProps>(
   ({ __inputScope, asChild, children, ...props }: InputScopedProps<ErrorMessageProps>, forwardedRef) => {
     const { errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     return (
-      <Root {...props} id={errorMessageId} ref={forwardedRef}>
+      <Comp {...props} id={errorMessageId} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -59,11 +59,11 @@ const Validation = forwardRef<HTMLSpanElement, ValidationProps>(
     if (validationValence === 'error') {
       return <ErrorMessage {...props} ref={forwardedRef} />;
     } else {
-      const Root = asChild ? Slot : Primitive.span;
+      const Comp = asChild ? Slot : Primitive.span;
       return (
-        <Root {...otherProps} ref={forwardedRef}>
+        <Comp {...otherProps} ref={forwardedRef}>
           {children}
-        </Root>
+        </Comp>
       );
     }
   },
@@ -74,11 +74,11 @@ type DescriptionAndValidationProps = ComponentPropsWithRef<typeof Primitive.p> &
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
   ({ __inputScope, asChild, children, ...props }: InputScopedProps<DescriptionAndValidationProps>, forwardedRef) => {
     const { descriptionId, validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    const Root = asChild ? Slot : Primitive.p;
+    const Comp = asChild ? Slot : Primitive.p;
     return (
-      <Root {...props} {...(validationValence !== 'error' && { id: descriptionId })} ref={forwardedRef}>
+      <Comp {...props} {...(validationValence !== 'error' && { id: descriptionId })} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

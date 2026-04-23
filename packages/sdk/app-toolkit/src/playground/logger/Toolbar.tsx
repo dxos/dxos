@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'dxos.org/test/logger/action',
+        id: 'org.dxos.test.logger.action',
         role: 'toolbar',
         component: Logger,
       }),

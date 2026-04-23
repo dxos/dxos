@@ -38,6 +38,10 @@ export const ObjectMeta = Schema.Struct({
   parent: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
+  /** Unix ms timestamp when the object was first indexed. */
+  createdAt: Schema.NullOr(Schema.Number),
+  /** Unix ms timestamp when the object was last re-indexed. */
+  updatedAt: Schema.NullOr(Schema.Number),
 });
 export interface ObjectMeta extends Schema.Schema.Type<typeof ObjectMeta> {}
 
@@ -88,16 +92,23 @@ export class ObjectMetaIndex implements Index {
       source TEXT,
       target TEXT,
       parent TEXT,
-      version INTEGER NOT NULL
+      version INTEGER NOT NULL,
+      createdAt INTEGER,
+      updatedAt INTEGER
     )`;
 
     // Add `parent` column for tables created before it was introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
+    // Add timestamp columns for tables created before they were introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
   });
 
   query = Effect.fn('ObjectMetaIndex.query')(
@@ -271,6 +282,8 @@ export class ObjectMetaIndex implements Index {
               // Parent (nullable).
               const parent = castData[ATTR_PARENT] ?? null;
 
+              const sourceTimestamp = object.updatedAt;
+
               if (existing.length > 0) {
                 yield* sql`
                   UPDATE objectMeta SET
@@ -280,18 +293,21 @@ export class ObjectMetaIndex implements Index {
                     deleted = ${deleted},
                     source = ${source},
                     target = ${target},
-                    parent = ${parent}
+                    parent = ${parent},
+                    updatedAt = ${sourceTimestamp}
                   WHERE recordId = ${existing[0].recordId}
                 `;
               } else {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, spaceId, documentId, 
-                    entityKind, typeDxn, deleted, source, target, parent, version
+                    entityKind, typeDxn, deleted, source, target, parent, version,
+                    createdAt, updatedAt
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${spaceId}, ${documentId ?? ''}, 
                     ${entityKind}, ${typeDxn}, ${deleted}, 
-                    ${source}, ${target}, ${parent}, ${version}
+                    ${source}, ${target}, ${parent}, ${version},
+                    ${sourceTimestamp}, ${sourceTimestamp}
                   )
                 `;
               }
@@ -380,6 +396,58 @@ export class ObjectMetaIndex implements Index {
           ...rows[0],
           deleted: !!rows[0].deleted,
         };
+      }),
+  );
+
+  /**
+   * Query objects by timestamp range.
+   */
+  queryByTimeRange = Effect.fn('ObjectMetaIndex.queryByTimeRange')(
+    (query: {
+      spaceIds: readonly string[];
+      updatedAfter?: number;
+      updatedBefore?: number;
+      createdAfter?: number;
+      createdBefore?: number;
+      includeAllQueues?: boolean;
+      queueIds?: readonly string[] | null;
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const sourceCondition = buildSourceCondition(
+          sql,
+          query.spaceIds,
+          query.includeAllQueues ?? false,
+          query.queueIds ?? null,
+        );
+
+        const timeConditions: Statement.Fragment[] = [];
+        if (query.updatedAfter != null) {
+          timeConditions.push(sql`updatedAt >= ${query.updatedAfter}`);
+        }
+        if (query.updatedBefore != null) {
+          timeConditions.push(sql`updatedAt <= ${query.updatedBefore}`);
+        }
+        if (query.createdAfter != null) {
+          timeConditions.push(sql`createdAt >= ${query.createdAfter}`);
+        }
+        if (query.createdBefore != null) {
+          timeConditions.push(sql`createdAt <= ${query.createdBefore}`);
+        }
+
+        const rows =
+          timeConditions.length > 0
+            ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${sql.and(timeConditions)}`
+            : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
       }),
   );
 

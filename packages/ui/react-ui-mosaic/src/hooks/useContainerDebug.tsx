@@ -37,7 +37,7 @@ const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames 
   const { id, state, activeLocation, scrolling } = useMosaicContainer(CONTAINER_INFO_NAME);
   const counter = useRef(0);
   return (
-    <Json
+    <Json.Data
       data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
       classNames={mx('text-xs', classNames)}
       ref={forwardedRef}

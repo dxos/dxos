@@ -9,26 +9,27 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
-import { Database, Feed, Obj, Query, Tag, Type } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Obj, Query, Tag } from '@dxos/echo';
+import { Collection, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
-import { Collection, View } from '@dxos/schema';
+import { withLayout } from '@dxos/react-ui/testing';
+import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '../../translations';
-import PipelineObjectSettings from '../PipelineObjectSettings';
-
+import PipelineProperties from '../PipelineProperties';
 import { PipelineContainer } from './PipelineContainer';
 
-faker.seed(0);
+random.seed(0);
 
 const DefaultStory = () => {
   const db = useDatabase();
@@ -41,8 +42,8 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
-      <PipelineContainer role='article' subject={pipeline} />
-      <PipelineObjectSettings pipeline={pipeline} classNames='border-s border-separator' />
+      <PipelineContainer role='article' subject={pipeline} attendableId='test' />
+      <PipelineProperties pipeline={pipeline} classNames='border-s border-separator' />
     </div>
   );
 };
@@ -51,7 +52,6 @@ const meta = {
   title: 'plugins/plugin-pipeline/containers/PipelineContainer',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -60,7 +60,7 @@ const meta = {
         ClientPlugin({
           types: [
             Tag.Tag,
-            Type.Feed,
+            Feed.Feed,
             Pipeline.Pipeline,
             View.View,
             Collection.Collection,
@@ -70,65 +70,62 @@ const meta = {
             Message.Message,
           ],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            yield* Effect.promise(() => client.halo.createIdentity());
-            yield* Effect.promise(() => client.spaces.waitUntilReady());
-            const space = client.spaces.default;
-            yield* Effect.promise(() => space.waitUntilReady());
+            const { personalSpace } = yield* initializeIdentity(client);
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
               const tagDxn = Obj.getDXN(tag).toString();
 
               // Create a view for Contacts.
-              const personView = View.make({
+              const personView = ViewModel.make({
                 query: Query.select(Filter.type(Person.Person)),
-                jsonSchema: Type.toJsonSchema(Person.Person),
+                jsonSchema: JsonSchema.toJsonSchema(Person.Person),
               });
 
               // Create a view for Organizations.
-              const organizationView = View.make({
+              const organizationView = ViewModel.make({
                 query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn)),
-                jsonSchema: Type.toJsonSchema(Organization.Organization),
+                jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
               });
 
               // Create a view for Tasks.
-              const taskView = View.make({
+              const taskView = ViewModel.make({
                 query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDxn)),
-                jsonSchema: Type.toJsonSchema(Task.Task),
+                jsonSchema: JsonSchema.toJsonSchema(Task.Task),
               });
 
               // Create a view for Project-Projects.
-              const projectView = View.make({
+              const projectView = ViewModel.make({
                 query: Query.select(Filter.type(Pipeline.Pipeline)),
-                jsonSchema: Type.toJsonSchema(Pipeline.Pipeline),
+                jsonSchema: JsonSchema.toJsonSchema(Pipeline.Pipeline),
               });
 
               // Create a feed for Messages.
               const messageFeed = yield* Database.add(Feed.make({ name: 'Messages' }));
               const messages = Array.from({ length: 20 }).map(() =>
                 Obj.make(Message.Message, {
-                  created: faker.date.recent().toISOString(),
+                  created: random.date.recent().toISOString(),
                   sender: { role: 'user' },
-                  blocks: [{ _tag: 'text' as const, text: faker.lorem.sentences(2) }],
+                  blocks: [{ _tag: 'text' as const, text: random.lorem.sentences(2) }],
                 }),
               );
               yield* Feed.append(messageFeed, messages);
 
               const messageQueueDxn = Feed.getQueueDxn(messageFeed)!.toString();
-              const messageView = View.make({
-                query: Query.select(Filter.type(Message.Message)).options({
+              const messageView = ViewModel.make({
+                query: Query.select(Filter.type(Message.Message)).from({
                   queues: [messageQueueDxn],
                 }),
-                jsonSchema: Type.toJsonSchema(Message.Message),
+                jsonSchema: JsonSchema.toJsonSchema(Message.Message),
               });
 
               // Create a feed for Tasks (for testing feed switching in settings).
               const taskFeed = yield* Database.add(Feed.make({ name: 'Tasks' }));
               const feedTasks = Array.from({ length: 10 }).map(() =>
                 Obj.make(Task.Task, {
-                  title: faker.lorem.sentence(),
-                  status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                  priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                  title: random.lorem.sentence(),
+                  status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                  priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
                 }),
               );
               yield* Feed.append(taskFeed, feedTasks);
@@ -168,52 +165,50 @@ const meta = {
               // Generate sample Organizations.
               for (const _ of Array.from({ length: 20 })) {
                 yield* Database.add(
-                  Obj.make(
-                    Organization.Organization,
-                    {
-                      name: faker.company.name(),
-                      website: faker.internet.url(),
-                      description: faker.lorem.paragraph(),
-                      image: faker.image.url(),
+                  Obj.make(Organization.Organization, {
+                    [Obj.Meta]: {
+                      tags: random.datatype.boolean() ? [tagDxn] : [],
                     },
-                    {
-                      tags: faker.datatype.boolean() ? [tagDxn] : [],
-                    },
-                  ),
+                    name: random.company.name(),
+                    website: random.internet.url(),
+                    description: random.lorem.paragraph(),
+                    image: random.image.url(),
+                  }),
                 );
               }
 
               // Generate sample Tasks.
               for (const _ of Array.from({ length: 20 })) {
                 yield* Database.add(
-                  Obj.make(
-                    Task.Task,
-                    {
-                      title: faker.lorem.sentence(),
-                      status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                      priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                  Obj.make(Task.Task, {
+                    [Obj.Meta]: {
+                      tags: random.datatype.boolean() ? [tagDxn] : [],
                     },
-                    {
-                      tags: faker.datatype.boolean() ? [tagDxn] : [],
-                    },
-                  ),
+                    title: random.lorem.sentence(),
+                    status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                    priority: random.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                  }),
                 );
               }
 
               // Generate sample Contacts.
-              const factory = createObjectFactory(space.db, faker as any);
+              const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects.
               for (const _ of Array.from({ length: 20 })) {
                 yield* Database.add(
                   Pipeline.make({
-                    name: faker.commerce.productName(),
-                    description: faker.lorem.sentence(),
+                    name: random.commerce.productName(),
+                    description: random.lorem.sentence(),
                   }),
                 );
               }
-            }).pipe(Effect.provide(Layer.merge(Database.layer(space.db), createFeedServiceLayer(space.queues))));
+            }).pipe(
+              Effect.provide(
+                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.queues)),
+              ),
+            );
           }),
         }),
         InboxPlugin(),

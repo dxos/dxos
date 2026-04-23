@@ -15,9 +15,10 @@ function _ts_decorate(decorators, target, key, desc) {
 }
 var __dxlog_file = 'decorators.ts';
 import { raise } from '@dxos/debug';
-import { Filter } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo';
 import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
+
 import { formatInferredRelationshipLabel, formatNodeLabel, isReference } from './schema';
 // 6
 export class EchoDataSource {

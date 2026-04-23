@@ -6,20 +6,19 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { Icon, ScrollArea } from '@dxos/react-ui';
+import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
 
 export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className='flex w-full h-full overflow-hidden'>
+    <div role='none' className='dx-container flex'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
-        <ErrorBoundary key={pathname}>
+        <ErrorBoundary key={pathname} name='devtools.root'>
           <Suspense>
             <Outlet />
           </Suspense>
@@ -41,7 +40,7 @@ const Sidebar = () => {
             <div>
               {section.items?.map(({ id, title, icon }) => (
                 <div key={id} className={mx('flex items-center ps-4 gap-2', id === pathname && 'bg-active-surface')}>
-                  <Icon icon={icon} size={4} />
+                  <Icon icon={icon} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
                   </Link>

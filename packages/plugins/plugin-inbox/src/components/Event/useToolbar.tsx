@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type UseEventToolbarActionsProps = {
   onNoteCreate?: () => void;
@@ -24,7 +24,7 @@ export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsP
         {
           nodes.push(
             createMenuItemGroup('root', {
-              label: ['event toolbar label', { ns: meta.id }],
+              label: ['event-toolbar.menu', { ns: meta.id }],
             }),
           );
         }
@@ -36,17 +36,17 @@ export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsP
               onNoteCreate?.();
             },
             {
-              label: ['event toolbar create note menu', { ns: meta.id }],
+              label: ['event-toolbar-create-note.menu', { ns: meta.id }],
               icon: 'ph--note--regular',
             },
           );
           nodes.push(action);
-          edges.push({ source: 'root', target: action.id });
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
         const gap = createGapSeparator();
         nodes.push(gap.nodes[0]);
-        edges.push({ source: 'root', target: gap.nodes[0].id });
+        edges.push({ source: 'root', target: gap.nodes[0].id, relation: 'child' });
 
         return { nodes, edges };
       }),

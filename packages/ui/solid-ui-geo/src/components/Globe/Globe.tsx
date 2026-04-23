@@ -18,6 +18,8 @@ import { type ControlPosition } from 'leaflet';
 import { type Accessor, type JSX, type Setter, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { type Topology } from 'topojson-specification';
 
+import { mx } from '@dxos/ui-theme';
+
 import { GlobeContextProvider, type GlobeContextProviderProps, useGlobeContext } from '../../hooks';
 import {
   type Features,
@@ -135,11 +137,11 @@ const GlobeRoot = (props: GlobeRootProps) => {
   );
 
   return (
-    <div ref={containerRef} class={`relative flex grow overflow-hidden ${props.class ?? ''}`} {...props}>
-      <GlobeContextProvider size={size()} {...props}>
+    <GlobeContextProvider size={size()} {...props}>
+      <div ref={containerRef} class={mx('relative dx-container')} {...props}>
         {props.children}
-      </GlobeContextProvider>
-    </div>
+      </div>
+    </GlobeContextProvider>
   );
 };
 

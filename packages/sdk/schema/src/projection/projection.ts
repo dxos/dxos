@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { Format, Obj } from '@dxos/echo';
+import { View } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import {
   EchoSchema,
   type JsonProp,
@@ -17,15 +19,11 @@ import {
   typeToFormat,
 } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
-import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { type View } from '../types';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
-
-import { type FieldType, createFieldId } from './field';
 import { PropertySchema, type PropertyType } from './format';
 
 export const VIEW_FIELD_LIMIT = 32;
@@ -34,7 +32,7 @@ export const VIEW_FIELD_LIMIT = 32;
  * Composite of view and schema metadata for a property.
  */
 export type FieldProjection = {
-  field: FieldType;
+  field: View.FieldType;
   props: PropertyType;
 };
 
@@ -68,7 +66,7 @@ export const createEchoChangeCallback = (
   schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
 ): ProjectionChangeCallback => ({
   // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
-  projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
+  projection: (mutate) => Obj.change(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
   schema:
     schema instanceof EchoSchema
       ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
@@ -125,9 +123,9 @@ export class ProjectionModel {
   // Internal atoms.
   private readonly _viewAtom: Atom.Atom<Obj.Snapshot<View.View>>;
   private readonly _projectionAtom: Atom.Atom<View.Projection>;
-  private readonly _fieldsAtom: Atom.Atom<readonly FieldType[]>;
-  private readonly _hiddenFieldsAtom: Atom.Atom<readonly FieldType[]>;
-  private readonly _allFieldsAtom: Atom.Atom<readonly FieldType[]>;
+  private readonly _fieldsAtom: Atom.Atom<readonly View.FieldType[]>;
+  private readonly _hiddenFieldsAtom: Atom.Atom<readonly View.FieldType[]>;
+  private readonly _allFieldsAtom: Atom.Atom<readonly View.FieldType[]>;
 
   constructor({ registry = Registry.make(), view, baseSchema, change }: ProjectionModelProps) {
     this._registry = registry;
@@ -167,21 +165,21 @@ export class ProjectionModel {
   /**
    * Atom for the visible fields in the projection.
    */
-  get fields(): Atom.Atom<readonly FieldType[]> {
+  get fields(): Atom.Atom<readonly View.FieldType[]> {
     return this._fieldsAtom;
   }
 
   /**
    * Atom for the hidden fields in the projection.
    */
-  get hiddenFields(): Atom.Atom<readonly FieldType[]> {
+  get hiddenFields(): Atom.Atom<readonly View.FieldType[]> {
     return this._hiddenFieldsAtom;
   }
 
   /**
    * Atom for all fields in the projection (both visible and hidden).
    */
-  get allFields(): Atom.Atom<readonly FieldType[]> {
+  get allFields(): Atom.Atom<readonly View.FieldType[]> {
     return this._allFieldsAtom;
   }
 
@@ -199,21 +197,21 @@ export class ProjectionModel {
   /**
    * Gets the current visible fields array.
    */
-  getFields(): readonly FieldType[] {
+  getFields(): readonly View.FieldType[] {
     return this._registry.get(this._fieldsAtom);
   }
 
   /**
    * Gets the current hidden fields array.
    */
-  getHiddenFields(): readonly FieldType[] {
+  getHiddenFields(): readonly View.FieldType[] {
     return this._registry.get(this._hiddenFieldsAtom);
   }
 
   /**
    * Gets the current all fields array.
    */
-  getAllFields(): readonly FieldType[] {
+  getAllFields(): readonly View.FieldType[] {
     return this._registry.get(this._allFieldsAtom);
   }
 
@@ -234,11 +232,11 @@ export class ProjectionModel {
   /**
    * Construct a new property.
    */
-  createFieldProjection(): FieldType {
+  createFieldProjection(): View.FieldType {
     invariant(this._view.projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
 
-    const field: FieldType = {
-      id: createFieldId(),
+    const field: View.FieldType = {
+      id: View.createFieldId(),
       path: createUniqueProperty(this._view.projection),
       visible: true,
     };
@@ -359,10 +357,10 @@ export class ProjectionModel {
         existingField.visible = true;
       } else {
         projection.fields.unshift({
-          id: createFieldId(),
+          id: View.createFieldId(),
           path: property,
           visible: true,
-        } satisfies FieldType);
+        } satisfies View.FieldType);
       }
     });
   }
@@ -392,8 +390,8 @@ export class ProjectionModel {
 
         // TODO(burdon): Set field if does not exist.
         if (field) {
-          const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
-          const clonedField: FieldType = { ...field, ...propsValues };
+          const propsValues = props ? (pick(props, ['referencePath']) as Partial<View.FieldType>) : undefined;
+          const clonedField: View.FieldType = { ...field, ...propsValues };
           const fieldIndex = projection.fields.findIndex((f) => f.path === sourcePropertyName);
           if (fieldIndex === -1) {
             invariant(projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
@@ -404,7 +402,7 @@ export class ProjectionModel {
             }
           } else {
             const existing = projection.fields[fieldIndex];
-            const updatedField: FieldType = {
+            const updatedField: View.FieldType = {
               ...existing,
               ...clonedField,
               ...(isRename ? { path: targetPropertyName } : undefined),
@@ -536,7 +534,7 @@ export class ProjectionModel {
         if (prop !== 'id' && !fieldPaths.has(prop as JsonProp)) {
           // Add new hidden field.
           projection.fields.push({
-            id: createFieldId(),
+            id: View.createFieldId(),
             path: prop as JsonProp,
             visible: false,
           });

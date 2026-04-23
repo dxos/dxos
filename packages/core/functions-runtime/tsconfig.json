@@ -83,6 +83,9 @@
       "path": "../mesh/edge-client"
     },
     {
+      "path": "../operation"
+    },
+    {
       "path": "../protocols"
     }
   ]

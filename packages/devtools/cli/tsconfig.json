@@ -74,6 +74,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -101,7 +104,13 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
+      "path": "../../plugins/plugin-observability"
+    },
+    {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-sample"
     },
     {
       "path": "../../plugins/plugin-script"

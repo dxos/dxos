@@ -18,7 +18,7 @@ export const BlueprintModule = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return !blueprint?.instructions ? (
-    <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no blueprint message')}</p>
+    <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no-blueprint.message')}</p>
   ) : (
     <div className='flex flex-col h-full'>
       <Toolbar.Root classNames='border-b border-subdued-separator'>

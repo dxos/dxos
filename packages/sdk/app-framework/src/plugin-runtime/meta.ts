@@ -5,7 +5,7 @@
 import { type Plugin } from '../core';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/runtime',
+  id: 'org.dxos.plugin.runtime',
   name: 'Runtime Plugin',
   description: 'Provides a managed Effect runtime by composing contributed layers.',
 };

@@ -3,7 +3,8 @@
 -->
 
 ---
-<!-- 
+
+<!--
 .slide: data-background="#151515"
 -->
 
@@ -16,17 +17,20 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 [dxos.org/discord](https://dxos.org/discord)
 
 ---
-<!-- 
+
+<!--
 .slide: data-background="#151515"
 -->
 
 ## Mission Statement
+
 <!-- .element: class="!text-center !p-0" -->
 
 > To enable open source developers to build «&nbsp;commercially-competitive&nbsp;» privacy-preserving applications.
 
 ---
-<!-- 
+
+<!--
 .slide: data-background="#151515"
 -->
 
@@ -38,6 +42,7 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 4. Compute
 
 notes:
+
 - more difficult when decentralized; online/offline
 - some form of user management; permissions; collaboration
 - irony of the cloud internet has become centralized; client/server
@@ -45,7 +50,8 @@ notes:
 - interaction model; terminal; windows
 
 ---
-<!-- 
+
+<!--
 ECHO
 .slide: data-background="#96254F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-echo.svg" data-background-position="100% 50%"
 -->
@@ -61,7 +67,8 @@ ECHO
 ## Distributed Data
 
 ---
-<!-- 
+
+<!--
 HALO
 .slide: data-background="#D95B3C" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-halo.svg" data-background-position="100% 50%"
 -->
@@ -77,7 +84,8 @@ HALO
 ## Identity & Security
 
 ---
-<!-- 
+
+<!--
 MESH
 .slide: data-background="#3A2862" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-mesh.svg" data-background-position="100% 50%"
 -->
@@ -93,7 +101,8 @@ MESH
 ## Resilient Networks
 
 ---
-<!-- 
+
+<!--
 KUBE
 .slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
@@ -109,6 +118,7 @@ KUBE
 ## Decentralized Compute
 
 ---
+
 <!--
 .slide: data-visibility="hidden"
 -->
@@ -127,33 +137,35 @@ KUBE
 ## Decentralized Compute
 
 ---
-<!-- 
+
+<!--
 .slide: data-background="#111111" data-background-opacity="0.5"
 -->
 
 # Code
 
 ```tsx
-import { ClientProvider } from '@dxos/react-client'
+import { ClientProvider } from '@dxos/react-client';
 
 const Component = ({ str }: { str?: string }) => {
-  return (
-    <ClientProvider>{str ?? 'hello'}</ClientProvider>
-  )
-}
+  return <ClientProvider>{str ?? 'hello'}</ClientProvider>;
+};
 ```
 
 ---
-<!-- 
-.slide: data-background-transition="zoom" 
+
+<!--
+.slide: data-background-transition="zoom"
 -->
 
-# Composer 
+# Composer
+
 <!-- .element: class="!text-center !p-0" -->
 
-> *Super App*: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
+> _Super App_: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
 
 ---
+
 <!--
 .slide: data-background-video="https://dxos.network/DXOS.mp4"
 -->

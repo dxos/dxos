@@ -1,6 +1,6 @@
 ---
 order: 8
-next: 
+next:
   text: Building Plugins
   link: plugins/
 ---

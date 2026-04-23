@@ -2,7 +2,9 @@
   .tl-theme__dark {
     --color-background: transparent;
 
-    .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
+    .tlui-toolbar__tools,
+    .tlui-menu,
+    .tlui-style-panel__wrapper {
       box-shadow: none;
       border: 1px solid var(--color-separator);
     }
@@ -11,7 +13,9 @@
   .tl-theme__light {
     --color-background: transparent;
 
-    .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
+    .tlui-toolbar__tools,
+    .tlui-menu,
+    .tlui-style-panel__wrapper {
       box-shadow: none;
       border: 1px solid var(--color-separator);
     }

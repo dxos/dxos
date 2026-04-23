@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SpacePresence } from './SpacePresence';
-
-export default SpacePresence;
+export { SpacePresence, SmallPresenceLive } from './SpacePresence';
+export { SpacePresence as default } from './SpacePresence';

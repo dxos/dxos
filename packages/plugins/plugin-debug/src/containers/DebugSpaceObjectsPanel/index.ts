@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DebugSpaceObjectsPanel } from './DebugSpaceObjectsPanel';
-
-export default DebugSpaceObjectsPanel;
+export { DebugSpaceObjectsPanel as default } from './DebugSpaceObjectsPanel';

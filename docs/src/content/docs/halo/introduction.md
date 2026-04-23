@@ -7,15 +7,15 @@ sidebar:
 
 HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements.
 
-* The HALO SDK is part of the [DXOS client library](https://www.npmjs.com/package/@dxos/client) and provides user authentication, identity, and contact management capabilities.
-* The HALO protocol supports the verification, transport, and exchange of identity information between networked peers.
+- The HALO SDK is part of the [DXOS client library](https://www.npmjs.com/package/@dxos/client) and provides user authentication, identity, and contact management capabilities.
+- The HALO protocol supports the verification, transport, and exchange of identity information between networked peers.
 
 ## Features
 
-* Public/private key-pair authentication mechanism integrated into ECHO
-* Passwordless log in
-* Local-first credentials and key storage
-* Multi-device synchronization of identities, credentials, ECHO spaces
+- Public/private key-pair authentication mechanism integrated into ECHO
+- Passwordless log in
+- Local-first credentials and key storage
+- Multi-device synchronization of identities, credentials, ECHO spaces
 
 ## Establishing user identity
 
@@ -30,5 +30,5 @@ There are a few ways a user can establish their identity (login) with DXOS on an
 
 How to read the HALO identity in code:
 
-* Use the [`useIdentity` hook in react](/halo/react)
-* Use the [`client.halo.profile` field in TypeScript](/halo/typescript)
+- Use the [`useIdentity` hook in react](/halo/react)
+- Use the [`client.halo.profile` field in TypeScript](/halo/typescript)

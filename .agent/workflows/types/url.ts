@@ -5,9 +5,9 @@
 import { type Obj } from '@dxos/echo';
 
 // TODO: use URL scheme for source?
-export const FUNCTIONS_META_KEY = 'dxos.org/service/function';
+export const FUNCTIONS_META_KEY = 'org.dxos.service.function';
 
-export const FUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
+export const FUNCTIONS_PRESET_META_KEY = 'org.dxos.service.function-preset';
 
 /**
  * NOTE: functionId is backend ID, not ECHO object id.

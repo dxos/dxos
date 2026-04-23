@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 const { exec } = require('node:child_process');
 const { writeFile, readFile } = require('node:fs/promises');
 const semver = require('semver');
@@ -11,11 +15,11 @@ const bump = async () => {
 
   const {
     packages: {
-      '.': { 'extra-files': extraFiles }
-    }
+      '.': { 'extra-files': extraFiles },
+    },
   } = releasePleaseConfig;
 
-  extraFiles.push({ type: 'json', path: 'package.json', jsonpath: '$.version' })
+  extraFiles.push({ type: 'json', path: 'package.json', jsonpath: '$.version' });
 
   const { '.': currentVersion } = releasePleaseManifest;
 

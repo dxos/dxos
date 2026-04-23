@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';
 
-import { faker } from '@dxos/random';
-import { useSpace } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -22,16 +22,15 @@ import {
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';
-
 import { image } from './image';
 
-faker.seed(1);
-const initialValue = faker.lorem.paragraphs(100);
+random.seed(1);
+const initialValue = random.lorem.paragraphs(100);
 const instances = {};
 
 const DefaultStory = () => {
   const { themeMode } = useThemeContext();
-  const space = useSpace();
+  const [space] = useSpaces();
   const [blockstore, setBlockstore] = useState<Blockstore>();
 
   useEffect(() => {
@@ -92,7 +91,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-wnfs/image',
+  title: 'plugins/plugin-wnfs/extensions/image',
   render: DefaultStory,
   decorators: [withTheme(), withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;

@@ -5,7 +5,9 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import {
   type CredentialProcessor,
   createAdmissionCredentials,
@@ -13,7 +15,8 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type SpaceManager } from '@dxos/echo-pipeline';
+import { type EchoHost, type SpaceManager } from '@dxos/echo-pipeline';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -21,6 +24,7 @@ import { log } from '@dxos/log';
 import {
   ApiError,
   AuthorizationError,
+  FeedProtocol,
   IdentityNotInitializedError,
   SpaceNotFoundError,
   encodeError,
@@ -40,11 +44,13 @@ import {
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
+  SpaceArchive,
   SpaceMember,
   SpaceState,
   type SpacesService,
   type SubscribeMessagesRequest,
   type UpdateMemberRoleRequest,
+  type CreateSpaceRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -54,8 +60,14 @@ import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager } from '../identity';
-import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
-
+import {
+  SpaceArchiveWriter,
+  detectSpaceArchiveFormat,
+  extractSpaceArchive,
+  readSerializedSpaceArchive,
+  writeSerializedSpaceArchive,
+  objJsonToObjectStructure,
+} from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 
@@ -63,29 +75,35 @@ export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
+    private readonly _echoHost: EchoHost,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
-  async createSpace(): Promise<Space> {
+  async createSpace(request: CreateSpaceRequest, options?: RequestOptions): Promise<Space> {
     this._requireIdentity();
+    const ctx = options?.ctx ?? new Context();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace();
+    const space = await dataSpaceManager.createSpace(ctx, {
+      tags: request?.tags,
+      membershipPolicy: request?.membershipPolicy,
+    });
     await this._updateMetrics();
     return this._serializeSpace(space);
   }
 
-  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Promise<void> {
+  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest, options?: RequestOptions): Promise<void> {
+    const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
     if (state) {
       switch (state) {
         case SpaceState.SPACE_ACTIVE:
-          await space.activate();
+          await space.activate(ctx);
           break;
 
         case SpaceState.SPACE_INACTIVE:
-          await space.deactivate();
+          await space.deactivate(ctx);
           break;
         default:
           throw new ApiError({ message: 'Invalid space state' });
@@ -93,7 +111,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     if (edgeReplication !== undefined) {
-      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(ctx, spaceKey, edgeReplication);
     }
   }
 
@@ -262,18 +280,26 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
+  async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest, options?: RequestOptions): Promise<JoinSpaceResponse> {
+    const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
-    return this._joinByAdmission({ credential });
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(ctx, spaceKey);
+    return this._joinByAdmission(ctx, { credential });
   }
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
-    await using writer = await new SpaceArchiveWriter().open();
     assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
+
+    const format = request.format ?? SpaceArchive.Format.BINARY;
+    if (format === SpaceArchive.Format.JSON) {
+      const archive = await writeSerializedSpaceArchive({ space, echoHost: this._echoHost });
+      return { archive };
+    }
+
+    await using writer = await new SpaceArchiveWriter().open();
     await writer.begin({ spaceId: space.id });
     const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
     assertState(rootUrl, 'Space does not have a root URL');
@@ -283,15 +309,40 @@ export class SpacesServiceImpl implements SpacesService {
       await writer.writeDocument(documentId, data);
     }
 
+    const feeds = await space.getAllFeeds();
+    for (const feed of feeds) {
+      const archiveBlocks = feed.blocks.map((block) => ({
+        actorId: block.actorId,
+        sequence: block.sequence,
+        prevActorId: block.prevActorId,
+        prevSequence: block.prevSequence,
+        position: block.position,
+        timestamp: block.timestamp,
+        data: Buffer.from(block.data).toString('base64'),
+      }));
+      await writer.writeFeed(feed.feedId, feed.feedNamespace, archiveBlocks);
+    }
+
     const archive = await writer.finish();
     return { archive };
   }
 
-  async importSpace(request: ImportSpaceRequest): Promise<ImportSpaceResponse> {
+  async importSpace(request: ImportSpaceRequest, options?: RequestOptions): Promise<ImportSpaceResponse> {
+    const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
+
+    const format = request.archive.format ?? detectSpaceArchiveFormat(request.archive);
+    if (format === SpaceArchive.Format.JSON) {
+      const serialized = readSerializedSpaceArchive(request.archive);
+      const space = await dataSpaceManager.createSpace(ctx);
+      await this._hydrateSpaceFromSerialized(space, serialized);
+      await this._updateMetrics();
+      return { newSpaceId: space.id };
+    }
+
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
-    const space = await dataSpaceManager.createSpace({
+    const space = await dataSpaceManager.createSpace(ctx, {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
     });
@@ -299,7 +350,49 @@ export class SpacesServiceImpl implements SpacesService {
     return { newSpaceId: space.id };
   }
 
-  private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+  /**
+   * Populate a freshly-created space with the objects and feed messages described in a {@link SerializedSpace}.
+   *
+   * Objects are written directly into the space's automerge root document as inline
+   * {@link ObjectStructure} entries; feed messages are appended to the appropriate queue
+   * via {@link EchoHost.queuesService}.
+   */
+  private async _hydrateSpaceFromSerialized(
+    space: DataSpace,
+    serialized: ReturnType<typeof readSerializedSpaceArchive>,
+  ): Promise<void> {
+    const databaseRoot = space.databaseRoot;
+    assertState(databaseRoot, 'Space database root is not ready');
+
+    databaseRoot.handle.change((doc: DatabaseDirectory) => {
+      if (!doc.objects) {
+        doc.objects = {};
+      }
+      for (const obj of serialized.objects) {
+        doc.objects[obj.id] = objJsonToObjectStructure(obj);
+      }
+    });
+
+    for (const feed of serialized.feeds ?? []) {
+      if (feed.messages.length === 0) {
+        continue;
+      }
+      const namespace =
+        feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
+      try {
+        await this._echoHost.queuesService.insertIntoQueue({
+          spaceId: space.id,
+          queueId: feed.feedObjectId,
+          subspaceTag: namespace,
+          objects: feed.messages,
+        });
+      } catch (err) {
+        log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
+      }
+    }
+  }
+
+  private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     const myIdentity = this._identityManager.identity;
@@ -308,9 +401,10 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
     if (!dataSpace) {
-      dataSpace = await dataSpaceManager.acceptSpace({
+      dataSpace = await dataSpaceManager.acceptSpace(ctx, {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
+        tags: assertion.tags,
       });
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
@@ -363,6 +457,8 @@ export class SpacesServiceImpl implements SpacesService {
         }),
       ),
       creator: space.inner.spaceState.creator?.key,
+      tags: space.tags,
+      membershipPolicy: space.membershipPolicy,
       cache: space.cache,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),

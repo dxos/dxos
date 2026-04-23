@@ -36,12 +36,12 @@
  * - Creates separate import statements for renamed symbols
  */
 
+import chalk from 'chalk';
+import fs from 'fs/promises';
+import { globby } from 'globby';
 import { Project, ts } from 'ts-morph';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { globby } from 'globby';
-import fs from 'fs/promises';
-import chalk from 'chalk';
 
 // Parse command line arguments
 const argv = yargs(hideBin(process.argv))
@@ -89,13 +89,19 @@ for (const filePath of tsFiles) {
 
   // Process each import declaration
   sourceFile.getImportDeclarations().forEach((importDecl) => {
+    // Skip side-effect imports (no named imports)
+    let namedImports;
+    try {
+      namedImports = importDecl.getNamedImports();
+    } catch {
+      return;
+    }
+
     const moduleSpecifier = importDecl.getModuleSpecifierValue();
 
     // Check each rename mapping
     for (const mapping of renameMappings) {
       if (moduleSpecifier === mapping.fromPackage) {
-        // Find matching named imports
-        const namedImports = importDecl.getNamedImports();
         const matchingImport = namedImports.find((imp) => imp.getName() === mapping.fromSymbol);
 
         if (matchingImport) {

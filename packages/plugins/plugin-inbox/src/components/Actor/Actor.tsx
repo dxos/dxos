@@ -9,7 +9,7 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { type Actor } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: Actor.Actor }>) => {
   const { t } = useTranslation(meta.id);
@@ -22,7 +22,7 @@ export const ActorComponent = ({ actor, classNames }: ThemedClassName<{ actor: A
         icon='ph--user--duotone'
         iconOnly
         size={4}
-        label={t('open profile button')}
+        label={t('open-profile.button')}
         classNames='cursor-pointer text-subdued p-0!'
       />
       <div className='truncate text-description'>{actor.name ?? actor.email}</div>

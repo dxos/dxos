@@ -9,7 +9,6 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { Invitation } from '@dxos/react-client/invitations';
 
 import { InvitationsTestManager } from '../testing';
-
 import * as stories from './Invitations.stories';
 
 const { Default } = composeStories(stories);
@@ -138,7 +137,7 @@ describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createIdentity(1);
       await manager.createSpace(0);
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -148,7 +147,7 @@ describe('Invitations', () => {
       await manager.authenticateInvitation('space', authCode, 1);
 
       await manager.openPanel(0, 'spaces');
-      const spaceName0 = await manager.waitForSpaceName(0, 1);
+      const spaceName0 = await manager.waitForSpaceName(0, 0);
       expect(spaceName0).toBeTruthy();
       await manager.waitForSpaceToAppear(1, spaceName0!);
     });
@@ -161,7 +160,7 @@ describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createIdentity(1);
       await manager.createSpace(0);
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
 
       // First invitation with no auth.
       const invitation1 = await manager.createInvitation(0, 'space', {
@@ -172,11 +171,11 @@ describe('Invitations', () => {
 
       // Wait for space to appear on peer 1.
       await manager.openPanel(0, 'spaces');
-      const spaceName0 = await manager.waitForSpaceName(0, 1);
+      const spaceName0 = await manager.waitForSpaceName(0, 0);
       await manager.waitForSpaceToAppear(1, spaceName0!);
 
       // Second invitation - peer 1 should already be a member.
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
       const invitation2 = await manager.createInvitation(0, 'space');
       await manager.openPanel(1, 'join');
       await manager.acceptInvitation(1, 'space', invitation2);
@@ -194,7 +193,7 @@ describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createIdentity(1);
       await manager.createSpace(0);
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
       const invitation = await manager.createInvitation(0, 'space', {
         authMethod: Invitation.AuthMethod.NONE,
       });
@@ -203,7 +202,7 @@ describe('Invitations', () => {
       await manager.acceptInvitation(1, 'space', invitation);
 
       await manager.openPanel(0, 'spaces');
-      const spaceName0 = await manager.waitForSpaceName(0, 1);
+      const spaceName0 = await manager.waitForSpaceName(0, 0);
       expect(spaceName0).toBeTruthy();
       await manager.waitForSpaceToAppear(1, spaceName0!);
     });
@@ -216,7 +215,7 @@ describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createIdentity(1);
       await manager.createSpace(0);
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
       const invitation = await manager.createInvitation(0, 'space');
       const authCode = await manager.getAuthCode();
 
@@ -236,7 +235,7 @@ describe('Invitations', () => {
       await manager.authenticateInvitation('space', authCode, 1);
 
       await manager.openPanel(0, 'spaces');
-      const spaceName0 = await manager.waitForSpaceName(0, 1);
+      const spaceName0 = await manager.waitForSpaceName(0, 0);
       expect(spaceName0).toBeTruthy();
       await manager.waitForSpaceToAppear(1, spaceName0!);
     }, 30000);
@@ -252,7 +251,7 @@ describe('Invitations', () => {
       await manager.createIdentity(0);
       await manager.createIdentity(1);
       await manager.createSpace(0);
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
       const invitation = await manager.createInvitation(0, 'space', { timeout: 10 });
 
       await manager.openPanel(1, 'join');
@@ -280,7 +279,7 @@ describe('Invitations', () => {
       await manager.createIdentity(2);
 
       await manager.createSpace(0);
-      await manager.openPanel(0, 1);
+      await manager.openPanel(0, 0);
       await manager.openPanel(1, 'join');
       await manager.openPanel(2, 'join');
 
@@ -302,7 +301,7 @@ describe('Invitations', () => {
 
       // Verify all peers have the same space.
       await manager.openPanel(0, 'spaces');
-      const spaceName0 = await manager.waitForSpaceName(0, 1);
+      const spaceName0 = await manager.waitForSpaceName(0, 0);
       expect(spaceName0).toBeTruthy();
       await manager.waitForSpaceToAppear(1, spaceName0!);
       await manager.waitForSpaceToAppear(2, spaceName0!);

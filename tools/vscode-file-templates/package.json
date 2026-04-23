@@ -1,15 +1,17 @@
 {
   "name": "vscode-file-templates",
+  "displayName": "DXOS File Templates",
   "version": "0.0.7",
-  "license": "MIT",
-  "author": "info@dxos.org",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
+  "publisher": "dxos",
   "main": "./extension.js",
   "scripts": {
     "build": "vsce package && mkdir -p dist && mv *.vsix dist/",
@@ -19,9 +21,6 @@
   "devDependencies": {
     "@vscode/vsce": "catalog:"
   },
-  "activationEvents": [
-    "onCommand:fileTemplates.newFromTemplate"
-  ],
   "contributes": {
     "commands": [
       {
@@ -38,9 +37,10 @@
       ]
     }
   },
-  "displayName": "DXOS File Templates",
+  "activationEvents": [
+    "onCommand:fileTemplates.newFromTemplate"
+  ],
   "engines": {
     "vscode": "^1.80.0"
-  },
-  "publisher": "dxos"
+  }
 }

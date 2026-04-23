@@ -3,4 +3,9 @@
 //
 
 export { default as MarkdownBlueprint } from './blueprint';
-export { MarkdownFunctions } from './functions';
+export {
+  Create as MarkdownCreate,
+  Read as MarkdownRead,
+  Update as MarkdownUpdate,
+  MarkdownHandlers,
+} from './functions';

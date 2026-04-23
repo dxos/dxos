@@ -7,7 +7,7 @@ import React from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; icon?: boolean }) => {
   const { t } = useTranslation(meta.id);
@@ -27,7 +27,7 @@ export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; i
           icon='ph--calendar--duotone'
           iconOnly
           size={4}
-          label={t('open calendar button')}
+          label={t('open-calendar.button')}
           classNames='cursor-pointer text-subdued p-0!'
         />
       )}

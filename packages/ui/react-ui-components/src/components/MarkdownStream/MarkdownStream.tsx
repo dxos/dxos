@@ -9,29 +9,25 @@ import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
 import React, {
-  Component,
-  type ErrorInfo,
-  type PropsWithChildren,
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
+  useRef,
   useState,
+  type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { runAndForwardErrors } from '@dxos/effect';
-import { log } from '@dxos/log';
-import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
-import { useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
+import { useTextEditor, type UseTextEditor } from '@dxos/react-ui-editor';
 import {
-  type AutoScrollToProps,
-  type StreamerOptions,
+  type AutoScrollProps,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
-  autoScroll,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -39,27 +35,30 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   preview,
-  scrollToLine,
   scroller,
   scrollerLineEffect,
-  streamer,
+  fader,
+  wire,
+  wireBypass,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
+  autoScroll,
+  documentSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-import { isNonNullable } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { createStreamer } from './stream';
 
 export interface MarkdownStreamController extends XmlWidgetStateManager {
-  get view(): EditorView | null;
+  get length(): number | undefined;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
-  reset: (text: string) => Promise<void>;
+  setContent: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 }
 
@@ -72,150 +71,63 @@ export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
     content?: string;
-    autoScroll?: boolean; // TODO(burdon): On/off.
+    options?: {
+      autoScroll?: boolean;
+      wire?: boolean;
+      cursor?: boolean;
+      fader?: boolean;
+    };
     onEvent?: (event: MarkdownStreamEvent) => void;
-  } & (XmlTagsOptions & StreamerOptions & AutoScrollToProps)
+  } & (XmlTagsOptions & AutoScrollProps)
 >;
 
-// TODO(burdon): Initial content isn't formatted.
+/**
+ * Codemirror-based markdown editor with xml tag widtgets and streaming support.
+ */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+  ({ classNames, debug, content, options, registry, onEvent, paragraphToWidgetGapRem = 1.125 }, forwardedRef) => {
+    // Store current content so that we can toggle debug mode.
+    const contentRef = useRef(content);
 
-    // Active widgets.
-    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    // Codemirror editor.
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
+      debug,
+      registry,
+      options,
+      paragraphToWidgetGapRem,
+    });
 
-    // Editor.
-    const { parentRef, view } = useTextEditor(() => {
-      return {
-        initialValue: content,
-        selection: EditorSelection.cursor(content?.length ?? 0),
-        extensions: [
-          createThemeExtensions({
-            themeMode,
-            syntaxHighlighting: true,
-            slots: {
-              scroll: {
-                // NOTE: Child widgets must have `max-w-[100cqi]`.
-                className: 'dx-size-container p-form-padding',
-              },
-            },
-          }),
-          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: false }),
-          extendedMarkdown({ registry }),
-          scroller({ overScroll: 64 }),
-          debug
-            ? []
-            : [
-                decorateMarkdown({
-                  skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-                }),
-                preview(),
-                xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-                streamer({ cursor, fadeIn }),
-                autoScroll(),
-              ],
-        ].filter(isNonNullable),
-      };
-    }, [debug, themeMode, registry]);
-
-    // Streaming queue.
+    // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
-    useEffect(() => {
-      if (!view) {
-        return;
-      }
 
-      // Consume queue and update document.
-      const fork = Stream.fromQueue(queueRef.current).pipe(
-        createStreamer,
-        Stream.runForEach((text) =>
-          Effect.sync(() => {
-            const scrollTop = view.scrollDOM.scrollTop;
-            view.dispatch({
-              changes: [{ from: view.state.doc.length, insert: text }],
-              annotations: Transaction.remote.of(true),
-              scrollIntoView: false,
-            });
-
-            // Prevent autoscrolling.
-            requestAnimationFrame(() => {
-              view.scrollDOM.scrollTop = scrollTop;
-            });
-          }),
-        ),
-        Effect.runFork,
-      );
-
-      return () => {
-        void runAndForwardErrors(Fiber.interrupt(fork));
-      };
-    }, [view, queue]);
-
-    // Expose controller as API.
-    const viewRef = useDynamicRef(view);
-    useImperativeHandle(forwardedRef, () => {
-      const reset = async (text: string) => {
+    // Reset document.
+    const onReset = useCallback(
+      async (text: string) => {
+        contentRef.current = text;
         if (!viewRef.current) {
           return;
         }
 
+        // Set content and scroll to bottom.
         viewRef.current.dispatch({
           effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
+          annotations: wireBypass.of(true),
           selection: EditorSelection.cursor(text.length),
         });
 
-        scrollToLine(viewRef.current, { line: -1, behavior: 'instant' });
-
         // New queue.
-        const queue = Effect.runSync(Queue.unbounded<string>());
-        setQueue(queue);
-      };
+        setQueue(Effect.runSync(Queue.unbounded<string>()));
+      },
+      [contentRef, viewRef, setQueue],
+    );
 
-      return {
-        get view() {
-          return viewRef.current;
-        },
-        scrollToBottom: (behavior?: ScrollBehavior) => {
-          viewRef.current?.dispatch({
-            effects: scrollerLineEffect.of({ line: -1, behavior }),
-          });
-        },
-        navigatePrevious: () => {
-          viewRef.current?.dispatch({
-            effects: navigatePreviousEffect.of(),
-          });
-        },
-        navigateNext: () => {
-          viewRef.current?.dispatch({
-            effects: navigateNextEffect.of(),
-          });
-        },
-        // Set the context for XML tags.
-        setContext: (context: any) => {
-          viewRef.current?.dispatch({
-            effects: xmlTagContextEffect.of(context),
-          });
-        },
-        // Reset document.
-        reset,
-        // Append to queue (and stream).
-        append: async (text: string) => {
-          if (viewRef.current?.state.doc.length === 0) {
-            await reset(text);
-          } else if (text.length) {
-            await runAndForwardErrors(Queue.offer(queueRef.current, text));
-          }
-        },
-        // Update widget.
-        updateWidget: (id: string, value: any) => {
-          viewRef.current?.dispatch({
-            effects: xmlTagUpdateEffect.of({ id, value }),
-          });
-        },
-      } satisfies MarkdownStreamController;
-    }, []);
+    // Controller API.
+    useImperativeHandle(
+      forwardedRef,
+      () => createMarkdownStreamController({ contentRef, viewRef, queueRef, onReset }),
+      [onReset],
+    );
 
     // Widget events.
     useEffect(() => {
@@ -223,8 +135,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         return;
       }
 
-      return addEventListener(parentRef.current, 'click', (ev) => {
-        const button = (ev.target as HTMLElement).closest('[data-action="submit"]');
+      // TODO(burdon): Replace this hack with a custom event listener from widgets.
+      return addEventListener(parentRef.current, 'click', (event) => {
+        const button = (event.target as HTMLElement).closest('[data-action="submit"]');
         if (button?.getAttribute('data-action') === 'submit') {
           onEvent?.({
             type: 'submit',
@@ -232,7 +145,10 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           });
         }
       });
-    }, [view, onEvent]);
+    }, [view, parentRef, onEvent]);
+
+    // Consume queue and update document.
+    useMarkdownStreamQueue(view, queue);
 
     // Cleanup.
     useEffect(() => {
@@ -244,12 +160,14 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div ref={parentRef} className={mx('h-full w-full overflow-hidden', classNames)} />
+        <div role='none' className={mx('dx-container', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorBoundary>
+        <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
+            <div key={id} role='none'>
+              {createPortal(<Component view={view} {...props} />, root)}
+            </div>
           ))}
         </ErrorBoundary>
       </>
@@ -257,21 +175,195 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-class ErrorBoundary extends Component<PropsWithChildren, { hasError: boolean }> {
-  override state = { hasError: false };
+type MarkdownStreamTextEditorParams = Pick<
+  MarkdownStreamProps,
+  'debug' | 'registry' | 'options' | 'paragraphToWidgetGapRem'
+>;
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
+type MarkdownStreamTextEditorResult = UseTextEditor & {
+  viewRef: RefObject<EditorView | null>;
+  widgets: XmlWidgetState[];
+};
 
-  override componentDidCatch(error: unknown, info: ErrorInfo) {
-    log.catch(error, info);
-  }
+/**
+ * Read-only markdown editor configured for streaming (theme, markdown extensions, XML widgets).
+ */
+const useMarkdownStreamTextEditor = (
+  currentContent: RefObject<string | undefined>,
+  { debug, registry, options, paragraphToWidgetGapRem }: MarkdownStreamTextEditorParams,
+): MarkdownStreamTextEditorResult => {
+  const { themeMode } = useThemeContext();
 
-  override render() {
-    if (this.state.hasError) {
-      return <div>Something went wrong.</div>;
+  // Active widgets.
+  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+
+  // Editor.
+  const { view, parentRef } = useTextEditor(() => {
+    const content = currentContent.current;
+    return {
+      initialValue: content,
+      selection: EditorSelection.cursor(content?.length ?? 0),
+      extensions: [
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: documentSlots,
+        }),
+        createBasicExtensions({
+          lineWrapping: true,
+          readOnly: true,
+        }),
+        !debug && [
+          extendedMarkdown({ registry }),
+          decorateMarkdown({
+            skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+          }),
+          preview(),
+          xmlTags({
+            registry,
+            setWidgets,
+            bookmarks: ['prompt'],
+            paragraphToWidgetGapRem,
+          }),
+          scroller({ overScroll: 64 }),
+          ...(options?.autoScroll ? [autoScroll()] : []),
+          ...(options?.wire
+            ? [
+                wire({
+                  cursor: options?.cursor,
+                  streamingTags: new Set(
+                    Object.entries(registry ?? {})
+                      .filter(([, def]) => def.streaming)
+                      .map(([tag]) => tag),
+                  ),
+                }),
+              ]
+            : []),
+          ...(options?.fader ? [fader()] : []),
+        ],
+      ].filter(isTruthy),
+    };
+  }, [
+    themeMode,
+    registry,
+    debug,
+    options?.autoScroll,
+    options?.wire,
+    options?.cursor,
+    options?.fader,
+    paragraphToWidgetGapRem,
+  ]);
+
+  const viewRef = useDynamicRef(view);
+  return { view, viewRef, parentRef, widgets };
+};
+
+/**
+ * Consumes streaming text from the queue and appends it to the editor document.
+ */
+const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<string>) => {
+  useEffect(() => {
+    if (!view) {
+      return;
     }
-    return this.props.children;
-  }
-}
+
+    // Consume queue and update document.
+    const fork = Stream.fromQueue(queue).pipe(
+      createStreamer,
+      Stream.runForEach((text) =>
+        Effect.sync(() => {
+          const scrollTop = view.scrollDOM.scrollTop;
+          view.dispatch({
+            changes: [{ from: view.state.doc.length, insert: text }],
+            annotations: Transaction.remote.of(true),
+            scrollIntoView: false,
+          });
+
+          // Prevent autoscrolling.
+          requestAnimationFrame(() => {
+            view.scrollDOM.scrollTop = scrollTop;
+          });
+        }),
+      ),
+      Effect.runFork,
+    );
+
+    return () => {
+      void runAndForwardErrors(Fiber.interrupt(fork));
+    };
+  }, [view, queue]);
+};
+
+type MarkdownStreamControllerDeps = {
+  contentRef: RefObject<string | undefined>;
+  viewRef: RefObject<EditorView | null>;
+  queueRef: RefObject<Queue.Queue<string>>;
+  onReset: (text: string) => Promise<void>;
+};
+
+/**
+ * External controller API.
+ */
+const createMarkdownStreamController = ({
+  contentRef,
+  viewRef,
+  queueRef,
+  onReset,
+}: MarkdownStreamControllerDeps): MarkdownStreamController => {
+  return {
+    get length() {
+      return viewRef.current?.state.doc.length;
+    },
+
+    /** Scroll to bottom. */
+    scrollToBottom: (behavior?: ScrollBehavior) => {
+      viewRef.current?.dispatch({
+        effects: scrollerLineEffect.of({ line: -1, behavior }),
+      });
+    },
+
+    /** Navigate previous prompt. */
+    navigatePrevious: () => {
+      viewRef.current?.dispatch({
+        effects: navigatePreviousEffect.of(),
+      });
+    },
+
+    /** Navigate next prompt. */
+    navigateNext: () => {
+      viewRef.current?.dispatch({
+        effects: navigateNextEffect.of(),
+      });
+    },
+
+    /** Set the context for widgets (XML tags). */
+    setContext: (context: any) => {
+      viewRef.current?.dispatch({
+        effects: xmlTagContextEffect.of(context),
+      });
+    },
+
+    /** Reset document. */
+    setContent: onReset,
+
+    /** Append to queue (and stream). */
+    append: async (text: string) => {
+      contentRef.current += text;
+      if (viewRef.current?.state.doc.length === 0) {
+        await onReset(text);
+      } else if (text.length) {
+        const queue = queueRef.current;
+        if (queue) {
+          await runAndForwardErrors(Queue.offer(queue, text));
+        }
+      }
+    },
+
+    /** Update widget state. */
+    updateWidget: (id: string, value: any) => {
+      viewRef.current?.dispatch({
+        effects: xmlTagUpdateEffect.of({ id, value }),
+      });
+    },
+  } satisfies MarkdownStreamController;
+};

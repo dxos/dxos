@@ -10,7 +10,8 @@ import Redis from 'ioredis';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Type } from '@dxos/echo';
-import { type EchoDatabaseImpl, Filter, type QueryResult, createDocAccessor } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo';
+import { type EchoDatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
 import { invariant } from '@dxos/invariant';
@@ -26,7 +27,7 @@ export const Text = Schema.Struct({
   content: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'dxos.org/blade-runner/Text',
+    typename: 'org.dxos.type.bladeRunner.text',
     version: '0.1.0',
   }),
 );
@@ -194,7 +195,7 @@ export class EchoReplicant {
         }
       },
     });
-    await this._testPeer?.host.addReplicator(this._replicator);
+    await this._testPeer?.host.addReplicator(Context.default(), this._replicator);
     invariant(this._replicator?.context, 'Replicator not connected.');
     return { peerId: this._replicator.context.peerId };
   }

@@ -4,8 +4,7 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { mx } from '../../util';
-import { focusRing, surfaceShadow, surfaceZIndex } from '../fragments';
+import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type PopoverStyleProps = Partial<{
   constrainBlock: boolean;
@@ -13,20 +12,23 @@ export type PopoverStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
+export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'flex flex-col rounded-md',
-    constrainBlock && 'max-h-(--radix-popover-content-available-height) overflow-hidden',
-    constrainInline && 'max-w-(--radix-popover-content-available-width) overflow-hidden',
+    'dx-modal-surface border border-separator rounded-sm',
+    surfaceShadow({ elevation: 'positioned' }),
+    surfaceZIndex({ elevation, level: 'menu' }),
+    'dx-focus-ring',
     ...etc,
   );
 
-export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
+export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
-    'dx-modal-surface border border-separator rounded-md',
-    surfaceShadow({ elevation: 'positioned' }),
-    surfaceZIndex({ elevation, level: 'menu' }),
-    focusRing,
+    'grid grid-rows-[1fr] min-h-0 min-w-popover-min-width',
+    (constrainBlock || constrainInline) && 'overflow-hidden',
+    constrainBlock && 'max-h-(--radix-popover-content-available-height)',
+    constrainBlock &&
+      'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
+    constrainInline && 'max-w-(--radix-popover-content-available-width)',
     ...etc,
   );
 

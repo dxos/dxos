@@ -6,7 +6,8 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 // import { IntentResolver } from './capabilities';
-import { meta } from './meta';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export const TransformerPlugin = Plugin.define(meta).pipe(

@@ -94,6 +94,11 @@
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
       "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
+    },
+    "./coordinator-worker-onconnect": {
+      "source": "./src/services/dedicated/coordinator-worker.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -176,14 +181,12 @@
     "fast-deep-equal": "catalog:",
     "jwt-decode": "catalog:",
     "lodash.isequalwith": "catalog:",
-    "ua-parser-js": "catalog:",
     "web-worker": "1.5.0"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequalwith": "catalog:",
-    "@types/ua-parser-js": "catalog:",
     "fast-check": "catalog:",
     "typedoc": "catalog:"
   },

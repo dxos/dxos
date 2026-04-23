@@ -7,8 +7,10 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { Collection, DataTypes } from '@dxos/schema';
+import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
   Employer,
@@ -22,11 +24,11 @@ import {
   Task,
 } from '@dxos/types';
 
-import { IdentityCreated } from '../capabilities/identity-created';
-import { OperationResolver } from '../capabilities/operation-resolver';
-import { meta } from '../meta';
-import { SpaceEvents } from '../types';
-import { type CreateObject, type SpacePluginOptions } from '../types';
+import { IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceEvents } from '#types';
+import { type CreateObject, type SpacePluginOptions } from '#types';
 
 import { database, queue, space } from './commands';
 
@@ -39,11 +41,20 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     metadata: {
       id: Collection.Collection.typename,
       metadata: {
-        createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Collection.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
@@ -73,15 +84,15 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(OperationResolver),
-        activatesOn: ActivationEvents.SetupOperationResolver,
-        activate: () => OperationResolver({ createInvitationUrl, observability: false }),
+        id: Capability.getModuleTag(UndoMappings),
+        activatesOn: ActivationEvents.SetupOperationHandler,
+        activate: () => UndoMappings({ createInvitationUrl, observability: false }),
       };
     },
   ),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.make,

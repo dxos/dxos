@@ -8,24 +8,25 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AgentFunctions } from '@dxos/assistant-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
-import { Function, serializeFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
-import { createNotebook } from '../../testing';
-import { translations } from '../../translations';
-import { Notebook } from '../../types';
+import { createNotebook } from '#testing';
+import { Notebook } from '#types';
 
+import { translations } from '../../translations';
 import { NotebookContainer } from './NotebookContainer';
 
 const meta: Meta<typeof NotebookContainer> = {
@@ -33,13 +34,12 @@ const meta: Meta<typeof NotebookContainer> = {
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
-    return <NotebookContainer {...args} subject={notebooks[0]} />;
+    return <NotebookContainer {...args} subject={notebooks[0]} attendableId='test' />;
   },
   decorators: [
-    withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-prose-max-width' }),
+    withLayout({ layout: 'column', classNames: 'w-document-max-width' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -50,17 +50,14 @@ const meta: Meta<typeof NotebookContainer> = {
               services: SERVICES_CONFIG.REMOTE,
             },
           }),
-          types: [...DataTypes, Notebook.Notebook, Function.Function, Markdown.Document],
+          types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              const space = client.spaces.default;
-              yield* Effect.promise(() => space.waitUntilReady());
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              space.db.add(createNotebook());
-              space.db.add(Markdown.make({ content: '# Hello World' }));
-              space.db.add(serializeFunction(AgentFunctions.Prompt));
+              personalSpace.db.add(createNotebook());
+              personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              personalSpace.db.add(Operation.serialize(AgentPrompt));
             }),
         }),
         AssistantPlugin(),

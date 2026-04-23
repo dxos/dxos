@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/transcription',
+  id: 'org.dxos.plugin.transcription',
   name: 'Transcription',
   description: trim`
     Real-time voice-to-text transcription service for capturing spoken content.

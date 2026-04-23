@@ -8,30 +8,28 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { MarkdownFunctions } from './functions';
+import { Create, Read, Update } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
 const instructions = trim`
   You read, write & create markdown documents.
 `;
-
-const functions = Object.values(MarkdownFunctions);
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Markdown',
     description: 'Work with markdown documents.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: [Create, Read, Update] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

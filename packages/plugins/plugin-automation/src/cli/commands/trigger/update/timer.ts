@@ -12,8 +12,9 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { DXN, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { DXN, Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 import { Cron, Enabled, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -58,7 +59,7 @@ export const timer = Command.make(
 ).pipe(
   Command.withDescription('Update a timer trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
+  Command.provideEffectDiscard(() => withTypes(Operation.PersistentOperation, Trigger.Trigger)),
 );
 
 /**
@@ -67,10 +68,10 @@ export const timer = Command.make(
  * @returns The current function (either original or newly assigned)
  */
 const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionIdOption: Option.Option<string>) {
-  let currentFn: Function.Function | undefined = trigger.function
+  let currentFn: Operation.PersistentOperation | undefined = trigger.function
     ? yield* Database.load(trigger.function) as any
     : undefined;
-  if (currentFn && !Obj.instanceOf(Function.Function, currentFn)) {
+  if (currentFn && !Obj.instanceOf(Operation.PersistentOperation, currentFn)) {
     currentFn = undefined;
   }
   const currentFunctionName = currentFn ? (currentFn.name ?? currentFn.id) : undefined;
@@ -87,13 +88,13 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.runQuery(Filter.type(Function.Function));
+    const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
     const foundFn = functions.find((fn) => fn.id === functionId);
-    if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
+    if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
-    Obj.change(trigger, (mutableTrigger) => {
-      mutableTrigger.function = Ref.make(foundFn);
+    Obj.change(trigger, (trigger) => {
+      trigger.function = Ref.make(foundFn);
     });
     currentFn = foundFn;
   }
@@ -128,9 +129,9 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    Obj.change(trigger, (mutableTrigger) => {
-      if (mutableTrigger.spec?.kind === 'timer') {
-        mutableTrigger.spec.cron = cron;
+    Obj.change(trigger, (trigger) => {
+      if (trigger.spec?.kind === 'timer') {
+        trigger.spec.cron = cron;
       }
     });
   }
@@ -142,7 +143,7 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
  */
 const updateInput = Effect.fn(function* (
   trigger: Trigger.Trigger,
-  fn: Function.Function,
+  fn: Operation.PersistentOperation,
   inputOption: Option.Option<Record<string, any>>,
 ) {
   const currentInput = trigger.input as Record<string, any> | undefined;
@@ -161,11 +162,11 @@ const updateInput = Effect.fn(function* (
   if (shouldChangeInput) {
     const inputObj = yield* Option.match(inputOption, {
       onNone: () =>
-        promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined, currentInput),
+        promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    Obj.change(trigger, (mutableTrigger) => {
-      mutableTrigger.input = inputObj;
+    Obj.change(trigger, (trigger) => {
+      trigger.input = inputObj;
     });
   }
 });
@@ -187,7 +188,7 @@ const updateEnabled = Effect.fn(function* (
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
   });
-  Obj.change(trigger, (mutableTrigger) => {
-    mutableTrigger.enabled = enabledValue;
+  Obj.change(trigger, (trigger) => {
+    trigger.enabled = enabledValue;
   });
 });

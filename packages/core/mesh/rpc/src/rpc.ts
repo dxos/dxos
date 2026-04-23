@@ -4,6 +4,7 @@
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { type Any, type ProtoCodec, type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -14,7 +15,7 @@ import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
 
-const DEFAULT_TIMEOUT = 3_000;
+const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;
 
 const DEBUG_CALLS = true;
@@ -385,6 +386,13 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
+      let traceContext;
+      try {
+        traceContext = options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined;
+      } catch (err) {
+        log.warn('failed to encode trace context', { err });
+      }
+
       // Send request call.
       const sending = this._sendMessage({
         request: {
@@ -392,6 +400,7 @@ export class RpcPeer {
           method,
           payload: request,
           stream: false,
+          ...(traceContext ? { traceContext } : {}),
         },
       });
 
@@ -460,16 +469,30 @@ export class RpcPeer {
 
       this._outgoingRequests.set(id, new PendingRpcRequest(onResponse, closeStream, true));
 
-      this._sendMessage({
-        request: {
-          id,
-          method,
-          payload: request,
-          stream: true,
-        },
-      }).catch((err) => {
-        close(err);
-      });
+      let traceContext;
+      try {
+        traceContext = options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined;
+      } catch (err) {
+        log.warn('failed to encode trace context', { err });
+      }
+
+      try {
+        this._sendMessage({
+          request: {
+            id,
+            method,
+            payload: request,
+            stream: true,
+            ...(traceContext ? { traceContext } : {}),
+          },
+        }).catch((err) => {
+          this._outgoingRequests.delete(id);
+          close(err);
+        });
+      } catch (err) {
+        this._outgoingRequests.delete(id);
+        throw err;
+      }
 
       return () => {
         this._sendMessage({
@@ -487,13 +510,28 @@ export class RpcPeer {
     await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
   }
 
+  private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
+    let traceCtx: Context | undefined;
+    if (req.traceContext) {
+      try {
+        traceCtx = ContextRpcCodec.decode(req.traceContext);
+      } catch (err) {
+        log.warn('failed to decode trace context', { traceContext: req.traceContext, err });
+      }
+    }
+    if (!traceCtx && !this._params.handlerRpcOptions) {
+      return undefined;
+    }
+    return { ...this._params.handlerRpcOptions, ...(traceCtx ? { ctx: traceCtx } : {}) };
+  }
+
   private async _callHandler(req: Request): Promise<Response> {
     try {
       invariant(typeof req.id === 'number');
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(req.method, req.payload, this._params.handlerRpcOptions);
+      const response = await this._params.callHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       return {
         id: req.id,
         payload: response,
@@ -513,7 +551,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(req.method, req.payload, this._params.handlerRpcOptions);
+      const responseStream = this._params.streamHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       responseStream.onReady(() => {
         callback({
           id: req.id,

@@ -4,6 +4,5 @@
 
 export * from './Chat';
 export * from './Container';
-export * from './ErrorBoundary';
 export * from './Options';
 export * from './Thumbnail';

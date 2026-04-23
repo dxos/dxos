@@ -10,7 +10,13 @@
 }
 
 .dx-avatar-group .dx-avatar {
-  &[size="0"], &[size="px"], &[size="0.5"], &[size="1"], &[size="1.5"], &[size="2"], &[size="2.5"] {
+  &[size='0'],
+  &[size='px'],
+  &[size='0.5'],
+  &[size='1'],
+  &[size='1.5'],
+  &[size='2'],
+  &[size='2.5'] {
     margin-right: -0.25rem;
   }
 }
@@ -30,12 +36,14 @@ dx-avatar {
     height: 100%;
   }
 
-  .dx-avatar__frame, .dx-avatar__ring {
+  .dx-avatar__frame,
+  .dx-avatar__ring {
     border-radius: 9999px;
   }
 
-  &[data-variant="square"] {
-    .dx-avatar__frame, .dx-avatar__ring {
+  &[data-variant='square'] {
+    .dx-avatar__frame,
+    .dx-avatar__ring {
       border-radius: 0.125rem;
     }
   }
@@ -53,44 +61,44 @@ dx-avatar {
     border-color: var(--surface-bg);
   }
 
-  &[data-status="active"] .dx-avatar__ring {
+  &[data-status='active'] .dx-avatar__ring {
     border-color: var(--color-success-border);
   }
 
-  &[data-status="inactive"] .dx-avatar__ring {
+  &[data-status='inactive'] .dx-avatar__ring {
     border-color: var(--color-neutral-border);
   }
 
-  &[data-status="current"] .dx-avatar__ring {
+  &[data-status='current'] .dx-avatar__ring {
     border-color: var(--color-accent-focus-indicator);
   }
 
-  &[data-status="internal"] .dx-avatar__ring {
+  &[data-status='internal'] .dx-avatar__ring {
     border-color: var(--color-separator);
   }
 
-  &[data-status="error"] .dx-avatar__ring {
+  &[data-status='error'] .dx-avatar__ring {
     border-color: var(--color-error-border);
   }
 
-  &[data-status="warning"] .dx-avatar__ring {
+  &[data-status='warning'] .dx-avatar__ring {
     border-color: var(--color-warning-border);
   }
 
-  &[data-animation="pulse"] .dx-avatar__ring {
+  &[data-animation='pulse'] .dx-avatar__ring {
     animation: halo-pulse var(--duration, 1s) ease-in-out infinite;
   }
 
-  &[data-state-loading-status="loaded"] {
-    .dx-avatar__fallback-text, .dx-avatar__status-icon {
+  &[data-state-loading-status='loaded'] {
+    .dx-avatar__fallback-text,
+    .dx-avatar__status-icon {
       display: none;
     }
   }
 
-  &[data-state-loading-status="error"] {
+  &[data-state-loading-status='error'] {
     .dx-avatar__image {
       display: none;
     }
   }
 }
-

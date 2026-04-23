@@ -6,18 +6,29 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Input,
+  useFileDownload,
+  useMulticastObservable,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { meta } from '../../meta';
-import { SpaceCapabilities, SpaceForm, SpaceOperation } from '../../types';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceForm } from '#types';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -61,15 +72,15 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       }
 
       if (changed['name'] || changed['icon'] || changed['hue']) {
-        Obj.change(space.properties, (p) => {
+        Obj.change(space.properties, (obj) => {
           if (changed['name'] && newValues.name !== undefined) {
-            p.name = newValues.name;
+            obj.name = newValues.name;
           }
           if (changed['icon']) {
-            p.icon = newValues.icon;
+            obj.icon = newValues.icon;
           }
           if (changed['hue']) {
-            p.hue = newValues.hue;
+            obj.hue = newValues.hue;
           }
         });
       }
@@ -77,9 +88,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       if (changed['archived']) {
         if (newValues.archived && !archived) {
           void invokePromise(SpaceOperation.Close, { space });
-          void invokePromise(LayoutOperation.SwitchWorkspace, {
-            subject: client.spaces.default.id,
-          });
+          const personalSpace = getPersonalSpace(client);
+          if (personalSpace) {
+            void invokePromise(LayoutOperation.SwitchWorkspace, {
+              subject: getSpacePath(personalSpace.id),
+            });
+          }
         } else if (!newValues.archived && archived) {
           void invokePromise(SpaceOperation.Open, { space });
         }
@@ -88,7 +102,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space, client, archived, invokePromise, toggleEdgeReplication],
   );
 
-  const values = useMemo(
+  const defaultValues = useMemo(
     () => ({
       name: space.properties.name,
       icon: space.properties.icon,
@@ -99,43 +113,49 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication, archived],
   );
 
+  const personal = isPersonalSpace(space);
+
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      name: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback(
-          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
-          [onValueChange, type],
-        );
-        return (
-          <Settings.ItemInput title={label} description={t('display name description')}>
-            <Input.TextInput
-              value={getValue()}
-              onChange={handleChange}
-              placeholder={t('display name input placeholder')}
-              classNames='min-w-64'
-            />
-          </Settings.ItemInput>
-        );
-      },
-      icon: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
-        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-        return (
-          <Settings.Item title={label} description={t('icon description')}>
-            <IconPicker
-              value={getValue()}
-              onChange={handleChange}
-              onReset={handleReset}
-              classNames='justify-self-end'
-            />
-          </Settings.Item>
-        );
-      },
+      name: personal
+        ? () => null
+        : ({ type, label, getValue, onValueChange }) => {
+            const handleChange = useCallback(
+              ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
+              [onValueChange, type],
+            );
+            return (
+              <Settings.Item title={label} description={t('display-name.description')}>
+                <Input.TextInput
+                  value={getValue()}
+                  onChange={handleChange}
+                  placeholder={t('display-name-input.placeholder')}
+                  classNames='min-w-64'
+                />
+              </Settings.Item>
+            );
+          },
+      icon: personal
+        ? () => null
+        : ({ type, label, getValue, onValueChange }) => {
+            const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
+            const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+            return (
+              <Settings.Item title={label} description={t('icon.description')}>
+                <IconPicker
+                  value={getValue()}
+                  onChange={handleChange}
+                  onReset={handleReset}
+                  classNames='justify-self-end'
+                />
+              </Settings.Item>
+            );
+          },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('hue description')}>
+          <Settings.Item title={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </Settings.Item>
         );
@@ -143,59 +163,96 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <Settings.ItemInput title={label} description={t('edge replication description')}>
+          <Settings.Item title={label} description={t('edge-replication.description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-          </Settings.ItemInput>
+          </Settings.Item>
         );
       },
-      archived: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
-        return (
-          <Settings.ItemInput title={label} description={t('archive space description')}>
-            <Button
-              disabled={space === client.spaces.default}
-              variant={getValue() ? 'default' : 'destructive'}
-              onClick={handleChange}
-            >
-              {getValue() ? t('unarchive space label') : t('archive space label')}
-            </Button>
-          </Settings.ItemInput>
-        );
-      },
+      archived: personal
+        ? () => null
+        : ({ type, label, getValue, onValueChange }) => {
+            const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
+            return (
+              <Settings.Item title={label} description={t('archive-space.description')}>
+                <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
+                  {getValue() ? t('unarchive-space.label') : t('archive-space.label')}
+                </Button>
+              </Settings.Item>
+            );
+          },
     }),
-    [t, space, client],
+    [t, space, personal],
   );
 
   const download = useFileDownload();
-  const handleBackup = useCallback(async () => {
-    const archive = await space.internal.export();
+  const handleBackupBinary = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
+    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
+  }, [space, download]);
+  const handleBackupJson = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
     download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
   }, [space, download]);
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space, isDefault: client.spaces.default === space })));
-  }, [client, space, repairs]);
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
+  }, [space, repairs]);
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section
-        title={t('space properties settings verbose label')}
-        description={t('space properties settings description', { ns: meta.id })}
+        title={t('space-properties-settings-verbose.label')}
+        description={t('space-properties-settings.description', { ns: meta.id })}
       >
-        <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
-          <Form.FieldSet classNames='space-y-trim-md' />
+        <Form.Root
+          key={space.id}
+          fieldMap={fieldMap}
+          schema={SpaceFormSchema}
+          defaultValues={defaultValues}
+          onValuesChanged={handleValuesChanged}
+        >
+          <Form.FieldSet />
         </Form.Root>
       </Settings.Section>
-      <Settings.Section title={t('space controls title')} description={t('space controls description')}>
-        <Settings.ItemInput title={t('backup space title')} description={t('backup space description')}>
-          <Button onClick={handleBackup}>{t('download backup label')}</Button>
-        </Settings.ItemInput>
-        <Settings.ItemInput title={t('repair space title')} description={t('repair space description')}>
-          <Button onClick={handleRepair}>{t('repair space label')}</Button>
-        </Settings.ItemInput>
+
+      <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
+        <Settings.Item title={t('space-key.title')} description={t('space-key.description')}>
+          <div className='flex items-center gap-2'>
+            <Input.Root>
+              <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+            </Input.Root>
+            <IconButton
+              icon='ph--copy--regular'
+              iconOnly
+              label={t('copy-space-key.label')}
+              onClick={() => {
+                void navigator.clipboard.writeText(space.key.toHex());
+              }}
+            />
+          </div>
+        </Settings.Item>
+        <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button>
+                {t('download-backup.label')}
+                <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Settings.Item>
+        <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
+          <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+        </Settings.Item>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

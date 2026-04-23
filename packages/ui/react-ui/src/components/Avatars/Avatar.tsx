@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-avatar.pcss';
-
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
+import '@dxos/lit-ui/dx-avatar.pcss';
 import {
   type AvatarAnimation,
   type AvatarStatus,
@@ -64,10 +63,10 @@ type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primit
 
 const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
-    return <Root {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
+    return <Comp {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
   },
 );
 
@@ -78,11 +77,11 @@ type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof 
 
 const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { descriptionId } = useAvatarContext('AvatarDescription');
     return (
-      <Root
+      <Comp
         {...props}
         id={descriptionId}
         ref={forwardedRef}

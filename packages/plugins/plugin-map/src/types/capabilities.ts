@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { type MapControlType } from '../containers';
-import { meta } from '../meta';
+import { type MapControlType } from '#containers';
+import { meta } from '#meta';
 
 const LatLngLiteralSchema = Schema.Struct({
   lat: Schema.Number,
@@ -31,5 +31,5 @@ export namespace MapCapabilities {
     zoom?: number;
   };
 
-  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
 }

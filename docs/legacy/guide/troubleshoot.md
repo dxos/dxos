@@ -14,10 +14,10 @@ If you haven't shared your identity with other devices than that identity will b
 If you have data stored locally for this domain that hasn't been synced that data will be lost.
 :::
 
-* Open the DXOS [developer tools](./tooling/)
-* Go to the 'Storage' tab
-* Click 'Reset Storage' in the top right
-* Go back to your app and reload
+- Open the DXOS [developer tools](./tooling/)
+- Go to the 'Storage' tab
+- Click 'Reset Storage' in the top right
+- Go back to your app and reload
 
 ### Ad Blockers
 

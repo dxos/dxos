@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { createRtcTransportFactory } from '../transport';
 import { chooseInitiatorPeer } from '../transport/webrtc/utils';
-
 import { Connection } from './connection';
 
 // Segfault in node-datachannel.
@@ -44,9 +43,9 @@ describe.skip('Connection', () => {
       sessionId,
       true,
       {
-        offer: async (msg) => ({ accept: true }),
-        signal: async (msg) => {
-          await fastConnection.signal(msg);
+        offer: async (_ctx, _msg) => ({ accept: true }),
+        signal: async (ctx, msg) => {
+          await fastConnection.signal(ctx, msg);
         },
       },
       slowPeerProtocol.factory({
@@ -66,9 +65,9 @@ describe.skip('Connection', () => {
       sessionId,
       false,
       {
-        offer: async (msg) => ({ accept: true }),
-        signal: async (msg) => {
-          await slowConnection.signal(msg);
+        offer: async (_ctx, _msg) => ({ accept: true }),
+        signal: async (ctx, msg) => {
+          await slowConnection.signal(ctx, msg);
         },
       },
       fastPeerProtocol.factory({

@@ -6,34 +6,32 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ProjectFunctions } from './functions';
+import { AddArtifact } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/project';
-
-const functions = [ProjectFunctions.AddArtifact];
+const BLUEPRINT_KEY = 'org.dxos.blueprint.agent';
 
 /**
- * Creates the Project blueprint. This is a function to avoid circular dependency issues.
+ * Creates the Agent blueprint. This is a function to avoid circular dependency issues.
  */
+// TODO(dmaretskyi): Combine with Agent Wizard.
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
-    name: 'Project blueprint',
+    name: 'Agent blueprint',
     instructions: Template.make({
       source: trim`
-        You work on an project. Each project has a spec - the goal of the project.
-        The project plan shows the current progress of the project.
-        Project has an number of associated artifacts you can read/write.
-        Spec and plan are also artifacts.
+        You work on an agent. Each agent has instructions - the goal of the agent.
+        The agent plan shows the current progress of the agent.
+        Agent has a number of associated artifacts you can read/write.
         You can edit them if necessary.
 
-        IMPORTANT: When create a new artifact, always add it to the project using the add-artifact function.
+        IMPORTANT: When creating a new artifact, always add it to the agent using the add-artifact function.
 
-        {{#with project}}
-        <project id="{{id}}" name="{{name}}">
-          <spec>
-            {{spec}}
-          </spec>
+        {{#with agent}}
+        <agent id="{{id}}" name="{{name}}">
+          <instructions>
+            {{instructions}}
+          </instructions>
           <plan>
             {{plan}}
           </plan>
@@ -45,23 +43,22 @@ const make = () =>
             </artifact>
           {{/each}}
           </artifacts>
-        </project>
+        </agent>
         {{/with}}
       `,
       inputs: [
         {
-          name: 'project',
+          name: 'agent',
           kind: 'function',
-          function: 'dxos.org/function/project/get-context',
+          function: 'org.dxos.function.agent.get-context',
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: [AddArtifact] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

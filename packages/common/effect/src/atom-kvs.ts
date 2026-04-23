@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import { Atom } from '@effect-atom/atom-react';
+import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import type * as Schema from 'effect/Schema';
 
 // TODO(wittjosiah): This is currently provided for convenience but maybe should be removed.

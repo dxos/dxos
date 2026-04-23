@@ -28,4 +28,4 @@ export type LayoutState = {
   workspace: string;
 };
 
-export const LayoutState = Capability.make<LayoutState>(`${meta.id}/state`);
+export const LayoutState = Capability.make<LayoutState>(`${meta.id}.state`);

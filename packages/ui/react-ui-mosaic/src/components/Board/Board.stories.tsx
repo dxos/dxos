@@ -10,9 +10,9 @@ import { expect, within } from 'storybook/test';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
@@ -21,27 +21,23 @@ import { TestColumn, TestItem } from '../../testing';
 import { translations } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicEventHandler } from '../Mosaic';
-
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 
-faker.seed(999);
+random.seed(999);
 
-// TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
-// TODO(burdon): Remove react-ui-kanban (replace kanban).
-// TODO(burdon): Mobile implementation.
-// TODO(burdon): Tests/stories (sanity check).
+const randomItems = () => random.number.int({ min: 0, max: 20 });
 
-const createTestData = (db: Database.Database, columnCount: number, emptyColumns = 0) => {
-  Array.from({ length: columnCount }).forEach((_, i) => {
+const createTestData = (db: Database.Database, columns: number, items?: (column: number) => number) => {
+  Array.from({ length: columns }).forEach((_, i) => {
     db.add(
       Obj.make(TestColumn, {
         name: `Column ${i}`,
-        items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
+        items: Array.from({ length: items?.(i) ?? 0 }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
-              name: faker.lorem.sentence(3),
-              description: faker.lorem.paragraph(1),
+              name: random.lorem.sentence(3),
+              description: random.lorem.paragraph(1),
               label: `${String.fromCharCode(65 + i)}-${j}`,
             }),
           );
@@ -51,15 +47,11 @@ const createTestData = (db: Database.Database, columnCount: number, emptyColumns
       }),
     );
   });
-
-  for (let i = 0; i < emptyColumns; i++) {
-    db.add(Obj.make(TestColumn, { name: `Column ${columnCount + i}`, items: [] }));
-  }
 };
 
-type StoryProps = {
+type DefaultStoryProps = {
   columns?: number;
-  emptyColumns?: number;
+  items?: (column: number) => number;
   debug?: boolean;
 };
 
@@ -101,7 +93,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
               const refs = get(AtomObj.makeProperty(column, 'items'));
               return (
                 refs
-                  ?.map((ref) => get(AtomObj.makeWithReactive(ref)))
+                  ?.map((ref: Ref.Ref<TestItem>) => get(AtomObj.makeWithReactive(ref)))
                   .filter((item): item is TestItem => item != null) ?? []
               );
             }),
@@ -121,8 +113,8 @@ const useTestBoardModel = (): TestBoardModelResult => {
         invariant(space);
         const item = space.db.add(
           Obj.make(TestItem, {
-            name: faker.lorem.sentence(3),
-            description: faker.lorem.paragraph(1),
+            name: random.lorem.sentence(3),
+            description: random.lorem.paragraph(1),
           }),
         );
 
@@ -133,13 +125,13 @@ const useTestBoardModel = (): TestBoardModelResult => {
         return item;
       },
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        Obj.change(column, (mutableColumn) => {
-          if (!mutableColumn.items) {
+        Obj.change(column, (column) => {
+          if (!column.items) {
             return;
           }
-          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
+          const idx = column.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
           if (idx !== -1) {
-            mutableColumn.items.splice(idx, 1);
+            column.items.splice(idx, 1);
           }
         });
       },
@@ -171,12 +163,11 @@ const useTestBoardModel = (): TestBoardModelResult => {
   return { model, eventHandler };
 };
 
-const DefaultStory = ({ debug = false }: StoryProps) => {
+const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryProps) => {
   const { model, eventHandler } = useTestBoardModel();
   const columns = useAtomValue(model.columns);
-
-  if (columns.length === 0) {
-    return <></>;
+  if (columnsProp > 0 && columns.length === 0) {
+    return <Loading />;
   }
 
   return (
@@ -207,8 +198,8 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: ({ space }, context) => {
-        const args = context.args as StoryProps;
-        createTestData(space.db, args.columns ?? 4, args.emptyColumns ?? 0);
+        const args = context.args as DefaultStoryProps;
+        createTestData(space.db, args.columns ?? 0, args.items);
       },
     }),
   ],
@@ -233,6 +224,22 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     columns: 8,
+    items: randomItems,
+  },
+};
+
+export const SingleColumn: Story = {
+  args: {
+    columns: 1,
+    items: () => 1,
+  },
+};
+
+export const Empty: Story = {};
+
+export const EmptyColumn: Story = {
+  args: {
+    columns: 1,
   },
 };
 
@@ -245,8 +252,8 @@ export const Debug: Story = {
 
 export const Spec: Story = {
   args: {
-    columns: 2,
-    emptyColumns: 1,
+    columns: 3,
+    items: (column) => (column < 2 ? 5 : 0),
   },
   play: async () => {
     const body = within(document.body);
@@ -258,7 +265,7 @@ export const Spec: Story = {
       const items = within(column).queryAllByTestId('board-item');
       await expect(items.length).toBeGreaterThan(0);
     }
-    const emptyItems = within(columns[2]).queryAllByTestId('board-item');
-    await expect(emptyItems).toHaveLength(0);
+    const items = within(columns[2]).queryAllByTestId('board-item');
+    await expect(items).toHaveLength(0);
   },
 };

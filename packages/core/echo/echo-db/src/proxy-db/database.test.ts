@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
+import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Err } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -22,7 +22,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
@@ -177,7 +176,7 @@ describe('Database', () => {
 
     const obj1 = db.add(Obj.make(TestSchema.Expando, { name: 'Object 1' }));
     const obj2 = db.add(Obj.make(TestSchema.Expando, { name: 'Object 2' }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     {
       const objects = await db.query(Filter.id(obj1.id)).run();
@@ -236,8 +235,8 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(Obj.getSchema(task)?.ast).to.eq(TestSchema.Task.ast);
-    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
-    expect(Obj.getTypename(task)).to.eq('example.com/type/Task');
+    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:type:com.example.type.task:0.1.0');
+    expect(Obj.getTypename(task)).to.eq('com.example.type.task');
 
     db.add(task);
     await db.flush();
@@ -273,9 +272,9 @@ describe('Database', () => {
       const container = db.add(Obj.make(TestSchema.Container, { objects: [] }));
       await db.flush();
 
-      Obj.change(container, (c) => {
-        c.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { foo: 100 })));
-        c.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { bar: 200 })));
+      Obj.change(container, (container) => {
+        container.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { foo: 100 })));
+        container.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { bar: 200 })));
       });
     }
 
@@ -300,9 +299,9 @@ describe('Database', () => {
       const container = db.add(Obj.make(TestSchema.Container, { objects: [] }));
       await db.flush();
 
-      Obj.change(container, (c) => {
-        c.objects!.push(Ref.make(Obj.make(TestSchema.Task, {})));
-        c.objects!.push(Ref.make(Obj.make(TestSchema.Person, {})));
+      Obj.change(container, (container) => {
+        container.objects!.push(Ref.make(Obj.make(TestSchema.Task, {})));
+        container.objects!.push(Ref.make(Obj.make(TestSchema.Person, {})));
       });
     }
 
@@ -318,8 +317,8 @@ describe('Database', () => {
   test('object fields', async () => {
     const task = Obj.make(TestSchema.Task, {});
 
-    Obj.change(task, (t) => {
-      t.title = 'test';
+    Obj.change(task, (task) => {
+      task.title = 'test';
     });
     expect(task.title).to.eq('test');
     expect(Obj.getMeta(task).keys).to.have.length(0);
@@ -384,8 +383,8 @@ describe('Database', () => {
       }),
     );
 
-    expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
-    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:example.com/type/Task:0.1.0');
+    expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('com.example.type.task');
+    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:com.example.type.task:0.1.0');
   });
 
   test('versions', async () => {
@@ -400,8 +399,8 @@ describe('Database', () => {
     expect(Obj.versionValid(version2)).to.be.true;
     expect(Obj.compareVersions(version1, version2)).to.eq('equal');
 
-    Obj.change(task, (t) => {
-      t.title = 'Main task 2';
+    Obj.change(task, (task) => {
+      task.title = 'Main task 2';
     });
     const version3 = Obj.version(task as any);
     expect(Obj.isVersion(version3)).to.be.true;
@@ -415,9 +414,9 @@ describe('Database', () => {
       const root = newTask();
       expect(root.subTasks).to.have.length(0);
 
-      Obj.change(root, (r) => {
-        range(3).forEach(() => r.subTasks!.push(Ref.make(newTask())));
-        r.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
+      Obj.change(root, (root) => {
+        range(3).forEach(() => root.subTasks!.push(Ref.make(newTask())));
+        root.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
       });
 
       expect(root.subTasks).to.have.length(5);
@@ -429,8 +428,8 @@ describe('Database', () => {
       root.subTasks!.forEach((task: any, i: number) => expect(task.target!.id).to.eq(ids[i]));
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
-      Obj.change(root, (r) => {
-        r.subTasks = [
+      Obj.change(root, (root) => {
+        root.subTasks = [
           Ref.make(Obj.make(TestSchema.Task, {})),
           Ref.make(Obj.make(TestSchema.Task, {})),
           Ref.make(Obj.make(TestSchema.Task, {})),
@@ -443,11 +442,11 @@ describe('Database', () => {
 
     test('splice', async () => {
       const root = newTask();
-      Obj.change(root, (r) => {
-        r.subTasks = range(3).map((_i) => Ref.make(newTask()));
+      Obj.change(root, (root) => {
+        root.subTasks = range(3).map((_i) => Ref.make(newTask()));
       });
-      Obj.change(root, (r) => {
-        r.subTasks!.splice(0, 2, Ref.make(newTask()));
+      Obj.change(root, (root) => {
+        root.subTasks!.splice(0, 2, Ref.make(newTask()));
       });
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
@@ -455,8 +454,8 @@ describe('Database', () => {
 
     test('array of plain objects', async () => {
       const root = Obj.make(TestSchema.Container, { records: [] });
-      Obj.change(root, (r) => {
-        r.records!.push({
+      Obj.change(root, (root) => {
+        root.records!.push({
           title: 'test',
           contacts: [Ref.make(Obj.make(TestSchema.Person, { name: 'tester' }))],
         });
@@ -472,20 +471,20 @@ describe('Database', () => {
     test('reset array', async () => {
       const { db, obj: root } = await addToDatabase(Obj.make(TestSchema.Container, { records: [] }));
 
-      Obj.change(root, (r) => {
-        r.records!.push({ title: 'one' });
+      Obj.change(root, (root) => {
+        root.records!.push({ title: 'one' });
       });
       expect(root.records).to.have.length(1);
 
-      Obj.change(root, (r) => {
-        r.records = [];
+      Obj.change(root, (root) => {
+        root.records = [];
       });
       expect(root.records).to.have.length(0);
       await db.flush();
       expect(root.records).to.have.length(0);
 
-      Obj.change(root, (r) => {
-        r.records!.push({ title: 'two' });
+      Obj.change(root, (root) => {
+        root.records!.push({ title: 'two' });
       });
       expect(root.records).to.have.length(1);
       await db.flush();

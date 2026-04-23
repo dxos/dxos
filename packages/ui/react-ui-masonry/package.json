@@ -29,8 +29,10 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
-    "masonic": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@virtuoso.dev/masonry": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {

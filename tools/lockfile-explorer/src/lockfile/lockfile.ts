@@ -5,7 +5,6 @@
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-
 import * as yaml from 'yaml';
 
 import { entries } from '@dxos/util';

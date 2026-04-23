@@ -4,13 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
-import { Trigger, serializeFunction } from '@dxos/functions';
+import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { GmailFunctions } from '@dxos/plugin-inbox';
+import { Operation } from '@dxos/operation';
+import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -20,9 +21,9 @@ import {
   createChat,
   createComputeGraph,
   createConstant,
+  createFeed,
   createFunction,
   createGpt,
-  createQueue,
   createRandom,
   createSurface,
   createTemplate,
@@ -30,7 +31,7 @@ import {
   createTrigger,
 } from '@dxos/react-ui-canvas-compute';
 import { CanvasBoard, CanvasGraphModel, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
 
@@ -73,8 +74,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (d) => {
-            Obj.getMeta(d).tags = [tagDxn];
+          Obj.change(doc, (doc) => {
+            Obj.getMeta(doc).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -85,7 +86,9 @@ export const generator = () => ({
           //   }),
           // );
 
-          space.db.add(Obj.make(Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }));
+          space.db.add(
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDxn] }, fullName: 'Rich', organization: Ref.make(org) }),
+          );
           space.db.add(
             Obj.make(Person.Person, {
               fullName: 'Josiah',
@@ -114,10 +117,12 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const feeds = await space.db.query(Filter.type(Type.Feed)).run();
-        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
-        invariant(mailbox, 'Mailbox feed not found');
-        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+        const mailbox = mailboxes[0];
+        invariant(mailbox, 'Mailbox not found');
+        const mailboxFeed = await mailbox.feed?.tryLoad();
+        invariant(mailboxFeed, 'Mailbox missing feed reference');
+        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
@@ -130,11 +135,8 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'timer',
-                cron: '* * * * *', // Every minute.
-              },
-              function: Ref.make(serializeFunction(GmailFunctions.Sync)),
+              spec: Trigger.specTimer('* * * * *'), // Every minute.
+              function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -145,11 +147,8 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-              spec: {
-                kind: 'queue',
-                queue: queueDxn,
-              },
-              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
+              spec: Trigger.specQueue(queueDxn),
+              function: Ref.make(Operation.serialize(EntityExtraction)),
               input: {
                 source: '{{event.item}}',
               },
@@ -179,13 +178,8 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'subscription',
-                query: {
-                  ast: organizationsQuery.ast,
-                },
-              },
-              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
+              spec: Trigger.specSubscription(organizationsQuery),
+              function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
@@ -193,27 +187,27 @@ export const generator = () => ({
             }),
           );
 
-          const mailboxView = View.make({
+          const mailboxView = ViewModel.make({
             query: Query.select(
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).options({
+            ).from({
               queues: [queueDxn],
             }),
-            jsonSchema: Type.toJsonSchema(Message.Message),
+            jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
-          const contactsView = View.make({
+          const contactsView = ViewModel.make({
             query: contactsQuery,
-            jsonSchema: Type.toJsonSchema(Person.Person),
+            jsonSchema: JsonSchema.toJsonSchema(Person.Person),
           });
-          const organizationsView = View.make({
+          const organizationsView = ViewModel.make({
             query: organizationsQuery,
-            jsonSchema: Type.toJsonSchema(Organization.Organization),
+            jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
           });
-          const notesView = View.make({
+          const notesView = ViewModel.make({
             query: notesQuery,
-            jsonSchema: Type.toJsonSchema(Markdown.Document),
+            jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
           });
 
           return space.db.add(
@@ -311,7 +305,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
+                ast: Query.select(Filter.typename('org.dxos.type.chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -396,7 +390,7 @@ export const generator = () => ({
     //       const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
     //       invariant(templateComputeNode, 'Template compute node was not created.');
     //       templateComputeNode.value = templateContent.join('\n');
-    //       templateComputeNode.inputSchema = Type.toJsonSchema(EmailTriggerOutput);
+    //       templateComputeNode.inputSchema = JsonSchema.toJsonSchema(EmailTriggerOutput);
 
     //       attachTrigger(functionTrigger, computeModel);
 
@@ -530,7 +524,7 @@ export const generator = () => ({
     //       invariant(templateComputeNode, 'Template compute node was not created.');
     //       templateComputeNode.value = templateContent.join('\n');
     //       const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
-    //       templateComputeNode.inputSchema = Type.toJsonSchema(extendedSchema);
+    //       templateComputeNode.inputSchema = JsonSchema.toJsonSchema(extendedSchema);
 
     //       attachTrigger(functionTrigger, computeModel);
 
@@ -613,7 +607,7 @@ export const generator = () => ({
             );
             const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
             const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
-            const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
+            const queue = canvasModel.createNode(createFeed(position({ x: 0, y: 12 })));
 
             builder
               .createEdge({
@@ -758,8 +752,8 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    Obj.change(functionTrigger, (ft) => {
-      initSpec(ft.spec as any);
+    Obj.change(functionTrigger, (functionTrigger) => {
+      initSpec(functionTrigger.spec as any);
     });
   });
 
@@ -769,7 +763,9 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   invariant(templateComputeNode, 'Template compute node was not created.');
   // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
+  templateComputeNode.inputSchema = JsonSchema.toJsonSchema(
+    Schema.Struct({ type: Schema.String, changeId: Schema.String }),
+  );
   attachTrigger(functionTrigger, computeModel);
 
   return { canvasModel, computeModel };
@@ -797,7 +793,7 @@ const setupQueue = (
     }),
   );
   const queue = canvasModel.createNode(
-    createQueue(
+    createFeed(
       args?.queuePosition ? rawPosition(args.queuePosition) : position({ x: -3, y: 3, width: 14, height: 10 }),
     ),
   );
@@ -808,9 +804,9 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (t) => {
-    t.function = Ref.make(computeModel.root);
-    t.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (functionTrigger) => {
+    functionTrigger.function = Ref.make(computeModel.root);
+    functionTrigger.inputNodeId = inputNode.id;
   });
 };
 

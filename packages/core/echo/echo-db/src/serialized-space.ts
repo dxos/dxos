@@ -2,17 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EncodedReference } from '@dxos/echo-protocol';
-import { deepMapValuesAsync } from '@dxos/util';
+import { type Obj } from '@dxos/echo';
 
 /**
- * Archive of echo objects.
+ * Serialized feed/queue data associated with a Feed ECHO object.
+ */
+export type SerializedFeed = {
+  /** ID of the Feed ECHO object this data belongs to. */
+  feedObjectId: string;
+  /** Feed namespace ('data' | 'trace'). */
+  namespace: string;
+  /** Queue messages as JSON. */
+  messages: Obj.JSON[];
+};
+
+/**
+ * JSON space archive.
  *
  * ## Encoding and file format
  *
- * The data is serialized to JSON.
- * Preferred file extensions are `.dx.json`.
- * The file might be compressed with gzip (`.dx.json.gz`).
+ * Single-file encoding. Default file extension is `.dx.json` (may be gzipped as `.dx.json.gz`).
+ * The archive payload is the UTF-8 encoding of `JSON.stringify(serializedSpace)`.
+ *
+ * Produced by `SpacesService.ExportSpace` when `format = JSON`
+ * and consumed by `SpacesService.ImportSpace` when a JSON archive is detected.
+ *
+ * See also the binary tar archive format described in
+ * `@dxos/protocols` (`space-archive.ts`).
  */
 export type SerializedSpace = {
   /**
@@ -23,63 +39,33 @@ export type SerializedSpace = {
   version: number;
 
   /**
-   * Human-readable date of creation.
+   * Human-readable ISO timestamp when the archive was produced.
    */
   timestamp?: string;
 
   /**
-   * List of objects included in the archive.
+   * Original space ID the archive was exported from (SpaceId).
    */
-  objects: SerializedObject[];
-};
-
-export type SerializedObject = {
-  /**
-   * Format version number.
-   *
-   * Current version: 1.
-   */
-  '@version': number;
+  originalSpaceId?: string;
 
   /**
-   * Human-readable date of creation.
+   * DID of the identity that exported the space.
    */
-  '@timestamp'?: string;
+  exportedBy?: string;
 
   /**
-   * Unique object identifier.
+   * Milliseconds since Unix epoch when the archive was produced.
    */
-  '@id': string;
+  createdAt?: number;
 
   /**
-   * Reference to a type.
+   * List of ECHO objects included in the archive.
    */
-  '@type'?: EncodedReference | string;
+  objects: Obj.JSON[];
 
   /**
-   * Flag to indicate soft-deleted objects.
+   * Feed/queue message data.
+   * Optional for backward compatibility with archives that predate feed support.
    */
-  '@deleted'?: boolean;
-
-  /**
-   * @deprecated
-   *
-   * Model name for the objects backed by a legacy ECHO model.
-   */
-  '@model'?: string;
-} & Record<string, any>;
-
-/**
- * Updates the serialized object data to the latest version.
- */
-export const normalizeSerializedObjectData = async (data: SerializedObject): Promise<SerializedObject> => {
-  data = await deepMapValuesAsync(data, async (value, recurse) => {
-    return recurse(value);
-  });
-
-  if (data['@timestamp']) {
-    data['@timestamp'] = new Date(data['@timestamp']).toISOString();
-  }
-
-  return data;
+  feeds?: SerializedFeed[];
 };

@@ -3,6 +3,7 @@
 //
 
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,7 +14,6 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { HypergraphImpl } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
-
 import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
 
 export type EchoClientProps = {};
@@ -217,7 +217,11 @@ export class EchoClient extends Resource {
     }
   }
 
-  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps) {
+  private async _loadObjectFromDocument({
+    spaceId,
+    objectId,
+    documentId,
+  }: LoadObjectProps): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;

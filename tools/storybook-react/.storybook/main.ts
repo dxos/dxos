@@ -3,10 +3,9 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
 //
 
+import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { type StorybookConfig } from '@storybook/react-vite';
 import { type InlineConfig } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -19,6 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
+const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
@@ -114,6 +114,9 @@ export const createConfig = ({
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
+            util: '@dxos/node-std/util',
+            'node:crypto': '@dxos/node-std/crypto',
+            crypto: '@dxos/node-std/crypto',
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
@@ -139,7 +142,78 @@ export const createConfig = ({
           },
         },
         optimizeDeps: {
-          exclude: ['@dxos/wa-sqlite'],
+          // WASM modules.
+          exclude: ['@dxos/wa-sqlite', 'manifold-3d'],
+          ...(isFastBundle && {
+            include: [
+              // React.
+              'react',
+              'react-dom',
+              'react/jsx-runtime',
+              // Effect (with subpath imports).
+              'effect',
+              'effect/Effect',
+              'effect/Array',
+              'effect/Ref',
+              'effect/Option',
+              'effect/Cause',
+              'effect/Exit',
+              'effect/Layer',
+              'effect/Runtime',
+              'effect/Fiber',
+              'effect/Deferred',
+              'effect/Function',
+              'effect/HashSet',
+              'effect/PubSub',
+              'effect/Schema',
+              'effect/Context',
+              'effect/Stream',
+              'effect/Console',
+              '@effect/platform',
+              '@effect/platform-browser',
+              // Effect AI (with submodule exports).
+              '@effect/ai',
+              '@effect/ai/AiError',
+              '@effect/ai/Chat',
+              '@effect/ai/LanguageModel',
+              '@effect/ai/Prompt',
+              '@effect/ai/Response',
+              '@effect/ai/Tool',
+              '@effect/ai/Toolkit',
+              '@effect/ai-anthropic',
+              '@effect/ai-anthropic/AnthropicClient',
+              '@effect/ai-anthropic/AnthropicLanguageModel',
+              '@effect/ai-anthropic/AnthropicTool',
+              '@effect/ai-openai',
+              '@effect/ai-openai/OpenAiClient',
+              '@effect/ai-openai/OpenAiLanguageModel',
+              // Automerge.
+              '@automerge/automerge',
+              '@automerge/automerge-repo',
+              // CodeMirror (many files in HAR).
+              'codemirror',
+              '@codemirror/state',
+              '@codemirror/view',
+              '@codemirror/language',
+              '@codemirror/commands',
+              '@codemirror/autocomplete',
+              '@codemirror/lang-javascript',
+              '@codemirror/lang-json',
+              '@codemirror/lang-markdown',
+              '@codemirror/theme-one-dark',
+              // Radix (many requests in HAR).
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-tooltip',
+              '@radix-ui/react-scroll-area',
+              '@radix-ui/react-popover',
+              '@radix-ui/react-slot',
+              '@radix-ui/react-context-menu',
+              // Atlaskit drag-and-drop.
+              '@atlaskit/pragmatic-drag-and-drop',
+              '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+            ],
+          }),
         },
         worker: {
           format: 'es',
@@ -150,19 +224,48 @@ export const createConfig = ({
           // NOTE: Order matters.
           //
 
-          importSource({
-            exclude: [
-              '@dxos/random-access-storage',
-              '@dxos/lock-file',
-              '@dxos/network-manager',
-              '@dxos/teleport',
-              '@dxos/config',
-              '@dxos/client-services',
-              '@dxos/observability',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '@dxos/lit-*',
-            ],
-          }),
+          // RSS proxy middleware for CORS-free feed fetching.
+          {
+            name: 'rss-proxy',
+            configureServer(server: any) {
+              server.middlewares.use('/api/rss', async (req: any, res: any) => {
+                const url = new URL(req.url!, `http://${req.headers.host}`);
+                const feedUrl = url.searchParams.get('url');
+                if (!feedUrl) {
+                  res.statusCode = 400;
+                  res.end('Missing url parameter');
+                  return;
+                }
+                try {
+                  const response = await globalThis.fetch(feedUrl);
+                  const contentType = response.headers.get('content-type');
+                  if (contentType) {
+                    res.setHeader('content-type', contentType);
+                  }
+                  res.statusCode = response.status;
+                  res.end(await response.text());
+                } catch (error) {
+                  res.statusCode = 502;
+                  res.end(String(error));
+                }
+              });
+            },
+          },
+
+          !isFastBundle &&
+            importSource({
+              exclude: [
+                '@dxos/random-access-storage',
+                '@dxos/lock-file',
+                '@dxos/network-manager',
+                '@dxos/teleport',
+                '@dxos/config',
+                '@dxos/client-services',
+                '@dxos/observability',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '@dxos/lit-*',
+              ],
+            }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),

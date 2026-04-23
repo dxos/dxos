@@ -65,8 +65,8 @@ describe('Relation', () => {
       expect(Relation.getDXN(snapshot)).toBeDefined();
 
       // getTypename - works with both.
-      expect(Relation.getTypename(rel)).toBe('example.com/type/HasManager');
-      expect(Relation.getTypename(snapshot)).toBe('example.com/type/HasManager');
+      expect(Relation.getTypename(rel)).toBe('com.example.type.has-manager');
+      expect(Relation.getTypename(snapshot)).toBe('com.example.type.has-manager');
 
       // getMeta - works with both.
       expect(Relation.getMeta(rel)).toBeDefined();

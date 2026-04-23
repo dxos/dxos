@@ -14,8 +14,8 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
-const TYPE_EXAMPLE = DXN.parse('dxn:type:example.com/type/Example:0.1.0').toString();
+const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
+const TYPE_EXAMPLE = DXN.parse('dxn:type:com.example.type.example:0.1.0').toString();
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -40,6 +40,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -73,6 +74,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -114,6 +116,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -153,6 +156,7 @@ describe('ReverseRefIndex', () => {
         queueId,
         documentId: null,
         recordId,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -171,6 +175,7 @@ describe('ReverseRefIndex', () => {
         queueId,
         documentId: null,
         recordId,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -203,6 +208,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -234,6 +240,7 @@ describe('ReverseRefIndex', () => {
         queueId: null,
         documentId: 'doc-123',
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,

@@ -11,11 +11,11 @@ packages:
 
 catalog:
   3d-force-graph: ^1.76.1
-  '@1password/op-js': ^0.1.13
   '@ai-sdk/react': ^3.0.99
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
+  '@assistant-ui/react': ^0.12.24
   '@astrojs/starlight': ^0.32.5
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
@@ -28,6 +28,8 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
+  '@babylonjs/core': ^7.52.5
+  '@babylonjs/loaders': ^7.54.3
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
@@ -58,9 +60,11 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
+  '@dxos/echo': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
+  '@effect-rx/rx-react': ^0.42.4
   '@effect/ai': 0.33.2
   '@effect/ai-anthropic': 0.23.0
   '@effect/ai-openai': 0.37.2
@@ -86,7 +90,6 @@ catalog:
   '@effect/workflow': ^0.16.0
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
-  '@eslint/js': ^9.37.0
   '@excalidraw/excalidraw': ^0.18.0
   '@fluentui/react-tabster': 9.26.11
   '@fontsource-variable/inter': 5.2.8
@@ -105,7 +108,8 @@ catalog:
   '@lezer/markdown': ^1.3.1
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
-  '@moonrepo/cli': 2.0.0-rc.2
+  '@modelcontextprotocol/sdk': ^1.27.1
+  '@moonrepo/cli': 2.2.3
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
@@ -115,6 +119,7 @@ catalog:
   '@opentelemetry/api-logs': ^0.203.0
   '@opentelemetry/auto-instrumentations-node': ^0.64.1
   '@opentelemetry/auto-instrumentations-web': ^0.51.0
+  '@opentelemetry/core': ^2.1.0
   '@opentelemetry/exporter-logs-otlp-http': ^0.203.0
   '@opentelemetry/exporter-metrics-otlp-http': ^0.203.0
   '@opentelemetry/exporter-trace-otlp-http': ^0.203.0
@@ -179,7 +184,6 @@ catalog:
   '@rive-app/react-canvas': ^4.14.0
   '@robloche/chartjs-plugin-streaming': 3.1.0
   '@rollup/plugin-inject': ^5.0.5
-  '@rushstack/eslint-patch': ^1.12.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
   '@storybook/addon-docs': ^10.2.12
@@ -188,6 +192,7 @@ catalog:
   '@storybook/addon-vitest': ^10.2.12
   '@storybook/builder-vite': ^10.2.12
   '@storybook/html-vite': ^10.2.12
+  '@storybook/icons': ^2.0.1
   '@storybook/mdx2-csf': ^1.1.0
   '@storybook/react-vite': ^10.2.12
   '@storybook/web-components-vite': ^10.2.12
@@ -195,10 +200,14 @@ catalog:
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
   '@tailwindcss/forms': ^0.5.9
+  '@tailwindcss/oxide': ^4.2.0
+  '@tailwindcss/postcss': ^4.2.0
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
   '@tauri-apps/plugin-deep-link': ^2.2.0
+  '@tauri-apps/plugin-dialog': ^2.2.0
+  '@tauri-apps/plugin-fs': ^2.4.0
   '@tauri-apps/plugin-haptics': ^2.3.2
   '@tauri-apps/plugin-opener': ^2.5.3
   '@tauri-apps/plugin-os': ^2.3.1
@@ -217,7 +226,6 @@ catalog:
   '@tldraw/tldraw': ^3.0.0
   '@tldraw/tlschema': ^3.0.0
   '@tldraw/utils': ^3.0.0
-  '@trivago/prettier-plugin-sort-imports': ^5.2.2
   '@trpc/server': ^10.45.3
   '@types/argparse': ^2.0.0
   '@types/bytes': ^3.1.1
@@ -279,11 +287,11 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
-  '@typescript/native-preview': 7.0.0-dev.20250808.1
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
+  '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/plugin-react': ^5.0.0
   '@vitejs/plugin-react-swc': ^4.0.0
   '@vitest/browser': ^3.2.4
@@ -300,7 +308,6 @@ catalog:
   '@xyflow/react': ^12.8.1
   JSONStream: ^1.3.5
   abstract-level: ^1.0.2
-  adm-zip: ^0.5.16
   agents: ^0.3.10
   ai: ^6.0.97
   ajv: ^8.18.0
@@ -311,6 +318,7 @@ catalog:
   assert: ^2.0.0
   astro: ^5.15.9
   autoprefixer: ^10.4.12
+  babylonjs-gltf2interface: ^7.0.0
   base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
@@ -334,9 +342,9 @@ catalog:
   chartjs-node-canvas: ^5.0.0
   chess.js: ^1.0.0
   chromatic: ^13.0.1
+  cjs-module-lexer: ^2.2.0
   classnames: ^2.3.2
   cli-highlight: ^2.1.11
-  cli-table3: ^0.6.5
   codemirror: ^6.0.1
   codemirror-lang-spreadsheet: ^1.3.0
   color-hash: ^1.0.3
@@ -354,7 +362,7 @@ catalog:
   d3-force: ~3.0.0
   d3-geo-projection: ^4.0.0
   d3-hexbin: ^0.2.2
-  date-fns: ^3.3.1
+  date-fns: ^3.6.0
   debounce: ^2.2.0
   debug: ^4.3.4
   deep-equal: ^2.2.3
@@ -364,9 +372,11 @@ catalog:
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
-  effect: 3.19.16
+  dompurify: ^3.3.1
+  effect: 3.20.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
+  error-stack-parser: ^2.1.4
   esbuild: 0.25.11
   esbuild-plugin-glsl: ^1.4.0
   esbuild-plugin-inline-image: ^0.0.9
@@ -375,17 +385,6 @@ catalog:
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.1
   esbuild-wasm: ^0.16.14
-  eslint: ^9.37.0
-  eslint-config-prettier: ^10.1.8
-  eslint-formatter-unix: ^8.40.0
-  eslint-plugin-i18next: ^6.1.3
-  eslint-plugin-import-x: 4.6.1
-  eslint-plugin-prefer-arrow-functions: ^3.6.2
-  eslint-plugin-prettier: ^5.5.4
-  eslint-plugin-react: ^7.37.5
-  eslint-plugin-sort-exports: ^0.9.1
-  eslint-plugin-storybook: ^10.2.12
-  eslint-plugin-unused-imports: ^4.1.4
   eventemitter3: ^5.0.1
   events: ^3.3.0
   exa-js: ^1.5.12
@@ -397,7 +396,7 @@ catalog:
   extensionless: ^1.9.9
   fast-check: ^3.19.0
   fast-deep-equal: ^3.1.3
-  fast-xml-parser: ^5.3.8
+  fast-xml-parser: ^5.5.9
   fetch-mock: ^11.0.0
   find-process: ^1.4.7
   flame-chart-js: ^3.3.0
@@ -472,8 +471,8 @@ catalog:
   luxon: ^3.4.4
   madge: 8.0.0
   main-thread-scheduling: ^14.1.1
+  manifold-3d: ^3.0.0
   marked: ^12.0.2
-  masonic: ^4.1.0
   mathjs: ^14.2.1
   md5-hex: 5.0.0
   mermaid: ^10.9.4
@@ -497,6 +496,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.6.0
+  papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
   partykit: ^0.0.103
@@ -514,8 +514,7 @@ catalog:
   posthog-js: ^1.353.0
   preact: ^10.26.10
   prettier: ^3.6.2
-  prettier-plugin-packagejson: ^2.5.19
-  protobufjs: ^7.2.5
+  protobufjs: ^8.0.0
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
   race-as-promised: ^0.0.3
@@ -583,8 +582,6 @@ catalog:
   tabster: ^8.5.5
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
-  '@tailwindcss/postcss': ^4.2.0
-  '@tailwindcss/oxide': ^4.2.0
   tailwindcss: ^4.2.0
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
@@ -604,8 +601,7 @@ catalog:
   type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
-  typescript: ^5.9.3
-  typescript-eslint: ^8.39.0
+  typescript: ^6.0.3
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
@@ -622,6 +618,7 @@ catalog:
   versor: ^0.2.0
   vite: ^7.1.11
   vite-node: ^3.2.4
+  vite-plugin-css-injected-by-js: ^5.0.1
   vite-plugin-devtools-json: ^0.4.1
   vite-plugin-glslify: ^2.3.0
   vite-plugin-inspect: ^11.3.2
@@ -648,21 +645,14 @@ catalog:
   ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
-  yaml: ^2.7.0
+  yaml: ^2.8.2
   yargs: ~16.2.0
+  youtube-caption-extractor: ^1.9.1
+  youtube-transcript: ^1.2.1
   zen-observable: ^0.10.0
   zen-push: ^0.3.1
   zone.js: ^0.15.0
   zx: ^8.8.5
-
-peerDependencyRules:
-  allowedVersions:
-    dfx>@effect/platform: '>=0.93.0'
-  ignoreMissing:
-    - '@cloudflare/ai-chat'
-    - '@cloudflare/codemode'
-
-strictPeerDependencies: true
 
 onlyBuiltDependencies:
   - '@bufbuild/buf'
@@ -691,38 +681,24 @@ onlyBuiltDependencies:
   - workerd
   - yarn
 
-patchedDependencies:
-  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
-  'random-access-idb@1.2.2': patches/random-access-idb@1.2.2.patch
-  'uuid@8.3.2': patches/uuid@8.3.2.patch
-
 overrides:
-  # Version alignment overrides.
   '@automerge/automerge': 'catalog:'
+  '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': 'catalog:'
+  '@modelcontextprotocol/sdk': '>=1.26.0'
+  '@remix-run/router': '>=1.23.2'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
-  effect: 'catalog:'
-  nan: 'catalog:'
-  react: 'catalog:'
-  react-dom: 'catalog:'
-  typescript: 'catalog:'
-
-  # Security: force patched versions of vulnerable transitive dependencies.
-  # See: pnpm audit, https://github.com/advisories
-  # TODO(wittjosiah): Review these overrides and try bumping direct dependencies instead.
-  '@grpc/grpc-js': '>=1.10.9'
-  '@modelcontextprotocol/sdk': '>=1.26.0'
-  '@remix-run/router': '>=1.23.2'
   ajv@8: '>=8.18.0'
-  axios: '>=1.13.5'
+  axios: 1.14.0
   base-x@4: 4.0.1
   cookie: '>=0.7.0'
   d3-color: '>=3.1.0'
   devalue: '>=5.6.3'
   diff: '>=5.2.2'
   dompurify: '>=3.2.4'
+  effect: 'catalog:'
   esbuild: '>=0.25.0'
   fast-xml-parser: '>=5.3.6'
   glob: '>=10.5.0'
@@ -731,6 +707,7 @@ overrides:
   mdast-util-to-hast: '>=13.2.1'
   mermaid: '>=10.9.4'
   minimatch: '>=10.2.1'
+  nan: 'catalog:'
   nanoid: '>=3.3.8'
   node.extend: '>=1.1.7'
   nth-check: '>=2.0.1'
@@ -738,9 +715,34 @@ overrides:
   path-to-regexp: '>=3.3.0'
   prismjs: '>=1.30.0'
   qs: '>=6.14.1'
+  react: 'catalog:'
+  react-dom: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
+  typescript: 'catalog:'
   undici: '>=7.18.2'
   vite: '>=7.1.11'
   wrangler: '>=4.59.1'
   ws: '>=8.17.1'
+
+patchedDependencies:
+  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
+  random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
+  uuid@8.3.2: patches/uuid@8.3.2.patch
+
+peerDependencyRules:
+  allowedVersions:
+    dfx>@effect/platform: '>=0.93.0'
+    manifold-3d>esbuild-wasm: '*'
+  ignoreMissing:
+    - '@cloudflare/ai-chat'
+    - '@cloudflare/codemode'
+
+strictPeerDependencies: true
+
+trustPolicy: no-downgrade
+
+trustPolicyExclude:
+  - rollup@3.30.0
+  - mermaid@10.9.4
+  - undici-types@6.20.0

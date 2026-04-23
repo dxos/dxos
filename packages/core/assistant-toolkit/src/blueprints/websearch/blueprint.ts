@@ -2,30 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolId } from '@dxos/ai';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/web-search';
+import { Fetch } from './functions';
 
-const functions: AppCapabilities.BlueprintDefinition['functions'] = [];
+const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Web Search',
     description: 'Search the web.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make()),
     },
-    tools: [ToolId.make('AnthropicWebSearch')],
+    tools: Blueprint.toolDefinitions({ operations: [Fetch], tools: ['AnthropicWebSearch'] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

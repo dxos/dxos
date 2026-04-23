@@ -45,7 +45,7 @@ export const TextCrawl = ({
   transition = 500,
   ...props
 }: TextCrawlProps) => {
-  const [index, setIndex] = useState(greedy ? lines.length - 1 : 0);
+  const [index, setIndex] = useState(() => (greedy ? Math.max(0, lines.length - 1) : 0));
 
   // Control ribbon.
   const controllerRef = useRef<TextRibbonController>(null);
@@ -68,6 +68,20 @@ export const TextCrawl = ({
     setPosition(index, false);
   }, []);
 
+  // Greedy: keep uncontrolled index on the last line when lines or greedy change.
+  useEffect(() => {
+    if (!greedy || indexProp !== undefined) {
+      return;
+    }
+
+    const lastIndex = Math.max(0, lines.length - 1);
+    if (lines.length === 0) {
+      return;
+    }
+
+    setIndex((prev) => (prev === lastIndex ? prev : lastIndex));
+  }, [greedy, lines, indexProp]);
+
   // Controlled.
   useEffect(() => {
     if (indexProp === undefined || indexProp === index) {
@@ -86,7 +100,9 @@ export const TextCrawl = ({
     }
 
     let i: NodeJS.Timeout;
-    setPosition(index, index !== 0 && !wasReset);
+    const lastLineIndex = Math.max(0, lines.length - 1);
+    const showLastLineImmediately = greedy && index === lastLineIndex;
+    setPosition(index, index !== 0 && !wasReset && !showLastLineImmediately);
     if (cyclic && index >= lines.length) {
       i = setTimeout(() => {
         setIndex(0);
@@ -97,7 +113,7 @@ export const TextCrawl = ({
     return () => {
       clearTimeout(i);
     };
-  }, [wasReset, lines, index, indexProp, cyclic]);
+  }, [wasReset, lines, index, indexProp, cyclic, greedy]);
 
   // Auto-advance.
   const lastUpdatedRef = useRef(Date.now());
@@ -123,7 +139,7 @@ export const TextCrawl = ({
     };
 
     if (wasReset) {
-      setIndex(greedy ? lines.length - 1 : 0);
+      setIndex(greedy ? Math.max(0, lines.length - 1) : 0);
     } else {
       const now = Date.now();
       const wasVisible = now - lastUpdatedRef.current >= minDuration;
@@ -203,7 +219,7 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
     useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
 
     return (
-      <div role='none' className={mx('relative overflow-hidden', classNames, className)}>
+      <div role='none' className={mx('relative overflow-hidden', className, classNames)}>
         <div role='none' ref={containerRef} className={mx('flex flex-col')}>
           {lines.map((line, i) => (
             <Line

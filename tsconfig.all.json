@@ -139,6 +139,9 @@
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
+      "path": "packages/core/assistant-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/core/assistant-toolkit/tsconfig.json"
     },
     {
@@ -203,6 +206,9 @@
     },
     {
       "path": "packages/core/halo/keyring/tsconfig.json"
+    },
+    {
+      "path": "packages/core/mcp-client/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
@@ -271,6 +277,9 @@
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
+      "path": "packages/experimental/discord-worker/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
@@ -298,16 +307,22 @@
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
+      "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-files/tsconfig.json"
@@ -320,6 +335,9 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
@@ -346,6 +364,9 @@
       "path": "packages/plugins/plugin-native/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
     },
     {
@@ -370,6 +391,9 @@
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sample/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-script/tsconfig.json"
     },
     {
@@ -382,6 +406,9 @@
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sidekick/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
     },
     {
@@ -389,6 +416,15 @@
     },
     {
       "path": "packages/plugins/plugin-space/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spacetime/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spec/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spotlight/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-stack/tsconfig.json"
@@ -412,6 +448,9 @@
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-token-manager/tsconfig.json"
     },
     {
@@ -421,7 +460,16 @@
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-voxel/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-youtube/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-zen/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
@@ -485,6 +533,9 @@
     },
     {
       "path": "packages/ui/lit-ui/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
     },
     {
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
@@ -562,7 +613,7 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-searchlist/tsconfig.json"
+      "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-sfx/tsconfig.json"
@@ -643,6 +694,9 @@
       "path": "tools/vite-plugin-import-source/tsconfig.json"
     },
     {
+      "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
       "path": "tools/x/tsconfig.json"
     },
     {
@@ -656,7 +710,5 @@
     }
   ],
   "include": [],
-  "exclude": [
-    "**/node_modules"
-  ]
+  "exclude": ["**/node_modules"]
 }

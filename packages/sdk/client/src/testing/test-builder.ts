@@ -31,6 +31,7 @@ import {
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
@@ -43,7 +44,6 @@ import {
   LocalClientServices,
   MemoryWorkerCoordiantor,
 } from '../services';
-
 import { TestWorkerFactory } from './test-worker-factory';
 
 export const testConfigWithLocalSignal = new Config({
@@ -115,7 +115,7 @@ export class TestBuilder {
     });
 
     this._ctx.onDispose(() => runtime.dispose());
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(() => services.close(this._ctx));
     return services;
   }
 
@@ -124,8 +124,14 @@ export class TestBuilder {
    * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
   createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean; sqlitePath?: string }): LocalClientServices {
+    // When the test supplies a sqlitePath, run FILE-backed SQLite; otherwise use MEMORY so the
+    // test doesn't depend on OPFS (which is browser-only).
+    const sqliteMode = options?.sqlitePath
+      ? Runtime.Client.Storage.SqliteMode.FILE
+      : Runtime.Client.Storage.SqliteMode.MEMORY;
+    const config = new Config({ runtime: { client: { storage: { sqliteMode } } } }, this.config.values);
     const services = new LocalClientServices({
-      config: this.config,
+      config,
       storage: this?.storage?.(),
       level: this?.level?.(),
       runtimeProps: {

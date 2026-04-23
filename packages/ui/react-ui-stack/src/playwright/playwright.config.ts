@@ -10,7 +10,7 @@ export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
-    command: 'moon run storybook-react:serve-e2e -- --port=9003',
+    command: 'pnpm storybook dev --ci --quiet --port=9003 --config-dir=.storybook',
     port: 9003,
     reuseExistingServer: false,
   },

@@ -7,7 +7,7 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 /**
  * Translation namespace for OS-level translations.
  */
-export const osTranslations = 'dxos.org/i18n/os';
+export const osTranslations = 'org.dxos.i18n.os';
 
 /**
  * Available color hues for UI components.

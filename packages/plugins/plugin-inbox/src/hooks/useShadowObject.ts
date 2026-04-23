@@ -16,7 +16,7 @@ import { useQuery } from '@dxos/react-client/echo';
 export const useShadowObject = <T extends Obj.Unknown>(
   db: Database.Database | undefined,
   subject: T,
-  type: Type.Obj.Any,
+  type: Type.AnyObj,
 ): [T | undefined, () => T] => {
   const id = Obj.getDXN(subject).toString();
   const objects = useQuery(db, Filter.type(type));
@@ -37,8 +37,8 @@ export const useShadowObject = <T extends Obj.Unknown>(
     }
 
     const newObject = db.add(Obj.clone(subject));
-    Obj.change(newObject, (obj) => {
-      Obj.getMeta(obj).keys.push({ source: 'echo', id }); // TODO(burdon): Factor out const?
+    Obj.change(newObject, (newObject) => {
+      Obj.getMeta(newObject).keys.push({ source: 'echo', id }); // TODO(burdon): Factor out const?
     });
     setTarget(newObject);
     return newObject;

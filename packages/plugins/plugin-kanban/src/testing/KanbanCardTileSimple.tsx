@@ -5,15 +5,18 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
+import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
-import { type KanbanCardProps, useKanbanBoard } from '../components';
-import { meta } from '../meta';
+import { type KanbanCardProps, useKanbanBoard } from '#components';
+import { meta } from '#meta';
 
 const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
 
-/** Card tile without Surface; for stories and tests when plugin manager is not available. */
+/**
+ * Card tile without Surface; for stories and tests when plugin manager is not available.
+ */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
@@ -26,37 +29,52 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
       () =>
         onCardRemove
           ? [
-              {
-                label: t('remove card label'),
-                onClick: (card: Obj.Unknown) => onCardRemove(card),
-              },
+              createMenuAction('remove', () => onCardRemove(data), {
+                label: t('remove-card.label'),
+                icon: 'ph--trash--regular',
+              }),
             ]
           : [],
-      [onCardRemove, t],
+      [onCardRemove, data, t],
     );
 
     return (
-      <Mosaic.Tile
-        asChild
-        id={model.getItemId(data)}
-        data={data}
-        location={location}
-        debug={debug}
-        dragHandle={dragHandle}
-      >
-        <Focus.Group asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
-            <Card.Toolbar>
-              <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              {menuItems.length > 0 && <Card.Menu context={data} items={menuItems} />}
-            </Card.Toolbar>
-            <Card.Content>
-              <div className='p-2 text-sm text-fg'>{Obj.getLabel(data)}</div>
-            </Card.Content>
-          </Card.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
+      <Menu.Root>
+        <Mosaic.Tile
+          asChild
+          id={model.getItemId(data)}
+          data={data}
+          location={location}
+          debug={debug}
+          dragHandle={dragHandle}
+        >
+          <Focus.Item asChild>
+            <Card.Root ref={forwardedRef} data-testid='board-item'>
+              <Card.Toolbar>
+                <Card.DragHandle ref={dragHandleRef} />
+                <Card.Title>{Obj.getLabel(data)}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Menu.Trigger asChild disabled={!menuItems?.length}>
+                  <Toolbar.IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    label={t('action-menu.label')}
+                  />
+                </Menu.Trigger>
+                <Menu.Content items={menuItems} />
+              </Card.Toolbar>
+              <Card.Content>
+                <Card.Section>
+                  <pre className='p-2 text-xs text-description whitespace-pre-wrap'>
+                    {JSON.stringify(data, null, 2)}
+                  </pre>
+                </Card.Section>
+              </Card.Content>
+            </Card.Root>
+          </Focus.Item>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );

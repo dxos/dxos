@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
@@ -11,7 +11,6 @@ import { ClientProvider } from '@dxos/react-client';
 
 import { getConfig } from '../config';
 import { Todo, TodoList, createTodoList } from '../types';
-
 import { Main } from './Main';
 
 const createWorker = () =>
@@ -35,9 +34,9 @@ export const Root = () => {
         const deviceInvitationCode = searchProps.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
-          await client.spaces.default.waitUntilReady();
-          createTodoList(client.spaces.default);
+          const space = await client.spaces.create();
+          await space.waitUntilReady();
+          createTodoList(space);
         }
 
         const spaceInvitationCode = searchProps.get('spaceInvitationCode');

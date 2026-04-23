@@ -9,15 +9,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
 import { translationKey } from '../../translations';
-
 import { type JoinPanelMode } from './JoinPanelProps';
 
-export interface JoinSpaceHeadingProps {
+export type JoinSpaceHeadingProps = {
   mode?: JoinPanelMode;
   titleId: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];
   onExit?: () => void;
-}
+};
 
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
@@ -32,7 +31,7 @@ export const JoinHeading = forwardRef(
         data-testid='join-exit'
       >
         <Icon icon='ph--x--bold' size={4} />
-        <span className='sr-only'>{t('exit label')}</span>
+        <span className='sr-only'>{t('exit.label')}</span>
       </Button>
     );
 
@@ -42,9 +41,9 @@ export const JoinHeading = forwardRef(
         titleId={titleId}
         title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
         {...(mode === 'halo-only'
-          ? { titleSrOnly: true }
+          ? { ssrOnly: true }
           : { corner: exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton })}
-        titleSrOnly={mode === 'halo-only'}
+        ssrOnly={mode === 'halo-only'}
       />
     );
   },

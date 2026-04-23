@@ -7,7 +7,7 @@ import React from 'react';
 import { type Invitation } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, Actions, StepHeading } from '../../../components';
+import { Action, ActionBar, InputLabel } from '../../../components';
 import { translationKey } from '../../../translations';
 import { type FailReason } from '../../../types';
 import { type JoinStepProps } from '../JoinPanelProps';
@@ -34,7 +34,7 @@ const InvitationActions = ({
   if (failReason) {
     return (
       <>
-        <StepHeading className='text-description'>
+        <InputLabel classNames='text-description'>
           {t(
             failReason === 'timeout'
               ? 'timeout status label'
@@ -42,32 +42,32 @@ const InvitationActions = ({
                 ? 'cancelled status label'
                 : 'error status label',
           )}
-        </StepHeading>
+        </InputLabel>
         <div role='none' className='grow' />
-        <Actions>
+        <ActionBar>
           <Action
             disabled={!active}
             onClick={() => send({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
-            {t('reset label')}
+            {t('reset.label')}
           </Action>
-        </Actions>
+        </ActionBar>
       </>
     );
   } else {
     return (
       <>
-        <StepHeading className='text-description'>{t('connecting status label')}</StepHeading>
+        <InputLabel classNames='text-description'>{t('connecting-status.label')}</InputLabel>
         <div role='none' className='grow' />
-        <Actions>
+        <ActionBar>
           <Action disabled classNames='order-2' data-testid='next'>
-            {t('next label')}
+            {t('next.label')}
           </Action>
           <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
-            {t('cancel label')}
+            {t('cancel.label')}
           </Action>
-        </Actions>
+        </ActionBar>
       </>
     );
   }
@@ -82,17 +82,17 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
       {typeof invitationState === 'undefined' ? (
         <>
           <div role='none' className='grow flex flex-col justify-center'>
-            <StepHeading className='text-description'>There was a problem joining the space</StepHeading>
+            <InputLabel classNames='text-description'>There was a problem joining the space</InputLabel>
           </div>
-          <Actions>
+          <ActionBar>
             <Action
               disabled={!active}
               data-testid='invitation-rescuer-blank-reset'
               onClick={() => send({ type: `reset${Kind}Invitation` })}
             >
-              {t('reset label')}
+              {t('reset.label')}
             </Action>
-          </Actions>
+          </ActionBar>
         </>
       ) : (
         <InvitationActions {...props} />

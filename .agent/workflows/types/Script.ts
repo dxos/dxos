@@ -17,10 +17,10 @@ export const Script = Schema.Struct({
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
-  source: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  source: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Script',
+    typename: 'org.dxos.type.script',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),

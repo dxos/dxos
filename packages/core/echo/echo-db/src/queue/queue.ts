@@ -8,15 +8,15 @@ import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
-import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { Filter, Query } from '@dxos/echo';
+import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
-import { assertArgument, failedInvariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { Filter, Query, QueryResultImpl } from '../query';
-
+import { QueryResultImpl } from '../query';
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 
@@ -63,6 +63,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
               dxn: this._dxn.extend([(obj as any).id]),
+              database: this._database,
+              parent: this._parentEntity,
             });
           } catch (err) {
             log.verbose('schema validation error; object ignored', { obj, error: err });
@@ -108,6 +110,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    */
   private _pollingHandlers: number = 0;
 
+  private _parentEntity: Obj.Unknown | undefined = undefined;
+
   private _objectCache = new Map<ObjectId, T>();
   private _objects: T[] = [];
   private _isLoading = true;
@@ -119,11 +123,20 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
+    private readonly _database?: Database.Database,
   ) {
     const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
     this._subspaceTag = subspaceTag ?? failedInvariant();
     this._spaceId = spaceId ?? failedInvariant();
     this._queueId = queueId ?? failedInvariant();
+  }
+
+  /**
+   * Set the parent entity for items in this queue.
+   * When set, all deserialized items will have their parent set to this entity.
+   */
+  setParentEntity(parent: Obj.Unknown): void {
+    this._parentEntity = parent;
   }
 
   toJSON() {
@@ -179,6 +192,9 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
       defineHiddenProperty(item, SelfDXNId, this._dxn.extend([item.id]));
+      if (this._parentEntity) {
+        defineHiddenProperty(item, ParentId, this._parentEntity);
+      }
     }
 
     // Optimistic update.
@@ -234,14 +250,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
-    assertArgument(options === undefined, 'options', 'not supported');
+  private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithOptions = query.options({
-      spaceIds: [this._spaceId],
-      queues: [this._dxn.toString()],
-    });
-    return new QueryResultImpl(new QueueQueryContext(this), queryWithOptions);
+    const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
+    return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 
   async sync({
@@ -269,6 +281,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
               dxn: this._dxn.extend([(obj as any).id]),
+              database: this._database,
+              parent: this._parentEntity,
             });
             this._objectCache.set(decoded.id, decoded as T);
             return decoded;
@@ -298,6 +312,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
       dxn: this._dxn.extend([(obj as any).id]),
+      database: this._database,
+      parent: this._parentEntity,
     });
     return decoded;
   }

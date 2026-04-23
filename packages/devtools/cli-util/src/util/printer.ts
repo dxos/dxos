@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Doc from '@effect/printer/Doc';
 import * as AnsiDoc from '@effect/printer-ansi/AnsiDoc';
+import * as Doc from '@effect/printer/Doc';
 
 /**
  * Pretty print document.

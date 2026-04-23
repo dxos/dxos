@@ -4,4 +4,3 @@
 
 export * from './components';
 export * from './hooks';
-export * as Surface from './components/surface';

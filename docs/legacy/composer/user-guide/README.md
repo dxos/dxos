@@ -35,8 +35,8 @@ Each of these devices synchronizes data and can also be used to add additional d
 
 Say you create an initial identity and then add two other devices to it. You know have:
 
-* Three copies of your data (once they finish the initial sync)
-* Three places from which you create invitiations to add new devices to your identity
+- Three copies of your data (once they finish the initial sync)
+- Three places from which you create invitiations to add new devices to your identity
 
 ::: note You can have more than one 'device' per computer
 
@@ -57,9 +57,9 @@ In the future we plan to support recovering an identity using a [seed phrase](..
 
 ### Upsides
 
-* There are no passwords to track
-* You can associate new devices with an identity even without Internet access
+- There are no passwords to track
+- You can associate new devices with an identity even without Internet access
 
 ### Downsides
 
-* If you lose your identity it's permanently lost. Since it's not company controlled there's no place to appeal to for backchannel recovery.
+- If you lose your identity it's permanently lost. Since it's not company controlled there's no place to appeal to for backchannel recovery.

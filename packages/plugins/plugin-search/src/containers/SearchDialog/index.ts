@@ -2,6 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SearchDialog } from './SearchDialog';
-
-export default SearchDialog;
+export { SearchDialog, type SearchDialogProps } from './SearchDialog';
+export { SearchDialog as default } from './SearchDialog';

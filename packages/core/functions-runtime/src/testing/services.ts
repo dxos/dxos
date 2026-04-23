@@ -13,12 +13,10 @@ import {
   type CredentialsService,
   QueueService,
   type ServiceCredential,
-  type TracingService,
 } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
-
 import { consoleLogger, noopLogger } from './logger';
 
 // TODO(burdon): Factor out.
@@ -72,10 +70,6 @@ export type TestServiceOptions = {
    * Queue service configuration.
    */
   queues?: QueueFactory;
-
-  tracing?: {
-    service?: Context.Tag.Service<TracingService>;
-  };
 };
 
 /**
@@ -88,7 +82,6 @@ export const createTestServices = ({
   logging,
   queues,
   space,
-  tracing,
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && (!!db || !!queues)), 'space', 'space can be provided only if db and queues are not');
 
@@ -98,7 +91,6 @@ export const createTestServices = ({
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
     eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
-    tracing: tracing?.service,
   });
 };
 

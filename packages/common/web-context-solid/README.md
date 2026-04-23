@@ -36,7 +36,7 @@ import { useWebComponentContext } from '@dxos/web-context-solid';
 
 const MyComponent = () => {
   const theme = useWebComponentContext(ThemeContext, { subscribe: true });
-  
+
   return <div style={{ color: theme()?.color }}>Hello World</div>;
 };
 ```

@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Type } from '@dxos/echo';
+import { JsonSchema } from '@dxos/echo';
 import { DynamicTable } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
@@ -14,10 +14,6 @@ export type ItemTableProps<T> = {
 };
 
 export const ItemTable = <T extends object>({ schema, objects = [] }: ItemTableProps<T>) => {
-  const jsonSchema = useMemo(() => Type.toJsonSchema(schema), [schema]);
-  return (
-    <div role='none' className='w-full h-full'>
-      <DynamicTable jsonSchema={jsonSchema} rows={objects} />
-    </div>
-  );
+  const jsonSchema = useMemo(() => JsonSchema.toJsonSchema(schema), [schema]);
+  return <DynamicTable classNames='dx-container' jsonSchema={jsonSchema} rows={objects} />;
 };

@@ -12,8 +12,10 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/types/index.ts'
+      - '--entryPoint=src/operations/index.ts'
       - '--platform=browser'
       - '--platform=node'
   e2e:
     inputs:
+      - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

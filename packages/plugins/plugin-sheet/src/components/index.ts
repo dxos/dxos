@@ -3,7 +3,4 @@
 //
 
 export * from './ComputeGraph';
-export * from './FunctionEditor';
-export * from './GridSheet';
-export * from './SheetContext';
-export * from './SheetToolbar';
+export * from './Sheet';

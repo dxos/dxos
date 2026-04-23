@@ -6,27 +6,27 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, Input, useTranslation } from '@dxos/react-ui';
+import { Button, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { StackItem } from '@dxos/react-ui-stack';
+import { composable, composableProps } from '@dxos/ui-theme';
 
-import { Call } from '../../components/Call';
-import { meta } from '../../meta';
-import { ThreadCapabilities } from '../../types';
-import { type Channel } from '../../types';
-import ChatContainer from '../ChatContainer';
+import { Call } from '#components';
+import { meta } from '#meta';
+import { ThreadCapabilities } from '#types';
+import { type Channel } from '#types';
 
-export type ChannelContainerProps = SurfaceComponentProps<
+import { ChatContainer } from '../ChatContainer';
+
+export type ChannelContainerProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
   {
     roomId?: string;
@@ -38,13 +38,18 @@ export type ChannelContainerProps = SurfaceComponentProps<
  * Renders a call when active, otherwise renders the channel chat.
  */
 // TODO(burdon): Create Radix style layout.
-export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, fullscreen }: ChannelContainerProps) => {
+export const ChannelContainer = ({
+  role,
+  subject: channel,
+  attendableId,
+  roomId: roomIdProp,
+  fullscreen,
+}: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
   const extensions = useCapabilities(ThreadCapabilities.CallExtension);
   const joined = useAtomValue(callManager.joinedAtom);
   const currentRoomId = useAtomValue(callManager.roomIdAtom);
-  const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
   const roomId = roomIdProp ?? attendableId ?? failUndefined();
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
@@ -118,24 +123,37 @@ export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, f
   }, [extensions, roomId]);
 
   const isJoined = joined && currentRoomId === roomId;
+  if (isJoined) {
+    return (
+      <Panel.Root>
+        <Panel.Content>
+          {isNamed ? (
+            <Call.Root>
+              <Call.Grid fullscreen={fullscreen} />
+              <Call.Toolbar channel={channel} onLeave={handleLeave} />
+            </Call.Root>
+          ) : (
+            <DisplayNameMissing />
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    );
+  }
 
-  return (
-    <StackItem.Content classNames={isJoined && 'h-full'} toolbar={!isJoined}>
-      {isJoined && !isNamed && <DisplayNameMissing />}
-      {isJoined && isNamed && (
-        <Call.Root>
-          <Call.Grid fullscreen={fullscreen} />
-          <Call.Toolbar channel={channel} onLeave={handleLeave} />
-        </Call.Root>
-      )}
-      {!isJoined && channel && channel.defaultThread.target && space && (
-        <>
+  if (channel && channel.defaultThread.target && space) {
+    return (
+      <Panel.Root classNames='dx-document'>
+        <Panel.Toolbar asChild>
           <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
-          <ChatContainer space={space} thread={channel.defaultThread.target} classNames='dx-container-max-width' />
-        </>
-      )}
-    </StackItem.Content>
-  );
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ChatContainer space={space} thread={channel.defaultThread.target} />
+        </Panel.Content>
+      </Panel.Root>
+    );
+  }
+
+  return null;
 };
 
 const DisplayNameMissing = () => {
@@ -146,19 +164,19 @@ const DisplayNameMissing = () => {
   const handleSave = useCallback(() => client.halo.updateProfile({ displayName }), [client, displayName]);
 
   return (
-    <Settings.Group classNames='p-4 place-content-center'>
-      <Settings.ItemInput title={t('display name label')} description={t('display name description')}>
+    <div className='space-y-trim-md p-4 place-content-center'>
+      <Settings.Item title={t('display-name.label')} description={t('display-name.description')}>
         <Input.TextInput
           value={displayName}
           onChange={handleChange}
-          placeholder={t('display name input placeholder')}
+          placeholder={t('display-name-input.placeholder')}
           classNames='md:min-w-64'
         />
-      </Settings.ItemInput>
-      <Settings.GroupButton disabled={!displayName} onClick={handleSave}>
-        {t('set display name label')}
-      </Settings.GroupButton>
-    </Settings.Group>
+      </Settings.Item>
+      <Button classNames='md:col-span-2' disabled={!displayName} onClick={handleSave}>
+        {t('set-display-name.label')}
+      </Button>
+    </div>
   );
 };
 
@@ -169,15 +187,15 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
         return {
           nodes: [
             createMenuItemGroup('root', {
-              label: ['channel toolbar title', { ns: meta.id }],
+              label: ['channel-toolbar.title', { ns: meta.id }],
             }),
             createMenuAction('video-call', () => onJoinCall?.(), {
-              label: ['start video call label', { ns: meta.id }],
+              label: ['start-video-call.menu', { ns: meta.id }],
               icon: 'ph--video-camera--regular',
               type: 'video-call',
             }),
           ],
-          edges: [{ source: 'root', target: 'video-call' }],
+          edges: [{ source: 'root', target: 'video-call', relation: 'child' }],
         };
       }),
     [],
@@ -186,20 +204,20 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = {
-  attendableId?: string;
-  role?: string;
+type ChannelToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   onJoinCall?: () => void;
 };
 
-const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps) => {
-  const menuProps = useChannelToolbarActions(onJoinCall);
+const ChannelToolbar = composable<HTMLDivElement, ChannelToolbarProps>(
+  ({ attendableId, role, onJoinCall, ...props }, forwardedRef) => {
+    const menuActions = useChannelToolbarActions(onJoinCall);
 
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu textBlockWidth />
-      </MenuProvider>
-    </ElevationProvider>
-  );
-};
+    return (
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+        </Menu.Root>
+      </ElevationProvider>
+    );
+  },
+);

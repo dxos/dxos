@@ -7,15 +7,14 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space/types';
-import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -23,48 +22,46 @@ import {
   type TableModelProps,
   TablePresentation,
   type TableRowAction,
-  TableToolbar,
   extractOrder,
   useAddRow,
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
-import { meta } from '../../meta';
-import { type Table } from '../../types';
+import { meta } from '#meta';
+import { type Table } from '#operations';
 
-export type TableContainerProps = SurfaceComponentProps<Table.Table>;
+export type TableContainerProps = AppSurface.ObjectArticleProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
-  ({ role, subject: object }, forwardedRef) => {
+  ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const { invokePromise } = useOperationInvoker();
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
-    const view = object.view.target;
-    const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
-    const typename = getTypenameFromQuery(query.ast);
+    const [view] = useObject(object.view);
+    const queryAst = view?.query?.ast;
+    const typename = getTypenameFromQuery(queryAst);
     const schema = useSchema(db, typename);
-    // TODO(wittjosiah): This should use `query` above.
+    // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
-    // const queriedObjects = useQuery(db, query);
-    const queriedObjects = useQueryWorkaround(db, query.ast, schema);
+    const queriedObjects = useQueryWorkaround(db, queryAst, schema);
     const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
     const { graph } = useAppGraph();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(Obj.getDXN(object).toString()));
+        const actions = get(graph.actions(attendableId!));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         return {
           nodes,
-          edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+          edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
         };
       });
-    }, [graph]);
+    }, [graph, attendableId]);
 
     const addRow = useAddRow({ db, schema });
 
@@ -77,10 +74,11 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
 
     const handleDeleteColumn = useCallback(
       (fieldId: string) => {
-        invariant(view);
-        void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
+        const liveView = object.view.target;
+        invariant(liveView);
+        void invokePromise(SpaceOperation.DeleteField, { view: liveView, fieldId });
       },
-      [invokePromise, view],
+      [invokePromise, object.view],
     );
 
     const features: Partial<TableFeatures> = useMemo(
@@ -97,14 +95,14 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     }, []);
 
     const rowActions = useMemo(
-      (): TableRowAction[] => [{ id: 'open', label: ['open object label', { ns: meta.id }] }],
+      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.id }] }],
       [],
     );
 
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] })),
+          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] })),
           Match.orElseAbsurd,
         ),
       [invokePromise],
@@ -115,7 +113,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     }, []);
 
     const handleCreate = useCallback(
-      (schema: Type.Entity.Any, values: any) => {
+      (schema: Type.AnyEntity, values: any) => {
         invariant(db);
         invariant(Type.isObjectSchema(schema));
         return db.add(Obj.make(schema, values));
@@ -159,26 +157,30 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <Container.Main toolbar role={role} ref={forwardedRef}>
-        <TableToolbar
-          attendableId={Obj.getDXN(object).toString()}
-          customActions={customActions}
-          viewDirty={model?.getViewDirty()}
-          onAdd={handleInsertRow}
-          onSave={handleSave}
-        />
-        <TableComponent.Root role={role}>
-          <TableComponent.Main
-            key={Obj.getDXN(object).toString()}
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            schema={schema}
-            onCreate={handleCreate}
-            onRowClick={handleRowClick}
-          />
-        </TableComponent.Root>
-      </Container.Main>
+      <TableComponent.Root ref={tableRef}>
+        <Panel.Root role={role} ref={forwardedRef}>
+          <Panel.Toolbar asChild>
+            <TableComponent.Toolbar
+              attendableId={attendableId}
+              customActions={customActions}
+              viewDirty={model?.getViewDirty()}
+              onAdd={handleInsertRow}
+              onSave={handleSave}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <TableComponent.Content
+              classNames='border-t border-separator'
+              key={attendableId}
+              model={model}
+              presentation={presentation}
+              schema={schema}
+              onCreate={handleCreate}
+              onRowClick={handleRowClick}
+            />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
     );
   },
 );
@@ -190,31 +192,36 @@ export default TableContainer;
 const useQueryWorkaround = (
   db: Database.Database | undefined,
   ast: QueryAST.Query | undefined,
-  schema: Type.Entity.Any | undefined,
+  schema: Type.AnyEntity | undefined,
 ) => {
-  // Extract order from query AST and apply it to the base filter query
+  // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
-    const baseQuery = schema ? Filter.type(schema) : Filter.nothing();
+    const baseFilter = schema ? Filter.type(schema) : Filter.nothing();
+    let query = Query.select(baseFilter);
 
-    if (!ast) {
-      return Query.select(baseQuery);
+    // Apply tag filter from the query AST.
+    const tag = getTagFromQuery(ast);
+    if (tag) {
+      query = query.select(Filter.tag(tag));
     }
 
+    if (!ast) {
+      return query;
+    }
+
+    // Apply sort order from the query AST.
     const orders = extractOrder(ast);
     if (orders && orders.length > 0) {
-      // Convert AST orders to Order objects and apply to query
-      const queryWithFilter = Query.select(baseQuery);
       const orderObjects = orders
         .filter((order): order is QueryAST.Order & { kind: 'property' } => order.kind === 'property')
         .map((order) => Order.property<any>(order.property, order.direction));
 
       if (orderObjects.length > 0) {
-        // TypeScript needs explicit type assertion for spread operator
-        return queryWithFilter.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
+        return query.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
       }
     }
 
-    return Query.select(baseQuery);
+    return query;
   }, [ast, schema]);
 
   return useQuery(db, query);

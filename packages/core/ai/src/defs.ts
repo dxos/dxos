@@ -49,6 +49,8 @@ export const DEFAULT_OLLAMA_MODELS = [
   'llama3.2:1b',
   'llama3:70b',
   'deepseek-r1:latest',
+  'gpt-oss:20b',
+  'gemma4:latest',
 ] as const;
 
 /**
@@ -72,7 +74,7 @@ export const ModelName = Schema.Literal(
 
 export type ModelName = Schema.Schema.Type<typeof ModelName>;
 
-export const DEFAULT_EDGE_MODEL: ModelName = '@anthropic/claude-sonnet-4-5';
+export const DEFAULT_EDGE_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 export const DEFAULT_LMSTUDIO_MODEL: ModelName = '@meta/llama-3.2-3b-instruct';
 export const DEFAULT_OLLAMA_MODEL: ModelName = 'llama3.2:1b';
 export const DEFAULT_OPENAI_MODEL: ModelName = '@openai/gpt-4o';
@@ -93,4 +95,11 @@ export class MockModelRegistry implements ModelRegistry {
   getCapabilities(model: string) {
     return this._models.get(model);
   }
+}
+
+export interface ModelOptions {
+  /**
+   * Enable thinking.
+   */
+  thinking?: boolean;
 }

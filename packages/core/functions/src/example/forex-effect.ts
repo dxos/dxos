@@ -14,7 +14,7 @@ import {
 import { Effect, Schedule } from 'https://esm.sh/effect@3.17.0?bundle=false';
 
 export default defineFunction({
-  key: 'dxos.org/script/forex-effect',
+  key: 'org.dxos.script.forex-effect',
   name: 'Forex Effect',
   description: 'Returns the exchange rate between two currencies.',
 

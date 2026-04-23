@@ -105,7 +105,6 @@ export DX_DXNS_ACCOUNT=5591834c2a818055a778a5a891e3e652f8ef64e898beb8c4a414218db
 dx ns info
 ```
 
-
 ## Deploying an app with the new device
 
 After the new device has been added to the DXNS Account, it has access rights to publish apps with the domain we auctioned earlier.

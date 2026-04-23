@@ -1,7 +1,7 @@
 ---
 title: Updating and deleting data
 sidebar_title: 6. Mutating data
-description: 
+description:
 ---
 
 ## Updating items

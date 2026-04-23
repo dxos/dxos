@@ -3,22 +3,29 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
+export {
+  isSpace,
+  type Echo,
+  type Space,
+  SpaceSchema,
+  SpaceProperties,
+  LegacySpaceProperties,
+} from '@dxos/client-protocol';
 export { compareForeignKeys, createQueueDXN, type ObjectMeta, Ref, RefArray } from '@dxos/echo/internal';
 export { Entity, Relation, Type, Database } from '@dxos/echo';
 export {
   createObject,
   createSubscription,
+  defineObjectMigration,
   getVersion,
   type EchoDatabase,
-  Filter,
   type ObjectMigration,
   ObjectVersion,
-  Query,
   Queue,
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';
+export { Filter, Query } from '@dxos/echo';
 
 // TODO(dmaretskyi): Remove this export.
 export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
@@ -30,7 +37,7 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-export { importSpace } from './import';
+export { importSpace, type ImportSpaceOptions } from './import';
 export {
   createEmptyEdgeSyncState,
   parseId,

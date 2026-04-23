@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/markdown',
+  id: 'org.dxos.plugin.markdown',
   name: 'Markdown',
   description: trim`
     Full-featured collaborative markdown editor with real-time editing, inline comments, and rich formatting.

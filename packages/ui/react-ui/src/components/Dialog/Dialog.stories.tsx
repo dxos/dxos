@@ -5,24 +5,28 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Input } from '../Input';
-
+import { ScrollArea } from '../ScrollArea';
 import { Dialog, type DialogContentProps } from './Dialog';
 
-type StoryProps = Pick<DialogContentProps, 'size'> &
+type DefaultStoryProps = Pick<DialogContentProps, 'size'> &
   Partial<{
     title: string;
     description: string;
     openTrigger: string;
     closeTrigger: string;
-    blockAlign: 'center' | 'start';
+    blockAlign: 'start' | 'center';
   }>;
 
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+/**
+ * Standard Dialog with non-scrolling content in Dialog.Body.
+ * Dialog.Body propagates the Column grid via subgrid. Children auto-center via --dx-col.
+ */
+const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
@@ -56,6 +60,45 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
   );
 };
 
+/**
+ * Dialog with a ScrollArea child inside Dialog.Body.
+ * The ScrollArea breaks out of Body's gutter padding via `--gutter`
+ * and applies its own asymmetric padding (accounting for scrollbar width).
+ */
+const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
+  return (
+    <Dialog.Root defaultOpen modal>
+      <Dialog.Trigger asChild>
+        <Button>{openTrigger}</Button>
+      </Dialog.Trigger>
+      <Dialog.Overlay blockAlign={blockAlign}>
+        <Dialog.Content size={size}>
+          <Dialog.Header>
+            <Dialog.Title>{title}</Dialog.Title>
+            {closeTrigger && (
+              <Dialog.Close asChild>
+                <Dialog.CloseIconButton />
+              </Dialog.Close>
+            )}
+          </Dialog.Header>
+          <Dialog.Body>
+            <ScrollArea.Root orientation='vertical' padding thin>
+              <ScrollArea.Viewport>
+                <Dialog.Description>{description}</Dialog.Description>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Dialog.Body>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild>
+              <Button variant='primary'>{closeTrigger}</Button>
+            </Dialog.Close>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-core/components/Dialog',
   component: Dialog as any,
@@ -70,7 +113,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'start',
@@ -80,7 +123,7 @@ export const Default: Story = {
 export const Small: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -91,7 +134,7 @@ export const Small: Story = {
 export const Medium: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(1),
+    description: random.lorem.paragraph(1),
     openTrigger: 'Open',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -102,7 +145,7 @@ export const Medium: Story = {
 export const Large: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: random.lorem.paragraph(2),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',
@@ -113,10 +156,22 @@ export const Large: Story = {
 export const ExtraLarge: Story = {
   args: {
     title: 'Dialog title',
-    description: faker.lorem.paragraph(2),
+    description: random.lorem.paragraph(2),
     openTrigger: 'Open Dialog',
     closeTrigger: 'Close',
     blockAlign: 'center',
     size: 'xl',
+  },
+};
+
+export const Scrolling: Story = {
+  render: ScrollingStory,
+  args: {
+    title: 'Dialog title',
+    description: random.lorem.paragraph(20),
+    openTrigger: 'Open Dialog',
+    closeTrigger: 'Close',
+    blockAlign: 'center',
+    size: 'md',
   },
 };

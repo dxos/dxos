@@ -3,7 +3,5 @@
 //
 
 export * from './Board';
-export * from './Card';
 export * from './Focus';
-export * from './Image';
 export * from './Mosaic';

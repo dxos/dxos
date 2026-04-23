@@ -5,23 +5,22 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
-import { Container } from '../../primitives';
+import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
-
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
-type StoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
+type DefaultStoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
 
-const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: StoryProps) => {
+const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: DefaultStoryProps) => {
   const [lines, setLines] = useState<string[]>([]);
   const [running, setRunning] = useState(runningProp);
   const scroller = useRef<ScrollController>(null);
   useEffect(() => {
-    setLines(Array.from({ length: initialLines }, () => faker.lorem.paragraph()));
+    setLines(Array.from({ length: initialLines }, () => random.lorem.paragraph()));
   }, [initialLines]);
   useEffect(() => {
     if (!running) {
@@ -29,31 +28,38 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
     }
 
     const i = setInterval(() => {
-      setLines((lines) => [...lines, faker.lorem.paragraph()]);
+      setLines((lines) => [...lines, random.lorem.paragraph()]);
     }, 500);
 
     return () => clearInterval(i);
   }, [running]);
 
   return (
-    <Container.Main toolbar>
-      <Toolbar.Root>
-        <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
-        <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
-        <Toolbar.Separator variant='gap' />
-        <div className='px-1'>{lines.length}</div>
-      </Toolbar.Root>
-      <ScrollContainer.Root {...props} ref={scroller}>
-        <ScrollContainer.Viewport>
-          {lines.map((line, index) => (
-            <div key={index} className='p-2 text-description'>
-              {line}
-            </div>
-          ))}
-        </ScrollContainer.Viewport>
-        <ScrollContainer.ScrollDownButton />
-      </ScrollContainer.Root>
-    </Container.Main>
+    <Panel.Root className='dx-document'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
+          <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
+          <Toolbar.Separator />
+          <div className='px-1'>{lines.length}</div>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <ScrollContainer.Root {...props} ref={scroller}>
+          <ScrollContainer.Content>
+            <ScrollContainer.Viewport>
+              {lines.map((line, index) => (
+                <div key={index} className='p-2 text-description'>
+                  {line}
+                </div>
+              ))}
+            </ScrollContainer.Viewport>
+            <ScrollContainer.ScrollDownButton />
+            <ScrollContainer.Fade />
+          </ScrollContainer.Content>
+        </ScrollContainer.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -71,7 +77,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     pin: true,
-    fade: true,
+
     running: true,
   },
 };
@@ -79,7 +85,7 @@ export const Default: Story = {
 export const Large: Story = {
   args: {
     pin: true,
-    fade: true,
+
     initialLines: 100,
   },
 };

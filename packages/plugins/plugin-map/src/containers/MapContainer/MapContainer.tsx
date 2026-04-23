@@ -3,25 +3,23 @@
 //
 
 import * as Predicate from 'effect/Predicate';
-import React, { Fragment } from 'react';
+import React, { Fragment, useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Container as DxContainer, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Query } from '@dxos/echo';
+import { Filter, useObject, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Panel as DxPanel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import { GlobeControl } from '../../components/Globe';
-import { MapControl } from '../../components/Map';
-import { type GeoControlProps } from '../../components/types';
-import { type Map } from '../../types';
+import { type GeoControlProps, GlobeControl, MapControl } from '#components';
+import { type Map } from '#types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = SurfaceComponentProps<
+export type MapContainerProps = AppSurface.ObjectArticleProps<
   Map.Map,
   GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
 >;
@@ -30,10 +28,15 @@ export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ..
   const [type, setType] = useControlledState(typeProp);
   const db = object && Obj.getDatabase(object);
 
-  const view = object?.view?.target;
+  const [view] = useObject(object?.view);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
   const schema = useSchema(db, typename);
-  const objects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
+  const query = useMemo(() => {
+    const baseFilter = schema ? Filter.type(schema) : Filter.nothing();
+    return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
+  }, [schema, tag]);
+  const objects = useQuery(db, query);
 
   const markers = objects
     .map((row) => {
@@ -65,14 +68,16 @@ export const MapContainer = ({ role, subject: object, type: typeProp = 'map', ..
 
   return (
     <Root>
-      <DxContainer.Main>
-        {type === 'map' && (
-          <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
-        )}
-        {type === 'globe' && (
-          <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
-        )}
-      </DxContainer.Main>
+      <DxPanel.Root>
+        <DxPanel.Content>
+          {type === 'map' && (
+            <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
+          )}
+          {type === 'globe' && (
+            <GlobeControl markers={markers} selected={selected} onToggle={() => setType('map')} {...props} />
+          )}
+        </DxPanel.Content>
+      </DxPanel.Root>
     </Root>
   );
 };

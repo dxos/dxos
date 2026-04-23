@@ -12,9 +12,9 @@ The DXOS platform and SDK is currently in a technology preview state.
 
 This means:
 
-* Persistence, integrity, or confidentiality of user data is not guaranteed.
-* Protocols, libraries, and SDKs are likely to change, so DXOS SDK components should not yet be used for production.
-* Security of the platform and SDK is immature and incomplete. Identity and device authentication is verified using strong encryption. Data is encrypted in transit. Data stored locally, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) may not be encrypted.
+- Persistence, integrity, or confidentiality of user data is not guaranteed.
+- Protocols, libraries, and SDKs are likely to change, so DXOS SDK components should not yet be used for production.
+- Security of the platform and SDK is immature and incomplete. Identity and device authentication is verified using strong encryption. Data is encrypted in transit. Data stored locally, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) may not be encrypted.
 
 ## Performance, Reliability, and Scale: Current state
 
@@ -48,7 +48,7 @@ With a nominal amount of continuous activity (400 mutations/sec), our communicat
 
 ## Browser Support
 
-* Firefox doesn't work in private mode ([read more](https://github.com/dxos/dxos/issues/3551)).
+- Firefox doesn't work in private mode ([read more](https://github.com/dxos/dxos/issues/3551)).
 
 ## License
 

@@ -28,7 +28,7 @@ import {
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { deferFunction, isNode } from '@dxos/util';
+import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
@@ -131,12 +131,11 @@ export class IdentityManager {
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
   }
 
-  async close(): Promise<void> {
-    await this._identity?.close(new Context());
+  async close(ctx: Context): Promise<void> {
+    await this._identity?.close(ctx);
   }
 
-  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
-    // TODO(nf): populate using context from ServiceContext?
+  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -153,7 +152,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx ?? Context.default());
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -211,28 +210,32 @@ export class IdentityManager {
     return identity;
   }
 
-  // TODO(nf): receive platform info rather than generating it here.
   createDefaultDeviceProfile(): DeviceProfileDocument {
+    // See TODOs in credentials.proto.
     let type: DeviceType;
-    // TODO(nf): call Platform service instead?
     if (isNode()) {
       type = DeviceType.AGENT;
     } else {
       if (platform.name?.startsWith('iOS') || platform.name?.startsWith('Android')) {
         type = DeviceType.MOBILE;
-      } else if ((globalThis as any).__args) {
+      } else if (isTauri() || !platform.name) {
+        // Tauri's __TAURI__ global isn't available in web workers. Fallback: WKWebView
+        // (Tauri on macOS) reports null for platform.name; all standard browsers don't.
         type = DeviceType.NATIVE;
       } else {
         type = DeviceType.BROWSER;
       }
     }
 
+    const os = platform.os?.family === 'OS X' ? 'macOS' : platform.os?.family;
+    const name = type === DeviceType.NATIVE || type === DeviceType.MOBILE ? 'App' : platform.name;
+
     return {
       type,
-      platform: platform.name,
+      platform: name,
       platformVersion: platform.version,
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
-      os: platform.os?.family,
+      os,
       osVersion: platform.os?.version,
     };
   }
@@ -240,7 +243,7 @@ export class IdentityManager {
   /**
    * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async prepareIdentity(params: JoinIdentityProps) {
+  async prepareIdentity(params: JoinIdentityProps, ctx?: Context) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -256,7 +259,7 @@ export class IdentityManager {
       },
     };
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx ?? Context.default());
     return { identity, identityRecord };
   }
 

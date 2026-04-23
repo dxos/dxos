@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace NavTreeCapabilities {
   export type NavTreeItemState = { open: boolean; current: boolean; alternateTree?: boolean };
@@ -17,5 +17,5 @@ export namespace NavTreeCapabilities {
     setItem: (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => void;
   };
 
-  export const State = Capability.make<NavTreeStateStore>(`${meta.id}/capability/state`);
+  export const State = Capability.make<NavTreeStateStore>(`${meta.id}.capability.state`);
 }

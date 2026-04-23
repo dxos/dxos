@@ -8,18 +8,18 @@ import { useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Node } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
-import { byPosition } from '@dxos/util';
 
-import { type NavTreeItemGraphNode } from '../types';
+import { type NavTreeItemGraphNode } from '#types';
 
-import { filterItems } from './useFilteredItems';
+import { filterItems } from '../util';
 import { useNavTreeState } from './useNavTreeState';
 
-const getChildrenFilter = (node: Node.Node): node is Node.Node =>
-  !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
+// TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
+const isVisibleChild = (node: Node.Node): boolean =>
+  node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 
 /** Create an atom family for item display props keyed by path. */
 const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
@@ -32,15 +32,25 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
       if (!node) {
         return { id, label: id };
       }
-      const connections = get(graph.connections(node.id, 'outbound'));
-      const children = connections.filter(getChildrenFilter);
-      const safeChildren = children.filter((n) => !path.includes(n.id));
+      const safeChildren = get(graph.connections(node.id, 'child')).filter((child) => !path.includes(child.id));
+      const visibleChildren = safeChildren.filter(isVisibleChild);
       const parentOf =
-        safeChildren.length > 0 ? safeChildren.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
+        visibleChildren.length > 0
+          ? visibleChildren.map((child) => child.id)
+          : node.properties.role === 'branch'
+            ? []
+            : undefined;
+      const parentId = path.length >= 2 ? path[path.length - 2] : undefined;
+      const parentNode = parentId ? Option.getOrElse(get(graph.node(parentId)), () => undefined) : undefined;
+      const droppable =
+        node.properties.droppable === false || parentNode?.properties.childrenDroppable === false ? false : undefined;
+
       return {
         id: node.id,
         parentOf,
         disabled: node.properties.disabled,
+        draggable: node.properties.draggable,
+        droppable,
         label: node.properties.label ?? node.id,
         className: mx(node.properties.className, node.properties.modified && 'italic'),
         headingClassName: node.properties.headingClassName,
@@ -51,16 +61,10 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
     }).pipe(Atom.keepAlive);
   });
 
-/** Create an atom family for outbound child IDs keyed by parent ID, sorted by position. */
+/** Create an atom family for outbound child IDs keyed by parent ID (pre-sorted by position on write). */
 const createChildIdsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
   Atom.family((id: string) =>
-    Atom.make((get) => {
-      const outbound = get(graph.edges(id)).outbound;
-      const nodes = outbound
-        .map((childId) => Option.getOrElse(get(graph.node(childId)), () => undefined))
-        .filter((node): node is Node.Node => node != null);
-      return nodes.toSorted((a, b) => byPosition(a.properties, b.properties)).map((node) => node.id);
-    }).pipe(Atom.keepAlive),
+    Atom.make((get) => get(graph.connections(id, 'child')).map((child) => child.id)).pipe(Atom.keepAlive),
   );
 
 /** Create an atom family for item resolution keyed by ID. */
@@ -68,8 +72,7 @@ const createItemFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
   Atom.family((id: string) =>
     Atom.make((get) => {
       const node = Option.getOrElse(get(graph.node(id)), () => undefined);
-      const passed = node ? filterItems(node) : false;
-      return node && passed ? node : undefined;
+      return node && filterItems(node) ? node : undefined;
     }).pipe(Atom.keepAlive),
   );
 

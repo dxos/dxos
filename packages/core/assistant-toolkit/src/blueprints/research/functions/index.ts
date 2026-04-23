@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import Create from './document-create';
-import Research from './research';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const ResearchFunctions = {
-  Create,
-  Research,
-};
+export * from './definitions';
+
+export const ResearchHandlers = OperationHandlerSet.lazy(
+  () => import('./document-create'),
+  () => import('./research'),
+);

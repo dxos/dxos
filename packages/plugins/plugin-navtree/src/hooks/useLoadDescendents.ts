@@ -9,8 +9,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
 
 /**
- * Eagerly expands a root node and its immediate children in the app graph.
- * Avoid using within the tree items as it is heavy.
+ * Expands a root node in the app graph.
  */
 export const useLoadDescendents = (root?: Node.Node) => {
   const { graph } = useAppGraph();
@@ -18,9 +17,7 @@ export const useLoadDescendents = (root?: Node.Node) => {
     if (!root) {
       return;
     }
-    Graph.expand(graph, root.id, 'outbound');
-    Graph.getConnections(graph, root.id, 'outbound').forEach((child) => {
-      Graph.expand(graph, child.id, 'outbound');
-    });
+
+    Graph.expand(graph, root.id, 'child');
   }, [graph, root]);
 };

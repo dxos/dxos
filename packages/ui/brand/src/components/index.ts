@@ -1,5 +1,6 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './ComposerLogo';
+export * from './icons';
+export * from './logotypes';

@@ -18,7 +18,7 @@ jobs:
           - name: typescript
             spec: 'typescript'
           - name: eslint
-            spec: 'eslint "@eslint/*" "@typescript-eslint/*" prettier "prettier-plugin-*"'
+            spec: 'eslint "@eslint/*" "@typescript-eslint/*"'
           - name: react
             spec: 'react "react-dom" "react-is" "react-test-renderer" "@types/react" "@types/react-dom" "@testing-library/*"'
           - name: automerge

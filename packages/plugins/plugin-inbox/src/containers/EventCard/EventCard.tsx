@@ -4,13 +4,15 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Card } from '@dxos/react-ui';
 import { type Event } from '@dxos/types';
 
-import { DateComponent } from '../../components';
+import { DateComponent } from '#components';
 
-export const EventCard = ({ subject: event }: SurfaceComponentProps<Event.Event>) => {
+export type EventCardProps = AppSurface.ObjectCardProps<Event.Event>;
+
+export const EventCard = ({ subject: event }: EventCardProps) => {
   return (
     <Card.Content>
       <Card.Row icon='ph--calendar--regular'>

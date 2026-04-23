@@ -6,29 +6,38 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
-import { useAttended } from '@dxos/react-ui-attention';
+import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { getParentId, useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
-import { CommentsContainer, type CommentsContainerProps } from '../../components';
-import { meta } from '../../meta';
-import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
+import { CommentsPanel, type CommentsPanelProps } from '#components';
+import { meta } from '#meta';
+import { ThreadOperation } from '#operations';
+import { ThreadCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export const ThreadCompanion = ({ subject }: { subject: any }) => {
+export type ThreadCompanionProps = AppSurface.ObjectArticleProps<
+  Thread.Thread,
+  {
+    attendableId?: string;
+  }
+>;
+
+export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps) => {
   const { t } = useTranslation(meta.id);
+  const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
+  const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
   const stateAtom = useCapability(ThreadCapabilities.State);
@@ -70,7 +79,8 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
-  const attended = useAttended();
+  const { hasAttention, isAncestor, isRelated } = useAttention(parentId);
+  const isAttended = hasAttention || isAncestor || isRelated;
 
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
@@ -80,17 +90,26 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       if (state.current !== threadId) {
         registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
-        // TODO(wittjosiah): Should this be a thread-specific intent?
-        //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
-        //  This may be overloading this intent or highjacking its intended purpose.
-        void invokePromise(LayoutOperation.ScrollIntoView, {
-          subject: Obj.getDXN(subject).toString(),
-          cursor: anchor.anchor,
-          ref: threadId,
-        });
+        // Scroll plank into view (deck handler).
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject: parentId });
+
+        // Scroll within content to anchor (metadata-driven, per typename).
+        if (anchor.anchor && parentId) {
+          const typename = Obj.getTypename(subject);
+          const metadata = manager.capabilities
+            .getAll(AppCapabilities.Metadata)
+            .find(({ id }) => id === typename)?.metadata;
+          if (metadata?.scrollToAnchor) {
+            void invokePromise(metadata.scrollToAnchor, {
+              subject: parentId,
+              cursor: anchor.anchor,
+              ref: threadId,
+            });
+          }
+        }
       }
     },
-    [state.current, invokePromise, subject, registry, stateAtom],
+    [state.current, invokePromise, registry, stateAtom, parentId, subject, manager],
   );
 
   const handleComment = useCallback(
@@ -131,7 +150,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     [invokePromise, subject],
   );
 
-  const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
+  const handleAcceptProposal = useCallback<NonNullable<CommentsPanelProps['onAcceptProposal']>>(
     async (anchor, messageId) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
@@ -152,9 +171,9 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   const comments = (
-    <CommentsContainer
+    <CommentsPanel
       anchors={anchors}
-      currentId={attended.includes(subjectId) ? state.current : undefined}
+      currentId={isAttended ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}
       onAttend={handleAttend}
       onComment={handleComment}
@@ -166,29 +185,33 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <Container.Main toolbar>
-      <Tabs.Root
-        value={showResolvedThreads ? 'all' : 'unresolved'}
-        orientation='horizontal'
-        classNames={[
-          'contents [&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
-        ]}
-        onValueChange={onChangeViewState}
-      >
-        {/* TODO(burdon): Standardize (like Tollbar). */}
-        <Tabs.Tablist classNames={mx('bg-toolbar-surface border-b border-subdued-separator')}>
-          <Tabs.Tab value='unresolved' classNames='text-sm'>
-            {t('show unresolved label')}
-          </Tabs.Tab>
-          <Tabs.Tab value='all' classNames='text-sm'>
-            {t('show all label')}
-          </Tabs.Tab>
-        </Tabs.Tablist>
-        <div className='overflow-y-auto'>
-          <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-          <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
-        </div>
-      </Tabs.Root>
-    </Container.Main>
+    <Tabs.Root
+      orientation='horizontal'
+      value={showResolvedThreads ? 'all' : 'unresolved'}
+      onValueChange={onChangeViewState}
+    >
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Tabs.Tablist classNames='p-0'>
+              <Tabs.Tab classNames='text-sm' value='unresolved'>
+                {t('show-unresolved.label')}
+              </Tabs.Tab>
+              <Tabs.Tab classNames='text-sm' value='all'>
+                {t('show-all.label')}
+              </Tabs.Tab>
+            </Tabs.Tablist>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };

@@ -1,0 +1,93 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React from 'react';
+
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Obj, Query, Relation } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { random } from '@dxos/random';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { AnchoredTo, Message, Thread } from '@dxos/types';
+
+import { createCommentThread, createProposalThread } from '../../testing/data';
+import { translations } from '../../translations';
+import { CommentsPanel } from './CommentsPanel';
+
+random.seed(1);
+
+const DefaultStory = () => {
+  const identity = useIdentity();
+  const db = useDatabase();
+  const anchors = useQuery(db, Query.type(AnchoredTo.AnchoredTo));
+
+  useAsyncEffect(async () => {
+    if (identity && db) {
+      const object = db.add(Obj.make(TestSchema.Expando, {}));
+      const thread1 = db.add(createCommentThread(identity));
+      const thread2 = db.add(createProposalThread(identity));
+      db.add(
+        Relation.make(AnchoredTo.AnchoredTo, {
+          [Relation.Source]: thread1,
+          [Relation.Target]: object,
+          anchor: 'test',
+        }),
+      );
+      db.add(
+        Relation.make(AnchoredTo.AnchoredTo, {
+          [Relation.Source]: thread2,
+          [Relation.Target]: object,
+          anchor: 'test',
+        }),
+      );
+    }
+  }, [identity, db]);
+
+  if (!identity || !db || !anchors) {
+    return <Loading data={{ identity: !!identity, db: !!db, anchors: !!anchors }} />;
+  }
+
+  return <CommentsPanel anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />;
+};
+
+const meta = {
+  title: 'plugins/plugin-thread/components/Comments',
+  render: DefaultStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
+    //  Currently this is required due to useOnEditAnalytics.
+    withPluginManager({
+      plugins: [
+        OperationPlugin(),
+        RuntimePlugin(),
+        ClientPlugin({
+          types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+            }),
+        }),
+      ],
+    }),
+  ],
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

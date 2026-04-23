@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
 //
@@ -17,7 +17,7 @@ export const TestItem = Schema.Struct({
   label: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Item',
+    typename: 'com.example.type.item',
     version: '0.1.0',
   }),
 );
@@ -27,10 +27,10 @@ export interface TestItem extends Schema.Schema.Type<typeof TestItem> {}
 export const TestColumn = Schema.Struct({
   id: ObjectId,
   name: Schema.String,
-  items: Schema.mutable(Schema.Array(Type.Ref(TestItem))),
+  items: Schema.mutable(Schema.Array(Ref.Ref(TestItem))),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Column',
+    typename: 'com.example.type.column',
     version: '0.1.0',
   }),
 );

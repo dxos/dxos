@@ -145,7 +145,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   // QUEUE
 
-  readonly queueCacheName = `${storeName()}/state/queue`;
+  readonly queueCacheName = `${storeName()}.state.queue`;
 
   async #addToQueue(key: CID): Promise<void> {
     await this.#saveQueue([...this.#queue, key.toString()]);

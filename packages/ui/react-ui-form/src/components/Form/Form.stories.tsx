@@ -6,24 +6,23 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Format, Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
-
 import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -43,11 +42,11 @@ const Person = Schema.Struct({
         title: 'State',
         description: 'State code',
       }),
-      zip: Schema.Number,
+      zip: Schema.Number.annotations({ title: 'ZIP Code' }),
     }).annotations({ title: 'Address' }),
   ),
-  employer: Schema.optional(Type.Ref(Organization).annotations({ title: 'Employer' })),
-  tags: Schema.optional(Schema.Array(Type.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
+  employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
+  tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
   status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
@@ -65,16 +64,16 @@ const Person = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
+    typename: 'org.dxos.type.person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
-type StoryProps<T extends AnyProperties> = {
+type DefaultStoryProps<T extends AnyProperties> = {
+  schema?: Schema.Schema<T>;
   debug?: boolean;
-  schema: Schema.Schema<T>;
 } & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
@@ -82,10 +81,10 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
   ...props
-}: StoryProps<T>) => {
+}: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
-  const client = useClient();
-  const space = client.spaces.default;
+  const spaces = useSpaces();
+  const space = spaces[0];
 
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
@@ -97,13 +96,17 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     setValues(valuesProp ?? {});
   }, []);
 
+  if (!space) {
+    return <Loading />;
+  }
+
   return (
     <Tooltip.Provider>
-      <TestLayout json={{ values, schema: schema.ast }}>
+      <TestLayout json={{ values, schema: schema?.ast }}>
         <Form.Root
           debug={debug}
           schema={schema}
-          values={values}
+          defaultValues={values}
           db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}
@@ -111,6 +114,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport>
             <Form.Content>
+              <Form.Section label='Section' description='This is a section' />
               <Form.FieldSet />
               <Form.Actions />
             </Form.Content>
@@ -125,7 +129,6 @@ const meta = {
   title: 'ui/react-ui-form/Form',
   component: Form.Root,
   render: DefaultStory,
-
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -133,16 +136,10 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       types: [Tag.Tag, Organization, Person],
-      onCreateIdentity: ({ client }) => {
-        const space = client.spaces.default;
+      onCreateSpace: ({ space }) => {
         [
-          Obj.make(Organization, { name: 'DXOS' }),
-          Obj.make(Organization, { name: 'BlueYard' }),
-          Obj.make(Organization, { name: 'Backed' }),
-          Obj.make(Organization, { name: 'BCV' }),
-          Tag.make({ label: 'Tag 1' }),
-          Tag.make({ label: 'Tag 2' }),
-          Tag.make({ label: 'Tag 3' }),
+          ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
+          ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
         ].map((obj) => space.db.add(obj));
       },
     }),
@@ -151,11 +148,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps<any>>;
+} satisfies Meta<DefaultStoryProps<any>>;
 
 export default meta;
 
-type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
 const values: Partial<Person> = {
   name: 'Alice',
@@ -188,16 +185,5 @@ export const Static: Story<ExcludeId<typeof Person>> = {
 };
 
 export const Empty: Story<ExcludeId<typeof Person>> = {
-  render: () => (
-    <TestLayout>
-      <Form.Root>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Actions />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </TestLayout>
-  ),
+  args: {},
 };

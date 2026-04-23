@@ -8,21 +8,21 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-
-import { type ViewMode, useMessageToolbarActions } from './useToolbar';
+import { type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -35,6 +35,7 @@ type MessageContextValue = {
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
   sender: DXN | undefined;
+  onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
@@ -53,6 +54,7 @@ type MessageRootProps = PropsWithChildren<
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'plain',
+  onOpen,
   onReply,
   onReplyAll,
   onForward,
@@ -64,6 +66,7 @@ const MessageRoot = ({
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
+      onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
@@ -82,19 +85,17 @@ MessageRoot.displayName = 'Message.Root';
 
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
-type MessageToolbarProps = ThemedClassName<{}>;
-
-export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
+const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
 
   return (
-    <MenuProvider {...actions} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+    </Menu.Root>
   );
-};
+});
 
 MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 
@@ -104,22 +105,26 @@ MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 
 const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
-type MessageViewportProps = ThemedClassName<PropsWithChildren<{ role?: string }>>;
+type MessageViewportProps = ThemedClassName<PropsWithChildren>;
 
-const MessageViewport = ({ classNames, children, role }: MessageViewportProps) => {
-  return (
-    <div
-      role='none'
-      className={mx(
-        'overflow-hidden grid',
-        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-        classNames,
-      )}
-    >
-      {children}
-    </div>
-  );
-};
+const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
+  ({ children, role, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...composableProps(props, {
+          role: 'none',
+          classNames: [
+            'overflow-hidden grid',
+            role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+          ],
+        })}
+        ref={forwardedRef}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 MessageViewport.displayName = MESSAGE_VIEWPORT_NAME;
 
@@ -145,7 +150,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
           <div role='none' className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(), new Date(message.created))}
+            {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>
@@ -173,9 +178,9 @@ MessageHeader.displayName = MESSAGE_HEADER_NAME;
 
 const MESSAGE_CONTENT_NAME = 'Message.Content';
 
-type MessageContentProps = ThemedClassName<{}>;
+type MessageBodyProps = ThemedClassName;
 
-const MessageContent = ({ classNames }: MessageContentProps) => {
+const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
 
@@ -193,7 +198,7 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-3' } } }),
+      createThemeExtensions({ themeMode, slots: compactSlots }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
@@ -207,14 +212,14 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
   return (
     <div
       role='none'
-      ref={parentRef}
       className={mx('flex overflow-hidden', classNames)}
       data-popover-collision-boundary={true}
+      ref={parentRef}
     />
   );
 };
 
-MessageContent.displayName = MESSAGE_CONTENT_NAME;
+MessageBody.displayName = MESSAGE_CONTENT_NAME;
 
 //
 // Message
@@ -226,7 +231,7 @@ export const Message = {
   Toolbar: MessageToolbar,
   Viewport: MessageViewport,
   Header: MessageHeader,
-  Content: MessageContent,
+  Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageToolbarProps, MessageViewportProps, MessageHeaderProps, MessageContentProps };
+export type { MessageRootProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };

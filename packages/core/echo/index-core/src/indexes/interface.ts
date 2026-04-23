@@ -36,6 +36,11 @@ export interface IndexerObject {
    * JSON data of the object.
    */
   data: Obj.JSON;
+
+  /**
+   * Timestamp of the last update of the object.
+   */
+  updatedAt: number;
 }
 
 /**

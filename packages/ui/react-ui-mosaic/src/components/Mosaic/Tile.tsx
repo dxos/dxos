@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import {
+  type Edge,
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import {
   type ElementDragPayload,
@@ -11,28 +16,15 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
-import {
-  type Edge,
-  attachClosestEdge,
-  extractClosestEdge,
-} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type CSSProperties,
-  type PropsWithChildren,
-  forwardRef,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type SlottableClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, slottable } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -58,24 +50,24 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = SlottableClassName<
+type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
   PropsWithChildren<{
-    asChild?: boolean;
+    className?: string;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
     id: string;
     data: TData;
     location: TLocation;
-    draggable?: boolean; // TODO(burdon): Not currently implemented.
+    draggable?: boolean;
+    /** Whether this tile is the current (aria-current) item. */
+    current?: boolean;
     debug?: boolean;
   }>
 >;
 
-const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
+const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
   (
     {
-      classNames,
-      className,
       children,
       asChild,
       dragHandle,
@@ -83,13 +75,16 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       location,
       id,
       data: dataProp,
+      draggable: draggableProp,
+      current: _current,
       debug: _,
-    }: MosaicTileProps,
+      ...props
+    },
     forwardedRef,
   ) => {
+    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
 
     // State.
     const {
@@ -120,7 +115,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
 
     useLayoutEffect(() => {
       const root = rootRef.current;
-      if (!root || !containerId || scrolling) {
+      if (!draggableProp || !root || !containerId || scrolling) {
         return;
       }
 
@@ -191,41 +186,53 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [
+      rootRef,
+      forwardedRef,
+      containerId,
+      dragHandle,
+      eventHandler,
+      data,
+      scrolling,
+      allowedEdges,
+      setActiveLocation,
+    ]);
+
+    const { className, ...rest } = composableProps(props, { classNames: 'relative outline-none' });
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
       <MosaicTileContextProvider state={state}>
-        <Root
+        <Comp
+          {...rest}
           {...{
+            'data-object-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative', className, classNames)}
+          className={className}
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
 
+        {/* Dragging preview. */}
         {state.type === 'preview' &&
           createPortal(
-            <Root
+            <Comp
               {...{
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
               }}
-              // TODO(burdon): Configure drop animation.
-              className={mx('relative', className, classNames)}
-              style={
-                {
-                  width: `${state.rect.width}px`,
-                  height: `${state.rect.height}px`,
-                } as CSSProperties
-              }
+              className={className}
+              style={{
+                width: `${state.rect.width}px`,
+                height: `${state.rect.height}px`,
+              }}
             >
               {children}
-            </Root>,
+            </Comp>,
             state.container,
           )}
       </MosaicTileContextProvider>

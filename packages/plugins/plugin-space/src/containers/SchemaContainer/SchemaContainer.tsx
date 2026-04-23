@@ -10,25 +10,26 @@ import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type SchemaPanelProps = { space: Space };
-
-const itemClasses = mx([
-  'dx-container-max-width grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
-  '*:first:!mt-0 *:last:!mb-0 px-trim-md py-trim-md',
-  'border border-separator rounded-md',
-]);
 
 export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const { t } = useTranslation(meta.id);
   const schemas = useQuerySpaceSchemas(space);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('schema verbose label')} description={t('schema description')}>
-        <div role='none' className={itemClasses}>
-          {schemas.length === 0 && <div className='text-center py-4'>{t('no schemas found message')}</div>}
+    <Settings.Viewport>
+      <Settings.Section title={t('schema-verbose.label')} description={t('schema.description')}>
+        <div
+          role='none'
+          className={mx([
+            'grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
+            '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
+            'border border-separator rounded-md',
+          ])}
+        >
+          {schemas.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
           {schemas.map((schema) => (
             <div role='none' key={schema.id}>
               {schema.typename}
@@ -36,7 +37,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
           ))}
         </div>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

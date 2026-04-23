@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/preview',
+  id: 'org.dxos.plugin.preview',
   name: 'Preview',
   description: trim`
     Rich preview panel for viewing object content without opening full editors.

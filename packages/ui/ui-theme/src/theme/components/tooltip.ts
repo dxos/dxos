@@ -4,8 +4,7 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { mx } from '../../util';
-import { surfaceShadow, surfaceZIndex } from '../fragments';
+import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type TooltipStyleProps = Partial<{
   elevation: Elevation;

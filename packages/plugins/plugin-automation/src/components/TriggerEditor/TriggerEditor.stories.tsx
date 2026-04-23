@@ -7,19 +7,20 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { Operation } from '@dxos/operation';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
-import { functions } from '../../testing';
-import { translations } from '../../translations';
+import { functions } from '#testing';
 
+import { translations } from '../../translations';
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [
@@ -40,13 +41,13 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
       return;
     }
 
-    const functions = await space.db.query(Filter.type(Function.Function)).run();
+    const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
     const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({
         function: Ref.make(fn),
-        spec: { kind: 'webhook' },
+        spec: Trigger.specWebhook(),
         input: {
           from: 'USD',
           to: 'JPY',
@@ -82,7 +83,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, Function.Function, Trigger.Trigger, TestSchema.ContactType],
+      types: [Tag.Tag, Operation.PersistentOperation, Trigger.Trigger, TestSchema.ContactType],
       onCreateSpace: ({ space }) => {
         // Tags.
         ['Important', 'Investor', 'New'].forEach((label) => {
@@ -91,14 +92,14 @@ const meta = {
 
         // Functions.
         functions.forEach((fn) => {
-          space.db.add(Function.make(fn));
+          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
         });
 
         // Objects.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(TestSchema.ContactType, {
-              name: faker.person.fullName(),
+              name: random.person.fullName(),
               identifiers: [],
             }),
           );
@@ -159,8 +160,8 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Queue — should show DXN field (the queue address).
-    await selectKind(combobox, 'q');
-    await expect(canvas.findByLabelText('DXN')).resolves.toBeInTheDocument();
+    // Feed — should show DXN field (the queue address). DXN is a combobox, not an input, so use getByText.
+    await selectKind(combobox, 'f');
+    await expect(canvas.findByText('DXN')).resolves.toBeInTheDocument();
   },
 };

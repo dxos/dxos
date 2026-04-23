@@ -7,13 +7,13 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleField } from '@dxos/react-ui-form';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -21,10 +21,9 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
 import { type CanvasGraphModel, RectangleShape } from '../../types';
-
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
 
@@ -63,7 +62,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -80,8 +79,8 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               values={selected}
               fieldMap={{
                 // TODO(burdon): Replace by type.
-                ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
+                center: (props) => <TupleField {...props} binding={['x', 'y']} />,
+                size: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
             >
               <Form.Viewport>
@@ -93,7 +92,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             </Form.Root>
           )}
 
-          {sidebar === 'json' && <Json data={{ graph: graph?.graph }} classNames='text-xs' />}
+          {sidebar === 'json' && <Json.Data data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>
       )}
     </div>
@@ -117,7 +116,7 @@ const meta = {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
               ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Type.Entity.Any[]);
+            ] as Type.AnyEntity[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,
