@@ -2,64 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import { type TestContext } from 'vitest';
 
-import { ModelName } from '@dxos/ai';
-import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
+import { type ModelName } from '@dxos/ai';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
-import {
-  AgentHandlers,
-  AgentPrompt,
-  AutomationBlueprint,
-  BlueprintManagerBlueprint,
-  BlueprintManagerHandlers,
-  DatabaseBlueprint,
-  DatabaseHandlers,
-  MemoryBlueprint,
-  WebSearchBlueprint,
-  WebSearchHandlers,
-  WebSearchToolkitOpaque,
-} from '@dxos/assistant-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { type Blueprint, Prompt } from '@dxos/blueprints';
-import { Database, Feed, Obj, Ref, type Type } from '@dxos/echo';
-import { TestHelpers, type TestTag } from '@dxos/effect/testing';
-import { Operation, type OperationHandlerSet } from '@dxos/operation';
+import { type Prompt } from '@dxos/blueprints';
+import { Database, Feed, Ref, type Type } from '@dxos/echo';
+import { TestContextService, TestHelpers, type TestTag } from '@dxos/effect/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;
-
-/**
- * Built-in blueprints shipped by `@dxos/assistant-toolkit` that are not
- * contributed via composer plugins. Always included in the test layer.
- */
-const DEFAULT_TOOLKIT_BLUEPRINTS = (): Blueprint.Blueprint[] => [
-  BlueprintManagerBlueprint.make(),
-  DatabaseBlueprint.make(),
-  WebSearchBlueprint.make(),
-  MemoryBlueprint.make(),
-  AutomationBlueprint.make(),
-];
-
-const DEFAULT_TOOLKIT_HANDLERS: OperationHandlerSet.OperationHandlerSet[] = [
-  AgentHandlers,
-  DatabaseHandlers,
-  BlueprintManagerHandlers,
-  WebSearchHandlers,
-];
-
-/**
- * Blueprints that prompts can reference via `blueprints` without loading any plugin.
- * These mirror {@link DEFAULT_TOOLKIT_BLUEPRINTS} but wrapped as refs for `Prompt.make`.
- */
-export const getDefaultBlueprints = () => [
-  Ref.make(BlueprintManagerBlueprint.make()),
-  Ref.make(DatabaseBlueprint.make()),
-];
 
 const INSTRUCTIONS = trim`
   You are running within a test environment.
@@ -91,56 +51,61 @@ export interface AgentTestOptions {
   testTag?: TestTag;
 
   /**
-   * Real composer plugins to load into the test harness. Blueprints, schemas and
-   * operation handlers contributed by these plugins are harvested and wired into
-   * the agent's runtime — no need to re-import them by hand.
+   * Composer plugins to load into the test harness. All blueprints, schemas,
+   * operation handlers and toolkits are harvested from plugin contributions —
+   * nothing is baked into the harness.
    */
   plugins?: Plugin.Plugin[];
-
-  /**
-   * Extra blueprints to register in addition to the toolkit defaults and any
-   * contributed by plugins.
-   */
-  extraBlueprints?: Blueprint.Blueprint[];
-
-  /**
-   * Extra ECHO types to register in addition to any contributed by plugins.
-   */
-  extraTypes?: Type.AnyEntity[];
-
-  /**
-   * Extra operation handler sets to register in addition to the toolkit defaults
-   * and any contributed by plugins.
-   */
-  extraOperationHandlers?: OperationHandlerSet.OperationHandlerSet[];
 }
 
-type PluginContributions = {
-  blueprints: Blueprint.Blueprint[];
-  types: Type.AnyEntity[];
-  handlers: OperationHandlerSet.OperationHandlerSet[];
+const TestServicesMeta = {
+  id: 'dxos.org/plugin/assistant-e2e-test-services',
+  name: 'AssistantE2ETestServices',
 };
 
-const harvestFromPlugins = (plugins: Plugin.Plugin[]): Effect.Effect<PluginContributions> =>
-  Effect.promise(async () => {
-    if (plugins.length === 0) {
-      return { blueprints: [], types: [], handlers: [] };
-    }
-    await using harness = await createComposerTestApp({
-      plugins,
-      // Skip SetupReactSurface + Startup — node tests only need the
-      // declarative contributions (schemas, blueprints, operation handlers).
-      // Firing SetupReactSurface would pull in browser-only lazy surfaces.
-      autoStart: false,
-    });
-    await harness.fire(AppActivationEvents.SetupSchema);
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    await harness.fire(ActivationEvents.SetupOperationHandler);
-    const blueprints = harness.getAll(AppCapabilities.BlueprintDefinition).map((def) => def.make());
-    const types = harness.getAll(AppCapabilities.Schema).flat();
-    const handlers = harness.getAll(Capabilities.OperationHandler);
-    return { blueprints, types, handlers };
-  });
+interface TestServicesOptions {
+  aiServicePreset: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+  model: ModelName;
+  disableLlmMemoization: boolean;
+  testContext: TestContext;
+}
+
+/**
+ * Contributes the runtime service layer (AI, database, feed, process manager,
+ * tracing, etc.) to the managed runtime that `harness.invoke` uses to run
+ * operations. Domain-level contributions (blueprints, schemas, operation
+ * handlers, toolkits) come from the plugins the caller passes in.
+ */
+const TestServicesPlugin = Plugin.define<TestServicesOptions>(TestServicesMeta).pipe(
+  Plugin.addModule((options: TestServicesOptions) => ({
+    id: 'test-services-layer',
+    activatesOn: ActivationEvents.SetupLayer,
+    activate: () =>
+      Effect.gen(function* () {
+        const schemaArrays = yield* Capability.getAll(AppCapabilities.Schema);
+        const types = (schemaArrays as unknown as Type.AnyEntity[][]).flat();
+        const blueprintDefs = yield* Capability.getAll(AppCapabilities.BlueprintDefinition);
+        const blueprints = blueprintDefs.map((def) => def.make());
+        const toolkits = yield* Capability.getAll(AppCapabilities.Toolkit);
+        const operationHandlers = yield* Capability.getAll(Capabilities.OperationHandler);
+
+        const services = AssistantTestLayer({
+          aiServicePreset: options.aiServicePreset,
+          model: options.model,
+          disableLlmMemoization: options.disableLlmMemoization,
+          operationHandlers,
+          types,
+          blueprints,
+          toolkits,
+        });
+
+        const layer = services.pipe(Layer.provide(Layer.succeed(TestContextService, options.testContext)));
+
+        return Capability.contributes(Capabilities.Layer, layer);
+      }),
+  })),
+  Plugin.make,
+);
 
 export const agentTest: {
   (options: AgentTestOptions, prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
@@ -153,36 +118,48 @@ export const agentTest: {
 
   return Effect.fnUntraced(
     function* (_) {
-      const contributions = yield* harvestFromPlugins(options.plugins ?? []);
+      const testContext = yield* TestContextService;
 
-      const TestLayer = AssistantTestLayer({
+      const servicesPlugin = TestServicesPlugin({
         aiServicePreset: options.inferenceProvider ?? 'edge-remote',
         model,
         disableLlmMemoization: options.disableLlmMemoization ?? false,
-        operationHandlers: [
-          ...DEFAULT_TOOLKIT_HANDLERS,
-          ...contributions.handlers,
-          ...(options.extraOperationHandlers ?? []),
-        ],
-        types: [...contributions.types, ...(options.extraTypes ?? [])],
-        blueprints: [...DEFAULT_TOOLKIT_BLUEPRINTS(), ...contributions.blueprints, ...(options.extraBlueprints ?? [])],
-        toolkits: [WebSearchToolkitOpaque],
+        testContext,
       });
 
-      const program = Effect.gen(function* () {
-        yield* Database.add(prompt);
-        const conversationFeed = Feed.make();
-        yield* Database.add(conversationFeed);
-        yield* Database.flush();
-        const exit = yield* Operation.invoke(
-          AgentPrompt,
-          {
+      const harness = yield* Effect.promise(() =>
+        createComposerTestApp({
+          plugins: [...(options.plugins ?? []), servicesPlugin],
+          autoStart: false,
+        }),
+      );
+
+      const body = Effect.gen(function* () {
+        yield* Effect.promise(async () => {
+          await harness.fire(AppActivationEvents.SetupSchema);
+          await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+          await harness.fire(ActivationEvents.SetupOperationHandler);
+          await harness.fire(ActivationEvents.Startup);
+        });
+
+        const runtime = harness.get(Capabilities.ManagedRuntime);
+        yield* Effect.promise(() =>
+          runtime.runPromise(
+            Effect.gen(function* () {
+              yield* Database.add(prompt);
+              yield* Database.add(Feed.make());
+              yield* Database.flush();
+            }) as any,
+          ),
+        );
+
+        const exit = yield* Effect.tryPromise(() =>
+          harness.invoke(AgentPrompt, {
             prompt: Ref.make(prompt),
             input: {},
             systemInstructions: INSTRUCTIONS,
             model,
-          },
-          { conversation: Obj.getDXN(conversationFeed).toString() },
+          }),
         ).pipe(Effect.exit);
 
         if (options.expect === 'failure') {
@@ -194,7 +171,7 @@ export const agentTest: {
         }
       });
 
-      yield* program.pipe(Effect.provide(TestLayer));
+      yield* body.pipe(Effect.ensuring(Effect.promise(() => harness.dispose())));
     },
     TestHelpers.provideTestContext,
     options.testTag ? TestHelpers.taggedTest(options.testTag) : Function.identity,

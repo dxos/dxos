@@ -10,6 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { AssistantTestFixturePlugin } from './fixture-plugin';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -17,7 +18,13 @@ describe('Local AI', () => {
   it.effect(
     'create and query database objects',
     agentTest(
-      { model: 'gpt-oss:20b', inferenceProvider: 'ollama', disableLlmMemoization: true, testTag: 'llm' },
+      {
+        model: 'gpt-oss:20b',
+        inferenceProvider: 'ollama',
+        disableLlmMemoization: true,
+        testTag: 'llm',
+        plugins: [AssistantTestFixturePlugin()],
+      },
       Prompt.make({
         instructions: trim`
           Create a new organization called "Cyberdyne Systems".
