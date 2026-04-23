@@ -13,7 +13,7 @@ import { AppCapabilities } from './capabilities';
 import { type Resource } from './translations';
 
 type PluginModuleOptions = Partial<
-  Pick<Plugin$.PluginModuleOptions, 'id' | 'activatesOn' | 'activatesBefore' | 'activatesAfter'>
+  Pick<Plugin$.PluginModuleOptions, 'id' | 'activatesOn' | 'firesBeforeActivation' | 'firesAfterActivation'>
 > &
   Pick<Plugin$.PluginModuleOptions, 'activate'>;
 
@@ -32,8 +32,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'app-graph-builder',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupAppGraph,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -51,8 +51,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: options?.id ?? 'translations',
       activatesOn: options?.activatesOn ?? AppActivationEvents.SetupTranslations,
-      activatesBefore: options?.activatesBefore,
-      activatesAfter: options?.activatesAfter,
+      firesBeforeActivation: options?.firesBeforeActivation,
+      firesAfterActivation: options?.firesAfterActivation,
       activate: Effect.fnUntraced(function* () {
         return Capability$.contributes(
           AppCapabilities.Translations,
@@ -75,8 +75,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: options.id ?? 'metadata',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: Effect.fnUntraced(function* () {
         return (Array.isArray(options.metadata) ? options.metadata : [options.metadata]).map((m) =>
           Capability$.contributes(AppCapabilities.Metadata, m),
@@ -96,8 +96,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'settings',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupSettings,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -113,8 +113,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'blueprint-definition',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupArtifactDefinition,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -132,8 +132,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: options.id ?? 'schema',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: Effect.fnUntraced(function* () {
         return Capability$.contributes(AppCapabilities.Schema, options.schema);
       }),
@@ -153,8 +153,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: options.id ?? 'cli-commands',
       activatesOn: options.activatesOn ?? ActivationEvents.Startup,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: Effect.fnUntraced(function* () {
         return options.commands.map((cmd) => Capability$.contributes(Capabilities.Command, cmd));
       }),
@@ -172,8 +172,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
       activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -189,8 +189,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-context',
       activatesOn: options.activatesOn ?? ActivationEvents.Startup,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -206,8 +206,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-root',
       activatesOn: options.activatesOn ?? ActivationEvents.Startup,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -223,8 +223,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
       activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -245,8 +245,8 @@ export namespace AppPlugin {
         return {
           id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
           activatesOn: resolved.activatesOn ?? ActivationEvents.OperationInvokerReady,
-          activatesBefore: resolved.activatesBefore,
-          activatesAfter: resolved.activatesAfter,
+          firesBeforeActivation: resolved.firesBeforeActivation,
+          firesAfterActivation: resolved.firesAfterActivation,
           activate: resolved.activate,
         };
       });
@@ -254,8 +254,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-handler',
       activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }
@@ -271,8 +271,8 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'surfaces',
       activatesOn: options.activatesOn ?? ActivationEvents.SetupReactSurface,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
     });
   }

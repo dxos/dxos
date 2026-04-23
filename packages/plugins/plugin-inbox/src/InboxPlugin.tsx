@@ -122,7 +122,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'inbox-settings',
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [InboxEvents.SettingsReady],
+    firesAfterActivation: [InboxEvents.SettingsReady],
     activate: InboxSettings,
   }),
   Plugin.addModule({
