@@ -9,6 +9,8 @@ import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { type Subscription } from '#types';
 
+import { formatDate } from '../../util/format-date';
+
 export type ArticleReaderProps = {
   post: Subscription.Post | undefined;
   onOpenChange: (open: boolean) => void;
@@ -50,15 +52,4 @@ export const ArticleReader = ({ post, onOpenChange }: ArticleReaderProps) => {
       </Dialog.Overlay>
     </Dialog.Root>
   );
-};
-
-const formatDate = (iso?: string): string | undefined => {
-  if (!iso) {
-    return undefined;
-  }
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return undefined;
-  }
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };

@@ -44,13 +44,20 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
       }
 
       if (added.length > 0) {
+        let appended = 0;
         Obj.change(magazine, (magazine) => {
           const mutable = magazine as Obj.Mutable<typeof magazine>;
-          mutable.posts = [...mutable.posts, ...added];
+          const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
+          const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
+          if (fresh.length > 0) {
+            mutable.posts = [...mutable.posts, ...fresh];
+          }
+          appended = fresh.length;
         });
+        return { added: appended };
       }
 
-      return { added: added.length };
+      return { added: 0 };
     }),
   ),
 );

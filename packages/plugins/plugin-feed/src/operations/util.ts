@@ -14,7 +14,7 @@ import { type Magazine, Subscription } from '../types';
  */
 export const collectCandidates = (magazine: Magazine.Magazine) =>
   Effect.gen(function* () {
-    const curatedIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
+    const seenPostIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
     const candidates: Array<{ post: Subscription.Post; feed: Subscription.Feed }> = [];
     for (const feedRef of magazine.feeds) {
       const feed = yield* Database.load(feedRef);
@@ -25,9 +25,10 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
       for (const post of posts) {
         const postDxn = Obj.getDXN(post).toString();
-        if (curatedIds.has(postDxn)) {
+        if (seenPostIds.has(postDxn)) {
           continue;
         }
+        seenPostIds.add(postDxn);
         candidates.push({ post, feed });
       }
     }

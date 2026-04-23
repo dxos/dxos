@@ -413,15 +413,27 @@ test T-3: Curate button disabled without feeds
 ```
 
 ```mdl
-test T-4: Curate flow runs sync then agent
+test T-4: Curate flow runs sync then deterministic curation
   given: a Magazine with two referenced feeds, each with unsynced remote posts
   when: user clicks Curate
   then:
     - SyncFeed invoked once per referenced feed
-    - After all SyncFeed calls resolve, MagazineBlueprint agent is invoked
-    - Agent calls ListCandidatePosts, FetchArticleContent, AddPostToMagazine in that order
-    - Magazine.posts grows by the agent-selected count
+    - After all SyncFeed calls resolve, CurateMagazine operation is invoked
+    - Magazine.posts grows by the count returned from CurateMagazine
     - Button returns to idle
+```
+
+```mdl
+test T-4a: Agent curation via blueprint
+  given: a chat referencing a Magazine whose MagazineBlueprint is active
+  when: the agent is prompted to curate the magazine
+  then:
+    - Agent calls ListCandidatePosts, FetchArticleContent, AddPostToMagazine
+    - Magazine.posts grows by the agent-selected count
+  note: >
+    The blueprint path is distinct from the Curate button (T-4). The button
+    runs the deterministic CurateMagazine op; agents invoke the fine-grained
+    tools through chat.
 ```
 
 ```mdl
@@ -429,8 +441,8 @@ test T-5: Partial feed sync failure is non-fatal
   given: a Magazine with two feeds; one feed's URL returns 500
   when: user clicks Curate
   then:
-    - Agent still invoked with posts from the successful feed
-    - Toast summary mentions the failed feed
+    - CurateMagazine still runs against posts from the successful feed
+    - Error surfaced via a localized message in the status bar
 ```
 
 ```mdl

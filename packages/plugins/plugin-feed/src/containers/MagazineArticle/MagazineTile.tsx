@@ -8,20 +8,11 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Subscription } from '#types';
 
+import { formatDate } from '../../util/format-date';
+
 export type MagazineTileProps = {
   post: Subscription.Post;
   onOpen?: (post: Subscription.Post) => void;
-};
-
-const formatDate = (iso?: string): string | undefined => {
-  if (!iso) {
-    return undefined;
-  }
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return undefined;
-  }
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 export const MagazineTile = ({ post, onOpen }: MagazineTileProps) => {
@@ -51,8 +42,8 @@ export const MagazineTile = ({ post, onOpen }: MagazineTileProps) => {
       {metaParts.length > 0 && <div className='text-xs text-subdued'>{metaParts.join(' · ')}</div>}
       {tags.length > 0 && (
         <div className='flex flex-wrap gap-1'>
-          {tags.map((tag) => (
-            <span key={tag} className='text-xs bg-modalSurface px-2 py-0.5 rounded-full'>
+          {tags.map((tag, index) => (
+            <span key={`${index}-${tag}`} className='text-xs bg-modalSurface px-2 py-0.5 rounded-full'>
               #{tag}
             </span>
           ))}

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -30,6 +31,16 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
   const [error, setError] = useState<string>();
   const [readerPost, setReaderPost] = useState<Subscription.Post>();
 
+  // Kick off load for any Post refs that aren't yet resolved so `ref.target`
+  // becomes populated reactively on the next render cycle.
+  useEffect(() => {
+    for (const ref of subject.posts) {
+      if (!ref.target) {
+        void ref.load().catch((err) => log.catch(err));
+      }
+    }
+  }, [subject.posts]);
+
   const posts = useMemo(() => {
     const resolved: Subscription.Post[] = [];
     for (const ref of subject.posts) {
@@ -52,7 +63,8 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
         subject.feeds.map(async (ref) => {
           try {
             return await ref.load();
-          } catch {
+          } catch (err) {
+            log.catch(err);
             return undefined;
           }
         }),
@@ -65,11 +77,12 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
       setState('curating');
       await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
     } catch (err) {
-      setError(String(err));
+      log.catch(err);
+      setError(t('curate-error.message'));
     } finally {
       setState('idle');
     }
-  }, [state, subject, invokePromise]);
+  }, [state, subject, invokePromise, t]);
 
   const handleOpen = useCallback((post: Subscription.Post) => {
     setReaderPost(post);
@@ -80,6 +93,8 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
       });
     }
   }, []);
+
+  const tileItems = useMemo(() => posts.map((post) => ({ post, onOpen: handleOpen })), [posts, handleOpen]);
 
   const handleReaderOpenChange = useCallback((open: boolean) => {
     if (!open) {
@@ -119,10 +134,7 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
           </div>
         ) : (
           <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content
-              items={posts.map((post) => ({ post, onOpen: handleOpen }))}
-              getId={(data) => Obj.getDXN(data.post).toString()}
-            />
+            <Masonry.Content items={tileItems} getId={(data) => Obj.getDXN(data.post).toString()} />
           </Masonry.Root>
         )}
       </Panel.Content>
