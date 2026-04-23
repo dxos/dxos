@@ -51,6 +51,11 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                     >
                       <Icon
                         size={4}
+                        classNames={mx(
+                          process.state === Process.State.RUNNING && 'animate-spin',
+                          process.state === Process.State.FAILED && 'text-error-text',
+                          process.state === Process.State.SUCCEEDED && 'text-success-text',
+                        )}
                         icon={Match.value(process.state).pipe(
                           Match.when(Process.State.RUNNING, () => 'ph--spinner-gap--regular'),
                           Match.when(Process.State.SUCCEEDED, () => 'ph--check-circle--regular'),
@@ -61,17 +66,13 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                           Match.when(Process.State.TERMINATED, () => 'ph--x-circle--regular'),
                           Match.orElse(() => 'ph--spinner-gap--regular'),
                         )}
-                        classNames={mx(
-                          process.state === Process.State.RUNNING && 'animate-spin',
-                          process.state === Process.State.FAILED && 'text-error-text',
-                          process.state === Process.State.SUCCEEDED && 'text-success-text',
-                        )}
                       />
                       <div role='none' className='flex items-center gap-2 text-xs overflow-hidden'>
-                        <span className='text-description'>{process.params.name}</span>
-                        {activeChildren.length > 0 && (
+                        {/* TODO(burdon): Name is too long (and not informative). */}
+                        <span className='truncate text-description'>{process.params.name}</span>
+                        {/* {activeChildren.length > 0 && (
                           <span className='text-xs text-description ml-1'>{activeChildren[0].params.name}</span>
-                        )}
+                        )} */}
                       </div>
                     </Treegrid.Cell>
                   </Treegrid.Row>

@@ -25,7 +25,7 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
     () =>
       Markdown.make({
         name: random.lorem.words(3),
-        content: random.lorem.paragraphs(5),
+        content: '# Title\n' + random.lorem.paragraphs(5),
       }),
     [],
   );

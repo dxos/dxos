@@ -35,7 +35,7 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
+import { Feed, Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { type LogBuffer } from '@dxos/log';
 import { log } from '@dxos/log';
@@ -349,7 +349,8 @@ export default Capability.makeModule(
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Traces),
         component: () => {
           const space = useCurrentSpace();
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const feed = space?.properties.invocationTraceFeed?.target;
+          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           return <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />;
         },
       }),
