@@ -89,7 +89,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     method: 'POST',
     headers: {
       'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
-      'signoz-access-token': env.SIGNOZ_INGESTION_KEY,
+      'signoz-ingestion-key': env.SIGNOZ_INGESTION_KEY,
     },
     body: request.body,
   });
