@@ -12,48 +12,27 @@ No memoized conversation found for the given prompt.
 Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 ```
 
+## Credentials
+
+The default inference preset is `edge-remote`, which proxies to Anthropic through `https://ai-service.dxos.workers.dev` and **requires no API key or credentials**. Just run the tests with `ALLOW_LLM_GENERATION=1`.
+
+**Never run `1p-credentials` or any 1Password command.** It triggers an interactive auth prompt. If a test explicitly needs a different provider and fails without credentials, stop and ask the user — do not try to load from 1Password.
+
 ## Regenerate all memoized-llm caches
 
-1. **Check if `ANTHROPIC_API_KEY` is already in env with a non-empty value**. Memoized LLM tests in this repo only need `ANTHROPIC_API_KEY` (including `edge-remote` preset, which proxies to Anthropic). Most harnesses (Cursor Cloud, CI, devcontainers, local shells with `.envrc`) already inject it. Some harnesses set the variable to an empty string, so presence of the name is not enough — check the value length:
+```bash
+ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'
+```
 
-   ```bash
-   env | grep -E '^ANTHROPIC_API_KEY=' | awk -F= '{print "len=" length($2)}'
-   # or: test -n "$ANTHROPIC_API_KEY" && echo set || echo empty
-   ```
-
-   **If `ANTHROPIC_API_KEY` is non-empty, DO NOT run `1p-credentials` — it triggers a 1Password auth prompt that interrupts the user unnecessarily.** Skip straight to step 3.
-
-2. **Only if `ANTHROPIC_API_KEY` is missing or empty**, load it from 1Password:
-
-   ```fish
-   eval (pnpm -ws 1p-credentials)
-   ```
-
-   (In bash/zsh, use the equivalent way to load 1Password credentials for the workspace. If multiple 1Password accounts are configured, prefix with `OP_ACCOUNT=<your-account>`.)
-
-3. **Run tests with generation enabled**:
-
-   ```bash
-   ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'
-   ```
-
-4. **Commit updated conversation files** (e.g. `*.conversations.json`).
+Then commit the updated `*.conversations.json` files.
 
 ## Regenerate one package
 
-To refresh cache for a single package, run that package's tests with generation enabled. Check env first; only run `1p-credentials` if `ANTHROPIC_API_KEY` is missing or empty (to avoid interrupting the user with a 1Password prompt):
-
 ```bash
-# Check env first; if ANTHROPIC_API_KEY has a non-empty value, skip the 1p step entirely.
-env | grep -E '^ANTHROPIC_API_KEY=' | awk -F= '{print "len=" length($2)}'
-
-# Only if missing or empty — otherwise skip this line:
-eval "$(pnpm -ws 1p-credentials)"
-
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
 
-Packages that use memoized-llm (tag in `moon.yml`) include: `ai`, `assistant`, `assistant-toolkit`, `plugin-markdown`.
+Packages that use memoized-llm (tag in `moon.yml`) include: `ai`, `assistant`, `assistant-toolkit`, `assistant-e2e`, `plugin-markdown`.
 
 Example for `assistant-toolkit` only:
 
@@ -66,3 +45,4 @@ ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test
 - Conversation files live next to tests, e.g. `session.conversations.json` next to `session.test.ts`.
 - Only run with `ALLOW_LLM_GENERATION=1` when you intend to update the cache; it uses real LLM calls and writes to the repo.
 - After regenerating, commit the changed `*.conversations.json` files so CI and others use the new cache.
+- The test suite in a file shares a PRNG seed (via `Obj.ID.dangerouslyDisableRandomness()`), so regenerate the entire file — not just the failing test — to keep cached conversations coherent.

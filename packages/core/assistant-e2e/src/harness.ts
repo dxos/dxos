@@ -14,8 +14,9 @@ import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { type Prompt } from '@dxos/blueprints';
-import { Database, Feed, Ref, type Type } from '@dxos/echo';
+import { Database, Ref, type Type } from '@dxos/echo';
 import { TestContextService, TestHelpers, type TestTag } from '@dxos/effect/testing';
+import { Operation } from '@dxos/operation';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { trim } from '@dxos/util';
 
@@ -143,23 +144,19 @@ export const agentTest: {
         });
 
         const runtime = harness.get(Capabilities.ManagedRuntime);
-        yield* Effect.promise(() =>
+        const exit = yield* Effect.tryPromise(() =>
           runtime.runPromise(
             Effect.gen(function* () {
               yield* Database.add(prompt);
-              yield* Database.add(Feed.make());
               yield* Database.flush();
+              return yield* Operation.invoke(AgentPrompt, {
+                prompt: Ref.make(prompt),
+                input: {},
+                systemInstructions: INSTRUCTIONS,
+                model,
+              });
             }) as any,
           ),
-        );
-
-        const exit = yield* Effect.tryPromise(() =>
-          harness.invoke(AgentPrompt, {
-            prompt: Ref.make(prompt),
-            input: {},
-            systemInstructions: INSTRUCTIONS,
-            model,
-          }),
         ).pipe(Effect.exit);
 
         if (options.expect === 'failure') {
