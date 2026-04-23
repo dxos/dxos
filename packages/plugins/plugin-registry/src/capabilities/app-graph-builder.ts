@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
@@ -51,14 +50,14 @@ export default Capability.makeModule(
               },
               nodes: [
                 Node.make({
-                  id: registryCategoryId('all'),
+                  id: registryCategoryId('official'),
                   type: 'category',
-                  data: registryCategoryId('all'),
+                  data: registryCategoryId('official'),
                   properties: {
-                    label: ['all-plugins.label', { ns: meta.id }],
+                    label: ['official-plugins.label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
                     key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.all',
+                    testId: 'pluginRegistry.official',
                   },
                 }),
                 Node.make({
@@ -94,15 +93,24 @@ export default Capability.makeModule(
                     testId: 'pluginRegistry.labs',
                   },
                 }),
+                Node.make({
+                  id: registryCategoryId('community'),
+                  type: 'category',
+                  data: registryCategoryId('community'),
+                  properties: {
+                    label: ['community-plugins.label', { ns: meta.id }],
+                    icon: 'ph--users-three--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.community',
+                  },
+                }),
               ],
             }),
           ]),
       }),
       GraphBuilder.createExtension({
         id: 'actions',
-        match: NodeMatcher.whenAny(NodeMatcher.whenId(`root/${REGISTRY_ID}`), (node) =>
-          node.properties.key === REGISTRY_KEY ? Option.some(node) : Option.none(),
-        ),
+        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         actions: () =>
           Effect.succeed([
             {

@@ -33,7 +33,6 @@
       "@dxos/plugin-debug": ["packages/plugins/plugin-debug/src/index.ts"],
       "@dxos/plugin-deck": ["packages/plugins/plugin-deck/src/index.ts"],
       "@dxos/plugin-deck/types": ["packages/plugins/plugin-deck/src/types/index.ts"],
-      "@dxos/plugin-excalidraw": ["packages/plugins/plugin-excalidraw/src/index.ts"],
       "@dxos/plugin-explorer": ["packages/plugins/plugin-explorer/src/index.ts"],
       "@dxos/plugin-explorer/meta": ["packages/plugins/plugin-explorer/src/meta.ts"],
       "@dxos/plugin-explorer/types": ["packages/plugins/plugin-explorer/src/types/index.ts"],
