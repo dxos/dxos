@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -24,10 +25,25 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     }
   }, [post.link]);
 
+  const handleMarkUnread = useCallback(() => {
+    Obj.change(post, (post) => {
+      const mutable = post as Obj.Mutable<typeof post>;
+      mutable.readAt = undefined;
+    });
+  }, [post]);
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
+          {post.readAt && (
+            <Toolbar.IconButton
+              label={t('mark-unread.label')}
+              icon='ph--envelope--regular'
+              iconOnly
+              onClick={handleMarkUnread}
+            />
+          )}
           {post.link && (
             <Toolbar.IconButton
               label={t('open-original.label')}
@@ -43,7 +59,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
           <h1 className='text-xl font-semibold'>{post.title ?? t('post-title.placeholder')}</h1>
           {metaLine && <div className='text-xs text-subdued'>{metaLine}</div>}
           {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' />}
-          {post.snippet && <p className='text-sm whitespace-pre-wrap'>{post.snippet}</p>}
+          {post.snippet && <p className='whitespace-pre-wrap'>{post.snippet}</p>}
         </article>
       </Panel.Content>
     </Panel.Root>

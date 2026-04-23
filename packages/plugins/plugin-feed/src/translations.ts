@@ -55,6 +55,7 @@ export const translations = [
         'post-companion.label': 'Post',
         'post-title.placeholder': 'Untitled',
         'open-original.label': 'Open original',
+        'mark-unread.label': 'Mark as unread',
         'close.label': 'Close',
       },
     },
