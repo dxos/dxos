@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 export type SnippetOptions = {
-  /** Maximum height of the editor in pixels. Content is clipped to whole lines within this height. */
+  /** Maximum height of the editor in pixels. Overflowing content is hidden. */
   height: number;
   /** Zoom factor applied to the editor (e.g. 0.5 renders at 50%). @default 1 */
   scale?: number;
@@ -14,8 +14,8 @@ export type SnippetOptions = {
 
 /**
  * CodeMirror extension for rendering a non-scrollable snippet of editor content.
- * Constrains the editor to the given height, clips to whole line boundaries,
- * and disables scrolling entirely.
+ * Constrains the editor to the given height via CSS `max-height`, wraps long
+ * lines (`pre-wrap`), and disables scrolling entirely.
  *
  * NOTE: Uses CSS `zoom` rather than `transform: scale` because `zoom` affects
  * layout, so line wrapping fills the full visual width of the container.

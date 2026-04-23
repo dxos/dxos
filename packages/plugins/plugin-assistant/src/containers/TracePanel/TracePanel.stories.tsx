@@ -144,11 +144,10 @@ const createStoryRuntime = (space: Space): StoryRuntime => {
 // Story component.
 //
 
-let invokeCounter = 0;
-
 const DefaultStory = () => {
   const [space] = useSpaces();
   const runtimeRef = useRef<StoryRuntime | null>(null);
+  const invokeCounterRef = useRef(0);
 
   useEffect(() => {
     if (!space) {
@@ -169,7 +168,7 @@ const DefaultStory = () => {
       return;
     }
 
-    const scenarioIndex = invokeCounter++;
+    const scenarioIndex = invokeCounterRef.current++;
     void runtime.runPromise(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.ProcessManagerService;
