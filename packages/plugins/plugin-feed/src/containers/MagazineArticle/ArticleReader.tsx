@@ -23,17 +23,24 @@ export const ArticleReader = ({ post, onOpenChange }: ArticleReaderProps) => {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Overlay>
-        <Dialog.Content>
+        <Dialog.Content classNames='md:max-is-prose'>
           {post && (
             <>
-              <Dialog.Title>{post.title ?? t('post-title.placeholder')}</Dialog.Title>
-              {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-64' />}
-              {post.author || post.published ? (
-                <div className='text-xs text-subdued'>
-                  {[post.author, formatDate(post.published)].filter(Boolean).join(' · ')}
-                </div>
-              ) : null}
-              {post.snippet && <p className='text-sm whitespace-pre-wrap'>{post.snippet}</p>}
+              <Dialog.Header>
+                <Dialog.Title>{post.title ?? t('post-title.placeholder')}</Dialog.Title>
+                <Dialog.Close asChild>
+                  <Dialog.CloseIconButton />
+                </Dialog.Close>
+              </Dialog.Header>
+              <Dialog.Body classNames='flex flex-col gap-3'>
+                {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-64' />}
+                {(post.author || post.published) && (
+                  <div className='text-xs text-subdued'>
+                    {[post.author, formatDate(post.published)].filter(Boolean).join(' · ')}
+                  </div>
+                )}
+                {post.snippet && <p className='text-sm whitespace-pre-wrap'>{post.snippet}</p>}
+              </Dialog.Body>
               <Dialog.ActionBar>
                 {post.link && (
                   <Button asChild>
@@ -43,7 +50,7 @@ export const ArticleReader = ({ post, onOpenChange }: ArticleReaderProps) => {
                   </Button>
                 )}
                 <Dialog.Close asChild>
-                  <Button>{t('close.label')}</Button>
+                  <Button variant='primary'>{t('close.label')}</Button>
                 </Dialog.Close>
               </Dialog.ActionBar>
             </>

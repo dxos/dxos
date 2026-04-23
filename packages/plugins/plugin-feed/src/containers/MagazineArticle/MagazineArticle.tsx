@@ -62,7 +62,12 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
       const feeds = await Promise.all(
         subject.feeds.map(async (ref) => {
           try {
-            return await ref.load();
+            const feed = await ref.load();
+            // Also load the nested ECHO feed ref so SyncFeed finds a resolved backing feed.
+            if (feed.feed) {
+              await feed.feed.load();
+            }
+            return feed;
           } catch (err) {
             log.catch(err);
             return undefined;
