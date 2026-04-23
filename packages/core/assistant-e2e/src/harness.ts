@@ -165,11 +165,7 @@ export const agentTest: {
           ...(options.extraOperationHandlers ?? []),
         ],
         types: [...contributions.types, ...(options.extraTypes ?? [])],
-        blueprints: [
-          ...DEFAULT_TOOLKIT_BLUEPRINTS(),
-          ...contributions.blueprints,
-          ...(options.extraBlueprints ?? []),
-        ],
+        blueprints: [...DEFAULT_TOOLKIT_BLUEPRINTS(), ...contributions.blueprints, ...(options.extraBlueprints ?? [])],
         toolkits: [WebSearchToolkitOpaque],
       });
 
