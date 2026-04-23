@@ -105,26 +105,26 @@ component MagazineArticle
   state:
     running: boolean                # Curate flow in progress
     phase?: 'syncing' | 'curating'  # shown as button tooltip while running
-    selectedPost?: Post             # when set, PostArticle renders in the detail column
   slots:
     header?: ReactNode
   actions:
     curate()                        # run syncFeeds → invoke CurateMagazine
-    openPost(post: Post)            # set selectedPost + sets post.readAt if unset
-    closeDetail()                   # clear selectedPost
+    openPost(post: Post)            # sets post.readAt if unset; dispatches useShowItem (plugin-deck)
   emits:
     onCurateComplete(added: number)
   layout: |
-    ┌────────────────────────────────┬────────────────────┐
-    │ [header slot]        [✨ Curate]│                    │
-    ├────────────────────────────────┤ PostArticle        │
-    │ ┌─────┐ ┌─────┐ ┌─────┐        │ (when a tile is    │
-    │ │tile │ │tile │ │tile │        │  selected; hidden  │
-    │ └─────┘ └─────┘ └─────┘        │  otherwise)        │
-    │ ┌─────┐ ┌─────┐                │                    │
-    │ │tile │ │tile │                │                    │
-    │ └─────┘ └─────┘                │                    │
-    └────────────────────────────────┴────────────────────┘
+    ┌─────────────────────────────────────────────┐
+    │ [header slot]                 [✨ Curate]   │
+    ├─────────────────────────────────────────────┤
+    │ ┌─────┐ ┌─────┐ ┌─────┐                     │
+    │ │tile │ │tile │ │tile │   (Masonry grid)    │
+    │ └─────┘ └─────┘ └─────┘                     │
+    │ ┌─────┐ ┌─────┐                             │
+    │ │tile │ │tile │                             │
+    │ └─────┘ └─────┘                             │
+    └─────────────────────────────────────────────┘
+    PostArticle is rendered by the host layout (complementary drawer,
+    sibling plank, or deck companion) — not composed inline.
 ```
 
 ```mdl
@@ -154,23 +154,22 @@ component PostArticle
   desc: >
     Independent article surface for a single Post. Registered as a React
     surface matching `object(Article, Subscription.Post)` so it can render
-    in any article/companion context. Intentionally not a Panel or Dialog
-    — a plain content block that composes cleanly as the detail pane of a
-    master-detail view.
+    in any article/companion context — the complementary sidebar in
+    'simple' mode, a sibling plank in 'multi' mode, or the deck companion
+    in the default 'deck' mode.
 
-    The MagazineArticle container renders PostArticle inline in a right-
-    hand detail column when a tile is clicked. post.readAt is set by the
-    master (MagazineArticle) when the tile is opened, not by PostArticle
-    itself.
+    Panel-based layout with a toolbar; the "Open original" link lives in
+    the toolbar so it's always accessible. post.readAt is set by the
+    master (MagazineArticle) when the tile is opened, not by PostArticle.
   props:
     post: Post                      # via Surface data.subject
   layout: |
     ┌───────────────────────────────────────┐
-    │ Title                                 │
+    │ Title                 [Open original] │  ← toolbar
+    ├───────────────────────────────────────┤
     │ Author · Date                         │
     │ [hero image]                          │
     │ Snippet                               │
-    │ [Open original ↗]                     │
     └───────────────────────────────────────┘
 ```
 
@@ -358,27 +357,40 @@ feat F-5: Masonry Display
 ```
 
 ```mdl
-feat F-6: Post Article Detail (master-detail)
-  desc: Post detail is rendered by a standalone PostArticle surface shown
-        alongside the masonry grid as the detail pane.
+feat F-6: Post Article Detail (master-detail via layout dispatch)
+  desc: Post detail is rendered by a standalone PostArticle surface. The
+        master (MagazineArticle) does not compose the detail inline;
+        instead it asks the deck's `useShowItem` to select the post and
+        route the detail to the appropriate place for the current
+        layout mode (complementary drawer / sibling plank / companion).
 
   req F-6.1: PostArticle is registered as a React surface matching
-             `object(Article, Subscription.Post)` and is usable outside
-             the MagazineArticle context.
-  req F-6.2: PostArticle is implemented as a plain content block — no
-             Panel wrapper, no Dialog/overlay.
-  req F-6.3: PostArticle shows title, author, date, hero image, snippet,
-             and an 'Open original' link to `post.link`.
-  req F-6.4:
+             `object(Article, Subscription.Post)` — usable anywhere an
+             article for a Post is requested.
+  req F-6.2: PostArticle is a Panel with a Toolbar. The 'Open original'
+             link lives in the toolbar. Body shows metadata, hero image,
+             and snippet.
+  req F-6.3:
     when: user clicks a tile in MagazineArticle
-    then: selectedPost state updates and PostArticle renders in the
-          right-hand detail column via Surface.Surface(type=Article, data={subject: post})
+    then:
+      - post.readAt is set to the current ISO timestamp if unset
+      - useShowItem is invoked with:
+          contextId = magazine attendableId
+          selectionId = post.id
+          companion = linkedSegment('post')
+          path = getObjectPathFromObject(post)
+  req F-6.4:
+    when: useShowItem is invoked in 'simple' layout mode
+    then: the complementary sidebar opens on linkedSegment('post')
   req F-6.5:
-    when: the detail column is visible
-    then: a close button (×) in the column header clears selectedPost
+    when: useShowItem is invoked in 'multi' layout mode
+    then: a sibling plank opens for the post's path, pivoted on the magazine
   req F-6.6:
-    when: selectedPost is cleared
-    then: the detail column collapses and the masonry takes the full width
+    when: useShowItem is invoked in the default ('deck') layout mode
+    then: the current plank's companion changes to linkedSegment('post')
+  req F-6.7: An app-graph extension under each Magazine node exposes a
+             companion node for linkedSegment('post') whose data resolves
+             to the currently-selected Post from magazine.posts.
 ```
 
 ```mdl

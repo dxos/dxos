@@ -4,14 +4,16 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { getObjectPathFromObject } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { useShowItem } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
@@ -19,17 +21,18 @@ import { type Magazine, type Subscription } from '#types';
 
 import { MagazineTile } from './MagazineTile';
 
-export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
-
 type CurateState = 'idle' | 'syncing' | 'curating';
 
-export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
+export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
+
+export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const showItem = useShowItem();
   useObject(subject);
+  const id = attendableId ?? Obj.getDXN(subject).toString();
   const [state, setState] = useState<CurateState>('idle');
   const [error, setError] = useState<string>();
-  const [selectedPost, setSelectedPost] = useState<Subscription.Post>();
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle.
@@ -92,17 +95,23 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
     }
   }, [state, subject, invokePromise, t]);
 
-  const handleOpen = useCallback((post: Subscription.Post) => {
-    setSelectedPost(post);
-    if (!post.readAt) {
-      Obj.change(post, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
-        mutable.readAt = new Date().toISOString();
+  const handleOpen = useCallback(
+    (post: Subscription.Post) => {
+      if (!post.readAt) {
+        Obj.change(post, (post) => {
+          const mutable = post as Obj.Mutable<typeof post>;
+          mutable.readAt = new Date().toISOString();
+        });
+      }
+      void showItem({
+        contextId: id,
+        selectionId: post.id,
+        companion: linkedSegment('post'),
+        path: getObjectPathFromObject(post),
       });
-    }
-  }, []);
-
-  const handleCloseDetail = useCallback(() => setSelectedPost(undefined), []);
+    },
+    [id, showItem],
+  );
 
   const tileItems = useMemo(() => posts.map((post) => ({ post, onOpen: handleOpen })), [posts, handleOpen]);
 
@@ -132,50 +141,21 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <div className={mx('grid h-full w-full', selectedPost && 'md:grid-cols-[1fr_minmax(20rem,28rem)]')}>
-          <div className='min-h-0 overflow-hidden'>
-            {posts.length === 0 ? (
-              <div className='flex items-center justify-center h-full text-subdued text-sm'>
-                {t('empty-magazine.message')}
-              </div>
-            ) : (
-              <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-                <Masonry.Content
-                  items={tileItems}
-                  getId={(data) => Obj.getDXN(data.post).toString()}
-                  thin
-                  centered
-                  padding
-                />
-              </Masonry.Root>
-            )}
+        {posts.length === 0 ? (
+          <div className='flex items-center justify-center h-full text-subdued text-sm'>
+            {t('empty-magazine.message')}
           </div>
-          {selectedPost && (
-            <div className='relative hidden md:flex flex-col min-h-0 overflow-hidden border-is border-separator'>
-              <div className='flex items-center justify-end p-1'>
-                <IconButton
-                  icon='ph--x--regular'
-                  iconOnly
-                  label={t('close.label')}
-                  onClick={handleCloseDetail}
-                  variant='ghost'
-                />
-              </div>
-              <div className='flex-1 min-h-0 overflow-hidden'>
-                <Surface.Surface
-                  type={AppSurface.Article}
-                  data={
-                    {
-                      subject: selectedPost,
-                      attendableId: Obj.getDXN(selectedPost).toString(),
-                    } satisfies AppSurface.ObjectArticleData
-                  }
-                  limit={1}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        ) : (
+          <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
+            <Masonry.Content
+              items={tileItems}
+              getId={(data) => Obj.getDXN(data.post).toString()}
+              thin
+              centered
+              padding
+            />
+          </Masonry.Root>
+        )}
       </Panel.Content>
       {error && (
         <Panel.Statusbar>

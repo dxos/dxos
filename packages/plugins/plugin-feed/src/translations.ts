@@ -52,6 +52,7 @@ export const translations = [
         'no-feeds.label': 'Add at least one feed first',
         'empty-magazine.message': 'No articles yet. Add feeds and press Curate.',
         'curate-error.message': 'Failed to curate magazine.',
+        'post-companion.label': 'Post',
         'post-title.placeholder': 'Untitled',
         'open-original.label': 'Open original',
         'close.label': 'Close',
