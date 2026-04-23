@@ -88,9 +88,7 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
         ? trim`
         <additional_research_sources>
           The following pluggable research sources are currently registered:
-          ${researchSources
-            .map((source) => `- ${source.id}: ${source.description}`)
-            .join('\n          ')}
+          ${researchSources.map((source) => `- ${source.id}: ${source.description}`).join('\n          ')}
           Prefer their tools for their respective domains when appropriate.
         </additional_research_sources>
       `

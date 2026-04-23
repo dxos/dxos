@@ -63,7 +63,7 @@ describe('extractContactFromMessage', () => {
         "Rich!  So nice to hear from you.  I'd love to get together.",
         "I'm no longer affiliated with Two Sigma or Two Sigma Ventures,",
         'and no longer doing angel investing,',
-        'and out of the loop on what\'s really happening in AI land,',
+        "and out of the loop on what's really happening in AI land,",
         "but it'd be great to get together.",
         '',
         'I recently moved to the Upper East Side (boo)',
@@ -90,7 +90,7 @@ describe('extractContactFromMessage', () => {
       body: [
         'Francesco,',
         '',
-        'I was just talking to Rich about his dispute and wonder if the three of us can put our heads together tomorrow.  Would 9:30am work?  I\'ll send a calendar invite but just let me know if you need to move it.',
+        "I was just talking to Rich about his dispute and wonder if the three of us can put our heads together tomorrow.  Would 9:30am work?  I'll send a calendar invite but just let me know if you need to move it.",
         '',
         'Mike',
         '',

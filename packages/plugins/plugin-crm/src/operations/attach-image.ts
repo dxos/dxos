@@ -18,13 +18,7 @@ import { AttachImage } from './definitions';
  */
 const DEFAULT_IMAGE_SERVICE_URL = 'https://images.dxos.org';
 
-const ALLOWED_CONTENT_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/svg+xml',
-]);
+const ALLOWED_CONTENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']);
 
 const inferContentTypeFromUrl = (url: string): string | undefined => {
   const ext = url.split('?')[0]?.split('#')[0]?.split('.').pop()?.toLowerCase();
@@ -62,8 +56,7 @@ const getImageServiceUrl = (override?: string): string => {
   if (override && override.length > 0) {
     return override;
   }
-  const fromEnv =
-    typeof process !== 'undefined' && process.env ? process.env.DX_CRM_IMAGE_SERVICE_URL : undefined;
+  const fromEnv = typeof process !== 'undefined' && process.env ? process.env.DX_CRM_IMAGE_SERVICE_URL : undefined;
   return fromEnv && fromEnv.length > 0 ? fromEnv : DEFAULT_IMAGE_SERVICE_URL;
 };
 
@@ -77,22 +70,18 @@ const handler: Operation.WithHandler<typeof AttachImage> = AttachImage.pipe(
         catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
       });
       if (!downloaded.ok) {
-        return yield* Effect.fail(
-          new Error(`Failed to download image: ${downloaded.status} ${downloaded.statusText}`),
-        );
+        return yield* Effect.fail(new Error(`Failed to download image: ${downloaded.status} ${downloaded.statusText}`));
       }
 
       const sourceBlob = yield* Effect.promise(() => downloaded.blob());
       const responseType = downloaded.headers.get('content-type')?.split(';')[0]?.trim();
       const inferredType = inferContentTypeFromUrl(url);
-      const contentType =
-        responseType && ALLOWED_CONTENT_TYPES.has(responseType) ? responseType : inferredType;
+      const contentType = responseType && ALLOWED_CONTENT_TYPES.has(responseType) ? responseType : inferredType;
       if (!contentType || !ALLOWED_CONTENT_TYPES.has(contentType)) {
         return yield* Effect.fail(new Error(`Unsupported image content-type: ${String(responseType)}`));
       }
 
-      const blob =
-        sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
+      const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
 
       const formData = new FormData();
       formData.append('file', blob, filenameFromUrl(url));

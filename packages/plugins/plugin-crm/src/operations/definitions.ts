@@ -34,8 +34,7 @@ export const AttachImage = Operation.make({
     }),
     imageServiceUrl: Schema.optional(
       Schema.String.annotations({
-        description:
-          'Override for the image service base URL. Defaults to the value configured for the runtime.',
+        description: 'Override for the image service base URL. Defaults to the value configured for the runtime.',
       }),
     ),
   }),

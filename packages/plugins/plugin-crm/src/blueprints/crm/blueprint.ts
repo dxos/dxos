@@ -21,8 +21,7 @@ export const makeCrmBlueprint = (researchSources: ReadonlyArray<ResearchSource> 
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'CRM',
-    description:
-      'Research people and organizations and produce structured Profile documents in your space.',
+    description: 'Research people and organizations and produce structured Profile documents in your space.',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
       operations: [AttachImage, ...researchSources.flatMap((source) => source.operations ?? [])],
