@@ -91,7 +91,9 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
  */
 // TODO(wittjosiah): Factor out to DXN spec.
 export const TypenameSchema = Schema.String.pipe(
-  Schema.pattern(/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/),
+  Schema.pattern(
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  ),
 ).annotations({
   description: 'Fully qualified globally unique typename in reverse-DNS form.',
   example: 'org.dxos.type.message',

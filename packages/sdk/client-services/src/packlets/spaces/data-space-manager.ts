@@ -190,8 +190,7 @@ export class DataSpaceManager extends Resource {
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
-            const properties =
-              rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
+            const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
             return {
               key: space.key.toHex(),

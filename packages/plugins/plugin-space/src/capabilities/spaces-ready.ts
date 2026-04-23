@@ -135,7 +135,10 @@ export default Capability.makeModule(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
         const personalSpaceForMigration = getPersonalSpace(client);
-        if (personalSpaceForMigration && personalSpaceForMigration.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+        if (
+          personalSpaceForMigration &&
+          personalSpaceForMigration.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
+        ) {
           await personalSpaceForMigration.internal.migrate();
         }
 

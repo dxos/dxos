@@ -30,6 +30,7 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
+  Migrations,
   OperationHandler,
   ReactSurface,
   Settings,

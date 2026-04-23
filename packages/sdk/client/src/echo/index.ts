@@ -3,13 +3,7 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export {
-  isSpace,
-  type Echo,
-  type Space,
-  SpaceSchema,
-  SpaceProperties,
-} from '@dxos/client-protocol';
+export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
 export { compareForeignKeys, createQueueDXN, type ObjectMeta, Ref, RefArray } from '@dxos/echo/internal';
 export { Entity, Relation, Type, Database } from '@dxos/echo';
 export {
