@@ -80,20 +80,20 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   }
 
   if (request.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders(origin) });
   }
 
   // Reject requests from disallowed origins server-side, not just via CORS headers.
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
-    return new Response("Forbidden", { status: 403 });
+    return new Response("Forbidden", { status: 403, headers: corsHeaders(origin) });
   }
 
   if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
-    return new Response("OTel proxy not configured", { status: 503 });
+    return new Response("OTel proxy not configured", { status: 503, headers: corsHeaders(origin) });
   }
 
   if (!request.body) {
-    return new Response("Empty body", { status: 400 });
+    return new Response("Empty body", { status: 400, headers: corsHeaders(origin) });
   }
 
   const upstreamHeaders: Record<string, string> = {
@@ -143,11 +143,11 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   await pipePromise;
 
   if (sizeExceeded) {
-    return new Response("Payload too large", { status: 413 });
+    return new Response("Payload too large", { status: 413, headers: corsHeaders(origin) });
   }
 
   if (!upstreamResponse) {
-    return new Response("Bad gateway", { status: 502 });
+    return new Response("Bad gateway", { status: 502, headers: corsHeaders(origin) });
   }
 
   return new Response(upstreamResponse.body, {
