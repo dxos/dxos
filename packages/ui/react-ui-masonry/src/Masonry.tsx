@@ -93,10 +93,13 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
       gutter,
     );
 
-    // Arrow-key navigation across tiles. Uses Tabster's grid axis so
-    // Up/Down/Left/Right move focus two-dimensionally through the items.
+    // Arrow-key navigation across tiles. Uses Tabster's grid-linear axis
+    // so Up/Down/Left/Right move focus two-dimensionally through the items,
+    // falling back to DOM order when no positional neighbor exists — which
+    // happens in masonry because columns have variable heights and items
+    // do not always line up horizontally.
     const arrowNavigationAttrs = useArrowNavigationGroup({
-      axis: 'grid',
+      axis: 'grid-linear',
       memorizeCurrent: true,
       tabbable: true,
     });
