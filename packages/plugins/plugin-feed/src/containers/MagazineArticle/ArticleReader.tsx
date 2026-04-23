@@ -25,13 +25,7 @@ export const ArticleReader = ({ post, onOpenChange }: ArticleReaderProps) => {
           {post && (
             <>
               <Dialog.Title>{post.title ?? t('post-title.placeholder')}</Dialog.Title>
-              {post.imageUrl && (
-                <img
-                  src={post.imageUrl}
-                  alt=''
-                  className='rounded w-full object-cover max-h-64'
-                />
-              )}
+              {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-64' />}
               {post.author || post.published ? (
                 <div className='text-xs text-subdued'>
                   {[post.author, formatDate(post.published)].filter(Boolean).join(' · ')}

@@ -44,18 +44,11 @@ export const MagazineTile = ({ post, onOpen }: MagazineTileProps) => {
       )}
     >
       {post.imageUrl && (
-        <img
-          src={post.imageUrl}
-          alt=''
-          className='rounded w-full object-cover max-h-48'
-          loading='lazy'
-        />
+        <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-48' loading='lazy' />
       )}
       {post.title && <h3 className='font-semibold text-base line-clamp-2'>{post.title}</h3>}
       {post.snippet && <p className='text-sm text-description line-clamp-3'>{post.snippet}</p>}
-      {metaParts.length > 0 && (
-        <div className='text-xs text-subdued'>{metaParts.join(' · ')}</div>
-      )}
+      {metaParts.length > 0 && <div className='text-xs text-subdued'>{metaParts.join(' · ')}</div>}
       {tags.length > 0 && (
         <div className='flex flex-wrap gap-1'>
           {tags.map((tag) => (

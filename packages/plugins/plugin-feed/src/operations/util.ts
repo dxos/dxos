@@ -22,9 +22,7 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       if (!echoFeed) {
         continue;
       }
-      const posts = yield* Database.runQuery<Subscription.Post>(
-        Query.select(Filter.everything()).from(echoFeed),
-      );
+      const posts = yield* Database.runQuery<Subscription.Post>(Query.select(Filter.everything()).from(echoFeed));
       for (const post of posts) {
         const postDxn = Obj.getDXN(post).toString();
         if (curatedIds.has(postDxn)) {

@@ -10,7 +10,11 @@ import { FeedOperation } from '#operations';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 
-const operations = [FeedOperation.ListCandidatePosts, FeedOperation.FetchArticleContent, FeedOperation.AddPostToMagazine];
+const operations = [
+  FeedOperation.ListCandidatePosts,
+  FeedOperation.FetchArticleContent,
+  FeedOperation.AddPostToMagazine,
+];
 
 const make = () =>
   Blueprint.make({
