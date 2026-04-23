@@ -20,7 +20,9 @@ const DANGEROUSLY_RESET_STORAGE_VERSION = 'v1';
  */
 export const shouldRunStorageResetMigration = (environment?: string): boolean => {
   const isProductionOrStaging = ['production', 'staging'].includes(environment ?? '');
-  return isProductionOrStaging && localStorage.getItem(DANGEROUSLY_RESET_STORAGE_KEY) !== DANGEROUSLY_RESET_STORAGE_VERSION;
+  return (
+    isProductionOrStaging && localStorage.getItem(DANGEROUSLY_RESET_STORAGE_KEY) !== DANGEROUSLY_RESET_STORAGE_VERSION
+  );
 };
 
 export const runStorageResetMigration = async (): Promise<void> => {
