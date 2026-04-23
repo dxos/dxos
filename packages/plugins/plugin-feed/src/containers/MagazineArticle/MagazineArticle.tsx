@@ -105,20 +105,23 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         });
       }
 
-      // Fetch the full article content in the background. When an image is
-      // found, update post.imageUrl so PostArticle/MagazineTile can display
-      // the article's hero rather than whatever the description snippet
-      // happened to include. Failures are logged and non-fatal.
-      if (post.link) {
+      // Fetch the full article content in the background when we don't
+      // already have it. Writes the extracted body to post.content so
+      // PostArticle can render the full article, and picks the first image
+      // (if any) as the hero. Failures are logged and non-fatal.
+      if (post.link && !post.content) {
         void fetchArticle(post.link)
-          .then(({ imageUrls }) => {
+          .then(({ text, imageUrls }) => {
             const hero = imageUrls[0];
-            if (hero && hero !== post.imageUrl) {
-              Obj.change(post, (post) => {
-                const mutable = post as Obj.Mutable<typeof post>;
+            Obj.change(post, (post) => {
+              const mutable = post as Obj.Mutable<typeof post>;
+              if (text) {
+                mutable.content = text;
+              }
+              if (hero) {
                 mutable.imageUrl = hero;
-              });
-            }
+              }
+            });
           })
           .catch((err) => log.catch(err, { postLink: post.link }));
       }

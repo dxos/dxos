@@ -67,7 +67,8 @@ type Post
     guid?: string                   # feed-provided unique id
 
     # --- Additions ---
-    snippet?: string                # agent-extracted short text (~200 chars)
+    snippet?: string                # short description-derived preview (~200 chars) for tiles
+    content?: string                # full article body plain text, populated on first open
     imageUrl?: string               # hero image URL extracted from the article page
     readAt?: string                 # ISO 8601; presence = read, absence = unread
     tags?: string[]                 # agent-assigned tags (future tagging feature; always [] today)
