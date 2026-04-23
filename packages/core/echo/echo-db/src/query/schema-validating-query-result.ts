@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { type Entity, Obj, type QueryResult } from '@dxos/echo';
+import { Entity, type QueryResult } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 
 import { type SchemaResolvers, assertQueryTypenamesResolvable } from './schema-validation';
@@ -40,7 +40,7 @@ export class SchemaValidatingQueryResult<
     }
     return entries.filter((entry) => {
       if (entry.result == null) return true;
-      const typeDxn = Obj.getTypeDXN(entry.result as any);
+      const typeDxn = Entity.getTypeDXN(entry.result);
       if (typeDxn == null) return true;
       if (this._resolvers.runtime.getSchemaByDXN(typeDxn) != null) return true;
       if (this._resolvers.persistent != null && this._resolvers.persistent.getSchemaByDXN(typeDxn) != null) {
@@ -56,7 +56,7 @@ export class SchemaValidatingQueryResult<
     }
     return objects.filter((obj) => {
       if (obj == null) return false;
-      const typeDxn = Obj.getTypeDXN(obj as any);
+      const typeDxn = Entity.getTypeDXN(obj);
       if (typeDxn == null) return true;
       if (this._resolvers.runtime.getSchemaByDXN(typeDxn) != null) return true;
       if (this._resolvers.persistent != null && this._resolvers.persistent.getSchemaByDXN(typeDxn) != null) {

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
@@ -69,7 +69,7 @@ export const filterObjectsWithResolvableSchema = <T extends Entity.Unknown>(
 
   return entities.filter((entity) => {
     if (entity == null) return false;
-    const typeDxn = Obj.getTypeDXN(entity);
+    const typeDxn = Entity.getTypeDXN(entity);
     if (typeDxn == null) {
       return true;
     }

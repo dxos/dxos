@@ -410,7 +410,7 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
 
 const assertSchemaRegistered = (obj: Entity.Unknown, database?: Database.Database, graph?: Hypergraph.Hypergraph) => {
-  const schema = Obj.getSchema(obj);
+  const schema = Entity.getSchema(obj);
   if (schema == null) {
     return;
   }
