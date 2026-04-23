@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
-import React, { Suspense, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -49,10 +49,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
   return (
     <Panel.Root {...props} ref={forwardedRef}>
       <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <Suspense>
-          <ActiveProcessList spaceId={space.id} />
-        </Suspense>
-        <Timeline classNames='py-1' branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
+        <ActiveProcessList spaceId={space.id} />
+        <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
   );
@@ -65,7 +63,7 @@ const ActiveProcessList = ({ spaceId }: { spaceId: Space['id'] }) => {
   const runtime = useComputeRuntimeService(Process.ProcessMonitorService, spaceId);
   const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
   if (activeProcesses.length === 0) {
-    return null;
+    return <div />;
   }
 
   return <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />;

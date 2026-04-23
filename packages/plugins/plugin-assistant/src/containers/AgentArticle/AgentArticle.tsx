@@ -35,6 +35,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const [computeRuntime] = useCapabilities(AutomationCapabilities.ComputeRuntime);
+  // TODO(burdon): Clear input queue also.
   const handleResetHistory = useCallback(async () => {
     if (!computeRuntime) {
       return;

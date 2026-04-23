@@ -274,7 +274,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={forwardedRef}>
-        <ScrollContainer.Content classNames={classNames} thin padding centered>
+        <ScrollContainer.Content classNames={classNames} thin>
           <ScrollContainer.Viewport>
             <div
               role='none'

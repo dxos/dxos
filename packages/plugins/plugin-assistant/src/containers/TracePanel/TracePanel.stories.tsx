@@ -186,7 +186,7 @@ const DefaultStory = () => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton icon='ph--play--regular' label='Run Agent' onClick={handleRunAgent} />
+          <IconButton icon='ph--plus--regular' label='Start Agent' onClick={handleRunAgent} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

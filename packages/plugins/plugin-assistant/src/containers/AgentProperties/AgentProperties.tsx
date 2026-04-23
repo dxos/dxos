@@ -21,7 +21,6 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
 import {
-  compactSlots,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -114,10 +113,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
     () =>
       instructions && [
         createBasicExtensions({ placeholder: t('instructions.placeholder') }),
-        createThemeExtensions({
-          syntaxHighlighting: true,
-          slots: compactSlots,
-        }),
+        createThemeExtensions({ syntaxHighlighting: true }),
         createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
         createMarkdownExtensions(),
         decorateMarkdown(),
@@ -153,7 +149,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         <Input.Label classNames='mt-form-gap'>{t('instructions.label')}</Input.Label>
         {instructions && (
           <Editor.Root>
-            <Editor.View extensions={extension} />
+            <Editor.View classNames='border border-subdued-separator rounded-xs p-1 px-2' extensions={extension} />
           </Editor.Root>
         )}
       </Input.Root>
