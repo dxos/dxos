@@ -121,12 +121,12 @@ export class LoggingServiceImpl implements LoggingService {
           timestamp: new Date(entry.timestamp),
           meta: {
             // TODO(dmaretskyi): Fix proto.
-            file: filename ?? entry.meta?.F ?? '',
-            line: line ?? entry.meta?.L ?? 0,
+            file: filename ?? '',
+            line: line ?? 0,
             scope: {
               hostSessionId: this._sessionId,
               uptimeSeconds: (Date.now() - this._started) / 1000,
-              name: scopeName ?? 'null',
+              name: scopeName ?? '',
             },
           },
         };

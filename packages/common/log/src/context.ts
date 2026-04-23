@@ -245,24 +245,32 @@ const stringifyOneLevel = (value: unknown): unknown => {
 const computeContext = (entry: LogEntry): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
 
-  if (entry.meta?.S !== undefined && entry.meta.S !== null) {
-    const scopeInfo = gatherLogInfoFromScope(entry.meta.S);
-    for (const [key, value] of Object.entries(scopeInfo)) {
+  const mergeInto = (source: unknown): void => {
+    if (!source || typeof source !== 'object') {
+      return;
+    }
+    for (const [key, value] of Object.entries(source)) {
       if (RESERVED_ERROR_KEYS.has(key)) {
         continue;
       }
       result[key] = stringifyOneLevel(value);
     }
+  };
+
+  if (entry.meta?.S !== undefined && entry.meta.S !== null) {
+    mergeInto(gatherLogInfoFromScope(entry.meta.S));
   }
 
   const rawContext = typeof entry.context === 'function' ? entry.context() : entry.context;
-  if (rawContext && typeof rawContext === 'object' && !(rawContext instanceof Error)) {
-    for (const [key, value] of Object.entries(rawContext)) {
-      if (RESERVED_ERROR_KEYS.has(key)) {
-        continue;
-      }
-      result[key] = stringifyOneLevel(value);
-    }
+  if (rawContext instanceof Error) {
+    // Structured debug info attached to thrown errors lives on `.context`.
+    mergeInto((rawContext as any).context);
+  } else {
+    mergeInto(rawContext);
+  }
+
+  if (entry.error) {
+    mergeInto((entry.error as any).context);
   }
 
   return result;
