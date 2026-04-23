@@ -1,20 +1,25 @@
-name: Preview
+name: Preview Build
+
+# Builds the composer-app bundle for PR previews and uploads it as an artifact.
+# NO secrets are exposed here — this workflow runs untrusted PR code safely.
+# The artifact is picked up by preview-deploy.yml (workflow_run) which runs
+# from the base branch with secrets and performs the Cloudflare Pages deploy.
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
 
 concurrency:
-  group: preview-${{ github.event.pull_request.number }}
+  group: preview-build-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  deploy:
-    # Skip forks: they cannot access secrets.
+  build:
+    # Skip forks (per project policy) — not required for safety (no secrets are
+    # used here), but fork previews are intentionally unsupported.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -23,71 +28,38 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
-    env:
-      BRANCH_ALIAS: pr-${{ github.event.pull_request.number }}
     steps:
-      - name: Checkout PR head
+      - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           lfs: true
-
-      - name: Set environment variables from secrets, env files
-        run: .github/workflows/scripts/populate-env.sh "$BRANCH_ALIAS" >> $GITHUB_ENV
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
-          COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
-          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
-          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
-          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Build
-        run: moon run composer-app:build
-        env:
-          NODE_ENV: production
-
       - name: Bundle composer-app
-        run: |
-          export DX_POSTHOG_API_KEY="$COMPOSER_APP_POSTHOG_API_KEY"
-          export DX_POSTHOG_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID"
-          export DX_POSTHOG_FEEDBACK_SURVEY_ID="$COMPOSER_APP_POSTHOG_FEEDBACK_SURVEY_ID"
-          export LOG_FILTER="error"
-          moon run composer-app:bundle
+        run: moon run composer-app:bundle
         env:
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
+          LOG_FILTER: error
 
       - name: Delete source maps
         run: find packages/apps/composer-app/out/composer -name '*.map' -delete
 
-      - name: Deploy to Cloudflare Pages
-        id: deploy
-        working-directory: packages/apps/composer-app
+      - name: Write deploy metadata
         run: |
-          pnpm exec wrangler pages deploy out/composer --branch "$BRANCH_ALIAS" | tee deploy.log
-          URL=$(grep -Eo 'https://[a-z0-9-]+\.composer\.pages\.dev' deploy.log | head -n1)
-          echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "alias=https://${BRANCH_ALIAS}.composer.pages.dev" >> $GITHUB_OUTPUT
+          mkdir -p preview-meta
+          echo "${{ github.event.pull_request.number }}" > preview-meta/pr-number
+          echo "${{ github.event.pull_request.head.sha }}" > preview-meta/head-sha
 
-      - name: Comment preview URL on PR
-        uses: marocchino/sticky-pull-request-comment@v2
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v7
         with:
-          header: composer-preview
-          message: |
-            ### Composer preview
-
-            - Branch alias: ${{ steps.deploy.outputs.alias }}
-            - Deployment: ${{ steps.deploy.outputs.url }}
-
-            Built from ${{ github.event.pull_request.head.sha }}.
+          name: composer-preview-bundle
+          path: |
+            packages/apps/composer-app/out/composer
+            preview-meta
+          retention-days: 3
+          if-no-files-found: error
