@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
-import { type Magazine, type Subscription } from '../types';
+import { type Magazine, Subscription } from '../types';
 
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing
@@ -22,7 +22,7 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       if (!echoFeed) {
         continue;
       }
-      const posts = yield* Database.runQuery<Subscription.Post>(Query.select(Filter.everything()).from(echoFeed));
+      const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
       for (const post of posts) {
         const postDxn = Obj.getDXN(post).toString();
         if (curatedIds.has(postDxn)) {
