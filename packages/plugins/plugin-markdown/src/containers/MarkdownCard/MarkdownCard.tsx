@@ -21,7 +21,7 @@ export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = useTranslation(meta.id);
   const snippet = useMemo(() => getSnippet(subject), [subject]);
-  const extensions = useMemo(() => [snippetExtension({ height: 200, scale: 0.7 })], []);
+  const extensions = useMemo(() => [snippetExtension({ height: 200, scale: 0.8 })], []);
   const info = getInfo(subject);
 
   return (
@@ -32,6 +32,16 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
             {(editorRootProps) => (
               <Editor.Root {...editorRootProps}>
                 <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
+                <div
+                  role='none'
+                  data-visible={overflow}
+                  className={mx(
+                    // NOTE: Gradients may not be visible with dark reader extensions.
+                    'z-10 absolute top-0 inset-x-0 h-24 w-full',
+                    'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
+                    'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
+                  )}
+                />
               </Editor.Root>
             )}
           </MarkdownEditorProvider>
@@ -46,7 +56,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   );
 };
 
-const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 5) => {
+const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 16) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
     return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback, maxLines);
   } else if (Obj.instanceOf(Text.Text, subject)) {
