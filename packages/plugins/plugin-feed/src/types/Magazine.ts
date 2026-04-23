@@ -34,7 +34,7 @@ export const Magazine = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--newspaper--regular',
+    icon: 'ph--newspaper-clipping--regular',
     hue: 'indigo',
   }),
 );

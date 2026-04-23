@@ -130,5 +130,5 @@ export const CurateMagazine = Operation.make({
   output: Schema.Struct({
     added: Schema.Number.annotations({ description: 'Number of Posts added to the Magazine.' }),
   }),
-  services: [Database.Service],
+  services: [Capability.Service],
 });

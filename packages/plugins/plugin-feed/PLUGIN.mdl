@@ -87,7 +87,7 @@ type Magazine
     instructions: Ref<Text>         # long-form curation brief (not rendered as form input)
     posts: Ref<Post>[]              # curated Post refs (insertion order; UI displays newest-last reversed)
   annotations:
-    icon: ph--newspaper--regular
+    icon: ph--newspaper-clipping--regular
     hue: indigo
     label: name
 ```
