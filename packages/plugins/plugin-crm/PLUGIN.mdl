@@ -1,0 +1,528 @@
+---
+id: org.dxos.plugin.crm
+name: CrmPlugin
+version: 0.1.0
+---
+
+A Composer plugin that contributes a **CRM blueprint** for researching people
+and organizations and producing structured Profile documents in the user's
+space. v1 is a library-layer plugin only — no UI surfaces. It is deliberately
+thin: the heavy lifting (web research, database CRUD, markdown document
+creation) is reused from existing `@dxos/assistant-toolkit` blueprints
+(`research`, `database`, `markdown`). plugin-crm contributes CRM-specific
+instructions, one relation schema, one image-attachment operation, and a
+pluggable research-source contract for future extensions (e.g., a LinkedIn
+browser-extension integration).
+
+Given a reference to a `Person`, `Organization`, or an email `Message`, the
+blueprint drives an agent to (a) locate or create the corresponding Person
+and Organization ECHO objects, (b) produce a markdown Profile document
+following an editable section template, (c) link the Profile to its subject
+via a typed `ProfileOf` relation, and (d) attach a best-effort avatar /
+company-logo image uploaded to the DXOS image service.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+| `blueprint` | `org.dxos.mdl.blueprint@1.0`  |
+
+## Types
+
+```mdl
+type ContactExtract
+  desc: >
+    Structured output of the email-signature extractor utility.
+    Pure function; computed from a Message's sender + blocks.
+  fields:
+    fullName?: string
+    email: string
+    phone?: string
+    orgName?: string               # e.g., "Kobre & Kim"
+    orgDomain?: string             # e.g., "kobrekim.com" (from email host)
+    locations?: string[]           # e.g., ["New York", "San Francisco"]
+    urls?: string[]                # any URLs found in the signature block
+    isFreeMailDomain: boolean      # gmail, outlook, icloud, yahoo, ...
+```
+
+```mdl
+type ProfileOf
+  desc: >
+    ECHO relation linking a Profile Document to its subject (Person or Organization).
+    A single Profile Document may have multiple ProfileOf relations when
+    research covers both a Person and their Organization.
+    Typename: org.dxos.relation.plugin-crm.profile-of
+  fields:
+    sources: string[]              # URLs / provider IDs that contributed to the profile
+    lastResearchedAt: DateTime     # ISO 8601 UTC timestamp
+    summary?: string               # 1–2 sentence abstract of the profile
+  relation:
+    source: Document               # org.dxos.type.document
+    target: Person | Organization  # org.dxos.type.person | org.dxos.type.organization
+```
+
+```mdl
+type ResearchSource
+  desc: >
+    Pluggable contract for augmenting the CRM blueprint with additional
+    research tools. Consumers register a ResearchSource; the CRM blueprint
+    picks up its tool definitions at build time. v1 defines the contract
+    only — no implementations ship with the plugin. A planned future
+    implementation ("LinkedIn via browser extension") will be provided by
+    composer-crx.
+  fields:
+    id: string                     # stable identifier, e.g. "linkedin-crx"
+    description: string            # human-readable; referenced in blueprint instructions
+    tools: ToolDefinition[]        # tool defs contributed to the blueprint
+    note: >
+      The CRM blueprint's instructions explicitly mention the sources that
+      are registered, so the agent knows to prefer them when appropriate.
+```
+
+## Blueprint
+
+```mdl
+blueprint CrmBlueprint
+  key: org.dxos.blueprint.crm
+  desc: >
+    Drives an agent to research a contact (Person, Organization, or email
+    Message) and produce a Profile document plus Person/Organization
+    records in the user's space.
+  depends_on:
+    - org.dxos.blueprint.research    # Research, DocumentCreate operations (high-level synthesis)
+    - org.dxos.blueprint.web-search  # Fetch operation + AnthropicWebSearch (low-level URL fetch + search)
+    - org.dxos.blueprint.database    # object-create, object-update, query, relation-create, load
+    - org.dxos.blueprint.markdown    # create/read/update markdown documents
+  contributes:
+    - plugin-crm/attach_image
+    - plugin-crm/ProfileOf (schema registration)
+    - tools from registered ResearchSource contracts (v1: none)
+  instructions: >
+    Authored in `src/blueprints/crm/instructions.ts`. Content is user-editable
+    post-install via the blueprint editor. Covers:
+      1. Subject resolution (branch on typename of the input ref).
+      2. Email-based contact extraction from Message (sender + signature).
+      3. Person/Organization lookup-or-create using the database blueprint.
+      4. Free-mail domain heuristic: do not attach Organization from
+         personal-email domains (gmail, outlook, icloud, yahoo, ...).
+      5. Research invocation via the research blueprint.
+      6. Profile composition following a section template (Overview,
+         Background, Current Role, Organization, Key Links, Notes, Sources).
+      7. ProfileOf relation creation linking the Document to its subject(s).
+      8. Best-effort image attachment via the attach_image operation.
+      9. Reply in the agent's normal reply style with inline object refs.
+```
+
+## Operations
+
+```mdl
+op attachImage
+  desc: >
+    Downloads an external image URL, re-uploads it to the DXOS image service
+    (POST /thumbnail), and stores the returned canonical URL on the subject's
+    `image` field. Mirrors the behaviour of composer-crx `createThumbnail`.
+  input:
+    subject: Ref<Person | Organization>
+    url: string                    # external image URL
+  output:
+    imageUrl: string               # canonical URL returned by the image service
+  errors:
+    ConfigMissing: imageServiceUrl is not configured
+    FetchFailed: unable to download the source image
+    UnsupportedContentType: source content-type is not an accepted image format
+    UploadFailed: image service rejected the upload
+  effects: [http, echo:write]
+  requires: [Database, Config, Trace]
+  note: >
+    Accepted content types: image/jpeg, image/png, image/webp, image/gif,
+    image/svg+xml. Content type is inferred from the response or URL
+    extension. Failures are returned as structured errors so the agent can
+    continue without the image.
+```
+
+## Services
+
+```mdl
+service ImageService
+  desc: >
+    DXOS EDGE image service. Accepts a multipart/form-data upload with a
+    single `file` field and returns a JSON body containing a canonical
+    `url`. Used by composer-crx today and reused verbatim by attach_image.
+  loading: lazy
+  ops:
+    postThumbnail(blob: Blob) → { url: string }
+  errors:
+    RateLimited: too many requests
+    InvalidUpload: the posted file is not an accepted image
+  note: >
+    Endpoint is `${config.imageServiceUrl}/thumbnail`. The field name `file`
+    is shared with composer-crx and should eventually be factored into a
+    protocol def.
+```
+
+```mdl
+service AssistantToolkit
+  desc: >
+    Reused blueprints and operations from @dxos/assistant-toolkit.
+  loading: eager
+  ops:
+    research.Research(query, instructions?, entityExtraction?)
+    research.DocumentCreate(subject, name, content) → { document: DXN }
+    webSearch.Fetch(url) → content              # low-level URL fetch
+    webSearch.AnthropicWebSearch                # native Anthropic web search tool
+    database.objectCreate(typename, fields) → Obj
+    database.objectUpdate(ref, fields) → Obj
+    database.query(filter) → Obj[]
+    database.relationCreate(typename, source, target, fields) → Relation
+    database.load(ref) → Obj
+    markdown.*                     # create/read/update — Document-level utilities
+  note: >
+    plugin-crm never reimplements these. The CRM blueprint declares its
+    dependency on the corresponding blueprints so they are loaded alongside.
+```
+
+## Features
+
+```mdl
+feat F-1: Polymorphic Subject Resolution
+  desc: >
+    The blueprint accepts a Ref<Person | Organization | Message> and
+    branches deterministically based on the loaded object's typename.
+  req F-1.1: Blueprint instructions describe how to load the subject via database.load.
+  req F-1.2: Instructions describe the three branches (Person, Organization, Message).
+  req F-1.3:
+    when: subject is a Message
+    then: agent extracts { fullName, email, phone?, orgName?, orgDomain?, locations? }
+          from sender + signature blocks
+  req F-1.4:
+    when: subject is a Person
+    then: agent seeds research from Person.fullName, Person.emails, and Person.organization (if set)
+  req F-1.5:
+    when: subject is an Organization
+    then: agent seeds research from Organization.name and Organization.website
+```
+
+```mdl
+feat F-2: Contact Extractor Utility
+  desc: >
+    Pure function used by tests and available as reference output for the
+    agent. Stable deterministic behaviour makes signature parsing
+    regression-testable independently of the LLM loop.
+  req F-2.1: extractContactFromMessage(msg: Message) → ContactExtract is a pure, synchronous function.
+  req F-2.2: Extractor reads Message.sender.name, Message.sender.email, Message.properties.subject, and all text blocks.
+  req F-2.3: Domain part of the sender email determines orgDomain, excluding free-mail domains.
+  req F-2.4: Phone numbers are detected via a permissive regex (international + US formats).
+  req F-2.5: URLs in the signature block are captured into urls[].
+  req F-2.6: Multi-city office strings (e.g., "Americas (New York, San Francisco, ...)") parse into locations[].
+  req F-2.7: Free-mail detection covers at minimum: gmail.com, outlook.com, icloud.com, yahoo.com, hotmail.com, protonmail.com.
+```
+
+```mdl
+feat F-3: Person & Organization Upsert
+  desc: >
+    The blueprint's instructions guide the agent to deduplicate by email
+    and by organization domain/name before creating new objects.
+  req F-3.1:
+    when: an email address is known
+    then: agent queries existing Person objects for emails containing that address
+  req F-3.2:
+    when: no matching Person exists
+    then: agent creates a new Person with extracted fields via database.objectCreate
+  req F-3.3:
+    when: a matching Person exists
+    then: agent updates it via database.objectUpdate with newly discovered fields (non-destructive)
+  req F-3.4:
+    when: orgDomain or orgName is known
+    then: agent queries existing Organization objects by website or name
+  req F-3.5:
+    when: no matching Organization exists AND domain is not free-mail
+    then: agent creates a new Organization
+  req F-3.6:
+    when: a Person has an Organization
+    then: agent ensures Person.organization references the Organization
+```
+
+```mdl
+feat F-4: Research & Profile Composition
+  desc: >
+    The blueprint delegates web research to the research blueprint and
+    composes a Profile markdown document following an editable section
+    template defined in the blueprint instructions.
+  req F-4.1: Blueprint instructions define a default section template: Overview, Background, Current Role, Organization, Key Links, Notes, Sources.
+  req F-4.2: Sections are editable via the blueprint editor (instructions are part of the blueprint object).
+  req F-4.3: Agent invokes research.Research with a composed query derived from { fullName, orgName, orgDomain }.
+  req F-4.4: Agent creates a Document via research.DocumentCreate with the subject ref and the composed markdown content.
+  req F-4.5: The "Notes" section records disambiguation hints and uncertainty (e.g., free-mail sender, ambiguous name).
+  req F-4.6: The "Sources" section lists URLs that contributed to the profile.
+```
+
+```mdl
+feat F-5: ProfileOf Relation
+  desc: >
+    A typed relation links the Profile Document to its subject. This is
+    the primary mechanism for discovering profiles from a Person or
+    Organization.
+  req F-5.1: ProfileOf schema is registered into the space's schema registry at plugin init.
+  req F-5.2:
+    when: a Profile Document is created for a Person
+    then: a ProfileOf relation is created with source=Document, target=Person
+  req F-5.3:
+    when: a Profile Document also covers an Organization
+    then: an additional ProfileOf relation is created with target=Organization
+  req F-5.4: Relation carries sources[], lastResearchedAt, and summary.
+```
+
+```mdl
+feat F-6: Image Attachment
+  desc: >
+    Best-effort avatar / logo retrieval. The agent finds candidate URLs via
+    the existing fetch_url / web search tools; plugin-crm uploads them to
+    the DXOS image service and writes the canonical URL onto the ECHO
+    object.
+  req F-6.1: attachImage operation uploads via POST /thumbnail and writes the result URL to subject.image.
+  req F-6.2: imageServiceUrl is read from @dxos/config at invocation time.
+  req F-6.3:
+    when: imageServiceUrl is not configured
+    then: operation returns ConfigMissing error; agent continues without image
+  req F-6.4:
+    when: image upload fails
+    then: operation returns a structured error; subject.image is not modified
+  req F-6.5: No fallback search path inside attachImage — the agent is responsible for supplying the URL.
+```
+
+```mdl
+feat F-7: Pluggable Research Sources
+  desc: >
+    Future sources (notably LinkedIn via browser extension) will register
+    additional tools into the CRM blueprint. v1 defines the contract but
+    ships no implementations.
+  req F-7.1: ResearchSource TypeScript interface is exported from src/sources.
+  req F-7.2: The CRM blueprint picks up registered sources' tools at blueprint.make() time.
+  req F-7.3: Blueprint instructions enumerate the currently-registered sources by id + description so the agent knows what is available.
+  req F-7.4: No ResearchSource is bundled in v1; composer-crx will ship the first one in a later PR.
+```
+
+```mdl
+feat F-8: Configuration Surface (deferred)
+  desc: >
+    Per-space CrmSettings ECHO type is planned but not implemented in v1.
+    v1 relies on @dxos/config for imageServiceUrl and uses only no-auth
+    public endpoints for search (inherited from the research blueprint).
+  req F-8.1: v1 does NOT ship a CrmSettings schema.
+  req F-8.2: Design allows adding CrmSettings later without breaking API — the attachImage operation reads from Config for now.
+  req F-8.3: No API keys are required to run v1.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Extractor — Madeline Ahern
+  given: an email Message with sender "Madeline Ahern <mahern@kirkconsult.com>" and signature block
+         containing "Madeline Ahern / mahern@kirkconsult.com / (510) 393-7703"
+  when: extractContactFromMessage(msg) is called
+  then:
+    - fullName === "Madeline Ahern"
+    - email === "mahern@kirkconsult.com"
+    - phone === "(510) 393-7703"
+    - orgDomain === "kirkconsult.com"
+    - isFreeMailDomain === false
+```
+
+```mdl
+test T-2: Extractor — David Joerg (free-mail)
+  given: an email Message with sender "David Joerg <dsjoerg@gmail.com>" and no corporate signature
+  when: extractContactFromMessage(msg) is called
+  then:
+    - fullName === "David Joerg"
+    - email === "dsjoerg@gmail.com"
+    - orgDomain === "gmail.com"
+    - isFreeMailDomain === true
+    - orgName is undefined
+```
+
+```mdl
+test T-3: Extractor — Michael Ng
+  given: an email Message with sender "Michael Ng <Michael.Ng@kobrekim.com>" and signature
+         block "Michael Ng / +1 415 582 4803 / www.kobrekim.com / Americas (New York, Buenos Aires, ...)"
+  when: extractContactFromMessage(msg) is called
+  then:
+    - fullName === "Michael Ng"
+    - email === "Michael.Ng@kobrekim.com"
+    - phone === "+1 415 582 4803"
+    - orgDomain === "kobrekim.com"
+    - urls contains "www.kobrekim.com"
+    - locations contains "New York"
+    - locations contains "San Francisco"
+    - isFreeMailDomain === false
+```
+
+```mdl
+test T-4: Full-loop playground — Madeline Ahern (tuning)
+  given: a space with the Madeline email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
+  when: the CRM blueprint is invoked with the Message ref
+  then:
+    - a Person exists whose emails contains "mahern@kirkconsult.com"
+    - an Organization exists whose website ends with "kirkconsult.com" OR whose name contains "Kirk Consult"
+    - Person.organization references the Organization
+    - a Document exists whose content contains "## Overview" and "## Sources"
+    - a ProfileOf relation exists with source=Document, target=Person
+    - a ProfileOf relation exists with source=Document, target=Organization
+```
+
+```mdl
+test T-5: Full-loop playground — David Joerg (free-mail)
+  given: a space with the Joerg email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
+  when: the CRM blueprint is invoked with the Message ref
+  then:
+    - a Person exists whose emails contains "dsjoerg@gmail.com"
+    - NO Organization has been created solely because of the sender domain
+    - the Profile Document's Notes section mentions the former Two Sigma / Two Sigma Ventures affiliations
+    - a ProfileOf relation exists with source=Document, target=Person
+```
+
+```mdl
+test T-6: Full-loop playground — Michael Ng
+  given: a space with the Ng email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
+  when: the CRM blueprint is invoked with the Message ref
+  then:
+    - a Person exists whose emails contains "Michael.Ng@kobrekim.com"
+    - an Organization exists whose website ends with "kobrekim.com" OR whose name contains "Kobre"
+    - Organization.location or the Profile Document mentions at least one office city
+    - a Document exists following the section template
+    - ProfileOf relations exist for both Person and Organization
+```
+
+```mdl
+test T-7: attachImage — success path
+  given: imageServiceUrl is configured; the mock image service returns { url: "https://images.dxos.org/abc" };
+         a Person exists with no image
+  when: attachImage({ subject: personRef, url: "https://example.com/avatar.png" }) is called
+  then:
+    - the mock image service received a multipart POST with field "file"
+    - Person.image === "https://images.dxos.org/abc"
+    - operation output.imageUrl === "https://images.dxos.org/abc"
+```
+
+```mdl
+test T-8: attachImage — config missing
+  given: imageServiceUrl is not configured in @dxos/config
+  when: attachImage({ subject: personRef, url: "https://example.com/avatar.png" }) is called
+  then:
+    - operation returns a structured error tagged ConfigMissing
+    - Person.image is unchanged
+    - the agent can continue without aborting the run
+```
+
+```mdl
+test T-9: Graduation — assistant-e2e suite
+  given: stable memoized fixtures in packages/core/assistant-e2e/src/testing/crm/fixtures/
+  when: CI runs the assistant-e2e test suite
+  then:
+    - the 3 email fixtures produce the same Person / Organization / Document / ProfileOf graph as the playground tests
+    - assertions are tight (exact field values, not substring matches)
+  tags: [deferred, post-tuning]
+```
+
+---
+
+## Design Notes
+
+### Composition over duplication
+
+The single most important architectural decision is that plugin-crm is a thin
+composition layer. The `research`, `web-search`, `database`, and `markdown`
+blueprints in `@dxos/assistant-toolkit` already provide, respectively,
+high-level synthesis (`Research` / `DocumentCreate`), low-level URL fetch +
+native Anthropic web search (`Fetch` / `AnthropicWebSearch`), CRUD on ECHO
+objects, and Document lifecycle. plugin-crm declares a dependency on these
+blueprints; the agent sees their tools alongside `attach_image` and drives
+the CRM workflow per the instructions. This means:
+
+- No new `upsert_person` / `upsert_organization` / `create_profile_document` / `search_web` / `fetch_url` tools.
+- The agent is responsible for orchestration — matching Q5 (agent-orchestrated) and Q11 (compose).
+- Tuning the CRM behaviour is primarily a prompt-engineering exercise on the blueprint instructions.
+
+### LinkedIn / browser extension seam
+
+LinkedIn is out of scope for v1 code. The `ResearchSource` TypeScript interface
+is defined in `src/sources/research-source.ts`, and the blueprint's `make()`
+function iterates over any registered sources and includes their tools in the
+blueprint's tool list. No sources are registered by default. The planned
+future implementation will live in `composer-crx` and communicate with the
+user's authenticated LinkedIn session via the browser.
+
+### Image attachment — no fallback search
+
+`attach_image` does not itself search for candidate images. The agent finds
+them (favicon, OG image, public Gravatar, company-website logo) via the
+web-search blueprint's `Fetch` operation and `AnthropicWebSearch` tool, then
+passes the URL to `attach_image`. This keeps the operation small,
+single-purpose, and mockable in tests.
+
+### Free-mail domains
+
+A conservative allowlist of free-mail domains (gmail, outlook, icloud, yahoo,
+hotmail, protonmail) is treated as "no organization signal from email alone".
+This prevents the David Joerg case (dsjoerg@gmail.com) from creating a
+"Gmail" or "Google" organization purely from the sender domain. The blueprint
+instructions call this out so the agent does not override the heuristic from
+body-text hints unless the user explicitly asks.
+
+### Profile section template
+
+The default section template lives in the blueprint instructions (prose), not
+in a separate schema or a template Document. This makes the template
+user-editable through the existing blueprint editor surface without
+introducing new ECHO types. Sections: **Overview**, **Background**, **Current
+Role**, **Organization**, **Key Links**, **Notes**, **Sources**.
+
+### Testing strategy
+
+Three layers:
+
+1. **Extractor unit tests** (`src/util/extract-contact.test.ts`) — pure, fast, CI-on-by-default, one test per email.
+2. **Tuning playground** (`src/blueprints/crm/blueprint.test.ts`) — memoized LLM + stubbed image/search; `.skip` by default; regenerable with `ALLOW_LLM_GENERATION=1`. Used to iterate on instructions against the 3 emails.
+3. **Graduated assistant-e2e suite** (`packages/core/assistant-e2e/src/testing/crm/`) — tight assertions, canonical CI; populated once playground behaviour is stable.
+
+### Out of scope for v1
+
+- UI surfaces (no react-surface, no article/object view, no settings panel).
+- `CrmSettings` ECHO type (planned; see F-8).
+- Any ResearchSource implementation, including LinkedIn.
+- API-keyed search providers (Tavily, Brave, Google CSE, Clearbit, etc.).
+- Deduping of multiple Person matches by fuzzy-name — v1 updates the best match or asks the user.
+- Image-quality heuristics — v1 accepts whatever candidate URL the agent supplies.
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document. Types not redefined here (`type`,
+`feat`, `test`, `op`, `service`) follow the definitions in the shared DXOS
+MDL extension library (see `packages/plugins/plugin-discord/PLUGIN.mdl`
+appendix for reference).
+
+```mdl
+ext blueprint
+  uri: org.dxos.mdl.blueprint@1.0
+  desc: >
+    A named blueprint declaration describing its key, dependencies on other
+    blueprints, its contributed operations/schemas, and a prose summary of
+    its instructions. The blueprint's actual instruction text lives in
+    source (src/blueprints/<name>/instructions.ts) and is out of scope for
+    this document's extension schema.
+  fields:
+    key: string                  # blueprint identifier (e.g. org.dxos.blueprint.crm)
+    desc?: Prose
+    depends_on?: string[]        # other blueprint keys this blueprint composes with
+    contributes?: string[]       # operations / schemas introduced by this blueprint
+    instructions?: Prose         # summary; authoritative text lives in code
+```
