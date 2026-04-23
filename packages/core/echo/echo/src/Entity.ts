@@ -198,7 +198,7 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
  * associated with it (either via runtime registry or persistent schema registry), returns an
  * empty array.
  *
- * @returns An array of {@link ParseResult.ArrayFormatterIssue} describing each validation error.
+ * @returns An array of `ParseResult.ArrayFormatterIssue` describing each validation error.
  *   Returns an empty array when the entity is valid or when no schema is attached.
  */
 export const getValidationErrors = (entity: Unknown | Snapshot): readonly ParseResult.ArrayFormatterIssue[] => {
