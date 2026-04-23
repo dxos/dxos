@@ -10,7 +10,8 @@
   "exclude": [
     "*.stories.tsx",
     "*.t.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "src"
   ],
   "include": [
     "src"
