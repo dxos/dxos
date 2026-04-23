@@ -16,7 +16,8 @@ import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assista
 import { Database, Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { Process, ServiceResolver, Trace } from '@dxos/functions';
-import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
+import { ProcessManager } from '@dxos/compute-runtime';
+import { FeedTraceSink } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -127,7 +128,12 @@ type StoryRuntime = ManagedRuntime.ManagedRuntime<ProcessManager.ProcessManagerS
 const createStoryRuntime = (space: Space): StoryRuntime => {
   const dbLayer = Database.layer(space.db);
   const feedServiceLayer = createFeedServiceLayer(space.queues);
-  const traceSinkLayer = FeedTraceSink.layerLive.pipe(Layer.provide(dbLayer), Layer.provide(feedServiceLayer));
+  // `layerLiveWithDirectSink` also installs the FeedTraceSink as the ambient
+  // `Trace.TraceSink`, which the ProcessManager layer requires.
+  const traceSinkLayer = FeedTraceSink.layerLiveWithDirectSink.pipe(
+    Layer.provide(dbLayer),
+    Layer.provide(feedServiceLayer),
+  );
 
   const layer = ProcessManager.layer().pipe(
     Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty)),

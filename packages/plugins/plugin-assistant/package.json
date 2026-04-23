@@ -88,6 +88,7 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",

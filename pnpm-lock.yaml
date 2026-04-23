@@ -7495,6 +7495,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
