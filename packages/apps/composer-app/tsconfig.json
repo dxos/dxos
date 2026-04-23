@@ -59,6 +59,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/effect-atom-solid"
+    },
+    {
       "path": "../../common/errors"
     },
     {
@@ -116,6 +119,9 @@
       "path": "../../common/web-context-react"
     },
     {
+      "path": "../../common/web-context-solid"
+    },
+    {
       "path": "../../core/ai"
     },
     {
@@ -137,7 +143,31 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-atom"
+    },
+    {
       "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-pipeline"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
+      "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/echo/echo-solid"
+    },
+    {
+      "path": "../../core/echo/feed"
+    },
+    {
+      "path": "../../core/echo/index-core"
     },
     {
       "path": "../../core/functions"
@@ -146,10 +176,46 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/keyring"
+    },
+    {
       "path": "../../core/mcp-client"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/mesh/messaging"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/mesh/teleport"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-automerge-replicator"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-gossip"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-replicator"
+    },
+    {
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/operation"
@@ -195,9 +261,6 @@
     },
     {
       "path": "../../plugins/plugin-discord"
-    },
-    {
-      "path": "../../plugins/plugin-excalidraw"
     },
     {
       "path": "../../plugins/plugin-explorer"
@@ -353,6 +416,9 @@
       "path": "../../sdk/app-graph"
     },
     {
+      "path": "../../sdk/app-solid"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -396,6 +462,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -486,6 +555,12 @@
     },
     {
       "path": "../../ui/react-ui-thread"
+    },
+    {
+      "path": "../../ui/solid-ui"
+    },
+    {
+      "path": "../../ui/solid-ui-geo"
     },
     {
       "path": "../../ui/ui"

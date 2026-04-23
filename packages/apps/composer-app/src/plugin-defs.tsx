@@ -21,7 +21,6 @@ import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { DiscordPlugin } from '@dxos/plugin-discord';
-import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -211,7 +210,6 @@ export const getPlugins = ({
     DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
     DiscordPlugin(),
-    isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
     GraphPlugin(),

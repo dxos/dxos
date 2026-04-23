@@ -360,9 +360,36 @@ export class Client {
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
+    const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
+
+    if (!this._options.services) {
+      // Default services mode when not explicitly set in config. The Client entrypoint only exposes
+      // the SharedWorker and OPFS worker options (dedicated worker is a composer-app-level choice).
+      const clientCfg = this._config.values.runtime?.client;
+      if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
+        const servicesMode = this._options.createWorker
+          ? Runtime.Client.ServicesMode.SHARED_WORKER
+          : Runtime.Client.ServicesMode.HOST;
+        // Default SQLite backing when the caller didn't set one:
+        // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
+        // - FILE when a sqlitePath was supplied (Node/Bun CLI)
+        // - MEMORY otherwise
+        const sqliteMode = clientCfg?.storage?.sqliteMode
+          ? undefined
+          : this._options.createOpfsWorker
+            ? Runtime.Client.Storage.SqliteMode.OPFS
+            : this._options.sqlitePath
+              ? Runtime.Client.Storage.SqliteMode.FILE
+              : Runtime.Client.Storage.SqliteMode.MEMORY;
+        this._config = new Config(
+          { runtime: { client: { servicesMode, ...(sqliteMode !== undefined && { storage: { sqliteMode } }) } } },
+          this._config.values,
+        );
+      }
+    }
 
     // NOTE: Must currently match the host.
     this._services = await (this._options.services ??

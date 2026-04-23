@@ -42,7 +42,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [SettingsReady],
+    firesAfterActivation: [SettingsReady],
     activate: MeetingSettings,
   }),
   Plugin.addModule({
@@ -50,7 +50,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [StateReady],
+    firesAfterActivation: [StateReady],
     activate: MeetingState,
   }),
   Plugin.addModule({

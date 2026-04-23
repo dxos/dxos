@@ -181,14 +181,12 @@
     "fast-deep-equal": "catalog:",
     "jwt-decode": "catalog:",
     "lodash.isequalwith": "catalog:",
-    "ua-parser-js": "catalog:",
     "web-worker": "1.5.0"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequalwith": "catalog:",
-    "@types/ua-parser-js": "catalog:",
     "fast-check": "catalog:",
     "typedoc": "catalog:"
   },
