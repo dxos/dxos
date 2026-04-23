@@ -13,46 +13,46 @@ type Env = {
 const MAX_BODY_SIZE = 2 * 1024 * 1024; // 2MB.
 
 const ALLOWED_ORIGINS = new Set([
-  'https://composer.space',
-  'https://staging.composer.space',
-  'https://labs.composer.space',
-  'https://main.composer.space',
+  "https://composer.space",
+  "https://staging.composer.space",
+  "https://labs.composer.space",
+  "https://main.composer.space",
 ]);
 
 const corsHeaders = (origin: string | null): Record<string, string> => ({
-  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
-  'Vary': 'Origin',
+  "Access-Control-Allow-Origin": origin && ALLOWED_ORIGINS.has(origin) ? origin : "",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Content-Encoding",
+  Vary: "Origin",
 });
 
 /** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
-  const origin = request.headers.get('Origin');
-  if (request.method === 'OPTIONS') {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
 
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
   }
 
   if (!env.FEEDBACK_LOGS) {
-    return new Response('Feedback logs storage not configured', { status: 503 });
+    return new Response("Feedback logs storage not configured", { status: 503 });
   }
 
-  const contentLength = Number(request.headers.get('content-length') ?? 0);
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
+    return new Response("Payload too large", { status: 413 });
   }
 
   const body = await request.text();
   if (body.length === 0) {
-    return new Response('Empty body', { status: 400 });
+    return new Response("Empty body", { status: 400 });
   }
 
   if (body.length > MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
+    return new Response("Payload too large", { status: 413 });
   }
 
   const date = new Date().toISOString().slice(0, 10);
@@ -60,54 +60,54 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   const key = `logs/${date}/${id}.ndjson`;
 
   await env.FEEDBACK_LOGS.put(key, body, {
-    httpMetadata: { contentType: 'application/x-ndjson' },
+    httpMetadata: { contentType: "application/x-ndjson" },
   });
 
   return new Response(JSON.stringify({ key }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
   });
 };
 
-const OTEL_PREFIX = '/api/otel';
-const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
+const OTEL_PREFIX = "/api/otel";
+const OTEL_SIGNALS = new Set(["/v1/traces", "/v1/logs", "/v1/metrics"]);
 
 /** Reverse-proxy OTel ingestion to SigNoz, injecting the access token server-side. */
 const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
-  const origin = request.headers.get('Origin');
-  if (request.method === 'OPTIONS') {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
 
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
   }
 
   if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
-    return new Response('OTel proxy not configured', { status: 503 });
+    return new Response("OTel proxy not configured", { status: 503 });
   }
 
-  const contentLength = Number(request.headers.get('content-length') ?? 0);
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_BODY_SIZE) {
-    return new Response('Payload too large', { status: 413 });
+    return new Response("Payload too large", { status: 413 });
   }
 
   const upstreamHeaders: Record<string, string> = {
-    'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
-    'signoz-ingestion-key': env.SIGNOZ_INGESTION_KEY,
+    "Content-Type": request.headers.get("Content-Type") ?? "application/json",
+    "signoz-ingestion-key": env.SIGNOZ_INGESTION_KEY,
   };
-  const contentEncoding = request.headers.get('Content-Encoding');
+  const contentEncoding = request.headers.get("Content-Encoding");
   if (contentEncoding) {
-    upstreamHeaders['Content-Encoding'] = contentEncoding;
+    upstreamHeaders["Content-Encoding"] = contentEncoding;
   }
-  const contentLengthHeader = request.headers.get('Content-Length');
+  const contentLengthHeader = request.headers.get("Content-Length");
   if (contentLengthHeader) {
-    upstreamHeaders['Content-Length'] = contentLengthHeader;
+    upstreamHeaders["Content-Length"] = contentLengthHeader;
   }
 
-  const upstream = `${env.SIGNOZ_INGEST_URL.replace(/\/$/, '')}${signal}`;
+  const upstream = `${env.SIGNOZ_INGEST_URL.replace(/\/$/, "")}${signal}`;
   const response = await fetch(upstream, {
-    method: 'POST',
+    method: "POST",
     headers: upstreamHeaders,
     body: request.body,
   });
@@ -115,7 +115,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   return new Response(response.body, {
     status: response.status,
     headers: {
-      'Content-Type': response.headers.get('Content-Type') ?? 'application/json',
+      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
       ...corsHeaders(origin),
     },
   });
@@ -131,7 +131,7 @@ const handler: ExportedHandler<Env> = {
     const url = new URL(request.url);
 
     // API routes.
-    if (url.pathname === '/api/feedback-logs') {
+    if (url.pathname === "/api/feedback-logs") {
       return handleFeedbackLogs(request, env);
     }
 
