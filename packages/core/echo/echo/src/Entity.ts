@@ -14,6 +14,7 @@ import type { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
+import type * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -135,6 +136,12 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entit
  * Get the DXN of an entity's type.
  */
 export const getTypeDXN = internal.getTypeDXN;
+
+/**
+ * Get the schema of an entity.
+ * Returns the branded ECHO schema used to create the entity.
+ */
+export const getSchema: (entity: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
 
 /**
  * Get the typename of an entity's type.
