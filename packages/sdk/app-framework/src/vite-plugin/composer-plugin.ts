@@ -6,16 +6,12 @@ import { type Plugin as VitePlugin } from 'vite';
 import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 
 import { type Plugin } from '../core';
+import { MANIFEST_ASSET_NAME, serializeManifest } from './manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
 
-const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
+export { MANIFEST_ASSET_NAME, serializeManifest };
 
-/**
- * Name of the asset written alongside the built module bundle.
- * The DXOS community registry resolves each published plugin by fetching this file
- * from the repo's latest GitHub Release, so authors should not rename it.
- */
-export const MANIFEST_ASSET_NAME = 'manifest.json';
+const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
 
 const DEFAULT_MODULE_FILE = 'plugin.mjs';
 
@@ -70,13 +66,6 @@ const REQUIRE_SHIM_BANNER = [
   '};',
   '// --- end CJS require shim ---',
 ].join('\n');
-
-/**
- * Serializes a plugin's public metadata into the format consumed by the community registry.
- * Exported so tests and tooling can validate manifests without depending on vite.
- */
-export const serializeManifest = (meta: Plugin.Meta, { moduleFile }: { moduleFile: string }): string =>
-  JSON.stringify({ ...meta, moduleFile }, null, 2);
 
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
