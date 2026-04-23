@@ -19,7 +19,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { type Magazine, type Subscription } from '#types';
 
-import { fetchArticle } from '../../util/fetch-article';
+import { fetchArticle } from '../../util';
 import { MagazineTile } from './MagazineTile';
 
 type CurateState = 'idle' | 'syncing' | 'curating';
@@ -106,10 +106,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         });
       }
 
-      // Fetch the full article content in the background when we don't
-      // already have it. Writes the extracted body to post.content so
-      // PostArticle can render the full article, and picks the first image
-      // (if any) as the hero. Failures are logged and non-fatal.
+      // Fetch the full article content in the background when we don't already have it.
+      // Writes the extracted body to post.content so PostArticle can render the full article,
+      // and picks the first image (if any) as the hero. Failures are logged and non-fatal.
       if (post.link && !post.content) {
         void fetchArticle(post.link)
           .then(({ text, imageUrls }) => {
@@ -174,13 +173,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </div>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-            <Masonry.Content
-              items={tileItems}
-              getId={(data) => Obj.getDXN(data.post).toString()}
-              thin
-              centered
-              padding
-            />
+            <Masonry.Content thin centered padding>
+              <Masonry.Viewport items={tileItems} getId={(data) => Obj.getDXN(data.post).toString()} />
+            </Masonry.Content>
           </Masonry.Root>
         )}
       </Panel.Content>
