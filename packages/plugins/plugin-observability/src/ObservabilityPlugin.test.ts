@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ObservabilityPlugin } from './ObservabilityPlugin';
 import { meta } from './meta';
+import { ObservabilityPlugin } from './ObservabilityPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -20,7 +20,7 @@ describe('ObservabilityPlugin', () => {
       plugins: [
         ObservabilityPlugin({
           namespace: 'test',
-          observability: async () => ({} as any),
+          observability: async () => ({}) as any,
         }),
       ],
       autoStart: false,

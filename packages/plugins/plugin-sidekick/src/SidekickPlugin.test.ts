@@ -8,8 +8,8 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { SidekickPlugin } from './SidekickPlugin';
 import { meta } from './meta';
+import { SidekickPlugin } from './SidekickPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

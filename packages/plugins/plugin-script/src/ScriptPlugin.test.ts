@@ -9,8 +9,8 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ScriptPlugin } from './ScriptPlugin';
 import { meta } from './meta';
+import { ScriptPlugin } from './ScriptPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

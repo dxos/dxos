@@ -10,8 +10,8 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ThreadPlugin } from './ThreadPlugin';
 import { meta } from './meta';
+import { ThreadPlugin } from './ThreadPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -30,11 +30,7 @@ describe('ThreadPlugin', () => {
 
     // Modules expected to be active (ReactSurface and ReactRoot excluded — browser-only).
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('AppGraphBuilder'),
-        moduleId('metadata'),
-        moduleId('schema'),
-      ]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
     );
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.

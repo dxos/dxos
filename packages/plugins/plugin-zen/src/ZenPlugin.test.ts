@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ZenPlugin } from './ZenPlugin';
 import { meta } from './meta';
+import { ZenPlugin } from './ZenPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

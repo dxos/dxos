@@ -8,8 +8,8 @@ import { ActivationEvents } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { WnfsPlugin } from './WnfsPlugin';
 import { meta } from './meta';
+import { WnfsPlugin } from './WnfsPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -26,9 +26,7 @@ describe('WnfsPlugin', () => {
     await harness.fire(AppActivationEvents.SetupMetadata);
     await harness.fire(AppActivationEvents.SetupSchema);
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('metadata'), moduleId('schema')]));
 
     await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));

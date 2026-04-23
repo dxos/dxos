@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { RegistryPlugin } from './RegistryPlugin';
 import { meta } from './meta';
+import { RegistryPlugin } from './RegistryPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

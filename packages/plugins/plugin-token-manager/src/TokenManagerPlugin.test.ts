@@ -9,8 +9,8 @@ import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { TokenManagerPlugin } from './TokenManagerPlugin';
 import { meta } from './meta';
+import { TokenManagerPlugin } from './TokenManagerPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

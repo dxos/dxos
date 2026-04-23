@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { StatusBarPlugin } from './StatusBarPlugin';
 import { meta } from './meta';
+import { StatusBarPlugin } from './StatusBarPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

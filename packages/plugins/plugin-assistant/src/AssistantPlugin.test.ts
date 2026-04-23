@@ -23,7 +23,12 @@ describe('AssistantPlugin', () => {
 
     // Modules expected to be active after a normal startup.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('metadata'),
+        moduleId('schema'),
+        moduleId('ReactSurface'),
+      ]),
     );
 
     // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own blueprint.

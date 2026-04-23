@@ -9,8 +9,8 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { VoxelPlugin } from './VoxelPlugin';
 import { meta } from './meta';
+import { VoxelPlugin } from './VoxelPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

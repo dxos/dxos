@@ -17,8 +17,6 @@ describe('IrohBeaconPlugin', () => {
       plugins: [IrohBeaconPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('ReactSurface')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('ReactSurface')]));
   });
 });

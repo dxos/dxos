@@ -8,8 +8,8 @@ import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { SheetPlugin } from './SheetPlugin';
 import { meta } from './meta';
+import { SheetPlugin } from './SheetPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

@@ -20,9 +20,7 @@ describe('ClientPlugin', () => {
     });
 
     // The CLI variant activates Client and SchemaDefs on startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('Client'), moduleId('SchemaDefs')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('Client'), moduleId('SchemaDefs')]));
 
     // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupOperationHandler);

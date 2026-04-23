@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { SpotlightPlugin } from './SpotlightPlugin';
 import { meta } from './meta';
+import { SpotlightPlugin } from './SpotlightPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

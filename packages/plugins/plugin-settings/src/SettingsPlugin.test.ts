@@ -8,8 +8,8 @@ import { ActivationEvents, OperationPlugin, RuntimePlugin } from '@dxos/app-fram
 import { createTestApp } from '@dxos/app-framework/testing';
 import { GraphPlugin } from '@dxos/plugin-graph';
 
-import { SettingsPlugin } from './SettingsPlugin';
 import { meta } from './meta';
+import { SettingsPlugin } from './SettingsPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
