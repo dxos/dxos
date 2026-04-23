@@ -117,6 +117,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
      * Unmerged branches keep their lane active (they may still be in progress).
      */
     const { branchLane, laneCount } = useMemo(() => {
+      const visibleBranches = new Set(branches);
+
       const commitBranch = new Map<string, string>();
       for (const commit of commits) {
         commitBranch.set(commit.id, commit.branch);
@@ -128,7 +130,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
         const commit = commits[row]!;
         for (const parentId of commit.parents ?? []) {
           const parentBranch = commitBranch.get(parentId);
-          if (parentBranch && parentBranch !== commit.branch) {
+          if (parentBranch && parentBranch !== commit.branch && visibleBranches.has(parentBranch)) {
             mergeRow.set(parentBranch, Math.max(mergeRow.get(parentBranch) ?? row, row));
           }
         }
@@ -144,7 +146,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
       for (let row = 0; row < commits.length; row++) {
         const commit = commits[row]!;
-        if (!branchLane.has(commit.branch)) {
+        if (visibleBranches.has(commit.branch) && !branchLane.has(commit.branch)) {
           let lane = 1;
           while (activeLanes.has(lane)) {
             lane++;
@@ -455,6 +457,9 @@ const LineVector = ({ branchLane, laneCount, spans, index, commit, currentCommit
       {/* Connectors */}
       {[...spans.entries()].map(([branch, span]) => {
         const lane = getBranchIndex(branch);
+        if (lane < 0) {
+          return null;
+        }
         const color = colors[lane % colors.length];
         const path = createPath(index, commit, branch, span);
         if (!path) {

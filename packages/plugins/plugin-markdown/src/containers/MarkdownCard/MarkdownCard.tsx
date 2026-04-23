@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { drawSelection } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
