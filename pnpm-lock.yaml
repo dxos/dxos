@@ -4694,6 +4694,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client

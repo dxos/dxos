@@ -22,6 +22,56 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
+    },
+    "./Operation": {
+      "source": "./src/Operation.ts",
+      "types": "./dist/types/src/Operation.d.ts",
+      "default": "./dist/lib/neutral/Operation.mjs"
+    },
+    "./Blueprint": {
+      "source": "./src/Blueprint.ts",
+      "types": "./dist/types/src/Blueprint.d.ts",
+      "default": "./dist/lib/neutral/Blueprint.mjs"
+    },
+    "./Prompt": {
+      "source": "./src/Prompt.ts",
+      "types": "./dist/types/src/Prompt.d.ts",
+      "default": "./dist/lib/neutral/Prompt.mjs"
+    },
+    "./Template": {
+      "source": "./src/Template.ts",
+      "types": "./dist/types/src/Template.d.ts",
+      "default": "./dist/lib/neutral/Template.mjs"
+    },
+    "./Trigger": {
+      "source": "./src/Trigger.ts",
+      "types": "./dist/types/src/Trigger.d.ts",
+      "default": "./dist/lib/neutral/Trigger.mjs"
+    },
+    "./Script": {
+      "source": "./src/Script.ts",
+      "types": "./dist/types/src/Script.d.ts",
+      "default": "./dist/lib/neutral/Script.mjs"
+    },
+    "./Process": {
+      "source": "./src/Process.ts",
+      "types": "./dist/types/src/Process.d.ts",
+      "default": "./dist/lib/neutral/Process.mjs"
+    },
+    "./Trace": {
+      "source": "./src/Trace.ts",
+      "types": "./dist/types/src/Trace.d.ts",
+      "default": "./dist/lib/neutral/Trace.mjs"
+    },
+    "./ServiceResolver": {
+      "source": "./src/ServiceResolver.ts",
+      "types": "./dist/types/src/ServiceResolver.d.ts",
+      "default": "./dist/lib/neutral/ServiceResolver.mjs"
+    },
+    "./StorageService": {
+      "source": "./src/StorageService.ts",
+      "types": "./dist/types/src/StorageService.d.ts",
+      "default": "./dist/lib/neutral/StorageService.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,6 +79,36 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "Operation": [
+        "dist/types/src/Operation.d.ts"
+      ],
+      "Blueprint": [
+        "dist/types/src/Blueprint.d.ts"
+      ],
+      "Prompt": [
+        "dist/types/src/Prompt.d.ts"
+      ],
+      "Template": [
+        "dist/types/src/Template.d.ts"
+      ],
+      "Trigger": [
+        "dist/types/src/Trigger.d.ts"
+      ],
+      "Script": [
+        "dist/types/src/Script.d.ts"
+      ],
+      "Process": [
+        "dist/types/src/Process.d.ts"
+      ],
+      "Trace": [
+        "dist/types/src/Trace.d.ts"
+      ],
+      "ServiceResolver": [
+        "dist/types/src/ServiceResolver.d.ts"
+      ],
+      "StorageService": [
+        "dist/types/src/StorageService.d.ts"
       ]
     }
   },
@@ -39,6 +119,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
