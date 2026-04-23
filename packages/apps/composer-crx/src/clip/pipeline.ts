@@ -16,13 +16,21 @@ const passthrough: ClipStage = (clip) => clip;
 
 /**
  * Default pipeline. Extendable at runtime via `setClipPipeline`.
+ * The internal array is never exposed directly so callers can't mutate it
+ * out from under the empty-pipeline fallback in `setClipPipeline`.
  */
 let pipeline: ClipStage[] = [passthrough];
 
-export const getClipPipeline = (): ClipStage[] => pipeline;
+/**
+ * Get a snapshot of the currently configured clip stages.
+ */
+export const getClipPipeline = (): ClipStage[] => [...pipeline];
 
-export const setClipPipeline = (stages: ClipStage[]): void => {
-  pipeline = stages.length > 0 ? stages : [passthrough];
+/**
+ * Replace the clip pipeline. An empty array falls back to passthrough.
+ */
+export const setClipPipeline = (stages: readonly ClipStage[]): void => {
+  pipeline = stages.length > 0 ? [...stages] : [passthrough];
 };
 
 /**

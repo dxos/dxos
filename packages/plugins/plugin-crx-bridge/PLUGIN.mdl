@@ -5,9 +5,9 @@ version: 0.1.0
 ---
 
 Receives clippings sent from the Composer browser extension (`@dxos/composer-crx`) and
-materializes them as `Person`, `Organization`, or generic note objects in the currently
-active space. The extension discovers this tab via `chrome.tabs.query` over a configured
-list of URLs and delivers the payload as a same-origin `window` `CustomEvent`.
+materializes them as `Person` or `Organization` objects in the currently active space.
+The extension discovers this tab via `chrome.tabs.query` over a configured list of URLs
+and delivers the payload as a same-origin `window` `CustomEvent`.
 
 The extension owns the DOM picker and bridge sender. This plugin owns only the receiver
 side: envelope validation, clip → ECHO object mapping, and user feedback (toast).
@@ -27,11 +27,12 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ```mdl
 type ClipKind
-  literals: person | organization
+  supported: person | organization
   note: |
-    `generic` is reserved for a future pass; the MVP only materializes
-    Person or Organization. The envelope tolerates additional kinds so
-    the extension can ship new kinds independently of the receiver.
+    At runtime, `Clip.kind` is modeled as `string` so new kinds can ship
+    from the extension without breaking envelope decoding. The receiver
+    accepts `person` and `organization` only; any other value is rejected
+    with `unsupportedKind`.
 ```
 
 ```mdl
@@ -68,9 +69,14 @@ type ClipHints
 
 ```mdl
 type Clip
+  desc: |
+    The on-the-wire envelope is intentionally permissive so that older
+    receivers can read newer versions just far enough to respond with
+    `unsupportedVersion`. Version-specific validation runs after the
+    envelope decode succeeds.
   fields:
-    version: 1
-    kind: ClipKind
+    version: number             # runtime check: only 1 is supported
+    kind: string                # runtime check against ClipKind.supported
     source: ClipSource
     selection: ClipSelection
     hints?: ClipHints

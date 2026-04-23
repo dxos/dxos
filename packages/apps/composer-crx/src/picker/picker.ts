@@ -207,13 +207,22 @@ export const startPicker = (): Promise<PickerResult> => {
 
     const onClick = (ev: MouseEvent) => {
       if (state.frozen) {
-        // Dismiss if click is outside the toolbar.
+        // Dismiss if click is outside the toolbar. Suppress the click so it
+        // doesn't activate an underlying link/button on the page.
         if (!isPickerOwned(ev.target as Element)) {
+          ev.preventDefault();
+          ev.stopPropagation();
           finish({ status: 'cancelled' });
         }
         return;
       }
-      const target = document.elementFromPoint(ev.clientX, ev.clientY);
+      // Prefer the arrow-key-widened selection in `state.current` when it is
+      // still present, falling back to hit-testing under the cursor. Without
+      // this, widening with ↑ then clicking would freeze the original
+      // deepest element instead of the widened ancestor.
+      const widened =
+        state.current && document.contains(state.current) && !isPickerOwned(state.current) ? state.current : undefined;
+      const target = widened ?? document.elementFromPoint(ev.clientX, ev.clientY);
       if (!target || isPickerOwned(target)) {
         return;
       }

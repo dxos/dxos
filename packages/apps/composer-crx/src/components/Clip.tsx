@@ -25,13 +25,11 @@ export const ClipAction = () => {
     if (!tab?.id) {
       return;
     }
-    try {
-      // Fire and forget — picker + delivery is orchestrated by the content
-      // script and background worker. The popup closes naturally.
-      void sendMessage('start-picker', {}, { context: 'content-script', tabId: tab.id });
-    } catch (err) {
-      log.catch(err);
-    }
+    // Fire and forget — picker + delivery is orchestrated by the content
+    // script and background worker. The popup closes naturally; any
+    // rejection during the round-trip is surfaced by the background via a
+    // browser notification, so here we just need to log it.
+    sendMessage('start-picker', {}, { context: 'content-script', tabId: tab.id }).catch((err) => log.catch(err));
     window.close();
   }, []);
 

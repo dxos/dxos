@@ -14,12 +14,16 @@ const NOTIFY_ICON = 'assets/img/icon-128.png';
 
 const notify = (title: string, message: string) => {
   try {
-    void browser.notifications?.create?.({
+    // `browser.notifications.create()` is async; capture and forward any
+    // promise rejection into our logger rather than letting it become an
+    // unhandled rejection.
+    const notification = browser.notifications?.create?.({
       type: 'basic',
       iconUrl: NOTIFY_ICON,
       title,
       message,
     });
+    void notification?.catch?.((err: unknown) => log.catch(err));
   } catch (err) {
     log.catch(err);
   }

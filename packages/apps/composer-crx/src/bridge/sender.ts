@@ -49,19 +49,22 @@ const pickBestTab = (tabs: browser.Tabs.Tab[]): browser.Tabs.Tab | undefined => 
   return withId.sort((a, b) => scoreTab(b) - scoreTab(a))[0];
 };
 
-const injectBridge = async (tabId: number): Promise<void> => {
-  // Idempotent — the bridge content script sets a guard on `window` and
-  // no-ops on re-injection.
-  await browser.scripting.executeScript({
-    target: { tabId },
-    files: ['src/bridge/receiver.ts'],
-    injectImmediately: true,
-  } as any);
+/**
+ * Type guard — validate a ClipAck shape rather than trusting any object with
+ * an `ok` property. Unknown responses fall through to `invalidAck`.
+ */
+const isClipAck = (response: unknown): response is ClipAck => {
+  if (!response || typeof response !== 'object') {
+    return false;
+  }
+  const ack = response as { ok?: unknown; id?: unknown; error?: unknown };
+  return (ack.ok === true && typeof ack.id === 'string') || (ack.ok === false && typeof ack.error === 'string');
 };
 
 /**
- * Find the best matching Composer tab, inject the bridge receiver, and send
- * the clip. Awaits the `composer:clip:ack` response from the page.
+ * Find the best matching Composer tab and send the clip. The tab-side
+ * bridge listener lives in `content.ts`, which is auto-loaded on every
+ * page, so no on-demand script injection is required.
  */
 export const deliverClip = async (clip: Clip, options: { timeoutMs?: number } = {}): Promise<DeliverResult> => {
   try {
@@ -72,25 +75,23 @@ export const deliverClip = async (clip: Clip, options: { timeoutMs?: number } = 
       return { status: 'no-tab' };
     }
 
-    await injectBridge(tab.id);
-
     const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const ack = await new Promise<ClipAck | 'timeout'>((resolve) => {
       const timer = setTimeout(() => resolve('timeout'), timeout);
       browser.tabs
         .sendMessage(tab.id!, { type: BRIDGE_MSG_TYPE, clip })
-        .then((response: any) => {
+        .then((response: unknown) => {
           clearTimeout(timer);
-          if (response && typeof response === 'object' && 'ok' in response) {
-            resolve(response as ClipAck);
+          if (isClipAck(response)) {
+            resolve(response);
           } else {
-            resolve({ ok: false, error: 'invalid-ack' });
+            resolve({ ok: false, error: 'invalidAck' });
           }
         })
         .catch((err: Error) => {
           clearTimeout(timer);
           log.catch(err);
-          resolve({ ok: false, error: err.message || 'transport-error' });
+          resolve({ ok: false, error: err.message || 'transportError' });
         });
     });
 
@@ -106,11 +107,40 @@ export const deliverClip = async (clip: Clip, options: { timeoutMs?: number } = 
 };
 
 /**
- * Open a new Composer tab using the first configured URL pattern. Used by
- * the popup when no Composer tab is open.
+ * Normalize a chrome-style match pattern into an openable URL.
+ *
+ * Accepts strings like `http://localhost:5173/*` and returns a navigable
+ * URL (`http://localhost:5173/`). Returns `undefined` for patterns that
+ * can't be safely materialized (wildcard schemes, wildcard hosts, path
+ * wildcards other than a trailing `/*`, missing authority, etc.).
+ */
+const matchPatternToUrl = (pattern: string): string | undefined => {
+  try {
+    const stripped = pattern.replace(/\/\*$/, '/');
+    if (stripped.includes('*')) {
+      return undefined;
+    }
+    // URL constructor enforces a valid scheme + authority.
+    const url = new URL(stripped);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return undefined;
+    }
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Open a new Composer tab using the first configured URL that parses into a
+ * valid `http(s)` URL. Used by the popup when no Composer tab is open.
  */
 export const openComposerTab = async (): Promise<void> => {
   const urls = await getComposerUrls();
-  const first = urls[0]?.replace(/\*$/, '') ?? 'https://composer.dxos.org/';
-  await browser.tabs.create({ url: first });
+  const target = urls.map(matchPatternToUrl).find((u): u is string => !!u);
+  if (!target) {
+    log.warn('no openable Composer URL configured', { urls });
+    return;
+  }
+  await browser.tabs.create({ url: target });
 };

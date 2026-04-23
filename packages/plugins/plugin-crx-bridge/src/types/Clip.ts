@@ -52,8 +52,27 @@ export const Kind = Schema.Literal('person', 'organization');
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
 /**
- * Clip envelope sent extension → Composer.
- * Only `version === 1` is accepted; any other version is rejected.
+ * Supported kinds known to the receiver. Unknown strings are rejected at
+ * runtime with `unsupportedKind` rather than at decode time, so the
+ * extension can ship new kinds without older Composer builds producing a
+ * generic `invalidPayload` error.
+ */
+export const SUPPORTED_KINDS: readonly string[] = ['person', 'organization'];
+
+/**
+ * Loose envelope — used as the first-pass decode so we can inspect
+ * `version` and respond with `unsupportedVersion` (rather than the generic
+ * `invalidPayload`) when an older receiver sees a newer payload. Anything
+ * that isn't an object with a numeric `version` is rejected outright.
+ */
+export const Envelope = Schema.Struct({
+  version: Schema.Number,
+});
+export type Envelope = Schema.Schema.Type<typeof Envelope>;
+
+/**
+ * Clip envelope sent extension → Composer. The V1 payload schema. Only
+ * decoded after the loose envelope decode confirms `version === 1`.
  */
 export const Clip = Schema.Struct({
   version: Schema.Literal(1),

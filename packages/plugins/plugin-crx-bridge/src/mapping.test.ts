@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Either from 'effect/Either';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type Clip } from '#types';
+import { Clip } from '#types';
 
 import { mapClip, toOrganization, toPerson } from './mapping';
 
@@ -76,8 +78,34 @@ describe('mapping', () => {
 
   test('mapClip returns undefined for unknown kind', ({ expect }) => {
     // Unknown kinds are intentionally allowed by the envelope schema; the
-    // receiver rejects them with an `unsupported-kind` ack.
+    // receiver rejects them with an `unsupportedKind` ack.
     const result = mapClip(makeClip({ kind: 'place' as any }));
     expect(result).toBeUndefined();
+  });
+});
+
+describe('envelope decode', () => {
+  // Guards against a regression where the full Clip decode rejects a
+  // `version: 2` payload as `invalidPayload` instead of letting the
+  // listener respond with `unsupportedVersion` (PR review #12).
+  test('Envelope accepts any numeric version', ({ expect }) => {
+    const v2 = Schema.decodeUnknownEither(Clip.Envelope)({ version: 2, junk: 'ok' });
+    expect(Either.isRight(v2)).toBe(true);
+    if (Either.isRight(v2)) {
+      expect(v2.right.version).toBe(2);
+    }
+  });
+
+  test('Envelope rejects non-object and non-numeric version', ({ expect }) => {
+    expect(Either.isLeft(Schema.decodeUnknownEither(Clip.Envelope)(null))).toBe(true);
+    expect(Either.isLeft(Schema.decodeUnknownEither(Clip.Envelope)({ version: '1' }))).toBe(true);
+    expect(Either.isLeft(Schema.decodeUnknownEither(Clip.Envelope)({}))).toBe(true);
+  });
+
+  test('SUPPORTED_KINDS matches mapping coverage', ({ expect }) => {
+    // If a kind is listed as supported, `mapClip` must produce an object.
+    for (const kind of Clip.SUPPORTED_KINDS) {
+      expect(mapClip(makeClip({ kind: kind as any }))).toBeDefined();
+    }
   });
 });
