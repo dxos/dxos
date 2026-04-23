@@ -4,6 +4,7 @@
 
 export * from './extract';
 export * from './feed-fetcher';
+export * from './fetch-article';
 export * from './fetch-atproto';
 export * from './fetch-rss';
 export * from './format-date';

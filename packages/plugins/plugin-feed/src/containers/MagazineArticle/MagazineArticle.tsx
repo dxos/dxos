@@ -19,6 +19,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { type Magazine, type Subscription } from '#types';
 
+import { fetchArticle } from '../../util/fetch-article';
 import { MagazineTile } from './MagazineTile';
 
 type CurateState = 'idle' | 'syncing' | 'curating';
@@ -103,6 +104,25 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           mutable.readAt = new Date().toISOString();
         });
       }
+
+      // Fetch the full article content in the background. When an image is
+      // found, update post.imageUrl so PostArticle/MagazineTile can display
+      // the article's hero rather than whatever the description snippet
+      // happened to include. Failures are logged and non-fatal.
+      if (post.link) {
+        void fetchArticle(post.link)
+          .then(({ imageUrls }) => {
+            const hero = imageUrls[0];
+            if (hero && hero !== post.imageUrl) {
+              Obj.change(post, (post) => {
+                const mutable = post as Obj.Mutable<typeof post>;
+                mutable.imageUrl = hero;
+              });
+            }
+          })
+          .catch((err) => log.catch(err, { postLink: post.link }));
+      }
+
       void showItem({
         contextId: id,
         selectionId: post.id,
