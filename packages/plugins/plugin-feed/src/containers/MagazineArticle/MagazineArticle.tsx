@@ -4,19 +4,19 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { type Magazine, type Subscription } from '#types';
 
-import { ArticleReader } from './ArticleReader';
 import { MagazineTile } from './MagazineTile';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
@@ -29,7 +29,7 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
   useObject(subject);
   const [state, setState] = useState<CurateState>('idle');
   const [error, setError] = useState<string>();
-  const [readerPost, setReaderPost] = useState<Subscription.Post>();
+  const [selectedPost, setSelectedPost] = useState<Subscription.Post>();
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle.
@@ -63,7 +63,6 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
         subject.feeds.map(async (ref) => {
           try {
             const feed = await ref.load();
-            // Also load the nested ECHO feed ref so SyncFeed finds a resolved backing feed.
             if (feed.feed) {
               await feed.feed.load();
             }
@@ -94,7 +93,7 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
   }, [state, subject, invokePromise, t]);
 
   const handleOpen = useCallback((post: Subscription.Post) => {
-    setReaderPost(post);
+    setSelectedPost(post);
     if (!post.readAt) {
       Obj.change(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;
@@ -103,13 +102,9 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
     }
   }, []);
 
-  const tileItems = useMemo(() => posts.map((post) => ({ post, onOpen: handleOpen })), [posts, handleOpen]);
+  const handleCloseDetail = useCallback(() => setSelectedPost(undefined), []);
 
-  const handleReaderOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setReaderPost(undefined);
-    }
-  }, []);
+  const tileItems = useMemo(() => posts.map((post) => ({ post, onOpen: handleOpen })), [posts, handleOpen]);
 
   const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
   const curateTooltip =
@@ -122,7 +117,7 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
           : undefined;
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
@@ -137,17 +132,51 @@ export const MagazineArticle = ({ role, subject }: MagazineArticleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        {posts.length === 0 ? (
-          <div className='flex items-center justify-center h-full text-subdued text-sm'>
-            {t('empty-magazine.message')}
+        <div className={mx('grid h-full w-full', selectedPost && 'md:grid-cols-[1fr_minmax(20rem,28rem)]')}>
+          <div className='min-h-0 overflow-hidden'>
+            {posts.length === 0 ? (
+              <div className='flex items-center justify-center h-full text-subdued text-sm'>
+                {t('empty-magazine.message')}
+              </div>
+            ) : (
+              <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
+                <Masonry.Content
+                  items={tileItems}
+                  getId={(data) => Obj.getDXN(data.post).toString()}
+                  thin
+                  centered
+                  padding
+                />
+              </Masonry.Root>
+            )}
           </div>
-        ) : (
-          <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content items={tileItems} getId={(data) => Obj.getDXN(data.post).toString()} />
-          </Masonry.Root>
-        )}
+          {selectedPost && (
+            <div className='relative hidden md:flex flex-col min-h-0 overflow-hidden border-is border-separator'>
+              <div className='flex items-center justify-end p-1'>
+                <IconButton
+                  icon='ph--x--regular'
+                  iconOnly
+                  label={t('close.label')}
+                  onClick={handleCloseDetail}
+                  variant='ghost'
+                />
+              </div>
+              <div className='flex-1 min-h-0 overflow-hidden'>
+                <Surface.Surface
+                  type={AppSurface.Article}
+                  data={
+                    {
+                      subject: selectedPost,
+                      attendableId: Obj.getDXN(selectedPost).toString(),
+                    } satisfies AppSurface.ObjectArticleData
+                  }
+                  limit={1}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </Panel.Content>
-      <ArticleReader post={readerPost} onOpenChange={handleReaderOpenChange} />
       {error && (
         <Panel.Statusbar>
           <p className='flex p-1 items-center text-error-text'>{error}</p>

@@ -105,26 +105,26 @@ component MagazineArticle
   state:
     running: boolean                # Curate flow in progress
     phase?: 'syncing' | 'curating'  # shown as button tooltip while running
-    readerPost?: Post               # open article in the inline reader when set
+    selectedPost?: Post             # when set, PostArticle renders in the detail column
   slots:
     header?: ReactNode
   actions:
-    curate()                        # run syncFeeds → invoke MagazineBlueprint agent
-    openReader(post: Post)          # show ArticleReader; sets post.readAt if unset
-    closeReader()
+    curate()                        # run syncFeeds → invoke CurateMagazine
+    openPost(post: Post)            # set selectedPost + sets post.readAt if unset
+    closeDetail()                   # clear selectedPost
   emits:
     onCurateComplete(added: number)
   layout: |
-    ┌─────────────────────────────────────────────┐
-    │ [header slot]                 [✨ Curate]   │
-    ├─────────────────────────────────────────────┤
-    │ ┌─────┐ ┌─────┐ ┌─────┐                     │
-    │ │tile │ │tile │ │tile │   (Masonry grid)    │
-    │ └─────┘ └─────┘ └─────┘                     │
-    │ ┌─────┐ ┌─────┐                             │
-    │ │tile │ │tile │                             │
-    │ └─────┘ └─────┘                             │
-    └─────────────────────────────────────────────┘
+    ┌────────────────────────────────┬────────────────────┐
+    │ [header slot]        [✨ Curate]│                    │
+    ├────────────────────────────────┤ PostArticle        │
+    │ ┌─────┐ ┌─────┐ ┌─────┐        │ (when a tile is    │
+    │ │tile │ │tile │ │tile │        │  selected; hidden  │
+    │ └─────┘ └─────┘ └─────┘        │  otherwise)        │
+    │ ┌─────┐ ┌─────┐                │                    │
+    │ │tile │ │tile │                │                    │
+    │ └─────┘ └─────┘                │                    │
+    └────────────────────────────────┴────────────────────┘
 ```
 
 ```mdl
@@ -150,27 +150,27 @@ component MagazineTile
 ```
 
 ```mdl
-component ArticleReader
+component PostArticle
   desc: >
-    Inline overlay (dialog/sheet) inside the MagazineArticle surface.
-    Displays the extracted snippet and a link-out to the original article.
-    Sets post.readAt on open if not already set.
+    Independent article surface for a single Post. Registered as a React
+    surface matching `object(Article, Subscription.Post)` so it can render
+    in any article/companion context. Intentionally not a Panel or Dialog
+    — a plain content block that composes cleanly as the detail pane of a
+    master-detail view.
+
+    The MagazineArticle container renders PostArticle inline in a right-
+    hand detail column when a tile is clicked. post.readAt is set by the
+    master (MagazineArticle) when the tile is opened, not by PostArticle
+    itself.
   props:
-    post: Post
-    feed: Feed
-  emits:
-    onClose()
+    post: Post                      # via Surface data.subject
   layout: |
     ┌───────────────────────────────────────┐
-    │ [hero image]                     [✕]  │
-    ├───────────────────────────────────────┤
     │ Title                                 │
-    │ Feed · Author · Date                  │
-    ├───────────────────────────────────────┤
-    │ Snippet (full)                        │
-    │                                       │
-    ├───────────────────────────────────────┤
-    │              [Open original ↗]        │
+    │ Author · Date                         │
+    │ [hero image]                          │
+    │ Snippet                               │
+    │ [Open original ↗]                     │
     └───────────────────────────────────────┘
 ```
 
@@ -358,13 +358,27 @@ feat F-5: Masonry Display
 ```
 
 ```mdl
-feat F-6: Inline Article Reader
-  desc: Lightweight reader for curated snippets.
+feat F-6: Post Article Detail (master-detail)
+  desc: Post detail is rendered by a standalone PostArticle surface shown
+        alongside the masonry grid as the detail pane.
 
-  req F-6.1: ArticleReader is rendered as an overlay inside MagazineArticle; no route change.
-  req F-6.2: Reader shows hero image, title, feed name, author, date, full snippet.
-  req F-6.3: Reader includes an 'Open original' button linking to post.link (new tab/window).
-  req F-6.4: Closing the reader restores focus to the tile that opened it.
+  req F-6.1: PostArticle is registered as a React surface matching
+             `object(Article, Subscription.Post)` and is usable outside
+             the MagazineArticle context.
+  req F-6.2: PostArticle is implemented as a plain content block — no
+             Panel wrapper, no Dialog/overlay.
+  req F-6.3: PostArticle shows title, author, date, hero image, snippet,
+             and an 'Open original' link to `post.link`.
+  req F-6.4:
+    when: user clicks a tile in MagazineArticle
+    then: selectedPost state updates and PostArticle renders in the
+          right-hand detail column via Surface.Surface(type=Article, data={subject: post})
+  req F-6.5:
+    when: the detail column is visible
+    then: a close button (×) in the column header clears selectedPost
+  req F-6.6:
+    when: selectedPost is cleared
+    then: the detail column collapses and the masonry takes the full width
 ```
 
 ```mdl
