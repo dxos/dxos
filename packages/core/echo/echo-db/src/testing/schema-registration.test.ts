@@ -136,50 +136,59 @@ describe('schema registration semantics', () => {
 
   describe('query filters results with unresolvable schema', () => {
     test('db objects whose schema can no longer be resolved are filtered out', async () => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+      // Use a unique per-test schema so that mutating the registry can't affect other tests.
+      const EphemeralSchema = Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }).pipe(Type.object({ typename: 'com.example.test.ephemeral-db', version: '0.1.0' }));
+
+      await using peer = await builder.createPeer({ types: [EphemeralSchema] });
       const db = await peer.createDatabase();
-      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(EphemeralSchema, { name: 'Alice' }));
       await db.flush();
 
       // Confirm the object is visible while the schema is registered.
       const withSchemaResults = await db.query(Query.select(Filter.everything())).run();
       expect(
-        withSchemaResults.filter((entity) => Obj.getTypename(entity as any) === TestSchema.Person.typename),
+        withSchemaResults.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename),
       ).toHaveLength(1);
 
       // Simulate the schema disappearing from the runtime registry (and it was never persisted).
-      (peer.client.graph.schemaRegistry as any)._registry.delete(TestSchema.Person.typename);
+      (peer.client.graph.schemaRegistry as any)._registry.delete(EphemeralSchema.typename);
 
       // With skipSchemaValidation the object is still returned.
       const bypassResults = await db
         .query(Query.select(Filter.everything()).options({ skipSchemaValidation: true }))
         .run();
       expect(
-        bypassResults.filter((entity) => Obj.getTypename(entity as any) === TestSchema.Person.typename),
+        bypassResults.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename),
       ).toHaveLength(1);
 
       // Without skipSchemaValidation the object is filtered out.
       const filteredResults = await db.query(Query.select(Filter.everything())).run();
       expect(
-        filteredResults.filter((entity) => Obj.getTypename(entity as any) === TestSchema.Person.typename),
+        filteredResults.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename),
       ).toHaveLength(0);
     });
 
     test('queue objects whose schema cannot be resolved are filtered out', async () => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const EphemeralSchema = Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }).pipe(Type.object({ typename: 'com.example.test.ephemeral-queue', version: '0.1.0' }));
+
+      await using peer = await builder.createPeer({ types: [EphemeralSchema] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
-      await queue.append([Obj.make(TestSchema.Person, { name: 'Alice' })]);
+      await queue.append([Obj.make(EphemeralSchema, { name: 'Alice' })]);
 
-      // With Person registered, the query returns the object.
+      // With the schema registered, the query returns the object.
       const withSchema = await queue
         .query(Query.select(Filter.everything()).options({ skipSchemaValidation: true }))
         .run();
       expect(withSchema).toHaveLength(1);
 
-      // Simulate a peer without the Person schema in its runtime registry.
-      (peer.client.graph.schemaRegistry as any)._registry.delete(TestSchema.Person.typename);
+      // Simulate a peer without the schema in its runtime registry.
+      (peer.client.graph.schemaRegistry as any)._registry.delete(EphemeralSchema.typename);
 
       // With skipSchemaValidation the object is still returned.
       const bypass = await queue.query(Query.select(Filter.everything()).options({ skipSchemaValidation: true })).run();
@@ -206,16 +215,20 @@ describe('schema registration semantics', () => {
     });
 
     test('db query returns objects with unresolvable schema when skipSchemaValidation is true', async () => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const EphemeralSchema = Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }).pipe(Type.object({ typename: 'com.example.test.ephemeral-skip', version: '0.1.0' }));
+
+      await using peer = await builder.createPeer({ types: [EphemeralSchema] });
       const db = await peer.createDatabase();
-      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(EphemeralSchema, { name: 'Alice' }));
       await db.flush();
 
-      (peer.client.graph.schemaRegistry as any)._registry.delete(TestSchema.Person.typename);
+      (peer.client.graph.schemaRegistry as any)._registry.delete(EphemeralSchema.typename);
 
       const results = await db.query(Query.select(Filter.everything()).options({ skipSchemaValidation: true })).run();
-      const people = results.filter((entity) => Obj.getTypename(entity as any) === TestSchema.Person.typename);
-      expect(people).toHaveLength(1);
+      const ephemeral = results.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename);
+      expect(ephemeral).toHaveLength(1);
     });
 
     test('queue query with unresolvable typename succeeds when skipSchemaValidation is true', async () => {
