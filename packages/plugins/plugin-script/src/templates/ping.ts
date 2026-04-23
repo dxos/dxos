@@ -2,16 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { defineFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'dxos.org/script/ping',
-  name: 'Ping',
-  inputSchema: Schema.Any,
-
-  handler: async ({ data }) => {
-    return data;
+const Ping = Operation.make({
+  meta: {
+    key: 'org.dxos.script.ping',
+    name: 'Ping',
   },
+  input: Schema.Any,
+  output: Schema.Any,
 });
+
+export default Ping.pipe(
+  Operation.withHandler(
+    Effect.fn(function* (data) {
+      return data;
+    }),
+  ),
+);

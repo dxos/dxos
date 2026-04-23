@@ -6,9 +6,26 @@ import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 
 import * as Template from '../template';
+
+/**
+ * MCP server definition.
+ */
+export const McpServer = Schema.Struct({
+  /**
+   * URL of the MCP server.
+   */
+  url: Schema.String.annotations({
+    description: 'URL of the MCP server',
+  }),
+
+  protocol: Schema.Union(Schema.Literal('sse'), Schema.Literal('http')).annotations({
+    description: 'Protocol of the MCP server',
+  }),
+});
+export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
@@ -53,16 +70,28 @@ export const Blueprint = Schema.Struct({
   tools: Schema.Array(ToolId).annotations({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
   }),
+
+  /**
+   * Whether an agent is allowed to auto-enable this blueprint in a conversation.
+   */
+  agentCanEnable: Schema.optional(Schema.Boolean).annotations({
+    description: 'Whether an agent is allowed to auto-enable this blueprint in a conversation.',
+  }),
+
+  /**
+   * Array of MCP servers that the AI assistant can use when this blueprint is active.
+   */
+  mcpServers: Schema.optional(Schema.Array(McpServer)),
 }).pipe(
   Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
-    typename: 'dxos.org/type/Blueprint',
+    typename: 'org.dxos.type.blueprint',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--blueprint--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 
@@ -88,8 +117,8 @@ export const make = ({ tools = [], instructions = Template.make(), ...props }: M
  */
 export const toolDefinitions = ({
   tools = [],
-  functions = [],
+  operations = [],
 }: {
   tools?: string[];
-  functions?: FunctionDefinition[];
-}) => [...functions.map((fn) => ToolId.make(fn.key)), ...tools.map((tool) => ToolId.make(tool))];
+  operations?: Operation.Definition.Any[];
+}) => [...operations.map((op) => ToolId.make(op.meta.key)), ...tools.map((tool) => ToolId.make(tool))];

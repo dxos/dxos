@@ -37,6 +37,20 @@ Your Spaces are listed in the left sidebar of your Composer window and your Obje
 
 Collections are a high level structure for organizing your documents inside of Composer. Collections can contain multiple "objects" which include things like documents, sketches, and more.
 
+### Projects
+
+Projects allow you to work collaboratively with an agent on a specific goal.
+
+Check out those examples:
+
+```prompt
+Create a project to build a CRM from my inbox.
+```
+
+```prompt
+Create a project to track what I ordered online.
+```
+
 ### Collaboration
 
 Composer is a realtime collaborative environment. This means multiple people can be working inside of the same Space, Collection or Object at any given time without overwriting each others changes. This is one of the core benefits of the DXOS platform.

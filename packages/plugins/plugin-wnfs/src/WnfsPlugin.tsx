@@ -3,19 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { Blockstore, FileUploader, Markdown, OperationResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { Blockstore, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { WnfsOperation } from '#operations';
+import { WnfsAction, WnfsCapabilities, WnfsFile } from '#types';
+
 import { translations } from './translations';
-import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -23,18 +27,23 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
       id: WnfsFile.File.typename,
       metadata: {
         // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
-        icon: 'ph--file--regular',
-        iconHue: 'teal',
+        icon: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: WnfsAction.UploadFileSchema,
-        createObject: ((props, { db }) =>
+        createObject: ((props, options) =>
           Effect.gen(function* () {
-            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db });
-            return object;
+            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db: options.db });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
           })) satisfies CreateObject,
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -51,16 +60,6 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         const instances: WnfsCapabilities.Instances = {};
         return Capability.contributes(WnfsCapabilities.Instances, instances);
       }),
-  }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(WnfsOperation.OnCreateSpace, params),
-        ),
-      ),
   }),
   Plugin.addModule({
     id: 'file-uploader',

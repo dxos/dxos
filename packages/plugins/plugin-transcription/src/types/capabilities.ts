@@ -4,7 +4,8 @@
 
 import { Capability } from '@dxos/app-framework';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import {
   type MediaStreamRecorderProps,
   type Transcriber,
@@ -21,13 +22,13 @@ export namespace TranscriptionCapabilities {
     onSegments: TranscriberProps['onSegments'];
   };
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
-  export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}/capability/transcriber`);
+  export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}.capability.transcriber`);
 
   export type GetTranscriptionManagerProps = {
     messageEnricher?: TranscriptMessageEnricher;
   };
   export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManager;
   export const TranscriptionManager = Capability.make<GetTranscriptionManager>(
-    `${meta.id}/capability/transcription-manager`,
+    `${meta.id}.capability.transcription-manager`,
   );
 }

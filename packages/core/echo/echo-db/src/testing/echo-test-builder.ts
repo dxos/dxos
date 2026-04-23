@@ -14,9 +14,10 @@ import isEqual from 'fast-deep-equal';
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Obj, type Type } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { Filter, Query } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -28,7 +29,6 @@ import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type EchoDatabase } from '../proxy-db';
-import { Filter, Query } from '../query';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -37,7 +37,7 @@ type OpenDatabaseOptions = {
 };
 
 type PeerOptions = {
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
@@ -81,7 +81,7 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
-  private readonly _types: Type.Entity.Any[];
+  private readonly _types: Type.AnyEntity[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
@@ -212,7 +212,7 @@ export class EchoTestPeer extends Resource {
     // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
-    const root = await this.host.createSpaceRoot(spaceKey);
+    const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
@@ -231,7 +231,7 @@ export class EchoTestPeer extends Resource {
   ) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
+    await this.host.openSpaceRoot(this._ctx, spaceId, rootUrl as AutomergeUrl);
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(rootUrl);
     await db.open();

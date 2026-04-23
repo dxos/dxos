@@ -2,18 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import * as Node from './node';
 
-/**
- * Key separators for compound string keys used across the app-graph package.
- * `primary` separates top-level components (e.g., node ID from relation).
- * `secondary` separates sub-components within an encoded value (e.g., relation kind from direction).
- * Two distinct characters are needed because secondary separators appear inside primary-separated fields.
- */
-export const Separators = {
-  primary: '\u0001',
-  secondary: '\u0002',
-} as const;
+// PRIMARY separates top-level components (e.g., node ID from relation) in compound string keys used within the app-graph package.
+const PRIMARY = '\u0001';
+
+// SECONDARY separates sub-components within an encoded value (e.g., relation kind from direction) in the same context.
+const SECONDARY = '\u0002';
+
+// PATH separates segments in qualified node IDs (e.g., parent path from local segment).
+const PATH = '/';
+
+/** Join parts with the primary separator. */
+export const primaryKey = (...parts: string[]): string => parts.join(PRIMARY);
+
+/** Split a key on the primary separator. */
+export const primaryParts = (key: string): string[] => key.split(PRIMARY);
+
+/** Join parts with the secondary separator. */
+export const secondaryKey = (...parts: string[]): string => parts.join(SECONDARY);
+
+/** Split a key on the secondary separator. */
+export const secondaryParts = (key: string): string[] => key.split(SECONDARY);
 
 /**
  * Normalize a relation input to a full Relation object.
@@ -52,4 +64,32 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
       shallowEqual(prevNode.properties, nextNode.properties)
     );
   });
+};
+
+/**
+ * Build a qualified node ID by joining path segments.
+ */
+export const qualifyId = (parentId: string, ...segmentIds: string[]): string => [parentId, ...segmentIds].join(PATH);
+
+/**
+ * Validate that a segment ID does not contain the path separator.
+ */
+export const validateSegmentId = (id: string): void => {
+  invariant(!id.includes(PATH), `Node segment ID must not contain '${PATH}': ${id}`);
+};
+
+/**
+ * Extract the parent qualified ID (everything before the last path separator).
+ * Returns undefined for IDs with no parent (single segment).
+ */
+export const getParentId = (qualifiedId: string): string | undefined => {
+  const lastSlash = qualifiedId.lastIndexOf(PATH);
+  return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
+};
+
+/**
+ * Extract the last segment of a qualified ID.
+ */
+export const getSegmentId = (qualifiedId: string): string => {
+  return qualifiedId.split(PATH).pop() ?? qualifiedId;
 };

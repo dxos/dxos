@@ -54,7 +54,7 @@ export const createDefaultSchema = () =>
     }),
   }).pipe(
     Type.object({
-      typename: `example.com/type/${PublicKey.random().truncate()}`,
+      typename: `com.example.type.${PublicKey.random().truncate()}`,
       version: '0.1.0',
     }),
   );
@@ -62,7 +62,7 @@ export const createDefaultSchema = () =>
 export const getSchema = async (
   dxn: DXN,
   registry?: SchemaRegistry.SchemaRegistry,
-): Promise<Type.Entity.Any | undefined> => {
+): Promise<Type.AnyEntity | undefined> => {
   const typeDxn = dxn.asTypeDXN();
   if (!typeDxn) {
     return;

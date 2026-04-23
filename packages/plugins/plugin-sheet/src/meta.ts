@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/sheet',
+  id: 'org.dxos.plugin.sheet',
   name: 'Sheet',
   description: trim`
     Full-featured spreadsheet application with over 400 built-in formulas for calculations and data analysis.

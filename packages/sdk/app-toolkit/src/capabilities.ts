@@ -3,16 +3,17 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
+import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
-import type { GenericToolkit } from '@dxos/ai';
+import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
-import type { Database, Type } from '@dxos/echo';
-import type { FunctionDefinition } from '@dxos/functions';
+import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 
 import type { FileInfo } from './file';
@@ -47,12 +48,12 @@ export namespace AppCapabilities {
    * Layout capability - provides reactive access to the current layout state.
    * @category Capability
    */
-  export const Layout = Capability$.make<Atom.Atom<Layout>>('dxos.org/app-framework/capability/layout');
+  export const Layout = Capability$.make<Atom.Atom<Layout>>('org.dxos.app-framework.capability.layout');
 
   /**
    * @category Capability
    */
-  export const Translations = Capability$.make<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
+  export const Translations = Capability$.make<Readonly<Resource[]>>('org.dxos.app-framework.capability.translations');
 
   export type AppGraph = Readonly<{
     graph: Graph.ExpandableGraph;
@@ -62,20 +63,20 @@ export namespace AppCapabilities {
   /**
    * @category Capability
    */
-  export const AppGraph = Capability$.make<AppGraph>('dxos.org/app-framework/capability/app-graph');
+  export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capability.app-graph');
 
   /**
    * @category Capability
    */
   export const AppGraphBuilder = Capability$.make<BuilderExtensions>(
-    'dxos.org/app-framework/capability/app-graph-builder',
+    'org.dxos.app-framework.capability.app-graph-builder',
   );
 
   /**
    * @category Capability
    */
   export const AppGraphSerializer = Capability$.make<NodeSerializer[]>(
-    'dxos.org/app-framework/capability/app-graph-serializer',
+    'org.dxos.app-framework.capability.app-graph-serializer',
   );
 
   export type Settings = {
@@ -99,7 +100,7 @@ export namespace AppCapabilities {
   /**
    * @category Capability
    */
-  export const Settings = Capability$.make<Settings>('dxos.org/app-framework/capability/settings');
+  export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
 
   export type Metadata = Readonly<{
     id: string;
@@ -109,26 +110,25 @@ export namespace AppCapabilities {
   /**
    * @category Capability
    */
-  export const Metadata = Capability$.make<Metadata>('dxos.org/app-framework/capability/metadata');
+  export const Metadata = Capability$.make<Metadata>('org.dxos.app-framework.capability.metadata');
 
-  export type Schema = ReadonlyArray<Type.Entity.Any>;
-
-  /**
-   * @category Capability
-   */
-  export const Schema = Capability$.make<Schema>('dxos.org/app-framework/capability/schema');
-
-  export type Toolkit = GenericToolkit.GenericToolkit;
+  export type Schema = ReadonlyArray<Type.AnyEntity>;
 
   /**
    * @category Capability
    */
-  export const Toolkit = Capability$.make<Toolkit>('dxos.org/app-framework/capability/ai-toolkit');
+  export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
+
+  export type Toolkit = OpaqueToolkit.OpaqueToolkit;
+
+  /**
+   * @category Capability
+   */
+  export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.ai-toolkit');
 
   // TODO(burdon): Move type upstream (into blueprint package).
   export type BlueprintDefinition = {
     key: string;
-    functions: FunctionDefinition.Any[];
     make: () => Blueprint.Blueprint;
   };
 
@@ -136,32 +136,27 @@ export namespace AppCapabilities {
    * @category Capability
    */
   export const BlueprintDefinition = Capability$.make<BlueprintDefinition>(
-    'dxos.org/app-framework/capability/blueprint-definition',
+    'org.dxos.app-framework.capability.blueprint-definition',
   );
 
   export type AiServiceLayer = Layer$.Layer<AiService$.AiService>;
   export const AiServiceLayer = Capability$.make<AiServiceLayer>(
-    'dxos.org/app-framework/capability/ai-service-factory',
+    'org.dxos.app-framework.capability.ai-service-factory',
   );
 
   /**
    * Plugins can contribute them to provide model resolvers.
    */
   export const AiModelResolver = Capability$.make<Layer$.Layer<AiModelResolver$.AiModelResolver>>(
-    'dxos.org/app-framework/capability/ai-model-resolver',
+    'org.dxos.app-framework.capability.ai-model-resolver',
   );
-
-  /**
-   * @category Capability
-   */
-  export const Functions = Capability$.make<FunctionDefinition.Any[]>('dxos.org/app-framework/capability/functions');
 
   export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
   /**
    * @category Capability
    */
-  export const FileUploader = Capability$.make<FileUploader>('dxos.org/app-framework/capability/file-uploader');
+  export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.file-uploader');
 
   export type AnchorSort = {
     key: string;
@@ -171,5 +166,55 @@ export namespace AppCapabilities {
   /**
    * @category Capability
    */
-  export const AnchorSort = Capability$.make<AnchorSort>('dxos.org/app-framework/capability/anchor-sort');
+  export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
+
+  export type NavigationTarget = {
+    /** Navigation path usable with the Open operation. */
+    path: string;
+    /** Human-readable label. */
+    label: string;
+    /** Object type. */
+    type: string;
+  };
+
+  export type NavigationQuery = {
+    dxn?: DXN.String;
+  };
+
+  /**
+   * Resolves a query to navigation targets.
+   * Each plugin interprets the query and returns matching targets.
+   * When called without a query, returns the plugin's default navigable pages.
+   * @category Capability
+   */
+  export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
+
+  export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
+    'org.dxos.app-framework.capability.navigation-target-resolver',
+  );
+
+  /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
+  );
+
+  /**
+   * Resolves a qualified graph path to a DXN.
+   * Each plugin recognizes its own path patterns and returns the corresponding DXN.
+   * Returns None if the path is not recognized by this resolver.
+   * Used to validate navigation targets against remote services (e.g., edge).
+   * @category Capability
+   */
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<DXN>>;
+
+  export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
+    'org.dxos.app-framework.capability.navigation-path-resolver',
+  );
 }

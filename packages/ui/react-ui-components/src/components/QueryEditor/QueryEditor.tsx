@@ -3,23 +3,20 @@
 //
 
 import { type Extension, Prec } from '@codemirror/state';
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { type ThemedClassName, setRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  EditorContent,
-  type EditorContentProps,
+  Editor,
+  type EditorViewProps,
   type EditorController,
-  EditorMenuProvider,
   type EditorMenuProviderProps,
-  type UseEditorMenuProps,
   createMenuGroup,
-  useEditorMenu,
+  type UseEditorMenuProps,
 } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-
 import { type CompletionOptions, completions } from './autocomplete';
 import { query } from './query-extension';
 
@@ -27,7 +24,7 @@ export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & (CompletionOptions & Omit<EditorContentProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
+  } & (CompletionOptions & Omit<EditorViewProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
 >;
 
 /**
@@ -37,32 +34,18 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, numItems = 8, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
-    const [controller, setController] = useState<EditorController | null>(null);
-    // TODO(burdon): This is suspicious; use other hooks.
-    useEffect(() => {
-      setRef(forwardedRef, controller);
-    }, [controller]);
-
     const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
     const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
       async (context) => [createMenuGroup({ items: getOptions(context) })],
       [getOptions],
     );
 
-    const { groupsRef, extension, ...menuProps } = useEditorMenu({
-      // TODO(burdon): Handle trigger AND triggerKey.
-      // trigger: ['#'],
-      triggerKey: 'Ctrl-Space',
-      getMenu,
-    });
-
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
-        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query editor placeholder') }),
-        createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
+        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query-editor.placeholder') }),
+        createThemeExtensions({ themeMode, slots: { scroller: { className: 'scrollbar-none' } } }),
         query({ tags }),
-        extension,
         Prec.highest(
           keymap.of([
             {
@@ -75,13 +58,21 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           ]),
         ),
       ],
-      [db, extension, readonly],
+      [db, readonly],
     );
 
     return (
-      <EditorMenuProvider view={controller?.view} groups={groupsRef.current} numItems={numItems} {...menuProps}>
-        <EditorContent {...props} initialValue={value} extensions={extensions} selectionEnd ref={setController} />
-      </EditorMenuProvider>
+      <Editor.Root
+        ref={forwardedRef}
+        extensions={extensions}
+        numItems={numItems}
+        // TODO(burdon): Handle trigger AND triggerKey.
+        // trigger: ['#'],
+        triggerKey='Ctrl-Space'
+        getMenu={getMenu}
+      >
+        <Editor.View {...props} initialValue={value} selectionEnd />
+      </Editor.Root>
     );
   },
 );

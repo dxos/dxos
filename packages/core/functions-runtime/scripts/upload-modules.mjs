@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
-import { chalk, fs } from 'zx';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { DeleteObjectsCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { writeFileSync } from 'fs';
+import path from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import path from 'path';
+import { chalk, fs } from 'zx';
+
 import { sleep } from '@dxos/async';
-import { writeFileSync } from 'fs';
-import { DeleteObjectsCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 //
 // Upload all assets from dist/vendor to cloudflare bucket.
@@ -33,14 +38,11 @@ const MAX_RETRIES = 6;
 const BASE_RETRY_DELAY_MS = 200;
 const MAX_RETRY_DELAY_MS = 10_000;
 
-
 const getRetryDelayMs = (attempt) => {
   const backoffMs = Math.min(MAX_RETRY_DELAY_MS, BASE_RETRY_DELAY_MS * 2 ** Math.max(0, attempt - 1));
   const jitter = 0.5 + Math.random();
   return Math.round(backoffMs * jitter);
 };
-
-
 
 const createS3Client = () =>
   new S3Client({

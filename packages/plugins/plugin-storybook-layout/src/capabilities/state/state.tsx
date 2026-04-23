@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { LayoutState } from '../../types';
+import { LayoutState } from '#types';
 
 const defaultState: LayoutState = {
   sidebarState: 'closed',
@@ -51,9 +51,6 @@ export default Capability.makeModule(({ initialState }: { initialState?: Partial
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
-    return [
-      Capability.contributes(LayoutState, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
-    ];
+    return [Capability.contributes(LayoutState, stateAtom), Capability.contributes(AppCapabilities.Layout, layoutAtom)];
   }),
 );

@@ -7,35 +7,60 @@ import { FileUploader } from 'react-drag-drop-files';
 
 import { Button, Dialog, Icon } from '@dxos/react-ui';
 
-export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: File) => Promise<void> }) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
+export type DialogRestoreSpaceProps = {
+  handleFile: (backupFile: File) => Promise<void>;
+  /** Controlled open state. When omitted, dialog manages its own state. */
+  open?: boolean;
+  /** Callback for controlled open state changes. */
+  onOpenChange?: (open: boolean) => void;
+  /** When set, dialog shows "Import into {spaceName}" and restricts to JSON only. */
+  spaceName?: string;
+};
+
+export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }: DialogRestoreSpaceProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = isControlled ? (onOpenChange ?? (() => {})) : setInternalOpen;
+  const isImportIntoExisting = !!spaceName;
 
   return (
-    <div className='flex shrink-0 m-2'>
-      <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => setDialogOpen(nextOpen)}>
+    <Dialog.Root open={isOpen} onOpenChange={(nextOpen) => setIsOpen(nextOpen)}>
+      {!isControlled && (
         <Dialog.Trigger asChild>
           <Button>Import space</Button>
         </Dialog.Trigger>
-
-        <Dialog.Overlay>
-          <Dialog.Content>
-            <Dialog.Title>{'Import space'}</Dialog.Title>
-            <p className='my-4'>{'Importing from a backup will create new space from.'}</p>
+      )}
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>{isImportIntoExisting ? 'Import into space' : 'Import space'}</Dialog.Title>
+          </Dialog.Header>
+          <Dialog.Body>
+            <p className='my-4'>
+              {isImportIntoExisting
+                ? `Import data into ${spaceName}. Only JSON snapshots are supported.`
+                : 'Importing from a backup will create new space from.'}
+            </p>
             <FileUploader
-              types={['json', 'tar']}
+              types={isImportIntoExisting ? ['json'] : ['json', 'tar']}
               classes='block my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
               dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-              handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setDialogOpen(false))}
+              handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setIsOpen(false))}
             >
               <Icon icon='ph--file-plus--duotone' size={8} />
-              <span>{'Drag file here or click to browse'}</span>
+              <span>
+                {isImportIntoExisting ? 'Drag JSON file here or click to browse' : 'Drag file here or click to browse'}
+              </span>
             </FileUploader>
+          </Dialog.Body>
+          <Dialog.ActionBar>
             <Dialog.Close asChild>
               <Button variant='primary'>{'Cancel'}</Button>
             </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Overlay>
-      </Dialog.Root>
-    </div>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
   );
 };

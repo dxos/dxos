@@ -12,9 +12,9 @@ import { Script } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ScriptToolbarState, type ScriptToolbarStateStore } from '../../hooks';
-import { translations } from '../../translations';
+import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
 
+import { translations } from '../../translations';
 import { ScriptToolbar } from './ScriptToolbar';
 
 // Create a mock store for stories.
@@ -51,7 +51,7 @@ const meta = {
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
     withTheme(),
-    withLayout({ classNames: 'w-prose-max-width' }),
+    withLayout({ classNames: 'w-document-max-width' }),
     withPluginManager({
       plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
     }),

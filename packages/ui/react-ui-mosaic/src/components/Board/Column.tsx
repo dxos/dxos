@@ -19,13 +19,12 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
-
 import { useBoard } from './Board';
 import { BoardItem } from './Item';
 
@@ -62,7 +61,7 @@ type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TC
   dragHandleRef?: RefObject<HTMLButtonElement | null>;
 };
 
-const BoardColumnRootInner = forwardRef<HTMLDivElement, BoardColumnRootProps>(
+const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
   ({ classNames, children, location, data, debug, dragHandleRef: dragHandleRefProp, ...rest }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_ROOT_NAME);
 
@@ -82,9 +81,11 @@ const BoardColumnRootInner = forwardRef<HTMLDivElement, BoardColumnRootProps>(
         <Focus.Group
           {...rest}
           data-testid='board-column'
+          border
           classNames={mx(
-            // NOTE: Reserves 2px for outer Focus.Group border.
-            'group/column h-full overflow-hidden w-[calc(100vw-2px)] md:w-card-default-width snap-center bg-deck-surface',
+            'group/column',
+            'h-full w-full md:w-card-default-width snap-center bg-deck-surface',
+            'overflow-hidden',
             classNames,
           )}
           ref={forwardedRef}
@@ -108,10 +109,10 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
+type BoardColumnHeaderProps = { label: string; dragHandleRef: ReactRef<HTMLButtonElement> };
 
-const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
-  ({ classNames, label, dragHandleRef }, forwardedRef) => {
+const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
+  ({ label, dragHandleRef, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { model } = useBoard(BOARD_COLUMN_HEADER_NAME);
     const column = useBoardColumn();
@@ -120,7 +121,7 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
         column != null && model.onColumnDelete
           ? [
               createMenuAction('delete-column', () => model.onColumnDelete?.(column), {
-                label: t('delete menu label'),
+                label: t('delete-menu.label'),
                 icon: 'ph--trash--regular',
               }),
             ]
@@ -130,20 +131,16 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
 
     return (
       <Menu.Root>
-        <Toolbar.Root
-          classNames={mx('border-b border-separator', classNames)}
-          data-testid='board-column-header'
-          ref={forwardedRef}
-        >
-          <Toolbar.DragHandle ref={dragHandleRef} />
-          <Toolbar.Text>{label}</Toolbar.Text>
+        <Toolbar.Root {...composableProps(props)} data-testid='board-column-header' ref={forwardedRef}>
+          <Toolbar.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
+          <Toolbar.Text data-testid='mosaicBoard.columnTitle'>{label}</Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!columnMenuItems?.length}>
             <Toolbar.IconButton
               iconOnly
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
-              label={t('action menu label')}
+              label={t('action-menu.label')}
             />
           </Menu.Trigger>
           <Menu.Content items={columnMenuItems} />
@@ -166,28 +163,32 @@ type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
   };
 
-const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
-  const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
-  const items = useAtomValue(model.items(data));
+const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
+  ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
+    const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useAtomValue(model.items(data));
 
-  return (
-    <Mosaic.Container
-      asChild
-      withFocus
-      orientation='vertical'
-      autoScroll={viewport}
-      eventHandler={eventHandler}
-      debug={debug}
-    >
-      <ScrollArea.Root orientation='vertical' thin margin padding>
-        <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-          <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Mosaic.Container>
-  );
-};
+    return (
+      <Mosaic.Container
+        {...composableProps(props)}
+        asChild
+        withFocus
+        orientation='vertical'
+        autoScroll={viewport}
+        eventHandler={eventHandler}
+        debug={debug}
+        ref={forwardedRef}
+      >
+        <ScrollArea.Root orientation='vertical' thin centered padding>
+          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    );
+  },
+);
 
 BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 
@@ -218,7 +219,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
             variant='ghost'
             icon='ph--plus--regular'
             iconOnly
-            label={t('add item label')}
+            label={t('add-item.label')}
             onClick={handleAdd}
           />
         )}

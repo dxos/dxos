@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 export * from 'quickjs-emscripten';
 
 import { newVariant, RELEASE_SYNC, newQuickJSWASMModuleFromVariant } from 'quickjs-emscripten';

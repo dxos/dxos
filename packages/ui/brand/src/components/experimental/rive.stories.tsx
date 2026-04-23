@@ -8,8 +8,7 @@ import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
@@ -56,35 +55,41 @@ const DefaultStory = () => {
   });
 
   if (!buffer) {
-    return null;
+    return <Loading data={{ buffer: !!buffer }} />;
   }
 
   return (
     <>
       <Component buffer={buffer} />
-      <div className='flex absolute left-0 right-0 top-[120px] h-[320px] align-center'>
-        <div
-          className='z-1 absolute inset-0 w-[800px] m-auto'
-          style={{
-            background: 'radial-gradient(ellipse 200% 100% at center, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0) 50%)',
-          }}
-        />
-        <div
-          className={mx(
-            'z-2 absolute inset-0 flex items-center w-[720px] m-auto p-2',
-            'text-white text-[60px] leading-tight text-center font-thin',
-          )}
-        >
-          The new standard for building collaborative local-first software.
+      {false && (
+        <div className='flex absolute left-0 right-0 top-[120px] h-[320px] align-center'>
+          <div
+            className='z-1 absolute inset-0 w-[800px] m-auto'
+            style={{
+              background: 'radial-gradient(ellipse 200% 100% at center, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0) 50%)',
+            }}
+          />
+          <div
+            className={mx(
+              'z-2 absolute inset-0 items-center w-[720px] m-auto p-2',
+              'text-white text-[60px] leading-tight text-center font-thin',
+            )}
+          >
+            <div className='flex flex-col items-center opacity-0'>
+              <div>The new standard</div>
+              <div>for collaborative</div>
+              <div>local-first software</div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
 
 const meta = {
   title: 'ui/brand/experimental/Rive',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',

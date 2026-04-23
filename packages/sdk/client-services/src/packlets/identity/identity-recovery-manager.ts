@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -72,7 +73,7 @@ export class EdgeIdentityRecoveryManager {
     return { recoveryCode };
   }
 
-  public async requestRecoveryChallenge() {
+  public async requestRecoveryChallenge(ctx: Context) {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const deviceKey = await this._keyring.createKey();
@@ -83,7 +84,7 @@ export class EdgeIdentityRecoveryManager {
     };
 
     try {
-      await this._edgeClient.recoverIdentity(request);
+      await this._edgeClient.recoverIdentity(ctx, request);
       throw new Error('No challenge received.');
     } catch (error: any) {
       if (!(error instanceof EdgeAuthChallengeError)) {
@@ -97,14 +98,17 @@ export class EdgeIdentityRecoveryManager {
     }
   }
 
-  public async recoverIdentityWithExternalSignature({
-    lookupKey,
-    deviceKey,
-    controlFeedKey,
-    signature,
-    clientDataJson,
-    authenticatorData,
-  }: RecoverIdentityRequest.ExternalSignature): Promise<void> {
+  public async recoverIdentityWithExternalSignature(
+    ctx: Context,
+    {
+      lookupKey,
+      deviceKey,
+      controlFeedKey,
+      signature,
+      clientDataJson,
+      authenticatorData,
+    }: RecoverIdentityRequest.ExternalSignature,
+  ): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const request: EdgeRecoverIdentityRequest = {
@@ -121,7 +125,7 @@ export class EdgeIdentityRecoveryManager {
           : Buffer.from(signature).toString('base64'),
     };
 
-    const response = await this._edgeClient.recoverIdentity(request);
+    const response = await this._edgeClient.recoverIdentity(ctx, request);
 
     await this._acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
@@ -137,7 +141,7 @@ export class EdgeIdentityRecoveryManager {
   /**
    * Recovery identity using an opaque token sent to the user's email.
    */
-  public async recoverIdentityWithToken({ token }: { token: string }): Promise<void> {
+  public async recoverIdentityWithToken(ctx: Context, { token }: { token: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const deviceKey = await this._keyring.createKey();
@@ -148,7 +152,7 @@ export class EdgeIdentityRecoveryManager {
       token,
     };
 
-    const response = await this._edgeClient.recoverIdentity(request);
+    const response = await this._edgeClient.recoverIdentity(ctx, request);
 
     await this._acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
@@ -161,7 +165,7 @@ export class EdgeIdentityRecoveryManager {
     });
   }
 
-  public async recoverIdentity({ recoveryCode }: { recoveryCode: string }): Promise<void> {
+  public async recoverIdentity(ctx: Context, { recoveryCode }: { recoveryCode: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);
@@ -176,13 +180,13 @@ export class EdgeIdentityRecoveryManager {
 
     let response: RecoverIdentityResponseBody;
     try {
-      response = await this._edgeClient.recoverIdentity(request);
+      response = await this._edgeClient.recoverIdentity(ctx, request);
     } catch (error: any) {
       if (!(error instanceof EdgeAuthChallengeError)) {
         throw error;
       }
       const signature = sign(Buffer.from(error.challenge, 'base64'), recoveryKeypair.secretKey);
-      response = await this._edgeClient.recoverIdentity({
+      response = await this._edgeClient.recoverIdentity(ctx, {
         ...request,
         signature: Buffer.from(signature).toString('base64'),
       });

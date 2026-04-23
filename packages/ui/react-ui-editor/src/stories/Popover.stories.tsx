@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -25,10 +25,9 @@ import {
   linkSlashCommands,
   useEditorMenu,
 } from '../components';
-
 import { EditorStory } from './components';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 const customCompletions: EditorMenuGroup = createMenuGroup({
   id: 'test',
@@ -41,12 +40,12 @@ const placeholder = (trigger: string[]) => {
     Domino.of('span').classNames(mx('border border-separator rounded-xs mx-1 px-1 py-[2px] pb-[3px]')).text(trigger),
   );
   const forCommandsEl = Domino.of('span').text('for commands');
-  return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
+  return Domino.of('div').append(pressEl, ...triggerEls, forCommandsEl).root;
 };
 
-type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
+type DefaultStoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 
-const DefaultStory = ({ text, ...props }: StoryProps) => {
+const DefaultStory = ({ text, ...props }: DefaultStoryProps) => {
   const [controller, setController] = useState<EditorController | null>(null);
   const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
 
@@ -57,7 +56,7 @@ const DefaultStory = ({ text, ...props }: StoryProps) => {
   );
 };
 
-const LinkStory = (args: StoryProps) => {
+const LinkStory = (args: DefaultStoryProps) => {
   const { space } = useClientStory();
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(

@@ -5,33 +5,43 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Feed, Obj } from '@dxos/echo';
-import { Container } from '@dxos/react-ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { Panel } from '@dxos/react-ui';
+import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
-import { useActorContact } from '../../hooks';
-import { InboxOperation } from '../../types';
+import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { useActorContact } from '#hooks';
+import { InboxOperation } from '#operations';
+import { Mailbox } from '#types';
 
-export type MessageArticleProps = SurfaceComponentProps<
+import { getMailboxMessagePath } from '../../paths';
+
+export type MessageArticleProps = AppSurface.ObjectArticleProps<
   MessageType.Message,
   {
-    feed: Feed.Feed;
+    mailbox?: Mailbox.Mailbox;
   }
 >;
 
 export const MessageArticle = ({
   role,
   subject: message,
-  feed, // TODO(burdon): companionTo?
+  attendableId,
+  companionTo,
+  mailbox: mailboxProp,
 }: MessageArticleProps) => {
+  const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
+
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const db = Obj.getDatabase(feed);
+  const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
 
   const { invokePromise } = useOperationInvoker();
@@ -44,41 +54,48 @@ export const MessageArticle = ({
     [db, invokePromise],
   );
 
-  const handleReply = useCallback(() => {
-    if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply', replyToMessage: message });
+  const handleOpen = useCallback(() => {
+    if (!mailbox || !db) {
+      return;
     }
-  }, [db, invokePromise, message]);
+    void invokePromise(LayoutOperation.Open, { subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)] });
+  }, [mailbox, db, message.id, invokePromise]);
 
-  const handleReplyAll = useCallback(() => {
-    if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply-all', replyToMessage: message });
-    }
-  }, [db, invokePromise, message]);
+  const openDraft = useCallback(
+    (mode: 'reply' | 'reply-all' | 'forward') => {
+      if (db) {
+        void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode, message, mailbox });
+      }
+    },
+    [db, invokePromise, message, mailbox],
+  );
 
-  const handleForward = useCallback(() => {
-    if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'forward', replyToMessage: message });
-    }
-  }, [db, invokePromise, message]);
+  const handleReply = useCallback(() => openDraft('reply'), [openDraft]);
+  const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
+  const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
   return (
-    <Container.Main role={role} toolbar>
-      <Message.Root
-        attendableId={Obj.getDXN(feed).toString()}
-        viewMode={viewMode}
-        message={message}
-        sender={sender}
-        onReply={handleReply}
-        onReplyAll={handleReplyAll}
-        onForward={handleForward}
-      >
-        <Message.Toolbar />
-        <Message.Viewport role={role}>
-          <Message.Header onContactCreate={handleContactCreate} />
-          <Message.Content />
-        </Message.Viewport>
-      </Message.Root>
-    </Container.Main>
+    <Message.Root
+      attendableId={toolbarAttendableId}
+      viewMode={viewMode}
+      message={message}
+      sender={sender}
+      onOpen={companionTo ? handleOpen : undefined}
+      onReply={handleReply}
+      onReplyAll={handleReplyAll}
+      onForward={handleForward}
+    >
+      <Panel.Root role={role} className='dx-document'>
+        <Panel.Toolbar asChild>
+          <Message.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Message.Viewport role={role}>
+            <Message.Header onContactCreate={handleContactCreate} />
+            <Message.Body />
+          </Message.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Message.Root>
   );
 };

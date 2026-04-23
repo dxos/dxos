@@ -15,17 +15,17 @@ export const RootId = 'root';
 /**
  * Root node type.
  */
-export const RootType = 'dxos.org/type/GraphRoot';
+export const RootType = 'org.dxos.type.graphRoot';
 
 /**
  * Action node type.
  */
-export const ActionType = 'dxos.org/type/GraphAction';
+export const ActionType = 'org.dxos.type.graphAction';
 
 /**
  * Action group node type.
  */
-export const ActionGroupType = 'dxos.org/type/GraphActionGroup';
+export const ActionGroupType = 'org.dxos.type.graphActionGroup';
 
 /**
  * Represents a node in the graph.
@@ -107,6 +107,9 @@ export type InvokeProps = {
   /** Node the invoked action is connected to. */
   parent?: Node;
 
+  /** Path from root to the node in the current tree context. */
+  path?: string[];
+
   caller?: string;
 };
 
@@ -147,3 +150,29 @@ export const isActionGroup = (data: unknown): data is ActionGroup =>
 export type ActionLike = Action | ActionGroup;
 
 export const isActionLike = (data: unknown): data is Action | ActionGroup => isAction(data) || isActionGroup(data);
+
+//
+// Node Factories
+//
+
+/** Typed factory for constructing a NodeArg. Provides auto-complete and type validation. */
+export const make = <TData = any, TProperties extends Record<string, any> = Record<string, any>>(
+  arg: NodeArg<TData, TProperties>,
+): NodeArg<TData, TProperties> => arg;
+
+/** Create an action node. Automatically sets `type: ActionType`. */
+export const makeAction = <R = never>(
+  arg: Omit<NodeArg<ActionData<R>>, 'type' | 'nodes' | 'edges'>,
+): NodeArg<ActionData<R>> => ({
+  ...arg,
+  type: ActionType,
+});
+
+/** Create an action group node. Automatically sets `type` and `data`. */
+export const makeActionGroup = (
+  arg: Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>,
+): NodeArg<typeof actionGroupSymbol> => ({
+  ...arg,
+  type: ActionGroupType,
+  data: actionGroupSymbol,
+});

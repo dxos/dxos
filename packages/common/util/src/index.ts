@@ -14,6 +14,7 @@ export * from './chunk-array';
 export * from './circular-buffer';
 export * from './clear-undefined';
 export * from './complex';
+export * from './composite-key';
 export * from './deep';
 export * from './defer-function';
 export * from './defer';

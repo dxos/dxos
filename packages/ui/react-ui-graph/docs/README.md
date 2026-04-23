@@ -29,6 +29,6 @@ dxos/react-ui-graph --> dxos/react-ui-graph
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
+| Module                                                        | Direct  |
+| ------------------------------------------------------------- | ------- |
 | [`@dxos/react-ui-graph`](../../react-ui-graph/docs/README.md) | &check; |

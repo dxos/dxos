@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vit
 
 import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { type Any, type TaggedType } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
@@ -13,13 +14,12 @@ import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 import { ComplexSet, range } from '@dxos/util';
 
 import { type Message, type PeerInfo } from '../signal-methods';
-
 import { SignalClient } from './signal-client';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
-  'type_url': 'google.protobuf.Any',
-  'value': Buffer.from('1'),
+  type_url: 'google.protobuf.Any',
+  value: Buffer.from('1'),
 };
 
 describe('SignalClient', () => {
@@ -43,7 +43,7 @@ describe('SignalClient', () => {
 
     const message = createMessage(peer2, peer1);
     const receivedMessage = peer1.waitForNextMessage();
-    await peer2.client.sendMessage(message);
+    await peer2.client.sendMessage(Context.default(), message);
     expect(await receivedMessage).toEqual(message);
   });
 
@@ -51,8 +51,8 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
 
-    await peer1.client.join({ topic, peer: peer1.peerInfo });
-    await peer2.client.join({ topic, peer: peer2.peerInfo });
+    await peer1.client.join(Context.default(), { topic, peer: peer1.peerInfo });
+    await peer2.client.join(Context.default(), { topic, peer: peer2.peerInfo });
 
     await peer1.waitForPeer(peer2.peerKey);
     await peer2.waitForPeer(peer1.peerKey);
@@ -67,7 +67,7 @@ describe('SignalClient', () => {
     const message = createMessage(peer2, peer1);
     const receivedMessage = peer1.waitForNextMessage();
 
-    await peer1.client.sendMessage(message);
+    await peer1.client.sendMessage(Context.default(), message);
     expect(await receivedMessage).toEqual(message);
   });
 
@@ -82,7 +82,7 @@ describe('SignalClient', () => {
 
     {
       const receivedMessage = peer1.waitForNextMessage({ timeout: 1_000 });
-      await peer2.client.sendMessage(message);
+      await peer2.client.sendMessage(Context.default(), message);
       expect(await receivedMessage).toEqual(message);
     }
 
@@ -91,7 +91,7 @@ describe('SignalClient', () => {
 
     {
       const receivedMessage = peer1.waitForNextMessage({ timeout: 200 });
-      await peer2.client.sendMessage(message);
+      await peer2.client.sendMessage(Context.default(), message);
       await expect(receivedMessage).rejects.toBeDefined();
     }
   });
@@ -106,7 +106,7 @@ describe('SignalClient', () => {
 
     {
       const waitMessage = peer1.waitForNextMessage();
-      await peer2.client.sendMessage(message);
+      await peer2.client.sendMessage(Context.default(), message);
       expect(await waitMessage).toEqual(message);
     }
 
@@ -120,7 +120,7 @@ describe('SignalClient', () => {
 
     {
       const waitMessage = peer1.waitForNextMessage();
-      await peer2.client.sendMessage(message);
+      await peer2.client.sendMessage(Context.default(), message);
       expect(await waitMessage).toEqual(message);
     }
   });

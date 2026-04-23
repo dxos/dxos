@@ -25,15 +25,8 @@ import {
 import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
-
 import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
-
-const editorSlots = {
-  scroll: {
-    className: '!py-(--dx-grid-cell-editor-padding-block)',
-  },
-};
 
 /**
  * Option to create new object/value.
@@ -42,7 +35,7 @@ export type QueryResult = Pick<Completion, 'label'> & {
   data: any;
 };
 
-export type TableCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type TableCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
   schema?: T;
   model?: TableModel;
   modals?: ModalController;
@@ -51,7 +44,7 @@ export type TableCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = 
   onSave?: () => void;
 };
 
-export const TableValueEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
+export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   __gridScope,
   schema,
   model,
@@ -250,7 +243,16 @@ export const TableCellEditor = ({
   return (
     <>
       <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
-      <GridCellEditor extensions={extensions} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
+      <GridCellEditor
+        extensions={extensions}
+        slots={{
+          content: {
+            className: '!py-(--dx-grid-cell-editor-padding-block)',
+          },
+        }}
+        getCellContent={getCellContent}
+        onBlur={handleBlur}
+      />
     </>
   );
 };

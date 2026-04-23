@@ -5,15 +5,16 @@
 import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Collection } from '@dxos/echo';
-import { Container } from '@dxos/react-ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Collection, Obj } from '@dxos/echo';
+import { Panel } from '@dxos/react-ui';
 
-import { PageNumber, Pager, Layout as PresenterLayout } from '../../components/Presenter';
-import { PresenterContext } from '../../types';
+import { PageNumber, Pager, Layout as PresenterLayout } from '#components';
+import { PresenterContext } from '#types';
+
 import { useExitPresenter } from '../../useExitPresenter';
 
-type CollectionPresenterContainerProps = SurfaceComponentProps<Collection.Collection>;
+export type CollectionPresenterContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const CollectionPresenterContainer = ({ role, subject: collection }: CollectionPresenterContainerProps) => {
   const [slide, setSlide] = useState(0);
@@ -21,21 +22,29 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
   const handleExit = useExitPresenter(collection);
 
   return (
-    <Container.Main role={role} classNames='relative'>
-      <PresenterLayout
-        bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
-        bottomLeft={
-          <Pager
-            index={slide}
-            count={collection.objects.length}
-            keys={running}
-            onChange={setSlide}
-            onExit={handleExit}
+    <Panel.Root role={role} classNames='relative'>
+      <Panel.Content asChild>
+        <PresenterLayout
+          bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
+          bottomLeft={
+            <Pager
+              index={slide}
+              count={collection.objects.length}
+              keys={running}
+              onChange={setSlide}
+              onExit={handleExit}
+            />
+          }
+        >
+          <Surface.Surface
+            type={AppSurface.Slide}
+            data={{
+              subject: collection.objects[slide],
+              attendableId: Obj.getDXN(collection).toString(),
+            }}
           />
-        }
-      >
-        <Surface.Surface role='slide' data={{ subject: collection.objects[slide] }} />
-      </PresenterLayout>
-    </Container.Main>
+        </PresenterLayout>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Type } from '@dxos/echo';
+import { Annotation, Format, Ref, Type } from '@dxos/echo';
 import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -21,7 +21,7 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(
     Type.object({
-      typename: 'dxos.org/example/Document',
+      typename: 'org.dxos.example.document',
       version: '0.1.0',
     }),
   );
@@ -49,7 +49,7 @@ export namespace TestSchema {
 
   export const Organization = OrganizationSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Organization',
+      typename: 'com.example.type.organization',
       version: '0.1.0',
     }),
   );
@@ -70,7 +70,7 @@ export namespace TestSchema {
     ),
     email: Schema.optional(Format.Email.pipe(GeneratorAnnotation.set('internet.email'))),
     organization: Schema.optional(
-      Type.Ref(Organization).annotations({
+      Ref.Ref(Organization).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
@@ -82,7 +82,7 @@ export namespace TestSchema {
 
   export const Person = PersonSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
     }),
   );
@@ -105,7 +105,7 @@ export namespace TestSchema {
 
   export const Project = ProjectSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Project',
+      typename: 'com.example.type.project',
       version: '0.1.0',
     }),
   );
@@ -125,7 +125,7 @@ export namespace TestSchema {
 
   export const Message = MessageSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Message',
+      typename: 'com.example.type.message',
       version: '0.1.0',
     }),
   );

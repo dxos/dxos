@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/kanban',
+  id: 'org.dxos.plugin.kanban',
   name: 'Kanban',
   description: trim`
     Visual project management using customizable kanban boards to track workflow progress.

@@ -9,11 +9,14 @@ import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 
-import { type ObservabilitySettingsProps } from '../containers';
-import { meta } from '../meta';
+import { meta } from '#meta';
+
+import * as Settings from './Settings';
 
 export namespace ObservabilityCapabilities {
-  export const Settings = Capability.make<Atom.Writable<ObservabilitySettingsProps>>(`${meta.id}/capability/settings`);
+  export const Namespace = Capability.make<string>(`${meta.id}.capability.namespace`);
+
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
 
   export const StateSchema = Schema.mutable(
     Schema.Struct({
@@ -24,11 +27,11 @@ export namespace ObservabilityCapabilities {
 
   export type State = Schema.Schema.Type<typeof StateSchema>;
 
-  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
 
-  export const Observability = Capability.make<Observability.Observability>(`${meta.id}/capability/observability`);
+  export const Observability = Capability.make<Observability.Observability>(`${meta.id}.capability.observability`);
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
 // TODO(burdon): Figure out how to share defs.
-export const ClientCapability = Capability.make<Client>('dxos.org/plugin/client/capability/client');
+export const ClientCapability = Capability.make<Client>('org.dxos.plugin.client.capability.client');

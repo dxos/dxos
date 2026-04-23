@@ -9,10 +9,10 @@ import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { ClientOperation } from '../../types';
+import { meta } from '#meta';
+import { ClientOperation } from '#operations';
 
-export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}/ManageCredentialsDialog`;
+export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}.ManageCredentialsDialog`;
 
 export const RecoveryCredentialsContainer = () => {
   const { t } = useTranslation(meta.id);
@@ -23,35 +23,33 @@ export const RecoveryCredentialsContainer = () => {
   );
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('recovery setup dialog title')} description={t('recovery setup dialog description')}>
-        <Settings.Group>
-          <Settings.Item title={t('create passkey label')} description={t('create passkey description')}>
-            <IconButton
-              label={t('create passkey label')}
-              icon='ph--key--duotone'
-              variant='primary'
-              onClick={() => invokePromise(ClientOperation.CreatePasskey)}
-            />
-          </Settings.Item>
-          <Settings.Item title={t('create recovery code label')} description={t('create recovery code description')}>
-            <IconButton
-              label={t('create recovery code label')}
-              icon='ph--receipt--duotone'
-              variant='default'
-              onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
-            />
-          </Settings.Item>
-        </Settings.Group>
+    <Settings.Viewport>
+      <Settings.Section title={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
+        <Settings.Item title={t('create-passkey.label')} description={t('create-passkey.description')}>
+          <IconButton
+            label={t('create-passkey.label')}
+            icon='ph--key--duotone'
+            variant='primary'
+            onClick={() => invokePromise(ClientOperation.CreatePasskey)}
+          />
+        </Settings.Item>
+        <Settings.Item title={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
+          <IconButton
+            label={t('create-recovery-code.label')}
+            icon='ph--receipt--duotone'
+            variant='default'
+            onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
+          />
+        </Settings.Item>
       </Settings.Section>
-      <Settings.Section title={t('credentials list label')}>
+      <Settings.Section title={t('credentials-list.label')}>
         {recoveryCredentials.length < 1 ? (
-          <Message.Root valence='error' classNames='dx-container-max-width'>
-            <Message.Title icon='ph--shield-warning--duotone'>{t('no credentials title')}</Message.Title>
-            <Message.Content>{t('no credentials message')}</Message.Content>
+          <Message.Root valence='error'>
+            <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
+            <Message.Content>{t('no-credentials.message')}</Message.Content>
           </Message.Root>
         ) : (
-          <List classNames='dx-container-max-width px-2'>
+          <List>
             {recoveryCredentials.map((credential) => (
               <ListItem.Root key={credential.id?.toHex()}>
                 <ListItem.Endcap>
@@ -63,6 +61,6 @@ export const RecoveryCredentialsContainer = () => {
           </List>
         )}
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

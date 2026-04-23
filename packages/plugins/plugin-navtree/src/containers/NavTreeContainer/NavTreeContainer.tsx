@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -14,11 +14,11 @@ import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
-import { NAV_TREE_ITEM, NavTree } from '../../components/NavTree';
-import { NavTreeContext } from '../../components/NavTreeContext';
-import { useNavTreeModel, useNavTreeState } from '../../hooks';
-import { meta } from '../../meta';
-import { type NavTreeItemGraphNode } from '../../types';
+import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
+import { useNavTreeModel, useNavTreeState } from '#hooks';
+import { meta } from '#meta';
+import { type NavTreeItemGraphNode } from '#types';
+
 import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
@@ -42,7 +42,7 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg');
-    const { invokeSync, invokePromise } = useOperationInvoker();
+    const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const { getItem, setItem } = useNavTreeState();
@@ -84,7 +84,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           navigationSidebarState: currentSidebarState,
           isLg: latestIsLg,
         } = latestRef.current;
-        invokeSync(LayoutOperation.UpdateSidebar, {
+        void invokePromise(LayoutOperation.UpdateSidebar, {
           state:
             node.id === activeTab
               ? currentSidebarState === 'expanded'
@@ -95,17 +95,21 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               : 'expanded',
         });
 
-        invokeSync(LayoutOperation.SwitchWorkspace, { subject: node.id });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            invokeSync(LayoutOperation.Open, { subject: [item.id] });
+            if (layout.mode === 'multi') {
+              void invokePromise(LayoutOperation.Set, { subject: [item.id] });
+            } else {
+              void invokePromise(LayoutOperation.Open, { subject: [item.id] });
+            }
           }
         }
       },
-      [invokeSync, graph],
+      [invokePromise, graph, layout.mode],
     );
 
     const blockInstruction = useCallback(
@@ -132,16 +136,20 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (Node.isAction(node)) {
           const [parent] = Graph.getConnections(graph, node.id, Node.childRelation('inbound'));
           if (parent) {
-            void runAction(node, { parent, caller: NAV_TREE_ITEM });
+            void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
           return;
         }
 
         const current = getItem(path).current;
         if (!current) {
-          invokeSync(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          if (layout.mode === 'multi') {
+            void invokePromise(LayoutOperation.Set, { subject: [node.id] });
+          } else {
+            void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          }
         } else if (option) {
-          invokeSync(LayoutOperation.Close, { subject: [node.id] });
+          void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
         }
@@ -154,13 +162,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (!isLg) {
-          invokeSync(LayoutOperation.UpdateSidebar, { state: 'closed' });
+          void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokeSync, invokePromise, getItem, runAction, isLg],
+      [graph, invokePromise, getItem, runAction, isLg, layout.mode],
     );
 
-    const handleBack = useCallback(() => invokeSync(LayoutOperation.RevertWorkspace), [invokeSync]);
+    const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
 
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {
@@ -178,8 +186,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             const targetNode = target.data.item as NavTreeItemGraphNode;
             const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
+            const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();
             const operation =
-              sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
+              sameParent && instruction.type !== 'make-child'
                 ? 'rearrange'
                 : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
             const sourceParent = getParent(graph, sourceNode, sourcePath);
@@ -208,7 +217,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               }
               case 'transfer': {
                 const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
+                if (!target?.properties.onTransferStart || target?.id === sourceParent?.id) {
                   break;
                 }
                 void target?.properties.onTransferStart(sourceNode, migrationIndex);

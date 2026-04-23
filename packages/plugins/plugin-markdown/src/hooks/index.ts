@@ -5,4 +5,3 @@
 export * from './useEditorMenuOptions';
 export * from './useExtensions';
 export * from './useLinkQuery';
-export * from './useSelectCurrentThread';

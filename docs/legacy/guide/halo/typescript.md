@@ -70,10 +70,7 @@ import { InvitationEncoder } from '@dxos/client-protocol';
 /** Accepts a device join invitation by prompting the user for:
  *    - invitation code
  *    - authentication code */
-const acceptInvitation = async (
-  client: Client,
-  deviceInvitationCode: string,
-) => {
+const acceptInvitation = async (client: Client, deviceInvitationCode: string) => {
   const decodedInvitation = InvitationEncoder.decode(deviceInvitationCode);
   const invitationResult = client.halo.join(decodedInvitation);
 
@@ -88,8 +85,8 @@ const acceptInvitation = async (
 
 ::: tip
 
-* Your client instance needs to be [configured](../echo/typescript/config.md) correctly to talk to a [signaling service](../glossary.md#signaling-service).
-* If accepting a device join invitation from a UI application using the [shell](../dxos-ui/shell/) (e.g. [Composer](../../composer/)), you will only be presented with the `authCode` after the call to `halo.join` has been made.
+- Your client instance needs to be [configured](../echo/typescript/config.md) correctly to talk to a [signaling service](../glossary.md#signaling-service).
+- If accepting a device join invitation from a UI application using the [shell](../dxos-ui/shell/) (e.g. [Composer](../../composer/)), you will only be presented with the `authCode` after the call to `halo.join` has been made.
   :::
 
 ::: details Retrieving a device invitation code from an invitation URL
@@ -98,9 +95,7 @@ const acceptInvitation = async (
 /** Extracts device invitation code from a URL or string. */
 const extractDeviceInvitationCode = (encoded: string) => {
   if (encoded.startsWith('http')) {
-    const searchParams = new URLSearchParams(
-      encoded.substring(encoded.lastIndexOf('?')),
-    );
+    const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
 
     return searchParams.get('deviceInvitationCode') ?? null;
   }

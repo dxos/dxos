@@ -9,6 +9,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
+import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   type JsonPath,
@@ -18,8 +20,6 @@ import {
   getPropertyMetaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';
@@ -57,7 +57,7 @@ describe('ProjectionModel', () => {
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -145,7 +145,7 @@ describe('ProjectionModel', () => {
     const registry = new RuntimeSchemaRegistry();
     await registry.register([TestSchema.Organization]);
 
-    const typename = 'example.com/type/Person';
+    const typename = 'com.example.type.person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
@@ -178,7 +178,7 @@ describe('ProjectionModel', () => {
       property: 'organization',
       type: TypeEnum.Ref,
       format: Format.TypeFormat.Ref,
-      referenceSchema: 'example.com/type/Organization',
+      referenceSchema: 'com.example.type.organization',
       referencePath: 'name',
     });
 
@@ -188,7 +188,7 @@ describe('ProjectionModel', () => {
       $ref: '/schemas/echo/ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Organization',
+          $ref: 'dxn:type:com.example.type.organization',
         },
         schemaVersion: '0.1.0',
       },
@@ -204,7 +204,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -243,7 +243,7 @@ describe('ProjectionModel', () => {
       description: Schema.optional(Schema.String),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -296,7 +296,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -351,7 +351,7 @@ describe('ProjectionModel', () => {
       age: Schema.Number,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -411,7 +411,7 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
@@ -525,7 +525,7 @@ describe('ProjectionModel', () => {
       tags: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
@@ -664,7 +664,7 @@ describe('ProjectionModel', () => {
       createdAt: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -772,7 +772,7 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
@@ -815,7 +815,7 @@ describe('ProjectionModel', () => {
       title: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
@@ -868,7 +868,7 @@ describe('ProjectionModel', () => {
       phone: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -985,7 +985,7 @@ describe('ProjectionModel', () => {
       ),
     }).pipe(
       Type.object({
-        typename: 'dxos.org/type/ContactWithArrayOfEmails',
+        typename: 'org.dxos.type.contactWithArrayOfEmails',
         version: '0.1.0',
       }),
     );
@@ -1033,7 +1033,7 @@ describe('ProjectionModel', () => {
         [fieldName]: schemaType,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/TestObject',
+          typename: 'com.example.type.test-object',
           version: '0.1.0',
         }),
       );
@@ -1088,7 +1088,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/EmailTest',
+        typename: 'com.example.type.email-test',
         version: '0.1.0',
       }),
     );

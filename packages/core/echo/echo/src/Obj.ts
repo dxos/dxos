@@ -2,86 +2,39 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
+import { createJsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { assumeType } from '@dxos/util';
+import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
-import {
-  type ObjectJSON as APIJSON,
-  type AnyEntity,
-  type AnyProperties,
-  type Comparator as ApiComparator,
-  type Meta as ApiMeta,
-  type ReadonlyMeta as ApiReadonlyMeta,
-  type EntityVersion as ApiVersion,
-  type ChangeCallback,
-  type InternalObjectProps,
-  type KindId,
-  MetaId,
-  type Mutable,
-  type ObjectMeta,
-  // TODO(dmaretskyi): Export ParentId?
-  ParentId,
-  SnapshotKindId,
-  type VersionCompareResult,
-  VersionTypeId,
-  addTag as addTag$,
-  change as change$,
-  clone as clone$,
-  compareVersions,
-  decodeVersion,
-  deleteKeys as deleteKeys$,
-  encodeVersion,
-  getDXN as getDXN$,
-  getDatabase as getDatabase$,
-  getDescription as getDescription$,
-  getKeys as getKeys$,
-  getLabel as getLabel$,
-  getMetaChecked as getMeta$,
-  getSchema as getSchema$,
-  getSnapshot as getSnapshot$,
-  getTypeAnnotation,
-  getTypeDXN as getTypeDXN$,
-  getTypename as getTypename$,
-  isDeleted as isDeleted$,
-  isInstanceOf,
-  isVersion,
-  makeObject,
-  objectFromJSON,
-  removeTag as removeTag$,
-  setDescription as setDescription$,
-  setLabel as setLabel$,
-  setValue as setValue$,
-  sort as sort$,
-  sortByLabel as sortByLabel$,
-  sortByTypename as sortByTypename$,
-  subscribe as subscribe$,
-  objectToJSON as toJSON$,
-  version as version$,
-  versionValid,
-} from './internal';
-import type * as Ref from './Ref';
+import * as internal from './internal';
+import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
+import * as objInternal from './internal/Obj';
+import * as Ref from './Ref';
 import type * as Type from './Type';
 
 /**
  * Base type for all ECHO objects.
  */
-interface BaseObj extends AnyEntity, Entity.OfKind<typeof Entity.Kind.Object> {}
+interface BaseObj extends internal.AnyEntity, Entity.OfKind<typeof Entity.Kind.Object> {}
 
 /**
  * Object type with specific properties.
  */
-export type Obj<Props> = BaseObj & Props;
+export type OfShape<Props> = BaseObj & Props;
 
 /**
  * Object with no known properties beyond id and kind.
@@ -94,6 +47,44 @@ export type Obj<Props> = BaseObj & Props;
 export interface Unknown extends BaseObj {}
 
 /**
+ * Runtime Effect schema for any ECHO object.
+ * Use for validation, parsing, or as a reference target for collections.
+ *
+ * NOTE: `Schema.is(Type.Obj)` does STRUCTURAL validation only (checks for `id` field).
+ * Use `Obj.isObject()` for proper ECHO instance type guards that check the KindId brand.
+ *
+ * @example
+ * ```ts
+ * // Structural type guard (accepts any object with id field)
+ * if (Schema.is(Type.Obj)(unknownValue)) { ... }
+ *
+ * // ECHO instance type guard (checks KindId brand)
+ * if (Obj.isObject(unknownValue)) { ... }
+ *
+ * // Reference to any object type
+ * const Collection = Schema.Struct({
+ *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
+ * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
+ * ```
+ */
+// TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
+//   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
+//   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
+export const Unknown: Type.Obj<Unknown> = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  // TODO(dmaretskyi): Clean this up.
+  // NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Obj.Unknown) to work.
+  //   The typename/version only satisfy ECHO schema machinery for reference targets.
+  internal.EchoObjectSchema({ typename: internal.ANY_OBJECT_TYPENAME, version: internal.ANY_OBJECT_VERSION }),
+  (schema) =>
+    Object.assign(schema, {
+      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
+    }) as unknown as Type.Obj<Unknown>,
+);
+
+/**
  * Object with arbitrary properties.
  *
  * NOTE: Due to how TypeScript works, this type is not assignable to a specific schema type.
@@ -101,13 +92,13 @@ export interface Unknown extends BaseObj {}
  *
  * Prefer using `Obj.Unknown` when you don't need to access arbitrary properties.
  */
-export interface Any extends BaseObj, AnyProperties {}
+export interface Any extends BaseObj, internal.AnyProperties {}
 
 /**
  * Base type for snapshot objects (has SnapshotKindId instead of KindId).
  */
-interface BaseSnapshot extends AnyEntity {
-  readonly [SnapshotKindId]: typeof Entity.Kind.Object;
+interface BaseSnapshot extends internal.AnyEntity {
+  readonly [Entity.SnapshotKindId]: typeof Entity.Kind.Object;
   readonly id: ObjectId;
 }
 
@@ -120,16 +111,23 @@ interface BaseSnapshot extends AnyEntity {
  * Snapshots are structurally identical to reactive objects but have a different brand,
  * making them distinguishable at the TypeScript level. Neither is assignable to the other.
  */
-export type Snapshot<T extends Unknown = Unknown> = Omit<T, KindId> & BaseSnapshot;
+export type Snapshot<T extends Unknown = Unknown> = Omit<T, Entity.KindId> & BaseSnapshot;
 
-const defaultMeta: ObjectMeta = {
+/**
+ * JSON-encoded properties for objects.
+ */
+export interface BaseObjJson {
+  id: string;
+}
+
+const defaultMeta: internal.ObjectMeta = {
   keys: [],
 };
 
-type Props<T = any> = {
+type MakePropsInternal<T extends Unknown> = {
   id?: ObjectId;
-  [Meta]?: Partial<ObjectMeta>;
-} & Type.Properties<T>;
+  [Meta]?: Partial<internal.ObjectMeta>;
+} & Entity.Properties<T>;
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
@@ -137,9 +135,9 @@ type Props<T = any> = {
  */
 export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
   id?: ObjectId;
-  [Meta]?: Partial<ObjectMeta>;
+  [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & NoInfer<Props<Schema.Schema.Type<S>>>;
+} & MakePropsInternal<Schema.Schema.Type<S>>;
 
 /**
  * Creates a new echo object of the given schema.
@@ -156,23 +154,22 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  *
  * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
  */
-export const make: {
-  <S extends Type.Obj.Any>(schema: S, props: MakeProps<S>): Obj<Schema.Schema.Type<S>>;
-  /**
-   * @deprecated Pass meta as in the example: `Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' })`.
-   */
-  <S extends Type.Obj.Any>(schema: S, props: MakeProps<S>, meta: Partial<ObjectMeta>): Obj<Schema.Schema.Type<S>>;
-} = <S extends Type.Obj.Any>(
+export const make = <S extends Type.AnyObj>(
   schema: S,
-  props: MakeProps<S>,
-  meta?: Partial<ObjectMeta>,
-): Obj<Schema.Schema.Type<S>> => {
-  assertArgument(getTypeAnnotation(schema)?.kind === Entity.Kind.Object, 'schema', 'Expected an object schema');
+  props: NoInfer<MakeProps<S>>,
+): OfShape<Schema.Schema.Type<S>> => {
+  assertArgument(
+    internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
+    'schema',
+    'Expected an object schema',
+  );
+
+  let meta: internal.ObjectMeta | undefined = undefined;
 
   // Set default fields on meta on creation.
-  if (props[MetaId] != null) {
-    meta = { ...structuredClone(defaultMeta), ...props[MetaId] };
-    delete props[MetaId];
+  if (props[internal.MetaId] != null) {
+    meta = { ...structuredClone(defaultMeta), ...props[internal.MetaId] };
+    delete props[internal.MetaId];
   }
 
   // Filter undefined values (Object.entries only returns string-keyed properties).
@@ -186,7 +183,7 @@ export const make: {
     }
   }
 
-  return makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
+  return internal.makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
     ...defaultMeta,
     ...meta,
   });
@@ -196,13 +193,13 @@ export const make: {
  * Determine if object is an ECHO object.
  */
 export const isObject = (obj: unknown): obj is Unknown => {
-  assumeType<InternalObjectProps>(obj);
+  assumeType<internal.InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
 
 export const isSnapshot = (obj: unknown): obj is Snapshot => {
-  assumeType<InternalObjectProps>(obj);
-  return typeof obj === 'object' && obj !== null && (obj as any)[SnapshotKindId] === Entity.Kind.Object;
+  assumeType<internal.InternalObjectProps>(obj);
+  return typeof obj === 'object' && obj !== null && (obj as any)[Entity.SnapshotKindId] === Entity.Kind.Object;
 };
 
 /**
@@ -212,7 +209,7 @@ export const isSnapshot = (obj: unknown): obj is Snapshot => {
  * @returns Unsubscribe function.
  */
 export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
-  return subscribe$(obj, callback);
+  return internal.subscribe(obj, callback);
 };
 
 //
@@ -224,7 +221,7 @@ export const subscribe = (obj: Unknown, callback: () => void): (() => void) => {
  * The snapshot is branded with SnapshotKindId instead of KindId,
  * making it distinguishable from the reactive object at the type level.
  */
-export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = getSnapshot$ as any;
+export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objInternal.getSnapshot as any;
 
 /**
  * Returns the reactive version of an object from the database, given its snapshot.
@@ -245,7 +242,7 @@ export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = getSnapsh
  */
 export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Err.GetReactiveError> =>
   Effect.gen(function* () {
-    const db = getDatabase$(snapshot);
+    const db = internal.getDatabase(snapshot);
     if (!db) {
       return yield* Effect.fail(new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
     }
@@ -299,7 +296,7 @@ export type CloneOptions = {
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
  */
-export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = clone$;
+export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = objInternal.clone;
 
 //
 // Change
@@ -309,7 +306,7 @@ export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = clon
  * Makes all properties mutable recursively.
  * Used to provide a mutable view of an object within `Obj.change`.
  */
-export type { Mutable };
+export type Mutable<T> = internal.Mutable<T>;
 
 /**
  * Perform mutations on an echo object within a controlled context.
@@ -329,9 +326,9 @@ export type { Mutable };
  * const person = Obj.make(Person, { name: 'John', age: 25 });
  *
  * // Mutate within Obj.change
- * Obj.change(person, (p) => {
- *   p.name = 'Jane';
- *   p.age = 30;
+ * Obj.change(person, (obj) => {
+ *   obj.name = 'Jane';
+ *   obj.age = 30;
  * });
  * // ONE notification fires here
  *
@@ -341,8 +338,8 @@ export type { Mutable };
  *
  * Note: Only accepts objects. Use `Relation.change` for relations.
  */
-export const change = <T extends Unknown>(obj: T, callback: ChangeCallback<T>): void => {
-  change$(obj, callback);
+export const change = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
+  internal.change(obj, callback);
 };
 
 /**
@@ -368,7 +365,7 @@ export const change = <T extends Unknown>(obj: T, callback: ChangeCallback<T>): 
  * ```
  */
 export const getValue = (obj: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return getValue$(obj, createJsonPath(path));
+  return internal.getValue(obj, createJsonPath(path));
 };
 
 /**
@@ -390,15 +387,15 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
  * // Person schema has: addresses: Schema.Array(Address)
- * Obj.change(person, (p) => {
- *   Obj.setValue(p, ['addresses', 0, 'street'], '123 Main St');
+ * Obj.change(person, (obj) => {
+ *   Obj.setValue(obj, ['addresses', 0, 'street'], '123 Main St');
  * });
  * // Creates: person.addresses = [{ street: '123 Main St' }]
  * ```
  */
 // TODO(wittjosiah): Compute possible path values + type value based on generic object type.
 export const setValue: (obj: Mutable<Unknown>, path: readonly (string | number)[], value: any) => void =
-  setValue$ as any;
+  objInternal.setValue as any;
 
 //
 // Type
@@ -420,14 +417,14 @@ export type ID = ObjectId;
  * ```
  */
 export const instanceOf: {
-  <S extends Type.Entity.Any>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends Type.Entity.Any>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
-} = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
   if (args.length === 1) {
-    return (entity: unknown) => isInstanceOf(args[0], entity);
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }
 
-  return isInstanceOf(args[0], args[1]);
+  return internal.isInstanceOf(args[0], args[1]);
 }) as any;
 
 /**
@@ -444,11 +441,14 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.Entity.Any>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
-  <S extends Type.Entity.Any>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
-} = ((...args: [schema: Type.Entity.Any, value: unknown] | [schema: Type.Entity.Any]) => {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
+} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
   const check = (entity: unknown) =>
-    entity != null && typeof entity === 'object' && SnapshotKindId in entity && isInstanceOf(args[0], entity);
+    entity != null &&
+    typeof entity === 'object' &&
+    Entity.SnapshotKindId in entity &&
+    internal.isInstanceOf(args[0], entity);
 
   if (args.length === 1) {
     return (entity: unknown) => check(entity);
@@ -464,29 +464,29 @@ export const snapshotOf: {
  */
 export const getDXN = (entity: Unknown | Snapshot): DXN => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  return getDXN$(entity);
+  return internal.getDXN(entity);
 };
 
 /**
  * @returns The DXN of the object's type.
- * @example dxn:example.com/type/Person:1.0.0
+ * @example dxn:com.example.type.person:1.0.0
  */
 // TODO(wittjosiah): Narrow types.
-export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = getTypeDXN$ as any;
+export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = internal.getTypeDXN as any;
 
 /**
  * Get the schema of the object.
  * Returns the branded ECHO schema used to create the object.
  */
 // TODO(wittjosiah): Narrow types.
-export const getSchema: (obj: unknown | undefined) => Type.Entity.Any | undefined = getSchema$ as any;
+export const getSchema: (obj: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the object's type.
  * Accepts both reactive objects and snapshots.
- * @example `example.com/type/Person`
+ * @example `com.example.type.person`
  */
-export const getTypename = (entity: Unknown | Snapshot): string | undefined => getTypename$(entity);
+export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
 
 //
 // Database
@@ -497,24 +497,29 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => g
  * Accepts both reactive objects and snapshots.
  */
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
-  getDatabase$(entity);
+  internal.getDatabase(entity);
 
 //
 // Meta
 //
 
-export const Meta: unique symbol = MetaId as any;
+/**
+ * Property that accesses metadata for an entity.
+ *
+ * Alias for `Entity.Meta`.
+ */
+export const Meta = internal.MetaId;
 
 /**
  * Deeply read-only version of ObjectMeta.
  * Prevents mutation at all nesting levels (e.g., `meta.keys.push()` is a TypeScript error).
  */
-export type ReadonlyMeta = ApiReadonlyMeta;
+export type ReadonlyMeta = internal.ReadonlyMeta;
 
 /**
  * Mutable meta type returned by `Obj.getMeta` inside an `Obj.change` callback.
  */
-export type Meta = ApiMeta;
+export type Meta = internal.Meta;
 
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
@@ -529,8 +534,8 @@ export type Meta = ApiMeta;
  * const meta = Obj.getMeta(person);  // ReadonlyMeta
  *
  * // Mutable access inside change callback
- * Obj.change(person, (p) => {
- *   const meta = Obj.getMeta(p);     // ObjectMeta (mutable)
+ * Obj.change(person, (obj) => {
+ *   const meta = Obj.getMeta(obj);     // ObjectMeta (mutable)
  *   meta.tags ??= [];
  *   meta.tags.push('important');
  * });
@@ -540,7 +545,7 @@ export type Meta = ApiMeta;
 export function getMeta(entity: Mutable<Unknown>): Meta;
 export function getMeta(entity: Unknown | Snapshot): ReadonlyMeta;
 export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | ReadonlyMeta {
-  return getMeta$(entity);
+  return internal.getMetaChecked(entity);
 }
 
 /**
@@ -550,7 +555,7 @@ export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): Meta | R
 export const getKeys: {
   (entity: Unknown | Snapshot, source: string): ForeignKey[];
   (source: string): (entity: Unknown | Snapshot) => ForeignKey[];
-} = Function.dual(2, (entity: Unknown | Snapshot, source?: string): ForeignKey[] => getKeys$(entity, source!));
+} = Function.dual(2, (entity: Unknown | Snapshot, source?: string): ForeignKey[] => internal.getKeys(entity, source!));
 
 /**
  * Delete all keys from the object for the specified source.
@@ -559,7 +564,7 @@ export const getKeys: {
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => deleteKeys$(entity, source);
+export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => internal.deleteKeys(entity, source);
 
 /**
  * Add a tag to the object.
@@ -568,7 +573,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => de
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the object.
@@ -577,14 +582,14 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => addTag$(e
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => removeTag$(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the object is deleted.
  * Accepts both reactive objects and snapshots.
  */
 // TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(entity);
+export const isDeleted = (entity: Unknown | Snapshot): boolean => objInternal.isDeleted(entity);
 
 //
 // Annotations
@@ -594,7 +599,7 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => isDeleted$(ent
  * Get the label of the object.
  * Accepts both reactive objects and snapshots.
  */
-export const getLabel = (entity: Unknown | Snapshot): string | undefined => getLabel$(entity);
+export const getLabel = (entity: Unknown | Snapshot): string | undefined => internal.getLabel(entity);
 
 /**
  * Set the label of the object.
@@ -603,13 +608,13 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => getL
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const setLabel = (entity: Mutable<Unknown>, label: string): void => setLabel$(entity, label);
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of the object.
  * Accepts both reactive objects and snapshots.
  */
-export const getDescription = (entity: Unknown | Snapshot): string | undefined => getDescription$(entity);
+export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
 /**
  * Set the description of the object.
@@ -619,7 +624,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
 export const setDescription = (entity: Mutable<Unknown>, description: string): void =>
-  setDescription$(entity, description);
+  internal.setDescription(entity, description);
 
 /**
  * Symbol to set parent when creating objects with `Obj.make`.
@@ -631,7 +636,7 @@ export const setDescription = (entity: Mutable<Unknown>, description: string): v
  * })
  * ```
  */
-export const Parent: unique symbol = ParentId as any;
+export const Parent: unique symbol = internal.ParentId as any;
 
 /**
  * Get the parent of an object.
@@ -641,8 +646,8 @@ export const Parent: unique symbol = ParentId as any;
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
   assertArgument(isObject(entity), 'Expected an object');
-  assumeType<InternalObjectProps>(entity);
-  return entity[ParentId] as Unknown | undefined;
+  assumeType<internal.InternalObjectProps>(entity);
+  return entity[internal.ParentId] as Unknown | undefined;
 };
 
 /**
@@ -653,9 +658,125 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
-  assumeType<InternalObjectProps>(entity);
-  assumeType<InternalObjectProps | undefined>(parent);
-  entity[ParentId] = parent;
+  assumeType<internal.InternalObjectProps>(entity);
+  assumeType<internal.InternalObjectProps | undefined>(parent);
+  entity[internal.ParentId] = parent;
+};
+
+interface UpdateFromOptions<T> {
+  exclude?: (keyof T)[];
+  include?: (keyof T)[];
+}
+
+const valuesEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (left === null || right === null) {
+    return left === right;
+  }
+  if (typeof left !== 'object' || typeof right !== 'object') {
+    return Utils.structuralRegion(() => Equal.equals(left, right));
+  }
+  if (Ref.isRef(left) && Ref.isRef(right)) {
+    return left.dxn.toString() === right.dxn.toString();
+  }
+  if (Ref.isRef(left) || Ref.isRef(right)) {
+    return false;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    for (let index = 0; index < left.length; index++) {
+      if (!valuesEqual(left[index], right[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false;
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const keys = new Set([
+    ...Object.keys(leftRecord).filter((key) => key !== 'id'),
+    ...Object.keys(rightRecord).filter((key) => key !== 'id'),
+  ]);
+  for (const key of keys) {
+    const leftHas = Object.hasOwn(leftRecord, key);
+    const rightHas = Object.hasOwn(rightRecord, key);
+    const leftValue = leftHas ? leftRecord[key] : undefined;
+    const rightValue = rightHas ? rightRecord[key] : undefined;
+    if (!valuesEqual(leftValue, rightValue)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Breaks reactive proxies on assigned values so echo-db assignment accepts nested structs (same idea as link assignment).
+ */
+const prepareAssignValue = (value: unknown): unknown =>
+  deepMapValues(value, (nested, recurse) => {
+    if (nested === null || typeof nested !== 'object') {
+      return nested;
+    }
+    if (Ref.isRef(nested)) {
+      return nested;
+    }
+    if (Array.isArray(nested)) {
+      return recurse(nested);
+    }
+    if (isProxy(nested)) {
+      return recurse({ ...getProxyTarget(nested) });
+    }
+    return recurse(nested);
+  });
+
+/**
+ * For each key present on `source` (except `id`), assigns `target[key]` when the current value differs.
+ * References are compared by target DXN; other values use Effect `Equal.equals` inside a structural region,
+ * with recursive comparison for arrays and plain object-shaped property bags (excluding `id`).
+ *
+ * Must be called within an `Obj.change` callback.
+ *
+ * @returns Whether any property was updated.
+ */
+export const updateFrom = <T extends Unknown>(
+  target: Mutable<T>,
+  source: T,
+  options?: UpdateFromOptions<T>,
+): boolean => {
+  assertArgument(isObject(target), 'Expected an echo object target.');
+  assertArgument(isObject(source), 'Expected an echo object source.');
+  let keys = Object.keys(source as Record<string, unknown>).filter((key) => key !== 'id');
+  if (options?.include !== undefined) {
+    const include = new Set(options.include.map((key) => String(key)));
+    keys = keys.filter((key) => include.has(key));
+  }
+  if (options?.exclude !== undefined) {
+    const exclude = new Set(options.exclude.map((key) => String(key)));
+    keys = keys.filter((key) => !exclude.has(key));
+  }
+  let updated = false;
+  const sourceRecord = source as Record<string, unknown>;
+  const targetRecord = target as Record<string, unknown>;
+  for (const key of keys) {
+    if (!Object.hasOwn(sourceRecord, key)) {
+      continue;
+    }
+    const nextValue = sourceRecord[key];
+    const prevValue = Object.hasOwn(targetRecord, key) ? targetRecord[key] : undefined;
+    if (valuesEqual(prevValue, nextValue)) {
+      continue;
+    }
+    targetRecord[key] = prepareAssignValue(nextValue) as never;
+    updated = true;
+  }
+  return updated;
 };
 
 //
@@ -665,7 +786,7 @@ export const setParent = (entity: Unknown, parent: Any | undefined) => {
 /**
  * JSON representation of an object.
  */
-export type JSON = APIJSON;
+export type JSON = internal.ObjectJSON;
 
 /**
  * Converts object to its JSON representation.
@@ -673,7 +794,7 @@ export type JSON = APIJSON;
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
-export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
+export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectToJSON(entity);
 
 /**
  * Creates an object from its json representation, performing schema validation.
@@ -683,38 +804,45 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => toJSON$(entity);
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
+ * @param options.database - Database to associate with the object.
  */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
-  objectFromJSON as any;
+export const fromJSON: (
+  json: unknown,
+  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database; parent?: Unknown },
+) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**
  * Comparator function type for sorting objects.
  * Accepts both reactive objects and snapshots.
  */
-export type Comparator = ApiComparator<Unknown | Snapshot>;
+export type Comparator = internal.Comparator<Unknown | Snapshot>;
 
-export const sortByLabel: Comparator = sortByLabel$ as Comparator;
-export const sortByTypename: Comparator = sortByTypename$ as Comparator;
-export const sort = (...comparators: Comparator[]): Comparator => sort$(...comparators) as Comparator;
+export const sortByLabel: Comparator = internal.sortByLabel as Comparator;
+export const sortByTypename: Comparator = internal.sortByTypename as Comparator;
+export const sort = (...comparators: Comparator[]): Comparator => internal.sort(...comparators) as Comparator;
 
 //
 // Version
 //
 
-export { VersionTypeId };
-export type { VersionCompareResult };
+export const VersionTypeId = internal.VersionTypeId;
+export type VersionCompareResult = internal.VersionCompareResult;
 
 /**
  * Represent object version.
  * May be backed by Automerge.
  * Objects with no history are not versioned.
  */
-export type Version = ApiVersion;
+export type Version = internal.EntityVersion;
 
-export { isVersion, versionValid, compareVersions, encodeVersion, decodeVersion };
+export const isVersion = internal.isVersion;
+export const versionValid = internal.versionValid;
+export const compareVersions = internal.compareVersions;
+export const encodeVersion = internal.encodeVersion;
+export const decodeVersion = internal.decodeVersion;
 
 /**
  * Returns the version of the object.
  * Accepts both reactive objects and snapshots.
  */
-export const version = (entity: Unknown | Snapshot): Version => version$(entity);
+export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);

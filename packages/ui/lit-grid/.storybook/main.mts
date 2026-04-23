@@ -4,8 +4,6 @@
 
 import { config } from '../../../../tools/storybook-lit/.storybook/main';
 
-export const stories = [
-  '../src/**/*.lit-stories.ts',
-]
+export const stories = ['../src/**/*.lit-stories.ts'];
 
 export default config({ stories });

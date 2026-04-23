@@ -44,6 +44,7 @@ The `ios-deploy.sh` script handles both simulator and physical device deployment
 The script automatically detects whether the device name refers to a physical device or simulator.
 
 **Notes:**
+
 - Physical device deployment requires Apple Developer provisioning profiles
 - Enable Developer Mode on device: Settings > Privacy & Security > Developer Mode > ON
 - Tauri CLI prioritizes physical devices, so disconnect them to use simulators
@@ -71,10 +72,12 @@ After running `tauri ios init`, run the setup script to install iOS extensions:
 ```
 
 This copies:
+
 - `KeyboardObserver.swift` - Emits keyboard show/hide events to the webview
 - `KeyboardSetup.m` - Auto-initializes observer and disables Input Accessory View using Obj-C `+load`
 
 The observer dispatches `keyboard` CustomEvents to `window` with details:
+
 ```typescript
 { type: 'show' | 'hide', height: number, duration: number }
 ```
@@ -111,6 +114,7 @@ The iOS build job (`build_tauri_ios`) follows this sequence:
    - Configure Apple API keys for App Store Connect
 
 2. **Initialize iOS Project** (Critical Step)
+
    ```bash
    pnpm tauri ios init --ci
    ./scripts/ios-init.sh
@@ -123,6 +127,7 @@ The iOS build job (`build_tauri_ios`) follows this sequence:
    - Without this, the build fails with "libapp.a not found" due to debug/release path mismatch
 
 3. **Build for App Store**
+
    ```bash
    moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
    ```
@@ -136,10 +141,12 @@ The iOS build job (`build_tauri_ios`) follows this sequence:
 ### Configuration Management
 
 **Build Modes:**
+
 - `tauri ios build` → Release mode (default, used in CI)
 - `tauri ios build --debug` → Debug mode (development)
 
 **Important:** The Xcode project must be regenerated when:
+
 - Switching between debug/release builds
 - After modifying Tauri configuration
 - When the project structure changes
@@ -149,6 +156,7 @@ The build script outputs to `Externals/{arch}/${CONFIGURATION}/libapp.a` where `
 ### Desktop Builds
 
 Desktop builds (`build_tauri` job) support macOS, Linux, and Windows:
+
 - Build with code signing for macOS (Apple Developer certificate)
 - Generate updater artifacts via CrabNebula
 - Upload to CrabNebula Cloud for auto-updates
@@ -162,6 +170,7 @@ After all builds complete, the `publish_tauri` job publishes the release to Crab
 To test the full iOS build process locally (simulating CI), use the build script:
 
 **Quick Start:**
+
 ```bash
 # Full App Store release build
 ./scripts/ios-build.sh
@@ -179,12 +188,14 @@ To test the full iOS build process locally (simulating CI), use the build script
 **Manual Steps (what the script does):**
 
 **1. Clean Start:**
+
 ```bash
 cd packages/apps/composer-app
 rm -rf src-tauri/gen/apple
 ```
 
 **2. Run Initialization (same as CI):**
+
 ```bash
 pnpm install
 pnpm tauri ios init --ci
@@ -192,6 +203,7 @@ pnpm tauri ios init --ci
 ```
 
 **3. Build for Release:**
+
 ```bash
 # Full App Store build (requires code signing)
 pnpm tauri ios build --export-method=app-store-connect
@@ -201,6 +213,7 @@ pnpm tauri ios build --target aarch64-sim
 ```
 
 **4. Verify Build Artifacts:**
+
 ```bash
 # Check library was created in release directory
 ls -la src-tauri/gen/apple/Externals/arm64/release/libapp.a
@@ -213,11 +226,13 @@ ls -la src-tauri/gen/apple/build/arm64/*.ipa
 ```
 
 **Expected Results:**
+
 - ✅ No "libapp.a not found" errors
 - ✅ IPA file created successfully
 - ✅ Xcode project includes KeyboardHandler.m
 
 **Debugging:**
+
 ```bash
 # Check Xcode project file references
 grep -A 2 "path = debug\|path = release" src-tauri/gen/apple/app.xcodeproj/project.pbxproj

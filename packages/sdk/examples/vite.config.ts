@@ -24,9 +24,9 @@ export default defineConfig({
     https:
       process.env.HTTPS === 'true'
         ? {
-          key: '../../../key.pem',
-          cert: '../../../cert.pem',
-        }
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
         : false,
     fs: {
       allow: [

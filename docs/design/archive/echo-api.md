@@ -1,15 +1,15 @@
 # ECHO API
 
-*   Graph object module
-    *   Items
-        *   Parent-child
-    *   Links
-*   Query
-*   Item
-    *   Model
-        *   DocumentModel: Document (JSON)
-            *   Key-value mutations
-*   Transactions
+- Graph object module
+  - Items
+    - Parent-child
+  - Links
+- Query
+- Item
+  - Model
+    - DocumentModel: Document (JSON)
+      - Key-value mutations
+- Transactions
 
 ```protobuf
 message Contact {
@@ -39,7 +39,7 @@ class Contact extends Base<Contact> {
 
 
 db.transaction((context) => {
- /// 
+ ///
 }).commit()
 
 
@@ -55,7 +55,7 @@ const obj = db.createObject(Contact({
 });
 
 //
-db.create(Contacts({ name: {} }) 
+db.create(Contacts({ name: {} })
 
 console.log(alice.name.first);
 console.log(alice.fullName);
@@ -85,4 +85,3 @@ obj.emails.push('alice@example.com');
 db.query()
 
 ```
-

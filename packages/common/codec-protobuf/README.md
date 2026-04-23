@@ -5,9 +5,9 @@ There's an associated @dxos/protobuf-compiler package that does codegen based on
 ## Handling of scalar fields with default values
 
 Based on:
+
 - https://github.com/protocolbuffers/protobuf/blob/main/docs/field_presence.md
 - https://github.com/protocolbuffers/protobuf/blob/main/docs/implementing_proto3_presence.md
-
 
 In protobuf scalar fields (numbers, booleans, strings, bytes, enums) may have an implicit default value:
 

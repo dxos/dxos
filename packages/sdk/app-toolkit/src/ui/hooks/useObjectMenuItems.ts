@@ -12,12 +12,17 @@ import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { LayoutOperation } from '../../operations';
+import { getObjectPathFromObject } from '../../paths';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
 /** True when subject is an Echo object and its schema does not have the system annotation. */
 const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
   if (!subject || !Obj.isObject(subject)) {
+    return false;
+  }
+
+  if (!Obj.getDatabase(subject) || !Obj.getTypename(subject)) {
     return false;
   }
 
@@ -37,9 +42,9 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
       return;
     }
 
-    const subjectId = Obj.getDXN(subject).toString();
+    const subjectPath = getObjectPathFromObject(subject);
     return () => {
-      void invokePromise(LayoutOperation.Open, { subject: [subjectId] });
+      void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
     };
   }, [subject, invokePromise]);
 };
@@ -58,15 +63,15 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
       return [];
     }
 
-    const subjectId = Obj.getDXN(subject).toString();
+    const subjectPath = getObjectPathFromObject(subject);
     return [
       createMenuAction(
         'navigate',
         () => {
-          void invokePromise(LayoutOperation.Open, { subject: [subjectId] });
+          void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
         },
         {
-          label: t('open label'),
+          label: t('open.label'),
           icon: OPEN_ICON,
         },
       ),

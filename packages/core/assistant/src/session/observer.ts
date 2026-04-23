@@ -12,8 +12,9 @@ import { type Message } from '@dxos/types';
 /**
  * Live observer of the generation process.
  */
-export interface GenerationObserver<Tools extends Record<string, Tool.Any> = any>
-  extends AiParser.ParseResponseCallbacks<Tools> {
+export interface GenerationObserver<
+  Tools extends Record<string, Tool.Any> = any,
+> extends AiParser.ParseResponseCallbacks<Tools> {
   /**
    * Complete messages fired during the session, both from the model and from the user.
    * This message will contain all message blocks emitted through the `onBlock` callback.

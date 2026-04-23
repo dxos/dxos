@@ -14,5 +14,6 @@ export * from './processors';
 export * from './scope';
 export type * from './meta';
 export { dbg } from './dbg';
+export * from './log-buffer';
 
 export { getCurrentOwnershipScope } from './experimental/ownership';

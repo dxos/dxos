@@ -78,7 +78,7 @@ const CounterComponent = () => {
   }, [counter]);
 
   if (!manager) {
-    return <div className='p-4 text-red-500'>Error: Context not found</div>;
+    return <div className='p-4 text-error-text'>Error: Context not found</div>;
   }
 
   return (
@@ -116,7 +116,7 @@ const CounterComponent = () => {
 
 // Plugin that provides the Counter capability and renders the UI
 const CounterPlugin = Plugin.define({
-  id: 'dxos.org/plugin/counter',
+  id: 'org.dxos.plugin.counter',
   name: 'Counter Plugin',
 }).pipe(
   Plugin.addModule({
@@ -142,7 +142,7 @@ const CounterPlugin = Plugin.define({
 
         // Contribute the UI
         Capability.contributes(Capabilities.ReactRoot, {
-          id: 'dxos.org/plugin/counter/root',
+          id: 'org.dxos.plugin.counter.root',
           root: CounterComponent,
         }),
       ]);
@@ -152,7 +152,7 @@ const CounterPlugin = Plugin.define({
 )();
 
 const plugins = [CounterPlugin];
-const core = ['dxos.org/plugin/counter'];
+const core = ['org.dxos.plugin.counter'];
 const placeholder = () => (
   <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>
     Initializing Application...

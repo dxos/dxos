@@ -6,6 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
@@ -18,51 +19,54 @@ import {
   type EditorStateStore,
   type EditorViewMode,
   type ThemeExtensionsOptions,
+  mobileSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorSlots,
+  documentSlots,
   formattingListener,
   processEditorPayload,
-  stackItemContentEditorClassNames,
+  editorClassNames,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { useSelectCurrentThread } from '../../hooks';
-import { meta } from '../../meta';
+import { meta } from '#meta';
+import { MarkdownCapabilities } from '#types';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
 export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
+  attendableId?: string;
   role?: string;
+  compact?: boolean;
   viewMode?: EditorViewMode;
-  scrollPastEnd?: boolean;
   slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Atom.Writable<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 }> &
-  // prettier-ignore
   Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
 
+// TODO(burdon): Move controller to Root.
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
   (
     {
       classNames,
       id,
+      attendableId,
       role,
+      compact,
       viewMode,
       initialValue,
       editorStateStore,
       toolbarState,
       extensions,
-      scrollPastEnd,
-      slots = editorSlots,
+      slots,
       onFileUpload,
     },
     forwardedRef,
@@ -94,21 +98,19 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           id,
           scrollTo,
           selection,
-          // TODO(wittjosiah): Autofocus based on layout is racy.
-          // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
           selectionEnd: true,
         }),
         initialValue,
         extensions: [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
-            placeholder: t('editor placeholder'),
-            scrollPastEnd: scrollPastEnd && role !== 'section',
+            placeholder: t('editor.placeholder'),
+            scrollPastEnd: !compact,
             search: true,
           }),
           createThemeExtensions({
             themeMode,
-            slots,
+            slots: slots ?? (compact ? mobileSlots : documentSlots),
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
@@ -133,18 +135,24 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 
-    useSelectCurrentThread(editorView, id);
+    const [editorViewRegistry] = useCapabilities(MarkdownCapabilities.EditorViews);
+    useEffect(() => {
+      if (editorView && editorViewRegistry) {
+        editorViewRegistry.register(attendableId ?? id, editorView, id);
+        return () => editorViewRegistry.unregister(attendableId ?? id);
+      }
+    }, [editorView, editorViewRegistry, attendableId, id]);
 
     useTest(editorView);
 
     return (
       <div
+        {...focusAttributes}
+        className={mx(editorClassNames(role), classNames)}
         role='none'
-        ref={parentRef}
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
-        className={mx(stackItemContentEditorClassNames(role), classNames)}
-        {...focusAttributes}
+        ref={parentRef}
       />
     );
   },

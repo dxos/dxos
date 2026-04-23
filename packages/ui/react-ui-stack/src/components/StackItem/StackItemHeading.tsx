@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
@@ -26,16 +27,16 @@ export const StackItemHeading = ({
   classNames,
   asChild,
   separateOnScroll,
+  role,
   ...props
 }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-
-  const Root = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot : Primitive.div;
 
   return (
-    <Root
-      role='heading'
+    <Comp
       {...props}
+      role={role ?? 'heading'}
       className={mx(
         'flex items-center border-x-0! bg-header-surface',
         separateOnScroll
@@ -47,7 +48,7 @@ export const StackItemHeading = ({
       )}
     >
       {children}
-    </Root>
+    </Comp>
   );
 };
 

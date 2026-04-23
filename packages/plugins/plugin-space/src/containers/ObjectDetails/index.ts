@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectDetails } from './ObjectDetails';
-
-export default ObjectDetails;
+export { ObjectDetails as default } from './ObjectDetails';

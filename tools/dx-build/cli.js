@@ -4,4 +4,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import('./dist/src/main.js');
+void import('./dist/src/main.js');

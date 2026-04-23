@@ -29,8 +29,8 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 |                               | Object                     | Relation (extends Obj)     | Ref            |
 | ----------------------------- | -------------------------- | -------------------------- | -------------- |
 | **SCHEMA API**                |
-| Define schema                 | `Type.Obj()`               | `Type.Relation()`          | `Type.Ref()`   |
-| Any schema type               | `Type.Obj.Any`             | `Type.Relation.Any`        | `Type.Ref.Any` |
+| Define schema                 | `Type.Obj()`               | `Type.Relation()`          | `Ref.Ref()`    |
+| Any schema type               | `Type.AnyObj`              | `Type.Relation.Any`        | `Type.Ref.Any` |
 | Get DXN (of schema)           | `Type.getDXN(schema)`      | `Type.getDXN(schema)`      |                |
 | Get typename (of schema)      | `Type.getTypename(schema)` | `Type.getTypename(schema)` |                |
 | Get type metadata (of schema) | `Type.getMeta(schema)`     | `Type.getMeta(schema)`     |                |

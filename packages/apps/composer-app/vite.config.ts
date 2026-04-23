@@ -2,31 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import importSource from '@dxos/vite-plugin-import-source';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sourcemaps from 'rollup-plugin-sourcemaps';
+// import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
-import devtoolsJson from 'vite-plugin-devtools-json';
+import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
+// import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
+import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import importSource from '@dxos/vite-plugin-import-source';
+import { vitePluginLog } from '@dxos/vite-plugin-log';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
-import { APP_KEY } from './src/constants';
-
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
+const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -39,6 +40,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // Building from dist when creating a prod bundle.
   env.command === 'serve' &&
+    !isFastBundle &&
     importSource({
       exclude: [
         '@dxos/random-access-storage',
@@ -52,8 +54,9 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
+  env.command === 'serve' && vitePluginLog(),
   wasm(),
-  sourcemaps(),
+  // sourcemaps(),
 ];
 
 /**
@@ -96,6 +99,7 @@ export default defineConfig((env) => ({
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
+        reset: path.resolve(dirname, './reset.html'),
         'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       output: {
@@ -108,6 +112,76 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
+    ...(isFastBundle && {
+      include: [
+        // React.
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        // Effect (with subpath imports).
+        'effect',
+        'effect/Effect',
+        'effect/Array',
+        'effect/Ref',
+        'effect/Option',
+        'effect/Cause',
+        'effect/Exit',
+        'effect/Layer',
+        'effect/Runtime',
+        'effect/Fiber',
+        'effect/Deferred',
+        'effect/Function',
+        'effect/HashSet',
+        'effect/PubSub',
+        'effect/Schema',
+        'effect/Context',
+        'effect/Stream',
+        'effect/Console',
+        '@effect/platform',
+        '@effect/platform-browser',
+        // Effect AI (with submodule exports).
+        '@effect/ai',
+        '@effect/ai/AiError',
+        '@effect/ai/Chat',
+        '@effect/ai/LanguageModel',
+        '@effect/ai/Prompt',
+        '@effect/ai/Response',
+        '@effect/ai/Tool',
+        '@effect/ai/Toolkit',
+        '@effect/ai-anthropic',
+        '@effect/ai-anthropic/AnthropicClient',
+        '@effect/ai-anthropic/AnthropicLanguageModel',
+        '@effect/ai-anthropic/AnthropicTool',
+        '@effect/ai-openai',
+        '@effect/ai-openai/OpenAiClient',
+        '@effect/ai-openai/OpenAiLanguageModel',
+        // Automerge.
+        '@automerge/automerge',
+        '@automerge/automerge-repo',
+        // CodeMirror (many files in HAR).
+        'codemirror',
+        '@codemirror/state',
+        '@codemirror/view',
+        '@codemirror/language',
+        '@codemirror/commands',
+        '@codemirror/autocomplete',
+        '@codemirror/lang-javascript',
+        '@codemirror/lang-json',
+        '@codemirror/lang-markdown',
+        '@codemirror/theme-one-dark',
+        // Radix (many requests in HAR).
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
+        '@radix-ui/react-tooltip',
+        '@radix-ui/react-scroll-area',
+        '@radix-ui/react-popover',
+        '@radix-ui/react-slot',
+        '@radix-ui/react-context-menu',
+        // Atlaskit drag-and-drop.
+        '@atlaskit/pragmatic-drag-and-drop',
+        '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+      ],
+    }),
   },
   resolve: {
     alias: {
@@ -121,7 +195,7 @@ export default defineConfig((env) => ({
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
-      '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
+      // '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
@@ -142,6 +216,34 @@ export default defineConfig((env) => ({
   plugins: [
     ...sharedPlugins(env),
 
+    // RSS proxy middleware for CORS-free feed fetching.
+    {
+      name: 'rss-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/rss', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const feedUrl = url.searchParams.get('url');
+          if (!feedUrl) {
+            res.statusCode = 400;
+            res.end('Missing url parameter');
+            return;
+          }
+          try {
+            const response = await globalThis.fetch(feedUrl);
+            const contentType = response.headers.get('content-type');
+            if (contentType) {
+              res.setHeader('content-type', contentType);
+            }
+            res.statusCode = response.status;
+            res.end(await response.text());
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
+
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
@@ -158,7 +260,7 @@ export default defineConfig((env) => ({
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && inspect(),
 
-    env.command === 'serve' && devtoolsJson(),
+    // env.command === 'serve' && devtoolsJson(),
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
@@ -225,33 +327,7 @@ export default defineConfig((env) => ({
       ],
     }),
 
-    importMapPlugin({
-      modules: [
-        '@dxos/app-framework',
-        '@dxos/app-graph',
-        '@dxos/client',
-        '@dxos/client/devtools',
-        '@dxos/client/echo',
-        '@dxos/client/halo',
-        '@dxos/client/invitations',
-        '@dxos/client/mesh',
-        '@dxos/client-protocol',
-        '@dxos/client-services',
-        '@dxos/config',
-        '@dxos/echo',
-        '@dxos/react-client',
-        '@dxos/react-client/devtools',
-        '@dxos/react-client/echo',
-        '@dxos/react-client/halo',
-        '@dxos/react-client/invitations',
-        '@dxos/react-client/mesh',
-        '@dxos/schema',
-        '@effect/platform',
-        'effect',
-        'react',
-        'react-dom',
-      ],
-    }),
+    importMapPlugin(),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
@@ -371,7 +447,7 @@ export default defineConfig((env) => ({
  * Default makes most chunks have names like index-[hash].js.
  */
 function chunkFileNames(chunkInfo: any) {
-  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
@@ -385,57 +461,4 @@ function chunkFileNames(chunkInfo: any) {
   }
 
   return 'assets/[name]-[hash].js';
-}
-
-function importMapPlugin(options: { modules: string[] }): Plugin[] {
-  const chunkRefIds: Record<string, string> = {};
-  let imports: Record<string, string> = {};
-
-  return [
-    {
-      name: 'import-map:get-chunk-ref-ids',
-      async buildStart() {
-        if (this.environment.mode === 'dev') {
-          return;
-        }
-
-        for (const m of options.modules) {
-          const resolved = await this.resolve(m);
-          if (resolved) {
-            // Emit the chunk during build start.
-            chunkRefIds[m] = this.emitFile({
-              type: 'chunk',
-              id: resolved.id,
-              // Preserve the original exports.
-              preserveSignature: 'strict',
-            });
-          }
-        }
-      },
-
-      generateBundle() {
-        imports = Object.fromEntries(options.modules.map((m) => [m, `/${this.getFileName(chunkRefIds[m])}`]));
-      },
-    },
-    {
-      name: 'import-map:transform-index-html',
-      enforce: 'post',
-      transformIndexHtml(html: string) {
-        const tags = [
-          {
-            tag: 'script',
-            attrs: {
-              type: 'importmap',
-            },
-            children: JSON.stringify({ imports }, null, 2),
-          },
-        ];
-
-        return {
-          html,
-          tags,
-        };
-      },
-    },
-  ];
 }

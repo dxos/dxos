@@ -22,7 +22,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
 
       yield* Effect.gen(function* () {
         yield* Database.add(Obj.make(TestSchema.Expando, { label: 'test' }));
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
@@ -45,7 +45,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         for (let i = 0; i < NUM_OBJECTS; i++) {
           yield* Database.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
         }
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
       }).pipe(Effect.provide(DbLayer));
 
       yield* Effect.gen(function* () {
@@ -69,7 +69,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
         for (let i = 0; i < NUM_OBJECTS; i++) {
           yield* Database.add(Obj.make(Person.Person, { nickname: `Person ${i}` }));
         }
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
         {
           const objects = yield* Database.runQuery(Query.select(Filter.type(Person.Person)));

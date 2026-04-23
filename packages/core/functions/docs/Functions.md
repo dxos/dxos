@@ -11,7 +11,7 @@
 
 - Functions are defined by the `FunctionDef` ECHO Schema, which can be synchronized between the Function runtime (Agent) and other peers.
 - Rules define how functions are triggered.
-- The `FuncitonTrigger` data structure contains metadata about the various trigger types, and other metdata that is passed to the function handler. 
+- The `FuncitonTrigger` data structure contains metadata about the various trigger types, and other metdata that is passed to the function handler.
   - Timers define a cron schedule.
   - Webhooks define an HTTP endpoint (and method) that can be invoked.
   - Web sockets define a socket endpoint that can be called with an initial message object to initiate a data subscription.
@@ -19,7 +19,7 @@
 
 <br>
 
-![Functions](./functions.drawio.svg) 
+![Functions](./functions.drawio.svg)
 
 ## Lifecycle
 
@@ -46,7 +46,7 @@ rule:
   trigger:
     subscription:
       filter:
-      - type: braneframe/Game
+        - type: braneframe/Game
   meta:
     level: 2
 ```
@@ -63,7 +63,7 @@ rule:
   trigger:
     subscription:
       filter:
-      - type: braneframe/Message
+        - type: braneframe/Message
   meta:
     account: hello@dxos.network
 ```
@@ -112,5 +112,5 @@ rule:
         value: 'object.pgn' // Property of Game object
   output:
     type: braneframe/Message
-    field: content    
+    field: content
 ```

@@ -16,10 +16,9 @@ import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
 import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
-
 import { Table, type TableController } from './Table';
 
-export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = ThemedClassName<{
+export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
   schema?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
@@ -36,10 +35,10 @@ export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = The
  */
 // TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
-export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
+export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
   schema,
-  name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
+  name = 'com.example.dynamic-table', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
   jsonSchema: jsonSchemaProp,
@@ -96,18 +95,11 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
     }
   }, [registry, model]);
 
-  // TODO(burdon): Do we need the outer divs?
   return (
-    <div role='none' className={mx('w-full h-full grow grid', classNames)}>
+    <div role='none' className={mx('dx-expander grid', classNames)}>
       <div role='none' className='grid min-h-0 overflow-hidden'>
-        <Table.Root>
-          <Table.Main
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            ignoreAttention
-            onRowClick={onRowClick}
-          />
+        <Table.Root ref={tableRef}>
+          <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
         </Table.Root>
       </div>
     </div>

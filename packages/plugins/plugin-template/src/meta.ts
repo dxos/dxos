@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/template',
+  id: 'org.dxos.plugin.template',
   name: 'Template',
   description: trim`
     Create reusable templates for documents, tables, and other objects.

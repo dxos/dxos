@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { TestContextService } from '@dxos/effect/testing';
 
 import * as AiService from '../../AiService';
-
 import * as MemoizedLanguageModel from './MemoizedLanguageModel';
 
 export interface MemoizedAiService extends AiService.Service {}

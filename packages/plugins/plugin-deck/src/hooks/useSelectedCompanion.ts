@@ -5,8 +5,7 @@
 import { useMemo } from 'react';
 
 import { type Node } from '@dxos/plugin-graph';
-
-import { parseEntryId } from '../layout';
+import { getLinkedVariant } from '@dxos/react-ui-attention';
 
 /**
  * Resolves which companion to show based on variant preference.
@@ -20,19 +19,14 @@ export const useSelectedCompanion = (companions: Node.Node[], preferredVariant?:
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((companion) => {
-        const { variant } = parseEntryId(companion.id);
-        return variant === preferredVariant;
-      });
+      const preferred = companions.find((companion) => getLinkedVariant(companion.id) === preferredVariant);
       if (preferred) {
-        const { variant } = parseEntryId(preferred.id);
-        return { companionId: preferred.id, variant };
+        return { companionId: preferred.id, variant: getLinkedVariant(preferred.id) };
       }
     }
 
     // Fallback to first companion.
     const first = companions[0];
-    const { variant } = parseEntryId(first.id);
-    return { companionId: first.id, variant };
+    return { companionId: first.id, variant: getLinkedVariant(first.id) };
   }, [companions, preferredVariant]);
 };

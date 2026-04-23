@@ -10,7 +10,7 @@ export type MaybeProvider<T, V = void> = T | ((arg: V) => T);
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
+export type GuardedType<T> = T extends ((value: any) => value is infer R) ? R : never;
 
 /**
  * Removes readonly modifiers from top-level properties of T.

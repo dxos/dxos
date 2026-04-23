@@ -36,9 +36,9 @@ end
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/debug`](../../debug/docs/README.md) |  |
-| [`@dxos/keys`](../../keys/docs/README.md) |  |
-| [`@dxos/log`](../../log/docs/README.md) | &check; |
-| [`@dxos/util`](../../util/docs/README.md) | &check; |
+| Module                                      | Direct  |
+| ------------------------------------------- | ------- |
+| [`@dxos/debug`](../../debug/docs/README.md) |         |
+| [`@dxos/keys`](../../keys/docs/README.md)   |         |
+| [`@dxos/log`](../../log/docs/README.md)     | &check; |
+| [`@dxos/util`](../../util/docs/README.md)   | &check; |

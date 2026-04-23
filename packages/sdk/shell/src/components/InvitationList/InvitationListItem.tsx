@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { formatDistanceToNow } from 'date-fns';
 import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
@@ -22,12 +23,11 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { focusRing, getSize, mx } from '@dxos/ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { AuthCode } from '../AuthCode/AuthCode';
-
 import { type SharedInvitationListProps } from './InvitationListProps';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
@@ -166,7 +166,7 @@ export const InvitationListItemImpl = ({
             status={avatarStatus}
             fallback={hexToEmoji(invitationId)}
             tabIndex={0}
-            classNames={[focusRing, 'relative rounded-full place-self-center']}
+            classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
           />
         </Tooltip.Trigger>
       </Avatar.Root>
@@ -175,7 +175,7 @@ export const InvitationListItemImpl = ({
           <Tooltip.Trigger
             asChild
             content={
-              invitationHasLifetime ? t('expires label', { timeLeft: invitationTimeLeft }) : t('no expiration label')
+              invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
             <Button
@@ -184,7 +184,7 @@ export const InvitationListItemImpl = ({
               onClick={() => send({ type: 'selectInvitation', invitation })}
               data-testid='show-qrcode'
             >
-              <span>{t('open share panel label')}</span>
+              <span>{t('open-share-panel.label')}</span>
             </Button>
           </Tooltip.Trigger>
           <Clipboard.IconButton variant='ghost' value={invitationUrl} />
@@ -210,7 +210,7 @@ export const InvitationListItemImpl = ({
         <IconButton
           icon='ph--x--regular'
           size={4}
-          label={t('cancel invitation label')}
+          label={t('cancel-invitation.label')}
           iconOnly
           variant='ghost'
           classNames='flex gap-1 px-0'
@@ -221,7 +221,7 @@ export const InvitationListItemImpl = ({
         <IconButton
           icon='ph--x--regular'
           size={4}
-          label={t('remove invitation label')}
+          label={t('remove-invitation.label')}
           iconOnly
           variant='ghost'
           classNames='flex gap-1 px-0'

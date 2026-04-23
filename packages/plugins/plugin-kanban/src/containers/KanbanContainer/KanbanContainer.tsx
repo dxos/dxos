@@ -7,18 +7,19 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { useObject, useSchema } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
-import { KanbanBoard } from '../../components';
-import { useEchoChangeCallback, useProjectionModel } from '../../hooks';
-import { type Kanban, KanbanOperation } from '../../types';
+import { KanbanBoard } from '#components';
+import { useEchoChangeCallback, useProjectionModel } from '#hooks';
+import { KanbanOperation } from '#operations';
+import { type Kanban } from '#types';
 
-export type KanbanContainerProps = SurfaceComponentProps<Kanban.Kanban>;
+export type KanbanContainerProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 
 export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps) => {
   const registry = useContext(RegistryContext);
@@ -27,6 +28,7 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
   const { invokePromise } = useOperationInvoker();
   const [view] = useObject(object.view);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
   const schemaFromDb = useSchema(db, typename);
   const cardSchema = useMemo(
@@ -34,10 +36,14 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
     [schemaFromDb, schemas, typename],
   );
 
-  const items = useMemo(
-    () => (db ? AtomQuery.make(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing()) : null),
-    [db, cardSchema],
-  );
+  const items = useMemo(() => {
+    if (!db) {
+      return null;
+    }
+    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
+    const query = tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
+    return AtomQuery.make(db, query);
+  }, [db, cardSchema, tag]);
 
   const projection = useProjectionModel(cardSchema, object, registry);
   const change = useEchoChangeCallback(object);
@@ -69,7 +75,10 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
   }
 
   return (
-    <Container.Main role={role}>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <KanbanBoard.Root
         kanban={object}
         projection={projection}
@@ -78,8 +87,10 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
         onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}
       >
-        <KanbanBoard.Content />
+        <Panel.Content asChild>
+          <KanbanBoard.Content />
+        </Panel.Content>
       </KanbanBoard.Root>
-    </Container.Main>
+    </Panel.Root>
   );
 };

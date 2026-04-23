@@ -9,7 +9,6 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { inviteWithState } from '../../testing/fixtures';
-
 import { InvitationList } from './InvitationList';
 
 const meta = {

@@ -11,7 +11,7 @@ import * as Stream from 'effect/Stream';
 
 import { type ContentBlock } from '@dxos/types';
 
-import { parseResponse } from './AiParser';
+import * as AiParser from './AiParser';
 
 describe('parser', () => {
   describe('accumulation', () => {
@@ -19,7 +19,7 @@ describe('parser', () => {
       'single text block',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!'])])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -36,7 +36,7 @@ describe('parser', () => {
       'consecutive text blocks get combined',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello,', ' world!'])])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -53,7 +53,7 @@ describe('parser', () => {
       'status parsed',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<status>I am thinking...</status>'])])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -70,7 +70,7 @@ describe('parser', () => {
       'text followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!']), ...toolCall('123', 'foo', { bar: 'baz' })])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -97,7 +97,7 @@ describe('parser', () => {
           ...text(['<status>I am thinking...']),
           ...toolCall('123', 'foo', { bar: 'baz' }),
         ])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -121,7 +121,7 @@ describe('parser', () => {
       'reasoning gets passed through',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...reasoning('My thoughts are...'), ...text(['Hello, world!'])])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -142,7 +142,7 @@ describe('parser', () => {
       'COT tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<cot>My thoughts are...</cot>'])])
-          .pipe(parseResponse({ parseReasoningTags: true }))
+          .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -159,7 +159,7 @@ describe('parser', () => {
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<think>My thoughts are...</think>'])])
-          .pipe(parseResponse({ parseReasoningTags: true }))
+          .pipe(AiParser.parseResponse({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -176,7 +176,7 @@ describe('parser', () => {
       'toolkit',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(splitByWord('<toolkit/>'))])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -194,7 +194,7 @@ describe('parser', () => {
         const result = yield* makeInputStream([
           ...text(splitByWord('<select><option>Yes</option><option>No</option></select>')),
         ])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -223,7 +223,7 @@ describe('parser', () => {
             ),
           ),
         ])
-          .pipe(parseResponse())
+          .pipe(AiParser.parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -263,7 +263,7 @@ describe('parser', () => {
       'onPart is called with every part',
       Effect.fn(function* ({ expect }) {
         const onPart = vi.fn(Function.constant(Effect.void));
-        yield* makeInputStream(PARTS).pipe(parseResponse({ onPart })).pipe(Stream.runCollect);
+        yield* makeInputStream(PARTS).pipe(AiParser.parseResponse({ onPart })).pipe(Stream.runCollect);
         expect(onPart.mock.calls).toEqual(PARTS.map((part) => [part]));
       }),
     );
@@ -272,7 +272,7 @@ describe('parser', () => {
       'gets partial content blocks',
       Effect.fn(function* ({ expect }) {
         const onBlock = vi.fn(Function.constant(Effect.void));
-        yield* makeInputStream(PARTS).pipe(parseResponse({ onBlock })).pipe(Stream.runCollect);
+        yield* makeInputStream(PARTS).pipe(AiParser.parseResponse({ onBlock })).pipe(Stream.runCollect);
         expect(onBlock.mock.calls).toEqual(
           (
             [

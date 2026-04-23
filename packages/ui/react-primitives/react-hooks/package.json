@@ -31,6 +31,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-id": "catalog:",
     "alea": "catalog:",
     "lodash.defaultsdeep": "catalog:",

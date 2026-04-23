@@ -12,9 +12,8 @@ import { DocAccessor } from '@dxos/echo-db';
 
 import { Cursor } from '../../util';
 import { initialSync } from '../state';
-
 import { cursorConverter } from './cursor';
-import { type State, isReconcile, updateHeadsEffect } from './defs';
+import { type State, isReconcile, reconcileAnnotation, updateHeadsEffect } from './defs';
 import { Syncer } from './sync';
 
 export const automerge = (accessor: DocAccessor): Extension => {
@@ -72,11 +71,10 @@ export const automerge = (accessor: DocAccessor): Extension => {
             const value = DocAccessor.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {
-              // TODO(burdon): This attempts to set the initial state, but creates problems.
-              // this._view.dispatch({
-              //   changes: { from: 0, to: this._view.state.doc.length, insert: value },
-              //   annotations: initialSync,
-              // });
+              this._view.dispatch({
+                changes: { from: 0, to: this._view.state.doc.length, insert: value },
+                annotations: [initialSync, reconcileAnnotation.of(true)],
+              });
             }
           });
         }

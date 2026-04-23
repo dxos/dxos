@@ -21,7 +21,15 @@ import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullab
 import * as Graph from './graph';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import { Separators, nodeArgsUnchanged, normalizeRelation } from './util';
+import {
+  getParentId,
+  nodeArgsUnchanged,
+  normalizeRelation,
+  primaryKey,
+  primaryParts,
+  qualifyId,
+  validateSegmentId,
+} from './util';
 
 //
 // Extension Types
@@ -71,7 +79,7 @@ export type GraphBuilderTraverseOptions = {
   visitor: (node: Node.Node, path: string[]) => MaybePromise<boolean | void>;
   registry?: Registry.Registry;
   source?: string;
-  relation: Node.RelationInput;
+  relation: Node.RelationInput | Node.RelationInput[];
 };
 
 /**
@@ -105,7 +113,9 @@ class GraphBuilderImpl implements GraphBuilder {
   }
 
   // TODO(wittjosiah): Use Context.
+  /** Active subscriptions keyed by composite ID, cleaned up on node removal. */
   readonly _subscriptions = new Map<string, CleanupFn>();
+  /** Connector updates pending flush, keyed by connector key. */
   readonly _dirtyConnectors = new Map<
     string,
     {
@@ -113,16 +123,24 @@ class GraphBuilderImpl implements GraphBuilder {
       previous: string[];
     }
   >();
+  /** Last-flushed node IDs per connector key, used for edge removal on update. */
   readonly _connectorPrevious = new Map<string, string[]>();
+  /** Last-flushed node args per connector key, used for change detection. */
   readonly _connectorPreviousArgs = new Map<string, Node.NodeArg<any>[]>();
+  /** Whether a dirty-flush task is already scheduled. */
   _flushScheduled = false;
+  /** Resolves when the current flush completes. */
   _flushPromise: Promise<void> = Promise.resolve();
+  /** Registered builder extensions keyed by extension ID. */
   readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
     Atom.keepAlive,
     Atom.withLabel('graph-builder:extensions'),
   );
+  /** Triggers signalling that a node's resolver has fired at least once. */
   readonly _initialized: Record<string, Trigger> = {};
+  /** Shared atom registry for reactive subscriptions. */
   readonly _registry: Registry.Registry;
+  /** Backing graph with internal accessors for node atoms and construction. */
   readonly _graph: Graph.Graph & {
     _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
     _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
@@ -263,7 +281,8 @@ class GraphBuilderImpl implements GraphBuilder {
 
     const cancel = this._registry.subscribe(
       connectors,
-      (nodes) => {
+      (rawNodes) => {
+        const nodes = qualifyNodeArgs(id)(rawNodes);
         const previous = this._connectorPrevious.get(key) ?? [];
         const ids = nodes.map((n) => n.id);
 
@@ -284,7 +303,6 @@ class GraphBuilderImpl implements GraphBuilder {
     this._subscriptions.set(subscriptionKey(id, 'expand', key), cancel);
   }
 
-  // TODO(wittjosiah): If the same node is added by a connector, the resolver should probably cancel itself?
   private async _onInitialize(id: string) {
     log('onInitialize', { id });
     const resolver = this._resolvers(id);
@@ -293,14 +311,24 @@ class GraphBuilderImpl implements GraphBuilder {
       resolver,
       (node) => {
         const trigger = this._initialized[id];
+        const connectorOwned = [...this._connectorPrevious.values()].some((ids) => ids.includes(id));
         Option.match(node, {
           onSome: (node) => {
-            Graph.addNodes(this._graph, [node]);
+            if (!connectorOwned) {
+              Graph.addNodes(this._graph, [node]);
+              // Connect resolved node to its parent via a child edge.
+              const parentId = getParentId(id);
+              if (parentId) {
+                Graph.addEdges(this._graph, [{ source: parentId, target: id, relation: 'child' }]);
+              }
+            }
             trigger?.wake();
           },
           onNone: () => {
             trigger?.wake();
-            Graph.removeNodes(this._graph, [id]);
+            if (!connectorOwned) {
+              Graph.removeNodes(this._graph, [id]);
+            }
           },
         });
       },
@@ -311,9 +339,8 @@ class GraphBuilderImpl implements GraphBuilder {
   }
 
   private _onRemoveNode(id: string): void {
-    const prefix = `${id}${Separators.primary}`;
     for (const [key, cleanup] of this._subscriptions) {
-      if (key.startsWith(prefix)) {
+      if (primaryParts(key)[0] === id) {
         cleanup();
         this._subscriptions.delete(key);
       }
@@ -425,11 +452,14 @@ const exploreImpl = async (
     return;
   }
 
-  const nodes = Object.values(internal._registry.get(internal._extensions))
-    .filter((extension) => Graph.relationKey(extension.relation ?? 'child') === Graph.relationKey(relation))
-    .map((extension) => extension.connector)
-    .filter(isNonNullable)
-    .flatMap((connector) => registry.get(connector(internal._graph.node(source))));
+  const nodes = Function.pipe(
+    internal._registry.get(internal._extensions),
+    Record.values,
+    Array.map((extension) => extension.connector),
+    Array.filter(isNonNullable),
+    Array.flatMap((connector) => registry.get(connector(internal._graph.node(source)))),
+    qualifyNodeArgs(source),
+  );
 
   await Promise.all(
     nodes.map((nodeArg) => {
@@ -755,7 +785,7 @@ const createConnectorWithRuntime = <TData, R>(
  * All callbacks must return Effects for dependency injection.
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
-export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.Any, R = never> = {
+export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity, R = never> = {
   id: string;
   type: T;
   actions?: (
@@ -775,7 +805,7 @@ export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.A
  * The entity type is inferred from the schema type and works for both object and relation schemas.
  * Returns an Effect to allow callbacks to access services via dependency injection.
  */
-export const createTypeExtension = <T extends Type.Entity.Any, R = never>(
+export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, connector, relation, position } = options;
@@ -793,19 +823,33 @@ export const createTypeExtension = <T extends Type.Entity.Any, R = never>(
 // Extension Utilities
 //
 
-const connectorKey = (id: string, relation: Node.RelationInput): string =>
-  `${id}${Separators.primary}${Graph.relationKey(relation)}`;
+/**
+ * Qualify node IDs by prefixing with the parent path.
+ * Validates that segment IDs do not contain the path separator.
+ * Recursively qualifies inline child nodes.
+ */
+const qualifyNodeArgs =
+  (parentId: string) =>
+  (nodes: Node.NodeArg<any>[]): Node.NodeArg<any>[] =>
+    nodes.map((node) => {
+      validateSegmentId(node.id);
+      const qualified = qualifyId(parentId, node.id);
+      return {
+        ...node,
+        id: qualified,
+        nodes: node.nodes ? qualifyNodeArgs(qualified)(node.nodes) : undefined,
+      };
+    });
+
+const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 
 const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
-  const separatorIndex = key.indexOf(Separators.primary);
-  const id = key.slice(0, separatorIndex);
-  return { id, relation: Graph.relationFromKey(key.slice(separatorIndex + 1)) };
+  const [id, encodedRelation] = primaryParts(key);
+  return { id, relation: Graph.relationFromKey(encodedRelation) };
 };
 
 const subscriptionKey = (id: string, kind: string, detail?: string): string =>
-  detail != null
-    ? `${id}${Separators.primary}${kind}${Separators.primary}${detail}`
-    : `${id}${Separators.primary}${kind}`;
+  detail != null ? primaryKey(id, kind, detail) : primaryKey(id, kind);
 
 export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
   if (Array.isArray(extension)) {

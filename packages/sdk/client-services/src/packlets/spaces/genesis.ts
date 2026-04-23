@@ -6,7 +6,7 @@ import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { type Keyring } from '@dxos/keyring';
-import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
@@ -16,6 +16,8 @@ export const spaceGenesis = async (
   signingContext: SigningContext,
   space: Space,
   automergeRoot?: string,
+  tags?: string[],
+  membershipPolicy?: MembershipPolicy,
 ) => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
@@ -25,7 +27,9 @@ export const spaceGenesis = async (
       subject: space.key,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceGenesis',
-        'spaceKey': space.key,
+        spaceKey: space.key,
+        tags: tags ?? [],
+        membershipPolicy: membershipPolicy ?? MembershipPolicy.INVITE,
       },
     }),
 
@@ -35,10 +39,11 @@ export const spaceGenesis = async (
       subject: signingContext.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
-        'spaceKey': space.key,
-        'role': SpaceMember.Role.OWNER,
-        'profile': signingContext.getProfile(),
-        'genesisFeedKey': space.controlFeedKey ?? failUndefined(),
+        spaceKey: space.key,
+        role: SpaceMember.Role.OWNER,
+        profile: signingContext.getProfile(),
+        genesisFeedKey: space.controlFeedKey ?? failUndefined(),
+        tags: tags ?? [],
       },
     }),
 
@@ -46,10 +51,10 @@ export const spaceGenesis = async (
       subject: space.controlFeedKey ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        'spaceKey': space.key,
-        'identityKey': signingContext.identityKey,
-        'deviceKey': signingContext.deviceKey,
-        'designation': AdmittedFeed.Designation.CONTROL,
+        spaceKey: space.key,
+        identityKey: signingContext.identityKey,
+        deviceKey: signingContext.deviceKey,
+        designation: AdmittedFeed.Designation.CONTROL,
       },
     }),
 
@@ -57,10 +62,10 @@ export const spaceGenesis = async (
       subject: space.dataFeedKey ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        'spaceKey': space.key,
-        'identityKey': signingContext.identityKey,
-        'deviceKey': signingContext.deviceKey,
-        'designation': AdmittedFeed.Designation.DATA,
+        spaceKey: space.key,
+        identityKey: signingContext.identityKey,
+        deviceKey: signingContext.deviceKey,
+        designation: AdmittedFeed.Designation.DATA,
       },
     }),
 
@@ -68,10 +73,10 @@ export const spaceGenesis = async (
       subject: space.key ?? failUndefined(),
       assertion: {
         '@type': 'dxos.halo.credentials.Epoch',
-        'number': 0,
-        'previousId': undefined,
-        'timeframe': new Timeframe(),
-        'snapshotCid': undefined,
+        number: 0,
+        previousId: undefined,
+        timeframe: new Timeframe(),
+        snapshotCid: undefined,
         automergeRoot,
       },
     }),

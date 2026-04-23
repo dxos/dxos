@@ -20,13 +20,10 @@ import {
 } from './plan';
 import {
   AutomergeTestPlan,
-  AutomergeTestPlan,
   EdgeSync,
   EdgeWs,
   EmptyTestPlan,
   QueryTestPlan,
-  QueryTestPlan,
-  ReplicationTestPlan,
   ReplicationTestPlan,
   StorageTestPlan,
   TransportTestPlan,

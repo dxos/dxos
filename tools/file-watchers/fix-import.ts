@@ -4,6 +4,10 @@
 // Settings > Tools > File Watchers > [+ custom] > TypeScript (and JSX)
 // Arguments: $FilePath$
 
+//
+// Copyright 2026 DXOS.org
+//
+
 const fs = require('fs');
 const filePath = process.argv[2]; // File path is passed as an argument.
 

@@ -5,10 +5,10 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import {
   type CreateDeployOptions,
@@ -17,29 +17,33 @@ import {
   createFormat,
   createTemplateSelect,
   useDeployDeps,
-} from '../../hooks';
-import { meta } from '../../meta';
+} from '#hooks';
+import { meta } from '#meta';
 
-export type ScriptToolbarProps = {
-  role?: string;
+export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   script: Script.Script;
   state: ScriptToolbarStateStore;
 };
 
-export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
-  const { t } = useTranslation(meta.id);
-  const options = useDeployDeps({ script });
-  const menu = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
-  const actions = useMenuActions(menu);
+export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
+  ({ script, attendableId, role, state, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+    const options = useDeployDeps({ script });
+    const menuCreator = useMemo(
+      () => createToolbarActions({ state, script, t, ...options }),
+      [state, script, options, t],
+    );
+    const menuActions = useMenuActions(menuCreator);
 
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...actions} attendableId={Obj.getDXN(script).toString()}>
-        <Menu.Toolbar />
-      </Menu.Root>
-    </ElevationProvider>
-  );
-};
+    return (
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+        </Menu.Root>
+      </ElevationProvider>
+    );
+  },
+);
 
 const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Atom.Atom<ActionGraphProps> =>
   Atom.make((get) => {

@@ -83,8 +83,8 @@ export class ProtoCodec<T = any> implements Codec<T> {
   encodeAsAny(value: T, options: EncodingOptions = {}): WithTypeUrl<Any> {
     return {
       '@type': 'google.protobuf.Any',
-      'type_url': this._type.fullName.slice(1),
-      'value': this.encode(value, options),
+      type_url: this._type.fullName.slice(1),
+      value: this.encode(value, options),
     };
   }
 

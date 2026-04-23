@@ -9,7 +9,6 @@ import { hues } from '@dxos/ui-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing';
-
 import { Tag } from './Tag';
 
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];

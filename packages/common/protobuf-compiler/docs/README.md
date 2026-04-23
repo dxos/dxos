@@ -1,7 +1,5 @@
 # @dxos/protobuf-compiler
 
-
-
 ## Dependency Graph
 
 ```mermaid
@@ -28,4 +26,4 @@ linkStyle default stroke:#333,stroke-width:1px
 ## Dependencies
 
 | Module | Direct |
-|---|---|
+| ------ | ------ |

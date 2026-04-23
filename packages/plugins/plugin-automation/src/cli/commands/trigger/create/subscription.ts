@@ -13,8 +13,9 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 import { Deep, Delay, Enabled, Input, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
@@ -38,7 +39,7 @@ export const subscription = Command.make(
         onNone: () => selectFunction(),
         onSome: (id) => Effect.succeed(id),
       });
-      const functions = yield* Database.runQuery(Filter.type(Function.Function));
+      const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -51,7 +52,7 @@ export const subscription = Command.make(
           }).pipe(Prompt.run),
         onSome: (value) => Effect.succeed(value),
       });
-      const queryAst = Query.select(Filter.type(typename)).ast;
+      const subscriptionQuery = Query.select(Filter.type(typename));
 
       const deepOption = yield* Option.match(options.deep, {
         onNone: () =>
@@ -85,7 +86,7 @@ export const subscription = Command.make(
       }
 
       const input = yield* Option.match(options.input, {
-        onNone: () => promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined),
+        onNone: () => promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined),
         onSome: (value) => Effect.succeed(Object.fromEntries(HashMap.toEntries(value))),
       });
 
@@ -102,13 +103,10 @@ export const subscription = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: {
-          kind: 'subscription',
-          query: {
-            ast: queryAst,
-          },
-          options: Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined,
-        },
+        spec: Trigger.specSubscription(
+          subscriptionQuery,
+          Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined,
+        ),
         input,
       });
       yield* Database.add(trigger);
@@ -124,5 +122,5 @@ export const subscription = Command.make(
 ).pipe(
   Command.withDescription('Create a subscription trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
+  Command.provideEffectDiscard(() => withTypes(Operation.PersistentOperation, Trigger.Trigger)),
 );

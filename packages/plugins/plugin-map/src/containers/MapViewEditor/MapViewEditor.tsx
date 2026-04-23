@@ -5,13 +5,13 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { JsonSchema, Obj, type Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { useSchema } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { type Map } from '../../types';
+import { type Map } from '#types';
 
 // TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({
@@ -51,14 +51,14 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     }));
   }, [allSchemata]);
 
-  const jsonSchema = useMemo(() => (currentSchema ? Type.toJsonSchema(currentSchema) : {}), [currentSchema]);
+  const jsonSchema = useMemo(() => (currentSchema ? JsonSchema.toJsonSchema(currentSchema) : {}), [currentSchema]);
   const locationFields = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];
     }
 
     const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-      if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
+      if (typeof value === 'object' && (value as { format?: string })?.format === Format.TypeFormat.GeoPoint) {
         acc.push(key);
       }
       return acc;
@@ -70,8 +70,8 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
       if (view && values.coordinateColumn) {
-        Obj.change(view, (v) => {
-          v.projection.pivotFieldId = values.coordinateColumn;
+        Obj.change(view, (view) => {
+          view.projection.pivotFieldId = values.coordinateColumn;
         });
       }
     },

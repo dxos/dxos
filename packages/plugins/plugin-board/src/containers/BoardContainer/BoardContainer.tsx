@@ -5,18 +5,18 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board as BoardType } from '../../types';
+import { type Board as BoardType } from '#types';
 
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
@@ -24,15 +24,14 @@ type PickerState = {
   position: Position;
 };
 
-export type BoardContainerProps = SurfaceComponentProps<BoardType.Board>;
+export type BoardContainerProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
-export const BoardContainer = ({ role, subject: board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
   const [boardItems] = useObject(board, 'items');
   const items = useObjects(boardItems ?? []);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const db = Obj.getDatabase(board);
@@ -74,11 +73,11 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      Obj.change(board, (b) => {
+      Obj.change(board, (board) => {
         if (idx !== -1) {
-          b.items.splice(idx, 1);
+          board.items.splice(idx, 1);
         }
-        delete b.layout.cells[id];
+        delete board.layout.cells[id];
       });
     },
     [board],
@@ -87,8 +86,8 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      Obj.change(board, (b) => {
-        b.layout.cells[id] = { ...layout, ...position };
+      Obj.change(board, (board) => {
+        board.layout.cells[id] = { ...layout, ...position };
       });
     },
     [board],
@@ -107,11 +106,11 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
       }
 
       // Create a reference to the selected object and add it to the board.
-      Obj.change(board, (b) => {
-        b.items.push(Ref.make(selectedObject));
+      Obj.change(board, (board) => {
+        board.items.push(Ref.make(selectedObject));
 
         // Set the layout position for the new item.
-        b.layout.cells[selectedObject.id.toString()] = pickerState.position;
+        board.layout.cells[selectedObject.id.toString()] = pickerState.position;
       });
 
       // Close the picker.
@@ -128,21 +127,25 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
           setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
         }}
       >
-        <Container.Main role={role} toolbar>
-          <Board.Toolbar disabled={!hasAttention} />
-          <Board.Container>
-            <Board.Viewport classNames='border-none'>
-              <Board.Backdrop />
-              <Board.Content>
-                {items?.map((item, index) => (
-                  <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                    <Surface.Surface role='card--content' data={{ subject: item }} limit={1} />
-                  </Board.Cell>
-                ))}
-              </Board.Content>
-            </Board.Viewport>
-          </Board.Container>
-        </Container.Main>
+        <Panel.Root role={role}>
+          <Panel.Toolbar asChild>
+            <Board.Toolbar disabled={!hasAttention} />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <Board.Container>
+              <Board.Viewport classNames='border-none'>
+                <Board.Backdrop />
+                <Board.Content>
+                  {items?.map((item, index) => (
+                    <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
+                      <Surface.Surface type={AppSurface.Card} data={{ subject: item }} limit={1} />
+                    </Board.Cell>
+                  ))}
+                </Board.Content>
+              </Board.Viewport>
+            </Board.Container>
+          </Panel.Content>
+        </Panel.Root>
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>

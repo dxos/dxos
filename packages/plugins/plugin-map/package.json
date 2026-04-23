@@ -12,6 +12,16 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#testing": "./src/testing.ts",
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -24,6 +34,12 @@
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs",
       "types": "./dist/types/src/blueprints/index.d.ts"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "node": "./dist/lib/node-esm/operations/index.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
@@ -43,6 +59,9 @@
     "*": {
       "blueprints": [
         "dist/types/src/blueprints/index.d.ts"
+      ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
       ],
       "testing": [
         "dist/types/src/testing.d.ts"

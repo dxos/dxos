@@ -9,8 +9,8 @@
  * Then point your client at http://localhost:8080 instead of https://api.anthropic.com.
  */
 
-import { createServer } from 'node:http';
 import { mkdirSync, appendFileSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

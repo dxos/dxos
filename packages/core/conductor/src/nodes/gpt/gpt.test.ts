@@ -8,13 +8,13 @@ import * as Effect from 'effect/Effect';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import type { QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { Trace } from '@dxos/functions';
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { createTestServices } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { ValueBag } from '../../types';
-
 import { type GptInput, gptNode } from './gpt';
 
 const ENABLE_LOGGING = true;
@@ -54,7 +54,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         log.info('output', { output });
         expect(typeof output.text).toBe('string');
         expect(output.text.length).toBeGreaterThan(10);
-      }),
+      }, Effect.provide(Trace.writerLayerNoop)),
       60_000,
     );
 
@@ -90,7 +90,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         );
         log.info('conversationMessages', { conversationMessages });
         expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
-      }),
+      }, Effect.provide(Trace.writerLayerNoop)),
       60_000,
     );
   });

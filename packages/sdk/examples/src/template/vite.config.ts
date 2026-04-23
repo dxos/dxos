@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
@@ -20,8 +19,5 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
-  plugins: [
-    react(),
-    ThemePlugin({}),
-  ],
+  plugins: [react(), ThemePlugin({})],
 });

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/graph',
+  id: 'org.dxos.plugin.graph',
   name: 'Graph',
   description: trim`
     Graph database layer providing relationship modeling and queries for workspace objects.

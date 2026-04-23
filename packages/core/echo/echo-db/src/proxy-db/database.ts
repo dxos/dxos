@@ -8,6 +8,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -28,8 +29,6 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import { Filter, Query } from '../query';
-
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
 
@@ -179,7 +178,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
-      await this._coreDatabase.open({ rootUrl: this._rootUrl });
+      await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
     }
 
     await this._schemaRegistry.open();
@@ -198,9 +197,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
-        await this._coreDatabase.open({ rootUrl });
+        await this._coreDatabase.open(this._ctx, { rootUrl });
       } else {
-        await this._coreDatabase.updateSpaceState({ rootUrl });
+        await this._coreDatabase.updateSpaceState(this._ctx, { rootUrl });
       }
     }
   }
@@ -227,17 +226,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
+  private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
 
-    if (isQueryQualified(query.ast)) {
-      return this._coreDatabase.graph.query(query, options);
+    if (!isQueryScoped(query.ast)) {
+      query = query.from({ spaceIds: [this.spaceId] });
     }
 
-    return this._coreDatabase.graph.query(query, {
-      ...options,
-      spaceIds: [this.spaceId],
-    });
+    return this._coreDatabase.graph.query(query);
   }
 
   /**
@@ -386,12 +382,12 @@ const createSchemaNotRegisteredError = (schema?: any) => {
   return new Error(message);
 };
 
-const isQueryQualified = (query: QueryAST.Query): boolean => {
-  let isQualified = false;
+const isQueryScoped = (query: QueryAST.Query): boolean => {
+  let scoped = false;
   QueryAST.visit(query, (node) => {
-    if (node.type === 'options' && (node.options.spaceIds !== undefined || node.options.queues !== undefined)) {
-      isQualified = true;
+    if (node.type === 'from') {
+      scoped = true;
     }
   });
-  return isQualified;
+  return scoped;
 };

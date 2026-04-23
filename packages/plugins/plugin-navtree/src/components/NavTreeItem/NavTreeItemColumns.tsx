@@ -7,12 +7,12 @@ import React, { Fragment, memo, useMemo } from 'react';
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useActions } from '../../hooks';
-import { meta } from '../../meta';
+import { useActions } from '#hooks';
+import { meta } from '#meta';
+
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { type NavTreeItemColumnsProps } from '../types';
-
 import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
@@ -56,7 +56,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
     [primaryAction, groupedActions],
   );
 
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
+  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
   return (
     <div role='none' className='contents dx-app-no-drag'>
@@ -67,6 +67,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             label={toLocalizedString(primaryAction.properties?.label, t)}
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
+            path={path}
             monolithic={Node.isAction(primaryAction)}
             menuActions={primaryMenuActions}
             menuType={primaryAction.properties?.menuType}
@@ -81,9 +82,10 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
           <Treegrid.Cell classNames='contents'>
             <NavTreeItemAction
               testId={`navtree.treeItem.actionsLevel${level}`}
-              label={t('tree item actions label')}
+              label={t('tree-item-actions.label')}
               icon='ph--dots-three-vertical--regular'
               parent={item}
+              path={path}
               menuActions={actions}
               menuType='dropdown'
               caller={NAV_TREE_ITEM}

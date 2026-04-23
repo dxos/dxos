@@ -24,21 +24,16 @@ const typesMovedToDxosTypes = [
   'Geo',
 ];
 
-const typesStayingInSchema = [
-  'Collection',
-  'View',
-  'Text',
-  'StoredSchema',
-];
+const typesStayingInSchema = ['Collection', 'View', 'Text', 'StoredSchema'];
 
 async function refactorFile(filePath: string) {
   let content = readFileSync(filePath, 'utf-8');
   const originalContent = content;
-  
+
   // Check if file contains DataType imports or usage
-  const hasDataTypeImport = content.includes("import { DataType") || content.includes("import type { DataType");
-  const hasDataTypeUsage = content.includes("DataType.");
-  
+  const hasDataTypeImport = content.includes('import { DataType') || content.includes('import type { DataType');
+  const hasDataTypeUsage = content.includes('DataType.');
+
   if (!hasDataTypeImport && !hasDataTypeUsage) {
     return false;
   }
@@ -51,7 +46,8 @@ async function refactorFile(filePath: string) {
   let match;
   while ((match = dataTypePattern.exec(content)) !== null) {
     const [, namespace, type] = match;
-    if (namespace === type) { // e.g., DataType.Person.Person
+    if (namespace === type) {
+      // e.g., DataType.Person.Person
       usedTypes.add(namespace);
     }
   }
@@ -60,21 +56,21 @@ async function refactorFile(filePath: string) {
   const schemaImportPattern = /import\s*(?:type\s*)?\{([^}]+)\}\s*from\s*['"]@dxos\/schema['"]/g;
   const schemaImports: string[] = [];
   while ((match = schemaImportPattern.exec(content)) !== null) {
-    const imports = match[1].split(',').map(imp => imp.trim());
+    const imports = match[1].split(',').map((imp) => imp.trim());
     schemaImports.push(...imports);
   }
 
   // Separate types that need to move vs stay
   const typesToMoveToTypes: string[] = [];
   const typesToKeepInSchema: string[] = [];
-  
-  usedTypes.forEach(type => {
+
+  usedTypes.forEach((type) => {
     if (typesMovedToDxosTypes.includes(type)) {
       typesToMoveToTypes.push(type);
     }
   });
-  
-  schemaImports.forEach(imp => {
+
+  schemaImports.forEach((imp) => {
     const cleanImp = imp.replace(/type\s+/, '').trim();
     if (cleanImp !== 'DataType') {
       if (typesMovedToDxosTypes.includes(cleanImp)) {
@@ -88,12 +84,21 @@ async function refactorFile(filePath: string) {
   });
 
   // Remove DataType imports
-  content = content.replace(/import\s*(?:type\s*)?\{\s*DataType\s*(?:,\s*[^}]+)?\}\s*from\s*['"]@dxos\/schema['"];?\n?/g, '');
-  content = content.replace(/import\s*(?:type\s*)?\{\s*([^}]+),\s*DataType\s*\}\s*from\s*['"]@dxos\/schema['"];?\n?/g, "import { $1 } from '@dxos/schema';\n");
-  content = content.replace(/import\s*(?:type\s*)?\{\s*([^}]+),\s*DataType\s*,\s*([^}]+)\}\s*from\s*['"]@dxos\/schema['"];?\n?/g, "import { $1, $2 } from '@dxos/schema';\n");
+  content = content.replace(
+    /import\s*(?:type\s*)?\{\s*DataType\s*(?:,\s*[^}]+)?\}\s*from\s*['"]@dxos\/schema['"];?\n?/g,
+    '',
+  );
+  content = content.replace(
+    /import\s*(?:type\s*)?\{\s*([^}]+),\s*DataType\s*\}\s*from\s*['"]@dxos\/schema['"];?\n?/g,
+    "import { $1 } from '@dxos/schema';\n",
+  );
+  content = content.replace(
+    /import\s*(?:type\s*)?\{\s*([^}]+),\s*DataType\s*,\s*([^}]+)\}\s*from\s*['"]@dxos\/schema['"];?\n?/g,
+    "import { $1, $2 } from '@dxos/schema';\n",
+  );
 
   // Replace DataType.X.X with just X.X
-  typesMovedToDxosTypes.forEach(type => {
+  typesMovedToDxosTypes.forEach((type) => {
     const regex = new RegExp(`DataType\\.${type}\\.${type}`, 'g');
     content = content.replace(regex, `${type}.${type}`);
   });
@@ -105,12 +110,12 @@ async function refactorFile(filePath: string) {
   // Add new imports from @dxos/types if needed
   if (typesToMoveToTypes.length > 0) {
     const typesImport = `import { ${typesToMoveToTypes.join(', ')} } from '@dxos/types';\n`;
-    
+
     // Check if @dxos/types import already exists
     const existingTypesImport = content.match(/import\s*(?:type\s*)?\{([^}]+)\}\s*from\s*['"]@dxos\/types['"]/);
     if (existingTypesImport) {
       // Merge with existing import
-      const existingImports = existingTypesImport[1].split(',').map(imp => imp.trim());
+      const existingImports = existingTypesImport[1].split(',').map((imp) => imp.trim());
       const allImports = [...new Set([...existingImports, ...typesToMoveToTypes])].sort();
       content = content.replace(existingTypesImport[0], `import { ${allImports.join(', ')} } from '@dxos/types'`);
     } else {
@@ -120,27 +125,25 @@ async function refactorFile(filePath: string) {
   }
 
   // Clean up any schema imports that now only have types that moved
-  content = content.replace(/import\s*(?:type\s*)?\{\s*(?:Organization|Person|Task|Project|Event|Message|ContentBlock|Actor|Geo)(?:\s*,\s*(?:Organization|Person|Task|Project|Event|Message|ContentBlock|Actor|Geo))*\s*\}\s*from\s*['"]@dxos\/schema['"];?\n?/g, '');
+  content = content.replace(
+    /import\s*(?:type\s*)?\{\s*(?:Organization|Person|Task|Project|Event|Message|ContentBlock|Actor|Geo)(?:\s*,\s*(?:Organization|Person|Task|Project|Event|Message|ContentBlock|Actor|Geo))*\s*\}\s*from\s*['"]@dxos\/schema['"];?\n?/g,
+    '',
+  );
 
   // Write back if changed
   if (content !== originalContent) {
     writeFileSync(filePath, content);
     return true;
   }
-  
+
   return false;
 }
 
 async function main() {
   console.log('Starting refactoring of @dxos/schema imports...\n');
-  
+
   const files = glob.sync('packages/**/*.{ts,tsx}', {
-    ignore: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/*.d.ts',
-      '**/generated/**',
-    ],
+    ignore: ['**/node_modules/**', '**/dist/**', '**/*.d.ts', '**/generated/**'],
   });
 
   console.log(`Found ${files.length} TypeScript files to check\n`);

@@ -5,15 +5,14 @@
 import { type ViewUpdate } from '@codemirror/view';
 import { useMemo } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { fromUrlPath } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useThemeContext } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
@@ -40,7 +39,8 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy, safeUrl } from '@dxos/util';
 
-import { Markdown } from '../types';
+import { Markdown } from '#types';
+
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -48,12 +48,16 @@ export type DocumentType = Markdown.Document | Text.Text | { id: string; text: s
 export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
-  invokePromise?: Capabilities.OperationInvoker['invokePromise'];
   settings?: Markdown.Settings;
-  selectionManager?: SelectionManager;
+  compact?: boolean;
   viewMode?: EditorViewMode;
+  editable?: boolean;
+  selectionManager?: SelectionManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
+  platform?: 'mobile' | 'desktop';
+  /** Callback when an internal link is clicked. */
+  onSelectObject?: (objectId: string) => void;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
@@ -61,12 +65,14 @@ export const useExtensions = ({
   id,
   object,
   settings,
-  selectionManager,
+  compact,
   viewMode,
+  selectionManager,
   editorStateStore,
   previewOptions,
+  onSelectObject,
 }: ExtensionsOptions): Extension[] => {
-  const { invokePromise } = useOperationInvoker();
+  const { platform } = useThemeContext();
   const identity = useIdentity();
   const space = getSpace(object);
 
@@ -88,16 +94,19 @@ export const useExtensions = ({
         id,
         object,
         settings,
-        selectionManager,
+        compact,
         viewMode,
+        selectionManager,
         previewOptions,
-        invokePromise,
+        platform,
+        onSelectObject,
       }),
     [
       id,
       object,
+      compact,
       viewMode,
-      invokePromise,
+      selectionManager,
       previewOptions,
       settings,
       settings?.debug,
@@ -105,7 +114,8 @@ export const useExtensions = ({
       settings?.folding,
       settings?.numberedHeadings,
       settings?.typewriter,
-      selectionManager,
+      platform,
+      onSelectObject,
     ],
   );
 
@@ -143,16 +153,18 @@ export const useExtensions = ({
 const createBaseExtensions = ({
   id,
   object,
-  invokePromise,
+  onSelectObject,
   settings,
-  selectionManager,
+  compact,
   viewMode,
+  selectionManager,
   previewOptions,
+  platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings?.folding && folding(),
+    settings?.folding && !compact && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
 
   //
@@ -166,12 +178,7 @@ const createBaseExtensions = ({
           selectionChangeDelay: 100,
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
-          renderLinkButton: createRenderLink((targetId: string) => {
-            void invokePromise?.(LayoutOperation.Open, {
-              subject: [targetId],
-              pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
-            });
-          }),
+          renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
         }),
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),
@@ -217,21 +224,33 @@ const createRenderLink =
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const anchor = Domino.of('a')
-      .classNames('dx-link dx-icon-inline ms-1')
-      .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+    const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
+    const icon = Domino.of('span')
+      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
+      .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
-      anchor.on('click', () => {
-        const qualifiedId = url.split('/').at(-1);
-        invariant(qualifiedId, 'Invalid link format.');
-        onSelectObject(qualifiedId);
-      });
-    } else {
-      anchor.attributes({ href: url, rel: 'noreferrer', target: '_blank' });
+      invariant(qualifiedId, 'Invalid link format.');
+      icon
+        .attributes({ role: 'button', tabindex: '0' })
+        .on('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectObject(qualifiedId);
+        })
+        .on('keydown', (event) => {
+          const keyboardEvent = event as KeyboardEvent;
+          if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
+            return;
+          }
+
+          keyboardEvent.preventDefault();
+          keyboardEvent.stopPropagation();
+          onSelectObject(qualifiedId);
+        });
     }
 
-    el.appendChild(anchor.root);
+    el.appendChild(icon.root);
   };
 
 const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
@@ -239,7 +258,7 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
       .classNames('dx-link flex items-center gap-2')
-      .text(safeUrl(url)?.origin ?? url)
-      .children(Domino.svg('ph--arrow-square-out--regular')).root,
+      .text(safeUrl(url)?.toString() ?? url)
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

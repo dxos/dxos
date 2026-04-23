@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/theme',
+  id: 'org.dxos.plugin.theme',
   name: 'Theme',
   description: trim`
     Core theming engine providing consistent visual styling across the workspace.

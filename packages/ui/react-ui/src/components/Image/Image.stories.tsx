@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Image } from './Image';
 
 const seed = Math.random();
 
-faker.seed(seed);
+random.seed(seed);
 
 const meta = {
   title: 'ui/react-ui-mosaic/Image',
@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    src: faker.image.url(),
+    src: random.image.url(),
   },
 };
 

@@ -1,7 +1,7 @@
 ---
 title: Querying data
 sidebar_title: 5. Querying data
-description: 
+description:
 ---
 
 ## List items

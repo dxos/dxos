@@ -78,7 +78,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
         </div>
       )}
 
-      {Object.keys(span.input).length > 0 && (
+      {Object.keys(span.input as any).length > 0 && (
         <div className='mt-3'>
           <details className='text-sm'>
             <summary className='cursor-pointer font-medium'>Input Data</summary>

@@ -14,7 +14,7 @@ import {
   type Contact,
   type CreateEpochRequest,
   type Invitation,
-  type SpaceArchive,
+  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
@@ -22,7 +22,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type CancellableInvitation } from './invitations';
 import { type SpaceProperties } from './types';
@@ -30,6 +30,14 @@ import { type SpaceProperties } from './types';
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
   automergeRootUrl?: string;
+};
+
+export type ExportSpaceOptions = {
+  /**
+   * Archive format.
+   * @default SpaceArchive.Format.BINARY
+   */
+  format?: SpaceArchive.Format;
 };
 
 export interface SpaceInternal {
@@ -46,7 +54,7 @@ export interface SpaceInternal {
   // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
 
-  export(): Promise<SpaceArchive>;
+  export(options?: ExportSpaceOptions): Promise<SpaceArchive>;
 
   /**
    * Migrate space data to the latest version.
@@ -94,6 +102,18 @@ export interface Space extends Messenger {
   get isOpen(): boolean;
 
   /**
+   * Immutable tags assigned at space creation time.
+   * Available on closed spaces.
+   */
+  get tags(): string[];
+
+  /**
+   * Immutable membership policy assigned at space creation time.
+   * Available on closed spaces.
+   */
+  get membershipPolicy(): MembershipPolicy;
+
+  /**
    * Current state of the space.
    * The database is ready to be used in `SpaceState.SPACE_READY` state.
    * Presence is available in `SpaceState.SPACE_CONTROL_ONLY` state.
@@ -103,7 +123,7 @@ export interface Space extends Messenger {
   /**
    * Properties object.
    */
-  get properties(): Obj.Obj<SpaceProperties>;
+  get properties(): Obj.OfShape<SpaceProperties>;
 
   /**
    * Current state of space pipeline.

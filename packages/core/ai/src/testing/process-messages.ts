@@ -15,7 +15,6 @@ import { Message } from '@dxos/types';
 import * as AiParser from '../AiParser';
 import * as AiPreprocessor from '../AiPreprocessor';
 import { callTools, getToolCalls } from '../tools';
-
 import { TestingToolkit, testingLayer } from './toolkit';
 
 // TODO(dmaretskyi): What is the right stopping condition?

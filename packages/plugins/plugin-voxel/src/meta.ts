@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/voxel',
+  id: 'org.dxos.plugin.voxel',
   name: 'Voxel',
   description: trim`
     A 3D voxel editor for creating and editing block-based 3D worlds.

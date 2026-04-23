@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { type DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
-import { Queue } from '@dxos/echo-db';
 
 /**
  * Root transcript object created when the user starts a transcription.
  */
+// TODO(dmaretskyi): Convert `queue` to `Ref.Ref(Feed.Feed)` (see plugin-assistant migrations for pattern).
 export const Transcript = Schema.Struct({
   // TODO(wittjosiah): Remove?
   // TODO(burdon): Use Date or string?
@@ -18,15 +20,19 @@ export const Transcript = Schema.Struct({
   ended: Schema.optional(Schema.String),
 
   /**
-   * Queue containing TranscriptBlock objects.
+   * Feed containing TranscriptBlock objects.
    */
-  queue: Type.Ref(Queue),
+  feed: Ref.Ref(Feed.Feed),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Transcript',
+    typename: 'org.dxos.type.transcript',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--subtitles--regular',
+    hue: 'sky',
+  }),
 );
 
 export type Transcript = Schema.Schema.Type<typeof Transcript>;
@@ -43,4 +49,4 @@ const TranscriptHeader = Schema.Struct({
 
 export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;
 
-export const make = (queueDxn: DXN): Transcript => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });
+export const make = (feed: Ref.Ref<Feed.Feed>): Transcript => Obj.make(Transcript, { feed });

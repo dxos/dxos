@@ -2,11 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Relation, Type } from '@dxos/echo';
 
-import { Organization } from './Organization';
+import * as Organization from './Organization';
+
+/** @deprecated Use HasConnection instead. */
+export const LegacyHasConnection = Schema.Struct({
+  id: Obj.ID,
+  kind: Schema.String,
+}).pipe(
+  Type.relation({
+    typename: 'org.dxos.relation.has-connection',
+    version: '0.1.0',
+    source: Organization.Organization,
+    target: Organization.Organization,
+  }),
+);
+
+export interface LegacyHasConnection extends Schema.Schema.Type<typeof LegacyHasConnection> {}
 
 export const HasConnection = Schema.Struct({
   id: Obj.ID,
@@ -17,10 +34,10 @@ export const HasConnection = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'dxos.org/relation/HasConnection',
+      typename: 'org.dxos.relation.hasConnection',
       version: '0.1.0',
-      source: Organization,
-      target: Organization,
+      source: Organization.Organization,
+      target: Organization.Organization,
     }),
   )
   .annotations({

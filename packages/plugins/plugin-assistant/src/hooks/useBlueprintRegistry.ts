@@ -16,6 +16,7 @@ import { distinctBy } from '@dxos/util';
  * Provide a registry of blueprints from plugins.
  */
 // TODO(burdon): Reconcile with eventual public registry.
+// TODO(dmaretskyi): Reconcile with blueprint registry in compute runtime.
 export const useBlueprintRegistry = () => {
   const blueprintDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
   return useMemo(

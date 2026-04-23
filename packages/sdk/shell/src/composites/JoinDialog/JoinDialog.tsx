@@ -9,8 +9,7 @@ import { AlertDialog, type AlertDialogContentProps, useId, useVisualViewport } f
 import { JoinPanel, type JoinPanelProps } from '../../panels';
 
 export interface JoinDialogProps
-  extends Omit<AlertDialogContentProps, 'children'>,
-    Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
+  extends Omit<AlertDialogContentProps, 'children'>, Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
 
 export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef } from 'react';
 
@@ -130,13 +130,13 @@ type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
   (
-    { __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, noAutoFill, ...props },
+    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, ...props },
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
-    const density = useDensityContext(propsDensity);
-    const elevation = useElevationContext(propsElevation);
+    const density = useDensityContext(densityProp);
+    const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
 
     return (
@@ -193,7 +193,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   },
 );
 
-type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & {
+type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
   size?: Size;
 };
 
@@ -222,7 +222,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
     const { tx } = useThemeContext();
 
     return (
-      <CheckboxPrimitive
+      <CheckboxPrimitive.Root
         {...{
           ...props,
           checked,
@@ -233,7 +233,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
+          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >
@@ -241,7 +241,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
           icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
           classNames={tx('input.checkboxIndicator', { size, checked })}
         />
-      </CheckboxPrimitive>
+      </CheckboxPrimitive.Root>
     );
   },
 );

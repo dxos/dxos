@@ -12,7 +12,6 @@ import { buf } from '@dxos/protocols/buf';
 import { Messenger } from '../messenger';
 import { type SignalManager } from '../signal-manager';
 import { type Message, type PeerInfo } from '../signal-methods';
-
 import { type TestBuilder } from './test-builder';
 import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils';
 

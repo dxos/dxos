@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -14,7 +14,7 @@ import { ViewAnnotation } from '@dxos/schema';
 export const Table = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   sizes: Schema.Record({
     // TODO(wittjosiah): Should be JsonPath.
@@ -23,8 +23,8 @@ export const Table = Schema.Struct({
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Table',
-    version: '0.2.0',
+    typename: 'org.dxos.type.table',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
@@ -52,7 +52,7 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
 
   // Preset sizes.
   if (jsonSchema) {
-    const schema = Type.toEffectSchema(jsonSchema);
+    const schema = JsonSchema.toEffectSchema(jsonSchema);
     const properties = SchemaAST.getPropertySignatures(schema.ast);
     for (const property of properties) {
       const name = property.name.toString() as JsonPath;
@@ -77,19 +77,3 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
 
   return table;
 };
-
-//
-// V1
-//
-
-export const TableV1 = Schema.Struct({
-  sizes: Schema.Record({
-    key: Schema.String,
-    value: Schema.Number,
-  }).pipe(Schema.mutable),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Table',
-    version: '0.1.0',
-  }),
-);

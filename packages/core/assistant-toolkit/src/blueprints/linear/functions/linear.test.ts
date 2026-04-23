@@ -9,13 +9,14 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
 const TestLayer = AssistantTestLayer({
-  functions: [fetchLinearIssues],
+  operationHandlers: OperationHandlerSet.make(fetchLinearIssues),
   types: [Task.Task, Person.Person, Pipeline.Pipeline],
   credentials: [{ service: 'linear.app', apiKey: process.env.LINEAR_API_KEY }],
   tracing: 'pretty',
@@ -26,9 +27,9 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
     'sync',
     Effect.fnUntraced(
       function* (_) {
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
-        yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
+        yield* Operation.invoke(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 
@@ -48,7 +49,7 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('sync'),

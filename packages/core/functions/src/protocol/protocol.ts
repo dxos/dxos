@@ -11,42 +11,45 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, Ref, Type } from '@dxos/echo';
-import { refFromEncodedReference } from '@dxos/echo/internal';
+import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
+import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
-import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
-
+import { type FunctionServices } from '../sdk';
+import { CredentialsService, FunctionInvocationService, QueueService } from '../services';
+import * as Trace from '../Trace';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
  */
-export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.Func => {
-  if (!FunctionDefinition.isFunction(func)) {
-    throw new TypeError('Invalid function definition');
+export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Definition.Any>): FunctionProtocol.Func => {
+  if (!Operation.isOperationWithHandler(func)) {
+    throw new TypeError('Expected operation with handler');
   }
+
+  const serviceTags = func.services.map((service) => service.key);
 
   return {
     meta: {
-      key: func.key,
-      name: func.name,
-      description: func.description,
-      inputSchema: Type.toJsonSchema(func.inputSchema),
-      outputSchema: func.outputSchema === undefined ? undefined : Type.toJsonSchema(func.outputSchema),
-      services: func.services,
+      key: func.meta.key,
+      name: func.meta.name,
+      description: func.meta.description,
+      inputSchema: JsonSchema.toJsonSchema(func.input),
+      outputSchema: func.output === undefined ? undefined : JsonSchema.toJsonSchema(func.output),
+      services: func.services.map((service) => service.key),
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(Database.Service.key) ||
-          func.services.includes(QueueService.key) ||
-          func.services.includes(Feed.Service.key)) &&
+        (serviceTags.includes(Database.Service.key) ||
+          serviceTags.includes(QueueService.key) ||
+          serviceTags.includes(Feed.FeedService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -56,9 +59,9 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
       // eslint-disable-next-line no-useless-catch
       try {
-        if (!SchemaAST.isAnyKeyword(func.inputSchema.ast)) {
+        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.validateSync(func.inputSchema)(data);
+            Schema.validateSync(func.input)(data);
           } catch (error) {
             throw new FunctionError({ message: 'Invalid input schema', cause: error });
           }
@@ -68,19 +71,15 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         if (func.types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
-          await funcContext.db.graph.schemaRegistry.register(func.types as Type.Entity.Any[]);
+          await funcContext.db.graph.schemaRegistry.register(func.types as Type.AnyEntity[]);
         }
 
         const dataWithDecodedRefs =
-          funcContext.db && !SchemaAST.isAnyKeyword(func.inputSchema.ast)
-            ? decodeRefsFromSchema(func.inputSchema.ast, data, funcContext.db)
+          funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
+            ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
 
-        let result = await func.handler({
-          // TODO(dmaretskyi): Fix the types.
-          context: context as any,
-          data: dataWithDecodedRefs,
-        });
+        let result: any = await func.handler(dataWithDecodedRefs);
 
         if (Effect.isEffect(result)) {
           result = await runAndForwardErrors(
@@ -91,8 +90,8 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
           );
         }
 
-        if (func.outputSchema && !SchemaAST.isAnyKeyword(func.outputSchema.ast)) {
-          Schema.validateSync(func.outputSchema)(result);
+        if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
+          Schema.validateSync(func.output)(result);
         }
 
         return result;
@@ -158,7 +157,7 @@ class FunctionContext extends Resource {
       ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
-    const tracing = TracingService.layerNoop;
+    const operationServiceLayer = MockedOperationServiceLayer;
 
     const aiLayer = this.context.services.functionsAiService
       ? AiModelResolver.AiModelResolver.buildAiService.pipe(
@@ -175,7 +174,17 @@ class FunctionContext extends Resource {
         )
       : AiService.notAvailable;
 
-    return Layer.mergeAll(dbLayer, queuesLayer, feedLayer, credentials, functionInvocationService, aiLayer, tracing);
+    return Layer.mergeAll(
+      dbLayer,
+      queuesLayer,
+      feedLayer,
+      credentials,
+      functionInvocationService,
+      operationServiceLayer,
+      aiLayer,
+      // TODO(dmaretskyi): Forward trace events.
+      Trace.writerLayerNoop,
+    );
   }
 }
 
@@ -183,6 +192,12 @@ const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService,
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
   resolveFunction: () => Effect.die('Not implemented.'),
 });
+
+const MockedOperationServiceLayer = Layer.succeed(Operation.Service, {
+  invoke: () => Effect.die('Calling operations from functions is not implemented yet.'),
+  schedule: () => Effect.die('Not implemented.'),
+  invokePromise: async () => ({ error: new Error('Not implemented') }),
+} as any);
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
   if (value == null) {

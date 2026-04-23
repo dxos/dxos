@@ -36,9 +36,7 @@ export type EditorMenuProviderProps = PropsWithChildren<{
 }>;
 
 /**
- * Implements the Popover and listens for the `dx-anchor-activate` event from the
- * `popover` extension's decoration.
- *
+ * Implements the Popover and listens for the `dx-anchor-activate` event from the `popover` extension's decoration.
  * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
  * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
@@ -127,7 +125,7 @@ export const EditorMenuProvider = ({
           }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Viewport asChild classNames='flex-1 min-h-0'>
+          <Popover.Viewport asChild classNames='dx-container'>
             <ScrollArea.Root thin>
               <ScrollArea.Viewport>
                 <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
@@ -221,7 +219,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
 
   return (
     <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
-      {item.icon && <Icon icon={item.icon} size={5} />}
+      {item.icon && <Icon icon={item.icon} />}
       <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
     </li>
   );

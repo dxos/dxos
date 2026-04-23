@@ -6,29 +6,39 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ThemeExtensionsOptions } from './extensions';
 
-/**
- * CodeMirror content width.
- * 40rem = 640px. Corresponds to initial plank width (Google docs, Stashpad, etc.)
- * 50rem = 800px. Maximum content width for solo mode.
- * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
- */
-export const editorWidth = '!mx-auto w-full max-w-[min(50rem,100%-4rem)]';
+// NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
+export const editorClassNames = (role?: string) =>
+  mx(
+    'dx-attention-surface p-0.5 data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
+    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'dx-container overflow-hidden',
+  );
 
-export const editorSlots: ThemeExtensionsOptions['slots'] = {
-  scroll: {
-    className: 'pt-2',
-  },
+export const documentSlots: ThemeExtensionsOptions['slots'] = {
   content: {
-    className: editorWidth,
+    /**
+     * CodeMirror content width.
+     * 40rem = 640px. Corresponds to initial plank width (Google docs, Stashpad, etc.)
+     * 50rem = 800px. Maximum content width for solo mode.
+     * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
+     */
+    className: mx(
+      // NOTE: Container for widget sizing (must have `max-w-[100cqi]`).
+      'dx-size-container',
+      // Wider margin for web (vs. mobile).
+      'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
+      'mx-auto! w-full',
+    ),
   },
 };
 
-export const editorWithToolbarLayout =
-  'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
+export const compactSlots: ThemeExtensionsOptions['slots'] = {
+  content: {
+    className: 'mx-2!',
+  },
+};
 
-// NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
-export const stackItemContentEditorClassNames = (role?: string) =>
-  mx(
-    'p-0.5 dx-focus-ring-inset dx-attention-surface data-[toolbar=disabled]:pt-2',
-    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'min-h-0',
-  );
+export const mobileSlots: ThemeExtensionsOptions['slots'] = {
+  content: {
+    className: 'mx-2!',
+  },
+};

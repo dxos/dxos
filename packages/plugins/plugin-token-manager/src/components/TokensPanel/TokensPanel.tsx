@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { type Key } from '@dxos/echo';
-import { Separator, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
@@ -48,26 +48,22 @@ export const TokensPanel = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section
-        title={t('integrations verbose label', { ns: meta.id })}
-        description={t('integrations description', { ns: meta.id })}
-      >
+    <Settings.Viewport>
+      <Settings.Section title={t('integrations-verbose.label')} description={t('integrations.description')}>
         {adding ? (
-          <Settings.Item title={t('new integration label')}>
+          <Settings.Item title={t('new-integration.label')} description={t('new-integration.description')}>
             <Form.Root schema={FormSchema} values={initialValues} onCancel={onCancel} onSave={onAdd}>
               <Form.FieldSet />
               <Form.Actions />
             </Form.Root>
           </Settings.Item>
         ) : (
-          <Settings.Group>
+          <Settings.Panel>
             <TokenManager tokens={tokens} onDelete={onDelete} />
-            {tokens.length > 0 && <Separator classNames='my-4' />}
             <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
-          </Settings.Group>
+          </Settings.Panel>
         )}
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

@@ -241,25 +241,25 @@ dxos/protocol-plugin-presence --> dxos/mesh-protocol
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
-| [`@dxos/broadcast`](../../broadcast/docs/README.md) |  |
-| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
-| [`@dxos/context`](../../../../common/context/docs/README.md) |  |
-| [`@dxos/credentials`](../../../halo/credentials/docs/README.md) | &check; |
-| [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
-| [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
-| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) |  |
-| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
-| [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
-| [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |
-| [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) |  |
-| [`@dxos/messaging`](../../messaging/docs/README.md) | &check; |
-| [`@dxos/protocol-plugin-presence`](../../protocol-plugin-presence/docs/README.md) | &check; |
-| [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
-| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) |  |
-| [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |
+| Module                                                                                   | Direct  |
+| ---------------------------------------------------------------------------------------- | ------- |
+| [`@dxos/async`](../../../../common/async/docs/README.md)                                 | &check; |
+| [`@dxos/broadcast`](../../broadcast/docs/README.md)                                      |         |
+| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md)               | &check; |
+| [`@dxos/context`](../../../../common/context/docs/README.md)                             |         |
+| [`@dxos/credentials`](../../../halo/credentials/docs/README.md)                          | &check; |
+| [`@dxos/crypto`](../../../../common/crypto/docs/README.md)                               | &check; |
+| [`@dxos/debug`](../../../../common/debug/docs/README.md)                                 | &check; |
+| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md)                       |         |
+| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md)                         |         |
+| [`@dxos/keyring`](../../../halo/keyring/docs/README.md)                                  |         |
+| [`@dxos/keys`](../../../../common/keys/docs/README.md)                                   | &check; |
+| [`@dxos/log`](../../../../common/log/docs/README.md)                                     | &check; |
+| [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md)                              |         |
+| [`@dxos/messaging`](../../messaging/docs/README.md)                                      | &check; |
+| [`@dxos/protocol-plugin-presence`](../../protocol-plugin-presence/docs/README.md)        | &check; |
+| [`@dxos/protocols`](../../../protocols/docs/README.md)                                   | &check; |
+| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |         |
+| [`@dxos/rpc`](../../rpc/docs/README.md)                                                  | &check; |
+| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md)                         |         |
+| [`@dxos/util`](../../../../common/util/docs/README.md)                                   | &check; |

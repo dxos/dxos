@@ -5,17 +5,17 @@
 import React, { useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { Panel, useAsyncEffect } from '@dxos/react-ui';
 
-import { FilePreview } from '../../components/FilePreview';
+import { FilePreview } from '#components';
+import { WnfsCapabilities, type WnfsFile } from '#types';
+
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../../helpers';
-import { WnfsCapabilities, type WnfsFile } from '../../types';
 
-export type FileContainerProps = SurfaceComponentProps<WnfsFile.File>;
+export type FileContainerProps = AppSurface.ObjectArticleProps<WnfsFile.File>;
 
 export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);
@@ -46,9 +46,11 @@ export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   }
 
   return (
-    <Container.Main role={role}>
-      <FilePreview type={file.type} url={blobUrl} />
-    </Container.Main>
+    <Panel.Root role={role} className='dx-document'>
+      <Panel.Content asChild>
+        <FilePreview type={file.type} url={blobUrl} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

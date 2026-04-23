@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { inspectCustom } from '@dxos/debug';

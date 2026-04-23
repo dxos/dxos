@@ -11,9 +11,11 @@
    * NOTE: This doesn't override the white flash on hard reload.
    * https://github.com/storybookjs/storybook/discussions/32392
    *
-   * NOTE: color-scheme is handled by the theme CSS layers (dx-base).
-   * Setting it here unlayered would override layer-based dark mode toggling
-   * since unlayered CSS always beats layered CSS in the cascade.
+   * Uses hardcoded oklch values instead of CSS custom properties because
+   * during Vite HMR the old style tag is removed before the new one is
+   * inserted, briefly leaving all --color-* vars undefined.
+   * Values match neutral-50 / neutral-950 from the theme palette
+   * (kept in sync with ThemePlugin criticalTag).
    */
   @media (prefers-color-scheme: dark) {
     html,
@@ -21,8 +23,8 @@
     .sb-preparing-story,
     .sb-preparing-docs,
     .sb-previewBlock {
-      background: var(--color-base-surface) !important;
-      color: var(--color-base-surface-text) !important;
+      background: oklch(0.145 0 0) !important;
+      color: oklch(0.985 0 0) !important;
     }
   }
 </style>

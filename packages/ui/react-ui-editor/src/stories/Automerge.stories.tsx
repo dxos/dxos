@@ -8,16 +8,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { useTextEditor } from '../hooks';
@@ -44,7 +43,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
       initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
-        createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
+        createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-2' } } }),
         createDataExtensions({ id: 'test', text: source, messenger, identity }),
       ],
     }),
@@ -77,7 +76,7 @@ const DefaultStory = () => {
   }, []);
 
   if (!object1 || !object2) {
-    return null;
+    return <Loading data={{ object1: !!object1, object2: !!object2 }} />;
   }
 
   return (
@@ -150,7 +149,7 @@ type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): ERROR: factories.ts:126 Error: Non-base58 character
 export const Default: Story = {
-  render: render(DefaultStory),
+  render: DefaultStory,
 };
 
 // TODO(burdon): Failing (doesn't sync)
@@ -170,5 +169,5 @@ export const WithEcho: Story = {
       },
     }),
   ],
-  render: render(EchoStory),
+  render: EchoStory,
 };

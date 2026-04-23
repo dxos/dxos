@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { type DxGrid } from '@dxos/lit-grid';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
@@ -13,7 +13,7 @@ import { TableManager } from './TableManager';
 const storyUrl = storybookUrl('ui-react-ui-table-table--default', 9004);
 const relationsStoryUrl = storybookUrl('ui-react-ui-table-relations--default', 9004);
 
-// NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
+// NOTE(ZaymonFC): This test suite relies on the random seed being set to 0 in the story.
 test.describe('Table', () => {
   test('Loads', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
@@ -310,7 +310,7 @@ test.describe('Table', () => {
       dxGridElement.scrollToColumn(6);
     });
 
-    const nonRefContent = faker.lorem.words(3);
+    const nonRefContent = random.lorem.words(3);
     const nonRefCell = dxGrid.locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="6"]');
     await nonRefCell.click();
     await page.keyboard.press('Enter');

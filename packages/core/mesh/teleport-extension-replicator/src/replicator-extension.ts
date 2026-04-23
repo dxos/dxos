@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Duplex } from 'node:stream';
-
 import type { ProtocolStream } from 'hypercore-protocol';
+import { type Duplex } from 'node:stream';
 
 import { DeferredTask, asyncTimeout, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';

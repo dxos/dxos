@@ -6,9 +6,9 @@ import { type Mutable, type ObjectMeta } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 
 // TODO: use URL scheme for source?
-export const FUNCTIONS_META_KEY = 'dxos.org/service/function';
+export const FUNCTIONS_META_KEY = 'org.dxos.service.function';
 
-export const FUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
+export const FUNCTIONS_PRESET_META_KEY = 'org.dxos.service.function-preset';
 
 const isSecure = (protocol: string) => {
   return protocol === 'https:' || protocol === 'wss:';

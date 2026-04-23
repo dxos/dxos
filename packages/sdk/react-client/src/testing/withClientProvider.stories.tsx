@@ -7,13 +7,11 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
-
 import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider';
 
 const SpaceInfo = ({ space }: { space: Space }) => {
@@ -25,7 +23,7 @@ const DefaultStory = () => {
   const client = useClient();
   const spaces = useSpaces();
   if (!client) {
-    return null;
+    return <Loading data={{ client: !!client }} />;
   }
 
   return (
@@ -40,7 +38,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'sdk/react-client/withClientProvider',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withTheme()],
   tags: ['test'],
 } satisfies Meta<typeof DefaultStory>;

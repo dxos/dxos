@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -19,11 +19,11 @@ import { mermaid } from './mermaid-extension';
 
 const str = (...lines: string[]) => lines.join('\n');
 
-type StoryProps = {
+type DefaultStoryProps = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({

@@ -4,8 +4,6 @@
 
 import { createConfig } from '../../../../tools/storybook-react/.storybook/main';
 
-export const stories = [
-  '../src/**/*.stories.tsx',
-]
+export const stories = ['../src/**/*.stories.tsx'];
 
 export default createConfig({ stories });

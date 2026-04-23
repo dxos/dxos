@@ -11,7 +11,7 @@ import { type Script } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export type FormatActionProperties = { type: 'format' };
 
@@ -30,8 +30,8 @@ export const createFormat = (script: Script.Script) => {
           semi: true,
           singleQuote: true,
         });
-        Obj.change(script.source.target!, (s) => {
-          s.content = formatted;
+        Obj.change(script.source.target!, (obj) => {
+          obj.content = formatted;
         });
       } catch (err: any) {
         // TODO(wittjosiah): Show error in UI.
@@ -39,7 +39,7 @@ export const createFormat = (script: Script.Script) => {
       }
     },
     {
-      label: ['format label', { ns: meta.id }],
+      label: ['format.label', { ns: meta.id }],
       icon: 'ph--magic-wand--regular',
     },
   );

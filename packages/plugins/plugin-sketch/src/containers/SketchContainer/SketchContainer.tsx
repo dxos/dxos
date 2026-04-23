@@ -2,29 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Container as DxContainer, Flex, type FlexProps } from '@dxos/react-ui';
+import { Panel, Flex } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isTauri } from '@dxos/util';
 
-import { Sketch } from '../../components/Sketch';
-import { type Diagram, type SketchSettingsProps } from '../../types';
+import { SketchComponent } from '#components';
+import { type Sketch, type Settings } from '#types';
 
-export type SketchContainerProps = SurfaceComponentProps<
-  Diagram.Diagram,
+export type SketchContainerProps = AppSurface.ObjectArticleProps<
+  Sketch.Sketch,
   {
-    settings: SketchSettingsProps;
+    settings: Settings.Settings;
   }
 >;
 
-export const SketchContainer = ({ role, subject: sketch, settings }: SketchContainerProps) => {
+export const SketchContainer = ({ role, attendableId, subject: sketch, settings }: SketchContainerProps) => {
   const id = Obj.getDXN(sketch).toString();
-  const { hasAttention } = useAttention(id);
+  const { hasAttention } = useAttention(attendableId);
 
   const props = {
     readonly: role === 'slide',
@@ -37,23 +37,33 @@ export const SketchContainer = ({ role, subject: sketch, settings }: SketchConta
   const actions = useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
-  const Root = role === 'section' ? Container : DxContainer.Main;
+  const Comp = role === 'section' ? Container : Article;
 
   return (
-    <Root>
-      <Sketch
+    <Comp>
+      <SketchComponent
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}
         classNames='dx-attention-surface'
         sketch={sketch}
+        settings={settings}
         // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
         hideUi={!hasAttention && !isTauri()}
-        settings={settings}
         onThreadCreate={handleThreadCreate}
         {...props}
       />
-    </Root>
+    </Comp>
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
+const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
+  <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+    <Panel.Content>{props.children}</Panel.Content>
+  </Panel.Root>
+));
+
+const Container = composable<HTMLDivElement, PropsWithChildren>((props, forwardRef) => (
+  <Flex {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardRef}>
+    {props.children}
+  </Flex>
+));

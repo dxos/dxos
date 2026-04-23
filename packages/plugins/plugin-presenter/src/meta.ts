@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/presenter',
+  id: 'org.dxos.plugin.presenter',
   name: 'Presenter',
   description: trim`
     Transform markdown documents into interactive presentation slideshows.

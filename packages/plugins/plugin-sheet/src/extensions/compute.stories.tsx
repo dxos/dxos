@@ -8,11 +8,11 @@ import React, { useEffect, useMemo } from 'react';
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -22,11 +22,11 @@ import {
 } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
-import { GridSheet, SheetProvider, useComputeGraph } from '../components';
-import { useSheetModel } from '../model';
-import { useTestSheet, withComputeGraphDecorator } from '../testing';
-import { Sheet } from '../types';
+import { Sheet, useComputeGraph } from '#components';
+import { useTestSheet, withComputeGraphDecorator } from '#testing';
+import { Sheet as SheetType } from '#types';
 
+import { useSheetModel } from '../model';
 import { compute, computeGraphFacet } from './compute';
 
 const str = (...lines: string[]) => lines.join('\n');
@@ -45,7 +45,7 @@ const SHEET_NAME = 'Test Sheet';
 const DefaultStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
-  const space = useSpace();
+  const [space] = useSpaces();
   const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
@@ -67,7 +67,7 @@ const DefaultStory = ({ text }: EditorProps) => {
 };
 
 const Grid = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { name: SHEET_NAME });
   const model = useSheetModel(graph, sheet);
@@ -88,9 +88,9 @@ const Grid = () => {
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <SheetProvider graph={graph} sheet={sheet}>
-        <GridSheet />
-      </SheetProvider>
+      <Sheet.Root graph={graph} sheet={sheet} attendableId='test'>
+        <Sheet.Content />
+      </Sheet.Root>
     </div>
   );
 };
@@ -110,7 +110,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Sheet.Sheet],
+      types: [SheetType.Sheet],
       createIdentity: true,
       createSpace: true,
     }),

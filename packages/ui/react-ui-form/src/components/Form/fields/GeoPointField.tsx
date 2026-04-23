@@ -62,17 +62,17 @@ export const GeoPointField = ({
       {layout === 'static' ? (
         <LatLng {...value} />
       ) : (
-        <div role='none' className='grid grid-cols-2 gap-2'>
+        <div role='none' className='grid grid-cols-2 gap-form-gap'>
           <div>
             <Input.Root>
-              {layout !== 'inline' && <Input.Label>{t('latitude label')}</Input.Label>}
+              {layout !== 'inline' && <Input.Label>{t('latitude.label')}</Input.Label>}
               <Input.TextInput
                 type='number'
                 step='0.00001'
                 min='-90'
                 max='90'
                 disabled={!!readonly}
-                placeholder={t('latitude placeholder')}
+                placeholder={t('latitude.placeholder')}
                 value={latitudeText ?? ''}
                 onChange={handleChange('latitude', setLatitudeText)}
                 onBlur={onBlur}
@@ -81,14 +81,14 @@ export const GeoPointField = ({
           </div>
           <div>
             <Input.Root>
-              {layout !== 'inline' && <Input.Label>{t('longitude label')}</Input.Label>}
+              {layout !== 'inline' && <Input.Label>{t('longitude.label')}</Input.Label>}
               <Input.TextInput
                 type='number'
                 step='0.00001'
                 min='-180'
                 max='180'
                 disabled={!!readonly}
-                placeholder={t('longitude placeholder')}
+                placeholder={t('longitude.placeholder')}
                 value={longitudeText ?? ''}
                 onChange={handleChange('longitude', setLongitudeText)}
                 onBlur={onBlur}
@@ -106,7 +106,7 @@ const LatLng = ({ latitude = 0, longitude = 0 }: GeoLocation) => {
   const lngHem = longitude >= 0 ? 'E' : 'W';
 
   return (
-    <span className='inline-flex items-center gap-1'>
+    <span className='inline-flex items-center gap-form-gap'>
       <span>
         <span>{Math.abs(latitude).toFixed(5)}</span>
         <span className='text-subdued'>°{latHem}</span>

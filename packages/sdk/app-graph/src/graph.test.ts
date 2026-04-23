@@ -12,7 +12,7 @@ import * as Node from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
-const EXAMPLE_TYPE = 'dxos.org/type/example';
+const EXAMPLE_TYPE = 'org.dxos.type.example';
 const CHILD_RELATION_KEY = Graph.relationKey('child');
 const CHILD_INBOUND_RELATION_KEY = Graph.relationKey(Node.childRelation('inbound'));
 const ACTIONS_RELATION_KEY = Graph.relationKey('action');
@@ -600,6 +600,26 @@ describe('Graph', () => {
         },
       });
       expect(nodes).to.deep.equal(['root', 'test1']);
+    });
+
+    test('traversal with multiple relations follows all edge types', () => {
+      const graph = Graph.make();
+      Graph.addNode(graph, {
+        id: Node.RootId,
+        type: Node.RootType,
+        nodes: [{ id: 'child1', type: 'test' }],
+      });
+      Graph.addNode(graph, { id: 'action1', type: Node.ActionType });
+      Graph.addEdge(graph, { source: Node.RootId, target: 'action1', relation: 'action' });
+
+      const nodes: string[] = [];
+      Graph.traverse(graph, {
+        relation: ['child', 'action'],
+        visitor: (node) => {
+          nodes.push(node.id);
+        },
+      });
+      expect(nodes).to.deep.equal(['root', 'child1', 'action1']);
     });
 
     test('traverse curried', () => {

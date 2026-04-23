@@ -7,6 +7,8 @@ import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -14,43 +16,36 @@ import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError } from './errors';
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
-import * as OperationResolver from './resolver';
+import * as Operation from './Operation';
+import * as OperationInvoker from './OperationInvoker';
+
+const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
 //
 // Test Operations
 //
 
 const Compute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.compute' },
 });
 
 const ToString = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ string: Schema.String }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ string: Schema.String }),
   meta: { key: 'test.to-string' },
 });
 
 const Add = Operation.make({
-  schema: {
-    input: Schema.Tuple(Schema.Number, Schema.Number),
-    output: Schema.Number,
-  },
+  input: Schema.Tuple(Schema.Number, Schema.Number),
+  output: Schema.Number,
   meta: { key: 'test.add' },
 });
 
 const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 
@@ -58,29 +53,18 @@ const SideEffect = Operation.make({
 // Test Handlers
 //
 
-const computeHandler = OperationResolver.make({
-  operation: Compute,
-  handler: (data) =>
-    Effect.gen(function* () {
-      yield* Effect.sleep(data.value * 10);
-      return { value: data.value * 2 };
-    }),
-});
+const computeHandler = Operation.withHandler(Compute, (data) =>
+  Effect.gen(function* () {
+    yield* Effect.sleep(data.value * 10);
+    return { value: data.value * 2 };
+  }),
+);
 
-const toStringHandler = OperationResolver.make({
-  operation: ToString,
-  handler: (data) => Effect.succeed({ string: String(data.value) }),
-});
+const toStringHandler = Operation.withHandler(ToString, (data) => Effect.succeed({ string: String(data.value) }));
 
-const addHandler = OperationResolver.make({
-  operation: Add,
-  handler: (data) => Effect.succeed(data[0] + data[1]),
-});
+const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] + data[1]));
 
-const sideEffectHandler = OperationResolver.make({
-  operation: SideEffect,
-  handler: () => Effect.succeed(undefined),
-});
+const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
 
 //
 // Test Utilities
@@ -136,7 +120,7 @@ const createEventCollector = (invoker: OperationInvoker.OperationInvoker): Effec
 describe('OperationInvoker', () => {
   it.effect('throws error if no handler found', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
       const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.either);
 
       expect(result._tag).toBe('Left');
@@ -148,7 +132,7 @@ describe('OperationInvoker', () => {
 
   it.effect('matches operation to handler and executes', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
       const result = yield* invoker.invoke(ToString, { value: 42 });
 
       expect(result.string).toBe('42');
@@ -157,8 +141,8 @@ describe('OperationInvoker', () => {
 
   it.effect('update handlers dynamically', () =>
     Effect.gen(function* () {
-      const handlers: OperationResolver.OperationResolver[] = [];
-      const invoker = OperationInvoker.make(() => Effect.succeed(handlers));
+      const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [];
+      const invoker = OperationInvoker.make(() => Effect.succeed(handlers), testRuntime);
 
       // No handler registered.
       const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.either);
@@ -178,7 +162,7 @@ describe('OperationInvoker', () => {
 
   it.effect('compose operation effects', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]), testRuntime);
 
       // Fork both operations.
       const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
@@ -197,7 +181,7 @@ describe('OperationInvoker', () => {
 
   it.effect('concurrent operation effects', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]), testRuntime);
 
       // Fork both operations concurrently.
       const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 5 }));
@@ -211,66 +195,9 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('filter handlers by predicate', () =>
-    Effect.gen(function* () {
-      const conditionalHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        filter: (data: { value: number }) => data?.value > 1,
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, computeHandler]));
-
-      // value=1 should use computeHandler (multiplies by 2, has sleep).
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
-      yield* TestClock.adjust('10 millis');
-      const a = yield* Fiber.join(fiberA);
-      expect(a.value).toBe(2);
-
-      // value=2 should use conditionalHandler (multiplies by 3, no sleep).
-      const b = yield* invoker.invoke(Compute, { value: 2 });
-      expect(b.value).toBe(6);
-    }),
-  );
-
-  it.effect('hoist handlers', () =>
-    Effect.gen(function* () {
-      const hoistedHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        position: 'hoist',
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, hoistedHandler]));
-      const result = yield* invoker.invoke(Compute, { value: 1 });
-
-      expect(result.value).toBe(3);
-    }),
-  );
-
-  it.effect('fallback handlers', () =>
-    Effect.gen(function* () {
-      const conditionalHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        filter: (data: { value: number }) => data?.value === 1,
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 2 }),
-      };
-      const fallbackHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        position: 'fallback',
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, fallbackHandler]));
-
-      const a = yield* invoker.invoke(Compute, { value: 1 });
-      expect(a.value).toBe(2);
-
-      const b = yield* invoker.invoke(Compute, { value: 2 });
-      expect(b.value).toBe(6);
-    }),
-  );
-
   it.effect('non-struct inputs & outputs', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]), testRuntime);
       const result = yield* invoker.invoke(Add, [1, 1]);
 
       expect(result).toBe(2);
@@ -279,7 +206,7 @@ describe('OperationInvoker', () => {
 
   it.effect('empty inputs & outputs', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([sideEffectHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([sideEffectHandler]), testRuntime);
       const result = yield* invoker.invoke(SideEffect);
 
       expect(result).toBe(undefined);
@@ -288,7 +215,7 @@ describe('OperationInvoker', () => {
 
   it.effect('invocations pubsub receives events', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
       const collector = yield* createEventCollector(invoker);
 
       // Small delay to ensure subscription is ready
@@ -308,81 +235,9 @@ describe('OperationInvoker', () => {
   );
 });
 
-describe('OperationInvoker.invokeSync', () => {
-  test('invokes sync operation synchronously', ({ expect }) => {
-    const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
-    const result = invoker.invokeSync(ToString, { value: 42 });
-
-    expect(result.error).toBeUndefined();
-    expect(result.data?.string).toBe('42');
-  });
-
-  test('returns error for missing handler', ({ expect }) => {
-    const invoker = OperationInvoker.make(() => Effect.succeed([]));
-    const result = invoker.invokeSync(ToString, { value: 42 });
-
-    expect(result.error).toBeDefined();
-    expect(result.error).toBeInstanceOf(NoHandlerError);
-  });
-});
-
-describe('OperationInvoker.invokeSync with services', () => {
-  // Test service that simulates Capability.Service pattern.
-  class TestService extends Context.Tag('@test/TestService')<TestService, { getValue: () => number }>() {}
-
-  // Operation that declares TestService and is marked as sync.
-  const SyncOpWithService = Operation.make({
-    schema: {
-      input: Schema.Struct({ multiplier: Schema.Number }),
-      output: Schema.Struct({ result: Schema.Number }),
-    },
-    meta: { key: 'test.sync-with-service' },
-    executionMode: 'sync',
-    services: [TestService],
-  });
-
-  // Handler that uses the service (like Capability.get pattern).
-  const syncServiceHandler = OperationResolver.make({
-    operation: SyncOpWithService,
-    handler: (input) =>
-      Effect.gen(function* () {
-        const service = yield* TestService;
-        return { result: service.getValue() * input.multiplier };
-      }),
-  });
-
-  test('invokes sync operation with declared service using ManagedRuntime', async ({ expect }) => {
-    const { ManagedRuntime, Layer } = await import('effect');
-
-    // Create a layer that provides the test service.
-    const testServiceLayer = Layer.succeed(TestService, { getValue: () => 42 });
-
-    // Create a ManagedRuntime with the service layer.
-    const managedRuntime = ManagedRuntime.make(testServiceLayer);
-
-    try {
-      // Create invoker with the ManagedRuntime.
-      const invoker = OperationInvoker.make(() => Effect.succeed([syncServiceHandler]), managedRuntime);
-
-      // Pre-warm: Make an async call first to initialize the runtime cache.
-      // In the real app, this happens during plugin activation before any sync operations.
-      const warmupResult = await invoker.invokePromise(SyncOpWithService, { multiplier: 1 });
-      expect(warmupResult.error).toBeUndefined();
-
-      // Now the sync call should work because the runtime is cached.
-      const result = invoker.invokeSync(SyncOpWithService, { multiplier: 2 });
-
-      expect(result.error).toBeUndefined();
-      expect(result.data?.result).toBe(84); // 42 * 2
-    } finally {
-      await managedRuntime.dispose();
-    }
-  });
-});
-
 describe('OperationInvoker.invokePromise', () => {
   test('invokes operation and returns result', async ({ expect }) => {
-    const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
+    const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
     const result = await invoker.invokePromise(ToString, { value: 42 });
 
     expect(result.error).toBeUndefined();
@@ -390,7 +245,7 @@ describe('OperationInvoker.invokePromise', () => {
   });
 
   test('returns error for missing handler', async ({ expect }) => {
-    const invoker = OperationInvoker.make(() => Effect.succeed([]));
+    const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
     const result = await invoker.invokePromise(ToString, { value: 42 });
 
     expect(result.error).toBeDefined();
@@ -399,10 +254,10 @@ describe('OperationInvoker.invokePromise', () => {
 });
 
 //
-// Type-level tests for OperationResolver.make service constraints.
+// Type-level tests for Operation.withHandler service constraints.
 //
 
-describe('OperationResolver.make type safety', () => {
+describe('Operation.withHandler type safety', () => {
   test('handler using undeclared service is a type error', () => {
     class DeclaredService extends Context.Tag('@test/DeclaredService')<DeclaredService, { declared: () => void }>() {}
     class UndeclaredService extends Context.Tag('@test/UndeclaredService')<
@@ -411,40 +266,32 @@ describe('OperationResolver.make type safety', () => {
     >() {}
 
     const opWithDeclaredService = Operation.make({
-      schema: {
-        input: Schema.Void,
-        output: Schema.Void,
-      },
+      input: Schema.Void,
+      output: Schema.Void,
       meta: { key: 'test.declared-service' },
       services: [DeclaredService],
     });
 
     // Using the declared service is allowed.
-    OperationResolver.make({
-      operation: opWithDeclaredService,
-      handler: (_input) =>
-        Effect.gen(function* () {
-          yield* DeclaredService;
-        }),
-    });
+    Operation.withHandler(opWithDeclaredService, (_input) =>
+      Effect.gen(function* () {
+        yield* DeclaredService;
+      }),
+    );
 
     // Using an undeclared service should be a type error.
-    OperationResolver.make({
-      operation: opWithDeclaredService,
-      handler: (_input) =>
-        // @ts-expect-error - UndeclaredService is not in the operation's services
-        Effect.gen(function* () {
-          yield* UndeclaredService;
-        }),
-    });
+    Operation.withHandler(opWithDeclaredService, (_input) =>
+      // @ts-expect-error - UndeclaredService is not in the operation's services
+      Effect.gen(function* () {
+        yield* UndeclaredService;
+      }),
+    );
 
-    // Using Operation.Service is always allowed (provided by invoker).
-    OperationResolver.make({
-      operation: opWithDeclaredService,
-      handler: (_input) =>
-        Effect.gen(function* () {
-          yield* Operation.schedule(SideEffect);
-        }),
-    });
+    // Operation.Service is always available to handlers without declaring it.
+    Operation.withHandler(opWithDeclaredService, (_input) =>
+      Effect.gen(function* () {
+        yield* Operation.schedule(SideEffect);
+      }),
+    );
   });
 });

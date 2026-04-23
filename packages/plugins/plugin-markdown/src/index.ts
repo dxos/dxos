@@ -10,4 +10,5 @@ export * from './util';
 
 export * from './MarkdownPlugin';
 
-export { MarkdownEditor } from './components/MarkdownEditor';
+export { MarkdownEditor, MarkdownEditorProvider } from './components';
+export type { MarkdownEditorEditorRootProps } from './components';

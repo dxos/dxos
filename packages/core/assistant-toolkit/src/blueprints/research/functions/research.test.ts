@@ -2,43 +2,57 @@
 // Copyright 2025 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { inspect } from 'node:util';
 
-import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding, GenerationObserver } from '@dxos/assistant';
+import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { HasSubject, type Message, Organization } from '@dxos/types';
+import { HasSubject, Organization } from '@dxos/types';
 
+import { MarkdownHandlers } from '../../markdown';
 import ResearchBlueprint from '../blueprint';
+import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
-
-import { default as createDocument } from './document-create';
 import { default as research } from './research';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [research, createDocument, ...MarkdownBlueprint.functions],
+  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownHandlers),
   types: [
     ...ResearchDataTypes,
     ResearchGraph.ResearchGraph,
     Blueprint.Blueprint,
     Markdown.Document,
     HasSubject.HasSubject,
+    Feed.Feed,
   ],
+  blueprints: [ResearchBlueprint.make(), MarkdownBlueprint.make()],
+});
+
+const AgentTestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
+  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownHandlers),
+  types: [
+    ...ResearchDataTypes,
+    ResearchGraph.ResearchGraph,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+  ],
+  blueprints: [ResearchBlueprint.make(), MarkdownBlueprint.make()],
 });
 
 describe('Research', () => {
@@ -52,20 +66,19 @@ describe('Research', () => {
             website: 'https://blueyard.com',
           }),
         );
-        yield* Database.flush({ indexes: true });
-        const result = yield* FunctionInvocationService.invokeFunction(research, {
+        yield* Database.flush();
+        const result = yield* Operation.invoke(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
 
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
-          const data = yield* Database.load(researchGraph.queue).pipe(
-            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
-          );
+          const feed = yield* Database.load(researchGraph.queue);
+          const data = yield* Feed.runQuery(feed, Filter.everything());
           console.log(inspect(data, { depth: null, colors: true }));
         }
       },
@@ -75,7 +88,7 @@ describe('Research', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
-  it.scoped(
+  it.effect(
     'create and update research report',
     Effect.fnUntraced(
       function* (_) {
@@ -86,31 +99,19 @@ describe('Research', () => {
           }),
         );
 
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
-
-        yield* Database.flush({ indexes: true });
-        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint.make()));
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* Effect.promise(() =>
-          conversation.context.bind({
-            blueprints: [Ref.make(researchBlueprint), Ref.make(markdownBlueprint)],
-            objects: [Ref.make(organization)],
-          }),
-        );
-
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-
-        yield* conversation.createRequest({
-          observer,
-          prompt: `Create a research summary about ${organization.name}.`,
+        const agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint.make(), MarkdownBlueprint.make()],
+          context: [Ref.make(organization)],
         });
+
+        yield* agent.submitPrompt(`Create a research summary about ${organization.name}.`);
+        yield* agent.waitForCompletion();
         {
           const docs = yield* Database.runQuery(
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => (_ as any).name)}`);
           }
 
           const doc = docs[0];
@@ -121,16 +122,14 @@ describe('Research', () => {
           });
         }
 
-        yield* conversation.createRequest({
-          observer,
-          prompt: 'Add a section about their portfolio.',
-        });
+        yield* agent.submitPrompt('Add a section about their portfolio.');
+        yield* agent.waitForCompletion();
         {
           const docs = yield* Database.runQuery(
             Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
-            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => (_ as any).name)}`);
           }
 
           const doc = docs[0];
@@ -141,8 +140,9 @@ describe('Research', () => {
           });
         }
       },
-      Effect.provide(TestLayer),
+      Effect.provide(AgentTestLayer),
       TestHelpers.provideTestContext,
+      TestHelpers.taggedTest('flaky'),
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );

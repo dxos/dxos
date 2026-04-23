@@ -6,8 +6,8 @@ import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import VitePluginFonts from 'unplugin-fonts/vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -60,7 +60,14 @@ export default defineConfig({
     },
     ConfigPlugin({
       root: dirname,
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_POSTHOG_API_KEY', 'DX_POSTHOG_API_HOST', 'DX_POSTHOG_FEEDBACK_SURVEY_ID', 'PACKAGE_VERSION'],
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_IPDATA_API_KEY',
+        'DX_POSTHOG_API_KEY',
+        'DX_POSTHOG_API_HOST',
+        'DX_POSTHOG_FEEDBACK_SURVEY_ID',
+        'PACKAGE_VERSION',
+      ],
     }),
     ThemePlugin({}),
     TopLevelAwaitPlugin(),

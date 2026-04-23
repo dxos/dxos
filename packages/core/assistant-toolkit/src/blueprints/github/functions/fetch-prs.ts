@@ -4,28 +4,21 @@
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { CredentialsService, defineFunction, withAuthorization } from '@dxos/functions';
+import { CredentialsService, withAuthorization } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'dxos.org/function/github/fetch-prs',
-  name: 'Fetch PRs',
-  description: 'Fetches PRs from GitHub.',
-  inputSchema: Schema.Struct({
-    owner: Schema.String.annotations({
-      description: 'GitHub owner.',
+import { FetchPrs } from './definitions';
+
+export default FetchPrs.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ owner, repo }) {
+      const credential = yield* CredentialsService.getCredential({ service: 'github.com' });
+      const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
+
+      const response = yield* client.get(`https://api.github.com/repos/${owner}/${repo}/pulls`);
+      const json: any = yield* response.json;
+      return json;
     }),
-    repo: Schema.String.annotations({
-      description: 'GitHub repository.',
-    }),
-  }),
-  handler: Effect.fnUntraced(function* ({ data }) {
-    const credential = yield* CredentialsService.getCredential({ service: 'github.com' });
-    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
-
-    const response = yield* client.get(`https://api.github.com/repos/${data.owner}/${data.repo}/pulls`);
-    const json: any = yield* response.json;
-    return json;
-  }),
-});
+  ),
+);

@@ -26,9 +26,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "snapshot": "moon run proto-guard:build && vite-node ./src/bin/snapshot.ts"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

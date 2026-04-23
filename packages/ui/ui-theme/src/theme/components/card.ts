@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
@@ -11,30 +11,30 @@ export type CardStyleProps = {
   fullWidth?: boolean;
   srOnly?: boolean;
   variant?: 'default' | 'subtitle' | 'description';
-  coarse?: boolean;
+  density?: Density;
   truncate?: boolean;
+  padding?: boolean;
 };
 
 const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card group/card relative flex flex-col w-full min-h-(--dx-rail-item) dx-card-min-width overflow-hidden',
+    'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
     border &&
       'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
   );
 
-const cardToolbar: ComponentFunction<CardStyleProps> = ({ coarse }, ...etc) =>
+const cardToolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
-    'dx-card__toolbar dx-density-fine bg-transparent col-span-3 !grid grid-cols-subgrid [contain:none]',
-    coarse && 'grid-cols-[var(--dx-l0-avatar-size)_minmax(0,1fr)_var(--dx-rail-item)]',
+    'dx-card__toolbar dx-density-fine bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
     ...etc,
   );
 
 const cardTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
 const cardContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__content contents [&>:last-child]:pb-1', ...etc);
+  mx('dx-card__content contents pb-1 last:pb-0', ...etc);
 
 const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
@@ -46,9 +46,9 @@ const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' },
 
 const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
-    'dx-card__text flex overflow-hidden',
+    'dx-card__text items-center overflow-hidden',
     variant === 'default' && 'py-1',
-    variant === 'description' && 'py-1.5',
+    variant === 'description' && 'py-1.5 text-description',
     ...etc,
   );
 
@@ -73,22 +73,30 @@ const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
-const cardIconBlock: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center', ...etc);
+const cardRow: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+  mx('dx-card__row col-span-3 grid grid-cols-subgrid', ...etc);
+
+const cardIconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
+  mx(
+    'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
+    padding && '[&>*]:p-1',
+    ...etc,
+  );
 
 export const cardTheme: Theme<CardStyleProps> = {
-  'root': cardRoot,
-  'toolbar': cardToolbar,
-  'title': cardTitle,
-  'content': cardContent,
-  'heading': cardHeading,
-  'text': cardText,
+  root: cardRoot,
+  toolbar: cardToolbar,
+  title: cardTitle,
+  content: cardContent,
+  row: cardRow,
+  heading: cardHeading,
+  text: cardText,
   'text-span': cardTextSpan,
-  'poster': cardPoster,
+  poster: cardPoster,
   'poster-icon': cardPosterIcon,
-  'action': cardAction,
+  action: cardAction,
   'action-label': cardActionLabel,
-  'link': cardLink,
+  link: cardLink,
   'link-label': cardLinkLabel,
   'icon-block': cardIconBlock,
 };

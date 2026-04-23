@@ -17,8 +17,9 @@
  *
  * The generated CSS will be written to src/styles/generated-tokens.css
  */
-import { writeFile } from 'node:fs/promises';
-import { renderTokenSet } from '@ch-ui/tokens';
+//
+// Copyright 2026 DXOS.org
+//
 
 console.error('This script needs to be updated to work with the new build system.');
 console.error('The generated-tokens.css file has already been created and is checked into source control.');

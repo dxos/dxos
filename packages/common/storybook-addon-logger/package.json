@@ -18,8 +18,13 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/browser/index.mjs"
     },
+    "./manager": {
+      "source": "./src/manager.tsx",
+      "types": "./dist/types/src/manager.d.ts",
+      "default": "./dist/lib/browser/manager.mjs"
+    },
     "./preview": {
-      "source": "./src/preview.ts",
+      "source": "./src/preview.tsx",
       "types": "./dist/types/src/preview.d.ts",
       "default": "./dist/lib/browser/preview.mjs"
     }
@@ -30,6 +35,7 @@
   ],
   "dependencies": {
     "@dxos/log": "workspace:*",
+    "@storybook/icons": "catalog:",
     "storybook": "catalog:"
   },
   "devDependencies": {

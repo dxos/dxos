@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -12,7 +15,6 @@ import {
   LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo/internal';
-import { IconAnnotation } from '@dxos/schema';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [
@@ -82,9 +84,12 @@ export const Organization = OrganizationSchema.pipe(
   ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  IconAnnotation.set('ph--building--regular'),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--building-office--regular',
+    hue: 'neutral',
+  }),
   Type.object({
-    typename: 'dxos.org/type/Organization',
+    typename: 'org.dxos.type.organization',
     version: '0.1.0',
   }),
 );
@@ -98,9 +103,12 @@ export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) =>
 export const LegacyOrganization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  IconAnnotation.set('ph--building--regular'),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--building-office--regular',
+    hue: 'neutral',
+  }),
   Type.object({
-    typename: 'dxos.org/type/Organization',
+    typename: 'org.dxos.type.organization',
     version: '0.1.0',
   }),
 );

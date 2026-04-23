@@ -10,7 +10,7 @@ import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { type SerializationModel } from '../../model';
-import { TranscriptView } from '../Transcript';
+import { Transcription } from '../Transcription';
 
 export const TranscriptionStory: FC<{
   model: SerializationModel<Message.Message>;
@@ -32,9 +32,11 @@ export const TranscriptionStory: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer.Root pin>
-        <ScrollContainer.Viewport>
-          <TranscriptView model={model} />
-        </ScrollContainer.Viewport>
+        <ScrollContainer.Content>
+          <ScrollContainer.Viewport>
+            <Transcription model={model} />
+          </ScrollContainer.Viewport>
+        </ScrollContainer.Content>
       </ScrollContainer.Root>
     </div>
   );

@@ -5,17 +5,17 @@
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
-import { type Function } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type FunctionInputEditorProps = {
   type: SchemaAST.AST;
-  functions: Function.Function[];
+  functions: Operation.PersistentOperation[];
   db?: Database.Database;
 } & FormFieldStateProps;
 
@@ -48,7 +48,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
-  const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
+  const effectSchema = useMemo(() => (inputSchema ? JsonSchema.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
   const defaultValues = useMemo(() => {
     const raw = getValue() ?? {};
@@ -68,7 +68,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
 
   return (
     <>
-      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Label label={t('function-parameters.label')} asChild />
       <Form.Root
         key={selectedFunction.id}
         schema={effectSchema}

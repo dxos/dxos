@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -16,7 +17,6 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { type Identity, type JoinIdentityProps } from '../identity';
-
 import { type InvitationProtocol } from './invitation-protocol';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {
@@ -97,7 +97,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
+  async accept(_ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
     invariant(response.device);
     const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
 
@@ -105,6 +105,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
 
     // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
+    // ctx is unused here because _acceptIdentity uses ServiceContext's lifecycle ctx internally.
 
     await this._acceptIdentity({
       identityKey,

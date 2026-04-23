@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/observability',
+  id: 'org.dxos.plugin.observability',
   name: 'Telemetry',
   description: trim`
     Application observability and telemetry collection for monitoring performance and usage patterns.

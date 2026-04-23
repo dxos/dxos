@@ -46,10 +46,12 @@ export class QueueFactory extends Resource implements QueueAPI {
       return queue as any as Queue<T>;
     }
 
+    const database = this._graph.getDatabase(this._spaceId);
     const newQueue = new QueueImpl<T>(
       this._service,
       this._graph.createRefResolver({ context: { space: this._spaceId, queue: dxn } }),
       dxn,
+      database,
     );
     this._queues.set(stringDxn, newQueue);
     return newQueue as any as Queue<T>;

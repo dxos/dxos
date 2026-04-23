@@ -23,7 +23,6 @@
     "@storybook/addon-vitest": "catalog:",
     "@storybook/builder-vite": "catalog:",
     "@storybook/web-components-vite": "catalog:",
-    "eslint-plugin-storybook": "catalog:",
     "lit": "catalog:",
     "storybook": "catalog:",
     "vite": "catalog:"

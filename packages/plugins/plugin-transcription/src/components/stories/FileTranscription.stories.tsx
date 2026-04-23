@@ -11,25 +11,26 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { useAudioFile, useQueueModelAdapter, useTranscriber } from '#hooks';
+import { TestItem } from '#testing';
+
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
-import { TestItem } from '../../testing';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
-
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 
@@ -186,7 +187,6 @@ const AudioFile = ({
 const meta = {
   title: 'plugins/plugin-transcription/components/FileTranscription',
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
@@ -196,10 +196,8 @@ const meta = {
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-              yield* Effect.promise(() => seedTestData(client.spaces.default));
+              const { personalSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => seedTestData(personalSpace));
             }),
         }),
 

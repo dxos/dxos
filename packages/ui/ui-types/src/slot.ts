@@ -2,35 +2,43 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type HTMLAttributes } from 'react';
+import { HTMLAttributes } from 'react';
 
-import { type ClassNameValue } from './theme';
+import { type ThemedClassName } from './theme';
+
+// TODO(burdon): Define base type for component with `testId`, etc.
 
 /**
- * NOTE:
- * - Classnames must be composed.
- * - Primitives should not define styles directly.
+ * Props for components that can receive merged props from a Radix Slot parent.
+ * A composable component spreads unknown props onto its root DOM element and forwards its ref,
+ * allowing a parent slot to inject layout or styling props transparently.
  *
- * const Component = forwardRef<HTMLButtonElement, SlottableProps<HTMLButtonElement>>(
- *   ({ classNames, className, children, ...props }, ref) => {
- *     return (
- *       <button {...props} className={mx(className, classNames)} ref={ref}>
- *         {children}
- *       </button>
- *     );
- *   },
- * );
+ * - `className` is set by the Slot merge mechanism.
+ * - `classNames` is the consumer-facing prop for theming overrides.
+ * - `children` is always accepted.
+ *
+ * NOTE: Use `composableProps` to reconcile both `className` and `classNames` into a single `className`.
+ *
+ * @see https://www.radix-ui.com/primitives/docs/guides/composition
+ * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type SlottableClassName<P = unknown> = P & {
-  className?: string;
-  classNames?: ClassNameValue;
-};
+export type ComposableProps<P extends object = {}> = ThemedClassName<P> &
+  Pick<HTMLAttributes<Element>, 'children' | 'className' | 'role' | 'style'>;
 
 /**
- * Properties type for components that implement Radix-style primitives.
+ * Props for components that render a default DOM element but support `asChild` to delegate rendering
+ * to a child via Radix Slot. Extends `ComposableProps` with `asChild`.
+ *
+ * When `asChild` is true the component does not render its own element — instead it clones its child
+ * and merges props (including event handlers) onto it.
+ *
+ * Every slottable component is implicitly composable (it spreads props and forwards its ref).
+ *
+ * @see https://www.radix-ui.com/primitives/docs/guides/composition
+ * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type SlottableProps<P extends HTMLElement | null = null> = SlottableClassName<
-  HTMLAttributes<P> & {
+export type SlottableProps<P extends object = {}> = ComposableProps<
+  P & {
     asChild?: boolean;
   }
 >;

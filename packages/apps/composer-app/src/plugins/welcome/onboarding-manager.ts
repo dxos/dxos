@@ -3,20 +3,20 @@
 //
 
 import { type Capabilities } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account, ClientOperation } from '@dxos/plugin-client/types';
-import { HelpOperation } from '@dxos/plugin-help/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { ClientOperation } from '@dxos/plugin-client/operations';
+import { Account } from '@dxos/plugin-client/types';
+import { HelpOperation } from '@dxos/plugin-help/operations';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
-
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
@@ -65,6 +65,7 @@ export class OnboardingManager {
     this._invokePromise = invokePromise;
     this._client = client;
     this._hubUrl = hubUrl;
+    // TODO(wittjosiah): Remove the environment condition. The gate should show whenever a hub URL is configured.
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
     this._token = token;
     this._tokenType = tokenType;
@@ -153,16 +154,18 @@ export class OnboardingManager {
 
     await this._invokePromise(LayoutOperation.AddToast, {
       id: 'passkey-setup-toast',
-      title: ['passkey setup toast title', { ns: meta.id }],
-      description: ['passkey setup toast description', { ns: meta.id }],
+      title: ['passkey-setup-toast.title', { ns: meta.id }],
+      description: ['passkey-setup-toast.description', { ns: meta.id }],
       duration: Infinity,
       icon: 'ph--key--regular',
-      closeLabel: ['close label', { ns: osTranslations }],
-      actionLabel: ['passkey setup toast action label', { ns: meta.id }],
-      actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
+      closeLabel: ['close.label', { ns: osTranslations }],
+      actionLabel: ['passkey-setup-toast-action.label', { ns: meta.id }],
+      actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.id }],
       onAction: async () => {
-        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Account.id });
-        await this._invokePromise(LayoutOperation.Open, { subject: [Account.Security] });
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
+        await this._invokePromise(LayoutOperation.Open, {
+          subject: [`${getSpacePath(Account.id)}/${Account.Security}`],
+        });
       },
     });
   }

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/debug',
+  id: 'org.dxos.plugin.debug',
   name: 'Debug',
   description: trim`
     Comprehensive developer toolkit for troubleshooting applications, generating test data, and exploring automation capabilities.

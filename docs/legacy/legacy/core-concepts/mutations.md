@@ -28,5 +28,5 @@ const Component = ({ space_key }) => {
 | Property | Description                                                 |
 | -------- | ----------------------------------------------------------- |
 | `type`   | Item's type, could be anything that helps you identify it.  |
-| `model`  | TODO: definition of model.                                   |
+| `model`  | TODO: definition of model.                                  |
 | `props`  | Any information that you would like to attach to your item. |

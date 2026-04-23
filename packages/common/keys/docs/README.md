@@ -30,6 +30,6 @@ end
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
+| Module                                      | Direct  |
+| ------------------------------------------- | ------- |
 | [`@dxos/debug`](../../debug/docs/README.md) | &check; |

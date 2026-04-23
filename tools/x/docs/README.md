@@ -37,6 +37,6 @@ linkStyle default stroke:#333,stroke-width:1px
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
+| Module                                                     | Direct  |
+| ---------------------------------------------------------- | ------- |
 | [`@dxos/log`](../../../packages/common/log/docs/README.md) | &check; |

@@ -21,6 +21,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -171,7 +174,13 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-observability"
+    },
+    {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

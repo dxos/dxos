@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/client',
+  id: 'org.dxos.plugin.client',
   name: 'Client',
   description: trim`
     Core client connectivity and peer-to-peer networking infrastructure.

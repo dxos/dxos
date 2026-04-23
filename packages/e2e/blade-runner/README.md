@@ -1,4 +1,3 @@
-
 # @dxos/blade-runner
 
 Blade Runner.
@@ -6,27 +5,30 @@ Blade Runner.
 ## Prerequisites
 
 - Install Playwright
+
 ```bash
 pnpm exec playwright install
 ```
 
 - Run redis
+
 ```bash
 brew install redis
 redis-server --port 6379
 ```
 
 ## Simple Usage
+
 ```bash
 pnpm run-tests <testname>
 ```
 
 tests currently include:
 
-* `signal`
-* `transport`
-* `echo`
-* `replication`
+- `signal`
+- `transport`
+- `echo`
+- `replication`
 
 For additional usage, `pnpm run-tests --help`
 

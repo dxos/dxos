@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 
-import { type Graph, GraphModel } from '@dxos/graph';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -22,36 +21,6 @@ export type NetworkGraphNode = {
 };
 
 // TODO(burdon): Update to use new GraphModel.
-class NetworkGraphModel extends GraphModel.GraphModel {
-  setData(graph: Graph.Any): void {
-    // this._graph = graph;
-  }
-
-  setFromMemberList(members: SpaceMember[]): void {
-    // const nodes = new Map<string, NetworkGraphNode>();
-    // const edges: GraphEdge[] = [];
-    // for (const member of members) {
-    //   for (const peer of member.peerStates ?? []) {
-    //     if (!peer.peerId) {
-    //       continue;
-    //     }
-    //     const node = defaultMap(nodes, peer.peerId.toHex(), { id: peer.peerId.toHex() });
-    //     node.peer ??= peer;
-    //     node.member ??= member;
-    //     for (const other of peer.connections ?? []) {
-    //       defaultMap(nodes, peer.peerId.toHex(), { id: peer.peerId.toHex() });
-    //       defaultMap(nodes, other.toHex(), { id: other.toHex() });
-    //       edges.push({
-    //         id: `${peer.peerId.toHex()}-${other.toHex()}`,
-    //         source: peer.peerId.toHex(),
-    //         target: other.toHex(),
-    //       });
-    //     }
-    //   }
-    // }
-    // this.setData({ nodes: Array.from(nodes.values()), edges });
-  }
-}
 
 const _classes = {
   default: '[&>circle]:fill-zinc-300 [&>circle]:stroke-zinc-400 [&>circle]:stroke-2',
@@ -75,12 +44,6 @@ export const NetworkPanel = (props: { space?: Space }) => {
     identity ? node?.member?.identity.identityKey.equals(identity.identityKey) : false;
 
   const members = useMembers(space?.key);
-  const [model] = useState(() => new NetworkGraphModel());
-  useEffect(() => {
-    if (members) {
-      model.setFromMemberList(members);
-    }
-  }, [members]);
 
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(
@@ -124,7 +87,6 @@ export const NetworkPanel = (props: { space?: Space }) => {
       <SVG.Root ref={context}>
         <SVG.Markers />
         <SVG.Graph
-          model={model}
           drag
           arrows
           projector={projector}

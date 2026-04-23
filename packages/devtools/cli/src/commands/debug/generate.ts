@@ -12,11 +12,11 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, getSpace, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 const pause = (interval: number, jitter: number) =>
   interval > 0
-    ? Effect.sleep(Duration.millis(interval + (jitter > 0 ? faker.number.int({ min: 0, max: jitter }) : 0)))
+    ? Effect.sleep(Duration.millis(interval + (jitter > 0 ? random.number.int({ min: 0, max: jitter }) : 0)))
     : Effect.void;
 
 export const handler = Effect.fn(function* ({
@@ -85,8 +85,8 @@ export const handler = Effect.fn(function* ({
 
   // Create objects
   for (let i = 0; i < objects; i++) {
-    yield* Database.add(Obj.make(TestSchema.Expando, { type, title: faker.lorem.word() }));
-    yield* Database.flush({ indexes: true });
+    yield* Database.add(Obj.make(TestSchema.Expando, { type, title: random.lorem.word() }));
+    yield* Database.flush();
     yield* pause(interval, jitter);
   }
 
@@ -95,11 +95,11 @@ export const handler = Effect.fn(function* ({
 
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {
-      const object = faker.helpers.arrayElement(queriedObjects);
-      Obj.change(object, (o) => {
-        o.title = faker.lorem.word();
+      const object = random.helpers.arrayElement(queriedObjects);
+      Obj.change(object, (object) => {
+        object.title = random.lorem.word();
       });
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
       yield* pause(interval, jitter);
 
       // Create epoch if specified
@@ -108,7 +108,7 @@ export const handler = Effect.fn(function* ({
         const space = yield* getSpace(spaceIdValue);
         if (space) {
           yield* Effect.tryPromise(() => space.internal.createEpoch());
-          yield* Database.flush({ indexes: true });
+          yield* Database.flush();
         }
       }
     }

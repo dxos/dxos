@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/chess',
+  id: 'org.dxos.plugin.chess',
   name: 'Chess',
   description: trim`
     Full-featured chess game supporting multiplayer matches with friends or practice sessions against AI opponents.

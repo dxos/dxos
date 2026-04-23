@@ -15,7 +15,6 @@ import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult
 import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from '../defs';
-
 import { getEdgeAuthHeader } from './edge-auth-header';
 
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.
@@ -107,7 +106,7 @@ export const createFetchOAuthInitiator = (): OAuthInitiator => ({
       // Build headers.
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Origin': params.redirectOrigin,
+        Origin: params.redirectOrigin,
       };
       if (params.authHeader) {
         headers['Authorization'] = params.authHeader;
@@ -196,8 +195,8 @@ export const performOAuthFlow = Effect.fn(function* (
       return yield* Effect.fail(new Error(`OAuth flow failed: ${oauthResult.reason}`));
     }
 
-    Obj.change(accessToken, (t) => {
-      t.token = oauthResult.accessToken;
+    Obj.change(accessToken, (accessToken) => {
+      accessToken.token = oauthResult.accessToken;
     });
   }).pipe(Effect.ensuring(server.stop().pipe(Effect.catchAll(() => Effect.void))));
 });

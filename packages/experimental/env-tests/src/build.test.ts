@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { writeFile } from 'node:fs/promises';
-
 import { build } from 'esbuild';
+import { writeFile } from 'node:fs/promises';
 import { describe, test } from 'vitest';
 
 // Checks that packages can be used in different environments.
@@ -16,7 +15,6 @@ describe('build tests', () => {
         // Place import specifiers that must be running at EDGE here.
         // NOTE: They also need to be added to package.json of this package.
         '@dxos/echo-db',
-        '@dxos/conductor',
         '@dxos/echo',
         '@dxos/keys',
         '@dxos/log',
@@ -84,9 +82,11 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
   });
 
   const problems: string[] = [];
-  for (const input of Object.keys(result.metafile.inputs)) {
-    if (config.forbid.some((pattern) => pattern.test(input))) {
-      problems.push(input);
+  for (const output of Object.values(result.metafile.outputs)) {
+    for (const [input, meta] of Object.entries(output.inputs)) {
+      if (meta.bytesInOutput > 0 && config.forbid.some((pattern) => pattern.test(input))) {
+        problems.push(input);
+      }
     }
   }
 

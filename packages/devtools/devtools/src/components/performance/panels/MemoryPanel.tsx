@@ -23,7 +23,7 @@ export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: Me
           <span title='Used (heap size)'>{String(Unit.Megabyte(memory?.usedJSHeapSize ?? 0))}</span>
           <span title='Allocated (heap size)'>{String(Unit.Megabyte(memory?.totalJSHeapSize ?? 0))}</span>
           {memory?.used !== undefined && (
-            <span title='Used (available)' className={mx(memory?.used > MEM_WARNING && 'text-red-500')}>
+            <span title='Used (available)' className={mx(memory?.used > MEM_WARNING && 'text-error-text')}>
               {String(Unit.Percent(memory?.used ?? 0))}
             </span>
           )}

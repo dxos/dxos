@@ -8,19 +8,19 @@ import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { type Entity, Obj, Relation, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
-import { faker } from '@dxos/random';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectViewer } from '../../../components/ObjectViewer';
+import { ObjectViewer } from '../../../components';
 import { DevtoolsContextProvider } from '../../../hooks';
-
 import { ObjectsPanel } from './ObjectsPanel';
 import { ObjectsTree } from './ObjectsTree';
 
-faker.seed(1);
+random.seed(1);
 
 const withDevtoolsContext: Decorator = (Story) => (
   <DevtoolsContextProvider>
@@ -60,7 +60,7 @@ const meta = {
         TestSchema.Organization,
         TestSchema.Person,
         TestSchema.Project,
-        Function.Function,
+        Operation.PersistentOperation,
         Trigger.Trigger,
         WorksAt,
       ],
@@ -68,8 +68,8 @@ const meta = {
         const organizations = Array.from({ length: 5 }, () =>
           space.db.add(
             Obj.make(TestSchema.Organization, {
-              name: faker.company.name(),
-              website: faker.internet.url(),
+              name: random.company.name(),
+              website: random.internet.url(),
             }),
           ),
         );
@@ -77,8 +77,8 @@ const meta = {
         const persons = Array.from({ length: 10 }, () =>
           space.db.add(
             Obj.make(TestSchema.Person, {
-              name: faker.person.fullName(),
-              email: faker.internet.email(),
+              name: random.person.fullName(),
+              email: random.internet.email(),
             }),
           ),
         );
@@ -86,7 +86,7 @@ const meta = {
         const projects = Array.from({ length: 3 }, () =>
           space.db.add(
             Obj.make(TestSchema.Project, {
-              name: faker.commerce.productName(),
+              name: random.commerce.productName(),
             }),
           ),
         );
@@ -94,10 +94,10 @@ const meta = {
 
         const functions = Array.from({ length: 3 }, (_, index) =>
           space.db.add(
-            Function.make({
+            Obj.make(Operation.PersistentOperation, {
               name: `function-${index}`,
               version: '0.1.0',
-              description: faker.lorem.sentence(),
+              description: random.lorem.sentence(),
             }),
           ),
         );
@@ -107,8 +107,8 @@ const meta = {
           space.db.add(
             Obj.make(Trigger.Trigger, {
               [Obj.Parent]: fn,
-              enabled: faker.datatype.boolean(),
-              spec: { kind: 'timer', cron: '0 0 * * *' },
+              enabled: random.datatype.boolean(),
+              spec: Trigger.specTimer('0 0 * * *'),
             }),
           );
         });
@@ -119,8 +119,8 @@ const meta = {
             space.db.add(
               Obj.make(TestSchema.Person, {
                 [Obj.Parent]: project,
-                name: faker.person.fullName(),
-                email: faker.internet.email(),
+                name: random.person.fullName(),
+                email: random.internet.email(),
               }),
             ),
           );
@@ -128,12 +128,12 @@ const meta = {
 
         // Relations: persons employed at organizations.
         persons.forEach((person) => {
-          const org = faker.helpers.arrayElement(organizations);
+          const org = random.helpers.arrayElement(organizations);
           space.db.add(
             Relation.make(WorksAt, {
               [Relation.Source]: person,
               [Relation.Target]: org,
-              role: faker.helpers.arrayElement(roles),
+              role: random.helpers.arrayElement(roles),
             }),
           );
         });

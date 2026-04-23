@@ -13,13 +13,14 @@ import {
   ClientReady,
   ObservabilitySettings,
   ObservabilityState,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { ClientReadyEvent, ObservabilityEvents } from '#types';
+import { ObservabilityCapabilities } from '#types';
+
 import { translations } from './translations';
-import { ClientReadyEvent, ObservabilityEvents } from './types';
-import { ObservabilityCapabilities } from './types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
@@ -30,7 +31,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ namespace, observability }) => ({
+  Plugin.addModule(({ observability }) => ({
     id: 'observability',
     activatesOn: ActivationEvents.Startup,
     activate: () =>
@@ -50,10 +51,11 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({
-    id: Capability.getModuleTag(OperationResolver),
-    activatesOn: ActivationEvents.SetupOperationResolver,
-    activate: () => OperationResolver({ namespace }),
+    id: 'namespace',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
   })),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(

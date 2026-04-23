@@ -4,20 +4,26 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Container } from '@dxos/react-ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Panel } from '@dxos/react-ui';
 
-import { Outline } from '../../components/Outline';
-import { type Outline as OutlineType } from '../../types';
+import { Outline } from '#components';
+import { type Outline as OutlineType } from '#types';
 
-export const OutlineContainer = ({ role, subject: outline }: SurfaceComponentProps<OutlineType.Outline>) => {
+export type OutlineContainerProps = AppSurface.ObjectArticleProps<OutlineType.Outline>;
+
+export const OutlineContainer = ({ role, attendableId: _attendableId, subject: outline }: OutlineContainerProps) => {
   if (!outline.content.target) {
     return null;
   }
 
   return (
-    <Container.Main role={role}>
-      <Outline id={outline.content.target.id} text={outline.content.target} classNames='dx-container-max-width' />
-    </Container.Main>
+    <Outline.Root id={outline.content.target.id} text={outline.content.target}>
+      <Panel.Root role={role} className='dx-document'>
+        <Panel.Content asChild>
+          <Outline.Content />
+        </Panel.Content>
+      </Panel.Root>
+    </Outline.Root>
   );
 };

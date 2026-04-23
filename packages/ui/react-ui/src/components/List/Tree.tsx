@@ -5,7 +5,6 @@
 import React, { type ComponentPropsWithoutRef, type FC, type ForwardRefExoticComponent, forwardRef } from 'react';
 
 import { type ThemedClassName } from '../../util';
-
 import {
   LIST_ITEM_NAME,
   List,

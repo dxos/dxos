@@ -12,7 +12,7 @@ import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { type ExtendedChessModel } from './types';
 
@@ -44,7 +44,14 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation === 'white' ? 'black' : 'white'}
         icon={
           onClose && (
-            <IconButton icon='ph--x--regular' iconOnly label={t('close info button')} size={4} onClick={onClose} />
+            <IconButton
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={t('close-info.button')}
+              size={4}
+              onClick={onClose}
+            />
           )
         }
       >
@@ -70,7 +77,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
-              label={t('flip board button')}
+              label={t('flip-board.button')}
               size={4}
               onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
             />
@@ -109,12 +116,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
-      ? t('game.checkmate label')
+      ? t('game.checkmate.label')
       : model.game.isStalemate()
-        ? t('game.stalemate label')
-        : t('game.draw label')
+        ? t('game.stalemate.label')
+        : t('game.draw.label')
     : model.game.isCheck()
-      ? t('game.check label')
+      ? t('game.check.label')
       : undefined;
 
   const history = model.game.history();
@@ -156,12 +163,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 ps-4 leading-1'>
+        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 ps-4'>
           <div className='content-center text-xs text-subdued'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}
-              className={mx('ps-2 cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 text-sm cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -170,7 +177,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('ps-2 cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 text-sm cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}
@@ -201,7 +208,7 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
           size={6}
-          classNames={mx(turn && (model.game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
+          classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-500' : 'text-success-text'))}
         />
       </div>
       <div className='truncate overflow-hidden items-center'>{children}</div>
@@ -224,7 +231,7 @@ const PlayerSelector = ({ value, onValueChange, members }: PlayerSelectorProps) 
   const { t } = useTranslation(meta.id);
   return (
     <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton placeholder={t('select player button')} />
+      <Select.TriggerButton placeholder={t('select-player.button')} />
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>

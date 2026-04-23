@@ -2,18 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { Fragment, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { type ToolbarStyleProps } from '@dxos/ui-theme';
+import { composable, composableProps, slottable, type ToolbarStyleProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { translationKey } from '../../translations';
-import { type ThemedClassName } from '../../util';
 import {
   Button,
   ButtonGroup,
@@ -33,36 +33,24 @@ import { Separator, type SeparatorProps } from '../Separator';
 // Root
 //
 
-type ToolbarRootProps = ThemedClassName<
-  ToolbarPrimitive.ToolbarProps &
-    ToolbarStyleProps & {
-      textBlockWidth?: boolean;
-    }
->;
+type ToolbarRootProps = ToolbarPrimitive.ToolbarProps & ToolbarStyleProps;
 
-// TODO(burdon): Implement asChild property.
-const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  (
-    { classNames, children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, ...props },
-    forwardedRef,
-  ) => {
+const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
+  ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
+    const { className, role, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
-    const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
-    const innerRootProps = textBlockWidthProp
-      ? {
-          role: 'none',
-          className: tx('toolbar.inner', { layoutManaged }, classNames),
-        }
-      : {};
 
     return (
       <ToolbarPrimitive.Root
-        {...props}
-        data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', { density, disabled, layoutManaged }, classNames)}
+        {...rest}
+        // Only pass role when explicitly set; radix provides role="toolbar" by default.
+        {...(role !== 'none' && { role })}
+        orientation={orientation}
+        data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
+        className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
         ref={forwardedRef}
       >
-        <InnerRoot {...innerRootProps}>{children}</InnerRoot>
+        {children}
       </ToolbarPrimitive.Root>
     );
   },
@@ -72,19 +60,18 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
 // Text
 //
 
-type ToolbarTextProps = SlottableProps<HTMLDivElement>;
+type ToolbarTextProps = SlottableProps;
 
-const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(
-  ({ classNames, className, asChild, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'div';
-    return (
-      <Root {...props} className={tx('toolbar.text', {}, [className, classNames])} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
+const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // Button
@@ -200,10 +187,10 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
 type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 
 const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
-  ({ variant = 'line', ...props }, forwardedRef) => {
+  ({ variant = 'gap', ...props }, forwardedRef) => {
     return variant === 'line' ? (
       <ToolbarPrimitive.Separator asChild>
-        <Separator {...props} ref={forwardedRef} />
+        <Separator orientation='vertical' {...props} ref={forwardedRef} />
       </ToolbarPrimitive.Separator>
     ) : (
       <ToolbarPrimitive.Separator className='grow' ref={forwardedRef} />
@@ -223,13 +210,13 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
     return (
       <ToolbarIconButton
         data-testid={testId}
+        tabIndex={-1}
         noTooltip
         iconOnly
         icon='ph--dots-six-vertical--regular'
         variant='ghost'
-        label={label ?? t('toolbar drag handle label')}
-        classNames='cursor-pointer'
-        size={5}
+        label={label ?? t('toolbar-drag-handle.label')}
+        classNames='dx-focus-ring-none cursor-pointer'
         disabled={!forwardedRef}
         ref={forwardedRef}
       />
@@ -246,14 +233,14 @@ type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
 const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
   ({ onClick, label }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+
     return (
       <ToolbarIconButton
         iconOnly
         icon='ph--x--regular'
         variant='ghost'
-        label={label ?? t('toolbar close label')}
+        label={label ?? t('toolbar-close.label')}
         classNames='cursor-pointer'
-        size={5}
         onClick={onClick}
         ref={forwardedRef}
       />
@@ -286,7 +273,7 @@ const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMen
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
-          label={t('toolbar menu label')}
+          label={t('toolbar-menu.label')}
         />
       </DropdownMenu.Trigger>
       {(items?.length ?? 0) > 0 && (

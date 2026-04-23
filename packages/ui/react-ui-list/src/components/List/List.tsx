@@ -4,7 +4,7 @@
 
 import {
   ListItem,
-  ListItemButton,
+  ListItemIconButton,
   ListItemDeleteButton,
   ListItemDragHandle,
   ListItemDragPreview,
@@ -15,17 +15,12 @@ import {
 } from './ListItem';
 import { ListRoot, type ListRootProps } from './ListRoot';
 
-// TODO(burdon): Multi-select model.
-// TODO(burdon): Key nav.
-// TODO(burdon): Animation.
-// TODO(burdon): Constrain axis.
-// TODO(burdon): Tree view.
-// TODO(burdon): Fix autoscroll while dragging.
-
 /**
  * Draggable list.
  * Ref: https://github.com/atlassian/pragmatic-drag-and-drop
  * Ref: https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
+ *
+ * @deprecated Use react-ui-mosaic.
  */
 export const List = {
   Root: ListRoot,
@@ -33,8 +28,8 @@ export const List = {
   ItemDragPreview: ListItemDragPreview,
   ItemWrapper: ListItemWrapper,
   ItemDragHandle: ListItemDragHandle,
+  ItemIconButton: ListItemIconButton,
   ItemDeleteButton: ListItemDeleteButton,
-  ItemButton: ListItemButton,
   ItemTitle: ListItemTitle,
 };
 

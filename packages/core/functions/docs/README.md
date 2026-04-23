@@ -2,7 +2,6 @@
 
 Functions SDK.
 
-
 ## Writing functions
 
 - Create a manifest file at package root:
@@ -19,8 +18,7 @@ triggers:
   - function: chess
     # spaceKey: f1ed03
     subscription:
-      type: dxos.org/type/Chess
-
+      type: org.dxos.type.chess
 ```
 
 - Write function implementation at `src/functions/<name>.ts`:
@@ -74,7 +72,6 @@ nodemon -w src -e ts --exec /Users/dmaretskyi/Projects/protocols/packages/devtoo
 ```
 
 ## Invoking functions
-
 
 > NOTE: The port (7001) must match the one in config.
 

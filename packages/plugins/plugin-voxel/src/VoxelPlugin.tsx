@@ -3,29 +3,44 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { BlueprintDefinition, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { Voxel } from '#types';
+
 import { translations } from './translations';
-import { Voxel } from './types';
 
 export const VoxelPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Voxel.World.typename,
       metadata: {
-        icon: 'ph--cube--regular',
-        createObject: ((props) => Effect.sync(() => Voxel.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
+        icon: Annotation.IconAnnotation.get(Voxel.World).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Voxel.World).pipe(Option.getOrThrow).hue ?? 'white',
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Voxel.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),
   AppPlugin.addSchemaModule({ schema: [Voxel.World] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

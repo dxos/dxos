@@ -15,8 +15,8 @@ tasks:
   compile-node:
     command: pnpm exec dx-compile
     args:
-      - '--entryPoint=src/plugins/plugin.ts'
-      - '--entryPoint=src/theme.css'
+      - '--entryPoint=src/plugins/ThemePlugin.ts'
+      - '--entryPoint=src/main.css'
       - '--outputPath=dist/plugin'
       - '--moduleFormat=cjs'
       - '--moduleFormat=esm'

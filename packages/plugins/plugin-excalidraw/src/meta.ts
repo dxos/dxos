@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/excalidraw',
+  id: 'org.dxos.plugin.excalidraw',
   name: 'Excalidraw',
   description: trim`
     Professional diagramming powered by Excalidraw for creating hand-drawn style illustrations.

@@ -8,12 +8,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
-
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 // Create tags at render time to avoid Storybook serialization issues with ECHO objects.
@@ -48,7 +47,7 @@ const meta = {
           onChange={handleChange}
         />
 
-        <Json data={filter} classNames='text-xs' />
+        <Json.Data data={filter} classNames='text-xs' />
       </div>
     );
   },
@@ -74,20 +73,20 @@ export const Default: Story = {};
 export const Complex: Story = {
   args: {
     autoFocus: true,
-    value: '#important OR type:dxos.org/type/Person AND { title: "DXOS", value: true }',
+    value: '#important OR type:org.dxos.type.person AND { title: "DXOS", value: true }',
   },
 };
 
 export const Relation: Story = {
   args: {
     autoFocus: true,
-    value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
+    value: '(type:org.dxos.type.person -> type:org.dxos.type.organization)',
   },
 };
 
 export const Tags: Story = {
   args: {
     autoFocus: true,
-    value: 'type:dxos.org/type/Person #investor #new',
+    value: 'type:org.dxos.type.person #investor #new',
   },
 };

@@ -28,9 +28,9 @@ Atoms wrap Echo objects and their properties, storing metadata about the object 
 
 ```typescript
 interface AtomValue<T> {
-  readonly obj: Entity.Unknown;  // The Echo object being watched
-  readonly path: KeyPath;        // Property path (empty for entire object)
-  readonly value: T;             // Current value
+  readonly obj: Entity.Unknown; // The Echo object being watched
+  readonly path: KeyPath; // Property path (empty for entire object)
+  readonly value: T; // Current value
 }
 ```
 
@@ -58,7 +58,7 @@ const registry = Registry.make();
 // Create an Echo object
 const person = Obj.make(TestSchema.Person, {
   name: 'Alice',
-  email: 'alice@example.com'
+  email: 'alice@example.com',
 });
 
 // Create an atom for the entire object
@@ -72,10 +72,14 @@ const currentPerson = registry.get(personAtom).value;
 const currentName = registry.get(nameAtom).value;
 
 // Subscribe to updates using the registry
-const unsubscribe = registry.subscribe(nameAtom, () => {
-  const newName = registry.get(nameAtom).value;
-  console.log('Name changed:', newName);
-}, { immediate: true });
+const unsubscribe = registry.subscribe(
+  nameAtom,
+  () => {
+    const newName = registry.get(nameAtom).value;
+    console.log('Name changed:', newName);
+  },
+  { immediate: true },
+);
 
 // Update the object directly - the atom will automatically update
 person.name = 'Bob';
@@ -115,11 +119,14 @@ function PersonView({ person }: { person: Person }) {
 
   return (
     <div>
-      <input
-        value={name}
-        onChange={(e) => updateName(e.target.value)}
-      />
-      <button onClick={() => updatePerson(p => { p.email = 'new@example.com'; })}>
+      <input value={name} onChange={(e) => updateName(e.target.value)} />
+      <button
+        onClick={() =>
+          updatePerson((p) => {
+            p.email = 'new@example.com';
+          })
+        }
+      >
         Update Email
       </button>
     </div>
@@ -157,11 +164,14 @@ function PersonView(props: { person: Person }) {
 
   return (
     <div>
-      <input
-        value={name()}
-        onInput={(e) => updateName(e.target.value)}
-      />
-      <button onClick={() => updatePerson(p => { p.email = 'new@example.com'; })}>
+      <input value={name()} onInput={(e) => updateName(e.target.value)} />
+      <button
+        onClick={() =>
+          updatePerson((p) => {
+            p.email = 'new@example.com';
+          })
+        }
+      >
         Update Email
       </button>
     </div>

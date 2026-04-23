@@ -9,9 +9,10 @@ import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { initializeIdentity } from '#testing';
+
 import { ClientPlugin } from '../../ClientPlugin';
 import { translations } from '../../translations';
-
 import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 
 const meta = {
@@ -25,7 +26,7 @@ const meta = {
         ClientPlugin({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
             }),
         }),
         OperationPlugin(),

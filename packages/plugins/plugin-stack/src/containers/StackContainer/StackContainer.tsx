@@ -8,27 +8,25 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { StackContext, StackSection } from '../../components';
-import { meta } from '../../meta';
+import { StackContext, StackSection } from '#components';
+import { meta } from '#meta';
 import {
   type AddSectionPosition,
   type CollapsedSections,
   type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-} from '../../types';
+} from '#types';
 
 const collectionObjectsFamily = Atom.family((collection: Collection.Collection) =>
   Atom.make((get) => {
@@ -42,11 +40,9 @@ const collectionObjectsFamily = Atom.family((collection: Collection.Collection) 
   }),
 );
 
-type StackContainerProps = SurfaceComponentProps<Collection.Collection> & {
-  id: string;
-};
+type StackContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
-export const StackContainer = ({ id, subject: collection }: StackContainerProps) => {
+export const StackContainer = ({ attendableId, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
@@ -104,7 +100,7 @@ export const StackContainer = ({ id, subject: collection }: StackContainerProps)
     async (id: string, position: AddSectionPosition) => {
       // TODO(wittjosiah): Use object creation dialog.
       await invokePromise(LayoutOperation.UpdateDialog, {
-        subject: `${meta.id}/AddSectionDialog`,
+        subject: `${meta.id}.AddSectionDialog`,
         blockAlign: 'start',
         props: {
           path: id,
@@ -138,10 +134,7 @@ export const StackContainer = ({ id, subject: collection }: StackContainerProps)
   );
 
   return (
-    <StackItem.Content
-      toolbar
-      classNames='dx-container-max-width overflow-hidden border-l border-r border-subdued-separator'
-    >
+    <StackItem.Content toolbar classNames='dx-document'>
       <Toolbar.Root>
         <Toolbar.IconButton
           icon='ph--plus--regular'
@@ -151,22 +144,27 @@ export const StackContainer = ({ id, subject: collection }: StackContainerProps)
           onClick={handleAddSection}
         />
       </Toolbar.Root>
-      <AttentionProvider id={id}>
-        <StackContext.Provider
-          value={{
-            onCollapse: handleCollapse,
-            onNavigate: handleNavigate,
-            onDelete: handleDelete,
-            onAdd: handleAdd,
-          }}
+      <StackContext.Provider
+        value={{
+          attendableId,
+          onCollapse: handleCollapse,
+          onNavigate: handleNavigate,
+          onDelete: handleDelete,
+          onAdd: handleAdd,
+        }}
+      >
+        <Stack
+          orientation='vertical'
+          size='intrinsic'
+          id={Obj.getDXN(collection).toString()}
+          data-testid='main.stack'
+          classNames='overflow-y-auto'
         >
-          <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack' classNames='overflow-y-auto'>
-            {items.map((item) => (
-              <StackSection key={item.id} {...item} />
-            ))}
-          </Stack>
-        </StackContext.Provider>
-      </AttentionProvider>
+          {items.map((item) => (
+            <StackSection key={item.id} {...item} />
+          ))}
+        </Stack>
+      </StackContext.Provider>
     </StackItem.Content>
   );
 };

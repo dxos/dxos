@@ -18,11 +18,11 @@ import { type ModalController, type TableModel, type TableRow } from '../../mode
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-const createOptionLabel: Label = ['create new object label', { ns: translationKey }];
+const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
 
-export type OnCreateHandler = (schema: Type.Entity.Any, values: any) => Parameters<typeof Ref.make>[0];
+export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 
-export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type FormCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
   __gridScope: any;
   schema?: T;
   model?: TableModel;
@@ -32,7 +32,7 @@ export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   onCreate?: OnCreateHandler;
 } & Omit<FormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
 
-export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
+export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   __gridScope,
   schema,
   model,

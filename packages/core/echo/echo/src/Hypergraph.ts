@@ -6,7 +6,7 @@ import { type DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import { type AnyProperties } from './internal';
+import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
 import type * as SchemaRegistry from './SchemaRegistry';
@@ -39,13 +39,12 @@ export interface RefResolverOptions {
    * Middleware to change the resolved object before returning it.
    * @deprecated On track to be removed.
    */
-  middleware?: (obj: AnyProperties) => AnyProperties;
+  middleware?: (obj: internal.AnyProperties) => internal.AnyProperties;
 }
 
 /**
- *
+ * Manages cross-space database interactions.
  */
-// TODO(burdon): Comment required.
 export interface Hypergraph extends Database.Queryable {
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
@@ -71,4 +70,10 @@ export interface Hypergraph extends Database.Queryable {
    */
   // TODO(dmaretskyi): Restructure API: Remove middleware.
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
+
+  /**
+   * Get a database by space ID.
+   * @returns The database for the given space ID, or undefined if not found.
+   */
+  getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 }

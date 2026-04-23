@@ -12,7 +12,6 @@ import { Card } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
 import { type CellLayout, type Position } from './types';
@@ -21,7 +20,7 @@ type DragState = 'idle' | 'dragging';
 
 const BOARD_CELL_NAME = 'Board.Cell';
 
-export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
+export type BoardCellProps<T extends Type.AnyObj = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     layout: CellLayout;
@@ -82,7 +81,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
-            label={t('button delete')}
+            label={t('delete-object.button')}
             onClick={() => onDelete?.(item.id)}
           />
         )}

@@ -7,27 +7,26 @@ import React, { useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { render } from '@dxos/storybook-utils';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import { useGraphModel } from '../../hooks';
-import { Graph } from '../../types';
+import { useGraphModel } from '#hooks';
+import { Graph } from '#types';
 
 import { D3ForceGraph } from './D3ForceGraph';
 import { generate } from './testing';
 
-const generator = faker as any as ValueGenerator;
+const generator = random as any as ValueGenerator;
 
-faker.seed(1);
+random.seed(1);
 
 const DefaultStory = () => {
   const client = useClient();
@@ -35,7 +34,7 @@ const DefaultStory = () => {
   const [graph, setGraph] = useState<Graph.Graph>();
 
   useAsyncEffect(async () => {
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     void generate(space, generator);
     const { view } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
     const graph = Graph.make({ name: 'Test', view });
@@ -46,7 +45,7 @@ const DefaultStory = () => {
 
   const model = useGraphModel(space);
   if (!model || !space || !graph) {
-    return null;
+    return <Loading data={{ model: !!model, space: !!space, graph: !!graph }} />;
   }
 
   return <D3ForceGraph model={model} />;
@@ -55,7 +54,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-explorer/components/D3ForceGraph',
   component: D3ForceGraph,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withRegistry,
     withTheme(),

@@ -11,9 +11,6 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 export default createConfig({
   dirname,
-  node: {
-    // TODO(dmaretskyi): Enabled because client tests were flaky. Remove when that's not the case.
-    retry: 2,
-  },
+  node: {},
   browser: 'chromium',
 });

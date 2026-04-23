@@ -5,7 +5,6 @@
 import { type EncodingOptions, type WithTypeUrl } from '../common';
 import { type TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
-
 import { structSubstitutions } from './struct';
 
 export const anySubstitutions = {
@@ -53,8 +52,8 @@ export const anySubstitutions = {
       if (options.preserveAny || field.getOption('preserve_any')) {
         return {
           '@type': 'google.protobuf.Any',
-          'type_url': value.type_url ?? '',
-          'value': value.value ?? new Uint8Array(),
+          type_url: value.type_url ?? '',
+          value: value.value ?? new Uint8Array(),
         };
       }
 

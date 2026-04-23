@@ -3,9 +3,10 @@
 //
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 
-import { DeferredTask, sleep } from '@dxos/async';
+import { asyncTimeout, DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -32,7 +33,6 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
-
 import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
@@ -57,7 +57,7 @@ export type EchoHostProps = {
   /**
    * Callback to run blocking queue sync.
    */
-  syncQueue?: (request: SyncQueueRequest) => Promise<void>;
+  syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 };
 
 /**
@@ -207,14 +207,33 @@ export class EchoHost extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    await this._automergeHost.open();
-    await this._queryService.open(ctx);
-    await this._spaceStateManager.open(ctx);
+    log('echo-host: opening automerge host...');
+    await this._automergeHost.open(ctx);
+    log('echo-host: automerge host opened');
 
+    log('echo-host: opening query service...');
+    await this._queryService.open(ctx);
+    log('echo-host: query service opened');
+
+    log('echo-host: opening space state manager...');
+    await this._spaceStateManager.open(ctx);
+    log('echo-host: space state manager opened');
+
+    // Timeout needs to be outside effect runtime to catch the layer hanging on startup.
+    await asyncTimeout(
+      RuntimeProvider.runPromise(this._runtime)(testSqlite()),
+      15_000,
+      new Error('SQLite quick check timed out'),
+    );
+
+    log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
+    log('echo-host: index engine migration done');
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
+    log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+    log('echo-host: feed store migration done');
     this._feedStore.onNewBlocks.on(this._ctx, () => {
       this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
@@ -234,6 +253,7 @@ export class EchoHost extends Resource {
       this._updateIndexes.schedule();
     });
     this._updateIndexes.schedule();
+    log('echo-host: open complete');
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -245,8 +265,8 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush(): Promise<void> {
-    await this._automergeHost.flush();
+  async flush(ctx: Context): Promise<void> {
+    await this._automergeHost.flush(ctx);
   }
 
   /**
@@ -265,8 +285,8 @@ export class EchoHost extends Resource {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
-  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
-    return await this._automergeHost.exportDoc(ctx, id);
+  async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(id);
   }
 
   /**
@@ -279,7 +299,7 @@ export class EchoHost extends Resource {
   /**
    * Create new space root.
    */
-  async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
+  async createSpaceRoot(ctx: Context, spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
@@ -292,15 +312,15 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(spaceId, automergeRoot.url);
+    return await this.openSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
     await handle.whenReady();
@@ -316,8 +336,8 @@ export class EchoHost extends Resource {
   /**
    * Install data replicator.
    */
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(replicator);
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(ctx, replicator);
   }
 
   /**
@@ -339,6 +359,16 @@ export class EchoHost extends Resource {
     this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
   }
 
+  /**
+   * Get all feeds and their blocks for a space.
+   * Used for space archive export.
+   */
+  async getAllFeedsForSpace(
+    spaceId: SpaceId,
+  ): Promise<Array<{ feedId: string; feedNamespace: string; blocks: FeedProtocol.Block[] }>> {
+    return RuntimeProvider.runPromise(this._runtime)(this._feedStore.getAllFeedsForSpace({ spaceId }));
+  }
+
   private _runUpdateIndexes = async (): Promise<void> => {
     let totalUpdated = 0;
     let totalDone = true;
@@ -346,7 +376,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.automerge:start');
       const { updated, done } = await this._indexEngine
-        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -367,7 +397,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
-        .update(this._queueDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -407,3 +437,18 @@ export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
 };
+
+/**
+ * Sqlite health check on startup.
+ */
+const testSqlite = () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const databases = yield* sql<{ seq: number; name: string; file: string }>`PRAGMA database_list`;
+    log('SQLite databases', { databases });
+    const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
+    if (result.quick_check !== 'ok') {
+      throw new Error('SQLite quick check failed');
+    }
+    log('SQLite quick check passed');
+  });

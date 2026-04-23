@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MapContainer } from './MapContainer';
-
-export default MapContainer;
+export { MapContainer, type MapContainerProps, type MapControlType } from './MapContainer';
+export { MapContainer as default } from './MapContainer';

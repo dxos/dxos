@@ -6,21 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
-import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { random } from '@dxos/random';
+import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
+import { translations } from '../../translations';
 import { TokenManager, type TokenManagerProps } from './TokenManager';
 
-faker.seed(1);
+random.seed(1);
 
 const generator = new TestObjectGenerator(
   { [AccessToken.AccessToken.typename]: AccessToken.AccessToken },
   {
     [AccessToken.AccessToken.typename]: async () => ({
-      token: faker.string.hexadecimal({ length: 32 }),
-      source: faker.internet.url(),
-      note: faker.lorem.sentence(faker.number.int({ min: 1, max: 9 })),
+      token: random.string.hexadecimal({ length: 32 }),
+      source: random.internet.url(),
+      note: random.lorem.sentence(random.number.int({ min: 1, max: 9 })),
     }),
   },
 );
@@ -32,9 +33,11 @@ const TokenManagerStory = (props: Omit<TokenManagerProps, 'tokens'>) => {
       setTokens(generated as AccessToken.AccessToken[]),
     );
   }, []);
+
   if (tokens.length === 0) {
-    return <div>Loading tokens...</div>;
+    return <Loading data={{ tokens: tokens.length }} />;
   }
+
   return <TokenManager tokens={tokens} {...props} />;
 };
 
@@ -42,6 +45,9 @@ const meta = {
   title: 'plugins/plugin-token-manager/components/TokenManager',
   decorators: [withTheme()],
   component: TokenManagerStory,
+  parameters: {
+    translations,
+  },
   args: {
     onDelete: console.log,
   },

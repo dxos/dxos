@@ -7,38 +7,38 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiConversation } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
+import { QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan, Project } from '../../types';
-import { PlanningBlueprint } from '../planning';
-
-import ProjectBlueprintDef from './blueprint';
-import { ProjectFunctions } from './functions';
+import { Chat, Plan, Agent } from '../../types';
+import { MarkdownBlueprint, MarkdownHandlers } from '../markdown';
+import { PlanningBlueprint, PlanningHandlers } from '../planning';
+import AgentBlueprintDef from './blueprint';
+import { AgentWorker, AgentBlueprintHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Object.values(ProjectFunctions), ...MarkdownBlueprint.functions],
+  operationHandlers: OperationHandlerSet.merge(AgentBlueprintHandlers, MarkdownHandlers, PlanningHandlers),
   types: [
-    Project.Project,
+    Agent.Agent,
     Plan.Plan,
     Chat.CompanionTo,
     Chat.Chat,
@@ -59,34 +59,85 @@ const SYSTEM = trim`
   DO NOT PRETEND TO DO SOMETHING YOU CAN'T DO.
 `;
 
-describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
-  const blueprint = ProjectBlueprintDef.make();
+describe('Agent', () => {
+  const blueprint = AgentBlueprintDef.make();
+
+  it.scoped(
+    'agent adds artifact to agent',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Test Project',
+            instructions: 'A test project for adding artifacts.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+          },
+          blueprint,
+        );
+        yield* Database.flush();
+
+        const document = yield* Database.add(
+          Obj.make(Markdown.Document, {
+            name: 'Test Document',
+            content: Ref.make(Text.make('This is a test document with some content.')),
+          }),
+        );
+        yield* Database.flush();
+
+        expect(agent.artifacts).toHaveLength(0);
+
+        const chatFeed = agent.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        yield* Effect.promise(() => session.context.open());
+
+        const documentDxn = Obj.getDXN(document);
+        yield* session
+          .createRequest({
+            system: SYSTEM,
+            prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this agent.`,
+          })
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
+
+        expect(agent.artifacts).toHaveLength(1);
+        expect(agent.artifacts[0].name).toBe('My Test Document');
+        const artifactData = yield* agent.artifacts[0].data.pipe(Database.load);
+        expect(Obj.instanceOf(Markdown.Document, artifactData)).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
   it.scoped(
     'shopping list',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Shopping list',
-              spec: 'Keep a shopping list of items to buy.',
-              blueprints: [Ref.make(MarkdownBlueprint.make())],
-            },
-            blueprint,
-          ),
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Shopping list',
+            instructions: 'Keep a shopping list of items to buy.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+          },
+          blueprint,
         );
-        const chatQueue = project.chat?.target?.queue?.target as any;
-        invariant(chatQueue, 'Project chat queue not found.');
-        yield* Database.flush({ indexes: true });
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
-        yield* Effect.promise(() => conversation.context.open());
+        const chatFeed = agent.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
+        yield* Database.flush();
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        yield* Effect.promise(() => session.context.open());
 
-        yield* conversation.createRequest({
-          system: SYSTEM,
-          prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
-        });
+        yield* session
+          .createRequest({
+            system: SYSTEM,
+            prompt: `List ingredients for a scrambled eggs on a toast breakfast.`,
+          })
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
 
-        console.log(yield* Effect.promise(() => dumpProject(project)));
+        console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -98,38 +149,33 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
     'expense tracking list',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Expense tracking',
-              spec: trim`
-                Keep a list of expenses in a markdown document (create artifact "Expenses").
-                Process incoming emails, add the relevant ones to the list.
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Expense tracking',
+            instructions: trim`
+              Keep a list of expenses in a markdown document (create artifact "Expenses").
+              Process incoming emails, add the relevant ones to the list.
 
-                Format:
+              Format:
 
-                ## Expenses
-                - Flight to London (2026-02-01): £100
-                - Hotel in London (2026-02-01): £100
-              `,
-              blueprints: [Ref.make(MarkdownBlueprint.make())],
-            },
-            blueprint,
-          ),
+              ## Expenses
+              - Flight to London (2026-02-01): £100
+              - Hotel in London (2026-02-01): £100
+            `,
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+          },
+          blueprint,
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
         const inboxQueue = yield* QueueService.createQueue();
         yield* Database.add(
           Trigger.make({
             enabled: true,
-            spec: {
-              kind: 'queue',
-              queue: inboxQueue.dxn.toString(),
-            },
-            function: Ref.make(FunctionDefinition.serialize(ProjectFunctions.Agent)),
+            spec: Trigger.specQueue(inboxQueue.dxn.toString()),
+            function: Ref.make(Operation.serialize(AgentWorker)),
             input: {
-              project: Ref.make(project),
+              agent: Ref.make(agent),
               event: '{{event}}',
             },
           }),
@@ -144,7 +190,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
         const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
         expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
-        console.log(yield* Effect.promise(() => dumpProject(project)));
+        console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -157,51 +203,52 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
     'planning',
     Effect.fnUntraced(
       function* (_) {
-        const project = yield* Database.add(
-          yield* Project.makeInitialized(
-            {
-              name: 'Egg making',
-              spec: trim`
-                I'm testing how planning (task management) works.
-                Create tasks to make scrambled eggs.
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Egg making',
+            instructions: trim`
+              I'm testing how planning (task management) works.
+              Create tasks to make scrambled eggs.
 
-                Then simulate this plan execution in a markdown document.
-                The document should reflect the state of all objects involved in the cooking process.
-                The document should also have the log of actions taken.
+              Then simulate this plan execution in a markdown document.
+              The document should reflect the state of all objects involved in the cooking process.
+              The document should also have the log of actions taken.
 
-                Important: simualte actions one by one, in the order they are listed.
-                Simlate by updating the local document.
+              Important: simualte actions one by one, in the order they are listed.
+              Simlate by updating the local document.
 
-                <example>
-                  # State
+              <example>
+                # State
 
-                  - 2 raw eggs
-                  - 1 frying pan
-                  
-                  # Action log
-                  
-                  - Taken 2 raw eggs out of the fridge.
-                </example>
-              `,
-              blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint.make()))],
-            },
-            blueprint,
-          ),
+                - 2 raw eggs
+                - 1 frying pan
+                
+                # Action log
+                
+                - Taken 2 raw eggs out of the fridge.
+              </example>
+            `,
+            blueprints: [Ref.make(MarkdownBlueprint.make()), Ref.make(Obj.clone(PlanningBlueprint.make()))],
+          },
+          blueprint,
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
-        const chatQueue = project.chat?.target?.queue?.target as any;
-        invariant(chatQueue, 'Project chat queue not found.');
-        yield* Database.flush({ indexes: true });
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
-        yield* Effect.promise(() => conversation.context.open());
+        const chatFeed = agent.chat?.target?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
+        yield* Database.flush();
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        yield* Effect.promise(() => session.context.open());
 
-        yield* conversation.createRequest({
-          system: SYSTEM,
-          prompt: `Go`,
-        });
+        yield* session
+          .createRequest({
+            system: SYSTEM,
+            prompt: `Go`,
+          })
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
 
-        console.log(yield* Effect.promise(() => dumpProject(project)));
+        console.log(yield* Effect.promise(() => dumpAgent(agent)));
       },
       WithProperties,
       Effect.provide(TestLayer),
@@ -211,15 +258,15 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
   );
 });
 
-const dumpProject = async (project: Project.Project) => {
+const dumpAgent = async (agent: Agent.Agent) => {
   let text = '';
-  text += `============== Project: ${project.name} ==============\n\n`;
-  text += `============== Spec ==============\n\n`;
-  text += `${await project.spec.load().then((_) => _.content)}\n`;
+  text += `============== Agent: ${agent.name} ==============\n\n`;
+  text += `============== Instructions ==============\n\n`;
+  text += `${await agent.instructions.load().then((_) => _.content)}\n`;
   text += `============== Plan ==============\n\n`;
-  text += `${await project.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
+  text += `${await agent.plan?.load().then((_) => Plan.formatPlan(_))}\n`;
   text += `============== Artifacts ==============\n\n`;
-  for (const artifact of project.artifacts) {
+  for (const artifact of agent.artifacts) {
     const data = await artifact.data.load();
     text += `============== ${artifact.name} (${Obj.getTypename(data)}) ==============\n`;
     if (Obj.instanceOf(Markdown.Document, data)) {

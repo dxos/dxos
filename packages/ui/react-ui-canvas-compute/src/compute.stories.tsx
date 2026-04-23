@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
@@ -12,17 +13,17 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { CredentialsService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
+import { CredentialsService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
@@ -123,7 +124,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
@@ -178,7 +179,12 @@ const DefaultStory = ({
                 </Form.Viewport>
               </Form.Root>
             )}
-            <JsonFilter data={json} />
+            <Json.Root data={json}>
+              <Json.Content>
+                <Json.Filter />
+                <Json.Data />
+              </Json.Content>
+            </Json.Root>
           </div>
         </Container>
       )}
@@ -216,13 +222,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const ServiceLayer = Layer.empty.pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service not available in test.'),
+        schedule: () => Effect.die('Operation.Service not available in test.'),
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+    ),
+  ),
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
-      TracingService.layerNoop,
       Feed.notAvailable,
     ),
   ),

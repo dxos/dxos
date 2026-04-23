@@ -6,12 +6,13 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import type { Entity } from '@dxos/echo';
-import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
+import { type Entity } from '@dxos/echo';
+import { createFeedServiceLayer, type Queue, type QueueAPI, type QueueFactory } from '@dxos/echo-db';
 import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
 /**
  * Gives access to all queues.
+ * @deprecated Use Feed.FeedService instead.
  */
 export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   QueueService,
@@ -71,6 +72,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
 
 /**
  * Gives access to a specific queue passed as a context.
+ * @deprecated Use Feed.FeedService instead.
  */
 export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
   ContextQueueService,
@@ -80,3 +82,10 @@ export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQue
 >() {
   static layer = (queue: Queue) => Layer.succeed(ContextQueueService, { queue });
 }
+
+export const feedServiceFromQueueServiceLayer = Layer.unwrapEffect(
+  Effect.gen(function* () {
+    const { queues } = yield* QueueService;
+    return createFeedServiceLayer(queues);
+  }),
+);

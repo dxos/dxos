@@ -5,14 +5,16 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { meta as automationMeta } from '@dxos/plugin-automation';
 
 export const TriggersModule = () => {
   return (
     <Surface.Surface
-      role='article'
+      type={AppSurface.Article}
       data={{
-        subject: `${automationMeta.id}/space-settings-automation`,
+        attendableId: 'story',
+        subject: `${automationMeta.id}.space-settings-automation`,
       }}
     />
   );

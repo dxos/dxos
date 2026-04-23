@@ -9,6 +9,12 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -39,6 +45,12 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -52,6 +64,15 @@
     },
     {
       "path": "../app-graph"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../schema"
     },
     {
       "path": "../types"

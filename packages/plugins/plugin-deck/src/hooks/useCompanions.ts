@@ -8,7 +8,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 
-import { PLANK_COMPANION_TYPE } from '../types';
+import { PLANK_COMPANION_TYPE } from '#types';
 
 export const useCompanions = (id?: string) => {
   const { graph } = useAppGraph();

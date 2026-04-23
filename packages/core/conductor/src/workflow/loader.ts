@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { JsonSchema } from '@dxos/echo';
-import { FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
@@ -20,7 +20,6 @@ import {
   type Executable,
   synchronizedComputeFunction,
 } from '../types';
-
 import { Workflow } from './workflow';
 
 export type WorkflowLoaderProps = {
@@ -132,13 +131,13 @@ export class WorkflowLoader {
       return cached;
     }
 
-    const funcionDef = FunctionDefinition.deserialize(await functionRef.load());
+    const funcionDef = Operation.deserialize(await functionRef.load());
     const output = node.outputSchema ? JsonSchema.toEffectSchema(node.outputSchema) : AnyOutput;
     const result: Executable = {
       meta: { input: node.inputSchema ? JsonSchema.toEffectSchema(node.inputSchema) : AnyInput, output },
       exec: synchronizedComputeFunction(
         Effect.fnUntraced(function* (input) {
-          return yield* FunctionInvocationService.invokeFunction(funcionDef, input);
+          return yield* Operation.invoke(funcionDef, input).pipe(Effect.orDie);
         }),
       ),
     };

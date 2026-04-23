@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'util';
-
 import { describe, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
@@ -13,7 +12,6 @@ import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb
 import { schema } from '@dxos/protocols/proto';
 
 import { createCredential } from '../credentials';
-
 import { signPresentation } from './presentation';
 
 describe('json encoding', () => {
@@ -26,10 +24,10 @@ describe('json encoding', () => {
     const serviceAccessCredential = await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.ServiceAccess',
-        'serverName': 'hub.dxos.network',
-        'serverKey': serviceProvider,
-        'identityKey': identity,
-        'capabilities': ['beta'],
+        serverName: 'hub.dxos.network',
+        serverKey: serviceProvider,
+        identityKey: identity,
+        capabilities: ['beta'],
       },
       subject: identity,
       issuer: serviceProvider,
@@ -39,8 +37,8 @@ describe('json encoding', () => {
     const deviceAuthorization = await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        'deviceKey': device,
-        'identityKey': identity,
+        deviceKey: device,
+        identityKey: identity,
       },
       subject: device,
       issuer: identity,

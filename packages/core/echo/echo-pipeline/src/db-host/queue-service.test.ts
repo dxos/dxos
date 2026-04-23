@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import type * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -91,7 +91,7 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(result.objects).toHaveLength(2);
-      expect(result.objects?.[1]).toMatchObject({ 'id': object1Id, '@deleted': true });
+      expect(result.objects?.[1]).toMatchObject({ id: object1Id, '@deleted': true });
     }).pipe(Effect.provide(TestLayer)),
   );
 

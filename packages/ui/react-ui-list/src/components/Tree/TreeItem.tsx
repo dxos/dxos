@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   type Instruction,
   type ItemMode,
   attachInstruction,
   extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import React, {
@@ -25,7 +25,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
+import { TreeItem as NaturalTreeItem, Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '@dxos/react-ui';
 import {
   ghostFocusWithin,
   ghostHover,
@@ -107,9 +107,19 @@ const RawTreeItem = <T extends { id: string } = any>({
   } = useTree();
   const path = useMemo(() => [...pathProp, item.id], [pathProp, item.id]);
 
-  const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = useAtomValue(
-    itemPropsAtom(path),
-  );
+  const {
+    id,
+    parentOf,
+    draggable: itemDraggable,
+    droppable: itemDroppable,
+    label,
+    className,
+    headingClassName,
+    icon,
+    iconHue,
+    disabled,
+    testId,
+  } = useAtomValue(itemPropsAtom(path));
   const childIds = useAtomValue(childIdsAtom(item.id));
   const open = useAtomValue(itemOpenAtom(path));
   const current = useAtomValue(itemCurrentAtom(path));
@@ -119,6 +129,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const canSelectItem = canSelect?.({ item, path }) ?? true;
   const data = { id, path, item } satisfies TreeData;
+  const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -127,6 +138,10 @@ const RawTreeItem = <T extends { id: string } = any>({
     }
   }, []);
 
+  const isItemDraggable = draggableProp && itemDraggable !== false;
+  const isItemDroppable = itemDroppable !== false;
+  const nativeDragText = id;
+
   useEffect(() => {
     if (!draggableProp) {
       return;
@@ -134,11 +149,16 @@ const RawTreeItem = <T extends { id: string } = any>({
 
     invariant(buttonRef.current);
 
-    // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
-    return combine(
+    const makeDraggable = () =>
       draggable({
-        element: buttonRef.current,
+        element: buttonRef.current!,
         getInitialData: () => data,
+        getInitialDataForExternal: () => {
+          if (!shouldSeedNativeDragData) {
+            return {};
+          }
+          return { 'text/plain': nativeDragText };
+        },
         onDragStart: () => {
           setState('dragging');
           if (open) {
@@ -152,62 +172,72 @@ const RawTreeItem = <T extends { id: string } = any>({
             onOpenChange?.({ item, path, open: true });
           }
         },
-      }),
-      // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx
-      dropTargetForElements({
-        element: buttonRef.current,
-        getData: ({ input, element }) => {
-          return attachInstruction(data, {
-            input,
-            element,
-            indentPerLevel: DEFAULT_INDENTATION,
-            currentLevel: level,
-            mode,
-            block: isBranch ? [] : ['make-child'],
-          });
-        },
-        canDrop: ({ source }) => {
-          const _canDrop = canDrop ?? (() => true);
-          return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
-        },
-        getIsSticky: () => true,
-        onDrag: ({ self, source }) => {
-          const desired = extractInstruction(self.data);
-          const block =
-            desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
-          const instruction: Instruction | null =
-            block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
+      });
 
-          if (source.data.id !== id) {
-            if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
-              cancelExpandRef.current = setTimeout(() => {
-                onOpenChange?.({ item, path, open: true });
-              }, 500);
-            }
+    if (!isItemDroppable) {
+      return isItemDraggable ? makeDraggable() : undefined;
+    }
 
-            if (instruction?.type !== 'make-child') {
-              cancelExpand();
-            }
+    const dropTarget = dropTargetForElements({
+      element: buttonRef.current,
+      getData: ({ input, element }) => {
+        return attachInstruction(data, {
+          input,
+          element,
+          indentPerLevel: DEFAULT_INDENTATION,
+          currentLevel: level,
+          mode,
+          block: isBranch ? [] : ['make-child'],
+        });
+      },
+      canDrop: ({ source }) => {
+        const _canDrop = canDrop ?? (() => true);
+        return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
+      },
+      getIsSticky: () => true,
+      onDrag: ({ self, source }) => {
+        const desired = extractInstruction(self.data);
+        const block =
+          desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
+        const instruction: Instruction | null =
+          block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
 
-            setInstruction(instruction);
-          } else if (instruction?.type === 'reparent') {
-            // TODO(wittjosiah): This is not occurring in the current implementation.
-            setInstruction(instruction);
-          } else {
-            setInstruction(null);
+        if (source.data.id !== id) {
+          if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {
+            cancelExpandRef.current = setTimeout(() => {
+              onOpenChange?.({ item, path, open: true });
+            }, 500);
           }
-        },
-        onDragLeave: () => {
-          cancelExpand();
+
+          if (instruction?.type !== 'make-child') {
+            cancelExpand();
+          }
+
+          setInstruction(instruction);
+        } else if (instruction?.type === 'reparent') {
+          // TODO(wittjosiah): This is not occurring in the current implementation.
+          setInstruction(instruction);
+        } else {
           setInstruction(null);
-        },
-        onDrop: () => {
-          cancelExpand();
-          setInstruction(null);
-        },
-      }),
-    );
-  }, [draggableProp, item, id, mode, path, open, blockInstruction, canDrop]);
+        }
+      },
+      onDragLeave: () => {
+        cancelExpand();
+        setInstruction(null);
+      },
+      onDrop: () => {
+        cancelExpand();
+        setInstruction(null);
+      },
+    });
+
+    if (!isItemDraggable) {
+      return dropTarget;
+    }
+
+    // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/about
+    return combine(makeDraggable(), dropTarget);
+  }, [draggableProp, isItemDraggable, isItemDroppable, item, id, mode, path, open, blockInstruction, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
@@ -275,7 +305,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         key={id}
         id={id}
         aria-labelledby={`${id}__label`}
-        parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
+        parentOf={parentOf?.join(TREEGRID_PARENT_OF_SEPARATOR)}
         data-object-id={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS

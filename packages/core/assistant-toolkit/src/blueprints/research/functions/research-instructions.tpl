@@ -92,11 +92,11 @@ The following objects are already in the database, I will not submit them again,
 
 I will use the following schema to construct new objects:
 
-- type:dxos.org/type/Organization for Alphabet Inc.
-- type:dxos.org/type/Person for Ivan Zhao
-- type:dxos.org/type/Person for Simon Last
-- dxn:type:dxos.org/relation/Employer for Ivan's employer
-- dxn:type:dxos.org/relation/Employer for Simon's employer
+- type:org.dxos.type.organization for Alphabet Inc.
+- type:org.dxos.type.person for Ivan Zhao
+- type:org.dxos.type.person for Simon Last
+- dxn:type:org.dxos.relation.employer for Ivan's employer
+- dxn:type:org.dxos.relation.employer for Simon's employer
 
 <status>Formatting results</status>
 

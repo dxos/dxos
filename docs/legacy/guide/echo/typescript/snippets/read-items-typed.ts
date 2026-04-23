@@ -7,8 +7,8 @@ import { Client } from '@dxos/client';
 const client = new Client();
 
 class Task {
-  public declare type: 'task';
-  public declare completed: boolean;
+  declare public type: 'task';
+  declare public completed: boolean;
 }
 
 async () => {

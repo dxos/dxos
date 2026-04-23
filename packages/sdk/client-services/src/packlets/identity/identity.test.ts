@@ -56,7 +56,7 @@ describe('identity/identity', () => {
       subject: setup.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        'profile': {
+        profile: {
           displayName: 'Alice',
         },
       },
@@ -93,8 +93,8 @@ describe('identity/identity', () => {
             subject: secondDevice.deviceKey,
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              'identityKey': owner.identityKey,
-              'deviceKey': secondDevice.deviceKey,
+              identityKey: owner.identityKey,
+              deviceKey: secondDevice.deviceKey,
             },
           }),
         },
@@ -130,7 +130,7 @@ describe('identity/identity', () => {
         onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
-        send: async (_) => {
+        send: async (..._) => {
           replicationStarted = true;
         },
       } as EdgeConnection,
@@ -218,7 +218,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
-    await identity.joinNetwork();
+    await identity.joinNetwork(Context.default());
     onTestFinished(() => identity.close(new Context()));
     return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
   };

@@ -1,4 +1,5 @@
 # @dxos/assistant
+
 Natural language interface to DXOS.
 
 Communicate with your DXOS applications through conversations using advanced LLM capabilities. This package provides a flexible system for building AI assistants that can help users interact with and control DXOS apps.

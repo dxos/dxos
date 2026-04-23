@@ -14,18 +14,19 @@ import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
-import { Menu } from '@dxos/react-ui-menu';
+import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { isTruthy, trim } from '@dxos/util';
 
-import { useChatToolbarActions } from '../../hooks';
-import { meta } from '../../meta';
+import { useChatToolbarActions } from '#hooks';
+import { meta } from '#meta';
+
 import { type AiChatProcessor } from '../../processor';
 import {
   ChatActions,
@@ -36,7 +37,6 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
-
 import { type ChatEvent } from './events';
 
 //
@@ -62,21 +62,47 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
+    queue?: Queue;
     onEvent?: (event: ChatEvent) => void;
   }
 >;
 
-const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const pending = useAtomValue(processor.messages);
   const streaming = useAtomValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const storedMessages = useQuery(chat?.queue?.target, Filter.type(Message.Message));
+  const storedMessages = useQuery(queue, Filter.type(Message.Message));
   const messages = useMemo(() => {
     return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [storedMessages, pending]);
+
+  // Debug.
+  const dump = useCallback(async () => {
+    const objects = processor.context.getObjects();
+    const blueprints = processor.context.getBlueprints();
+    const system = await processor.getSystemPrompt();
+    const tools = await processor.getTools();
+
+    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console
+    console.group('Chat', { objects, blueprints });
+    // eslint-disable-next-line no-console
+    console.log(trim`
+      System Prompt:
+      ${system}
+    `);
+    // eslint-disable-next-line no-console
+    console.log(trim`
+      Tools:
+      ${Object.values(tools)
+        .map((tool) => JSON.stringify(tool, null, 2))
+        .join('\n')}
+    `);
+    console.groupEnd();
+  }, [processor]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
@@ -84,25 +110,13 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     return event.on((ev) => {
       switch (ev.type) {
         case 'toggle-debug': {
-          setDebug((debug) => !debug);
-
-          // Dump state to console.
-          queueMicrotask(async () => {
-            const objects = processor.context.getObjects();
-            const blueprints = processor.context.getBlueprints();
-            const tools = await processor.getTools();
-            const system = await processor.getSystemPrompt();
-            // eslint-disable-next-line no-console
-            console.log('Chat processor state:', { objects, blueprints });
-            // eslint-disable-next-line no-console
-            console.log(`
-              ==== System Prompt ====
-              ${system}
-              ==== Tools ====
-              ${Object.values(tools)
-                .map((tool) => JSON.stringify(tool, null, 2))
-                .join('\n')}
-            `);
+          setDebug((debug) => {
+            if (debug) {
+              return false;
+            } else {
+              void dump();
+              return true;
+            }
           });
           break;
         }
@@ -136,7 +150,7 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
 
       onEvent?.(ev);
     });
-  }, [event, processor, streaming, onEvent]);
+  }, [event, dump, processor, streaming, onEvent]);
 
   const db = props.db ?? (chat && Obj.getDatabase(chat));
 
@@ -158,20 +172,45 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
 ChatRoot.displayName = 'Chat.Root';
 
 //
+// Toolbar
+//
+
+const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
+
+type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  companionTo?: Obj.Unknown;
+};
+
+const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
+  ({ attendableId, companionTo, ...props }, forwardedRef) => {
+    const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
+    const menuActions = useChatToolbarActions({ chat, companionTo });
+
+    return (
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      </Menu.Root>
+    );
+  },
+);
+
+ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
+
+//
 // Viewport
 //
 
 const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
 
-type ChatViewportProps = ThemedClassName<PropsWithChildren>;
+type ChatViewportProps = {};
 
-const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
+const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div role='none' className={mx('flex flex-col h-full w-full', classNames)}>
+    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
-};
+});
 
 ChatViewport.displayName = CHAT_VIEWPORT_NAME;
 
@@ -376,7 +415,7 @@ const ChatPrompt = ({
           autoFocus
           lineWrapping
           classNames='col-span-2 pt-0.5'
-          placeholder={placeholder ?? t('prompt placeholder')}
+          placeholder={placeholder ?? t('prompt.placeholder')}
           extensions={extensions}
           onSubmit={handleSubmit}
         />
@@ -407,7 +446,7 @@ const ChatPrompt = ({
             {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
-                <Input.Label srOnly>{t('online switch label')}</Input.Label>
+                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
                 <Input.Switch classNames='mx-2' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
@@ -421,39 +460,15 @@ const ChatPrompt = ({
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 //
-// Toolbar
-//
-
-const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
-
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown }>;
-
-const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
-  const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-  const menu = useChatToolbarActions({ chat, companionTo });
-
-  return (
-    <Menu.Root
-      {...menu}
-      attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
-    >
-      <Menu.Toolbar classNames={classNames} textBlockWidth />
-    </Menu.Root>
-  );
-};
-
-ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
-
-//
 // Chat
 //
 
 export const Chat = {
   Root: ChatRoot,
+  Toolbar: ChatToolbar,
   Viewport: ChatViewport,
   Thread: ChatThread,
   Prompt: ChatPrompt,
-  Toolbar: ChatToolbar,
 };
 
-export type { ChatRootProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };
+export type { ChatRootProps, ChatToolbarProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatEvent };

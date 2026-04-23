@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiService } from '@dxos/ai';
 import { type SpaceId } from '@dxos/client/echo';
-import { Database, Feed } from '@dxos/echo';
-import { CredentialsService, type FunctionDefinition, QueueService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
 
@@ -19,17 +17,37 @@ import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
  */
 export const createMockedComputeRuntimeProvider = ({
   functions,
-}: { functions?: FunctionDefinition.Any[] } = {}): FunctionsRuntimeProvider => {
+}: { functions?: OperationHandlerSet.OperationHandlerSet } = {}): FunctionsRuntimeProvider => {
   return {
     getRuntime: (_spaceId: SpaceId) =>
       ManagedRuntime.make(
-        FunctionInvocationServiceLayerTest({ functions }).pipe(
-          Layer.provide(AiService.notAvailable),
-          Layer.provide(CredentialsService.configuredLayer([])),
-          Layer.provide(Database.notAvailable),
-          Layer.provide(QueueService.notAvailable),
-          Layer.provide(Feed.notAvailable),
-        ),
+        functions
+          ? Layer.effect(
+              Operation.Service,
+              Effect.gen(function* () {
+                const handlers = yield* functions.handlers;
+                return {
+                  invoke: (op: any, ...args: any[]) => {
+                    const handler = handlers.find((h: any) => h.meta.key === op.meta.key);
+                    if (!handler) {
+                      return Effect.die(`No handler found for operation: ${op.meta.key}`);
+                    }
+                    const result = handler.handler(args[0]);
+                    if (Effect.isEffect(result)) {
+                      return result as Effect.Effect<unknown>;
+                    }
+                    return Effect.promise(() => Promise.resolve(result));
+                  },
+                  schedule: () => Effect.void,
+                  invokePromise: async () => ({ error: new Error('Not implemented in test runtime') }),
+                } as Operation.OperationService;
+              }),
+            )
+          : Layer.succeed(Operation.Service, {
+              invoke: () => Effect.die('Operation.Service not available in test.'),
+              schedule: () => Effect.die('Operation.Service not available in test.'),
+              invokePromise: async () => ({ error: new Error('Not available') }),
+            } as any),
       ),
   };
 };

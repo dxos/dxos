@@ -6,28 +6,29 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, type ContextBinding, ToolExecutionServices } from '@dxos/assistant';
+import { AiSessionService, ToolExecutionServices } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService, TracingService } from '@dxos/functions';
-import { FunctionImplementationResolver } from '@dxos/functions-runtime';
-import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
-import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type TestStep, runSteps } from '../testing';
-
 import PlanningOldBlueprint from './blueprint';
-import { TaskFunctions } from './functions';
+import { TaskHandlers } from './functions';
+
+const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(ToolExecutionServices),
+  Layer.provideMerge(
+    AssistantTestLayer({
+      operationHandlers: TaskHandlers,
+      types: [Text.Text, Markdown.Document, Blueprint.Blueprint],
+    }),
+  ),
+);
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   const blueprint = PlanningOldBlueprint.make();
@@ -35,12 +36,11 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        const session = yield* AiSessionService;
 
         yield* Database.add(blueprint);
         yield* Effect.promise(() =>
-          conversation.context.bind({
+          session.context.bind({
             blueprints: [Ref.make(blueprint)],
           }),
         );
@@ -97,24 +97,9 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           },
         ];
 
-        yield* runSteps(conversation, steps);
+        yield* runSteps(session, steps);
       },
-      Effect.provide(
-        Layer.mergeAll(
-          TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] }),
-          ToolExecutionServices,
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-        ).pipe(
-          Layer.provideMerge(
-            FunctionInvocationServiceLayerTestMocked({ functions: Object.values(TaskFunctions) }).pipe(
-              Layer.provideMerge(TracingService.layerNoop),
-            ),
-          ),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: Object.values(TaskFunctions) })),
-          Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
-          Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
-        ),
-      ),
+      Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))),
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),

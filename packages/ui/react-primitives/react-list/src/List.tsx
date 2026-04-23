@@ -6,6 +6,7 @@ import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
+// TODO(burdon): Reconcile with react-ui-list.
 // TODO(thure): A lot of the accessible affordances for this kind of thing need to be implemented per https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
 const LIST_NAME = 'List';
@@ -36,11 +37,7 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
   const { __listScope, variant = 'ordered', selectable = false, itemSizes, children, ...rootProps } = props;
   const ListRoot = variant === 'ordered' ? Primitive.ol : Primitive.ul;
   return (
-    <ListRoot
-      {...(selectable && { 'role': 'listbox', 'aria-multiselectable': true })}
-      {...rootProps}
-      ref={forwardedRef}
-    >
+    <ListRoot {...(selectable && { role: 'listbox', 'aria-multiselectable': true })} {...rootProps} ref={forwardedRef}>
       <ListProvider
         {...{
           scope: __listScope,

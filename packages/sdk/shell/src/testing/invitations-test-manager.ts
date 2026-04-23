@@ -213,15 +213,6 @@ export class InvitationsTestManager {
     await waitFor(() => {
       peer.getByTestId('identity-list-item');
     });
-
-    // Wait for default space to be created and ready.
-    // This prevents "Feed closed" errors from async space creation during cleanup.
-    await waitFor(() => {
-      const items = peer.queryAllByTestId('space-list-item');
-      if (items.length === 0) {
-        throw new Error('Default space not yet created');
-      }
-    });
   }
 
   /**

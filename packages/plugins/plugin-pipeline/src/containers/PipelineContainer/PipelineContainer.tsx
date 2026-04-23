@@ -9,46 +9,52 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Surface } from '@dxos/app-framework/ui';
 import {
+  AppSurface,
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-  type SurfaceComponentProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { Container } from '@dxos/react-ui';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { Panel } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
-import { type Pipeline as PipelineType } from '@dxos/types';
+import { type Pipeline } from '@dxos/types';
 
-import { type ItemProps, PipelineComponent, usePipelineBoardModel } from '../../components';
+import { type ItemProps, PipelineComponent } from '#components';
+import { usePipelineBoardModel } from '#hooks';
 
 const PIPELINE_ITEM = 'PipelineItem';
 
-export type PipelineContainerProps = SurfaceComponentProps<PipelineType.Pipeline>;
+export type PipelineContainerProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
 
-export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainerProps) => {
+export const PipelineContainer = ({ role, subject: pipeline, attendableId }: PipelineContainerProps) => {
   const registry = useCapability(Capabilities.AtomRegistry);
   const model = usePipelineBoardModel(pipeline, registry);
   const { invokePromise } = useOperationInvoker();
-  const attendableId = Obj.getDXN(pipeline).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${attendableId}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        companion: linkedSegment('settings'),
       }),
-    [invokePromise, attendableId],
+    [invokePromise],
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <PipelineComponent.Root Item={PipelineItem} model={model} onAddColumn={handleColumnAdd}>
-        <PipelineComponent.Toolbar disabled={!hasAttention} />
-        <PipelineComponent.Content pipeline={pipeline} />
-      </PipelineComponent.Root>
-    </Container.Main>
+    <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <PipelineComponent.Toolbar disabled={!hasAttention} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <PipelineComponent.Content asChild model={model}>
+            <PipelineComponent.Columns pipeline={pipeline} />
+          </PipelineComponent.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </PipelineComponent.Root>
   );
 };
 
@@ -69,7 +75,7 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
 
   return (
     <Surface.Surface
-      role='card--content'
+      type={AppSurface.Card}
       data={{
         subject: item,
         projection: projectionModel,

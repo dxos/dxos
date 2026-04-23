@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';

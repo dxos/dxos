@@ -5,14 +5,26 @@
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
+import { withColumn } from '../primitives/column';
+
+export const scrollbar = {
+  thin: {
+    size: 4,
+    padding: 4,
+  },
+  coarse: {
+    size: 8,
+    padding: 8,
+  },
+};
 
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
   autoHide?: boolean;
-  /** Balance left/right, top/bottom "margin" with scrollbar. */
-  margin?: boolean;
+  /** Balance left/right, top/bottom offset with scrollbar. */
+  centered?: boolean;
   /** Add default padding. */
-  /** TODO(burdon): Integrate with Container.Column padding. */
+  /** TODO(burdon): Integrate with Column.Root padding. */
   padding?: boolean;
   /** Use thin scrollbars. */
   /** TODO(burdon): Density fine/course. */
@@ -21,46 +33,17 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
 };
 
-/**
- * Layout rules for flex-based scroll containment:
- *
- * - `flex flex-col` on a container: makes it a flex column so children stack and can use `flex-1`.
- * - `flex-1` on a child: grows to fill the flex parent. Requires the parent to be `display:flex`.
- * - `min-h-0` alongside `flex-1`: browsers default flex children to `min-height:auto` (sized to content),
- *   which prevents shrinking. `min-h-0` overrides this so the element can shrink and
- *   trigger overflow/scrolling. Always pair with `flex-1` when scroll is needed.
- * - `h-full`: fills 100% of the parent's *computed* height. Use when the parent has a definite
- *   height but is not a flex container (e.g. `overflow:hidden` wrapper). Unlike `flex-1`, does
- *   not require the parent to be flex.
- *
- * Pattern for a scrollable region inside a flex ancestor:
- *   ancestor      → `flex flex-col`  (or `flex flex-row`)
- *   scroll root   → `flex-1 min-h-0` (fills ancestor, can shrink)
- *   scroll viewport → `h-full overflow-y-scroll` (fills root, scrolls)
- */
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, margin, thin }, ...etc) =>
+export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
-    'overflow-hidden',
+    // Expand
+    'dx-container',
 
-    // NOTE: min-h-0 is required for vertical scrollbars
-    orientation === 'vertical' && 'group/scroll-v min-h-0 flex-1 h-full w-full',
-    orientation === 'horizontal' && 'group/scroll-h h-full min-w-0 w-full',
-    orientation === 'all' && 'group/scroll-all min-h-0 flex-1 h-full min-w-0 w-full',
+    orientation === 'vertical' && 'group/scroll-v flex flex-col',
+    orientation === 'horizontal' && 'group/scroll-h flex',
+    orientation === 'all' && 'group/scroll-all',
 
-    // Apply col-span-full only when inside a Container.Column grid (detected via dx-column marker).
-    '[.dx-column_&]:col-span-full',
-
-    // NOTE: Uses --gutter CSS variable
-    // If contained within Container.Column grid, the gutter is set by that component.
-    margin && [
-      orientation === 'vertical' &&
-        (thin
-          ? 'pl-[var(--gutter,4px)] pr-[calc(var(--gutter,4px)-4px)]'
-          : 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-8px)]'),
-      orientation === 'horizontal' && (thin ? 'py-[var(--gutter,4px)]' : 'py-[var(--gutter,8px)]'),
-      orientation === 'all' &&
-        (thin ? 'pl-[var(--gutter,4px)] py-[var(--gutter,8px)]' : 'pl-[var(--gutter,8px)] py-[var(--gutter,8px)]'),
-    ],
+    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column-root marker).
+    '[.dx-column-root_&]:col-span-full',
 
     ...etc,
   );
@@ -69,23 +52,46 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
  * NOTE: The browser reserves space for scrollbars.
  */
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
-  { orientation, autoHide, padding, snap, thin },
+  { orientation, centered, padding, snap, autoHide },
   ...etc
-) =>
-  mx(
-    'h-full w-full',
+) => {
+  return mx(
+    'flex-1 min-h-0 w-full',
 
-    orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
-    orientation === 'horizontal' && 'flex overflow-x-scroll',
+    // Reset --dx-col so nested components don't try to grid-position themselves.
+    // ScrollArea has already consumed --gutter for padding.
+    withColumn.consumed(),
+
+    orientation === 'vertical' && 'overflow-y-scroll',
+    orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',
     orientation === 'all' && 'overflow-scroll',
-
-    thin
-      ? '[&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar]:h-[4px]'
-      : '[&::-webkit-scrollbar]:w-[8px] [&::-webkit-scrollbar]:h-[8px]',
 
     '[&::-webkit-scrollbar-corner]:bg-transparent',
     '[&::-webkit-scrollbar-track]:bg-transparent',
     '[&::-webkit-scrollbar-thumb]:rounded-none',
+
+    '[&::-webkit-scrollbar]:w-[var(--scroll-width)] [&::-webkit-scrollbar]:h-[var(--scroll-width)]',
+
+    // If contained within Column.Root grid the gutter is set by that component (--gutter CSS variable).
+    // If centered, left padding compensates for scrollbar width so content is visually centered.
+    (orientation === 'vertical' || orientation === 'all') &&
+      (padding
+        ? [
+            centered ? 'pl-[var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))]' : 'pl-[var(--gutter,0)]',
+            'pr-[calc(var(--gutter,calc(var(--scroll-width)+var(--scroll-padding)))-var(--scroll-width))]',
+          ]
+        : centered && 'pl-[var(--scroll-width)]'),
+
+    (orientation === 'horizontal' || orientation === 'all') &&
+      (padding
+        ? [centered && 'pt-[calc(var(--scroll-width)+var(--scroll-padding))]', 'pb-[var(--scroll-padding)]']
+        : centered && 'pt-[var(--scroll-width)]'),
+
+    snap && [
+      orientation === 'vertical' && 'snap-y snap-mandatory',
+      orientation === 'horizontal' && 'snap-x snap-mandatory',
+      orientation === 'all' && 'snap-both snap-mandatory',
+    ],
 
     autoHide
       ? [
@@ -99,20 +105,9 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
           orientation === 'all' && '[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         ],
 
-    padding && [
-      orientation === 'vertical' && 'px-[4px]',
-      orientation === 'horizontal' && 'pb-[4px]',
-      orientation === 'all' && 'pl-[4px] pb-[4px]',
-    ],
-
-    snap && [
-      orientation === 'vertical' && 'snap-y snap-mandatory',
-      orientation === 'horizontal' && 'snap-x snap-mandatory',
-      orientation === 'all' && 'snap-both snap-mandatory',
-    ],
-
     ...etc,
   );
+};
 
 export const scrollAreaTheme: Theme<ScrollAreaStyleProps> = {
   root: scrollAreaRoot,

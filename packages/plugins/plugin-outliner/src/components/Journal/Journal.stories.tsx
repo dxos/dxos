@@ -6,18 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
-import { translations } from '../../translations';
-import { Journal, Outline, getDateString } from '../../types';
+import { Journal, Outline, getDateString } from '#types';
 
+import { translations } from '../../translations';
 import { Journal as JournalComponent } from './Journal';
 
 const DefaultJournalStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const journal = useMemo(() => {
     if (space) {
       return space.db.add(Journal.make());
@@ -32,7 +32,7 @@ const DefaultJournalStory = () => {
 
 // Create journal with entries at render time (see above comment).
 const JournalsStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const journal = useMemo(() => {
     if (space) {
       const dates = [new Date(Date.now() - 5 * 24 * 60 * 60 * 1_000), new Date(2025, 0, 1)];

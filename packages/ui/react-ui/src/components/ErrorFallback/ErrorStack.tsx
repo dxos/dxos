@@ -9,11 +9,45 @@ import { mx } from '@dxos/ui-theme';
 
 type LocalFrame = { href: string; fileName: string };
 
+export type ParsedStackFrame = ReturnType<typeof ErrorStackParser.parse>[number];
+
+export type ErrorStackProps = {
+  /** When set, these frames are shown instead of parsing `error`. */
+  frames?: ParsedStackFrame[];
+  /** Used when `frames` is omitted. */
+  error?: Error;
+};
+
+/**
+ * Parses `captureOwnerStack()` output (React dev) into frames for {@link ErrorStack}.
+ * Prefixes a synthetic Error line when needed so `error-stack-parser` can read V8-style stacks.
+ */
+export const parseCaptureOwnerStack = (stack: string | null): ParsedStackFrame[] | null => {
+  if (stack == null || stack.length === 0) {
+    return null;
+  }
+  const err = new Error();
+  err.stack = stack;
+  try {
+    return ErrorStackParser.parse(err);
+  } catch {
+    err.stack = `Error\n${stack}`;
+    try {
+      return ErrorStackParser.parse(err);
+    } catch {
+      return null;
+    }
+  }
+};
+
 /**
  * Renders a parsed error stack trace with tree connector symbols and clickable vscode:// links for local frames.
  */
-export const ErrorStack = ({ error }: { error: Error }) => {
-  const frames = ErrorStackParser.parse(error);
+export const ErrorStack = ({ error, frames: framesProp }: ErrorStackProps) => {
+  const frames = framesProp ?? (error ? ErrorStackParser.parse(error) : []);
+  if (frames.length === 0) {
+    return null;
+  }
 
   return (
     <div className='font-mono text-sm'>

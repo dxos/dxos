@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { type DXN } from '@dxos/keys';
 

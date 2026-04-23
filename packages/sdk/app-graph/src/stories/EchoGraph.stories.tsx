@@ -10,14 +10,14 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect, useM
 
 import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Obj, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { faker } from '@dxos/random';
+import { TestSchema } from '@dxos/echo/testing';
+import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
+import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -25,7 +25,6 @@ import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
 import * as Node from '../node';
-
 import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;
@@ -64,7 +63,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
                 const propertiesSnapshot = get(AtomObj.make(space.properties));
                 return {
                   id: space.id,
-                  type: 'dxos.org/type/Space',
+                  type: 'org.dxos.type.space',
                   properties: {
                     label: propertiesSnapshot.name,
                   },
@@ -88,7 +87,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
             const objects = get(AtomQuery.make(space.db, Query.type(TestSchema.Expando, { type: 'test' })));
             return objects.map((object) => ({
               id: object.id,
-              type: 'dxos.org/type/test',
+              type: 'org.dxos.type.test',
               properties: { label: object.name },
               data: object,
             }));
@@ -146,8 +145,8 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        Obj.change(space.properties, (p) => {
-          p.name = faker.commerce.productName();
+        Obj.change(space.properties, (obj) => {
+          obj.name = random.commerce.productName();
         });
       }
       break;
@@ -157,7 +156,7 @@ const runAction = async (client: Client, action: Action) => {
       getRandomSpace(client)?.db.add(
         Obj.make(TestSchema.Expando, {
           type: 'test',
-          name: faker.commerce.productName(),
+          name: random.commerce.productName(),
         }),
       );
       break;
@@ -176,8 +175,8 @@ const runAction = async (client: Client, action: Action) => {
       if (space) {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
-        Obj.change(object, (o) => {
-          o.name = faker.commerce.productName();
+        Obj.change(object, (object) => {
+          object.name = random.commerce.productName();
         });
       }
       break;
@@ -216,7 +215,6 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Input.Root>
             <Input.TextInput
               autoComplete='off'
-              size={5}
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
@@ -347,7 +345,7 @@ export const TreeView: Story = {
             return {
               id: node.id,
               label: node.id,
-              icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              icon: node.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
               parentOf,
             };
           });

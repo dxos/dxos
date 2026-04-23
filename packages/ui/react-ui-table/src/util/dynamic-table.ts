@@ -5,7 +5,7 @@
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
-import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import {
   ProjectionModel,
@@ -36,16 +36,16 @@ export const getBaseSchema = ({
   properties,
   jsonSchema,
 }: {
-  schema?: Type.Entity.Any;
+  schema?: Type.AnyEntity;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
 }): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
-    return { typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) };
+    return { typename: schema.typename, jsonSchema: JsonSchema.toJsonSchema(schema) };
   } else if (schema) {
-    return { typename: Type.getTypename(schema)!, jsonSchema: Type.toJsonSchema(schema) };
+    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
@@ -93,8 +93,8 @@ const setProperties = (
     const field = projection.getFields().find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        Obj.change(table, (t) => {
-          t.sizes[field.path] = property.size!;
+        Obj.change(table, (table) => {
+          table.sizes[field.path] = property.size!;
         });
       }
 
@@ -111,9 +111,9 @@ const setProperties = (
         const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
         // Use any type parameter since we're working with dynamic field paths
         const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
-        Obj.change(view, (v) => {
+        Obj.change(view, (view) => {
           // Type assertion needed because Query AST types have some variance issues.
-          v.query.ast = newQuery.ast as typeof v.query.ast;
+          view.query.ast = newQuery.ast as typeof view.query.ast;
         });
       }
     }

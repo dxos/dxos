@@ -42,7 +42,6 @@ You only use the ./scripts/rename.mjs script.
 - - Creates separate import statements for renamed symbols
     \*/
 
-
 NOTE: Script is bugged, so only one rename at a time is supported.
 
 You can infer what to rename from compiler errors.

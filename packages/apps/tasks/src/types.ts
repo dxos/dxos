@@ -11,7 +11,7 @@ export const Task = Schema.Struct({
   completed: Schema.Boolean,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Task',
+    typename: 'com.example.type.task',
     version: '0.1.0',
   }),
 );

@@ -3,11 +3,13 @@
 //
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -20,7 +22,7 @@ type DeployScriptProps = {
   script: Script.Script;
   client: Client;
   space: Space;
-  fn?: Function.Function;
+  fn?: Operation.PersistentOperation;
   existingFunctionId?: string;
 };
 
@@ -50,7 +52,7 @@ export const deployScript = async ({
     }
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-    const newFunction = await functionsServiceClient.deploy({
+    const newFunction = await functionsServiceClient.deploy(Context.default(), {
       // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
@@ -61,8 +63,8 @@ export const deployScript = async ({
     });
 
     const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
-    Obj.change(script, (s) => {
-      s.changed = false;
+    Obj.change(script, (script) => {
+      script.changed = false;
     });
 
     return { success: true, functionId: getUserFunctionIdInMetadata(Obj.getMeta(storedFunction)) };
@@ -84,16 +86,16 @@ const validateDeployInputs = (script: Script.Script, space: Space): Error | null
 
 const createOrUpdateFunctionInSpace = (
   space: Space,
-  fn: Function.Function | undefined,
+  fn: Operation.PersistentOperation | undefined,
   script: Script.Script,
-  newFunction: Function.Function,
-): Function.Function => {
+  newFunction: Operation.PersistentOperation,
+): Operation.PersistentOperation => {
   if (fn) {
-    Function.setFrom(fn, newFunction);
+    Operation.setFrom(fn, newFunction);
     return fn;
   } else {
-    Obj.change(newFunction, (f) => {
-      f.source = Ref.make(script);
+    Obj.change(newFunction, (newFunction) => {
+      newFunction.source = Ref.make(script);
     });
     return space.db.add(newFunction);
   }

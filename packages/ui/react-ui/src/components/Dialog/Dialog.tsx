@@ -3,36 +3,22 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import {
-  DialogClose as DialogClosePrimitive,
-  type DialogCloseProps as DialogClosePrimitiveProps,
-  DialogContent as DialogContentPrimitive,
-  DialogDescription as DialogDescriptionPrimitive,
-  type DialogDescriptionProps as DialogDescriptionPrimitiveProps,
-  DialogOverlay as DialogOverlayPrimitive,
-  type DialogOverlayProps as DialogOverlayPrimitiveProps,
-  DialogPortal as DialogPortalPrimitive,
-  type DialogPortalProps as DialogPortalPrimitiveProps,
-  Root as DialogRootPrimitive,
-  type DialogProps as DialogRootPrimitiveProps,
-  DialogTitle as DialogTitlePrimitive,
-  type DialogTitleProps as DialogTitlePrimitiveProps,
-  DialogTrigger as DialogTriggerPrimitive,
-  type DialogTriggerProps as DialogTriggerPrimitiveProps,
-} from '@radix-ui/react-dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
   type FunctionComponent,
-  type PropsWithChildren,
   forwardRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { type DialogSize, osTranslations } from '@dxos/ui-theme';
+import { composableProps, type DialogSize, osTranslations, slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { Container } from '../../primitives';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
@@ -41,11 +27,16 @@ import { ElevationProvider } from '../ElevationProvider';
 // Root
 //
 
-type DialogRootProps = DialogRootPrimitiveProps;
+type DialogRootProps = DialogPrimitive.DialogProps;
 
 const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   <ElevationProvider elevation='dialog'>
-    <DialogRootPrimitive {...props} />
+    <DialogPrimitive.Root
+      // NOTE: Radix warning unless set to undefined.
+      // https://www.radix-ui.com/primitives/docs/components/dialog#description
+      aria-describedby={undefined}
+      {...props}
+    />
   </ElevationProvider>
 );
 
@@ -53,17 +44,17 @@ const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
 // Trigger
 //
 
-type DialogTriggerProps = DialogTriggerPrimitiveProps;
+type DialogTriggerProps = DialogPrimitive.DialogTriggerProps;
 
-const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogTriggerPrimitive;
+const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogPrimitive.Trigger;
 
 //
 // Portal
 //
 
-type DialogPortalProps = DialogPortalPrimitiveProps;
+type DialogPortalProps = DialogPrimitive.DialogPortalProps;
 
-const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPortalPrimitive;
+const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPrimitive.Portal;
 
 //
 // Overlay
@@ -78,21 +69,23 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   {},
 );
 
-type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps & { blockAlign?: 'center' | 'start' | 'end' }>;
+type DialogOverlayProps = ThemedClassName<
+  DialogPrimitive.DialogOverlayProps & { blockAlign?: 'center' | 'start' | 'end' }
+>;
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
 
     return (
-      <DialogOverlayPrimitive
+      <DialogPrimitive.Overlay
         {...props}
+        data-block-align={blockAlign}
         className={tx('dialog.overlay', {}, classNames)}
         ref={forwardedRef}
-        data-h-align={blockAlign}
       >
         <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
-      </DialogOverlayPrimitive>
+      </DialogPrimitive.Overlay>
     );
   },
 );
@@ -105,7 +98,7 @@ DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
 const DIALOG_CONTENT_NAME = 'DialogContent';
 
-type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContentPrimitive>> & {
+type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> & {
   size?: DialogSize;
   inOverlayLayout?: boolean;
 };
@@ -116,16 +109,25 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
-      <DialogContentPrimitive
+      <DialogPrimitive.Content
         {...props}
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
-        className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
+        className={tx(
+          'dialog.content',
+          {
+            size,
+            inOverlayLayout: propsInOverlayLayout || inOverlayLayout,
+          },
+          classNames,
+        )}
         ref={forwardedRef}
       >
-        <Container.Column>{children}</Container.Column>
-      </DialogContentPrimitive>
+        <Column.Root classNames='dx-expander' gutter='sm'>
+          {children}
+        </Column.Root>
+      </DialogPrimitive.Content>
     );
   },
 );
@@ -136,18 +138,18 @@ DialogContent.displayName = DIALOG_CONTENT_NAME;
 // Header
 //
 
-type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean };
+type DialogHeaderProps = SlottableProps;
 
-const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({ classNames, srOnly, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <Container.Segment asChild>
-        <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
-      </Container.Segment>
-    );
-  },
-);
+const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('dialog.header', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // CloseIconButton
@@ -161,11 +163,10 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
     return (
       <IconButton
         {...props}
-        label={label ?? t('close dialog label')}
+        label={label ?? t('close-dialog.label')}
         icon='ph--x--regular'
         iconOnly
         size={4}
-        density='fine'
         variant='ghost'
         ref={forwardedRef}
       />
@@ -177,32 +178,30 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 // Body
 //
 
-type DialogBodyProps = PropsWithChildren;
+type DialogBodyProps = SlottableProps;
 
-const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
-  ({ children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <Container.Segment asChild>
-        <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
-          {children}
-        </div>
-      </Container.Segment>
-    );
-  },
-);
+const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('dialog.body', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // Title
 //
 
-type DialogTitleProps = ThemedClassName<DialogTitlePrimitiveProps> & { srOnly?: boolean };
+type DialogTitleProps = ThemedClassName<DialogPrimitive.DialogTitleProps> & { srOnly?: boolean };
 
-const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
+const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
+      <DialogPrimitive.Title {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
     );
   },
 );
@@ -211,39 +210,35 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
 // Description
 //
 
-type DialogDescriptionProps = ThemedClassName<DialogDescriptionPrimitiveProps> & { srOnly?: boolean };
+type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DialogDescriptionProps> & { srOnly?: boolean };
 
-const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<
-  HTMLParagraphElement,
-  DialogDescriptionProps
->(({ classNames, srOnly, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <DialogDescriptionPrimitive
-      {...props}
-      className={tx('dialog.description', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
+  ({ classNames, srOnly, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DialogPrimitive.Description
+        {...props}
+        className={tx('dialog.description', { srOnly }, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 //
 // ActionBar
 //
 
-type DialogActionBarProps = ThemedClassName<PropsWithChildren>;
+type DialogActionBarProps = SlottableProps;
 
-const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forwardRef<
-  HTMLDivElement,
-  DialogActionBarProps
->(({ children, classNames, ...props }, forwardedRef) => {
+const DialogActionBar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className: classNames, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Container.Segment asChild>
-      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    </Container.Segment>
+    <Comp {...rest} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+      {children}
+    </Comp>
   );
 });
 
@@ -251,9 +246,9 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 // Close
 //
 
-type DialogCloseProps = DialogClosePrimitiveProps;
+type DialogCloseProps = DialogPrimitive.DialogCloseProps;
 
-const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
+const DialogClose: FunctionComponent<DialogCloseProps> = DialogPrimitive.Close;
 
 //
 // Dialog
@@ -286,4 +281,5 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
+  DialogCloseIconButtonProps,
 };
