@@ -9,7 +9,8 @@ import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
 import { DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { getSpaceDisplayName } from '../../util';
 
 export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
@@ -19,9 +20,9 @@ export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
   return space ? (
     <>
       <DropdownMenu.Separator />
-      <DropdownMenu.GroupLabel>{t('menu footer label')}</DropdownMenu.GroupLabel>
+      <DropdownMenu.GroupLabel>{t('menu-footer.label')}</DropdownMenu.GroupLabel>
       <dl className='ps-2 mb-2 text-xs grid grid-cols-[max-content_1fr] gap-2'>
-        <dt className='uppercase text-[.75em] tracking-wide font-medium mt-px self-start'>{t('location label')}</dt>
+        <dt className='uppercase text-[.75em] tracking-wide font-medium mt-px self-start'>{t('location.label')}</dt>
         <dd className='line-clamp-3'>
           <Icon icon='ph--planet--regular' classNames='inline-block me-1' />
           {toLocalizedString(spaceName, t)}

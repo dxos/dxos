@@ -16,7 +16,6 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
 
 import { translations } from '../../translations';
-
 import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {

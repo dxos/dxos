@@ -12,11 +12,10 @@ import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { TestLayout } from '../testing';
-
 import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
@@ -43,7 +42,7 @@ const Person = Schema.Struct({
         title: 'State',
         description: 'State code',
       }),
-      zip: Schema.Number,
+      zip: Schema.Number.annotations({ title: 'ZIP Code' }),
     }).annotations({ title: 'Address' }),
   ),
   employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
@@ -73,8 +72,8 @@ const Person = Schema.Struct({
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
 type DefaultStoryProps<T extends AnyProperties> = {
+  schema?: Schema.Schema<T>;
   debug?: boolean;
-  schema: Schema.Schema<T>;
 } & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
@@ -98,12 +97,12 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   }, []);
 
   if (!space) {
-    return <></>;
+    return <Loading />;
   }
 
   return (
     <Tooltip.Provider>
-      <TestLayout json={{ values, schema: schema.ast }}>
+      <TestLayout json={{ values, schema: schema?.ast }}>
         <Form.Root
           debug={debug}
           schema={schema}
@@ -115,6 +114,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport>
             <Form.Content>
+              <Form.Section label='Section' description='This is a section' />
               <Form.FieldSet />
               <Form.Actions />
             </Form.Content>
@@ -129,7 +129,6 @@ const meta = {
   title: 'ui/react-ui-form/Form',
   component: Form.Root,
   render: DefaultStory,
-
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -186,16 +185,5 @@ export const Static: Story<ExcludeId<typeof Person>> = {
 };
 
 export const Empty: Story<ExcludeId<typeof Person>> = {
-  render: () => (
-    <TestLayout>
-      <Form.Root>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Actions />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </TestLayout>
-  ),
+  args: {},
 };

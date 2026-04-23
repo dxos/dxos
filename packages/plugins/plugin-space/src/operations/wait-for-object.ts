@@ -6,7 +6,6 @@ import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { SpaceCapabilities } from '../types';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.WaitForObject> = SpaceOperation.WaitForObject.pipe(

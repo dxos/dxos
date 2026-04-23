@@ -19,7 +19,7 @@ import {
   type EditorStateStore,
   type EditorViewMode,
   type ThemeExtensionsOptions,
-  compactSlots,
+  mobileSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -27,13 +27,13 @@ import {
   documentSlots,
   formattingListener,
   processEditorPayload,
-  stackItemContentEditorClassNames,
+  editorClassNames,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { meta } from '../../meta';
-import { MarkdownCapabilities } from '../../types';
+import { meta } from '#meta';
+import { MarkdownCapabilities } from '#types';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
@@ -52,6 +52,7 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
 
+// TODO(burdon): Move controller to Root.
 export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
   (
     {
@@ -87,8 +88,6 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     // Restore last selection and scroll point.
     const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
 
-    console.log(slots, compact, compactSlots);
-
     const {
       parentRef,
       view: editorView,
@@ -99,21 +98,19 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           id,
           scrollTo,
           selection,
-          // TODO(wittjosiah): Autofocus based on layout is racy.
-          // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
           selectionEnd: true,
         }),
         initialValue,
         extensions: [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
-            placeholder: t('editor placeholder'),
+            placeholder: t('editor.placeholder'),
             scrollPastEnd: !compact,
             search: true,
           }),
           createThemeExtensions({
             themeMode,
-            slots: slots ?? (compact ? compactSlots : documentSlots),
+            slots: slots ?? (compact ? mobileSlots : documentSlots),
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
@@ -151,10 +148,10 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     return (
       <div
         {...focusAttributes}
+        className={mx(editorClassNames(role), classNames)}
         role='none'
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
-        className={mx(stackItemContentEditorClassNames(role), classNames)}
         ref={parentRef}
       />
     );

@@ -12,8 +12,8 @@ import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
-import * as typeInternal from './internal/Type';
 import * as internal from './internal';
+import * as typeInternal from './internal/Type';
 import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
 

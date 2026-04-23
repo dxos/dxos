@@ -7,7 +7,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import main, { type EsbuildExecutorOptions } from './main';
+import main, { type EsbuildExecutorOptions } from './main.ts';
 
 void (async () => {
   try {

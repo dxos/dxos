@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   Fragment,
   type NamedExoticComponent,
@@ -22,12 +23,18 @@ import { byPosition } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
-import { useCapabilities } from '../../hooks';
-
+import { usePluginManager } from '../PluginManager/PluginManagerProvider';
 import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import { type Definition, type Props, type WebComponentDefinition } from './types';
+import {
+  type Definition,
+  type Props,
+  type RoleToken,
+  type TokenData,
+  type TypedProps,
+  type WebComponentDefinition,
+} from './types';
 
 const DEBUG = import.meta.env.VITE_DEBUG;
 
@@ -38,7 +45,7 @@ const DEFAULT_PLACEHOLDER = <Fragment />;
  * Handles creation, prop setting, and cleanup of Web Components.
  */
 const WebComponentWrapper = memo(
-  forwardRef<HTMLElement, Props & { definition: WebComponentDefinition }>(
+  forwardRef<HTMLElement, Omit<Props, 'role'> & { role: string; definition: WebComponentDefinition }>(
     ({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
       const containerRef = useRef<HTMLDivElement>(null);
       const elementRef = useRef<HTMLElement | null>(null);
@@ -108,7 +115,7 @@ WebComponentWrapper.displayName = 'WebComponentWrapper';
  */
 // TODO(burdon): Allow DebugPlugin to provide different fallback using react-ui ErrorFallback.
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, Props & { definition: Definition }>(
+  forwardRef<HTMLElement, Omit<Props, 'role'> & { role: string; definition: Definition }>(
     ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
       const onProfilerRender = useSurfaceProfilerCallback();
@@ -177,43 +184,53 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
  * A surface is a named region of the screen that can be populated by plugins.
  */
 // TODO(burdon): Remove `ref` since relying on this would be error prone.
-export const SurfaceComponent: NamedExoticComponent<Props & RefAttributes<HTMLElement>> = memo(
-  forwardRef(({ id: _id, role, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
-    const data = useDefaultValue(dataProp, () => ({}));
+export const SurfaceComponent = memo(
+  forwardRef<HTMLElement, Props & { type?: RoleToken<any> }>(
+    ({ id: _id, role, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+      const data = useDefaultValue(dataProp, () => ({}));
+      // TODO(wittjosiah): This will make all surfaces depend on a single signal.
+      //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
+      //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
+      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
+      //   In the future, it would be nice to be able to bucket the surface contributions by role.
+      const surfaces = useSurfaces();
 
-    // TODO(wittjosiah): This will make all surfaces depend on a single signal.
-    //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
-    //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
-    //   This should be fine for now because it's how it worked prior to capabilities api anyway.
-    //   In the future, it would be nice to be able to bucket the surface contributions by role.
-    const surfaces = useSurfaces();
+      const effectiveRole = role ?? type?.role;
+      if (effectiveRole == null) {
+        if (DEBUG) {
+          log.warn('Surface has neither `role` nor `type` prop', { id: _id });
+        }
+        return null;
+      }
 
-    // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
-    const definitions = findCandidates(surfaces, { role, data });
-    const candidates = limit ? definitions.slice(0, limit) : definitions;
-    if (DEBUG && candidates.length === 0) {
-      log.warn('no candidates for surface', { role, data });
-      return null;
-    }
+      // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
+      const definitions = findCandidates(surfaces, { role: effectiveRole, data });
+      const candidates = limit ? definitions.slice(0, limit) : definitions;
+      if (DEBUG && candidates.length === 0) {
+        log.warn('no candidates for surface', { role: effectiveRole, data });
+        return null;
+      }
 
-    return (
-      <Suspense fallback={placeholder}>
-        {candidates.map((definition) => (
-          <SurfaceContextProvider
-            key={definition.id}
-            id={definition.id}
-            role={role}
-            data={data}
-            limit={limit}
-            definition={definition}
-            ref={forwardedRef}
-            {...rest}
-          />
-        ))}
-      </Suspense>
-    );
-  }),
-);
+      return (
+        <Suspense fallback={placeholder}>
+          {candidates.map((definition) => (
+            <SurfaceContextProvider
+              key={definition.id}
+              id={definition.id}
+              role={effectiveRole}
+              data={data}
+              limit={limit}
+              definition={definition}
+              ref={forwardedRef}
+              {...rest}
+            />
+          ))}
+        </Suspense>
+      );
+    },
+  ),
+) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode) &
+  NamedExoticComponent<Props & RefAttributes<HTMLElement>>;
 
 SurfaceComponent.displayName = 'Surface';
 
@@ -227,12 +244,12 @@ const ErrorFallback = ({ error }: Props) => {
   );
 };
 
-const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'role' | 'data'>) => {
+const findCandidates = (surfaces: Definition[], { role, data }: { role: string; data: Props['data'] }) => {
   return Object.values(surfaces)
     .filter((definition) =>
       Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
     )
-    .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
+    .filter(({ filter }) => (filter ? filter(data ?? {}, role) : true))
     .toSorted(byPosition);
 };
 
@@ -240,18 +257,47 @@ const findCandidates = (surfaces: Definition[], { role, data }: Pick<Props, 'rol
  * @internal
  */
 export const useSurfaces = () => {
-  const surfaces = useCapabilities(Capabilities.ReactSurface);
-  return useMemo(() => surfaces.flat(), [surfaces]);
+  const manager = usePluginManager();
+  const surfacesByModule = useAtomValue(manager.capabilities.atomByModule(Capabilities.ReactSurface));
+  return useMemo(() => {
+    const result: Definition[] = [];
+    for (const [moduleId, surfaces] of Object.entries(surfacesByModule)) {
+      for (const def of surfaces.flat()) {
+        result.push({ ...def, id: `${moduleId}.${def.id}` });
+      }
+    }
+    return result;
+  }, [surfacesByModule]);
 };
 
 /**
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
+ *
+ * Two overloads:
+ * - Typed: pass a `type` role token and `data` is constrained to the token's
+ *   declared contract (e.g. `AppSurface.Section` requires `attendableId`).
+ * - Legacy: pass a string `role` and `data` is untyped.
  */
-export const isSurfaceAvailable = (
+export function isSurfaceAvailable<TToken extends RoleToken<any>>(
   capabilityManager: CapabilityManager.CapabilityManager,
-  { role, data }: Pick<Props, 'role' | 'data'>,
-) => {
+  args: { type: TToken; data?: TokenData<TToken>; role?: never },
+): boolean;
+export function isSurfaceAvailable(
+  capabilityManager: CapabilityManager.CapabilityManager,
+  args: Pick<Props, 'role' | 'data'> & { type?: undefined },
+): boolean;
+export function isSurfaceAvailable(
+  capabilityManager: CapabilityManager.CapabilityManager,
+  { role, type, data }: { role?: string; type?: RoleToken<any>; data?: unknown },
+): boolean {
+  const effectiveRole = role ?? type?.role;
+  if (effectiveRole == null) {
+    return false;
+  }
   const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
-  const candidates = findCandidates(surfaces.flat(), { role, data });
+  const candidates = findCandidates(surfaces.flat(), {
+    role: effectiveRole,
+    data: data as Props['data'],
+  });
   return candidates.length > 0;
-};
+}

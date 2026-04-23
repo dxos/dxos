@@ -6,39 +6,37 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Database } from '@dxos/echo';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Database, Filter } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
-import { faker } from '@dxos/random';
-import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
-import { Popover } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { MarkdownStream } from '@dxos/react-ui-components';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
+import { type Queue, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Card, Popover } from '@dxos/react-ui';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Message, Organization, Person } from '@dxos/types';
 
-import { type Message, Organization, Person } from '@dxos/types';
+import { createMessageGenerator } from '#testing';
 
-import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
-
 import { ChatThread, type ChatThreadProps } from './ChatThread';
-import { componentRegistry } from './registry';
-import TEXT from './testing/thread.md?raw';
 
-faker.seed(1);
+random.seed(1);
 
 type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
 type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
-  const space = useSpace();
-  const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
-  const queue = useQueue<Message.Message>(queueDxn);
+  const [space] = useSpaces();
+  const queue = useMemo<Queue<Message.Message> | undefined>(() => space?.queues.create(), [space]);
+  const messages = useQuery(queue, Filter.type(Message.Message));
   const [done, setDone] = useState(false);
 
   // Generate messages.
@@ -55,6 +53,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
             yield* Effect.sleep(delay);
           }
         }
+
         setDone(true);
       }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), ContextQueueService.layer(queue)))),
     );
@@ -70,7 +69,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
 
   return (
     <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
-      <ChatThread {...props} messages={queue?.objects} />
+      <ChatThread {...props} messages={messages} />
       <PreviewCard />
     </EditorPreviewProvider>
   );
@@ -101,10 +100,17 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types: [Organization.Organization, Person.Person],
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Organization.Organization, Person.Person],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+            }),
+        }),
+      ],
     }),
   ],
   parameters: {
@@ -127,24 +133,11 @@ export const Default: Story = {
 export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),
-    delay: 1_000,
-    fadeIn: true,
-    cursor: false,
+    delay: 500,
+    options: {
+      autoScroll: true,
+      wire: true,
+      cursor: true,
+    },
   },
-};
-
-export const Raw: Story = {
-  render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
-      <MarkdownStream content={TEXT} />
-    </div>
-  ),
-};
-
-export const Static: Story = {
-  render: () => (
-    <div className='contents' style={{ '--user-fill': 'var(--color-amber-fill)' } as CSSProperties}>
-      <MarkdownStream content={TEXT} registry={componentRegistry} />
-    </div>
-  ),
 };

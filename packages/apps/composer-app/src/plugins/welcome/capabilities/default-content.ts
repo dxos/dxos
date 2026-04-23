@@ -18,7 +18,7 @@ const SPACE_ICON = 'house-line';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
-    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client/types'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
@@ -54,11 +54,11 @@ export default Capability.makeModule(
     space.db.add(readme);
 
     const gettingStarted = space.db.add(Obj.make(Collection.Collection, { name: 'Getting Started', objects: [] }));
-    Obj.change(gettingStarted, (collection) => {
-      collection.objects.push(Ref.make(readme));
+    Obj.change(gettingStarted, (gettingStarted) => {
+      gettingStarted.objects.push(Ref.make(readme));
     });
-    Obj.change(defaultSpaceCollection, (collection) => {
-      collection.objects.push(Ref.make(gettingStarted));
+    Obj.change(defaultSpaceCollection, (defaultSpaceCollection) => {
+      defaultSpaceCollection.objects.push(Ref.make(gettingStarted));
     });
 
     // Ensure the default content is in the graph and connected.

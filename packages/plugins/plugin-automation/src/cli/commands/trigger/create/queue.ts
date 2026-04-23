@@ -66,10 +66,7 @@ export const queue = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: {
-          kind: 'queue',
-          queue: queueDxn,
-        },
+        spec: Trigger.specQueue(queueDxn),
         input,
       });
 

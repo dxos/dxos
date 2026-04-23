@@ -14,7 +14,6 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { translationKey } from '../../translations';
-
 import {
   Button,
   ButtonGroup,
@@ -38,12 +37,14 @@ type ToolbarRootProps = ToolbarPrimitive.ToolbarProps & ToolbarStyleProps;
 
 const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
   ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
+    const { className, role, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (
       <ToolbarPrimitive.Root
         {...rest}
+        // Only pass role when explicitly set; radix provides role="toolbar" by default.
+        {...(role !== 'none' && { role })}
         orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
         className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
@@ -189,7 +190,7 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
   ({ variant = 'gap', ...props }, forwardedRef) => {
     return variant === 'line' ? (
       <ToolbarPrimitive.Separator asChild>
-        <Separator {...props} ref={forwardedRef} />
+        <Separator orientation='vertical' {...props} ref={forwardedRef} />
       </ToolbarPrimitive.Separator>
     ) : (
       <ToolbarPrimitive.Separator className='grow' ref={forwardedRef} />
@@ -214,7 +215,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
         iconOnly
         icon='ph--dots-six-vertical--regular'
         variant='ghost'
-        label={label ?? t('toolbar drag handle label')}
+        label={label ?? t('toolbar-drag-handle.label')}
         classNames='dx-focus-ring-none cursor-pointer'
         disabled={!forwardedRef}
         ref={forwardedRef}
@@ -238,7 +239,7 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
         iconOnly
         icon='ph--x--regular'
         variant='ghost'
-        label={label ?? t('toolbar close label')}
+        label={label ?? t('toolbar-close.label')}
         classNames='cursor-pointer'
         onClick={onClick}
         ref={forwardedRef}
@@ -272,7 +273,7 @@ const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMen
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
-          label={t('toolbar menu label')}
+          label={t('toolbar-menu.label')}
         />
       </DropdownMenu.Trigger>
       {(items?.length ?? 0) > 0 && (

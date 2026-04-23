@@ -9,7 +9,7 @@ import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTran
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type State = 'pending';
 
@@ -118,7 +118,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
             <Input.TextInput
               ref={inputRef}
               autoFocus
-              placeholder={t('function request placeholder')}
+              placeholder={t('function-request.placeholder')}
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
@@ -190,6 +190,6 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
 
 const RobotAvatar = () => (
   <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--robot--regular' />
+    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
   </Avatar.Root>
 );

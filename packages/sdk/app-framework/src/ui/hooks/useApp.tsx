@@ -102,7 +102,6 @@ export const useApp = ({
   const defaults = useDefaultValue(defaultsProp, () => []);
   const setupEvents = useDefaultValue(setupEventsProp, () => []);
 
-  // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader = useMemo(
     () =>
       pluginLoaderProp ??

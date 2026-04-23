@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { Save } from './definitions';
-
 import { FileCapabilities } from '../types';
 import { findFile, handleSave } from '../util';
+import { Save } from './definitions';
 
 const handler: Operation.WithHandler<typeof Save> = Save.pipe(
   Operation.withHandler(

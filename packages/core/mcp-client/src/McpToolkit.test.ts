@@ -10,8 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, type GenericToolkit } from '@dxos/ai';
+import { AiService, type OpaqueToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
+import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
@@ -25,6 +26,26 @@ const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking:
   ),
 );
 
+describe('connectWithFallback', () => {
+  it(
+    'connects to Linear MCP (SSE kind falls back to HTTP)',
+    {
+      skip: !process.env.LINEAR_API_KEY,
+      timeout: 30_000,
+    },
+    async () => {
+      const toolkit = await runAndForwardErrors(
+        McpToolkit.make({
+          url: 'https://mcp.linear.app/mcp',
+          kind: 'sse',
+          apiKey: process.env.LINEAR_API_KEY,
+        }),
+      );
+      log.info('connected', { tools: Object.keys(toolkit.toolkit.tools) });
+    },
+  );
+});
+
 describe('Browser Automation', () => {
   it.effect(
     'smoke',
@@ -37,7 +58,7 @@ describe('Browser Automation', () => {
 
         const chat = yield* Chat.empty;
         let prompt: Prompt.RawInput = 'Check that you are able to use the browser. Open https://example.com';
-        let output: LanguageModel.GenerateTextResponse<GenericToolkit.GenericTools>;
+        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools>;
 
         do {
           output = yield* chat
@@ -59,7 +80,9 @@ describe('Browser Automation', () => {
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    {
+      timeout: 120_000,
+    },
   );
 
   it.effect(
@@ -74,7 +97,7 @@ describe('Browser Automation', () => {
         const chat = yield* Chat.empty;
         let prompt: Prompt.RawInput =
           'Scrape effect blog at https://effect.website/blog and find the content of last 3 articles. Next prompt I will ask you generate structured representation.';
-        let output: LanguageModel.GenerateTextResponse<GenericToolkit.GenericTools>;
+        let output: LanguageModel.GenerateTextResponse<OpaqueToolkit.OpaqueTools>;
 
         do {
           output = yield* chat
@@ -118,6 +141,8 @@ describe('Browser Automation', () => {
       TestHelpers.provideTestContext,
       TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    {
+      timeout: 120_000,
+    },
   );
 });

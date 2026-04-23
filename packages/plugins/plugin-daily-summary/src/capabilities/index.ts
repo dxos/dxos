@@ -1,7 +1,9 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export * from './app-graph-builder';
-export * from './blueprint-definition';
-export * from './react-surface';
+import { Capability } from '@dxos/app-framework';
+
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

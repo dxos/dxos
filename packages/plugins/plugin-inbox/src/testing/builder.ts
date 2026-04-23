@@ -6,7 +6,7 @@ import { addDays, addMinutes, roundToNearestMinutes, startOfDay, subDays } from 
 
 import { Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { Actor, Event, Message, Person } from '@dxos/types';
 
@@ -36,11 +36,32 @@ export type BuilderOptions = {
   messages?: DateRange;
 };
 
-export type LinkedMessageOptions = {
-  /** Number of paragraphs to generate per message. Defaults to 3. */
-  paragraphs?: number;
+export type MessageLinkOptions = {
+  /** Space to which linked Person objects will be added. */
+  space: Space;
   /** Maximum number of linked Person objects to splice into the text. Defaults to 5. */
-  links?: number;
+  max?: number;
+};
+
+export type MessageOptions = {
+  /** Number of paragraphs to generate per message. Defaults to a random value between 1 and 4. */
+  paragraphs?: number;
+  /**
+   * If provided, markdown links to newly-created Person objects are injected into
+   * the message text. In this mode the message contains two text blocks: the first
+   * with link syntax stripped, the second with links intact.
+   */
+  links?: MessageLinkOptions;
+  /** Thread ID to assign to the message's `threadId`. */
+  threadId?: string;
+};
+
+export type MessagesOptions = MessageOptions & {
+  /**
+   * If set, generates a pool of N thread IDs and randomly assigns each message to one.
+   * Overrides any `threadId` supplied in the base options.
+   */
+  threads?: number;
 };
 
 export type BuildResult = {
@@ -113,7 +134,7 @@ export class Builder {
    */
   private _nextEventTime(): Date {
     const randomDay = this._randomTimeInRange(this._eventRange);
-    const randomMinutes = faker.number.int({ min: WORK_START_MINUTES, max: WORK_END_MINUTES });
+    const randomMinutes = random.number.int({ min: WORK_START_MINUTES, max: WORK_END_MINUTES });
     return roundToNearestMinutes(addMinutes(startOfDay(randomDay), randomMinutes), { nearestTo: 15 });
   }
 
@@ -126,15 +147,15 @@ export class Builder {
   private _makeActor(person?: Person.Person): Actor.Actor {
     return {
       identityDid: IdentityDid.random(),
-      email: faker.internet.email(),
-      name: person?.fullName ?? faker.person.fullName(),
+      email: random.internet.email(),
+      name: person?.fullName ?? random.person.fullName(),
     };
   }
 
   /** Returns a random actor from the pool (70% weight) or creates a fresh one. */
   private _randomActor(): Actor.Actor {
     return this._actors.length > 0 && Math.random() > 0.3
-      ? faker.helpers.arrayElement(this._actors)
+      ? random.helpers.arrayElement(this._actors)
       : this._makeActor();
   }
 
@@ -146,7 +167,7 @@ export class Builder {
    * Creates a single Person and adds them to the internal actor pool.
    */
   createPerson(): this {
-    const person = Person.make({ fullName: faker.person.fullName() });
+    const person = Person.make({ fullName: random.person.fullName() });
     this._persons.push(person);
     this._actors.push(this._makeActor(person));
     return this;
@@ -171,16 +192,16 @@ export class Builder {
    */
   createEvent(): this {
     const startDate = this._nextEventTime();
-    const durationMinutes = faker.number.int({ min: 1, max: 8 }) * 15;
+    const durationMinutes = random.number.int({ min: 1, max: 8 }) * 15;
     const endDate = addMinutes(startDate, durationMinutes);
 
     const owner = this._randomActor();
-    const attendeeCount = faker.number.int({ min: 1, max: 4 });
+    const attendeeCount = random.number.int({ min: 1, max: 4 });
     const attendees = [owner, ...Array.from({ length: attendeeCount }, () => this._randomActor())];
 
     this._events.push(
       Event.make({
-        title: faker.lorem.sentence(faker.number.int({ min: 3, max: 8 })),
+        title: random.lorem.sentence(random.number.int({ min: 3, max: 8 })),
         owner,
         attendees,
         startDate: startDate.toISOString(),
@@ -206,93 +227,54 @@ export class Builder {
   //
 
   /**
-   * Creates a single plain-text Message at a random time within the message range.
+   * Creates a single Message at a random time within the message range.
+   * If `options.links` is provided, the message body will include markdown links
+   * to newly-created Person objects, and the message will contain two text blocks
+   * (first with link syntax stripped, second with links intact).
    */
-  createMessage(): this {
+  createMessage({ paragraphs, links, threadId }: MessageOptions = {}): this {
     const created = this._nextMessageTime();
-    const paragraphCount = faker.number.int({ min: 1, max: 4 });
-    const text = faker.helpers
-      .multiple(() => faker.lorem.paragraph(faker.number.int({ min: 1, max: 3 })), { count: paragraphCount })
+    const paragraphCount = paragraphs ?? random.number.int({ min: 1, max: 4 });
+
+    let text = random.helpers
+      .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphCount })
       .join('\n\n');
 
-    this._messages.push(
-      Message.make({
-        created: created.toISOString(),
-        sender: this._randomActor(),
-        blocks: [{ _tag: 'text', text }],
-        properties: {
-          subject:
-            faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
-          snippet: text.slice(0, 120),
-          labels: faker.helpers.randomSubset(Object.keys(LABELS), {
-            min: 0,
-            max: Math.min(3, Object.keys(LABELS).length),
-          }),
-        },
-      }),
-    );
-
-    return this;
-  }
-
-  /**
-   * Creates multiple plain-text Messages, each at a random time within the message range.
-   */
-  createMessages(count: number): this {
-    for (let index = 0; index < count; index++) {
-      this.createMessage();
-    }
-    return this;
-  }
-
-  //
-  // Linked message factory
-  //
-
-  /**
-   * Creates a single Message whose body contains markdown links to Person objects
-   * added to the given Space database. The message has two content blocks:
-   * a plain-text block (links stripped) and an enriched block (links intact).
-   */
-  createLinkedMessage(space: Space, { paragraphs = 3, links = 5 }: LinkedMessageOptions = {}): this {
-    const created = this._nextMessageTime();
-
-    let text = faker.helpers
-      .multiple(() => faker.lorem.paragraph(faker.number.int({ min: 1, max: 3 })), { count: paragraphs })
-      .join('\n\n');
-
-    let enrichedText = text;
-    const words = text.split(' ');
-
-    if (links > 0) {
-      const linkCount = Math.floor(Math.random() * links) + 1;
+    let blocks: { _tag: 'text'; text: string }[];
+    if (links) {
+      const { space, max = 5 } = links;
+      const words = text.split(' ');
+      const linkCount = Math.floor(Math.random() * max) + 1;
       for (let index = 0; index < linkCount; index++) {
-        const fullName = faker.person.fullName();
+        const fullName = random.person.fullName();
         const obj = space.db.add(Person.make({ fullName }));
         const dxn = Ref.make(obj).dxn.toString();
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
       }
-    }
 
-    // First block: plain text with link syntax stripped, keeping the label.
-    enrichedText = words.join(' ');
-    text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
+      const enrichedText = words.join(' ');
+      // First block plain text (links stripped), second block enriched text (links intact).
+      text = enrichedText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      blocks = [
+        { _tag: 'text', text },
+        { _tag: 'text', text: enrichedText },
+      ];
+    } else {
+      blocks = [{ _tag: 'text', text }];
+    }
 
     this._messages.push(
       Message.make({
         created: created.toISOString(),
         sender: this._randomActor(),
-        // First block plain text (links stripped), second block enriched text (links intact).
-        blocks: [
-          { _tag: 'text', text },
-          { _tag: 'text', text: enrichedText },
-        ],
+        blocks,
+        ...(threadId && { threadId }),
         properties: {
           subject:
-            faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
+            random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),
-          labels: faker.helpers.randomSubset(Object.keys(LABELS), {
+          labels: random.helpers.randomSubset(Object.keys(LABELS), {
             min: 0,
             max: Math.min(3, Object.keys(LABELS).length),
           }),
@@ -304,12 +286,18 @@ export class Builder {
   }
 
   /**
-   * Creates multiple linked Messages, each at a random time within the message range.
+   * Creates multiple Messages, each at a random time within the message range.
+   * When `options.threads` is set, a pool of thread IDs is generated and each message
+   * is randomly assigned to one of them.
    */
-  createLinkedMessages(count: number, space: Space, options?: LinkedMessageOptions): this {
+  createMessages(count: number, options?: MessagesOptions): this {
+    const { threads, ...messageOptions } = options ?? {};
+    const threadIds = threads && threads > 0 ? Array.from({ length: threads }, () => random.string.uuid()) : undefined;
     for (let index = 0; index < count; index++) {
-      this.createLinkedMessage(space, options);
+      const threadId = threadIds ? random.helpers.arrayElement(threadIds) : messageOptions.threadId;
+      this.createMessage({ ...messageOptions, threadId });
     }
+
     return this;
   }
 

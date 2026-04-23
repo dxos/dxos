@@ -3,11 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Scope from 'effect/Scope';
 
 import { raise } from '@dxos/debug';
 import { ComputeEventLogger } from '@dxos/functions';
-import { type FunctionServices } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -15,6 +13,7 @@ import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
   type ComputeNode,
+  type ComputeRequirements,
   type ConductorError,
   type Executable,
   type ValueBag,
@@ -61,11 +60,11 @@ export class TestRuntime {
   runGraph<T extends ValueRecord = any>(
     graphDxn: string,
     input: ValueBag<any>,
-  ): Effect.Effect<ValueBag<T>, ConductorError, FunctionServices | Scope.Scope> {
+  ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeEventLogger>> {
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerNoop));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
@@ -74,7 +73,7 @@ export class TestRuntime {
     graphDxn: string,
     inputNodeId: string,
     input: ValueBag<any>,
-  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, FunctionServices | Scope.Scope> {
+  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeEventLogger>> {
     return Effect.gen(this, function* () {
       const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       const executor = new GraphExecutor({
@@ -92,6 +91,6 @@ export class TestRuntime {
       }
 
       return result;
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerNoop));
   }
 }

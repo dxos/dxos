@@ -45,6 +45,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
       "path": "../../core/blueprints"
     },
     {
@@ -91,6 +94,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-components"

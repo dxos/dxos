@@ -10,9 +10,10 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Settings } from '@dxos/react-ui-form';
 
-import { GenerateSummary } from '../../blueprints/functions/definitions';
-import { meta } from '../../meta';
+import { GenerateSummary } from '#blueprints';
+import { meta } from '#meta';
 
 export type DailySummarySettingsProps = {
   space: Space;
@@ -42,27 +43,24 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
     }
     const trigger = Trigger.make({
       enabled: true,
-      spec: {
-        kind: 'timer',
-        cron: '0 21 * * *',
-      },
+      spec: Trigger.specTimer('0 21 * * *'),
       function: Ref.make(Operation.serialize(GenerateSummary)),
     });
     space.db.add(trigger);
   }, [space, existingTrigger]);
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <h2 className='text-lg font-medium'>{t('plugin name')}</h2>
-      <p className='text-sm text-description'>{t('create trigger description')}</p>
-      <div>
-        <IconButton
-          icon={existingTrigger ? 'ph--check--regular' : 'ph--plus--regular'}
-          label={t('create trigger label')}
-          onClick={handleCreateTrigger}
-          disabled={!!existingTrigger}
-        />
-      </div>
-    </div>
+    <Settings.Viewport>
+      <Settings.Section title={t('settings.summary.label')}>
+        <Settings.Panel>
+          <IconButton
+            icon={existingTrigger ? 'ph--check--regular' : 'ph--plus--regular'}
+            label={t('create-trigger.label')}
+            onClick={handleCreateTrigger}
+            disabled={!!existingTrigger}
+          />
+        </Settings.Panel>
+      </Settings.Section>
+    </Settings.Viewport>
   );
 };

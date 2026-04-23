@@ -3,3 +3,4 @@
 //
 
 export * from './Settings';
+export { type SettingsFieldMap, type SettingsFieldProps, type SettingsFieldSetProps } from './SettingsFieldSet';

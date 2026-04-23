@@ -8,43 +8,57 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Obj, Query } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
+import { Builder, LABELS, MessagesOptions, initializeMailbox } from '#testing';
+import { Mailbox } from '#types';
+
 import { InboxPlugin } from '../../InboxPlugin';
-import { Builder, LABELS, initializeMailbox } from '../../testing';
-import { Mailbox } from '../../types';
+import { MessageStack, MessageStackProps } from './MessageStack';
 
-import { MessageStack as MessageStackComponent } from './MessageStack';
+const DefaultStory = ({
+  count = 0,
+  options,
+  ...props
+}: MessageStackProps & { count?: number; options?: MessagesOptions }) => {
+  const [messages] = useState(() =>
+    count ? new Builder().createMessages(count, options).build().messages : undefined,
+  );
 
-const DefaultStory = () => {
-  const [messages] = useState(() => new Builder().createMessages(100).build().messages);
-  return <MessageStackComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
+  return <MessageStack {...props} messages={messages} />;
 };
 
 const CompanionStory = () => {
-  const db = useDatabase();
-  const feeds = useQuery(db, Filter.type(Feed.Feed));
-  const feed = feeds.find((f) => Mailbox.instanceOf(f));
+  const spaces = useSpaces();
+  const db = useDatabase(spaces[0].id);
+  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+  const feed = mailbox?.feed?.target;
 
+  // Selected message.
   const selected = useSelected(feed ? Obj.getDXN(feed).toString() : undefined, 'single');
   const message = useQuery(
     db,
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
   )[0];
 
-  const mailboxData = useMemo(() => ({ subject: feed }), [feed]);
-  const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: feed }), [message, feed]);
+  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id ?? 'story' }), [mailbox]);
+  const companionData = useMemo(
+    () => ({ subject: message ?? 'message', attendableId: 'story-companion', companionTo: feed }),
+    [message, feed],
+  );
 
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);
@@ -55,35 +69,58 @@ const CompanionStory = () => {
 
   return (
     <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
-      <Surface.Surface role='article' data={mailboxData} />
-      <Surface.Surface role='article' data={companionData} />
+      <Surface.Surface type={AppSurface.Article} data={mailboxData} />
+      <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-inbox/components/MessageStack',
-  component: MessageStackComponent as any,
+  component: MessageStack,
   render: DefaultStory,
-  decorators: [withLayout({ layout: 'column' }), withAttention(), withMosaic()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof MessageStack>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme()],
+  args: {
+    id: 'story',
+  },
 };
 
-export const WithCompanion: Story = {
+export const WithMessages: Story = {
+  args: {
+    id: 'story',
+    labels: LABELS,
+    count: 100,
+  },
+};
+
+export const WithThreads: Story = {
+  args: {
+    id: 'story',
+    labels: LABELS,
+    threads: true,
+    count: 100,
+    options: {
+      threads: 10,
+    },
+  },
+};
+
+export const WithCompanion = {
   render: CompanionStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -92,10 +129,10 @@ export const WithCompanion: Story = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-              yield* Effect.promise(() => initializeMailbox(personalSpace));
+              const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace));
+              log.info('mailbox', { id: mailbox.id });
             }),
         }),
-
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),

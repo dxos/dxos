@@ -12,7 +12,6 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
 import { SpacesServiceImpl } from './spaces-service';
 
 describe('SpacesService', () => {
@@ -22,10 +21,15 @@ describe('SpacesService', () => {
   beforeEach(async () => {
     serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
-    spacesService = new SpacesServiceImpl(serviceContext.identityManager, serviceContext.spaceManager, async () => {
-      await serviceContext.initialized.wait();
-      return serviceContext.dataSpaceManager!;
-    });
+    spacesService = new SpacesServiceImpl(
+      serviceContext.identityManager,
+      serviceContext.spaceManager,
+      serviceContext.echoHost,
+      async () => {
+        await serviceContext.initialized.wait();
+        return serviceContext.dataSpaceManager!;
+      },
+    );
   });
 
   afterEach(async () => {

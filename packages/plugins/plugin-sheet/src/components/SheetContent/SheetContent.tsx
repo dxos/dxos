@@ -35,13 +35,13 @@ import {
 } from '@dxos/react-ui-grid';
 import { composable, composableProps } from '@dxos/ui-theme';
 
+import { meta } from '#meta';
+import { SheetOperation } from '#operations';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
+
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus } from '../../integrations';
-import { meta } from '../../meta';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '../../types';
-import { SheetOperation } from '../../operations';
 import { useSheetContext } from '../SheetRoot';
-
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -341,7 +341,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
   useSelectThreadOnCellFocus();
 
   return (
-    <div ref={forwardedRef} {...composableProps(props, { role: 'none', classNames: 'relative min-h-0' })}>
+    <div ref={forwardedRef} {...composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
@@ -379,7 +379,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
               <Icon
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
-              <span>{t(`add ${contextMenuAxis} before label`)}</span>
+              <span>{t(`add-${contextMenuAxis}-before.label`)}</span>
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onClick={() => handleAxisMenuAction('insert-after')}
@@ -388,14 +388,14 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
               <Icon
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
-              <span>{t(`add ${contextMenuAxis} after label`)}</span>
+              <span>{t(`add-${contextMenuAxis}-after.label`)}</span>
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onClick={() => handleAxisMenuAction('drop')}
               data-testid={`grid.${contextMenuAxis}.drop`}
             >
               <Icon icon='ph--backspace--regular' />
-              <span>{t(`delete ${contextMenuAxis} label`)}</span>
+              <span>{t(`delete-${contextMenuAxis}.label`)}</span>
             </DropdownMenu.Item>
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />

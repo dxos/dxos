@@ -12,7 +12,6 @@ import { mx } from '@dxos/ui-theme';
 
 import ident from '../../../assets/sounds/ident-2.mp3';
 import { DXOS } from '../icons';
-
 import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
 import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
 
@@ -44,8 +43,8 @@ export const Default: Story = {
       const audio = new Audio(ident);
       try {
         await audio.play();
-      } catch (e) {
-        console.warn('Audio playback failed:', e);
+      } catch (err) {
+        console.warn('Audio playback failed:', err);
       }
       setTimeout(() => {
         setLogo(true);

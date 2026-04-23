@@ -6,17 +6,21 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiContextService, AiConversationService } from '@dxos/assistant';
+import { MemoizedAiService } from '@dxos/ai/testing';
+import { AiContextService, AiSessionService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
+import { trim } from '@dxos/util';
 
-import { BlueprintManagerHandlers, QueryBlueprints, EnableBlueprints } from './functions';
 import DatabaseBlueprint from '../database/blueprint';
 import MarkdownBlueprint from '../markdown/blueprint';
 import ResearchBlueprint from '../research/blueprint';
+import BlueprintManagerDefinition from './blueprint';
+import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -28,14 +32,23 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer)));
+const provideTestLayers = Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
+
+/**
+ * Gets the conversation DXN for passing to Operation.invoke options.
+ */
+const getConversationDxn = Effect.gen(function* () {
+  const session = yield* AiSessionService;
+  return Obj.getDXN(session.feed).toString() as DXN.String;
+});
 
 describe('Blueprint Manager', () => {
   it.effect(
     'query-blueprints: returns all registered blueprints',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* FunctionInvocationService.invokeFunction(QueryBlueprints, {});
+        const conversation = yield* getConversationDxn;
+        const result = yield* Operation.invoke(QueryBlueprints, {}, { conversation });
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
         expect(keys).toContain('org.dxos.blueprint.database');
@@ -52,9 +65,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: enables blueprints with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.database'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.database'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(1);
         expect(enabled[0].key).toBe('org.dxos.blueprint.database');
         expect(rejected).toHaveLength(0);
@@ -73,9 +89,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: rejects blueprints without agentCanEnable',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.research'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.research'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(0);
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.research');
@@ -94,9 +113,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: mixed keys enables only allowed ones',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.markdown', 'org.dxos.blueprint.research'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.markdown', 'org.dxos.blueprint.research'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(2);
         const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => bp.key);
         expect(enabledKeys).toContain('org.dxos.blueprint.database');
@@ -114,9 +136,12 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: unknown keys are rejected with reason',
     Effect.fnUntraced(
       function* (_) {
-        const { enabled, rejected } = yield* FunctionInvocationService.invokeFunction(EnableBlueprints, {
-          keys: ['org.dxos.blueprint.nonexistent'],
-        });
+        const conversation = yield* getConversationDxn;
+        const { enabled, rejected } = yield* Operation.invoke(
+          EnableBlueprints,
+          { keys: ['org.dxos.blueprint.nonexistent'] },
+          { conversation },
+        );
         expect(enabled).toHaveLength(0);
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.nonexistent');
@@ -126,5 +151,49 @@ describe('Blueprint Manager', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },
+  );
+
+  it.scoped(
+    'refresh-blueprints: agent syncs a mutated database blueprint from the registry',
+    Effect.fnUntraced(
+      function* (_) {
+        const registry = yield* Blueprint.RegistryService;
+        const canonical = registry.getByKey('org.dxos.blueprint.database');
+        expect(canonical).toBeDefined();
+
+        const stored = yield* Blueprint.upsert('org.dxos.blueprint.database');
+        const originalName = stored.name;
+        Obj.change(stored, (stored) => {
+          stored.name = '___TEST_MUTATED_BLUEPRINT_NAME___';
+        });
+        yield* Database.flush();
+        expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
+
+        const session = yield* AiSessionService;
+        yield* Effect.promise(() => session.context.open());
+        yield* Effect.promise(() =>
+          session.context.bind({
+            blueprints: [Ref.make(BlueprintManagerDefinition.make())],
+          }),
+        );
+
+        yield* session
+          .createRequest({
+            system: trim`
+            You can call blueprint manager tools. When asked to refresh or sync blueprints from the registry,
+            call the refresh blueprints tool once and then stop.
+          `,
+            prompt: trim`
+            Refresh blueprints from the registry so database copies match the built-in definitions.
+          `,
+          })
+          .pipe(Effect.provide(session.makeToolExecutionServices()));
+
+        expect(stored.name).toBe(originalName);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 60_000,
   );
 });

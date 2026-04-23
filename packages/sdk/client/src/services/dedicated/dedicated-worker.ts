@@ -11,7 +11,6 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key';
-
 import type { DedicatedWorkerMessage } from './types';
 
 export type RunDedicatedWorkerOptions = {

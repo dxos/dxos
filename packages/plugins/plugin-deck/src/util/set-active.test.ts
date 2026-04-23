@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultDeck, type DeckState } from '../types';
+import { defaultDeck, type DeckState } from '#types';
 
 import { computeActiveUpdates } from './set-active';
 

@@ -6,7 +6,7 @@ import { type Registry } from '@effect-atom/atom-react';
 
 import { ChessModel } from '@dxos/react-ui-gameboard';
 
-import { type Chess } from '../../types';
+import { type Chess } from '#types';
 
 export class ExtendedChessModel extends ChessModel {
   constructor(

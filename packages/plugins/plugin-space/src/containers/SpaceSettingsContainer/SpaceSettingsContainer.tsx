@@ -9,16 +9,26 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Input,
+  useFileDownload,
+  useMulticastObservable,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { meta } from '../../meta';
-import { SpaceOperation } from '../../operations';
-import { SpaceCapabilities, SpaceForm } from '../../types';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SpaceCapabilities, SpaceForm } from '#types';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -92,7 +102,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space, client, archived, invokePromise, toggleEdgeReplication],
   );
 
-  const values = useMemo(
+  const defaultValues = useMemo(
     () => ({
       name: space.properties.name,
       icon: space.properties.icon,
@@ -115,14 +125,14 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
               [onValueChange, type],
             );
             return (
-              <Settings.ItemInput title={label} description={t('display name description')}>
+              <Settings.Item title={label} description={t('display-name.description')}>
                 <Input.TextInput
                   value={getValue()}
                   onChange={handleChange}
-                  placeholder={t('display name input placeholder')}
+                  placeholder={t('display-name-input.placeholder')}
                   classNames='min-w-64'
                 />
-              </Settings.ItemInput>
+              </Settings.Item>
             );
           },
       icon: personal
@@ -131,7 +141,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
             const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
             return (
-              <Settings.Item title={label} description={t('icon description')}>
+              <Settings.Item title={label} description={t('icon.description')}>
                 <IconPicker
                   value={getValue()}
                   onChange={handleChange}
@@ -145,7 +155,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('hue description')}>
+          <Settings.Item title={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </Settings.Item>
         );
@@ -153,9 +163,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <Settings.ItemInput title={label} description={t('edge replication description')}>
+          <Settings.Item title={label} description={t('edge-replication.description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-          </Settings.ItemInput>
+          </Settings.Item>
         );
       },
       archived: personal
@@ -163,11 +173,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         : ({ type, label, getValue, onValueChange }) => {
             const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
             return (
-              <Settings.ItemInput title={label} description={t('archive space description')}>
+              <Settings.Item title={label} description={t('archive-space.description')}>
                 <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
-                  {getValue() ? t('unarchive space label') : t('archive space label')}
+                  {getValue() ? t('unarchive-space.label') : t('archive-space.label')}
                 </Button>
-              </Settings.ItemInput>
+              </Settings.Item>
             );
           },
     }),
@@ -175,8 +185,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   const download = useFileDownload();
-  const handleBackup = useCallback(async () => {
-    const archive = await space.internal.export();
+  const handleBackupBinary = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
+    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
+  }, [space, download]);
+  const handleBackupJson = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
     download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
   }, [space, download]);
 
@@ -186,24 +200,59 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   }, [space, repairs]);
 
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section
-        title={t('space properties settings verbose label')}
-        description={t('space properties settings description', { ns: meta.id })}
+        title={t('space-properties-settings-verbose.label')}
+        description={t('space-properties-settings.description', { ns: meta.id })}
       >
-        <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
+        <Form.Root
+          key={space.id}
+          fieldMap={fieldMap}
+          schema={SpaceFormSchema}
+          defaultValues={defaultValues}
+          onValuesChanged={handleValuesChanged}
+        >
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>
-      <Settings.Section title={t('space controls title')} description={t('space controls description')}>
-        <Settings.ItemInput title={t('backup space title')} description={t('backup space description')}>
-          <Button onClick={handleBackup}>{t('download backup label')}</Button>
-        </Settings.ItemInput>
-        <Settings.ItemInput title={t('repair space title')} description={t('repair space description')}>
-          <Button onClick={handleRepair}>{t('repair space label')}</Button>
-        </Settings.ItemInput>
+
+      <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
+        <Settings.Item title={t('space-key.title')} description={t('space-key.description')}>
+          <div className='flex items-center gap-2'>
+            <Input.Root>
+              <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+            </Input.Root>
+            <IconButton
+              icon='ph--copy--regular'
+              iconOnly
+              label={t('copy-space-key.label')}
+              onClick={() => {
+                void navigator.clipboard.writeText(space.key.toHex());
+              }}
+            />
+          </div>
+        </Settings.Item>
+        <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button>
+                {t('download-backup.label')}
+                <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Settings.Item>
+        <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
+          <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+        </Settings.Item>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

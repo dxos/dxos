@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { defaultRegistry } from '../registry';
-
 import { useAtomResource } from './useAtomResource';
 
 describe('useAtomResource', () => {

@@ -4,13 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { MarkdownViewer } from './MarkdownViewer';
 
-faker.seed(0);
+random.seed(0);
 
 const meta = {
   title: 'ui/react-ui-markdown/MarkdownViewer',
@@ -27,7 +27,7 @@ const content = trim`
 
   > An example of the MarkdownViewer component.
 
-  ${faker.lorem.paragraphs(1)}
+  ${random.lorem.paragraphs(1)}
 
   Here's a JSON block:
 
@@ -64,7 +64,7 @@ const content = trim`
 
   ## Examples
 
-  ${faker.lorem.paragraphs(1)}
+  ${random.lorem.paragraphs(1)}
 `;
 
 export const Default: Story = {

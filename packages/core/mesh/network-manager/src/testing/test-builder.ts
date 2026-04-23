@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Context } from '@dxos/context';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,
@@ -29,7 +29,6 @@ import {
   TransportKind,
   createRtcTransportFactory,
 } from '../transport';
-
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.

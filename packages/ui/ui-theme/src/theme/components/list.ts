@@ -21,7 +21,7 @@ export const listItemEndcap: ComponentFunction<ListStyleProps> = ({ density }, .
   mx(density === 'fine' ? getSize(8) : getSize(10), 'shrink-0 flex items-center justify-center', ...etc);
 
 export const listItemHeading: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx(densityBlockSize(density), 'flex items-center', ...etc);
+  mx(densityBlockSize(density), 'flex items-center overflow-hidden [&>span]:truncate', ...etc);
 
 export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) =>
   mx(getSize(5), 'mt-2.5', ...etc);

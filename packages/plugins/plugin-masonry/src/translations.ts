@@ -5,25 +5,25 @@
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
-import { Masonry } from './types';
+import { meta } from '#meta';
+import { Masonry } from '#types';
 
 export const translations = [
   {
     'en-US': {
       [Type.getTypename(Masonry.Masonry)]: {
-        'typename label': 'Masonry',
-        'typename label_zero': 'Masonries',
-        'typename label_one': 'Masonry',
-        'typename label_other': 'Masonries',
-        'object name placeholder': 'New masonry',
-        'add object label': 'Add masonry',
-        'rename object label': 'Rename masonry',
-        'delete object label': 'Delete masonry',
-        'object deleted label': 'Masonry deleted',
+        'typename.label': 'Masonry',
+        'typename.label_zero': 'Masonries',
+        'typename.label_one': 'Masonry',
+        'typename.label_other': 'Masonries',
+        'object-name.placeholder': 'New masonry',
+        'add-object.label': 'Add masonry',
+        'rename-object.label': 'Rename masonry',
+        'delete-object.label': 'Delete masonry',
+        'object-deleted.label': 'Masonry deleted',
       },
       [meta.id]: {
-        'plugin name': 'Masonry',
+        'plugin.name': 'Masonry',
       },
     },
   },

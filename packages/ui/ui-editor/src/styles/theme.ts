@@ -48,11 +48,11 @@ export const fontBody = '"Inter Variable", ui-sans-serif, system-ui, sans-serif'
 export const fontMono = '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
 
 export const markdownTheme = {
-  code: 'font-mono! text-cm-code',
-  codeMark: 'font-mono! text-cm-code-mark',
+  code: 'font-mono! cm-code-inline',
+  codeMark: 'font-mono! cm-code-mark',
   mark: 'font-mono!',
   heading: (level: HeadingLevel) => ({
-    className: mx(headings[level].className, 'font-light text-cm-heading-number'),
+    className: mx(headings[level].className, 'font-light text-(--color-cm-heading-number)'),
     color: 'var(--color-cm-heading) !important',
     lineHeight: headings[level].lineHeight,
     fontSize: headings[level].fontSize,

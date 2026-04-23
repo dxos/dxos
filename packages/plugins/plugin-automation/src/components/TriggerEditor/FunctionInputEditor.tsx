@@ -11,7 +11,7 @@ import { type Operation } from '@dxos/operation';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type FunctionInputEditorProps = {
   type: SchemaAST.AST;
@@ -68,7 +68,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
 
   return (
     <>
-      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Label label={t('function-parameters.label')} asChild />
       <Form.Root
         key={selectedFunction.id}
         schema={effectSchema}

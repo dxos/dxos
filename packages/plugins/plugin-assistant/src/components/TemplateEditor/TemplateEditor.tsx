@@ -20,7 +20,7 @@ import {
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { handlebars, xmlDecorator } from './extensions';
 
@@ -43,12 +43,15 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
       return {
         initialValue: text.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+          createDataExtensions({
+            id,
+            text: createDocAccessor(text, ['content']),
+          }),
           createBasicExtensions({
             bracketMatching: false,
             lineNumbers,
             lineWrapping: true,
-            placeholder: t('template placeholder'),
+            placeholder: t('template.placeholder'),
           }),
           createThemeExtensions({ themeMode }),
           createMarkdownExtensions(),

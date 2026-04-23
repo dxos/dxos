@@ -9,17 +9,15 @@ import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { createFilename } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
-
-import { exportData, importData } from './backup';
+import { importData } from './backup';
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 
 type SpaceData = {
@@ -97,8 +95,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     async (spaceId: string) => {
       const space = spaces.find((space) => space.id === spaceId)!;
       await space.waitUntilReady();
-      const backupBlob = await exportData(space);
-      download(backupBlob, createFilename({ parts: [space.id], ext: 'json' }));
+      const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+      download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
   );
@@ -106,7 +104,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const handleArchive = useCallback(
     async (spaceId: string) => {
       const space = spaces.find((space) => space.id === spaceId)!;
-      const archive = await space.internal.export();
+      const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
       download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
@@ -115,40 +113,13 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const handleImport = useCallback(
     async (backup: File | Blob) => {
       try {
-        if (backup instanceof File) {
-          if (backup.type === 'application/json') {
-            // Validate backup.
-            const backupString = await backup.text();
-            JSON.parse(backupString);
-
-            // Import space.
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
-            await importData(space, backup);
-            Obj.change(space.properties, (obj) => {
-              obj.name = obj.name + ' - IMPORTED';
-            });
-          } else if (backup.type === 'application/x-tar') {
-            const archive = {
-              filename: backup.name,
-              contents: new Uint8Array(await backup.arrayBuffer()),
-            } satisfies SpaceArchive;
-            await client.spaces.import(archive);
-          } else {
-            throw new Error('Invalid backup type');
-          }
-        } else {
-          // For Blob type
-          const backupString = await backup.text();
-          JSON.parse(backupString);
-
-          const space = await client.spaces.create();
-          await space.waitUntilReady();
-          await importData(space, backup);
-          Obj.change(space.properties, (obj) => {
-            obj.name = obj.name + ' - IMPORTED';
-          });
-        }
+        const filename = backup instanceof File ? backup.name : 'archive';
+        const contents = new Uint8Array(await backup.arrayBuffer());
+        const archive = { filename, contents } satisfies SpaceArchive;
+        const imported = await client.spaces.import(archive);
+        Obj.change(imported.properties, (obj) => {
+          obj.name = (obj.name ?? '') + ' - IMPORTED';
+        });
       } catch (err) {
         log.catch(err);
       }

@@ -8,7 +8,6 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
 import { SEARCH_DIALOG } from '../constants';
-
 import { OpenSearch } from './definitions';
 
 const handler: Operation.WithHandler<typeof OpenSearch> = OpenSearch.pipe(

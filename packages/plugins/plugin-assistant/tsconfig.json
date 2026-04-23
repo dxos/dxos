@@ -104,6 +104,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -161,6 +164,9 @@
       "path": "../../ui/react-ui-markdown"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -216,6 +222,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-space"

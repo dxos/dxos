@@ -2,20 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback } from 'react';
+import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
+import {
+  type ChromaticPalette,
+  Icon,
+  IconButton,
+  Input,
+  Link,
+  ListItem,
+  type NeutralPalette,
+  Tag,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { type RegistryTagType } from '../../types';
+import { meta } from '#meta';
+import { type RegistryTagType } from '#types';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
   installed?: readonly string[];
   enabled?: readonly string[];
+  /**
+   * Derived tags (e.g. `community`, `local`) to display alongside the plugin's own meta.tags.
+   * Not persisted to plugin meta; computed per-render by the container.
+   */
+  extraTags?: readonly string[];
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;
   hasSettings?: (id: string) => boolean;
@@ -25,6 +40,7 @@ export type PluginItemProps = {
 export const PluginItem = ({
   plugin,
   enabled = [],
+  extraTags,
   onClick,
   onChange,
   hasSettings: hasSettingsProp,
@@ -32,6 +48,16 @@ export const PluginItem = ({
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
   const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
+  const displayTags = useMemo(() => {
+    if (!extraTags || extraTags.length === 0) {
+      return tags ?? [];
+    }
+    const set = new Set<string>(tags ?? []);
+    for (const tag of extraTags) {
+      set.add(tag);
+    }
+    return Array.from(set);
+  }, [tags, extraTags]);
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -79,7 +105,7 @@ export const PluginItem = ({
         </div>
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
-          {tags?.map((tag) => (
+          {displayTags.map((tag) => (
             <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
               {tag}
             </Tag>
@@ -91,7 +117,7 @@ export const PluginItem = ({
             aria-describedby={descriptionId}
             classNames='cursor-pointer'
             icon='ph--gear--regular'
-            label={t('settings label')}
+            label={t('settings.label')}
             iconOnly
             size={4}
             onClick={handleSettings}
@@ -99,7 +125,7 @@ export const PluginItem = ({
           />
 
           <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
-            {t('details label')}
+            {t('details.label')}
           </Link>
 
           <div className='grow' />
@@ -114,11 +140,13 @@ export const PluginItem = ({
   );
 };
 
-const tagColors: Record<RegistryTagType, ChromaticPalette> = {
+const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
   new: 'rose',
   beta: 'teal',
   labs: 'blue',
   popular: 'green',
   featured: 'pink',
   experimental: 'amber',
+  community: 'indigo',
+  local: 'neutral',
 };

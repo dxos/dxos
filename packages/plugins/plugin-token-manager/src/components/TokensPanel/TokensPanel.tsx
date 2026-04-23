@@ -10,10 +10,10 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
-import { TokenManager } from './TokenManager';
 import { NewTokenSelector } from './NewTokenSelector';
+import { TokenManager } from './TokenManager';
 
 const initialValues = {
   note: '',
@@ -48,25 +48,22 @@ export const TokensPanel = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section
-        title={t('integrations verbose label', { ns: meta.id })}
-        description={t('integrations description', { ns: meta.id })}
-      >
+    <Settings.Viewport>
+      <Settings.Section title={t('integrations-verbose.label')} description={t('integrations.description')}>
         {adding ? (
-          <Settings.Item title={t('new integration label')} description={t('new integration description')}>
+          <Settings.Item title={t('new-integration.label')} description={t('new-integration.description')}>
             <Form.Root schema={FormSchema} values={initialValues} onCancel={onCancel} onSave={onAdd}>
               <Form.FieldSet />
               <Form.Actions />
             </Form.Root>
           </Settings.Item>
         ) : (
-          <Settings.Frame>
+          <Settings.Panel>
             <TokenManager tokens={tokens} onDelete={onDelete} />
             <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
-          </Settings.Frame>
+          </Settings.Panel>
         )}
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

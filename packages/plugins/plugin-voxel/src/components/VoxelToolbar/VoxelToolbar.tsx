@@ -5,9 +5,10 @@
 import React from 'react';
 
 import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { HuePicker } from '@dxos/react-ui-pickers';
 import { type Hue, composable, composableProps } from '@dxos/ui-theme';
 
-import { PALETTE_STYLES, type ToolMode } from '../VoxelEditor';
+import { type ToolMode } from '../VoxelEditor';
 
 export type VoxelToolbarProps = ToolbarRootProps & {
   /** Currently selected tool mode. */
@@ -40,7 +41,7 @@ const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
   { value: 'remove', icon: 'ph--minus-square--regular', label: 'Remove' },
 ];
 
-/** Toolbar for the voxel editor with tool mode, color palette, and clear button. */
+/** Toolbar for the voxel editor with tool mode, hue picker, and actions. */
 export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
   (
     {
@@ -116,17 +117,7 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
           />
         )}
         <Toolbar.Separator />
-        {PALETTE_STYLES.map((colorStyle) => (
-          <Toolbar.IconButton
-            key={colorStyle.hue}
-            icon={colorStyle.hue === selectedHue ? 'ph--square--fill' : 'ph--square--duotone'}
-            iconOnly
-            variant='ghost'
-            label={colorStyle.hue}
-            classNames={colorStyle.text}
-            onClick={() => onHueChange(colorStyle.hue)}
-          />
-        ))}
+        <HuePicker value={selectedHue} onChange={(hue) => onHueChange(hue as Hue)} />
       </Toolbar.Root>
     );
   },

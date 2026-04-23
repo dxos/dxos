@@ -14,7 +14,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
 import CountriesData from '../../../data/countries-110m.js';
-
 import { Globe } from './Globe';
 
 // TODO(burdon): Generate data with geo lat/lng.

@@ -68,15 +68,15 @@ export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function
  * @param source - Source object to copy properties from.
  */
 export const setFrom = (target: Function, source: Function) => {
-  Obj.change(target, (obj) => {
-    obj.key = source.key ?? target.key;
-    obj.name = source.name ?? target.name;
-    obj.version = source.version;
-    obj.description = source.description;
-    obj.updated = source.updated;
+  Obj.change(target, (target) => {
+    target.key = source.key ?? target.key;
+    target.name = source.name ?? target.name;
+    target.version = source.version;
+    target.description = source.description;
+    target.updated = source.updated;
     // TODO(dmaretskyi): A workaround for an ECHO bug.
-    obj.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
-    obj.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
-    Obj.getMeta(obj).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+    target.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
+    target.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
+    Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
   });
 };

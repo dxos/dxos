@@ -25,7 +25,7 @@ const Outer = slottable<HTMLDivElement, { priority?: number }>(
     const Comp = asChild ? Slot : Primitive.div;
     return (
       <Comp
-        {...composableProps<HTMLDivElement>(props, { role: 'none', classNames: 'p-2 border border-red-500 rounded' })}
+        {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
         ref={forwardedRef}
       >
         {children}
@@ -38,7 +38,7 @@ const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwa
   const Comp = asChild ? Slot : Primitive.div;
   return (
     <Comp
-      {...composableProps<HTMLDivElement>(props, { role: 'none', classNames: 'p-2 border border-red-500 rounded' })}
+      {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
       ref={forwardedRef}
     >
       {children}
@@ -49,7 +49,7 @@ const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwa
 const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {
   return (
     <button
-      {...composableProps<HTMLButtonElement>(props, { role: 'none', classNames: 'p-2 border border-red-500 rounded' })}
+      {...composableProps<HTMLButtonElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
       ref={forwardedRef}
     >
       {children}

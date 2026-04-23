@@ -12,8 +12,9 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
+import { ScriptOperation } from '#operations';
+
 import { type Template } from '../templates';
-import { ScriptOperation } from '../operations';
 import { deployScript } from '../util';
 
 type DeploymentStatus = 'idle' | 'pending' | 'success' | 'error';

@@ -6,7 +6,8 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export * from './definitions';
 
-export const ProjectWizardHandlers = OperationHandlerSet.lazy(
+export const AgentWizardHandlers = OperationHandlerSet.lazy(
   () => import('./create-project'),
   () => import('./project-rules'),
+  () => import('./sync-triggers'),
 );

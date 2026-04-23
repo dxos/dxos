@@ -7,15 +7,14 @@ import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, FunctionError } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
 import { FunctionServiceError } from '../errors';
-
 import { createEdgeClient } from './functions';
 
 // TODO(wittjosiah): Copied from @dxos/functions-simulator-cloudflare.
@@ -132,8 +131,7 @@ export class FunctionsServiceClient {
   async query(ctx: Context): Promise<Operation.PersistentOperation[]> {
     try {
       const response = await this.#edgeClient.listFunctions(ctx);
-      return response.uploadedFunctions.map((record: any) => {
-        // Record shape is determined by EDGE API. We defensively parse.
+      return response.uploadedFunctions.flatMap((record: any) => {
         const latest = record.latestVersion ?? {};
         const versionMeta = safeParseJson<any>(latest.versionMetaJSON);
         if (!versionMeta) {
@@ -141,7 +139,7 @@ export class FunctionsServiceClient {
         }
         const fn = Obj.make(Operation.PersistentOperation, {
           [Obj.Meta]: {
-            keys: [{ source: FUNCTIONS_META_KEY, id: response.functionId }],
+            keys: [{ source: FUNCTIONS_META_KEY, id: record.id }],
           },
           key: versionMeta.key,
           name: versionMeta.name ?? versionMeta.key ?? record.id,

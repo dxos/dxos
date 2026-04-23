@@ -9,7 +9,7 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -20,7 +20,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message, Thread, Transcript } from '@dxos/types';
 
-import { Meeting } from '../../types';
+import { Meeting } from '#types';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
@@ -31,7 +31,7 @@ const Render = () => {
     return null;
   }
 
-  return <MeetingContainer subject={meeting} />;
+  return <MeetingContainer role='article' subject={meeting} attendableId='story' />;
 };
 
 const meta = {
@@ -48,11 +48,12 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
+              const transcriptFeed = personalSpace.db.add(Feed.make());
               personalSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   created: new Date().toISOString(),
                   participants: [],
-                  transcript: Ref.make(Transcript.make(personalSpace.queues.create().dxn)),
+                  transcript: Ref.make(Transcript.make(Ref.make(transcriptFeed))),
                   notes: Ref.make(Text.make('Notes')),
                   summary: Ref.make(Text.make()),
                   thread: Ref.make(Thread.make()),

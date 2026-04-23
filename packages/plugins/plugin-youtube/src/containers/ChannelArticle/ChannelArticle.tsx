@@ -13,7 +13,7 @@ import * as Video from '../../types/Video';
 
 export type ChannelArticleProps = {
   subject: Channel.YouTubeChannel;
-  attendableId?: string;
+  attendableId: string;
 };
 
 export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {

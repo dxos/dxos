@@ -4,6 +4,8 @@
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
+#[cfg(all(desktop, unix))]
+mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
@@ -34,7 +36,9 @@ pub fn run() {
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]
-    let builder = builder.plugin(tauri_nspanel::init());
+    let builder = builder
+        .plugin(tauri_nspanel::init())
+        .plugin(tauri_plugin_macos_passkey::init());
 
     // Initialize haptics plugin for mobile platforms.
     // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).
@@ -92,6 +96,12 @@ pub fn run() {
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
         oauth::initiate_oauth_flow,
+        #[cfg(unix)]
+        xattr_cmd::get_xattr,
+        #[cfg(unix)]
+        xattr_cmd::set_xattr,
+        #[cfg(unix)]
+        xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
     ]);

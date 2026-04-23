@@ -15,7 +15,6 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge';
-
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 
 const TEST_TYPE = DXN.parse('dxn:type:com.example.type.test:0.1.0').toString();

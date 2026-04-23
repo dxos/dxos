@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
@@ -48,16 +49,16 @@ export class NetworkServiceImpl implements NetworkService {
     await this.networkManager.setConnectionState(request.swarm);
   }
 
-  async joinSwarm(request: JoinRequest): Promise<void> {
-    return this.signalManager.join(Context.default(), request);
+  async joinSwarm(request: JoinRequest, options?: RequestOptions): Promise<void> {
+    return this.signalManager.join(options?.ctx ?? Context.default(), request);
   }
 
-  async leaveSwarm(request: LeaveRequest): Promise<void> {
-    return this.signalManager.leave(Context.default(), request);
+  async leaveSwarm(request: LeaveRequest, options?: RequestOptions): Promise<void> {
+    return this.signalManager.leave(options?.ctx ?? Context.default(), request);
   }
 
-  async querySwarm(request: QueryRequest): Promise<SwarmResponse> {
-    return this.signalManager.query(Context.default(), request);
+  async querySwarm(request: QueryRequest, options?: RequestOptions): Promise<SwarmResponse> {
+    return this.signalManager.query(options?.ctx ?? Context.default(), request);
   }
 
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
@@ -70,8 +71,8 @@ export class NetworkServiceImpl implements NetworkService {
     });
   }
 
-  async sendMessage(message: Message): Promise<void> {
-    return this.signalManager.sendMessage(Context.default(), message);
+  async sendMessage(message: Message, options?: RequestOptions): Promise<void> {
+    return this.signalManager.sendMessage(options?.ctx ?? Context.default(), message);
   }
 
   subscribeMessages(peer: Peer): Stream<Message> {

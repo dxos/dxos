@@ -13,7 +13,6 @@ import * as Layer from 'effect/Layer';
 import { log } from '@dxos/log';
 
 import { AiToolNotFoundError } from '../errors';
-
 import { type ToolId } from './tool';
 
 /**

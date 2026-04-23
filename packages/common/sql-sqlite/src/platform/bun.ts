@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqliteClient from '@effect/sql-sqlite-bun/SqliteClient';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
-import * as SqliteClient from '@effect/sql-sqlite-bun/SqliteClient';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';

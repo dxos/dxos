@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, assert, describe, it } from '@effect/vitest';
 import { type Atom, Registry } from '@effect-atom/atom-react';
+import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
-import * as Exit from 'effect/Exit';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
@@ -18,7 +18,6 @@ import { invariant } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents } from '../common';
-
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import type * as CapabilityManager from './capability-manager';
@@ -82,6 +81,27 @@ describe('PluginManager', () => {
       const removed = manager.remove(testMeta.id);
       assert.isTrue(removed);
       assert.deepStrictEqual(manager.getPlugins(), []);
+    }),
+  );
+
+  it.effect('should add plugin when locator differs from meta.id', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.make(Plugin.define(testMeta));
+      const testPlugin = Test();
+
+      const urlLocator = 'https://example.com/plugin.mjs';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return testPlugin;
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: urlLoader });
+      const added = yield* manager.add(urlLocator);
+      assert.isTrue(added);
+      assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.id]);
     }),
   );
 
@@ -552,7 +572,7 @@ describe('PluginManager', () => {
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
-          activatesBefore: [CountEvent],
+          firesBeforeActivation: [CountEvent],
           activate: Effect.fnUntraced(function* () {
             const capabilityManager = yield* Capability.Service;
             computeTotal(capabilityManager);

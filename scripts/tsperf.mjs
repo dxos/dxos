@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import { chalk } from 'zx';
+import { existsSync } from 'fs';
+import fs from 'node:fs/promises';
+import * as inspector from 'node:inspector/promises';
+import { dirname, resolve, relative } from 'path';
+import { Project } from 'ts-morph';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { Project } from 'ts-morph';
-import { dirname, resolve, relative } from 'path';
-import { existsSync } from 'fs';
-import * as inspector from 'node:inspector/promises';
-import fs from 'node:fs/promises';
+import { chalk } from 'zx';
 
 const argv = yargs(hideBin(process.argv))
   .usage('Usage: $0 <file> [options]')

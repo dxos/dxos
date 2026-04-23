@@ -13,19 +13,19 @@ import { type CancellableInvitationObservable, Invitation, InvitationEncoder } f
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { AuthCode, Centered, DeviceListItem, Emoji, Viewport, translationKey } from '@dxos/shell/react';
+import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { meta } from '../../meta';
-import { ClientOperation } from '../../operations';
+import { meta } from '#meta';
+import { ClientOperation } from '#operations';
 
 export type DevicesContainerProps = {
   createInvitationUrl?: (invitationCode: string) => string;
 };
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
@@ -38,61 +38,61 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
   );
 
   const handleJoinNewIdentity = useCallback(
-    () => invokePromise(ClientOperation.ResetStorage, { mode: 'join new identity' }),
+    () => invokePromise(ClientOperation.ResetStorage, { mode: 'join-new-identity' }),
     [invokePromise],
   );
 
   return (
     <Clipboard.Provider>
-      <Settings.Root>
+      <Settings.Viewport>
         <Settings.Section
-          title={t('devices verbose label', { ns: meta.id })}
-          description={t('devices description', { ns: meta.id })}
+          title={t('devices-verbose.label', { ns: meta.id })}
+          description={t('devices.description', { ns: meta.id })}
         >
-          <Settings.Frame>
-            <Settings.FrameItem title={t('devices label', { ns: meta.id })}>
+          <Settings.Panel>
+            <div role='group' className='min-w-0'>
+              <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.id })}</h3>
               <List>
                 {devices.map((device: Device) => (
                   <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
                 ))}
               </List>
-            </Settings.FrameItem>
+            </div>
             {createInvitationUrl && (
-              <Settings.FrameItem title='Add device'>
+              <div role='group' className='min-w-0'>
+                <h3 className='text-lg mb-2'>{t('add-device.label')}</h3>
                 <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-              </Settings.FrameItem>
+              </div>
             )}
-          </Settings.Frame>
+          </Settings.Panel>
         </Settings.Section>
         <Settings.Section
-          title={t('danger zone title', { ns: meta.id })}
-          description={t('danger zone description', { ns: meta.id })}
+          title={t('danger-zone.title', { ns: meta.id })}
+          description={t('danger-zone.description', { ns: meta.id })}
         >
-          <Settings.Group>
-            <Settings.Item title={t('reset device label')} description={t('reset device description', { ns: meta.id })}>
-              <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
-                {t('reset device label')}
-              </Button>
-            </Settings.Item>
-            <Settings.Item
-              title={t('recover identity label')}
-              description={t('recover identity description', { ns: meta.id })}
-            >
-              <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                {t('recover identity label')}
-              </Button>
-            </Settings.Item>
-            <Settings.Item
-              title={t('join new identity label')}
-              description={t('join new identity description', { ns: meta.id })}
-            >
-              <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
-                {t('join new identity label')}
-              </Button>
-            </Settings.Item>
-          </Settings.Group>
+          <Settings.Item title={t('reset-device.label')} description={t('reset-device.description', { ns: meta.id })}>
+            <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
+              {t('reset-device.label')}
+            </Button>
+          </Settings.Item>
+          <Settings.Item
+            title={t('recover-identity.label')}
+            description={t('recover-identity.description', { ns: meta.id })}
+          >
+            <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+              {t('recover-identity.label')}
+            </Button>
+          </Settings.Item>
+          <Settings.Item
+            title={t('join-new-identity.label')}
+            description={t('join-new-identity.description', { ns: meta.id })}
+          >
+            <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
+              {t('join-new-identity.label')}
+            </Button>
+          </Settings.Item>
         </Settings.Section>
-      </Settings.Root>
+      </Settings.Viewport>
     </Clipboard.Provider>
   );
 };
@@ -179,10 +179,10 @@ const InvitationSection = ({
 
   return activeView === 'init' ? (
     <>
-      <p className='text-description mb-2'>{t('add device description')}</p>
+      <p className='text-description mb-2'>{t('add-device.description')}</p>
       <IconButton
         icon='ph--plus--regular'
-        label={t('create device invitation label')}
+        label={t('create-device-invitation.label')}
         disabled={state >= 0}
         classNames='w-full'
         data-testid='devicesContainer.createInvitation'
@@ -215,7 +215,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <div className='flex justify-center py-4'>
           <div role='none' className='w-full md:max-w-80 aspect-square relative text-description'>
@@ -235,7 +235,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
           </div>
         </div>
         <span id={qrLabel} className='sr-only'>
-          {t('qr label')}
+          {t('qr.label')}
         </span>
       </div>
       {/* TODO(burdon): Factor out button bar */}
@@ -243,7 +243,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <div className='flex gap-2'>
           <Clipboard.Button value={url ?? 'never'} />
           <Button variant='ghost' onClick={onCancel}>
-            {t('cancel label')}
+            {t('cancel.label')}
           </Button>
         </div>
       </div>
@@ -257,12 +257,12 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth other device emoji message')}</p>
+      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth code message')}</p>
+      <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );

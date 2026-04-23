@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
+import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';

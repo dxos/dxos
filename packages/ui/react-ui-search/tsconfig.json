@@ -21,7 +21,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-mosaic"
     },
     {
       "path": "../ui-theme"

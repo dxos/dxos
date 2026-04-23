@@ -12,7 +12,6 @@ import { invariant } from '@dxos/invariant';
 import { type HeadingLevel, markdownTheme } from '../../styles';
 import { type RenderCallback } from '../../types';
 import { wrapWithCatch } from '../../util';
-
 import { adjustChanges } from './changes';
 import { image } from './image';
 import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';

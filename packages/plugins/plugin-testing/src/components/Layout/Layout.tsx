@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect, useR
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { type LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AlertDialog,
   Button,
@@ -23,8 +24,8 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { LayoutState, type LayoutStateProps } from '../../types';
+import { meta } from '#meta';
+import { LayoutState, type LayoutStateProps } from '#types';
 
 const debounce_delay = 100;
 
@@ -153,7 +154,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             >
               {layout.dialogBlockAlign === 'end' ? (
                 <Surface.Surface
-                  role='dialog'
+                  type={AppSurface.Dialog}
                   data={layout.dialogContent}
                   limit={1}
                   fallback={ErrorFallback}
@@ -165,7 +166,12 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   classNames={layout.dialogOverlayClasses}
                   style={layout.dialogOverlayStyle}
                 >
-                  <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ErrorFallback} />
+                  <Surface.Surface
+                    type={AppSurface.Dialog}
+                    data={layout.dialogContent}
+                    limit={1}
+                    fallback={ErrorFallback}
+                  />
                 </DialogOverlay>
               )}
             </DialogRoot>
@@ -192,11 +198,11 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                         )}
                         <Card.CloseIconButton onClick={handleClose} />
                       </Card.Toolbar>
-                      <Surface.Surface role='card--content' data={layout.popoverContent} limit={1} />
+                      <Surface.Surface type={AppSurface.Card} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}
                   {layout.popoverKind === 'base' && (
-                    <Surface.Surface role='popover' data={layout.popoverContent} limit={1} />
+                    <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                   )}
                 </Popover.Viewport>
                 <Popover.Arrow />
@@ -223,7 +229,7 @@ export const ErrorFallback = ({ error }: { error?: Error }) => {
       className={mx('overflow-auto p-8 dx-attention-surface grid place-items-center')}
     >
       <p className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}>
-        {error ? errorString : t('error fallback message')}
+        {error ? errorString : t('error-fallback.message')}
       </p>
     </div>
   );

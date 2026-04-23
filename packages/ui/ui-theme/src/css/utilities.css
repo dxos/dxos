@@ -38,6 +38,13 @@
 }
 
 /**
+ * Column that fills the available space (extends dx-expander with overflow clipping).
+ */
+@utility dx-column {
+  @apply flex-1 min-w-0 w-full;
+}
+
+/**
  * Fullscreen
  */
 @utility dx-fullscreen {

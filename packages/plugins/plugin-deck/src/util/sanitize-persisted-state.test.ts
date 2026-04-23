@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultDeck, type DeckState, type DeckStateProps } from '../types';
+import { defaultDeck, type DeckState, type StoredDeckState } from '#types';
 
 import { sanitizePersistedState } from './sanitize-persisted-state';
 
-const makeState = (decks: Record<string, Partial<DeckState>>): DeckStateProps => ({
+const makeState = (decks: Record<string, Partial<DeckState>>): StoredDeckState => ({
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,

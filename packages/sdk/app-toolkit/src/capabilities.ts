@@ -9,12 +9,13 @@ import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
-import type { GenericToolkit } from '@dxos/ai';
+import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
+
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
 import type { Resource } from './translations';
@@ -118,7 +119,7 @@ export namespace AppCapabilities {
    */
   export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
 
-  export type Toolkit = GenericToolkit.GenericToolkit;
+  export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 
   /**
    * @category Capability
@@ -190,6 +191,18 @@ export namespace AppCapabilities {
 
   export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
     'org.dxos.app-framework.capability.navigation-target-resolver',
+  );
+
+  /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
   );
 
   /**

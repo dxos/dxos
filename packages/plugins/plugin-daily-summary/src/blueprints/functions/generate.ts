@@ -10,8 +10,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Trace } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -109,8 +109,14 @@ export default GenerateSummary.pipe(
           AiService.model('@anthropic/claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
-          FunctionInvocationService.layerNotAvailable,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          Trace.writerLayerNoop,
         ),
       ),
     ),
@@ -158,14 +164,14 @@ const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: stri
   if (Ref.isRef(textRef)) {
     const text: Text.Text | undefined = yield* Effect.promise(() => textRef.load());
     if (text) {
-      Obj.change(text, (mutable) => {
-        mutable.content = newContent;
+      Obj.change(text, (text) => {
+        text.content = newContent;
       });
       return;
     }
   }
-  Obj.change(doc, (mutable) => {
-    mutable.content = Ref.make(Text.make(newContent));
+  Obj.change(doc, (doc) => {
+    doc.content = Ref.make(Text.make(newContent));
   });
 });
 

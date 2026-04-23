@@ -7,10 +7,8 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { type Context as OtelContext, propagation } from '@opentelemetry/api';
-
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -20,6 +18,7 @@ import {
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
+  EDGE_CLIENT_TAG_HEADER,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeFailure,
@@ -29,6 +28,7 @@ import {
   type ExportBundleResponse,
   type FeedProtocol,
   type GetAgentStatusResponseBody,
+  type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -46,7 +46,6 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -96,8 +95,17 @@ export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
+export type EdgeHttpClientOptions = {
+  /**
+   * Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header on every request.
+   * Used on Edge to classify traffic for metering (e.g. `ci-e2e`).
+   */
+  clientTag?: string;
+};
+
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
+  private readonly _clientTag: string | undefined;
 
   private _edgeIdentity: EdgeIdentity | undefined;
 
@@ -106,8 +114,9 @@ export class EdgeHttpClient {
    */
   private _authHeader: string | undefined;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
+    this._clientTag = options?.clientTag;
     log('created', { url: this._baseUrl });
   }
 
@@ -404,6 +413,18 @@ export class EdgeHttpClient {
   }
 
   //
+  // Registry
+  //
+
+  /**
+   * Fetches the hydrated plugin directory from the Edge registry service.
+   * Unauthenticated; safe to call without an identity.
+   */
+  public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
+    return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  //
   // Import/Export space.
   //
 
@@ -464,7 +485,7 @@ export class EdgeHttpClient {
           }
         }
 
-        const request = createRequest(args, this._authHeader, traceHeaders);
+        const request = createRequest(args, this._authHeader, traceHeaders, this._clientTag);
         log('call edge', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
@@ -523,6 +544,7 @@ const createRequest = (
   { method, body, json = true }: EdgeHttpRequestArgs,
   authHeader: string | undefined,
   traceHeaders?: Record<string, string>,
+  clientTag?: string,
 ): RequestInit => {
   let requestBody: BodyInit | undefined;
   const headers: HeadersInit = {};
@@ -546,6 +568,10 @@ const createRequest = (
     Object.assign(headers, traceHeaders);
   }
 
+  if (clientTag) {
+    headers[EDGE_CLIENT_TAG_HEADER] = clientTag;
+  }
+
   return {
     method,
     body: requestBody,
@@ -557,19 +583,16 @@ const createRequest = (
  * Extract W3C Trace Context headers (traceparent/tracestate) from a DXOS Context.
  */
 const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
-  const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
-  const otlpContext =
-    typeof spanId === 'number'
-      ? (TRACE_PROCESSOR.remoteTracing.getSpanContext(spanId) as OtelContext | undefined)
-      : undefined;
-
-  if (!otlpContext) {
+  const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
+  if (!traceCtx) {
     return undefined;
   }
 
-  const headers: Record<string, string> = {};
-  propagation.inject(otlpContext, headers);
-  return Object.keys(headers).length > 0 ? headers : undefined;
+  const headers: Record<string, string> = { traceparent: traceCtx.traceparent };
+  if (traceCtx.tracestate) {
+    headers.tracestate = traceCtx.tracestate;
+  }
+  return headers;
 };
 
 /**

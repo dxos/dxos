@@ -55,9 +55,7 @@ export const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
     );
 
     if (userInfo.email) {
-      Obj.change(token, (obj) => {
-        obj.note = `${userInfo.email} - ${obj.note ?? ''}`.trim();
-      });
+      Obj.change(token, (token) => (token.account = userInfo.email));
     }
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
@@ -102,8 +100,8 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
             return;
           }
 
-          Obj.change(token, (obj) => {
-            obj.token = data.accessToken;
+          Obj.change(token, (token) => {
+            token.token = data.accessToken;
           });
           yield* enrichGoogleTokenWithEmail(token);
           onAddAccessToken(token);
@@ -148,6 +146,7 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
             );
           }
         });
+
         await runAndForwardErrors(
           oauthEffect.pipe(
             Effect.tap(() => enrichGoogleTokenWithEmail(token)),
@@ -170,7 +169,9 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
     [edgeClient, spaceId, tokenMap, onAddAccessToken],
   );
 
-  return { startOAuthFlow };
+  return {
+    startOAuthFlow,
+  };
 };
 
 /** Finds an OAuth preset by source identifier. */

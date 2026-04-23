@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import os from 'node:os';
-
 import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
+import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';

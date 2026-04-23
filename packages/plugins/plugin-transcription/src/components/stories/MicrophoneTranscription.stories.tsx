@@ -16,27 +16,26 @@ import {
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
 import { Filter, type Obj } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { IndexKind, useSpace } from '@dxos/react-client/echo';
+import { IndexKind, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
-import { TestItem } from '../../testing';
+import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '#hooks';
+import { TestItem } from '#testing';
+
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
-
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 
@@ -77,7 +76,7 @@ const DefaultStory = ({
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
-  const space = useSpace();
+  const [space] = useSpaces();
 
   useEffect(() => {
     if (!space) {
@@ -86,13 +85,12 @@ const DefaultStory = ({
   }, [space]);
 
   // Entity extraction.
-  const { extractionFunction, executor, objects } = useMemo(() => {
+  const { extractionFunction, objects } = useMemo(() => {
     if (!space) {
       log.warn('no space');
       return {};
     }
 
-    let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
     let objects: Promise<Obj.Unknown[]> | undefined;
 
@@ -112,20 +110,8 @@ const DefaultStory = ({
         )
         .run();
     }
-    if (entityExtraction !== 'none') {
-      executor = new FunctionExecutor(
-        new ServiceContainer().setServices({
-          // ai: {
-          //   client: new Edge AiServiceClient({
-          //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-          //   }),
-          // },
-          // database: { db: space!.db },
-        }),
-      );
-    }
 
-    return { extractionFunction, executor, objects };
+    return { extractionFunction, objects };
   }, [entityExtraction, space]);
 
   // Transcriber.
@@ -143,9 +129,7 @@ const DefaultStory = ({
 
       if (entityExtraction !== 'none') {
         invariant(extractionFunction, 'extractionFunction is required');
-        invariant(executor, 'executor is required');
         const result = await processTranscriptMessage({
-          executor,
           function: extractionFunction,
           input: {
             message,

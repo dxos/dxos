@@ -13,7 +13,7 @@ import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/i
 import { ObjectId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
-import { Kanban } from '../types';
+import { Kanban } from '#types';
 
 import { useKanbanBoardModel } from './useKanbanBoardModel';
 

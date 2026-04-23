@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as ProjectWizardBlueprint } from './blueprint';
-export { ProjectRules, CreateProject, ProjectWizardHandlers } from './functions';
+export { default as AgentWizardBlueprint } from './blueprint';
+export { AgentRules, CreateAgent, SyncTriggers, AgentWizardHandlers } from './functions';

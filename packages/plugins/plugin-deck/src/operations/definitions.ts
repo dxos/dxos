@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
@@ -47,6 +47,7 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
+// TODO(burdon): Rename UpdateCompanion?
 export const ChangeCompanion = Operation.make({
   meta: {
     key: `${meta.id}.operation.change-companion`,

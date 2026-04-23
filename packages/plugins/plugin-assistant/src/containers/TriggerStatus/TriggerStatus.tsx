@@ -4,14 +4,14 @@
 
 import React, { useMemo } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
-import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
-import { useActiveSpace } from '@dxos/plugin-space';
+import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { type Database } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'error';
 
@@ -82,7 +82,7 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
           <IconButton
             icon={getIcon(triggerState)}
             iconOnly
-            label={t(`trigger status ${triggerState} label`)}
+            label={t(`trigger-status-${triggerState}.label`)}
             classNames={getIconClassNames(triggerState)}
           />
         </StatusBar.Item>
@@ -127,12 +127,12 @@ const TriggerStatusPopover = ({
       <Input.Root>
         <div className='flex items-center gap-2'>
           <Input.Switch checked={isRunning} onCheckedChange={onToggle} />
-          <Input.Label>{t('trigger runtime label')}</Input.Label>
+          <Input.Label>{t('trigger-runtime.label')}</Input.Label>
         </div>
       </Input.Root>
 
       <div className='flex flex-col gap-1'>
-        <div className='text-sm'>{t(`trigger status ${state} label`)}</div>
+        <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
           <div className='text-xs text-description'>{currentFunctionName}</div>
         )}

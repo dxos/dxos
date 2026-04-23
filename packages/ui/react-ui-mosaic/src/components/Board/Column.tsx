@@ -25,7 +25,6 @@ import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
-
 import { useBoard } from './Board';
 import { BoardItem } from './Item';
 
@@ -122,7 +121,7 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
         column != null && model.onColumnDelete
           ? [
               createMenuAction('delete-column', () => model.onColumnDelete?.(column), {
-                label: t('delete menu label'),
+                label: t('delete-menu.label'),
                 icon: 'ph--trash--regular',
               }),
             ]
@@ -141,7 +140,7 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
               iconOnly
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
-              label={t('action menu label')}
+              label={t('action-menu.label')}
             />
           </Menu.Trigger>
           <Menu.Content items={columnMenuItems} />
@@ -220,7 +219,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
             variant='ghost'
             icon='ph--plus--regular'
             iconOnly
-            label={t('add item label')}
+            label={t('add-item.label')}
             onClick={handleAdd}
           />
         )}

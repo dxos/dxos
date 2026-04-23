@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type RelatedContactsProps = {
   contacts: Person.Person[];
@@ -24,7 +24,7 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
   return (
     <>
       <Card.Row>
-        <Card.Heading variant='subtitle'>{t('related contacts title')}</Card.Heading>
+        <Card.Heading variant='subtitle'>{t('related-contacts.title')}</Card.Heading>
       </Card.Row>
       {contacts.map((contact) => (
         <Card.Action

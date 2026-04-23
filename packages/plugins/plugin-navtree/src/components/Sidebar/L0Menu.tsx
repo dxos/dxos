@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
-import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
   type Edge,
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type MouseEvent,
@@ -44,8 +44,9 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { useNavTreeState } from '../../hooks';
-import { meta } from '../../meta';
+import { useNavTreeState } from '#hooks';
+import { meta } from '#meta';
+
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { UserAccountAvatar } from '../UserAccountAvatar';
@@ -328,7 +329,7 @@ export const L0Menu = ({
       <Menu.Root onAction={handleAction}>
         <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
           <div role='none' className='grid place-items-center'>
-            <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app menu label')} />
+            <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app-menu.label')} />
           </div>
         </Menu.Trigger>
         <Menu.Content group={parent} items={menuActions} />

@@ -5,46 +5,48 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MessageStackActionHandler, MessageStack } from '../../components';
+import { type MessageStackActionHandler, MessageStack } from '#components';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { InboxCapabilities, type Mailbox } from '#types';
+
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { meta } from '../../meta';
-import { InboxOperation } from '../../operations';
-import { type Mailbox } from '../../types';
+import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
+import { InitializeMailbox } from './InitializeMailbox';
 
-import { NewMailbox } from './NewMailbox';
-
-export type MailboxArticleProps = SurfaceComponentProps<
+export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
-    attendableId?: string;
   }
 >;
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const settings = useAtomCapability(InboxCapabilities.Settings);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const db = Obj.getDatabase(mailbox);
-
-  // TODO(burdon): Review.
   const currentId = useSelected(id, 'single');
+  const db = Obj.getDatabase(mailbox);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
@@ -52,7 +54,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({ db, sortDescending: sortDescending.atom });
+  const menuActions = useMailboxActions({ db, mailbox, sortDescending: sortDescending.atom });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
@@ -76,6 +78,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
+
+  const layout = useLayout();
+  const filterEditorRef = useRef<EditorController>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
@@ -121,32 +127,80 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     return () => clearTimeout(t);
   }, [sortedMessages]);
 
-  const layout = useLayout();
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
-
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
+      log.debug('handleAction', { action, mode: layout.mode });
       switch (action.type) {
-        case 'current': {
+        case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
+          invariant(message);
+
           void invokePromise(AttentionOperation.Select, {
             contextId: id,
-            selection: { mode: 'single', id: message?.id },
+            selection: { mode: 'single', id: message.id },
           });
 
-          const companion = companionSegment('message');
-          if (layout.mode === 'simple') {
-            // Simple layout: open drawer with message companion.
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else {
-            // Deck layout: open as companion panel.
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
+          const companion = linkedSegment('message');
+          switch (layout.mode) {
+            case 'simple':
+              // Open drawer with message companion.
+              void invokePromise(LayoutOperation.UpdateComplementary, {
+                subject: companion,
+                state: 'expanded',
+              });
+              break;
+            case 'multi': {
+              invariant(db);
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+              break;
+            }
+            default:
+              // Show message in the companion panel.
+              void invokePromise(DeckOperation.ChangeCompanion, {
+                companion,
+              });
+              break;
+          }
+          break;
+        }
+
+        case 'current': {
+          const message = sortedMessages.find((message) => message.id === action.messageId);
+          invariant(message);
+          invariant(db);
+
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: message.id },
+          });
+
+          const companion = linkedSegment('message');
+          switch (layout.mode) {
+            case 'simple':
+              // Open drawer with message companion.
+              void invokePromise(LayoutOperation.UpdateComplementary, {
+                subject: companion,
+                state: 'expanded',
+              });
+              break;
+            case 'multi':
+              // Open the message plank beside this mailbox (pivot).
+              void invokePromise(LayoutOperation.Open, {
+                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
+                pivotId: id,
+                navigation: 'immediate',
+              });
+              break;
+            default:
+              // Show message in the companion panel.
+              void invokePromise(DeckOperation.ChangeCompanion, {
+                companion,
+              });
+              break;
           }
           break;
         }
@@ -157,9 +211,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             const tags = prevFilterText.split(/\s+/).filter(Boolean);
             if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
               return prevFilterText;
+            } else {
+              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
             }
-
-            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
           filterEditorRef.current?.focus();
           break;
@@ -177,7 +231,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleClear = useCallback(() => {
@@ -187,47 +241,48 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
-        {!isEmpty && (
-          <ElevationProvider elevation='positioned'>
-            <Menu.Root {...menuActions} attendableId={id}>
+      {!isEmpty && (
+        <ElevationProvider elevation='positioned'>
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Panel.Toolbar asChild>
               <Menu.Toolbar>
                 <QueryEditor
-                  ref={filterEditorRef}
                   classNames='grow min-w-0 ps-1'
                   db={db}
                   tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
+                  ref={filterEditorRef}
                 />
                 <IconButton
-                  ref={filterSaveButtonRef}
                   disabled={!filter}
-                  label={t('mailbox toolbar save button label')}
                   icon='ph--folder-plus--regular'
                   iconOnly
+                  label={t('mailbox-toolbar-save-button.label')}
                   onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                  ref={filterSaveButtonRef}
                 />
                 <IconButton
-                  label={t('mailbox toolbar clear button label')}
                   icon='ph--x--regular'
                   iconOnly
+                  label={t('mailbox-toolbar-clear-button.label')}
                   onClick={() => handleClear()}
                 />
               </Menu.Toolbar>
-            </Menu.Root>
-          </ElevationProvider>
-        )}
-      </Panel.Toolbar>
+            </Panel.Toolbar>
+          </Menu.Root>
+        </ElevationProvider>
+      )}
       <Panel.Content asChild>
         {isEmpty ? (
-          <NewMailbox mailbox={mailbox} />
+          <InitializeMailbox mailbox={mailbox} />
         ) : (
           <MessageStack
             id={id}
             messages={messagesWithTags}
             currentId={currentId}
             labels={mergedLabels}
+            threads={settings.threads}
             onAction={handleAction}
           />
         )}
@@ -299,11 +354,14 @@ const useMessageTagsMap = (
 
 const useMailboxActions = ({
   db,
+  mailbox,
   sortDescending,
 }: {
   db?: Database.Database;
+  mailbox?: Mailbox.Mailbox;
   sortDescending: Atom.Writable<boolean>;
 }) => {
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
   const menu = useMemo(
@@ -311,14 +369,14 @@ const useMailboxActions = ({
       Atom.make((context) => {
         return MenuBuilder.make()
           .root({
-            label: ['mailbox toolbar title', { ns: meta.id }],
+            label: t('mailbox-toolbar.title'),
           })
           .action(
             'sortAscending',
             {
               type: 'sortDescending',
               icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-              label: ['mailbox toolbar sort', { ns: meta.id }],
+              label: t('mailbox-toolbar-sort.menu'),
             },
             () => context.set(sortDescending, !context.get(sortDescending)),
           )
@@ -327,13 +385,13 @@ const useMailboxActions = ({
             {
               type: 'composeEmail',
               icon: 'ph--paper-plane-right--regular',
-              label: ['compose email label', { ns: meta.id }],
+              label: t('compose-email.label'),
             },
-            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
+            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
           )
           .build();
       }),
-    [sortDescending, invokePromise, db],
+    [sortDescending, invokePromise, db, mailbox],
   );
 
   return useMenuActions(menu);

@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-tag-picker.pcss';
-
 import React, { useCallback, useMemo } from 'react';
 
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { useQuery, useSchema as defaultUseSchema } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
-import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
@@ -34,7 +32,7 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { 
     return { id, label: label ?? id };
   });
 
-const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typename) =>
+const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
   useQuery(
     db,
     typename
@@ -51,8 +49,9 @@ export type RefFieldProps = FormFieldComponentProps &
     'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath' | 'createFieldMap'
   > & {
     db?: Database.Database;
-    resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
-    schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    // TODO(burdon): Replace hooks with callbacks.
+    useSchema?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     onCreate?: (schema: Type.AnyEntity, values: any) => void;
   };
@@ -71,8 +70,8 @@ export const RefField = (props: RefFieldProps) => {
     createInitialValuePath,
     createFieldMap,
     db,
-    resultsHook: useResults = defaultResultsHook,
-    schemaHook: useSchema = useSchema$,
+    useSchema = defaultUseSchema,
+    useResults = defaultUseResults,
     getOptions = defaultGetOptions,
     onCreate,
     onValueChange,
@@ -93,7 +92,6 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
-
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
@@ -103,20 +101,12 @@ export const RefField = (props: RefFieldProps) => {
           return matchingOption;
         }
       }
+
       return undefined;
     };
 
     return unknownToRefOption(formValue);
   }, [options, getValue]);
-
-  const handleUpdate = useCallback(
-    (id: string | undefined) => {
-      const item = options.find((option) => option.id === id);
-      const ref = item ? Ref.fromDXN(DXN.parse(item.id)) : undefined;
-      onValueChange(type, ref);
-    },
-    [options, type, onValueChange],
-  );
 
   const item = handleGetValue();
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
@@ -129,6 +119,15 @@ export const RefField = (props: RefFieldProps) => {
       }
     },
     [createSchema, onCreate],
+  );
+
+  const handleUpdate = useCallback(
+    (id: string | undefined) => {
+      const item = options.find((option) => option.id === id);
+      const ref = item ? Ref.fromDXN(DXN.parse(item.id)) : undefined;
+      onValueChange(type, ref);
+    },
+    [options, type, onValueChange],
   );
 
   const handleSelect = useCallback(
@@ -152,7 +151,7 @@ export const RefField = (props: RefFieldProps) => {
       <div>
         {readonly ? (
           !item ? (
-            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
+            <p className='text-description mb-2'>{t('empty-readonly-ref-field.label')}</p>
           ) : (
             <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}
@@ -162,7 +161,7 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-form-gap w-full'>
+                <div role='none' className='flex gap-form-gap w-full'>
                   <Input.Root key={item.id}>
                     <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
@@ -170,7 +169,7 @@ export const RefField = (props: RefFieldProps) => {
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
                   <div role='none' className='grow overflow-hidden'>
-                    <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
+                    <span className='truncate text-description'>{placeholder ?? t('ref-field.placeholder')}</span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>

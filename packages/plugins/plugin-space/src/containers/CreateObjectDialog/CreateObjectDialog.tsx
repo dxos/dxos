@@ -9,6 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
 import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -18,13 +19,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
-import {
-  type CreateObjectOption,
-  CreateObjectPanel,
-  type CreateObjectPanelProps,
-  type Metadata,
-} from '../../components';
-import { meta } from '../../meta';
+import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from '#components';
+import { meta } from '#meta';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
@@ -51,6 +47,7 @@ export const CreateObjectDialog = ({
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
   const spaces = useSpaces();
+  const layout = useLayout();
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
@@ -85,7 +82,7 @@ export const CreateObjectDialog = ({
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => ({
           id: entry.id,
-          label: t('typename label', { ns: entry.id, defaultValue: entry.id }),
+          label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
           icon: entry.metadata?.icon,
         })),
     [manager, views, viewTypenames, t],
@@ -111,9 +108,19 @@ export const CreateObjectDialog = ({
         });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
-          yield* operationInvoker.invoke(LayoutOperation.Open, {
-            subject: [...result.subject],
-          });
+          if (layout.mode === 'multi') {
+            yield* operationInvoker.invoke(LayoutOperation.Set, {
+              subject: [...result.subject],
+            });
+            yield* operationInvoker.invoke(LayoutOperation.Expose, {
+              subject: result.subject[0],
+            });
+          } else {
+            yield* operationInvoker.invoke(LayoutOperation.Open, {
+              subject: [...result.subject],
+              navigation: 'immediate',
+            });
+          }
         }
 
         onCreateObject?.(result.object);
@@ -122,15 +129,15 @@ export const CreateObjectDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         runAndForwardErrors,
       ),
-    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker],
+    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker, layout.mode],
   );
 
   return (
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>
-          {t('create object dialog title', {
-            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
+          {t('create-object-dialog.title', {
+            object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>

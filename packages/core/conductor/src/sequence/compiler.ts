@@ -4,7 +4,6 @@
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { type ComputeGraph, ComputeGraphModel, type ComputeNode } from '../types';
-
 import type { Sequence } from './sequence';
 
 /**

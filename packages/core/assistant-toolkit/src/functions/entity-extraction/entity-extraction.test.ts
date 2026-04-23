@@ -11,14 +11,12 @@ import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/operation';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { OperationHandlerSet } from '@dxos/operation';
-
 import { ResearchGraph } from '../../blueprints';
-
 import { default as entityExtraction } from './entity-extraction';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -60,7 +58,7 @@ describe('Entity extraction', () => {
           }),
         );
         yield* Database.flush();
-        const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
+        const result = yield* Operation.invoke(entityExtraction, {
           source: email,
         });
         expect(result.entities).toHaveLength(2);

@@ -39,7 +39,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
             </Card.Toolbar>
             {open && (
               <Card.Row>
-                <Json data={props.data} classNames='text-xs' />
+                <Json.Data data={props.data} classNames='text-xs' />
               </Card.Row>
             )}
           </Card.Root>

@@ -11,7 +11,7 @@ import type { Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type WnfsCapabilities } from '../types';
+import { type WnfsCapabilities } from '#types';
 
 import { Rng, filePath, store } from './common';
 import { loadWnfs } from './load';

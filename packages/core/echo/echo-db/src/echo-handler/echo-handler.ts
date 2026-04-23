@@ -2,14 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type InspectOptionsStylized } from 'node:util';
-
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
+import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Entity, Obj } from '@dxos/echo';
+import {
+  DATA_NAMESPACE,
+  EncodedReference,
+  type ObjectStructure,
+  PROPERTY_ID,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -61,13 +67,6 @@ import {
   setRefResolver,
   symbolIsProxy,
 } from '@dxos/echo/internal';
-import {
-  DATA_NAMESPACE,
-  EncodedReference,
-  type ObjectStructure,
-  PROPERTY_ID,
-  isEncodedReference,
-} from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -75,7 +74,6 @@ import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';

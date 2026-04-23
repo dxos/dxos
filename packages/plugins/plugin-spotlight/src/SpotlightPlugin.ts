@@ -5,10 +5,11 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationHandler, ReactRoot, SpotlightDismiss, State } from './capabilities';
-import { meta } from './meta';
+import { OperationHandler, ReactRoot, SpotlightDismiss, State } from '#capabilities';
+import { meta } from '#meta';
+import { SpotlightEvents } from '#types';
+
 import { translations } from './translations';
-import { SpotlightEvents } from './types';
 
 export const SpotlightPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -16,7 +17,7 @@ export const SpotlightPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [SpotlightEvents.StateReady, AppActivationEvents.LayoutReady],
+    firesAfterActivation: [SpotlightEvents.StateReady, AppActivationEvents.LayoutReady],
     activate: State,
   }),
   Plugin.addModule({

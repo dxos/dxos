@@ -11,8 +11,8 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -24,13 +24,13 @@ import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { useAudioFile, useQueueModelAdapter, useTranscriber } from '#hooks';
+import { TestItem } from '#testing';
+
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
-import { TestItem } from '../../testing';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
-
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 

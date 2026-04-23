@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
@@ -33,7 +33,6 @@ import {
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { BoardCell, type BoardCellProps } from './BoardCell';
 import { defaultGrid, defaultLayout } from './defs';
 import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter } from './geometry';
@@ -342,7 +341,7 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
         <IconButton
           icon='ph--plus--regular'
           iconOnly
-          label={t('button add')}
+          label={t('add-object.button')}
           classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
           onClick={onAddClick}
         />
@@ -369,20 +368,20 @@ const BoardToolbar = composable<HTMLDivElement, BoardToolbarProps>((props, forwa
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
-        label={t('button center')}
+        label={t('move-to-center.button')}
         onClick={() => controller.center()}
       />
       <Toolbar.IconButton
         icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
         iconOnly
-        label={t('button zoom')}
+        label={t('toggle-zoom.button')}
         onClick={() => controller.toggleZoom()}
       />
       {!readonly && onAdd && (
         <Toolbar.IconButton
           icon='ph--plus--regular'
           iconOnly
-          label={t('button add')}
+          label={t('add-object.button')}
           onClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement)}
         />
       )}

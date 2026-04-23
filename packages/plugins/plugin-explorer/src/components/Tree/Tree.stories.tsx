@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -18,7 +18,7 @@ import { Tree as TreeModel, TreeType } from './types';
 // TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
 // TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
 
-faker.seed(1);
+random.seed(1);
 
 type ComponentProps = ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] };
 

@@ -9,8 +9,9 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { ThreadCapabilities } from '../../types';
+import { meta } from '#meta';
+import { ThreadCapabilities } from '#types';
+
 import { Toolbar, type ToolbarProps } from '../Call';
 import { VideoObject } from '../Media';
 import { ResponsivePanel } from '../ResponsiveGrid';
@@ -69,7 +70,7 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
               classNames,
             )}
           />
-        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
+        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
       </ResponsivePanel>
     </div>
   );

@@ -10,7 +10,6 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types';
 import { Editor } from '../Editor';
-
 import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
 
 // TODO(burdon): Story with conductor nodes and local processing.

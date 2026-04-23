@@ -5,24 +5,21 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Expando } from '@dxos/schema';
 
-import { getActiveSpace } from '../../../hooks';
-import { meta } from '../../../meta';
-import { SPACE_TYPE, SpaceCapabilities } from '../../../types';
-import { SpaceOperation } from '../../../operations';
-import { getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
+import { SPACE_TYPE, SpaceCapabilities } from '#types';
 
 import { SHARED, getSpaceDisplayName } from '../../../util';
-
 import {
   CACHEABLE_PROPS,
   CAN_DROP_SPACE,
@@ -46,42 +43,42 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: `${meta.id}.primary-actions`,
+      id: 'primary-actions',
       position: 'hoist',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          {
+          Node.makeAction({
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
-              label: ['create space label', { ns: meta.id }],
+              label: ['create-space.label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
-              label: ['join space label', { ns: meta.id }],
+              label: ['join-space.label', { ns: meta.id }],
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
             }),
             properties: {
-              label: ['share space label', { ns: meta.id }],
+              label: ['share-space.label', { ns: meta.id }],
               icon: 'ph--users--regular',
               testId: 'spacePlugin.shareSpace',
               keyBinding: {
@@ -89,30 +86,30 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 windows: 'alt+.',
               },
             },
-          },
-          {
+          }),
+          Node.makeAction({
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }
             }),
             properties: {
-              label: ['open current space settings label', { ns: meta.id }],
+              label: ['open-current-space-settings.label', { ns: meta.id }],
               icon: 'ph--faders--regular',
               keyBinding: {
                 macos: 'meta+shift+,',
                 windows: 'ctrl+shift+,',
               },
             },
-          },
+          }),
         ]),
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}.spaces`,
+      id: 'spaces',
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         const client = capabilities.get(ClientCapabilities.Client);
@@ -156,6 +153,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => (settings?.showHidden ? true : spaceStates[idx] !== SpaceState.SPACE_INACTIVE))
+              .filter((space) => space.tags.length === 0 || isPersonalSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,
@@ -176,7 +174,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}.actions`,
+      id: 'actions',
       match: whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));
@@ -232,15 +230,15 @@ const constructSpaceNode = ({
           nextOrder.map(({ id }) => id),
         );
 
-        Obj.change(spacesOrder, (mutableOrder: any) => {
-          mutableOrder.order = nextOrder.map(({ id }) => id);
+        Obj.change(spacesOrder, (spacesOrder: any) => {
+          spacesOrder.order = nextOrder.map(({ id }) => id);
         });
       };
       spaceRearrangeCache.set(space.id, onRearrange);
     }
   }
 
-  return {
+  return Node.make({
     id: space.id,
     type: SPACE_TYPE,
     cacheable: CACHEABLE_PROPS,
@@ -261,7 +259,7 @@ const constructSpaceNode = ({
       canDrop: CAN_DROP_SPACE,
     },
     nodes: [
-      {
+      Node.make({
         id: 'settings',
         type: `${meta.id}.settings`,
         data: null,
@@ -271,9 +269,9 @@ const constructSpaceNode = ({
           disposition: 'alternate-tree',
           space,
         },
-      },
+      }),
     ],
-  };
+  });
 };
 
 /** Builds the action list for a space node (migrate, create object, rename). */
@@ -295,24 +293,25 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
-    actions.push({
-      id: SpaceOperation.Migrate.meta.key,
-      type: Node.ActionGroupType,
-      data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
-      properties: {
-        label: MIGRATE_SPACE_LABEL,
-        icon: 'ph--database--regular',
-        disposition: 'list-item-primary',
-        disabled: isMigrating,
-      },
-    });
+    actions.push(
+      Node.make({
+        id: SpaceOperation.Migrate.meta.key,
+        type: Node.ActionGroupType,
+        data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
+        properties: {
+          label: MIGRATE_SPACE_LABEL,
+          icon: 'ph--database--regular',
+          disposition: 'list-item-primary',
+          disabled: isMigrating,
+        },
+      }),
+    );
   }
 
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
-      {
+      Node.makeAction({
         id: SpaceOperation.OpenCreateObject.meta.key,
-        type: Node.ActionType,
         data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
         properties: {
           label: CREATE_OBJECT_IN_SPACE_LABEL,
@@ -320,10 +319,9 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
           disposition: 'list-item-primary',
           testId: 'spacePlugin.createObject',
         },
-      },
-      {
+      }),
+      Node.makeAction({
         id: SpaceOperation.Rename.meta.key,
-        type: Node.ActionType,
         data: (params?: Node.InvokeProps) =>
           Operation.invoke(SpaceOperation.Rename, { space, caller: `${params?.caller}:${params?.parent?.id}` }),
         properties: {
@@ -334,7 +332,7 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
             windows: 'shift+F6',
           },
         },
-      },
+      }),
     );
   }
 

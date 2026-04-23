@@ -10,26 +10,23 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Database, Feed, Query } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import {
   CredentialsService,
   FunctionError,
   FunctionInvocationService,
   FunctionNotFoundError,
-  type InvocationServices,
   QueueService,
+  Trace,
 } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
-import { runAndForwardErrors } from '@dxos/effect';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
   {
-    invokeFunction<I, O>(
-      functionDef: Operation.Definition<I, O>,
-      input: I,
-    ): Effect.Effect<O, never, InvocationServices>;
+    invokeFunction<I, O>(functionDef: Operation.Definition<I, O>, input: I): Effect.Effect<O>;
     resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError>;
   }
 >() {
@@ -41,24 +38,40 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const credentials = yield* CredentialsService;
       const database = yield* Database.Service;
       const queues = yield* QueueService;
-      const feedService = yield* Feed.Service;
+      const feedService = yield* Feed.FeedService;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
-        invokeFunction: <I, O>(
-          functionDef: Operation.Definition<I, O>,
-          input: I,
-        ): Effect.Effect<O, never, InvocationServices> =>
-          Effect.gen(function* () {
-            const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
-            const output = yield* invokeOperation(resolved, input);
-            return output as O;
-          }).pipe(
-            Effect.provideService(AiService.AiService, ai),
-            Effect.provideService(CredentialsService, credentials),
-            Effect.provideService(Database.Service, database),
-            Effect.provideService(QueueService, queues),
-            Effect.provideService(Feed.Service, feedService),
-            Effect.provideService(FunctionInvocationService, functionInvocationService),
+        invokeFunction: <I, O>(functionDef: Operation.Definition<I, O>, input: I): Effect.Effect<O> =>
+          Effect.flatMap(Effect.context<never>(), (callerContext) =>
+            Effect.gen(function* () {
+              const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
+              const output = yield* invokeOperation(resolved, input);
+              return output as O;
+            }).pipe(
+              Effect.provideService(AiService.AiService, ai),
+              Effect.provideService(CredentialsService, credentials),
+              Effect.provideService(Database.Service, database),
+              Effect.provideService(QueueService, queues),
+              Effect.provideService(Feed.FeedService, feedService),
+              Effect.provideService(FunctionInvocationService, functionInvocationService),
+              Effect.provideService(Operation.Service, {
+                invoke: (op: any, ...args: any[]) => functionInvocationService.invokeFunction(op, args[0]),
+                schedule: (op: any, ...args: any[]) =>
+                  functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
+                invokePromise: async (op: any, ...args: any[]) => {
+                  try {
+                    const data = await runAndForwardErrors(
+                      functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
+                    );
+                    return { data };
+                  } catch (error) {
+                    return { error: error as Error };
+                  }
+                },
+              } as any),
+              Effect.provide(Trace.writerLayerNoop),
+              Effect.provide(Layer.succeedContext(callerContext)),
+            ),
           ),
         resolveFunction: (key: string) =>
           Effect.gen(function* () {

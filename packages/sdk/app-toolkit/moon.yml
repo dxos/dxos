@@ -9,6 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/query.ts'
       - '--entryPoint=src/ui/index.ts'
   test:
     inputs:

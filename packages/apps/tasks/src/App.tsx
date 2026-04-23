@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
 import React, { useEffect, useMemo } from 'react';
 import {
   Navigate,
@@ -16,7 +16,7 @@ import {
 
 import { Obj } from '@dxos/echo';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { Filter, Query, parseId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, Query, parseId, useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { getConfig } from './config';
 import { TaskList } from './TaskList';
@@ -53,7 +53,7 @@ export const TaskListContainer = () => {
 };
 
 export const Home = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const shell = useShell();
   const [search, setSearchProps] = useSearchParams();
   const invitationCode = search.get('spaceInvitationCode');
@@ -62,7 +62,7 @@ export const Home = () => {
 
   useEffect(() => {
     if (deviceInvitationCode) {
-      // TODO(???): desired API for joining a device.
+      // TODO(wittjosiah): desired API for joining a device.
       // shell.joinDevice({ invitationCode: deviceInvitationCode });
       setSearchProps((p) => {
         p.delete('deviceInvitationCode');

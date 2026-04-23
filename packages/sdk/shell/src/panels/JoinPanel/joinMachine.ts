@@ -20,7 +20,6 @@ import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { type FailReason } from '../../types';
-
 import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
 
 type InvitationKindContext = Partial<{

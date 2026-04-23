@@ -5,26 +5,20 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps } from '../../components';
-import { useShadowObject } from '../../hooks';
-import { InboxOperation } from '../../operations';
-import { type Calendar } from '../../types';
+import { Event, type EventHeaderProps } from '#components';
+import { useShadowObject } from '#hooks';
+import { InboxOperation } from '#operations';
 
-export type EventArticleProps = SurfaceComponentProps<
-  EventType.Event,
-  {
-    calendar: Calendar.Calendar;
-  }
->;
+export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
-export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => {
+export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(subject).toString();
   const db = Obj.getDatabase(calendar);
@@ -36,8 +30,8 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      Obj.change(event, (obj) => {
-        obj.notes = Ref.make(Text.make());
+      Obj.change(event, (event) => {
+        event.notes = Ref.make(Text.make());
       });
     }
   }, [id, subject, db, shadowedEvent]);
@@ -62,7 +56,9 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
             <Event.Header db={db} onContactCreate={handleContactCreate} />
             <Event.Content />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
-            {notes && <Surface.Surface role='section' data={{ id, subject: notes, attendableId: id }} limit={1} />}
+            {notes && (
+              <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />
+            )}
           </Event.Viewport>
         </Panel.Content>
       </Panel.Root>

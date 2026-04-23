@@ -7,7 +7,6 @@ import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { OBJECT_RENAME_POPOVER } from '../constants';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RenameObject> = SpaceOperation.RenameObject.pipe(

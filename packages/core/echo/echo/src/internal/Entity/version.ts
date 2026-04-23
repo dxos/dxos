@@ -5,7 +5,6 @@
 import { assertArgument } from '@dxos/invariant';
 
 import { type AnyEntity, VersionTypeId } from '../common/types';
-
 import { ObjectVersionId } from './model';
 
 /**

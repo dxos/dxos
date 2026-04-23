@@ -5,8 +5,8 @@
 import { formatDistance } from 'date-fns';
 import React from 'react';
 
-import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 import { useConfig } from '@dxos/react-client';
+import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
@@ -34,13 +34,13 @@ export const AboutDialog = () => {
       </Dialog.Header>
       <Dialog.Body>
         {/* TODO(burdon): Reconcile with plugin-status-bar */}
-        <Column.Content classNames='flex flex-col text-sm'>
+        <Column.Center classNames='flex flex-col text-sm'>
           <div role='none' className='flex items-center'>
-            {t('version label', { version: v })}
+            {t('version.label', { version: v })}
           </div>
           {timestamp && (
             <div role='none' className='flex items-center gap-1'>
-              {t('published label', {
+              {t('published.label', {
                 timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
               })}
             </div>
@@ -49,18 +49,18 @@ export const AboutDialog = () => {
             <Trans
               {...{
                 t,
-                i18nKey: 'powered by dxos message',
+                i18nKey: 'powered-by-dxos.message',
                 components: {
                   dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
                 },
               }}
             />
           </p>
-        </Column.Content>
+        </Column.Center>
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button variant='primary'>{t('close label')}</Button>
+          <Button variant='primary'>{t('close.label')}</Button>
         </Dialog.Close>
       </Dialog.ActionBar>
     </Dialog.Content>

@@ -4,10 +4,11 @@
 
 export * from './Actor';
 
-export * from './ComposeEmailPanel';
 export * from './DateComponent';
+export * from './EditMessage';
 export * from './Event';
 export * from './EventStack';
+export * from './InboxSettings';
 export * from './MessageStack';
 export * from './Message';
 export * from './RelatedContacts';

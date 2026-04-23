@@ -6,8 +6,8 @@ import * as Registry from '@effect-atom/atom/Registry';
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
+import { TestSchema } from '@dxos/echo/testing';
 import { arrayMove } from '@dxos/util';
 
 import * as AtomObj from './atom';

@@ -48,7 +48,6 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from '../identity';
-
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { EdgeFeedReplicator } from './edge-feed-replicator';
@@ -240,7 +239,7 @@ export class DataSpace {
   }
 
   @synchronized
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async open(ctx: Context): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
       await this._open(ctx);
@@ -274,7 +273,7 @@ export class DataSpace {
   }
 
   @synchronized
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async close(ctx: Context): Promise<void> {
     await this._close(ctx);
   }
@@ -317,12 +316,14 @@ export class DataSpace {
 
   /**
    * Initialize the data pipeline in a separate task.
+   * @param callerCtx - Trace context from the caller (e.g., activate or createSpace) for span parenting.
    */
-  initializeDataPipelineAsync(): void {
+  initializeDataPipelineAsync(callerCtx?: Context): void {
+    const traceCtx = callerCtx ?? this._ctx;
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
-        await this.initializeDataPipeline(this._ctx);
+        await this.initializeDataPipeline(traceCtx);
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
@@ -340,7 +341,7 @@ export class DataSpace {
     });
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   async initializeDataPipeline(ctx: Context): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
       throw new SystemError({ message: 'Invalid operation' });
@@ -396,7 +397,7 @@ export class DataSpace {
     await this._callbacks.afterReady?.();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx,
@@ -601,7 +602,7 @@ export class DataSpace {
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
     await this._open(ctx);
-    this.initializeDataPipelineAsync();
+    this.initializeDataPipelineAsync(ctx);
   }
 
   @synchronized

@@ -19,9 +19,9 @@ import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { useKanbanBoardModel, useKanbanColumnEventHandler } from '../../hooks';
-import { meta } from '../../meta';
-import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '../../types';
+import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
+import { meta } from '#meta';
+import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
 
 import { KanbanCard, type KanbanCardProps } from './KanbanCard';
 import { KanbanColumn, type KanbanColumnProps } from './KanbanColumn';
@@ -120,7 +120,7 @@ export const KanbanBoardRoot = ({
   if (columns.length === 0) {
     return (
       <div role='none' className='flex flex-1 items-center justify-center p-8 text-center text-description'>
-        {t('select pivot placeholder')}
+        {t('select-pivot.placeholder')}
       </div>
     );
   }

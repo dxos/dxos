@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useEffect, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useMixerEngine } from '../../hooks';
-import { Dream, Sequence } from '../../types';
+import { useMixerEngine } from '#hooks';
+import { Dream, Sequence } from '#types';
 
 import { Mixer } from './Mixer';
 
@@ -35,7 +35,7 @@ const DefaultStory = () => {
   }, [space, dream]);
 
   if (!dream) {
-    return <></>;
+    return <Loading />;
   }
 
   return (

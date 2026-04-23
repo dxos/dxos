@@ -8,7 +8,6 @@ import { getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
 import { type Stats, removeEmpty } from '../../hooks';
-
 import { Panel } from './Panel';
 import {
   DatabasePanel,
@@ -21,7 +20,6 @@ import {
   RawQueriesPanel,
   ReplicatorMessagesPanel,
   ReplicatorPanel,
-  SpansPanel,
   SurfaceProfilerPanel,
   type SurfaceProfilerStats,
   SyncStatusPanel,
@@ -34,7 +32,6 @@ const PANEL_KEYS = [
   'ts',
   'performance',
   'surfaceProfiler',
-  'spans',
   'edge',
   'queries',
   'rawQueries',
@@ -83,9 +80,6 @@ export const StatsPanel = ({
     acc.set(str, num + 1);
     return acc;
   }, new Map<string, number>());
-
-  const spans = [...(stats?.diagnostics?.spans ?? [])];
-  spans.reverse();
 
   const queries = [...(stats?.queries ?? [])];
   queries.reverse();
@@ -158,7 +152,6 @@ export const StatsPanel = ({
           onToggle={handleToggle}
           database={stats?.database}
         />
-        <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
         <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
         <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
         <SyncStatusPanel

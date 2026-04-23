@@ -17,7 +17,6 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
-
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {

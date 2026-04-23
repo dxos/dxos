@@ -4,11 +4,10 @@
 
 /* eslint-disable no-console */
 
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-
 import tailwindcss from '@tailwindcss/postcss';
 import autoprefixer from 'autoprefixer';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';

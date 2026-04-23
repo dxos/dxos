@@ -3,8 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { Sleep } from './definitions';
+
 import { Operation } from '@dxos/operation';
+
+import { Sleep } from './definitions';
 
 export default Sleep.pipe(
   Operation.withHandler(

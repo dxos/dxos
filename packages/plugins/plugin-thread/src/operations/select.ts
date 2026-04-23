@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { Select } from './definitions';
-
 import { ThreadCapabilities } from '../types';
+import { Select } from './definitions';
 
 const handler: Operation.WithHandler<typeof Select> = Select.pipe(
   Operation.withHandler(

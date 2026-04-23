@@ -8,23 +8,12 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-// Tool definitions.
+import { CalculatorTool, calculatorHandler } from './calculator';
+
 export const TestingToolkit = Toolkit.make(
-  Tool.make('Calculator', {
-    description: 'Basic calculator tool',
-    parameters: {
-      input: Schema.String.annotations({
-        description: 'The calculation to perform.',
-      }),
-    },
-    success: Schema.Struct({
-      result: Schema.Number,
-    }),
-    failure: Schema.Never,
-  }),
+  CalculatorTool,
 
   Tool.make('Markdown', {
     description: 'Load markdown document',
@@ -40,22 +29,8 @@ export const TestingToolkit = Toolkit.make(
   }),
 );
 
-// Tool handlers.
 export const testingLayer = TestingToolkit.toLayer({
-  Calculator: Effect.fn(function* ({ input }) {
-    const result = (() => {
-      // Restrict to basic arithmetic operations for safety.
-      const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
-      log.info('calculate', { sanitizedInput });
-
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      return new Function(`"use strict"; return (${sanitizedInput})`)();
-    })();
-
-    // TODO(burdon): How to return an error.
-    yield* Console.log(`Executing calculation: ${input} = ${result}`);
-    return { result };
-  }),
+  Calculator: calculatorHandler,
 
   Markdown: Effect.fn(function* ({ name }) {
     yield* Console.log(`Reading markdown: ${name}`);

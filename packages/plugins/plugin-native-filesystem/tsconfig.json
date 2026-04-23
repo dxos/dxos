@@ -24,6 +24,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -42,6 +45,9 @@
       "path": "../../core/operation"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -49,6 +55,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

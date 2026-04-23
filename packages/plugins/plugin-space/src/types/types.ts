@@ -12,7 +12,9 @@ import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { type ComplexMap } from '@dxos/util';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
+export * as Settings from './Settings';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
@@ -91,17 +93,6 @@ export type PluginState = {
   // TODO(wittjosiah): Systematic way to handle migrations of state outside of spaces.
   enabledEdgeReplication: boolean;
 };
-
-export const SpaceSettingsSchema = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Show closed spaces.
-     */
-    showHidden: Schema.Boolean,
-  }),
-);
-
-export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 // TODO(wittjosiah): Reconcile with graph export serializers.
 

@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import { FunctionError } from '../errors';
 import fibFunc from '../example/fib';
 import replyFunc from '../example/reply';
-
 import { wrapFunctionHandler } from './protocol';
 
 describe('wrapFunctionHandler', () => {

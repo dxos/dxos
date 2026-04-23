@@ -8,15 +8,14 @@ import { invariant } from '@dxos/invariant';
 import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 //
 // Constants
 //
 
-const META_NS: { ns: string } = { ns: meta.id };
-const PERSONAL_SPACE_LABEL: Label = ['personal space label', META_NS];
-const UNNAMED_SPACE_LABEL: Label = ['unnamed space label', META_NS];
+const PERSONAL_SPACE_LABEL: Label = ['personal-space.label', { ns: meta.id }];
+const UNNAMED_SPACE_LABEL: Label = ['unnamed-space.label', { ns: meta.id }];
 
 export const SPACES = `${meta.id}-spaces`;
 export { SHARED } from './types';

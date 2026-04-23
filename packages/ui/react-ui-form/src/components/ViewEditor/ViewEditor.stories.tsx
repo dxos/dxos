@@ -18,7 +18,6 @@ import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
-
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
@@ -91,8 +90,8 @@ const DefaultStory = (props: DefaultStoryProps) => {
       if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
         const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
-        Obj.change(view, (obj) => {
-          obj.query.ast = query.ast as Mutable<typeof query.ast>;
+        Obj.change(view, (view) => {
+          view.query.ast = query.ast as Mutable<typeof query.ast>;
         });
 
         const typename = getTypenameFromQuery(query.ast);
@@ -105,13 +104,13 @@ const DefaultStory = (props: DefaultStoryProps) => {
           query,
           jsonSchema: newSchema.jsonSchema,
         });
-        Obj.change(view, (obj) => {
-          obj.projection = Obj.getSnapshot(newView).projection as Mutable<typeof obj.projection>;
+        Obj.change(view, (view) => {
+          view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
         });
         setSchema(() => newSchema);
       } else {
-        Obj.change(view, (obj) => {
-          obj.query.ast = newQuery as Mutable<typeof newQuery>;
+        Obj.change(view, (view) => {
+          view.query.ast = newQuery as Mutable<typeof newQuery>;
         });
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }

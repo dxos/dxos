@@ -24,15 +24,12 @@ import {
   Input,
   ScrollArea,
   type ThemedClassName,
-  useDensityContext,
-  useElevationContext,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import {
   SearchListInputContextProvider,
   SearchListItemContextProvider,
@@ -234,16 +231,16 @@ SearchListRoot.displayName = 'SearchList.Root';
 
 type SearchListContentProps = {};
 
+/**
+ * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
+ * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
+ *
+ * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
+ * handles column placement for SearchList's children automatically.
+ */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div
-      {...composableProps(props, {
-        role: 'none',
-        classNames:
-          'flex flex-col min-h-0 [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
-      })}
-      ref={forwardedRef}
-    >
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -266,17 +263,12 @@ type SearchListInputProps = ThemedClassName<
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  (
-    { classNames, density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props },
-    forwardedRef,
-  ) => {
+  ({ density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { hasIosKeyboard, tx } = useThemeContext();
+    const { hasIosKeyboard } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
-    const density = useDensityContext(propsDensity);
-    const elevation = useElevationContext(propsElevation);
-    const defaultPlaceholder = t('search placeholder');
+    const defaultPlaceholder = t('search.placeholder');
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -358,8 +350,8 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
       <Input.Root>
         <Input.TextInput
           {...props}
-          classNames='p-0 px-2'
           variant='subdued'
+          density='fine'
           autoFocus={props.autoFocus && !hasIosKeyboard}
           placeholder={placeholder ?? defaultPlaceholder}
           value={query}
@@ -461,7 +453,8 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
+          'py-1 px-2 rounded-xs select-none',
+          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay', // TODO(burdon): Replace with classes.
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}
@@ -482,12 +475,13 @@ SearchListItem.displayName = 'SearchList.Item';
 // Empty
 //
 
-type SearchListEmptyProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListEmptyProps = ThemedClassName;
 
-const SearchListEmpty = ({ classNames, children }: SearchListEmptyProps) => {
+const SearchListEmpty = ({ classNames }: SearchListEmptyProps) => {
+  const { t } = useTranslation(translationKey);
   return (
-    <div role='status' className={mx('flex flex-col w-full px-2 py-1', classNames)}>
-      {children}
+    <div role='status' className={mx(classNames)}>
+      {t('empty-results.message')}
     </div>
   );
 };

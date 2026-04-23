@@ -9,8 +9,15 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import {
+  IconButton,
+  type IconButtonProps,
+  ScrollArea,
+  type ThemedClassName,
+  useMergeRefs,
+  useTranslation,
+} from '@dxos/react-ui';
+import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
 
 import {
   type FormHandler,
@@ -20,14 +27,15 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { translationKey } from '../../translations';
-
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
   FormFieldSet as NaturalFormFieldSet,
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 
-// TODO(burdon): Move to @dxos/schema (re-export here).
+// TODO(burdon): Move styles to form.ts (as with ui-theme).
+
+// TODO(burdon): Reconcile with @dxos/echo.
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
@@ -178,17 +186,25 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const FormContent = ({ classNames, children }: FormContentProps) => {
+const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
-  const ref = useRef<HTMLDivElement>(null);
-  useKeyHandler(ref.current, form);
+  const localRef = useRef<HTMLDivElement>(null);
+  const mergedRef = useMergeRefs([forwardedRef, localRef]);
+  useKeyHandler(localRef, form);
 
   return (
-    <div ref={ref} role='form' className={mx('flex flex-col w-full', classNames)} data-testid={testId}>
+    <div
+      {...composableProps(props, {
+        role: 'form',
+        classNames: mx(withColumn.center(), 'flex flex-col w-full pb-form-gap'),
+      })}
+      data-testid={testId}
+      ref={mergedRef}
+    >
       {children}
     </div>
   );
-};
+});
 
 FormContent.displayName = FORM_CONTENT_NAME;
 
@@ -227,16 +243,20 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   if (readonly || layout === 'static') {
     return null;
   }
+
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
+    <div
+      role='none'
+      className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}
+    >
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
           iconEnd
-          label={t('cancel button label')}
+          label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
@@ -248,7 +268,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
           disabled={!canSave}
           icon='ph--check--regular'
           iconEnd
-          label={t('save button label')}
+          label={t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
         />
@@ -258,6 +278,31 @@ const FormActions = ({ classNames }: FormActionsProps) => {
 };
 
 FormActions.displayName = FORM_ACTIONS_NAME;
+
+//
+// Section
+//
+
+const FORM_SECTION_NAME = 'Form.Section';
+
+type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
+
+const FormSection = composable<HTMLDivElement, FormSectionProps>(
+  ({ children, label, description, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
+        ref={forwardedRef}
+      >
+        <h2 className='text-lg'>{label}</h2>
+        {description && <p className='text-description'>{description}</p>}
+        {children}
+      </div>
+    );
+  },
+);
+
+FormSection.displayName = FORM_SECTION_NAME;
 
 //
 // Submit
@@ -287,7 +332,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
         variant='primary'
         disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
-        label={label ?? t('save button label')}
+        label={label ?? t('save-button.label')}
         onClick={onSave}
         data-testid='save-button'
       />
@@ -306,6 +351,7 @@ export const Form = {
   Root: FormRoot,
   Viewport: FormViewport,
   Content: FormContent,
+  Section: FormSection,
   FieldSet: FormFieldSet,
   Label: FormFieldLabel,
   Actions: FormActions,
@@ -318,6 +364,7 @@ export type {
   FormRootProps,
   FormViewportProps,
   FormContentProps,
+  FormSectionProps,
   FormFieldSetProps,
   FormFieldLabelProps,
   FormActionsProps,

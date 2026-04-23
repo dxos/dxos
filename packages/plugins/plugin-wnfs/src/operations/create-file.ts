@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { upload } from '../helpers';
 import { WnfsCapabilities, WnfsFile } from '../types';
-
 import { CreateFile } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateFile> = CreateFile.pipe(

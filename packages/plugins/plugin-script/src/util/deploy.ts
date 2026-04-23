@@ -6,10 +6,10 @@ import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -63,8 +63,8 @@ export const deployScript = async ({
     });
 
     const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
-    Obj.change(script, (obj) => {
-      obj.changed = false;
+    Obj.change(script, (script) => {
+      script.changed = false;
     });
 
     return { success: true, functionId: getUserFunctionIdInMetadata(Obj.getMeta(storedFunction)) };
@@ -94,8 +94,8 @@ const createOrUpdateFunctionInSpace = (
     Operation.setFrom(fn, newFunction);
     return fn;
   } else {
-    Obj.change(newFunction, (obj) => {
-      obj.source = Ref.make(script);
+    Obj.change(newFunction, (newFunction) => {
+      newFunction.source = Ref.make(script);
     });
     return space.db.add(newFunction);
   }

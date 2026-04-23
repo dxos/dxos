@@ -4,6 +4,7 @@
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 
 import { asyncTimeout, DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -32,7 +33,6 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
-
 import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
@@ -40,7 +40,6 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
-import * as Effect from 'effect/Effect';
 
 export type EchoHostProps = {
   kv: LevelDB;

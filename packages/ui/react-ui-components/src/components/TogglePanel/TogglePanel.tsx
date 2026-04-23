@@ -3,10 +3,10 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
 import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 const IconBlock = ({ children }: PropsWithChildren) => {
   return <div className='grid h-[24px] w-[24px] place-items-center'>{children}</div>;
@@ -19,11 +19,7 @@ const IconBlock = ({ children }: PropsWithChildren) => {
 type ContextValue = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  /** Should shrink the width when closed. */
-  shrink: boolean;
   duration: number;
-  expandX: boolean;
-  expandY: boolean;
 };
 
 const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>('TogglePanel');
@@ -32,71 +28,42 @@ const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>(
 // Root
 //
 
+const ROOT_NAME = 'TogglePanel.Root';
+
 type RootProps = ThemedClassName<
   PropsWithChildren<
     {
       open?: boolean;
       defaultOpen?: boolean;
       onChangeOpen?: (open: boolean) => void;
-    } & Partial<Pick<ContextValue, 'shrink' | 'duration'>>
+    } & Partial<Pick<ContextValue, 'duration'>>
   >
 >;
 
-const Root = ({
-  classNames,
-  open: openProp,
-  defaultOpen = false,
-  shrink = false,
-  duration = 250,
-  children,
-  onChangeOpen,
-}: RootProps) => {
-  const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
-  const [expandX, setExpandX] = useState<boolean>(shrink ? open : true);
-  const [expandY, setExpandY] = useState<boolean>(open);
+const Root = composable<HTMLDivElement, RootProps>(
+  ({ children, open: openProp, defaultOpen = false, duration = 250, onChangeOpen, ...props }, forwardedRef) => {
+    const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
 
-  // Orchestrate opening/closing animation.
-  useEffect(() => {
-    onChangeOpen?.(open);
+    useEffect(() => {
+      onChangeOpen?.(open);
+    }, [open]);
 
-    let t: NodeJS.Timeout;
-    if (open) {
-      if (shrink) {
-        setExpandX(true);
-      }
-      t = setTimeout(
-        () => {
-          setExpandY(true);
-        },
-        shrink ? duration : 0,
-      );
-    } else {
-      setExpandY(false);
-      if (shrink) {
-        t = setTimeout(() => {
-          setExpandX(false);
-        }, duration);
-      }
-    }
+    return (
+      <TogglePanelContext duration={duration} open={open} setOpen={setOpen}>
+        <div
+          {...composableProps(props, {
+            classNames: ['border border-separator rounded-sm overflow-hidden w-full'],
+          })}
+          ref={forwardedRef}
+        >
+          {children}
+        </div>
+      </TogglePanelContext>
+    );
+  },
+);
 
-    return () => clearTimeout(t);
-  }, [open]);
-
-  return (
-    <TogglePanelContext
-      shrink={shrink}
-      duration={duration}
-      expandX={expandX}
-      expandY={expandY}
-      open={open}
-      setOpen={setOpen}
-    >
-      <div role='none' className={mx('overflow-hidden', !shrink && 'w-full', classNames)}>
-        {children}
-      </div>
-    </TogglePanelContext>
-  );
-};
+Root.displayName = ROOT_NAME;
 
 //
 // Header
@@ -107,12 +74,11 @@ const HEADER_NAME = 'TogglePanel.Header';
 type HeaderProps = ThemedClassName<
   PropsWithChildren<{
     icon?: JSX.Element;
-    shrink?: boolean;
   }>
 >;
 
 const Header = ({ classNames, children, icon }: HeaderProps) => {
-  const { open, setOpen, shrink, duration } = useTogglePanelContext(HEADER_NAME);
+  const { open, setOpen, duration } = useTogglePanelContext(HEADER_NAME);
 
   return (
     <div
@@ -123,7 +89,7 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
         <Icon
           size={4}
           icon={'ph--caret-right--regular'}
-          style={{ transitionDuration: `${shrink ? duration * 2 : duration}ms` }}
+          style={{ transitionDuration: `${duration}ms` }}
           classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
         />
       </IconBlock>
@@ -143,35 +109,41 @@ const CONTENT_NAME = 'TogglePanel.Content';
 
 type ContentProps = ThemedClassName<PropsWithChildren>;
 
-const Content = ({ classNames, children }: ContentProps) => {
-  const { duration, expandX, expandY } = useTogglePanelContext(CONTENT_NAME);
-
+const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => {
+  const { duration, open } = useTogglePanelContext(CONTENT_NAME);
   return (
     <div
-      role='none'
-      style={{ transitionDuration: `${duration}ms` }}
-      className={mx(
-        'grid transition-[grid-template-columns] ease-in-out',
-        expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
-      )}
+      {...composableProps(props, {
+        style: { transitionDuration: `${duration}ms` },
+        classNames: ['grid transition-[grid-template-rows] ease-in-out', open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'],
+      })}
+      ref={forwardedRef}
     >
-      <div className='overflow-hidden'>
-        <div
-          role='none'
-          style={{ transitionDuration: `${duration}ms` }}
-          className={mx(
-            'grid transition-[grid-template-rows] ease-in-out',
-            expandY ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
-          )}
-        >
-          <div className={mx('min-h-0 overflow-y-auto', classNames)}>{children}</div>
-        </div>
-      </div>
+      <div className='min-h-0 overflow-hidden'>{children}</div>
     </div>
   );
-};
+});
 
 Content.displayName = CONTENT_NAME;
+
+//
+// Viewport
+//
+
+const VIEWPORT_NAME = 'TogglePanel.Viewport';
+
+export type ViewportProps = ThemedClassName<PropsWithChildren>;
+
+/**
+ * Scrollable region for nested flex/grid layouts. Uses min-h-0 and min-w-0 so overflow can shrink correctly.
+ */
+export const Viewport = composable<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => (
+  <div {...composableProps(props, { classNames: ['min-h-0 min-w-0 overflow-y-auto'] })} ref={forwardedRef}>
+    {children}
+  </div>
+));
+
+Viewport.displayName = VIEWPORT_NAME;
 
 //
 // TogglePanel
@@ -181,10 +153,12 @@ export const TogglePanel = {
   Root,
   Header,
   Content,
+  Viewport,
 };
 
 export type {
   RootProps as TogglePanelRootProps,
   HeaderProps as TogglePanelHeaderProps,
   ContentProps as TogglePanelContentProps,
+  ViewportProps as TogglePanelViewportProps,
 };

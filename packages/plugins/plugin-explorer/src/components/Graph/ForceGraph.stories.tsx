@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -18,15 +18,15 @@ import { type ValueGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import { useGraphModel } from '../../hooks';
-import { Graph } from '../../types';
+import { useGraphModel } from '#hooks';
+import { Graph } from '#types';
 
 import { ForceGraph } from './ForceGraph';
 import { generate } from './testing';
 
-const generator = faker as any as ValueGenerator;
+const generator = random as any as ValueGenerator;
 
-faker.seed(1);
+random.seed(1);
 
 const DefaultStory = () => {
   const client = useClient();

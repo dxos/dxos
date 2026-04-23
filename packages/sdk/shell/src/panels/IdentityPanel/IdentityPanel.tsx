@@ -19,7 +19,6 @@ import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 import { CloseButton, Heading, Viewport } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 import { translationKey } from '../../translations';
-
 import { useIdentityMachine } from './identityMachine';
 import {
   type IdentityPanelHeadingProps,
@@ -108,11 +107,11 @@ const IdentityHeading = ({
         </Avatar.Label>
 
         <Input.Root>
-          <Input.Label srOnly>{t('display name input label')}</Input.Label>
+          <Input.Label srOnly>{t('display-name-input.label')}</Input.Label>
           <Input.TextInput
             variant='subdued'
             data-testid='display-name-input'
-            placeholder={t('display name input placeholder')}
+            placeholder={t('display-name-input.placeholder')}
             classNames='mt-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
@@ -131,13 +130,13 @@ const IdentityHeading = ({
           <Clipboard.IconButton
             classNames='h-(--dx-rail-action)'
             data-testid='update-profile-form-copy-key'
-            label={t('copy self did label')}
+            label={t('copy-self-did.label')}
             value={identity.did}
           />
           {onManageCredentials && (
             <Toolbar.IconButton
               icon='ph--identification-card--regular'
-              label={t('manage credentials label')}
+              label={t('manage-credentials.label')}
               iconOnly
               tooltipSide='bottom'
               classNames='h-(--dx-rail-action)'
@@ -178,10 +177,10 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   const { t } = useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
-      case 'device invitation manager':
-        return t('choose add device label');
+      case 'device-invitation-manager':
+        return t('choose-add-device.label');
       default:
-        return t('identity heading');
+        return t('identity.heading');
     }
   }, [activeView, t]);
 
@@ -205,43 +204,43 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
       />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='identity action chooser' classNames={viewStyles}>
+          <Viewport.View id='identity-action-chooser' classNames={viewStyles}>
             <IdentityActionChooserComponent
-              active={activeView === 'identity action chooser'}
+              active={activeView === 'identity-action-chooser'}
               {...rest}
               connectionState={connectionState}
             />
           </Viewport.View>
-          <Viewport.View id='device invitation manager' classNames={viewStyles}>
+          <Viewport.View id='device-invitation-manager' classNames={viewStyles}>
             <InvitationManagerComponent
-              active={activeView === 'device invitation manager'}
+              active={activeView === 'device-invitation-manager'}
               {...rest}
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='confirm join new identity'>
+          <Viewport.View classNames={viewStyles} id='confirm-join-new-identity'>
             <ConfirmReset
-              active={activeView === 'confirm join new identity'}
+              active={activeView === 'confirm-join-new-identity'}
               {...rest}
-              mode='join new identity'
+              mode='join-new-identity'
               onConfirm={onJoinNewIdentity}
               onCancel={onCancelReset}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='confirm recover'>
+          <Viewport.View classNames={viewStyles} id='confirm-recover'>
             <ConfirmReset
-              active={activeView === 'confirm recover'}
+              active={activeView === 'confirm-recover'}
               {...rest}
               mode='recover'
               onConfirm={onRecover}
               onCancel={onCancelReset}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='confirm reset storage'>
+          <Viewport.View classNames={viewStyles} id='confirm-reset-storage'>
             <ConfirmReset
-              active={activeView === 'confirm reset storage'}
+              active={activeView === 'confirm-reset-storage'}
               {...rest}
-              mode='reset storage'
+              mode='reset-storage'
               onConfirm={onResetStorage}
               onCancel={onCancelReset}
             />
@@ -297,17 +296,17 @@ export const IdentityPanel = ({
   const activeView = useMemo(() => {
     switch (true) {
       case identityState.matches('choosingAction'):
-        return 'identity action chooser';
+        return 'identity-action-chooser';
       case identityState.matches('managingDeviceInvitation'):
-        return 'device invitation manager';
+        return 'device-invitation-manager';
       case identityState.matches('confirmingResetStorage'):
-        return 'confirm reset storage';
+        return 'confirm-reset-storage';
       case identityState.matches('confirmingRecover'):
-        return 'confirm recover';
+        return 'confirm-recover';
       case identityState.matches('confirmingJoinNewIdentity'):
-        return 'confirm join new identity';
+        return 'confirm-join-new-identity';
       default:
-        return 'identity action chooser';
+        return 'identity-action-chooser';
     }
   }, [identityState]);
 

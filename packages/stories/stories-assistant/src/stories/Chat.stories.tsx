@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
@@ -20,8 +20,8 @@ import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { Reply, Script, Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
 import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
@@ -147,7 +147,9 @@ export const Default: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
-      return { plugins: [MarkdownPlugin()] };
+      return {
+        plugins: [MarkdownPlugin()],
+      };
     },
     config: config.remote,
   }),
@@ -160,7 +162,9 @@ export const WithWebSearch: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
-      return { plugins: [MarkdownPlugin()] };
+      return {
+        plugins: [MarkdownPlugin()],
+      };
     },
     config: config.remote,
   }),
@@ -171,14 +175,16 @@ export const WithWebSearch: Story = {
 };
 
 // Test with prompt: Propose changes to my document based on the style guide.
-export const WithDocument: Story = {
+export const WithMarkdown: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const [{ MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-thread'),
       ]);
-      return { plugins: [MarkdownPlugin(), ThreadPlugin()] };
+      return {
+        plugins: [MarkdownPlugin(), ThreadPlugin()],
+      };
     },
     config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space }) => {
@@ -215,7 +221,9 @@ export const WithBlueprints: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-table'),
       ]);
-      return { plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()] };
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -235,7 +243,10 @@ export const WithChess: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
-      return { plugins: [ChessPlugin()], types: [Chess.Game] };
+      return {
+        plugins: [ChessPlugin()],
+        types: [Chess.Game],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -285,7 +296,9 @@ export const WithMail: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-thread'),
       ]);
-      return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -319,7 +332,9 @@ export const WithGmail: Story = {
         import('@dxos/plugin-inbox'),
         import('@dxos/plugin-token-manager'),
       ]);
-      return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
+      return {
+        plugins: [InboxPlugin(), TokenManagerPlugin()],
+      };
     },
     config: config.persistent,
     types: [Feed.Feed, Mailbox.Mailbox],
@@ -349,7 +364,9 @@ export const WithCalendar: Story = {
         import('@dxos/plugin-inbox'),
         import('@dxos/plugin-token-manager'),
       ]);
-      return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
+      return {
+        plugins: [InboxPlugin(), TokenManagerPlugin()],
+      };
     },
     config: config.remote,
     types: [Feed.Feed, Calendar.Calendar, Event.Event],
@@ -381,7 +398,10 @@ export const WithMap: Story = {
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
-      return { plugins: [MapPlugin(), TablePlugin()], types: [View.View, Map.Map, Table.Table] };
+      return {
+        plugins: [MapPlugin(), TablePlugin()],
+        types: [View.View, Map.Map, Table.Table],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -424,7 +444,10 @@ export const WithTrip: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-map'),
       ]);
-      return { plugins: [MarkdownPlugin(), MapPlugin()], types: [Map.Map] };
+      return {
+        plugins: [MarkdownPlugin(), MapPlugin()],
+        types: [Map.Map],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -479,7 +502,10 @@ export const WithBoard: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { Board, BoardPlugin } = await import('@dxos/plugin-board');
-      return { plugins: [BoardPlugin()], types: [Board.Board] };
+      return {
+        plugins: [BoardPlugin()],
+        types: [Board.Board],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -509,10 +535,12 @@ export const WithResearch: Story = {
         import('@dxos/plugin-table'),
         import('@dxos/plugin-thread'),
       ]);
-      return { plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()] };
+      return {
+        plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+      };
     },
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -555,15 +583,19 @@ export const WithTranscription: Story = {
         import('@dxos/plugin-transcription'),
         import('@dxos/plugin-preview'),
       ]);
-      return { plugins: [TranscriptionPlugin(), PreviewPlugin()] };
+      return {
+        plugins: [TranscriptionPlugin(), PreviewPlugin()],
+      };
     },
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const feed = space.db.add(Feed.make());
+      const queueDxn = Feed.getQueueDxn(feed);
+      invariant(queueDxn);
       const messages = createTestTranscription();
-      await queue.append(messages);
-      space.db.add(Transcript.make(queue.dxn));
+      await space.queues.get(queueDxn).append(messages);
+      space.db.add(Transcript.make(Ref.make(feed)));
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
@@ -604,10 +636,7 @@ export const WithTriggers: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(Reply)),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '*/5 * * * * *', // Every 5 seconds.
-          },
+          spec: Trigger.specTimer('*/5 * * * * *'), // Every 5 seconds.
         }),
       );
     },
@@ -622,7 +651,10 @@ export const WithChessTrigger: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
-      return { plugins: [ChessPlugin()], types: [Chess.Game] };
+      return {
+        plugins: [ChessPlugin()],
+        types: [Chess.Game],
+      };
     },
     config: config.remote,
     onInit: async ({ space }) => {
@@ -654,12 +686,7 @@ export const WithChessTrigger: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(ChessFunctions.Play)),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Chess.Game)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Chess.Game))),
           input: {
             id: '{{event.changedObjectId}}',
             side: 'black', // NOTE: Removing it makes the bot play itself.
@@ -678,14 +705,15 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
-      const researchInputQueue = space.db.add(
-        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
-      );
+      const feed = space.db.add(Feed.make());
+      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      await researchInputQueue.queue.target!.append(orgs);
+      const feedQueueDxn = Feed.getQueueDxn(feed);
+      invariant(feedQueueDxn);
+      await space.queues.get(feedQueueDxn).append(orgs);
 
       const researchPrompt = space.db.add(
         Prompt.make({
@@ -695,7 +723,6 @@ export const WithResearchQueue: Story = {
             org: Schema.Any,
           }),
           output: Schema.Any,
-
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(ResearchBlueprint.make())],
@@ -706,10 +733,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: researchInputQueue.queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -735,7 +759,9 @@ export const WithProject: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-pipeline'),
       ]);
-      return { plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()] };
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
+      };
     },
     config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
@@ -759,8 +785,8 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, (obj) => {
-          Obj.getMeta(obj).tags = [tagDxn];
+        Obj.change(person, (person) => {
+          Obj.getMeta(person).tags = [tagDxn];
         });
       });
 
@@ -783,18 +809,19 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, (obj) => {
-          Obj.getMeta(obj).tags = [tagDxn];
+        Obj.change(research, (research) => {
+          Obj.getMeta(research).tags = [tagDxn];
         });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.change(organization, (org) => {
-          Obj.getMeta(org).tags = [tagDxn];
+        Obj.change(organization, (organization) => {
+          Obj.getMeta(organization).tags = [tagDxn];
         });
       });
+
       // TODO(wittjosiah): Support relations.
       // space.db.add(
       //   Relation.make(HasSubject, {
@@ -837,12 +864,7 @@ export const WithProject: Story = {
       const researchTrigger = Trigger.make({
         function: Ref.make(Operation.serialize(AgentPrompt)),
         enabled: true,
-        spec: {
-          kind: 'subscription',
-          query: {
-            ast: organizationsQuery.ast,
-          },
-        },
+        spec: Trigger.specSubscription(organizationsQuery),
         input: {
           prompt: Ref.make(researchPrompt),
           input: {
@@ -911,7 +933,9 @@ export const WithScript: Story = {
         import('@dxos/plugin-markdown'),
         import('@dxos/plugin-script'),
       ]);
-      return { plugins: [MarkdownPlugin(), ScriptPlugin()] };
+      return {
+        plugins: [MarkdownPlugin(), ScriptPlugin()],
+      };
     },
     config: config.local,
     types: [Script.Script, Text.Text],
@@ -966,7 +990,9 @@ export const WithPrompt: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
-      return { plugins: [MarkdownPlugin()] };
+      return {
+        plugins: [MarkdownPlugin()],
+      };
     },
     config: config.remote,
     types: [Text.Text],
@@ -980,7 +1006,6 @@ export const WithPrompt: Story = {
             org: Schema.Any,
           }),
           output: Schema.Any,
-
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(ResearchBlueprint.make())],

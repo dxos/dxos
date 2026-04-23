@@ -17,7 +17,6 @@ import { mx } from '@dxos/ui-theme';
 import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-
 import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
 
 export const WorkflowPanel = (props: { space?: Space }) => {

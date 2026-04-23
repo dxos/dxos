@@ -3,19 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Memory, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
+import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -23,6 +26,7 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  CompanionChatProvisioner,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
@@ -30,12 +34,12 @@ import {
   ReactSurface,
   Settings,
   Toolkit,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { AssistantOperation } from '#operations';
+import { AssistantEvents } from '#types';
+
 import { translations } from './translations';
-import { AssistantEvents } from './types';
-import { AssistantOperation } from './operations';
-import * as Option from 'effect/Option';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -115,19 +119,15 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Project.Project),
+        id: Type.getTypename(Agent.Agent),
         metadata: {
-          icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
+          icon: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Agent.Agent).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = yield* Project.makeInitialized(
-                {
-                  name: 'New Project',
-                  spec: 'Not specified yet',
-                },
-                ProjectBlueprint.make(),
-              ).pipe(withComputeRuntime(options.db.spaceId));
+              const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
+                withComputeRuntime(options.db.spaceId),
+              );
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
@@ -145,10 +145,12 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
+      Feed.Feed,
       HasSubject.HasSubject,
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,
-      Project.Project,
+      Agent.Agent,
+      McpServer.McpServer,
       Plan.Plan,
       Sequence,
       Memory.Memory,
@@ -157,7 +159,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,
-    activatesBefore: [AppActivationEvents.SetupArtifactDefinition],
+    firesBeforeActivation: [AppActivationEvents.SetupArtifactDefinition],
   }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -191,7 +193,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: LocalModelResolver,
   }),
   Plugin.addModule({
-    activatesBefore: [AssistantEvents.SetupAiServiceProviders],
+    firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: ActivationEvents.Startup,
     activate: AiService,
@@ -200,6 +202,18 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Use a different event.
     activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      AppActivationEvents.AppGraphReady,
+      DeckEvents.StateReady,
+    ),
+    activate: CompanionChatProvisioner,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.make,
 );

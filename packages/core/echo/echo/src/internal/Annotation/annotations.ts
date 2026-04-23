@@ -15,7 +15,6 @@ import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
@@ -442,7 +441,6 @@ export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Identifies if a property should be included in a form or not.
  * By default, all properties are included in forms, so this is opt-out.
  */
-// TODO(burdon): UI concern.
 export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInput');
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 

@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { type Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { type SearchResult } from '../types';
+import { type SearchResult } from '#types';
 
 export const queryStringToMatch = (queryString?: string): RegExp | undefined => {
   const trimmed = queryString?.trim();

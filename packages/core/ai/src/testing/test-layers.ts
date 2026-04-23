@@ -11,8 +11,7 @@ import * as Redacted from 'effect/Redacted';
 
 import * as AiModelResolver from '../AiModelResolver';
 import type * as AiService from '../AiService';
-import { AnthropicResolver, LMStudioResolver } from '../resolvers';
-
+import { AnthropicResolver, LMStudioResolver, OllamaResolver } from '../resolvers';
 import { MemoizedAiService } from './memoization';
 import { tapHttpErrors } from './tap';
 
@@ -65,14 +64,31 @@ export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
 );
 
 /**
+ * Uses a local Ollama instance (running on `localhost:11434`).
+ *
+ * Start ollama with CORS enabled:
+ * ```bash
+ * OLLAMA_ORIGINS="*" ollama serve
+ * ```
+ */
+export const OllamaAiServiceLayer: AiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
+  Layer.provide(OllamaResolver.make()),
+  Layer.provide(FetchHttpClient.layer),
+);
+
+export type AiServicePreset = 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+
+/**
  * Create an appropriate testing layer based on the preset.
  */
-export const AiServiceTestingPreset = (preset: 'direct' | 'edge-local' | 'edge-remote'): AiServiceLayer => {
+export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer => {
   switch (preset) {
     case 'edge-local':
       return LocalEdgeAiServiceLayer;
     case 'edge-remote':
       return RemoteEdgeAiServiceLayer;
+    case 'ollama':
+      return OllamaAiServiceLayer;
     case 'direct':
     default:
       return DirectAiServiceLayer;
@@ -86,7 +102,7 @@ export const AiServiceTestingPreset = (preset: 'direct' | 'edge-local' | 'edge-r
 export const TestAiService = ({
   disableMemoization = false,
   preset = 'direct',
-}: { disableMemoization?: boolean; preset?: 'direct' | 'edge-local' | 'edge-remote' } = {}) => {
+}: { disableMemoization?: boolean; preset?: AiServicePreset } = {}) => {
   if (disableMemoization) {
     return AiServiceTestingPreset(preset);
   } else {

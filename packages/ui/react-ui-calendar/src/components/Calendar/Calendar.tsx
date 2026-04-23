@@ -24,7 +24,6 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-
 import { getDate, isSameDay } from './util';
 
 const maxRows = 50 * 100;
@@ -130,7 +129,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
-          label={t('today button')}
+          label={t('today.button')}
           onClick={handleToday}
         />
       </div>

@@ -8,20 +8,15 @@ import React from 'react';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 
 import { withLayout, withTheme } from '../../testing';
-
 import { ErrorFallback } from './ErrorFallback';
 import { ThrowError } from './ThrowError';
 
-const BasicStory = () => {
+const DefaultStory = () => {
   return (
     <ErrorBoundary name='story' FallbackComponent={ErrorFallback}>
       <ThrowError />
     </ErrorBoundary>
   );
-};
-
-const StringErrorStory = () => {
-  return <ErrorFallback error='This is a string error message' data={{ context: 'story' }} />;
 };
 
 const meta: Meta = {
@@ -38,7 +33,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: BasicStory,
+  render: DefaultStory,
   play: async () => {
     // This story intentionally renders an ErrorBoundary fallback; clear the smoke-test error flag.
     (window as any).__ERROR_BOUNDARY_ERRORS__ = [];
@@ -46,5 +41,5 @@ export const Default: Story = {
 };
 
 export const StringError: Story = {
-  render: StringErrorStory,
+  render: () => <ErrorFallback error='This is a string error message' data={{ context: 'story' }} />,
 };

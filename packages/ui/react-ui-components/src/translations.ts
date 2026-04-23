@@ -10,14 +10,14 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'no commits message': 'No events yet',
+        'no-commits.message': 'No events yet',
 
-        'query editor placeholder': 'Enter query (e.g., "#tag", "type")',
+        'query-editor.placeholder': 'Enter query (e.g., "#tag", "type")',
 
-        'picker select label': 'Select',
-        'picker none label': 'None',
-        'picker type placeholder': 'Type',
-        'picker tag placeholder': 'Tag',
+        'picker-select.label': 'Select',
+        'picker-none.label': 'None',
+        'picker-type.placeholder': 'Type',
+        'picker-tag.placeholder': 'Tag',
       },
     },
   },

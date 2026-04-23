@@ -11,6 +11,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -21,8 +22,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-
-import { type ViewMode, useMessageToolbarActions } from './useToolbar';
+import { type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -35,6 +35,7 @@ type MessageContextValue = {
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
   sender: DXN | undefined;
+  onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
@@ -53,6 +54,7 @@ type MessageRootProps = PropsWithChildren<
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'plain',
+  onOpen,
   onReply,
   onReplyAll,
   onForward,
@@ -64,6 +66,7 @@ const MessageRoot = ({
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
+      onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
@@ -83,12 +86,12 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
+  const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
       <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
@@ -147,7 +150,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
           <div role='none' className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(), new Date(message.created))}
+            {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>
@@ -195,7 +198,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-3' } } }),
+      createThemeExtensions({ themeMode, slots: compactSlots }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
@@ -209,9 +212,9 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   return (
     <div
       role='none'
-      ref={parentRef}
       className={mx('flex overflow-hidden', classNames)}
       data-popover-collision-boundary={true}
+      ref={parentRef}
     />
   );
 };

@@ -3,10 +3,9 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
 //
 
+import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { type StorybookConfig } from '@storybook/react-vite';
 import { type InlineConfig } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -143,7 +142,8 @@ export const createConfig = ({
           },
         },
         optimizeDeps: {
-          exclude: ['@dxos/wa-sqlite'],
+          // WASM modules.
+          exclude: ['@dxos/wa-sqlite', 'manifold-3d'],
           ...(isFastBundle && {
             include: [
               // React.
@@ -223,6 +223,34 @@ export const createConfig = ({
           //
           // NOTE: Order matters.
           //
+
+          // RSS proxy middleware for CORS-free feed fetching.
+          {
+            name: 'rss-proxy',
+            configureServer(server: any) {
+              server.middlewares.use('/api/rss', async (req: any, res: any) => {
+                const url = new URL(req.url!, `http://${req.headers.host}`);
+                const feedUrl = url.searchParams.get('url');
+                if (!feedUrl) {
+                  res.statusCode = 400;
+                  res.end('Missing url parameter');
+                  return;
+                }
+                try {
+                  const response = await globalThis.fetch(feedUrl);
+                  const contentType = response.headers.get('content-type');
+                  if (contentType) {
+                    res.setHeader('content-type', contentType);
+                  }
+                  res.statusCode = response.status;
+                  res.end(await response.text());
+                } catch (error) {
+                  res.statusCode = 502;
+                  res.end(String(error));
+                }
+              });
+            },
+          },
 
           !isFastBundle &&
             importSource({

@@ -4,12 +4,15 @@
 
 import { type ViewUpdate } from '@codemirror/view';
 import { useMemo } from 'react';
+
+import { fromUrlPath } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useThemeContext } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
@@ -34,12 +37,11 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
-import { useThemeContext } from '@dxos/react-ui';
 import { isTruthy, safeUrl } from '@dxos/util';
 
-import { Markdown } from '../types';
+import { Markdown } from '#types';
+
 import { setFallbackName } from '../util';
-import { fromUrlPath } from '@dxos/app-toolkit';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
@@ -49,6 +51,7 @@ export type ExtensionsOptions = {
   settings?: Markdown.Settings;
   compact?: boolean;
   viewMode?: EditorViewMode;
+  editable?: boolean;
   selectionManager?: SelectionManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
@@ -95,8 +98,8 @@ export const useExtensions = ({
         viewMode,
         selectionManager,
         previewOptions,
-        onSelectObject,
         platform,
+        onSelectObject,
       }),
     [
       id,
@@ -105,14 +108,14 @@ export const useExtensions = ({
       viewMode,
       selectionManager,
       previewOptions,
-      onSelectObject,
       settings,
       settings?.debug,
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
-      platform,
       settings?.typewriter,
+      platform,
+      onSelectObject,
     ],
   );
 
@@ -224,7 +227,7 @@ const createRenderLink =
     const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
     const icon = Domino.of('span')
       .classNames('dx-link ms-1 inline-block align-[-0.125em]')
-      .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+      .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
       invariant(qualifiedId, 'Invalid link format.');
@@ -256,6 +259,6 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
       .classNames('dx-link flex items-center gap-2')
       .text(safeUrl(url)?.toString() ?? url)
-      .children(Domino.svg('ph--arrow-square-out--regular')).root,
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

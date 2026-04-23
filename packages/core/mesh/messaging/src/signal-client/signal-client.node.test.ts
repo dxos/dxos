@@ -14,7 +14,6 @@ import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 import { ComplexSet, range } from '@dxos/util';
 
 import { type Message, type PeerInfo } from '../signal-methods';
-
 import { SignalClient } from './signal-client';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {

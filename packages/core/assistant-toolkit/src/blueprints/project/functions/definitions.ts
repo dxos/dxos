@@ -4,48 +4,46 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService, TriggerEvent } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { QueueService, Trace, TriggerEvent } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
-import { Project } from '../../../types';
+import { Agent } from '../../../types';
 
-export const Agent = Operation.make({
+export const AgentWorker = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.agent',
-    name: 'Project Agent',
-    description: 'Agentic worker that drives the project autonomously.',
+    key: 'org.dxos.function.agent.worker',
+    name: 'Agent Worker',
+    description: 'Agentic worker that drives the agent autonomously.',
   },
   input: Schema.Struct({
-    project: Schema.suspend(() => Ref.Ref(Project.Project)),
+    agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
     prompt: Schema.optional(Schema.String),
     event: Schema.optional(TriggerEvent.TriggerEvent),
   }),
   output: Schema.Void,
   services: [
-    AiContextService,
     AiService.AiService,
     Database.Service,
-    FunctionInvocationService,
-    // TODO(dmaretskyi): Consider making TracingService a default to all operations.
-    TracingService,
-    // TODO(dmaretskyi): Handle those within session/conversation context.
-    ToolExecutionService,
-    ToolResolverService,
+    QueueService,
+    Feed.FeedService,
+    OperationRegistry.Service,
+    Trace.TraceService,
+    OpaqueToolkit.OpaqueToolkitProvider,
   ],
 });
 
 export const Qualifier = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.qualifier',
-    name: 'Project Qualifier',
+    key: 'org.dxos.function.agent.qualifier',
+    name: 'Agent Qualifier',
     description:
-      'Qualifier that determines if the event is relevant to the project. Puts the data into the input queue of the project.',
+      'Qualifier that determines if the event is relevant to the agent. Puts the data into the input queue of the agent.',
   },
   input: Schema.Struct({
-    project: Schema.suspend(() => Ref.Ref(Project.Project)),
+    agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
     event: TriggerEvent.TriggerEvent,
   }),
   output: Schema.Void,
@@ -54,15 +52,15 @@ export const Qualifier = Operation.make({
 
 export const GetContext = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.get-context',
-    name: 'Get Project Context',
-    description: 'Get the context of an project.',
+    key: 'org.dxos.function.agent.get-context',
+    name: 'Get Agent Context',
+    description: 'Get the context of an agent.',
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
     id: Schema.String,
     name: Schema.String,
-    spec: Schema.String,
+    instructions: Schema.String,
     plan: Schema.String,
     artifacts: Schema.Array(
       Schema.Struct({
@@ -77,7 +75,7 @@ export const GetContext = Operation.make({
 
 export const AddArtifact = Operation.make({
   meta: {
-    key: 'org.dxos.function.project.add-artifact',
+    key: 'org.dxos.function.agent.add-artifact',
     name: 'Add artifact',
     description: 'Adds a new artifact.',
   },

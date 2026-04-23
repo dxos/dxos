@@ -14,8 +14,8 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { PluginList } from '../../components';
-import { getPluginPath } from '../../meta';
+import { PluginList } from '#components';
+import { getPluginPath } from '#meta';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
@@ -23,17 +23,20 @@ const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { n
 export type PluginRegistryProps = {
   id: string;
   plugins: Plugin.Plugin[];
+  /**
+   * Map from plugin id → display-only tags (e.g. `community`, `local`) computed by the caller.
+   */
+  extraTagsById?: Record<string, readonly string[]>;
 };
 
 export const PluginRegistry = composable<HTMLDivElement, PluginRegistryProps>(
-  ({ id, plugins: pluginsProp, ...props }, forwardedRef) => {
+  ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();
     const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
     const enabled = useAtomValue(manager.enabled);
     const allSettings = useCapabilities(AppCapabilities.Settings);
 
-    // TODO(wittjosiah): Factor out to an intent?
     const handleChange = useCallback(
       (id: string, enabled: boolean) =>
         Effect.gen(function* () {
@@ -80,6 +83,7 @@ export const PluginRegistry = composable<HTMLDivElement, PluginRegistryProps>(
           <PluginList
             plugins={plugins}
             enabled={enabled}
+            extraTagsById={extraTagsById}
             onClick={handleClick}
             onChange={handleChange}
             hasSettings={hasSettings}

@@ -6,15 +6,16 @@ import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { type StackSectionItem } from '../../types';
-import { useStack } from '../StackContext';
+import { meta } from '#meta';
+import { type StackSectionItem } from '#types';
 
+import { useStack } from '../StackContext';
 import { CaretDownUp } from './CaretDownUp';
 
 const sectionActionDimensions = 'p-1 my-1 shrink-0 min-h-0 w-(--dx-rail-action) h-min';
@@ -58,27 +59,27 @@ export const StackSection = ({
                     {view.collapsed ? (
                       <DropdownMenu.Item onClick={() => onNavigate(id)} data-testid='section.navigate-to'>
                         <Icon icon='ph--arrow-right--regular' />
-                        <span className='ms-2 grow'>{t('navigate to section label')}</span>
+                        <span className='ms-2 grow'>{t('navigate-to-section.label')}</span>
                       </DropdownMenu.Item>
                     ) : (
                       <CollapsiblePrimitive.Trigger asChild>
                         <DropdownMenu.Item>
                           <CaretDownUp className={getSize(5)} />
-                          <span className='ms-2 grow'>{t('collapse label')}</span>
+                          <span className='ms-2 grow'>{t('collapse.label')}</span>
                         </DropdownMenu.Item>
                       </CollapsiblePrimitive.Trigger>
                     )}
                     <DropdownMenu.Item onClick={() => onAdd(id, 'before')} data-testid='section.add-before'>
                       <Icon icon='ph--arrow-line-up--regular' />
-                      <span className='ms-2 grow'>{t('add section before label')}</span>
+                      <span className='ms-2 grow'>{t('add-section-before.label')}</span>
                     </DropdownMenu.Item>
                     <DropdownMenu.Item onClick={() => onAdd(id, 'after')} data-testid='section.add-after'>
                       <Icon icon='ph--arrow-line-down--regular' />
-                      <span className='ms-2 grow'>{t('add section after label')}</span>
+                      <span className='ms-2 grow'>{t('add-section-after.label')}</span>
                     </DropdownMenu.Item>
                     <DropdownMenu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
                       <Icon icon='ph--trash--regular' />
-                      <span className='ms-2 grow'>{t('remove section label')}</span>
+                      <span className='ms-2 grow'>{t('remove-section.label')}</span>
                     </DropdownMenu.Item>
                   </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
@@ -90,7 +91,7 @@ export const StackSection = ({
                 <IconButton
                   iconOnly
                   variant='ghost'
-                  label={t('expand label')}
+                  label={t('expand.label')}
                   icon='ph--caret-up-down--regular'
                   classNames={sectionActionDimensions}
                 />
@@ -100,7 +101,7 @@ export const StackSection = ({
                 iconOnly
                 variant='ghost'
                 onClick={() => onNavigate(id)}
-                label={t('navigate to section label')}
+                label={t('navigate-to-section.label')}
                 icon='ph--arrow-right--regular'
                 data-testid='section.navigate-to'
                 classNames={sectionActionDimensions}
@@ -109,7 +110,7 @@ export const StackSection = ({
           </StackItem.HeadingStickyContent>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content>
-          <Surface.Surface role='section' data={data} limit={1} placeholder={<></>} />
+          <Surface.Surface type={AppSurface.Section} data={data} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
           <StackItem.Content classNames='dx-attention-surface'>
