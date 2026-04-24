@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { type SlackChannel, type SlackConnectionStatus } from '#types';
 
@@ -10,10 +10,20 @@ const SLACK_API = 'https://slack.com/api';
 
 /** Lightweight Slack API client using fetch. No npm dependency needed. */
 export const useSlackApi = (botToken?: string) => {
-  const [status, setStatus] = useState<SlackConnectionStatus>(botToken ? 'disconnected' : 'disconnected');
+  const [status, setStatus] = useState<SlackConnectionStatus>('disconnected');
   const [channels, setChannels] = useState<SlackChannel[]>([]);
   const [teamName, setTeamName] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
+
+  // Reset state when the token changes (including when cleared via Disconnect).
+  // Without this, swapping or removing tokens left stale `connected` / team
+  // / channel state on the UI until the next testConnection() call.
+  useEffect(() => {
+    setStatus('disconnected');
+    setChannels([]);
+    setTeamName(undefined);
+    setError(undefined);
+  }, [botToken]);
 
   const callSlack = useCallback(
     async (method: string, params?: Record<string, string>) => {
@@ -37,16 +47,31 @@ export const useSlackApi = (botToken?: string) => {
     [botToken],
   );
 
-  const testConnection = useCallback(async () => {
-    if (!botToken) {
+  // Accept an explicit token override so callers can validate a freshly-
+  // typed token before persisting it to settings (avoids the race where
+  // `testConnection` uses the stale `botToken` prop while the component is
+  // mid-update).
+  const testConnection = useCallback(async (overrideToken?: string) => {
+    const token = overrideToken ?? botToken;
+    if (!token) {
       setStatus('disconnected');
       return false;
     }
 
     setStatus('connecting');
     setError(undefined);
+    const call = async (method: string, params?: Record<string, string>) => {
+      const body = new URLSearchParams({ token, ...params });
+      const response = await fetch(`${SLACK_API}/${method}`, { method: 'POST', body });
+      const data = await response.json();
+      if (!data.ok) {
+        const detail = data.needed ? ` (need scope: ${data.needed})` : '';
+        throw new Error(`${data.error ?? 'Slack API error'}${detail}`);
+      }
+      return data;
+    };
     try {
-      const authData = await callSlack('auth.test');
+      const authData = await call('auth.test');
       setTeamName(authData.team);
       setStatus('connected');
 
@@ -62,7 +87,7 @@ export const useSlackApi = (botToken?: string) => {
         if (cursor) {
           params.cursor = cursor;
         }
-        const channelsData = await callSlack('conversations.list', params);
+        const channelsData = await call('conversations.list', params);
         const page: SlackChannel[] = (channelsData.channels ?? []).map(
           (channel: { id: string; name: string; is_member: boolean }) => ({
             id: channel.id,
@@ -82,7 +107,7 @@ export const useSlackApi = (botToken?: string) => {
       setError(err instanceof Error ? err.message : 'Unknown error');
       return false;
     }
-  }, [botToken, callSlack]);
+  }, [botToken]);
 
   const postMessage = useCallback(
     async (channelId: string, text: string, threadTs?: string) => {

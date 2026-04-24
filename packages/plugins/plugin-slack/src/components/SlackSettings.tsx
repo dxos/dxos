@@ -28,10 +28,17 @@ export const SlackSettings = ({ settings, onSettingsChange }: SlackSettingsProps
 
   const handleTestConnection = useCallback(async () => {
     const trimmed = tokenInput.trim();
-    if (trimmed) {
+    if (!trimmed) {
+      return;
+    }
+    // Validate the trimmed input *first*; only persist if Slack accepts it.
+    // Previously we persisted the typed-but-unvalidated token and then called
+    // testConnection(), which used the stale bound token. Bad tokens could
+    // end up saved.
+    const ok = await testConnection(trimmed);
+    if (ok) {
       updatePartial({ botToken: trimmed });
     }
-    await testConnection();
   }, [tokenInput, updatePartial, testConnection]);
 
   const handleDisconnect = useCallback(() => {

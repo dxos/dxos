@@ -47,12 +47,18 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
     }
   }, [messages.length, responses]);
 
-  // Auto-start monitoring.
+  // Start / stop monitoring based on settings. Previously this only started
+  // polling and never stopped it when the bot token was cleared or the
+  // channel list was emptied — leaving the interval alive and the polling
+  // flag stale.
   useEffect(() => {
-    if (settings.botToken && (settings.monitoredChannels ?? []).length > 0 && !polling) {
+    const enabled = Boolean(settings.botToken) && (settings.monitoredChannels ?? []).length > 0;
+    if (enabled && !polling) {
       startPolling();
+    } else if (!enabled && polling) {
+      stopPolling();
     }
-  }, [settings.botToken, settings.monitoredChannels, polling, startPolling]);
+  }, [settings.botToken, settings.monitoredChannels, polling, startPolling, stopPolling]);
 
   /** Update a response entry. */
   const updateResponse = useCallback((key: string, update: Partial<AgentResponse>) => {
@@ -260,6 +266,15 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
       }
       return;
     }
+    // Respect the settings toggle: if the user has disabled @mention auto-
+    // response, drain the queue without invoking the agent so we don't
+    // silently ignore the setting (or accumulate pending mentions forever).
+    if (settings.respondToMentions === false) {
+      if (pendingMentions.length > 0) {
+        clearPendingMentions();
+      }
+      return;
+    }
     if (pendingMentions.length === 0) {
       return;
     }
@@ -271,7 +286,7 @@ export const SlackFeed = ({ settings, db }: SlackFeedProps) => {
       }
       void handleAskAgent(mention);
     }
-  }, [pendingMentions, clearPendingMentions, handleAskAgent]);
+  }, [pendingMentions, clearPendingMentions, handleAskAgent, settings.respondToMentions]);
 
   // Auto-respond to thread replies.
   useEffect(() => {

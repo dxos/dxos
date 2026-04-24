@@ -276,15 +276,31 @@ export const useSlackMessages = (
     });
   }, [normalizeChannelIds, resolveChannelName, resolveUserName]);
 
+  // In-flight guard so overlapping polls don't queue up when the network is
+  // slow or channel count is high. Without this a slow Slack response could
+  // cause `fetchMessages` writes to land out of order.
+  const fetchInFlightRef = useRef(false);
+  const guardedFetch = useCallback(async () => {
+    if (fetchInFlightRef.current) {
+      return;
+    }
+    fetchInFlightRef.current = true;
+    try {
+      await fetchMessages();
+    } finally {
+      fetchInFlightRef.current = false;
+    }
+  }, [fetchMessages]);
+
   const startPolling = useCallback(() => {
     if (intervalRef.current) {
       return;
     }
     setPolling(true);
     log.info('slack: starting polling');
-    void fetchMessages();
-    intervalRef.current = setInterval(() => void fetchMessages(), pollIntervalMs);
-  }, [fetchMessages, pollIntervalMs]);
+    void guardedFetch();
+    intervalRef.current = setInterval(() => void guardedFetch(), pollIntervalMs);
+  }, [guardedFetch, pollIntervalMs]);
 
   const stopPolling = useCallback(() => {
     setPolling(false);
