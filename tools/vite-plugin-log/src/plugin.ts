@@ -7,14 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Plugin as RolldownPlugin, RolldownMagicString } from 'rolldown';
-import {
-  parseAst,
-  parseSync,
-  type ConfigEnv,
-  type IndexHtmlTransformContext,
-  type Plugin,
-  type UserConfig,
-} from 'vite';
+import { parseSync, type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig } from 'vite';
 
 import {
   DEFAULT_LOG_META_TRANSFORM_SPEC,

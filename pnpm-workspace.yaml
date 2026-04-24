@@ -732,6 +732,7 @@ overrides:
 
 patchedDependencies:
   '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
+  js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
 
@@ -756,6 +757,6 @@ trustPolicyExclude:
   # @swc/core is used by @dxos/swc-log-plugin tooling without provenance attestation pnpm expects.
   - '@swc/core@1.13.5'
   # Transitive deps without provenance.
-  - 'semver@6.3.1'
-  - 'semver@5.7.2'
-  - 'ua-parser-js@1.0.41'
+  - semver@6.3.1
+  - semver@5.7.2
+  - ua-parser-js@1.0.41
