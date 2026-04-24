@@ -467,19 +467,19 @@ export class AutomergeHost extends Resource {
       this._createdDocuments.add(handle.documentId);
       this._sharePolicyChangedTask?.schedule();
       return handle;
-    }
+    } else {
+      if (initialValue instanceof Uint8Array) {
+        throw new Error('Cannot create document from Uint8Array without preserving history');
+      }
 
-    if (initialValue instanceof Uint8Array) {
-      throw new Error('Cannot create document from Uint8Array without preserving history');
+      if (opts?.documentId) {
+        throw new Error('Cannot prefil document id when not importing an existing doc');
+      }
+      const handle = await this._repo.create2<T>(initialValue);
+      this._createdDocuments.add(handle.documentId);
+      this._sharePolicyChangedTask?.schedule();
+      return handle;
     }
-
-    if (opts?.documentId) {
-      throw new Error('Cannot prefil document id when not importing an existing doc');
-    }
-    const handle = await this._repo.create2<T>(initialValue);
-    this._createdDocuments.add(handle.documentId);
-    this._sharePolicyChangedTask?.schedule();
-    return handle;
   }
 
   async waitUntilHeadsReplicated(ctx: Context, heads: DocHeadsList): Promise<void> {
