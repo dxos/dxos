@@ -42,4 +42,4 @@ We're also thinking about how to make the process of migrating data more user-fr
 
 There are other potential ways to transform changes in otherwise abandoned Epochs and somehow "rebase" them onto the canonical state once latent peers rejoin the space. Perhaps the schema itself can be represented with a CRDT. The [Cambria](https://www.inkandswitch.com/cambria/) project from Ink & Switch suggests the usage of lenses for reads and writes.
 
-If you're interested in these problems, we'd love to hear from you. Join the conversation on [Discord](https://discord.gg/FhG4W87KbC) and let's talk about decentralized problems.
+If you're interested in these problems, we'd love to hear from you. Join the conversation on [Discord](https://dxos.org/discord) and let's talk about decentralized problems.

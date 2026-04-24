@@ -24,6 +24,12 @@
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "storybook-react:serve"],
       "port": 9009
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "docs:serve"],
+      "port": 4321
     }
   ]
 }

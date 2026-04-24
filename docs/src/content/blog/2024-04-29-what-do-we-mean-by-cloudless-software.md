@@ -26,7 +26,7 @@ If you're building a collaborative app for small teams of people, DXOS may be a 
 
 Try the [DXOS SDK](https://docs.dxos.org). Check out the app we're building with it: [Composer](https://dxos.org/composer).
 
-Join our [Discord](https://discord.gg/FhG4W87KbC) - we'd love to hear from you.
+Join our [Discord](https://dxos.org/discord) - we'd love to hear from you.
 
 Learn more:
 
