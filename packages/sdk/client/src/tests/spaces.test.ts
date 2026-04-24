@@ -8,7 +8,7 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Serializer, getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
@@ -683,6 +683,36 @@ describe('Spaces', () => {
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
+  });
+
+  test('import space archive (JSON) with feed messages', { timeout: 5_000, retry: 1 }, async () => {
+    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    // Create a feed with a couple of objects on client 1.
+    const space = await client1.spaces.create();
+    const feedObj = space.db.add(Feed.make({ name: 'test-feed' }));
+    await space.db.flush();
+    const feedDxn = Feed.getQueueDxn(feedObj);
+    expect(feedDxn).toBeDefined();
+    const queue = space.queues.get(feedDxn!);
+    await queue.append([createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
+
+    // Export as JSON, import on client 2.
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+    expect(archive.contents.length).to.be.greaterThan(0);
+    const importedSpace = await client2.spaces.import(archive);
+    expect(importedSpace.id).not.toEqual(space.id);
+
+    // Query the Feed object on client 2.
+    const importedFeed = await importedSpace.db.query(Filter.type(Feed.Feed)).first();
+    expect(importedFeed.name).toEqual('test-feed');
+
+    // Query the messages from within the feed on client 2.
+    const messages = await importedSpace.db.query(Query.type(TestSchema$.Expando).from(importedFeed)).run();
+    expect(messages.length).toEqual(2);
+    expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
   });
 
   test('import JSON into existing space', { timeout: 5_000 }, async () => {
