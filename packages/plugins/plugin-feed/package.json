@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-feed",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Feed plugin for RSS and open protocol subscriptions.",
   "homepage": "https://dxos.org",
