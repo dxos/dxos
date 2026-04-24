@@ -9166,6 +9166,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9205,6 +9208,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -18877,6 +18883,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
+      '@fluentui/react-tabster':
+        specifier: 'catalog:'
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
