@@ -42,11 +42,11 @@ const accent = currentPage !== 'home' ? ' c' : '';
           <a href="/plugins" {...(currentPage === 'plugins' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'plugins' ? ' w--current' : ''}`}>
             <div>Plugins</div>
           </a>
-          <a href="/docs" class={`nav-link${accent} w-inline-block`}>
-            <div>Docs</div>
-          </a>
           <a href="/blog" {...(currentPage === 'blog' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'blog' ? ' w--current' : ''}`}>
             <div>Blog</div>
+          </a>
+          <a href="/docs" class={`nav-link${accent} w-inline-block`}>
+            <div>Docs</div>
           </a>
         </div>
       </nav>
