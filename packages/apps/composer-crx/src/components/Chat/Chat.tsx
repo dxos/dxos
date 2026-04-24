@@ -10,7 +10,7 @@ import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
@@ -125,78 +125,86 @@ export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
   }, [clearError, clearHistory, stop]);
 
   return (
-    <div className={mx('flex flex-col gap-2 overflow-hidden bg-base-surface', classNames)}>
+    <div className={mx('flex flex-col bg-base-surface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
-      <div role='toolbar' className='flex relative items-center'>
-        {onClip && (
-          <IconButton
-            variant='ghost'
-            icon='ph--paperclip--regular'
-            iconOnly
-            label={t('clip.button')}
-            onClick={onClip}
-          />
-        )}
-        <Input.Root>
-          <Input.TextInput
-            ref={inputRef}
-            autoFocus
-            placeholder={t('chat.placeholder')}
-            value={text}
-            onChange={(ev) => setText(ev.target.value)}
-            onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-            classNames='px-2 pt-[4px] pb-[4px] w-full rounded-none text-lg ring-none! ring-sky-500!'
-          />
-        </Input.Root>
-        {filteredMessages.length > 0 && (
-          <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
+      <div role='none' className='flex flex-col'>
+        <div role='none' className='flex relative items-center'>
+          <Input.Root>
+            <Input.TextInput
+              ref={inputRef}
+              autoFocus
+              placeholder={t('chat.placeholder')}
+              value={text}
+              onChange={(ev) => setText(ev.target.value)}
+              onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
+              classNames='px-2 pt-[4px] pb-[4px] w-full rounded-none text-lg ring-none! ring-sky-500!'
+            />
+          </Input.Root>
+          {filteredMessages.length > 0 && (
+            <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
+              <IconButton
+                variant='ghost'
+                icon='ph--x--regular'
+                iconOnly
+                label={t('chat.clear.button')}
+                onClick={handleClear}
+              />
+            </div>
+          )}
+        </div>
+        <Toolbar.Root>
+          {onClip && (
             <IconButton
               variant='ghost'
-              icon='ph--x--regular'
+              icon='ph--paperclip--regular'
               iconOnly
-              label={t('chat.clear.button')}
-              onClick={handleClear}
+              label={t('clip.button')}
+              onClick={onClip}
             />
-          </div>
-        )}
+          )}
+        </Toolbar.Root>
       </div>
 
       {/* TODO(burdon): Replace with ChatThread. */}
       {filteredMessages.length > 0 && (
-        <ScrollContainer.Root pin>
-          <ScrollContainer.Content classNames='max-h-[480px] p-3'>
-            <ScrollContainer.Viewport>
-              {filteredMessages.map((message, i) => (
-                <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
-                  <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>
-                    <MarkdownViewer
-                      content={message.parts
-                        .map((part) => (part.type === 'text' ? part.text : null))
-                        .filter(Boolean)
-                        .join('')}
-                    />
-                  </p>
-                </div>
-              ))}
-            </ScrollContainer.Viewport>
-          </ScrollContainer.Content>
-        </ScrollContainer.Root>
+        <div className='flex flex-col'>
+          <ScrollContainer.Root pin>
+            <ScrollContainer.Content classNames='max-h-[480px] p-3'>
+              <ScrollContainer.Viewport>
+                {filteredMessages.map((message, i) => (
+                  <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
+                    <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>
+                      <MarkdownViewer
+                        content={message.parts
+                          .map((part) => (part.type === 'text' ? part.text : null))
+                          .filter(Boolean)
+                          .join('')}
+                      />
+                    </p>
+                  </div>
+                ))}
+              </ScrollContainer.Viewport>
+            </ScrollContainer.Content>
+          </ScrollContainer.Root>
+        </div>
       )}
 
       {error && (
         <div className='flex overflow-hidden items-center opacity-50'>
-          <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
-            {error.message || 'An error occurred'}
-          </div>
-          <div className='flex shrink-0'>
-            <IconButton
-              variant='ghost'
-              icon='ph--clipboard--regular'
-              iconOnly
-              label={t('chat.clear.button')}
-              classNames='text-subdued'
-              onClick={() => navigator.clipboard.writeText(error.message)}
-            />
+          <div className='flex overflow-hidden items-center opacity-50'>
+            <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
+              {error.message || 'An error occurred'}
+            </div>
+            <div className='flex shrink-0'>
+              <IconButton
+                variant='ghost'
+                icon='ph--clipboard--regular'
+                iconOnly
+                label={t('chat.clear.button')}
+                classNames='text-subdued'
+                onClick={() => navigator.clipboard.writeText(error.message)}
+              />
+            </div>
           </div>
         </div>
       )}
