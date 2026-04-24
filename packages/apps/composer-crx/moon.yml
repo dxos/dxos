@@ -11,8 +11,8 @@ tasks:
   # "Load unpacked") picks up the new build without a manual copy.
   #
   # From the main checkout this is a no-op — use `bundle` directly if you
-  # prefer to skip the sync step.
-  bundle-sync:
+  # prefer to skip the copy step.
+  bundle-copy:
     command: pnpm run sync:dist
     deps:
       - bundle
