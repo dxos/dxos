@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -15,6 +16,18 @@ import { Card, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Granola } from '#types';
+
+/** Shape the model is asked to return. Used to validate AI output at the boundary. */
+const MatchResultSchema = Schema.Struct({
+  noteTitle: Schema.String,
+  meetingTitle: Schema.String,
+  cardName: Schema.String,
+  cardListName: Schema.String,
+  confidence: Schema.String,
+  reasoning: Schema.String,
+});
+const MatchResultArraySchema = Schema.Array(MatchResultSchema);
+const decodeMatches = Schema.decodeUnknownSync(MatchResultArraySchema);
 
 export type GranolaArticleProps = {
   role: string;
@@ -74,14 +87,7 @@ const buildDocumentContent = (detail: any): string => {
 // AI matching.
 //
 
-type MatchResult = {
-  noteTitle: string;
-  meetingTitle: string;
-  cardName: string;
-  cardListName: string;
-  confidence: string;
-  reasoning: string;
-};
+type MatchResult = Schema.Schema.Type<typeof MatchResultSchema>;
 
 /** Use Claude to find matches between Granola notes and Trello cards. */
 const aiMatch = async (
@@ -156,7 +162,15 @@ Only include matches where there is a real connection. If a note has no matching
   const result = await response.json();
   const text = result.content?.[0]?.text ?? '[]';
   const jsonText = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
-  return JSON.parse(jsonText) as MatchResult[];
+  // Decode through a schema so malformed or partial model output fails
+  // predictably (with a useful error) instead of sneaking past as `any`.
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (err) {
+    throw new Error(`AI match: model returned non-JSON output (${err instanceof Error ? err.message : 'parse error'})`);
+  }
+  return [...decodeMatches(parsed)];
 };
 
 //
@@ -273,8 +287,18 @@ MatchTile.displayName = 'MatchTile';
 
 export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) => {
   const db = Obj.getDatabase(account);
-  const syncRecords: Granola.GranolaSyncRecord[] = useQuery(db, Filter.type(Granola.GranolaSyncRecord));
+  const allSyncRecords: Granola.GranolaSyncRecord[] = useQuery(db, Filter.type(Granola.GranolaSyncRecord));
   const trelloCards: Trello.TrelloCard[] = useQuery(db, Filter.type(Trello.TrelloCard));
+  // Scope sync records to this account so multi-account spaces don't surface,
+  // match, or mutate records belonging to a different account. Records
+  // without an `account` ref are legacy (pre-ref) and always included.
+  const syncRecords = useMemo(
+    () =>
+      allSyncRecords.filter(
+        (record) => !record.account?.target || record.account.target.id === account.id,
+      ),
+    [allSyncRecords, account.id],
+  );
   const [syncing, setSyncing] = useState(false);
   const [matching, setMatching] = useState(false);
   const [matches, setMatches] = useState<MatchResult[]>([]);
@@ -366,8 +390,8 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
         remoteNotes.push(...data.notes);
         hasMore = data.hasMore;
         if (hasMore && !data.cursor) {
-          log.warn("granola: pagination stuck — hasMore=true but no cursor");
-          break;
+          // Fail fast rather than loop forever on the same cursor.
+          throw new Error('Granola API: hasMore=true but no cursor was returned; aborting sync');
         }
         cursor = data.cursor ?? undefined;
       }
@@ -409,6 +433,11 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
             }
           }
           Obj.change(existing, (mutable) => {
+            // Back-fill the account ref on legacy records so they're scoped
+            // correctly from now on.
+            if (!mutable.account) {
+              mutable.account = Ref.make(account);
+            }
             mutable.attendees = attendees;
             mutable.calendarEvent = calendarEvent;
             mutable.ownerName = detail.owner?.name;
@@ -418,9 +447,12 @@ export const GranolaArticle = ({ role, subject: account }: GranolaArticleProps) 
         } else {
           const doc = Markdown.make({ name: title, content });
           db.add(doc);
-          const syncRecord = Obj.make(Granola.GranolaSyncRecord, {
+          // Use the factory so the Granola ID lands in Obj.Meta.keys, not as
+          // a schema field (the older inline Obj.make form dropped the id).
+          const syncRecord = Granola.makeSyncRecord({
             granolaId: summary.id,
             document: Ref.make(doc),
+            account: Ref.make(account),
             attendees,
             calendarEvent,
             ownerName: detail.owner?.name,

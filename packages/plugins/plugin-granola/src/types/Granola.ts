@@ -37,6 +37,8 @@ export type CalendarEvent = Schema.Schema.Type<typeof CalendarEvent>;
  * (`{ source: 'granola.ai', id: <granolaId> }`).
  */
 export const GranolaSyncRecord = Schema.Struct({
+  /** The Granola account that owns this record. Populated by sync; scopes the record to one account in multi-account spaces. */
+  account: Schema.optional(Ref.Ref(Schema.suspend(() => GranolaAccount)).pipe(FormInputAnnotation.set(false))),
   /** Reference to the synced Composer Document. */
   document: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
   /** Meeting attendees. */
@@ -121,6 +123,7 @@ export const makeAccount = (props?: { name?: string }): GranolaAccount => {
 export const makeSyncRecord = (props: {
   granolaId: string;
   document: Ref.Ref<Markdown.Document>;
+  account?: Ref.Ref<GranolaAccount>;
   attendees?: Attendee[];
   calendarEvent?: CalendarEvent;
   ownerName?: string;
@@ -143,6 +146,5 @@ const GRANOLA_SOURCE = 'granola.ai';
 
 /** Extract the Granola ID from an object's foreignKeys. */
 export const getGranolaId = (obj: Obj.Any): string | undefined => {
-  const meta = Obj.getMeta(obj);
-  return meta.keys?.find((key: { source: string; id: string }) => key.source === GRANOLA_SOURCE)?.id;
+  return Obj.getKeys(obj, GRANOLA_SOURCE)[0]?.id;
 };
