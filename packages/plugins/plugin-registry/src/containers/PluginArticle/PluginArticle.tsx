@@ -56,10 +56,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     Effect.gen(function* () {
       const added = yield* manager.add(moduleUrl);
       yield* manager.enable(added.meta.id);
-    }).pipe(
-      Effect.ensuring(Effect.sync(() => setInstalling(false))),
-      runAndForwardErrors,
-    );
+    }).pipe(Effect.ensuring(Effect.sync(() => setInstalling(false))), runAndForwardErrors);
   }, [manager, moduleUrl]);
 
   return (

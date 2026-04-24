@@ -78,9 +78,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       const catalogIds = new Set(sortedEntries.map((entry) => entry.meta.id));
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
       const fromCatalog = sortedEntries.map(toDisplayPlugin);
-      const fromUrlOnly = plugins.filter(
-        (plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id),
-      );
+      const fromUrlOnly = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
       const installedFirst = [...fromCatalog, ...fromUrlOnly].sort((a, b) => {
         const aInstalled = installedSnapshot.has(a.meta.id);
         const bInstalled = installedSnapshot.has(b.meta.id);
