@@ -21,7 +21,7 @@ import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
-import { vitePluginLog } from '@dxos/vite-plugin-log';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -54,7 +54,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && vitePluginLog(),
+  env.command === 'serve' && DxosLogPlugin({ transform: false }),
   wasm(),
   // sourcemaps(),
 ];
@@ -104,8 +104,12 @@ export default defineConfig((env) => ({
       },
       output: {
         chunkFileNames,
-        manualChunks: {
-          react: ['react', 'react-dom'],
+        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+        // record form that worked in Rollup is rejected at runtime.
+        manualChunks: (id: string) => {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'react';
+          }
         },
       },
     },
