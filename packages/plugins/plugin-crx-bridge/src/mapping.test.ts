@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Clip } from '#types';
 
-import { mapClip, toOrganization, toPerson } from './mapping';
+import { mapClip, toNote, toOrganization, toPerson } from './mapping';
 
 const baseSource: Clip.Source = {
   url: 'https://www.linkedin.com/in/ricburdon',
@@ -74,6 +74,23 @@ describe('mapping', () => {
 
     const org = mapClip(makeClip({ kind: 'organization', hints: { ogTitle: 'Acme' } }));
     expect((org as any)?.name).toBe('Acme');
+
+    const note = mapClip(makeClip({ kind: 'note', hints: { h1: 'Hello' } }));
+    expect((note as any)?.name).toBe('Hello');
+  });
+
+  test('Note prefers h1 for title, then og:title, then first line, then source title', ({ expect }) => {
+    const fromH1 = toNote(makeClip({ kind: 'note', hints: { h1: 'From H1', ogTitle: 'From OG' } }));
+    expect(fromH1.name).toBe('From H1');
+
+    const fromOg = toNote(makeClip({ kind: 'note', hints: { ogTitle: 'From OG' } }));
+    expect(fromOg.name).toBe('From OG');
+
+    const fromText = toNote(makeClip({ kind: 'note', hints: {} }));
+    expect(fromText.name).toBe('Rich Burdon');
+
+    const fromSource = toNote(makeClip({ kind: 'note', hints: {}, selection: { text: '' } }));
+    expect(fromSource.name).toBe(baseSource.title);
   });
 
   test('mapClip returns undefined for unknown kind', ({ expect }) => {

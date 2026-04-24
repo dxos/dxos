@@ -18,7 +18,7 @@ export type Clip = {
   hints?: ClipHints;
 };
 
-export type ClipKind = 'person' | 'organization';
+export type ClipKind = 'person' | 'organization' | 'note';
 
 export type ClipSource = {
   url: string;

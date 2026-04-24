@@ -22,10 +22,16 @@ export const CrxBridgePlugin = Plugin.define(meta).pipe(
       const capabilityManager = yield* Capability.Service;
       const invoker = yield* Capability.get(Capabilities.OperationInvoker);
 
+      const SUCCESS_TOAST_BY_KIND: Record<string, string> = {
+        person: 'toast.person.title',
+        organization: 'toast.organization.title',
+        note: 'toast.note.title',
+      };
+
       installClipListener(capabilityManager, invoker, (ack, detail) => {
         const kind = (detail as { kind?: string } | null)?.kind;
         if (ack.ok) {
-          const key = kind === 'organization' ? 'toast.organization.title' : 'toast.person.title';
+          const key = (kind && SUCCESS_TOAST_BY_KIND[kind]) ?? 'toast.person.title';
           void invoker.invokePromise(LayoutOperation.AddToast, {
             id: `${meta.id}.clip-${ack.id}`,
             title: [key, { ns: meta.id }],

@@ -48,7 +48,7 @@ export const Hints = Schema.Struct({
 });
 export type Hints = Schema.Schema.Type<typeof Hints>;
 
-export const Kind = Schema.Literal('person', 'organization');
+export const Kind = Schema.Literal('person', 'organization', 'note');
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
 /**
@@ -57,7 +57,7 @@ export type Kind = Schema.Schema.Type<typeof Kind>;
  * extension can ship new kinds without older Composer builds producing a
  * generic `invalidPayload` error.
  */
-export const SUPPORTED_KINDS: readonly string[] = ['person', 'organization'];
+export const SUPPORTED_KINDS: readonly string[] = ['person', 'organization', 'note'];
 
 /**
  * Loose envelope — used as the first-pass decode so we can inspect

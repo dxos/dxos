@@ -13,6 +13,7 @@ export const translations = [
         'plugin.name': 'CRX Bridge',
         'toast.person.title': 'Added person',
         'toast.organization.title': 'Added organization',
+        'toast.note.title': 'Added note',
         'toast.error.title': 'Clip failed',
         'toast.error.invalidPayload.message': 'Unrecognized clip payload.',
         'toast.error.unsupportedVersion.message': 'Unsupported clip version — update Composer.',

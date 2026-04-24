@@ -164,8 +164,9 @@ export const startPicker = (): Promise<PickerResult> => {
     const saveOrg = makeBtn('🏢 Organization', () =>
       finish({ status: 'picked', element: state.frozen!, kind: 'organization' }),
     );
+    const saveNote = makeBtn('📝 Note', () => finish({ status: 'picked', element: state.frozen!, kind: 'note' }));
     const cancelBtn = makeBtn('✕', () => finish({ status: 'cancelled' }));
-    toolbar.append(savePerson, saveOrg, cancelBtn);
+    toolbar.append(savePerson, saveOrg, saveNote, cancelBtn);
     host.appendChild(toolbar);
 
     const state: PickerState = {
