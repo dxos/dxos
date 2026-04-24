@@ -19,6 +19,14 @@ describe('AttentionPlugin', () => {
       plugins: [GraphPlugin(), OperationPlugin(), RuntimePlugin(), AttentionPlugin()],
     });
 
+    // attention + ReactContext activate on Startup.
+    // Keyboard activates on allOf(AppGraphReady, AttentionReady) — both fire during startup
+    // because GraphPlugin fires AppGraphReady and the attention module fires AttentionReady.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('attention'), moduleId('ReactContext'), moduleId('Keyboard')]),
+    );
+
+    // OperationHandler fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });

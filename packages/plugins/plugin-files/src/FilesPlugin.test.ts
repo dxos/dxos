@@ -26,7 +26,7 @@ describe('FilesPlugin', () => {
     await harness.fire(AppActivationEvents.SetupSettings);
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('settings')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('FileSettings')]),
     );
 
     // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
