@@ -76,8 +76,16 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
         peerId: this._params.ownPeerId,
       },
       {
-        onStartReplication: async (info, remotePeerId) => {
+        onStartReplication: async (info, remotePeerId /** Teleport ID */) => {
+          // Note: We store only one enabled extension per peer.
+          //       There can be a case where two connected peers have more than one teleport connection between them
+          //       and each of them uses different teleport connections to send messages.
+          //       It works because we receive messages from all teleport connections and Automerge Repo dedup them.
+          // TODO(mykola): Use only one teleport connection per peer.
+
           this.remoteDeviceKey = remotePeerId;
+
+          // Set automerge id.
           this._remotePeerId = info.id;
 
           log('onStartReplication', { id: info.id, thisPeerId: this.peerId, remotePeerId: remotePeerId.toHex() });
@@ -89,6 +97,7 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
             return;
           }
           const message = cbor.decode(payload) as AutomergeProtocolMessage;
+          // Note: automerge Repo dedup messages.
           readableStreamController.enqueue(message);
         },
         onClose: async () => {

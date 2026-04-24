@@ -187,7 +187,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.shouldSyncCollection(params);
   }
 
-  sendSyncRequest(collectionId: string, targetId: PeerId): void {
+  queryCollectionState(collectionId: string, targetId: PeerId): void {
     const message: CollectionQueryMessage = {
       type: 'collection-query',
       senderId: this.peerId as PeerId,
@@ -197,7 +197,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._send(message);
   }
 
-  sendSyncState(collectionId: string, targetId: PeerId, state: unknown): void {
+  sendCollectionState(collectionId: string, targetId: PeerId, state: unknown): void {
     const message: CollectionStateMessage = {
       type: 'collection-state',
       senderId: this.peerId as PeerId,

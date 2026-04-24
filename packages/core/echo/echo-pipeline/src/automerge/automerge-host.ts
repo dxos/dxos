@@ -895,11 +895,11 @@ export class AutomergeHost extends Resource {
   }
 
   private _queryCollectionState(collectionId: string, peerId: PeerId): void {
-    this._echoNetworkAdapter.sendSyncRequest(collectionId, peerId);
+    this._echoNetworkAdapter.queryCollectionState(collectionId, peerId);
   }
 
   private _sendCollectionState(collectionId: string, peerId: PeerId, state: CollectionState): void {
-    this._echoNetworkAdapter.sendSyncState(collectionId, peerId, encodeCollectionState(state));
+    this._echoNetworkAdapter.sendCollectionState(collectionId, peerId, encodeCollectionState(state));
   }
 
   private _onPeerConnected(peerId: PeerId): void {
