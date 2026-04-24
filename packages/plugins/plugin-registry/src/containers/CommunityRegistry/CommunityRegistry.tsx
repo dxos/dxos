@@ -114,7 +114,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
           return;
         }
         setInstallingIds((prev) => (prev.includes(pluginId) ? prev : [...prev, pluginId]));
-        Effect.gen(function* () {
+        void void Effect.gen(function* () {
           const plugin = yield* manager.add(moduleUrl);
           yield* manager.enable(plugin.meta.id);
           yield* invoke(ObservabilityOperation.SendEvent, {

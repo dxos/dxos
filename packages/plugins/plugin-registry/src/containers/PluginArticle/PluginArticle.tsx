@@ -53,7 +53,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       return;
     }
     setInstalling(true);
-    Effect.gen(function* () {
+    void Effect.gen(function* () {
       const added = yield* manager.add(moduleUrl);
       yield* manager.enable(added.meta.id);
     }).pipe(Effect.ensuring(Effect.sync(() => setInstalling(false))), runAndForwardErrors);
