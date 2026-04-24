@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Query } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { Trace } from '@dxos/functions';
 
 import * as FeedTraceSink from './FeedTraceSink';
@@ -36,6 +36,26 @@ describe('FeedTraceSink', () => {
       expect(messages[0].events[0].data).toBe('foo');
       expect(messages[1].meta.processName).toBe('test');
       expect(messages[1].events[0].data).toBe('bar');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect.only(
+    'make message of invalid schema',
+    Effect.fnUntraced(function* ({ expect }) {
+      const feed = yield* Database.add(Feed.make());
+      yield* Feed.append(feed, [
+        Obj.make(Trace.Message, {
+          events: [],
+          meta: {
+            parentPid: undefined,
+          },
+          isEphemeral: false,
+        }),
+      ]);
+      yield* Database.flush();
+
+      const objs = yield* Database.runQuery(Query.select(Filter.everything()).from(feed));
+      console.log(objs);
     }, Effect.provide(TestLayer)),
   );
 });
