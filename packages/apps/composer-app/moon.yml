@@ -14,7 +14,6 @@ tasks:
     deps:
       - prebuild
     inputs:
-      - '*.html'
       - script-frame/index.html
   compile:
     deps:
