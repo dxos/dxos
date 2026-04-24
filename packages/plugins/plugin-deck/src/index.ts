@@ -5,4 +5,4 @@
 export { DeckCapabilities, DeckEvents } from './types';
 export * from './DeckPlugin';
 export * from './meta';
-export { useCompanions } from './hooks';
+export { useCompanions, useShowItem, type ShowItemOptions } from './hooks';
