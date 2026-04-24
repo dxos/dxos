@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Trigger } from '@dxos/functions';
+import { Trace, Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
@@ -17,7 +17,7 @@ import { translations } from './translations';
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Operation.PersistentOperation, Trigger.Trigger] }),
+  AppPlugin.addSchemaModule({ schema: [Operation.PersistentOperation, Trigger.Trigger, Trace.Message] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
