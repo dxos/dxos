@@ -46,6 +46,8 @@ export type Member = Schema.Schema.Type<typeof Member>;
 export const TrelloCard = Schema.Struct({
   name: Schema.String,
   description: Schema.optional(Schema.String),
+  /** Back-reference to the owning board. Populated by sync. Scoping queries without this field require correlating trelloListId against a board's lists. */
+  board: Schema.optional(Ref.Ref(Schema.suspend(() => TrelloBoard)).pipe(FormInputAnnotation.set(false))),
   /** List ID on Trello (drives Kanban grouping). */
   trelloListId: Schema.String.pipe(FormInputAnnotation.set(false)),
   /** List name (pivot field for Kanban columns). */
@@ -140,9 +142,12 @@ export const makeCard = (props: {
   trelloCardId: string;
   name: string;
   description?: string;
+  board?: Ref.Ref<TrelloBoard>;
   trelloListId: string;
   listName?: string;
   position?: number;
+  dueDate?: string;
+  dueComplete?: boolean;
   url?: string;
   closed?: boolean;
   lastActivityAt?: string;
