@@ -87,7 +87,11 @@ export class SpacesDumper {
     for (const space of client.spaces.get()) {
       const schemas = await space.db.schemaRegistry.query({ location: ['database', 'runtime'] }).run();
       for (const schema of schemas) {
-        const objects = await space.db.query(Filter.type(schema)).run();
+        // Snapshot may contain objects whose schemas come from a different client build; skip
+        // validation to avoid spurious filtering of raw data during compat checks.
+        const objects = await space.db
+          .query(Query.select(Filter.type(schema)).options({ skipSchemaValidation: true }))
+          .run();
         const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, schema);
         const actualIds = objects.map((obj) => obj.id).sort();
         const expectedIds = expectedObjects.map((obj) => obj.id).sort();
