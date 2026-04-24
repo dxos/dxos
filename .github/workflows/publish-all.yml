@@ -127,5 +127,5 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
         if: github.event_name == 'release' && github.event.action == 'published'
