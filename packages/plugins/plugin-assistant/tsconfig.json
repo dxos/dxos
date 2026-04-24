@@ -13,7 +13,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {

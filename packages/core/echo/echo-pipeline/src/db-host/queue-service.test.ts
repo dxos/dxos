@@ -42,7 +42,7 @@ describe('LocalQueueServiceImpl', () => {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
-          objects: [object1, object2],
+          objects: [object1, object2].map((obj) => JSON.stringify(obj)),
         }),
       );
 
@@ -51,8 +51,8 @@ describe('LocalQueueServiceImpl', () => {
           query: { spaceId, queueIds: [queueId] },
         }),
       );
-      expect(result.objects?.[0]).toMatchObject(object1);
-      expect(result.objects?.[1]).toMatchObject(object2);
+      expect(JSON.parse(result.objects![0])).toMatchObject(object1);
+      expect(JSON.parse(result.objects![1])).toMatchObject(object2);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -73,7 +73,7 @@ describe('LocalQueueServiceImpl', () => {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
-          objects: [object1],
+          objects: [JSON.stringify(object1)],
         }),
       );
       yield* Effect.promise(() =>
@@ -91,7 +91,7 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(result.objects).toHaveLength(2);
-      expect(result.objects?.[1]).toMatchObject({ id: object1Id, '@deleted': true });
+      expect(JSON.parse(result.objects![1])).toMatchObject({ id: object1Id, '@deleted': true });
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -111,7 +111,7 @@ describe('LocalQueueServiceImpl', () => {
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
           queueId,
-          objects: items,
+          objects: items.map((item) => JSON.stringify(item)),
         }),
       );
 
@@ -122,8 +122,8 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(page1.objects).toHaveLength(5);
-      expect(page1.objects?.[0]).toMatchObject(items[0]);
-      expect(page1.objects?.[4]).toMatchObject(items[4]);
+      expect(JSON.parse(page1.objects![0])).toMatchObject(items[0]);
+      expect(JSON.parse(page1.objects![4])).toMatchObject(items[4]);
       expect(page1.nextCursor).toBeDefined();
 
       // Query next 5
@@ -138,8 +138,8 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(page2.objects).toHaveLength(5);
-      expect(page2.objects?.[0]).toMatchObject(items[5]);
-      expect(page2.objects?.[4]).toMatchObject(items[9]);
+      expect(JSON.parse(page2.objects![0])).toMatchObject(items[5]);
+      expect(JSON.parse(page2.objects![4])).toMatchObject(items[9]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

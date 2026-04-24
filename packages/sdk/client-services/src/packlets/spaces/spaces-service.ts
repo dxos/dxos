@@ -384,7 +384,7 @@ export class SpacesServiceImpl implements SpacesService {
           spaceId: space.id,
           queueId: feed.feedObjectId,
           subspaceTag: namespace,
-          objects: feed.messages,
+          objects: feed.messages.map((message) => JSON.stringify(message)),
         });
       } catch (err) {
         log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
