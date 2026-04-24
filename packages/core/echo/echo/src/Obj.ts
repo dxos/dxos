@@ -13,7 +13,7 @@ import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
@@ -470,16 +470,19 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => {
 /**
  * @returns The DXN of the object's type.
  * @example dxn:com.example.type.person:1.0.0
+ * @throws If the object is missing its type (corrupted object).
  */
-// TODO(wittjosiah): Narrow types.
-export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = internal.getTypeDXN as any;
+export const getTypeDXN = (obj: Unknown | Snapshot): DXN => {
+  const type = internal.getTypeDXN(obj);
+  invariant(type != null, 'Corrupted object: missing type.');
+  return type;
+};
 
 /**
  * Get the schema of the object.
  * Returns the branded ECHO schema used to create the object.
  */
-// TODO(wittjosiah): Narrow types.
-export const getSchema: (obj: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getSchema: (obj: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the object's type.
