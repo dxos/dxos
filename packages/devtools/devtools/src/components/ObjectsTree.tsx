@@ -287,7 +287,7 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Option.fromNullable(Obj.getSchema(entity)).pipe(
+    const { icon, hue } = Option.fromNullable(Entity.getSchema(entity)).pipe(
       Option.flatMap(Annotation.IconAnnotation.get),
       Option.getOrElse(() => ({
         icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,

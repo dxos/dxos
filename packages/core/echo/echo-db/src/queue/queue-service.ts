@@ -33,7 +33,10 @@ export class QueueServiceImpl implements QueueService {
       request.query.spaceId as SpaceId,
       request.query,
     );
-    return result as any as QueueQueryResult;
+    return {
+      ...result,
+      objects: (result.objects ?? []).map((obj) => JSON.stringify(obj)),
+    } as QueueQueryResult;
   }
 
   insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
@@ -43,7 +46,7 @@ export class QueueServiceImpl implements QueueService {
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,
-      request.objects!,
+      (request.objects ?? []).map((encoded) => JSON.parse(encoded)),
     );
   }
 
@@ -67,7 +70,7 @@ export class QueueServiceImpl implements QueueService {
  * Mock implementation for testing.
  */
 export class MockQueueService implements QueueService {
-  private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], unknown[]>(
+  private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], ObjectJSON[]>(
     ([subspaceTag, spaceId, queueId]) => compositeKey(subspaceTag, spaceId, queueId),
   );
 
@@ -77,7 +80,7 @@ export class MockQueueService implements QueueService {
       this._queues.get([request.query.queuesNamespace!, query!.spaceId as SpaceId, query!.queueIds![0] as ObjectId]) ??
       [];
     return {
-      objects: objects as any,
+      objects: objects.map((obj) => JSON.stringify(obj)),
       nextCursor: '',
       prevCursor: '',
     };
@@ -88,8 +91,9 @@ export class MockQueueService implements QueueService {
     const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
     const array = this._queues.get(key) ?? [];
     this._queues.set(key, array);
-    for (const obj of objects!) {
-      setQueuePosition(obj as ObjectJSON, array.length);
+    for (const encoded of objects ?? []) {
+      const obj = JSON.parse(encoded) as ObjectJSON;
+      setQueuePosition(obj, array.length);
       array.push(obj);
     }
   }
@@ -100,7 +104,7 @@ export class MockQueueService implements QueueService {
     const existing = this._queues.get(key) ?? [];
     this._queues.set(
       key,
-      existing.filter((obj: any) => !objectIds!.includes(obj.id)),
+      existing.filter((obj) => !objectIds!.includes((obj as any).id)),
     );
   }
 

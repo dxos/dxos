@@ -43,7 +43,6 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
 
 import { DebugSettings } from '#components';
 import {
@@ -135,13 +134,7 @@ export default Capability.makeModule(
             [data.subject.space, invokePromise],
           );
 
-          return (
-            <Panel.Root role={role} className='dx-document'>
-              <Panel.Content asChild>
-                <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-              </Panel.Content>
-            </Panel.Root>
-          );
+          return <SpaceGenerator role={role} space={data.subject.space} onCreateObjects={handleCreateObject} />;
         },
       }),
       Surface.create({
@@ -169,7 +162,7 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+        component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'devtools-overview',

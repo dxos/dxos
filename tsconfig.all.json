@@ -307,6 +307,9 @@
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-crm/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
     },
     {
@@ -317,9 +320,6 @@
     },
     {
       "path": "packages/plugins/plugin-discord/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
