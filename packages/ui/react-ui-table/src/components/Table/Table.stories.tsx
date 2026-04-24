@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
@@ -141,9 +141,7 @@ const DefaultStory = () => {
       <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
         <ScrollArea.Viewport>
           <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
-          <SyntaxHighlighter language='json' className='text-xs'>
-            {JSON.stringify({ view: table.view.target, schema }, null, 2)}
-          </SyntaxHighlighter>
+          <JsonHighlighter data={{ view: table.view.target, schema }} classNames='text-xs' />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </div>

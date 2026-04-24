@@ -30,8 +30,7 @@ export type ShowItemOptions = {
  * then — based on the current layout mode — shows its detail surface:
  *
  * - `'simple'`: expand the complementary sidebar on the given companion segment.
- * - `'multi'`: open the item as a sibling plank beside the master
- *   (`pivotId = contextId`), when a `path` is provided.
+ * - `'multi'`: open the item as a sibling plank beside the master (`pivotId = contextId`), when a `path` is provided.
  * - otherwise: swap the current plank's companion to the given segment.
  */
 export const useShowItem = () => {

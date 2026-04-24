@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks';
@@ -162,7 +162,7 @@ export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNa
   const { containers, dragging } = useMosaic(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (
-    <Json.Data
+    <JsonHighlighter
       data={{ containers, dragging, count: counter.current++ }}
       classNames={mx('text-xs', classNames)}
       ref={forwardedRef}

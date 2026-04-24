@@ -13,7 +13,7 @@ import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
@@ -90,12 +90,14 @@ const DefaultStory = () => {
         <Button onClick={handleFlush}>Flush</Button>
         <Button onClick={handleQuery}>Query</Button>
       </Toolbar.Root>
-      <Json.Root data={data}>
-        <Json.Content>
-          <Json.Filter />
-          <Json.Data />
-        </Json.Content>
-      </Json.Root>
+      <Syntax.Root data={data}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </div>
   );
 };
