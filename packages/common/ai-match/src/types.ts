@@ -46,8 +46,8 @@ export type AiMatchConfig<S, T> = {
    */
   task: string;
 
-  /** Anthropic API key. Falls back to `localStorage.ANTHROPIC_API_KEY` in the browser. */
-  apiKey?: string;
+  /** Anthropic API key. Required — callers resolve it via their own credential layer. */
+  apiKey: string;
   /** Endpoint for the Claude API. Default: `/api/anthropic/v1/messages` (Composer's dev proxy). */
   endpoint?: string;
   /** Model ID. Default: `claude-sonnet-4-20250514`. */

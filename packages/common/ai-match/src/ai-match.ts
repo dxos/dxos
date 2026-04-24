@@ -2,9 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { log } from '@dxos/log';
 
 import { type AiMatchConfig, type AiMatchResult, type MatchBase } from './types';
+
+const MatchBaseSchema = Schema.Struct({
+  sourceId: Schema.String,
+  targetId: Schema.String,
+  confidence: Schema.Literal('high', 'medium', 'low'),
+  reasoning: Schema.String,
+});
+const MatchBaseArraySchema = Schema.Array(MatchBaseSchema);
+const decodeMatches = Schema.decodeUnknownSync(MatchBaseArraySchema);
 
 const DEFAULT_ENDPOINT = '/api/anthropic/v1/messages';
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
@@ -34,7 +45,7 @@ export const aiMatch = async <S, T>(config: AiMatchConfig<S, T>): Promise<AiMatc
     sourceId,
     targetId,
     task,
-    apiKey = resolveApiKey(),
+    apiKey,
     endpoint = DEFAULT_ENDPOINT,
     model = DEFAULT_MODEL,
     maxTokens = DEFAULT_MAX_TOKENS,
@@ -42,7 +53,12 @@ export const aiMatch = async <S, T>(config: AiMatchConfig<S, T>): Promise<AiMatc
   } = config;
 
   if (!apiKey) {
-    throw new Error('aiMatch: no Anthropic API key. Pass `apiKey` or set `ANTHROPIC_API_KEY` in localStorage.');
+    // Callers pass the API key explicitly — no localStorage fallback, since
+    // that exposes a long-lived raw key to any XSS in the host app. In
+    // Composer, the dev proxy injects a server-side key; in standalone
+    // Node use, callers should resolve it via their own credential layer
+    // (e.g. an Effect Config.redacted) before invoking aiMatch.
+    throw new Error('aiMatch: `apiKey` is required');
   }
   if (source.length === 0 || target.length === 0) {
     return [];
@@ -111,13 +127,6 @@ export const aiMatch = async <S, T>(config: AiMatchConfig<S, T>): Promise<AiMatc
   return joined;
 };
 
-const resolveApiKey = (): string | undefined => {
-  if (typeof globalThis.localStorage !== 'undefined') {
-    return globalThis.localStorage.getItem('ANTHROPIC_API_KEY') ?? undefined;
-  }
-  return undefined;
-};
-
 const buildPrompt = (task: string, sources: unknown[], targets: unknown[]): string =>
   `${task}
 
@@ -139,9 +148,13 @@ const parseJsonArray = <T>(text: string): T[] => {
   const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
   try {
     const parsed = JSON.parse(stripped);
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
+    // Schema-validate each element so malformed or partial model output
+    // fails explicitly instead of handing the caller a half-typed cast.
+    // Confidence is constrained to the three documented values.
+    return decodeMatches(parsed) as readonly T[] as T[];
   } catch (err) {
-    log.warn('aiMatch: failed to parse LLM response as JSON', { error: String(err), text: stripped.slice(0, 200) });
+    // Keep the text preview short — the model can echo prompt contents.
+    log.warn('aiMatch: failed to parse/validate LLM response', { error: String(err), text: stripped.slice(0, 200) });
     return [];
   }
 };
