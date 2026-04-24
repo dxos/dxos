@@ -10,9 +10,11 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
+import * as Sink from 'effect/Sink';
 import * as Stream from 'effect/Stream';
 
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
@@ -223,7 +225,13 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
         return messages.length;
       }),
     ),
-    Stream.runFold(0, (acc, count) => acc + count),
+    Stream.runFoldEffect(
+      0,
+      Effect.fnUntraced(function* (acc, count) {
+        yield* Trace.emitStatus(`Syncing messages: ${acc + count}`);
+        return acc + count;
+      }),
+    ),
   );
 
   return count;
