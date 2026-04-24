@@ -24,14 +24,21 @@ import {
 export class SchemaValidatingQueryResult<
   T extends Entity.Unknown = Entity.Unknown,
 > implements QueryResult.QueryResult<T> {
+  #typenamesAsserted = false;
+
   constructor(
     private readonly _inner: QueryResult.QueryResult<T>,
     private readonly _resolvers: SchemaResolvers,
     private readonly _queryAst: QueryAST.Query,
   ) {}
 
+  // Cache the success of the assertion -- once typenames resolve successfully, skip subsequent
+  // lookups on this instance. Failures are not cached so transient misses (e.g., late-registered
+  // system types during space initialization) eventually succeed.
   private _assertTypenames(): void {
+    if (this.#typenamesAsserted) return;
     assertQueryTypenamesResolvable(this._queryAst, this._resolvers);
+    this.#typenamesAsserted = true;
   }
 
   private _filterEntries(entries: QueryResult.Entry<T>[]): QueryResult.Entry<T>[] {
