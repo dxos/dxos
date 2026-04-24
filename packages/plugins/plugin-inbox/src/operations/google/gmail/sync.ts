@@ -10,7 +10,6 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
-import * as Sink from 'effect/Sink';
 import * as Stream from 'effect/Stream';
 
 import { Database, Feed, Filter, Obj } from '@dxos/echo';

@@ -24,6 +24,8 @@ export interface Base extends Schema.Schema.Type<typeof Base> {}
 export const Disposition = Schema.Literal(
   'user', // message written by user
   'synthetic', // synthetic message created by the system
+  'cot', // chain-of-thought content in an assistant message
+  'version-pin', // marker on a json block that pins an object version
 );
 export type Disposition = Schema.Schema.Type<typeof Disposition>;
 
