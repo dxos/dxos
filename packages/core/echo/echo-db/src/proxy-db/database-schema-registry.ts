@@ -110,21 +110,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     switch (dxn.kind) {
       case DXN.kind.ECHO: {
         const id = dxn.asEchoDXN()?.echoId;
-        return id ? this.getSchemaById(id) : undefined;
+        return id ? this.query({ backingObjectId: id }).runSync()[0] : undefined;
       }
       case DXN.kind.TYPE: {
         const components = dxn.asTypeDXN();
         if (!components) return undefined;
-        const { type, version } = components;
-        // Check in-memory cache first.
-        const cached = [...this._schemaById.values()].filter((schema) => schema.typename === type);
-        const cachedMatch = version ? cached.find((schema) => schema.version === version) : cached[0];
-        if (cachedMatch) {
-          return cachedMatch;
-        }
-        // Fall through to live db query for persistent schemas not yet cached.
-        const results = this.query({ typename: type, version }).runSync();
-        return (results[0] as Type.RuntimeType | undefined) ?? undefined;
+        return this.query({ typename: components.type, version: components.version }).runSync()[0];
       }
       default:
         return undefined;
