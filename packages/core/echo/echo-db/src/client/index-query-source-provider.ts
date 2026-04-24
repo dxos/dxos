@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array } from 'effect';
+import * as Array from 'effect/Array';
 
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';

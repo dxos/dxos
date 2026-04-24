@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { isNotNullable } from 'effect/Predicate';
+import * as Predicate from 'effect/Predicate';
 
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/functions';
@@ -131,7 +131,9 @@ export const buildExecutionGraph = ({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
         parents: builder.computeParents([{ branch: event.meta.parentPid ?? MAIN_BRANCH }]),
-        tags: [...getTags(event.meta), event.meta.pid && tagStartMarker(event.meta.pid)].filter(isNotNullable),
+        tags: [...getTags(event.meta), event.meta.pid && tagStartMarker(event.meta.pid)].filter(
+          Predicate.isNotNullable,
+        ),
         timestamp: new Date(event.timestamp),
         icon: ICONS.agentRequestBegin.icon,
         level: ICONS.agentRequestBegin.level,
@@ -165,7 +167,9 @@ export const buildExecutionGraph = ({
                 },
                 {
                   commit: {
-                    tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(isNotNullable),
+                    tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(
+                      Predicate.isNotNullable,
+                    ),
                   },
                 },
               ]),
@@ -254,14 +258,16 @@ export const buildExecutionGraph = ({
               fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
             },
             {
-              commit: { tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(isNotNullable) },
+              commit: {
+                tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(Predicate.isNotNullable),
+              },
             },
           ]),
           tags: [
             ...getTags(event.meta),
             tagOperationBegin(event.meta.pid ?? 'unknown'),
             event.meta.pid && tagStartMarker(event.meta.pid),
-          ].filter(isNotNullable),
+          ].filter(Predicate.isNotNullable),
           timestamp: new Date(event.timestamp),
           icon: ICONS.operationStart.icon,
           level: ICONS.operationStart.level,
@@ -283,7 +289,9 @@ export const buildExecutionGraph = ({
               },
               { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
               {
-                commit: { tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(isNotNullable) },
+                commit: {
+                  tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(Predicate.isNotNullable),
+                },
               },
             ]),
             tags: getTags(event.meta),
