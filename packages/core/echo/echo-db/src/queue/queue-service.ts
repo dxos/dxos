@@ -104,7 +104,7 @@ export class MockQueueService implements QueueService {
     const existing = this._queues.get(key) ?? [];
     this._queues.set(
       key,
-      existing.filter((obj) => !objectIds!.includes((obj as any).id)),
+      existing.filter((obj) => !objectIds!.includes(obj.id)),
     );
   }
 
