@@ -394,7 +394,7 @@ jobs:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
-          working-directory: ./packages/apps/composer-app/src-tauri/
+          working-directory: ./packages/apps/composer-app/
 
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
