@@ -83,8 +83,8 @@ export const GranolaAccount = Schema.Struct({
   ),
   /** Last sync timestamp. */
   lastSyncedAt: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
-  /** Polling interval in milliseconds. */
-  pollIntervalMs: Schema.optional(Schema.Number),
+  /** Polling interval in milliseconds. Positive integer. */
+  pollIntervalMs: Schema.optional(Schema.Number.pipe(Schema.greaterThan(0))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.granolaAccount',
