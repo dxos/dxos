@@ -31,7 +31,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   useObject(subject);
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
-  const [state, setState] = useState<CurateState>('idle');
+  const [state, setState] = useState<'idle' | 'syncing' | 'curating'>('idle');
   const [error, setError] = useState<string>();
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
