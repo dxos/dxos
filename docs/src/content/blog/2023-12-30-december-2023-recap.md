@@ -34,4 +34,4 @@ Explore all the details in the full release notes on [GitHub](https://github.com
 
 ### Office Hours
 
-Jess Martin and Zhenya Savchenko are hosting weekly Office Hours on Thursdays from 11-12 PT. Join us on the DXOS [Discord](https://discord.gg/eXVfryv3sW) server.
+Jess Martin and Zhenya Savchenko are hosting weekly Office Hours on Thursdays from 11-12 PT. Join us on the DXOS [Discord](https://dxos.org/discord) server.

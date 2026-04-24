@@ -66,10 +66,10 @@ It's tricky to build a secure and reliable system for decentralized, real-time c
 
 For example, in case of a network partition (when some peers can't communicate with others), it's possible that two guests could join the space using the same single-use invitation. This can be handled later during the credential processing stage, where we can sort it out and kick someone out if they shouldn't be there.
 
-If you're keen on consensus, security, decentralized or local-first apps, or just love building mobile apps or desktop apps, join our [Discord](https://discord.gg/d3DPZ3VpH2) and help us solve for the needs of local-first apps while protecting users' sensitive data.
+If you're keen on consensus, security, decentralized or local-first apps, or just love building mobile apps or desktop apps, join our [Discord](https://dxos.org/discord) and help us solve for the needs of local-first apps while protecting users' sensitive data.
 
 ## Summary
 
 Software development is hard enough. The good news is that we no longer need to think about running databases or API servers. App developers can use DXOS Client to add collaborative features to any web app without new server infrastructure. DXOS protects end users' privacy by obviating the need for a centralized database or server, synchronizing JavaScript objects directly peer-to-peer, and leaving end users with ownership of their data.
 
-Check out the docs, star us on [GitHub](https://github.com/dxos) and bring your feedback to [Discord](https://discord.gg/d3DPZ3VpH2) - we'd love to hear from you!
+Check out the docs, star us on [GitHub](https://github.com/dxos) and bring your feedback to [Discord](https://dxos.org/discord) - we'd love to hear from you!

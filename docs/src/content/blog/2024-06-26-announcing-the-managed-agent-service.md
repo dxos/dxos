@@ -28,4 +28,4 @@ Similar to iCloud storage, which allows various applications to write to a singl
 
 ## Free During Preview Phase
 
-The managed service is free while in the preview phase. Please sign-up for the [Composer Beta](https://composer.space), and contact us on [Discord](https://discord.gg/W4GN4xgTT7) for access to Agents.
+The managed service is free while in the preview phase. Please sign-up for the [Composer Beta](https://composer.space), and contact us on [Discord](https://dxos.org/discord) for access to Agents.
