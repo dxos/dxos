@@ -247,17 +247,8 @@
             "type": "string"
           }
         },
-        "propertyOrder": [
-          "prompt",
-          "chat",
-          "model",
-          "input",
-          "systemInstructions"
-        ],
-        "required": [
-          "prompt",
-          "input"
-        ],
+        "propertyOrder": ["prompt", "chat", "model", "input", "systemInstructions"],
+        "required": ["prompt", "input"],
         "type": "object"
       },
       "key": "org.dxos.function.prompt",
@@ -888,6 +879,1096 @@
               "data": {
                 "key": "org.dxos.plugin.assistant.operation.update-chat-name",
                 "name": "Update Chat Name",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM8NDSAX9PPB68S5EVAHF5",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "149"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM8NDSAX9PPB68S5EVAHF5",
+          "meta": {
+            "pid": "c8faf76b-3df8-44b8-ac6c-f08fe5a08155",
+            "processName": "Update Chat Name (org.dxos.plugin.assistant.operation.update-chat-name)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030419897,
+              "data": {
+                "key": "org.dxos.plugin.assistant.operation.update-chat-name",
+                "name": "Update Chat Name"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM8SYNRBY4V01DG3CJ7NQY",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "150"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM8SYNRBY4V01DG3CJ7NQY",
+          "meta": {
+            "pid": "c8faf76b-3df8-44b8-ac6c-f08fe5a08155",
+            "processName": "Update Chat Name (org.dxos.plugin.assistant.operation.update-chat-name)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030424533,
+              "data": {
+                "key": "org.dxos.plugin.assistant.operation.update-chat-name",
+                "name": "Update Chat Name",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM97B6CZD5HDR8C337B7TM",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "151"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM97B6CZD5HDR8C337B7TM",
+          "meta": {
+            "pid": "0435704a-9ed8-46ab-9328-3922c9aec757",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030438246,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM97BJ4HJ5NB9VET80FT69",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "152"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM97BJ4HJ5NB9VET80FT69",
+          "meta": {
+            "pid": "07c2ca62-83c5-4578-ab6d-0b51dfff8c36",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030438258,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM97BZZY3V7C0VQZCXVS6Q",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "153"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM97BZZY3V7C0VQZCXVS6Q",
+          "meta": {
+            "pid": "6a82cfbe-f132-43eb-a053-7d82ab32a096",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030438271,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM97CAGJFSBM2VPDFBSQVT",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "154"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM97CAGJFSBM2VPDFBSQVT",
+          "meta": {
+            "pid": "389b7160-0331-476f-9d0f-4321ffe2799e",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030438282,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM97CS6036H6ZYRFR3PFX9",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "155"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM97CS6036H6ZYRFR3PFX9",
+          "meta": {
+            "pid": "2dd0fdcb-d348-4d29-9a18-761e004bbe78",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030438297,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM98VZZHXEEDM6RP4DNTNZ",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "156"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM98VZZHXEEDM6RP4DNTNZ",
+          "meta": {
+            "pid": "389b7160-0331-476f-9d0f-4321ffe2799e",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030439807,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM992PWWSKWM0N2W57ZSBZ",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "157"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM992PWWSKWM0N2W57ZSBZ",
+          "meta": {
+            "pid": "6a82cfbe-f132-43eb-a053-7d82ab32a096",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030440022,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM99862N3DFCPSHVRJ3H46",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "158"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM99862N3DFCPSHVRJ3H46",
+          "meta": {
+            "pid": "0435704a-9ed8-46ab-9328-3922c9aec757",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030440198,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9A511PYDPD56BFWRMGCE",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "159"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9A511PYDPD56BFWRMGCE",
+          "meta": {
+            "pid": "07c2ca62-83c5-4578-ab6d-0b51dfff8c36",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030441120,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BF7G1BGWPRKJJ7GEMM4",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "160"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BF7G1BGWPRKJJ7GEMM4",
+          "meta": {
+            "pid": "2dd0fdcb-d348-4d29-9a18-761e004bbe78",
+            "processName": "Agent Qualifier (org.dxos.function.agent.qualifier)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030442471,
+              "data": {
+                "key": "org.dxos.function.agent.qualifier",
+                "name": "Agent Qualifier",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BKE8M1P51ZDDP78PKX9",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "161"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BKE8M1P51ZDDP78PKX9",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030442606,
+              "data": {
+                "key": "org.dxos.function.agent.worker",
+                "name": "Agent Worker"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BNVG4Q6QT8WN0ZZABM9",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "162"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BNVG4Q6QT8WN0ZZABM9",
+          "meta": {
+            "pid": "c8f8cbdc-1664-4f97-b0bf-29366fee6f02",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Get Agent Context (org.dxos.function.agent.get-context)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030442683,
+              "data": {
+                "key": "org.dxos.function.agent.get-context",
+                "name": "Get Agent Context"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BP153NE3MRC5NMG03CK",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "163"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BP153NE3MRC5NMG03CK",
+          "meta": {
+            "pid": "c8f8cbdc-1664-4f97-b0bf-29366fee6f02",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Get Agent Context (org.dxos.function.agent.get-context)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030442689,
+              "data": {
+                "key": "org.dxos.function.agent.get-context",
+                "name": "Get Agent Context",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BPXSDVT5E674D755SJH",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "164"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BPXSDVT5E674D755SJH",
+          "meta": {
+            "pid": "1b6271af-a69c-44ab-baeb-8f5aec5ac7de",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030442716,
+              "data": {
+                "key": "org.dxos.function.blueprint-manager.query-blueprints",
+                "name": "Query blueprints"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BPXSDVT5E674D755SJJ",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "165"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BPXSDVT5E674D755SJJ",
+          "meta": {
+            "pid": "1b6271af-a69c-44ab-baeb-8f5aec5ac7de",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030442717,
+              "data": {
+                "key": "org.dxos.function.blueprint-manager.query-blueprints",
+                "name": "Query blueprints",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BSSX9YAX4KQBAESANNY",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "166"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BSSX9YAX4KQBAESANNY",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030442809,
+              "data": {
+                "messageId": "01KPZM9BSSX9YAX4KQBAESANNX",
+                "role": "user",
+                "block": {
+                  "_tag": "text",
+                  "text": "<REDACTED>",
+                  "disposition": "synthetic"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BWRWV7P3289313J18XK",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "167"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BWRWV7P3289313J18XK",
+          "meta": {
+            "pid": "8c4ca4e6-63c8-4629-b775-0f58d922d220",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Get Agent Context (org.dxos.function.agent.get-context)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030442904,
+              "data": {
+                "key": "org.dxos.function.agent.get-context",
+                "name": "Get Agent Context"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BWZAJ1SJ1NM45DTCBWY",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "168"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BWZAJ1SJ1NM45DTCBWY",
+          "meta": {
+            "pid": "8c4ca4e6-63c8-4629-b775-0f58d922d220",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Get Agent Context (org.dxos.function.agent.get-context)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030442911,
+              "data": {
+                "key": "org.dxos.function.agent.get-context",
+                "name": "Get Agent Context",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BY4APPJRWREHT06B6YQ",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "169"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BY4APPJRWREHT06B6YQ",
+          "meta": {
+            "pid": "dd3a551e-6f36-4483-97cc-9b7e727155cb",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030442948,
+              "data": {
+                "key": "org.dxos.function.blueprint-manager.query-blueprints",
+                "name": "Query blueprints"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9BY4APPJRWREHT06B6YR",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "170"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9BY4APPJRWREHT06B6YR",
+          "meta": {
+            "pid": "dd3a551e-6f36-4483-97cc-9b7e727155cb",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030442948,
+              "data": {
+                "key": "org.dxos.function.blueprint-manager.query-blueprints",
+                "name": "Query blueprints",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9JNBGKYTFSD071N2W257",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "171"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9JNBGKYTFSD071N2W257",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030449835,
+              "data": {
+                "messageId": "01KPZM9E586FP0GG3FB33QXH0S",
+                "role": "assistant",
+                "block": {
+                  "_tag": "reasoning",
+                  "reasoningText": "The user has received a new email that needs to be classified. Let me analyze it:\n\n- From: OpenAI (noreply@tm.openai.com)\n- Subject: \"ChatGPT - Your data export has started\"\n- Content: Notification that a ChatGPT data export has been requested and is being prepared\n\nThis is a security/privacy-related notification about data export from ChatGPT. It could fit under 🔐 Security (account-related notification) or 🛠️ Dev Tools. Given that it's about a data export request from an AI platform and relates to account/data management, I'd say 🔐 Security is the best fit since it's about personal data handling.\n\n\nNow I'll use the classify-email tool to categorize this message."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9KVG13FDXF92MRYY45P3",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "172"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9KVG13FDXF92MRYY45P3",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030451056,
+              "data": {
+                "messageId": "01KPZM9JNTJGMNK1FR6Q12ZEHG",
+                "role": "assistant",
+                "block": {
+                  "_tag": "toolCall",
+                  "toolCallId": "toolu_01DjSd4JH9iFGgSB1TM5yAz5",
+                  "name": "classify-email",
+                  "input": "{\"message\": {\"id\":\"01KPZM5Y7SFZR0WE96XC5KFM47\",\"threadId\":\"19d22ab3ae024083\",\"created\":\"2026-03-25T01:45:40.000Z\",\"sender\":{\"email\":\"noreply@tm.openai.com\",\"name\":\"OpenAI\"},\"subject\":\"ChatGPT - Your data export has started\",\"snippet\":\"Your requested ChatGPT data export has started. You recently requested a copy of your ChatGPT data. We have started preparing your data export, this process may take a few days. We will email you when\",\"labels\":[\"IMPORTANT\",\"CATEGORY_UPDATES\",\"INBOX\"]}}",
+                  "providerExecuted": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9KVXJKJPKKMVAEVN5XMP",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "173"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9KVXJKJPKKMVAEVN5XMP",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030451069,
+              "data": {
+                "messageId": "01KPZM9KVXJKJPKKMVAEVN5XMN",
+                "role": "assistant",
+                "block": {
+                  "_tag": "stats",
+                  "model": "claude-opus-4-6",
+                  "duration": 8042,
+                  "message": "OK",
+                  "toolCalls": 1,
+                  "usage": {
+                    "inputTokens": 3,
+                    "outputTokens": 400,
+                    "totalTokens": 403
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9KX8Z98YEG5RKEE9WBS1",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "174"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9KX8Z98YEG5RKEE9WBS1",
+          "meta": {
+            "pid": "933502d3-ac8a-4411-867e-b22d7700cd33",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Classify email (org.dxos.plugin.inbox.operation.classify-email)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030451112,
+              "data": {
+                "key": "org.dxos.plugin.inbox.operation.classify-email",
+                "name": "Classify email"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9KXAV6BTCPWJBWVAE5NC",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "175"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9KXAV6BTCPWJBWVAE5NC",
+          "meta": {
+            "pid": "933502d3-ac8a-4411-867e-b22d7700cd33",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Classify email (org.dxos.plugin.inbox.operation.classify-email)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030451114,
+              "data": {
+                "key": "org.dxos.plugin.inbox.operation.classify-email",
+                "name": "Classify email",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9KXCD4TCNJHKEP0N5B39",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "176"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9KXCD4TCNJHKEP0N5B39",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030451116,
+              "data": {
+                "messageId": "01KPZM9KXB21H68A9CFP00W919",
+                "role": "tool",
+                "block": {
+                  "_tag": "toolResult",
+                  "toolCallId": "toolu_01DjSd4JH9iFGgSB1TM5yAz5",
+                  "name": "classify-email",
+                  "providerExecuted": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9M2F5D0JM022EZDFKR3E",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "177"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9M2F5D0JM022EZDFKR3E",
+          "meta": {
+            "pid": "549b3e0b-5429-4914-a5bd-c04996c472c9",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Get Agent Context (org.dxos.function.agent.get-context)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030451279,
+              "data": {
+                "key": "org.dxos.function.agent.get-context",
+                "name": "Get Agent Context"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9M2PNEB39CCABF7FZGEZ",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "178"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9M2PNEB39CCABF7FZGEZ",
+          "meta": {
+            "pid": "549b3e0b-5429-4914-a5bd-c04996c472c9",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Get Agent Context (org.dxos.function.agent.get-context)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030451286,
+              "data": {
+                "key": "org.dxos.function.agent.get-context",
+                "name": "Get Agent Context",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9M3KCN79CHE2N0B8MQ68",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "179"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9M3KCN79CHE2N0B8MQ68",
+          "meta": {
+            "pid": "fd768208-c02a-4207-be14-86185ec46e27",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.start",
+              "timestamp": 1777030451315,
+              "data": {
+                "key": "org.dxos.function.blueprint-manager.query-blueprints",
+                "name": "Query blueprints"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9M3KCN79CHE2N0B8MQ69",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "180"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9M3KCN79CHE2N0B8MQ69",
+          "meta": {
+            "pid": "fd768208-c02a-4207-be14-86185ec46e27",
+            "parentPid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Query blueprints (org.dxos.function.blueprint-manager.query-blueprints)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030451315,
+              "data": {
+                "key": "org.dxos.function.blueprint-manager.query-blueprints",
+                "name": "Query blueprints",
+                "outcome": "success"
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9QW7Q6DMEB1P6Z2SC87T",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "181"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9QW7Q6DMEB1P6Z2SC87T",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030455175,
+              "data": {
+                "messageId": "01KPZM9NZMA8R9ESVJ8WFJYAQJ",
+                "role": "assistant",
+                "block": {
+                  "_tag": "reasoning",
+                  "reasoningText": "The email from OpenAI about a ChatGPT data export has been classified. This would fall under 🔐 Security since it's related to account data management/export, which is a security-adjacent activity. The classify-email tool handled the classification automatically."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9RC8S91PS30VEK7MREZN",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "182"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9RC8S91PS30VEK7MREZN",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030455688,
+              "data": {
+                "messageId": "01KPZM9QWQB28MFRE927FQ8KF0",
+                "role": "assistant",
+                "block": {
+                  "_tag": "text",
+                  "text": "Classified the incoming email from **OpenAI** (\"ChatGPT - Your data export has started\") — this is a notification about a data export request, tagged as **🔐 Security** since it relates to account data management."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9RDJERCPH9JVEXA5AE7H",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "183"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9RDJERCPH9JVEXA5AE7H",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "assistant.completeBlock",
+              "timestamp": 1777030455730,
+              "data": {
+                "messageId": "01KPZM9RDJERCPH9JVEXA5AE7G",
+                "role": "assistant",
+                "block": {
+                  "_tag": "stats",
+                  "model": "claude-opus-4-6",
+                  "duration": 4350,
+                  "message": "OK",
+                  "toolCalls": 0,
+                  "usage": {
+                    "inputTokens": 1,
+                    "outputTokens": 126,
+                    "totalTokens": 127
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "01KPZM9REDXSEWXYF0REVXHEHA",
+          "@type": "dxn:type:org.dxos.type.traceMessage:0.1.0",
+          "@meta": {
+            "keys": [
+              {
+                "source": "org.dxos.key.queue-position",
+                "id": "184"
+              }
+            ]
+          },
+          "@dxn": "dxn:queue:trace:B2IKIUU532EAQWPHCHYKEIKTTPR6JJ2AE:01KPZJ6HCN509TQ4F6TDSXQJW9:01KPZM9REDXSEWXYF0REVXHEHA",
+          "meta": {
+            "pid": "9ccba23d-9d49-4f9a-98fd-ef00bf19b709",
+            "processName": "Agent Worker (org.dxos.function.agent.worker)"
+          },
+          "isEphemeral": false,
+          "events": [
+            {
+              "type": "operation.end",
+              "timestamp": 1777030455757,
+              "data": {
+                "key": "org.dxos.function.agent.worker",
+                "name": "Agent Worker",
                 "outcome": "success"
               }
             }

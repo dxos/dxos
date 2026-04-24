@@ -257,7 +257,11 @@ export const buildExecutionGraph = ({
               commit: { tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(isNotNullable) },
             },
           ]),
-          tags: [...getTags(event.meta), tagOperationBegin(event.meta.pid ?? 'unknown')],
+          tags: [
+            ...getTags(event.meta),
+            tagOperationBegin(event.meta.pid ?? 'unknown'),
+            event.meta.pid && tagStartMarker(event.meta.pid),
+          ].filter(isNotNullable),
           timestamp: new Date(event.timestamp),
           icon: ICONS.operationStart.icon,
           level: ICONS.operationStart.level,
@@ -326,6 +330,7 @@ export const buildExecutionGraph = ({
 type Falsy = false | null | undefined;
 type MaybeFalsy<T> = T | Falsy;
 
+// TODO(dmaretskyi): Replace this with simple composition of predicates.
 type CommitSelector = { id?: MaybeFalsy<string>[]; tags?: MaybeFalsy<string>[] };
 
 class GraphBuilder {

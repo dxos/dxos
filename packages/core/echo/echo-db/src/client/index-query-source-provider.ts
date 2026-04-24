@@ -7,7 +7,7 @@ import { Array } from 'effect';
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
+import { Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -175,11 +175,11 @@ export class IndexQuerySource implements QuerySource {
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
           const results = processedResults.filter(isNonNullable);
-          const resultsWithNoSchema = results.filter((_) => !Obj.getSchema(_.result));
+          const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getSchema(_.result));
           if (resultsWithNoSchema.length > 0) {
             log.warn('unable to resolve schema for queried objects', {
               count: resultsWithNoSchema.length,
-              types: Array.dedupe(results.map((_) => Obj.getTypeDXN(_.result)?.toString())),
+              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeDXN(_.result)?.toString())),
             });
           }
 
