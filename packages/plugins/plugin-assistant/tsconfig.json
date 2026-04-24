@@ -10,11 +10,11 @@
   "exclude": [
     "*.stories.tsx",
     "*.t.ts",
-    "src",
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {

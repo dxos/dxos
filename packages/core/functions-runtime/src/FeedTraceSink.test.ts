@@ -39,7 +39,7 @@ describe('FeedTraceSink', () => {
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect.only(
+  it.effect(
     'make message of invalid schema',
     Effect.fnUntraced(function* ({ expect }) {
       const feed = yield* Database.add(Feed.make());
