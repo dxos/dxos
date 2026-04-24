@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Input, Panel, Tag, Toolbar } from '@dxos/react-ui';
+import { Icon, Input, Panel, Tag, Toolbar } from '@dxos/react-ui';
 
 import { PushCard } from '#operations';
 import { Trello } from '#types';
@@ -31,11 +31,21 @@ export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProp
   const db = Obj.getDatabase(card);
   const boards: Trello.TrelloBoard[] = useQuery(db, Filter.type(Trello.TrelloBoard));
   const board = useMemo(() => {
+    // Prefer the board the card explicitly references.
+    if (card.board?.target) {
+      return card.board.target;
+    }
     if (boards.length <= 1) {
       return boards[0];
     }
+    // Older cards without a back-reference: match on list-id membership. The
+    // card's trelloListId only belongs to one board, so whichever board has
+    // this card's list as one of its lists is the right owner. We can't know
+    // a board's lists locally (they aren't synced as objects), so as a last
+    // resort pick the first board that has credentials; never just boards[0]
+    // which can be the wrong workspace.
     return boards.find((candidate) => candidate.accessToken !== undefined) ?? boards[0];
-  }, [boards]);
+  }, [card.board, boards]);
 
   const handlePush = useCallback(async () => {
     if (!board?.accessToken) {
@@ -75,9 +85,9 @@ export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProp
           />
           {pushStatus && <Toolbar.Text>{pushStatus}</Toolbar.Text>}
           {card.url && (
-            <a href={card.url} target='_blank' rel='noreferrer'>
-              <Toolbar.IconButton label='Open in Trello' icon='ph--arrow-square-out--regular' iconOnly />
-            </a>
+            <Toolbar.Link href={card.url} target='_blank' rel='noreferrer' aria-label='Open in Trello'>
+              <Icon icon='ph--arrow-square-out--regular' size={4} />
+            </Toolbar.Link>
           )}
         </Toolbar.Root>
       </Panel.Toolbar>

@@ -12,7 +12,6 @@ import { Kanban } from '@dxos/plugin-kanban/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { ViewModel } from '@dxos/schema';
 
 import { SyncBoard } from '#operations';
 import { Trello } from '#types';
@@ -111,7 +110,9 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
     if (!board.kanbanId || !db) {
       return;
     }
-    const kanbanPath = getTypePath(db.spaceId, 'org.dxos.type.trelloCard', board.kanbanId);
+    // Use the Kanban typename, not the TrelloCard typename — the kanbanId
+    // points at a Kanban object, and getTypePath must match.
+    const kanbanPath = getTypePath(db.spaceId, Kanban.Kanban.typename, board.kanbanId);
     void invokePromise(LayoutOperation.Open, { subject: [kanbanPath] });
   }, [board.kanbanId, db, invokePromise]);
 
@@ -129,41 +130,15 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
 
     setSyncing(true);
     try {
+      // The SyncBoard operation also creates the Kanban view on first sync;
+      // no client-side duplicate is needed.
       await invokePromise(SyncBoard, { board: Ref.make(board) });
-
-      // Create Kanban view on first sync if not already created.
-      if (!board.kanbanId) {
-        try {
-          const remoteLists = allCards
-            .filter((card) => card.listName)
-            .map((card) => card.listName!)
-            .filter((name, index, arr) => arr.indexOf(name) === index);
-
-          const { view } = await ViewModel.makeFromDatabase({
-            db,
-            typename: 'org.dxos.type.trelloCard',
-            pivotFieldName: 'listName',
-            fields: ['name', 'description', 'listName', 'dueDate'],
-            createInitial: 0,
-          });
-
-          const kanban = Kanban.make({
-            name: board.name ?? 'Trello Board',
-            view,
-            arrangement: { order: remoteLists, columns: {} },
-          });
-          db.add(kanban);
-          Obj.change(board, (mutable) => { mutable.kanbanId = kanban.id; });
-        } catch (kanbanError) {
-          log.catch(kanbanError);
-        }
-      }
     } catch (error) {
       log.catch(error);
     } finally {
       setSyncing(false);
     }
-  }, [db, board, allCards, invokePromise]);
+  }, [db, board, invokePromise]);
 
   const didAutoSync = useRef(false);
   useEffect(() => {
@@ -195,9 +170,9 @@ export const TrelloArticle = ({ role, subject: board }: TrelloArticleProps) => {
             />
           )}
           {board.url && (
-            <a href={board.url} target='_blank' rel='noreferrer'>
-              <Toolbar.IconButton label='Open in Trello' icon='ph--arrow-square-out--regular' iconOnly />
-            </a>
+            <Toolbar.Link href={board.url} target='_blank' rel='noreferrer' aria-label='Open in Trello'>
+              <Icon icon='ph--arrow-square-out--regular' size={4} />
+            </Toolbar.Link>
           )}
           {board.lastSyncedAt && (
             <>
