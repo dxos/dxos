@@ -2,26 +2,32 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "composer-crx",
+      "runtimeExecutable": "/Users/burdon/.proto/bin/moon",
+      "runtimeArgs": ["run", "composer-crx:serve"],
+      "port": 5173
+    },
+    {
       "name": "composer-app",
-      "runtimeExecutable": "moon",
+      "runtimeExecutable": "/Users/burdon/.proto/bin/moon",
       "runtimeArgs": ["run", "composer-app:serve"],
       "port": 5173
     },
     {
       "name": "testbench-app",
-      "runtimeExecutable": "moon",
+      "runtimeExecutable": "/Users/burdon/.proto/bin/moon",
       "runtimeArgs": ["run", "testbench-app:serve"],
       "port": 5173
     },
     {
       "name": "tasks-app",
-      "runtimeExecutable": "moon",
+      "runtimeExecutable": "/Users/burdon/.proto/bin/moon",
       "runtimeArgs": ["run", "tasks:serve"],
       "port": 5173
     },
     {
       "name": "storybook-react",
-      "runtimeExecutable": "moon",
+      "runtimeExecutable": "/Users/burdon/.proto/bin/moon",
       "runtimeArgs": ["run", "storybook-react:serve"],
       "port": 9009
     }

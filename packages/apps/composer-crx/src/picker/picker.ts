@@ -6,11 +6,11 @@ import browser from 'webextension-polyfill';
 
 import { Domino } from '@dxos/ui';
 
-import { type ClipKind } from '../clip/types';
+import { type ClipKind } from '../clip';
 import { CLIP_KINDS, type ClipKindDef } from './kinds';
 
 const ROOT_ATTR = 'data-dxos-crx-picker';
-const Z_TOP = '2147483647';
+const Z_TOP = Number.MAX_SAFE_INTEGER.toString();
 
 /**
  * Result of a user interaction with the picker. The click resolves with
