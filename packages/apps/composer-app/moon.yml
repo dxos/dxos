@@ -13,10 +13,6 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
-    inputs:
-      - src/functions/_worker.ts
-    outputs:
-      - out/composer/_worker.js
   compile:
     deps:
       - prebuild
