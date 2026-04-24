@@ -58,14 +58,21 @@ type SyntaxRootProps = PropsWithChildren<{
   // Text mode.
   language?: string;
   source?: string;
-  // JSON mode (defined `data` selects JSON mode; explicit `undefined` falls back to text mode).
+  // JSON mode (presence of the `data` prop selects JSON mode; `undefined` is still JSON).
   data?: any;
   replacer?: JsonReplacer;
 }>;
 
-/** Headless context provider. Selects JSON mode when `data` is defined; text mode otherwise. */
-const SyntaxRoot: FC<SyntaxRootProps> = ({ children, language, source, replacer, data }) => {
-  const isJson = data !== undefined;
+/**
+ * Headless context provider. Selects JSON mode when the `data` prop is passed at all — even
+ * `data={undefined}` — so loading states render an empty JSON view rather than flipping to
+ * text mode (which would trip `Syntax.Filter`'s JSON-only guard). Mode is chosen by prop
+ * presence, not value.
+ */
+const SyntaxRoot: FC<SyntaxRootProps> = (props) => {
+  const { children, language, source, replacer } = props;
+  const isJson = 'data' in props;
+  const data = props.data;
   const [filterText, setFilterText] = useState('');
 
   const { filteredData, filterError } = useMemo<{ filteredData: any; filterError: Error | null }>(() => {
