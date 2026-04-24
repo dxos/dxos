@@ -7,7 +7,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { Focus, Mosaic, type MosaicStackTileComponent } from '../components';
 
@@ -39,7 +39,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
             </Card.Toolbar>
             {open && (
               <Card.Row>
-                <Json.Data data={props.data} classNames='text-xs' />
+                <JsonHighlighter data={props.data} classNames='text-xs' />
               </Card.Row>
             )}
           </Card.Root>
