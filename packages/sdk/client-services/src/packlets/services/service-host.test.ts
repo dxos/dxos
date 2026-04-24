@@ -3,7 +3,6 @@
 //
 
 import { rmSync } from 'node:fs';
-
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
@@ -13,6 +12,7 @@ import { verifyPresentation } from '@dxos/credentials';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { isNode } from '@dxos/util';
 
@@ -29,16 +29,16 @@ describe('ClientServicesHost', () => {
   test('open and close', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    await host.close();
+    await host.close(Context.default());
   });
 
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
 
     await host.services.IdentityService!.createIdentity({});
-    const { spaceKey } = await host.services.SpacesService!.createSpace();
+    const { spaceKey } = await host.services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
 
     const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
     const [done, tick] = latch({ count: 3 });
@@ -54,7 +54,7 @@ describe('ClientServicesHost', () => {
   test('write and query credentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
 
     await host.services.IdentityService!.createIdentity({});
 
@@ -91,7 +91,7 @@ describe('ClientServicesHost', () => {
   test('sign presentation', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
 
     await host.services.IdentityService!.createIdentity({});
 
@@ -128,7 +128,7 @@ describe('ClientServicesHost', () => {
       expect(host.context.storage.size).to.exist;
 
       await asyncTimeout(host.reset(), 1000);
-      await host.close();
+      await host.close(Context.default());
     }
 
     {
@@ -146,7 +146,7 @@ describe('ClientServicesHost', () => {
       });
       await expect(asyncTimeout(trigger.wait(), 200)).rejects.toBeInstanceOf(Error);
       await stream?.close();
-      await host.close();
+      await host.close(Context.default());
     }
   });
 });

@@ -5,29 +5,22 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
+import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
-import {
-  ScrollContainer,
-  type ScrollContainerRootProps,
-  type ScrollContainerViewportProps,
-  type ScrollController,
-} from './ScrollContainer';
+type DefaultStoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
 
-type StoryProps = ScrollContainerRootProps &
-  Pick<ScrollContainerViewportProps, 'fade'> & { running?: boolean; initialLines?: number };
-
-const DefaultStory = ({ initialLines = 0, running: runningProp, fade, ...props }: StoryProps) => {
+const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: DefaultStoryProps) => {
   const [lines, setLines] = useState<string[]>([]);
   const [running, setRunning] = useState(runningProp);
   const scroller = useRef<ScrollController>(null);
   useEffect(() => {
-    setLines(Array.from({ length: initialLines }, () => faker.lorem.paragraph()));
+    setLines(Array.from({ length: initialLines }, () => random.lorem.paragraph()));
   }, [initialLines]);
   useEffect(() => {
     if (!running) {
@@ -35,7 +28,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, fade, ...props }
     }
 
     const i = setInterval(() => {
-      setLines((lines) => [...lines, faker.lorem.paragraph()]);
+      setLines((lines) => [...lines, random.lorem.paragraph()]);
     }, 500);
 
     return () => clearInterval(i);
@@ -51,16 +44,19 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, fade, ...props }
           <div className='px-1'>{lines.length}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <ScrollContainer.Root {...props} ref={scroller}>
-          <ScrollContainer.Viewport fade={fade}>
-            {lines.map((line, index) => (
-              <div key={index} className='p-2 text-description'>
-                {line}
-              </div>
-            ))}
-          </ScrollContainer.Viewport>
-          <ScrollContainer.ScrollDownButton />
+          <ScrollContainer.Content>
+            <ScrollContainer.Viewport>
+              {lines.map((line, index) => (
+                <div key={index} className='p-2 text-description'>
+                  {line}
+                </div>
+              ))}
+            </ScrollContainer.Viewport>
+            <ScrollContainer.ScrollDownButton />
+            <ScrollContainer.Fade />
+          </ScrollContainer.Content>
         </ScrollContainer.Root>
       </Panel.Content>
     </Panel.Root>
@@ -81,7 +77,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     pin: true,
-    fade: true,
+
     running: true,
   },
 };
@@ -89,7 +85,7 @@ export const Default: Story = {
 export const Large: Story = {
   args: {
     pin: true,
-    fade: true,
+
     initialLines: 100,
   },
 };

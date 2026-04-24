@@ -18,7 +18,7 @@ import { type ModalController, type TableModel, type TableRow } from '../../mode
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-const createOptionLabel: Label = ['create new object label', { ns: translationKey }];
+const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
 
 export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 

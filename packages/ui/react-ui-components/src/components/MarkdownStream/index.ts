@@ -4,6 +4,5 @@
 
 export * from './stream';
 export * from './testing';
-export * from './widgets';
 
 export * from './MarkdownStream';

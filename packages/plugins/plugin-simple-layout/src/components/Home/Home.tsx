@@ -8,14 +8,15 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
 import { byPosition, getHostPlatform, isTauri } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { useExpandPath } from '../hooks';
 
 export type HomeProps = {};
@@ -43,26 +44,21 @@ export const Home = (_: HomeProps) => {
   const autoFocus = !isTauri() || getHostPlatform() !== 'ios';
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <SearchList.Content>
-            <Mosaic.Container asChild>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport classNames='p-2'>
-                  <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </SearchList.Content>
-        </Panel.Content>
-      </Panel.Root>
-    </SearchList.Root>
+    <SearchPanel onSearch={handleSearch}>
+      <Mosaic.Container asChild>
+        <ScrollArea.Root centered padding thin>
+          <ScrollArea.Viewport>
+            <Mosaic.Stack
+              classNames='gap-1'
+              draggable={false}
+              items={results}
+              getId={(item) => item.id}
+              Tile={WorkspaceTile}
+            />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    </SearchPanel>
   );
 };
 
@@ -108,7 +104,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
       onClick={handleSelect}
       ref={cardRef}
     >
-      <Card.Toolbar density='coarse'>
+      <Card.Toolbar density='fine'>
         <Avatar.Root>
           <Avatar.Content
             icon={data.properties.icon}
@@ -118,7 +114,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
             size={8}
             fallback={name}
           />
-          <Avatar.Label>{name}</Avatar.Label>
+          <Avatar.Label classNames='cursor-pointer'>{name}</Avatar.Label>
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
       </Card.Toolbar>

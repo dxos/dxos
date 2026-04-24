@@ -5,15 +5,16 @@
 import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Collection } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Collection, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { PageNumber, Pager, Layout as PresenterLayout } from '../../components';
-import { PresenterContext } from '../../types';
+import { PageNumber, Pager, Layout as PresenterLayout } from '#components';
+import { PresenterContext } from '#types';
+
 import { useExitPresenter } from '../../useExitPresenter';
 
-type CollectionPresenterContainerProps = SurfaceComponentProps<Collection.Collection>;
+export type CollectionPresenterContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const CollectionPresenterContainer = ({ role, subject: collection }: CollectionPresenterContainerProps) => {
   const [slide, setSlide] = useState(0);
@@ -35,7 +36,13 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
             />
           }
         >
-          <Surface.Surface role='slide' data={{ subject: collection.objects[slide] }} />
+          <Surface.Surface
+            type={AppSurface.Slide}
+            data={{
+              subject: collection.objects[slide],
+              attendableId: Obj.getDXN(collection).toString(),
+            }}
+          />
         </PresenterLayout>
       </Panel.Content>
     </Panel.Root>

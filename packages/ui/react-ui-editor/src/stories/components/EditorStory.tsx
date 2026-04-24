@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -20,7 +20,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-  editorSlots,
+  documentSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -33,7 +33,7 @@ export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 
 const defaultId = 'editor-' + PublicKey.random().toHex().slice(0, 8);
 
-export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection' | 'extensions'> &
+export type EditorStoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection' | 'extensions'> &
   Pick<ThemeExtensionsOptions, 'slots'> & {
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
@@ -46,7 +46,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     onReady?: (view: EditorView) => void;
   };
 
-export const EditorStory = forwardRef<EditorController, StoryProps>(
+export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
   ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
     const controllerRef = useRef<EditorController>(null);
     const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
@@ -62,7 +62,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const view = controllerRef.current?.view;
     return (
-      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+      <div className={mx('dx-container grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
@@ -76,7 +76,16 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
                 {view?.state.doc.toString()}
               </pre>
             )}
-            {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
+            {(debug === 'tree' || debug === 'raw+tree') && (
+              <Syntax.Root data={tree}>
+                <Syntax.Content>
+                  <Syntax.Filter />
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='p-1 text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            )}
           </div>
         )}
       </div>
@@ -87,7 +96,7 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 /**
  * Default story component.
  */
-const EditorComponent = forwardRef<EditorController, StoryProps>(
+const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
   (
     {
       id = defaultId,
@@ -100,7 +109,7 @@ const EditorComponent = forwardRef<EditorController, StoryProps>(
       scrollTo,
       selection,
       extensions,
-      slots = editorSlots,
+      slots = documentSlots,
       onReady,
     },
     forwardedRef,

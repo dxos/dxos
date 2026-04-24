@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package dxos.client.services;
 
-import "google/protobuf/struct.proto";
 import "google/protobuf/empty.proto";
 
 
@@ -34,9 +33,12 @@ message QueueQuery {
 }
 
 message QueueQueryResult {
-  repeated google.protobuf.Struct objects = 1;
+  /// JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
+  /// We use JSON strings instead of google.protobuf.Struct because Struct
+  /// coerces `undefined` to `null`, corrupting optional fields.
+  repeated string objects = 1;
 
-  /// Cursor to query the next items. Can be passed to `after` in query to keep querying. 
+  /// Cursor to query the next items. Can be passed to `after` in query to keep querying.
   string next_cursor = 2;
 
   string prev_cursor = 3;
@@ -50,7 +52,8 @@ message InsertIntoQueueRequest {
   string subspace_tag = 1;
   string space_id = 2;
   string queue_id = 3;
-  repeated google.protobuf.Struct objects = 4;
+  /// JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
+  repeated string objects = 4;
 }
 
 message DeleteFromQueueRequest {

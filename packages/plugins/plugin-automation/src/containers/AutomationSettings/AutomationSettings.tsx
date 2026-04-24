@@ -7,21 +7,22 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
+import { meta } from '#meta';
+
 import { AutomationPanel, type AutomationPanelProps } from '../../components/AutomationPanel';
-import { meta } from '../../meta';
 import { TriggersSettings } from '../TriggerSettings';
 
 export const AutomationSettings = (props: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   return (
-    <Settings.Root>
+    <Settings.Viewport>
       <Settings.Section
-        title={t('automation verbose label', { ns: meta.id })}
-        description={t('automation description', { ns: meta.id })}
+        title={t('automation-verbose.label', { ns: meta.id })}
+        description={t('automation.description', { ns: meta.id })}
       >
         <AutomationPanel {...props} />
         <TriggersSettings db={props.space.db} />
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };

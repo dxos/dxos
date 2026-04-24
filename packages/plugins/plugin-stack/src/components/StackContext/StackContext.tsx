@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from 'react';
 
-import { type AddSectionPosition } from '../../types';
+import { type AddSectionPosition } from '#types';
 
 export type StackContextValue = {
   attendableId: string;

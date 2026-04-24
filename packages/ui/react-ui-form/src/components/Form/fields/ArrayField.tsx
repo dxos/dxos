@@ -80,7 +80,11 @@ export const ArrayField = ({
       <div role='none' className='flex flex-col gap-form-gap'>
         {values?.map((_, index) => {
           return (
-            <div role='none' key={index} className='flex gap-form-gap last:mb-form-gap'>
+            <div
+              role='none'
+              key={index}
+              className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'
+            >
               <FormField
                 autoFocus={index === values.length - 1}
                 type={elementType}
@@ -97,7 +101,7 @@ export const ArrayField = ({
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly
-                      label={t('button remove')}
+                      label={t('remove.button')}
                       onClick={() => handleDelete(index)}
                       classNames='self-center'
                     />
@@ -111,7 +115,12 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton classNames='flex w-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
+        <IconButton
+          classNames='flex w-full'
+          icon='ph--plus--regular'
+          label={t('add-item.button')}
+          onClick={handleAdd}
+        />
       )}
     </>
   );

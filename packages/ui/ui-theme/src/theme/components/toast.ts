@@ -4,7 +4,6 @@
 
 import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { focusRing } from '../../fragments';
 import { mx, surfaceShadow } from '../../util';
 
 export type ToastStyleProps = Partial<{
@@ -28,7 +27,7 @@ export const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
     'radix-swipe-end:animate-toast-swipe-out',
     'translate-x-radix-toast-swipe-move-x',
     'radix-swipe-cancel:translate-x-0 radix-swipe-cancel:duration-200 radix-swipe-cancel:ease-[ease]',
-    focusRing,
+    'dx-focus-ring',
     ...etc,
   );
 

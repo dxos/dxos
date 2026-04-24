@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { EchoObjectSchema } from '../Entity';
-
 import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
@@ -32,7 +31,7 @@ describe('annotations', () => {
     test('should validate typename', ({ expect }) => {
       // Valid (reverse-DNS format).
       expect(TypenameSchema.make('org.dxos.type.foo')).to.exist;
-      expect(TypenameSchema.make('org.dxos.type.foo-bar')).to.exist;
+      expect(TypenameSchema.make('org.dxos.type.fooBar')).to.exist;
       expect(TypenameSchema.make('org.dxos.type.foobar')).to.exist;
 
       // Invalid.

@@ -11,7 +11,6 @@ import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { getNestedObjects } from '../util';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(
@@ -53,8 +52,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
 
         const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
         if (index !== -1) {
-          Obj.change(parentCollection, (obj) => {
-            obj.objects.splice(index, 1);
+          Obj.change(parentCollection, (parentCollection) => {
+            parentCollection.objects.splice(index, 1);
           });
         }
 

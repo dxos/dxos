@@ -9,22 +9,22 @@ import { testFunctionPlugins } from '@dxos/compute/testing';
 import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+
+import { withComputeGraphDecorator } from '#testing';
+import { Sheet } from '#types';
 
 import { useSheetModel } from '../../model';
-import { withComputeGraphDecorator } from '../../testing';
-import { Sheet } from '../../types';
-
 import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 
 const DefaultStory = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<Sheet.Sheet>();
   const [text, setText] = useState(`${FUNCTION_NAME}(100)`);
@@ -75,9 +75,7 @@ const DefaultStory = () => {
         </Input.Root>
         <Button onClick={handleTest}>Test</Button>
       </Toolbar.Root>
-      <SyntaxHighlighter language='json'>
-        {JSON.stringify({ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }, null, 2)}
-      </SyntaxHighlighter>
+      <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />
     </div>
   );
 };

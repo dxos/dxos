@@ -7,13 +7,14 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Context } from '@dxos/context';
+import { Feed, Obj } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import type { BundleResult } from '@dxos/functions-runtime/native';
+import { Operation } from '@dxos/operation';
 import { ErrorCodec, type FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -58,7 +59,7 @@ export const deployFunction = async (
     entryPoint,
     verbose: true,
   });
-  const func = await functionsServiceClient.deploy({
+  const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,
@@ -83,8 +84,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   let count = 0;
   while (true) {
     try {
-      const invocations =
-        (await space.properties.invocationTraceQueue?.target!.query(Query.select(Filter.everything())).run()) ?? [];
+      const traceFeed = space.properties.invocationTraceFeed?.target;
+      const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
+      const invocations = traceQueueDxn ? ((await space.queues.get(traceQueueDxn).queryObjects()) ?? []) : [];
 
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {

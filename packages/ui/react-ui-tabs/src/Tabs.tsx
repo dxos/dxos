@@ -249,13 +249,14 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
   );
 };
 
-type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
+type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
-const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
+// TODO(burdon): Make slottable.
+const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => {
   const { value: contextValue } = useTabsContext('TabsTab');
   return (
     <Activity mode={contextValue === props.value ? 'visible' : 'hidden'}>
-      <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
+      <TabsPrimitive.Content {...props} className={mx('p-0! dx-focus-ring-inset-over-all', classNames)}>
         {children}
       </TabsPrimitive.Content>
     </Activity>
@@ -271,7 +272,7 @@ export const Tabs = {
   IconTab: TabsIconTab,
   TabPrimitive: TabsPrimitive.Trigger,
   TabGroupHeading: TabsTabGroupHeading,
-  Tabpanel: TabsTabpanel,
+  Panel: TabsPanel,
   BackButton: TabsBackButton,
   Viewport: TabsViewport,
 };
@@ -283,6 +284,6 @@ export type {
   TabsTabProps,
   TabsTabPrimitiveProps,
   TabsTabGroupHeadingProps,
-  TabsTabpanelProps,
+  TabsPanelProps,
   TabsViewportProps,
 };

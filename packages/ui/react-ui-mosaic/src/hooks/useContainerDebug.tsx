@@ -6,7 +6,7 @@ import React, { type FC, type ReactNode, forwardRef, useMemo, useRef } from 'rea
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useMosaicContainer } from '../components';
@@ -37,7 +37,7 @@ const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames 
   const { id, state, activeLocation, scrolling } = useMosaicContainer(CONTAINER_INFO_NAME);
   const counter = useRef(0);
   return (
-    <Json
+    <JsonHighlighter
       data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
       classNames={mx('text-xs', classNames)}
       ref={forwardedRef}

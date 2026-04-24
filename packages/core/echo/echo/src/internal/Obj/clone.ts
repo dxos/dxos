@@ -7,8 +7,8 @@ import { deepMapValues } from '@dxos/util';
 
 import type * as Obj from '../../Obj';
 import { makeObject } from '../common/proxy';
-import { Ref } from '../Ref';
 import { getMeta, getSchema } from '../common/types';
+import { Ref } from '../Ref';
 
 /**
  * Clones an object or relation.

@@ -21,7 +21,7 @@ import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/operation';
 
-import { type CreateObject } from '../../../types';
+import { type CreateObject } from '#types';
 
 import { printObject } from './util';
 

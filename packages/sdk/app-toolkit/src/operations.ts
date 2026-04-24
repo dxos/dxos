@@ -265,17 +265,23 @@ export namespace LayoutOperation {
   // Main Content Operations
   //
 
+  const NavigationMode = Schema.Literal('immediate', 'validate');
+
   export const Open = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.open`,
       name: 'Open',
-      description: 'Open items in the main content area.',
+      description: 'Open items in the main content area. Takes navigation paths as subjects.',
     },
     executionMode: 'sync',
     services: [Capability.Service],
     input: Schema.Struct({
       // TODO(dmaretskyi): use Ref.Ref(Obj.Unknown)
-      subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to open.' })),
+      subject: Schema.Array(
+        Schema.String.annotations({
+          description: 'Navigation paths of the items to open.',
+        }),
+      ),
       state: Schema.optional(Schema.Literal(true).annotations({ description: 'The items are being added.' })),
       variant: Schema.optional(Schema.String.annotations({ description: 'The variant of the item to open.' })),
       key: Schema.optional(
@@ -285,6 +291,12 @@ export namespace LayoutOperation {
       ),
       workspace: Schema.optional(Schema.String.annotations({ description: 'The workspace to open the items in.' })),
       scrollIntoView: Schema.optional(Schema.Boolean.annotations({ description: 'Scroll the items into view.' })),
+      navigation: Schema.optional(
+        NavigationMode.annotations({
+          description:
+            'How navigation should resolve the requested path. Validate checks the path first; immediate opens it directly and lets the graph catch up.',
+        }),
+      ),
       pivotId: Schema.optional(
         Schema.String.annotations({ description: 'The id of the item to place new items next to.' }),
       ),
@@ -295,7 +307,7 @@ export namespace LayoutOperation {
         ),
       ),
     }),
-    output: Schema.Void,
+    output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
   });
 
   export const Close = Operation.make({

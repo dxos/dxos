@@ -18,7 +18,6 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-
 import { forcePoint } from './graph-forces';
 import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 

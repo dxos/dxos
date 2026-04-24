@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import { useAtomValue } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -123,20 +123,20 @@ export const useObject: {
       if (obj === undefined) {
         return;
       }
-      Obj.change(obj, (o: any) => {
+      Obj.change(obj, (obj: any) => {
         if (typeof updateOrValue === 'function') {
-          const returnValue = updateOrValue(property !== undefined ? o[property] : o);
+          const returnValue = updateOrValue(property !== undefined ? obj[property] : obj);
           if (returnValue !== undefined) {
             if (property === undefined) {
               throw new Error('Cannot re-assign the entire object');
             }
-            o[property] = returnValue;
+            obj[property] = returnValue;
           }
         } else {
           if (property === undefined) {
             throw new Error('Cannot re-assign the entire object');
           }
-          o[property] = updateOrValue;
+          obj[property] = updateOrValue;
         }
       });
     },

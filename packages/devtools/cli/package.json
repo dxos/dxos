@@ -52,6 +52,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
+    "@dxos/plugin-sample": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",

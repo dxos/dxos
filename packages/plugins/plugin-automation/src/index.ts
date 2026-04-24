@@ -2,9 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components';
-export * from './meta';
-export * from './hooks';
-export * from './types';
-
-export * from './AutomationPlugin';
+export { AutomationPlugin } from './AutomationPlugin';
+export { meta } from './meta';

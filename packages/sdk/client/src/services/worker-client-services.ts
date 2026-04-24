@@ -15,7 +15,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { STORAGE_LOCK_KEY } from '../lock-key';
-
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
 
@@ -29,8 +28,6 @@ export type WorkerClientServicesProps = {
   config: Config;
   createWorker: () => SharedWorker;
   logFilter?: string;
-  observabilityGroup?: string;
-  signalTelemetryEnabled?: boolean;
 };
 
 /**
@@ -51,21 +48,11 @@ export class WorkerClientServices implements ClientServicesProvider {
   private _runtime!: SharedWorkerConnection;
   private _services!: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
-  private readonly _observabilityGroup?: string;
-  private readonly _signalTelemetryEnabled: boolean;
 
-  constructor({
-    config,
-    createWorker,
-    logFilter = 'error,warn',
-    observabilityGroup,
-    signalTelemetryEnabled,
-  }: WorkerClientServicesProps) {
+  constructor({ config, createWorker, logFilter = 'error,warn' }: WorkerClientServicesProps) {
     this._config = config;
     this._createWorker = createWorker;
     this._logFilter = parseFilter(logFilter);
-    this._observabilityGroup = observabilityGroup;
-    this._signalTelemetryEnabled = signalTelemetryEnabled ?? false;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -89,7 +76,10 @@ export class WorkerClientServices implements ClientServicesProvider {
     log('opening...');
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
-    worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
+    worker.port.postMessage({
+      dxlog: localStorage.getItem('dxlog'),
+      config: this._config.values,
+    });
     worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
@@ -102,11 +92,7 @@ export class WorkerClientServices implements ClientServicesProvider {
       config: this._config,
       systemPort: createWorkerPort({ port: systemPort }),
     });
-    await this._runtime.open({
-      origin: location.origin,
-      observabilityGroup: this._observabilityGroup,
-      signalTelemetryEnabled: this._signalTelemetryEnabled,
-    });
+    await this._runtime.open({ origin: location.origin });
 
     this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
     await this._services.open();

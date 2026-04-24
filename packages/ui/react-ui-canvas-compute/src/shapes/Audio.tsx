@@ -9,7 +9,6 @@ import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const AudioShape = Schema.extend(

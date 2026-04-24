@@ -25,15 +25,8 @@ import {
 import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
-
 import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
-
-const editorSlots = {
-  scroll: {
-    className: '!py-(--dx-grid-cell-editor-padding-block)',
-  },
-};
 
 /**
  * Option to create new object/value.
@@ -250,7 +243,16 @@ export const TableCellEditor = ({
   return (
     <>
       <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
-      <GridCellEditor extensions={extensions} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
+      <GridCellEditor
+        extensions={extensions}
+        slots={{
+          content: {
+            className: '!py-(--dx-grid-cell-editor-padding-block)',
+          },
+        }}
+        getCellContent={getCellContent}
+        onBlur={handleBlur}
+      />
     </>
   );
 };

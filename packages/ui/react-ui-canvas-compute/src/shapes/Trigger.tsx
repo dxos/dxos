@@ -10,7 +10,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -48,13 +48,13 @@ export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 
 export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const functionTrigger = shape.functionTrigger?.target;
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
-      Obj.change(functionTrigger, (obj) => {
-        obj.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
+      Obj.change(functionTrigger, (functionTrigger) => {
+        functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
       });
     }
   }, [functionTrigger, functionTrigger?.spec]);
@@ -114,21 +114,16 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
   const kind = props.triggerKind ?? 'email';
   switch (kind) {
     case 'timer':
-      return { kind: 'timer', cron: '*/10 * * * * *' } satisfies Trigger.TimerSpec;
+      return Trigger.specTimer('*/10 * * * * *');
     case 'webhook':
-      return { kind: 'webhook', method: 'POST' } satisfies Trigger.WebhookSpec;
+      return Trigger.specWebhook({ method: 'POST' });
     case 'subscription':
-      return {
-        kind: 'subscription',
-        query: {
-          ast: Query.select(Filter.nothing()).ast,
-        },
-      } satisfies Trigger.SubscriptionSpec;
+      return Trigger.specSubscription(Query.select(Filter.nothing()));
     case 'email':
-      return { kind: 'email' } satisfies Trigger.EmailSpec;
+      return Trigger.specEmail();
     case 'queue': {
       const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), Obj.ID.random()]).toString();
-      return { kind: 'queue', queue: dxn } satisfies Trigger.QueueSpec;
+      return Trigger.specQueue(dxn);
     }
   }
 };

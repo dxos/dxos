@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { withTheme } from '../../testing';
-
 import { Skeleton } from './Skeleton';
 
 export default {

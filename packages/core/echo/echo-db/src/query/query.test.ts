@@ -22,19 +22,19 @@ import {
   View,
 } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { range } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
-faker.seed(1);
+random.seed(1);
 
 const tags = ['red', 'green', 'blue'];
 
@@ -47,7 +47,7 @@ type ObjectProps = {
 
 const createTestObject = (props: ObjectProps = {}) => {
   return Obj.make(TestSchema.Expando, {
-    title: faker.commerce.productName(),
+    title: random.commerce.productName(),
     ...props,
   });
 };
@@ -264,6 +264,215 @@ describe('Query', () => {
 
       const datasets = await db.query(Query.type(Dataset.Dataset)).run();
       expect(datasets).to.have.length(3);
+    });
+  });
+
+  describe('Timestamp queries', () => {
+    test('updated({ after }) excludes objects created before cutoff', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(recent.id);
+      expect(ids).not.toContain(early.id);
+    });
+
+    test('created({ before }) excludes objects created after cutoff', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const late = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.created({ before: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(early.id);
+      expect(ids).not.toContain(late.id);
+    });
+
+    test('updated({ after, before }) returns only objects in range', async () => {
+      const { db } = await builder.createDatabase();
+      const before = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const rangeStart = Date.now();
+      await sleep(20);
+
+      const middle = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      await sleep(20);
+      const rangeEnd = Date.now();
+      await sleep(20);
+
+      const after = db.add(createTestObject({ value: 3 }));
+      await db.flush();
+
+      const objects = await db
+        .query(
+          Query.select(
+            Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: rangeStart, before: rangeEnd })),
+          ),
+        )
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(middle.id);
+      expect(ids).not.toContain(before.id);
+      expect(ids).not.toContain(after.id);
+    });
+
+    test('timestamp filter combined with type and property filter', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 100 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 200 }));
+      await db.flush();
+
+      const objects = await db
+        .query(
+          Query.select(Filter.and(Filter.type(TestSchema.Expando, { value: 200 }), Filter.updated({ after: cutoff }))),
+        )
+        .run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0].id).toBe(recent.id);
+    });
+
+    test('updated({ after }) with future cutoff returns empty', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      const futureCutoff = Date.now() + 60_000;
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: futureCutoff }))))
+        .run();
+      expect(objects).toHaveLength(0);
+    });
+
+    test('updated({ after }) accepts Date objects', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = new Date();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(recent.id);
+      expect(ids).not.toContain(early.id);
+    });
+
+    test('updated({ after }) picks up modified objects', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(createTestObject({ value: 1 }));
+      const other = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      // Automerge timestamps have second-level precision.
+      // Wait until we cross into the next second so the modification
+      // gets a strictly later timestamp than the initial indexing.
+      const secondAfterFlush = Math.floor(Date.now() / 1000) + 1;
+      while (Math.floor(Date.now() / 1000) < secondAfterFlush) {
+        await sleep(50);
+      }
+      const cutoff = secondAfterFlush * 1000;
+
+      Obj.change(obj, (obj: any) => {
+        obj.value = 999;
+      });
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(obj.id);
+      expect(ids).not.toContain(other.id);
+    });
+
+    test('standalone updated({ after }) without type filter', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.updated({ after: cutoff }))).run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(recent.id);
+      expect(ids).not.toContain(early.id);
+    });
+
+    test('not(updated) throws clear error', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await expect(db.query(Query.select(Filter.not(Filter.updated({ after: Date.now() })))).run()).rejects.toThrow(
+        /[Nn]egated timestamp/,
+      );
+    });
+
+    test('not(and(type, updated)) throws clear error', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await expect(
+        db
+          .query(
+            Query.select(
+              Filter.not(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: Date.now() }))),
+            ),
+          )
+          .run(),
+      ).rejects.toThrow(/[Nn]egated timestamp/);
+    });
+
+    test('or(updated, type) throws clear error', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await expect(
+        db.query(Query.select(Filter.or(Filter.updated({ after: Date.now() }), Filter.type(TestSchema.Expando)))).run(),
+      ).rejects.toThrow(/too complex/);
     });
   });
 
@@ -561,13 +770,11 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
 
-      // Create a feed object and bind it to the queue.
+      // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -587,12 +794,10 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -636,12 +841,10 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await queue.append([
@@ -1302,6 +1505,29 @@ describe('Query', () => {
       expect(parentChildren).toHaveLength(1);
       expect(parentChildren[0]).toMatchObject({ name: 'Child' });
     });
+
+    test('traverse to children of a feed returns feed queue items', async () => {
+      const feedPeer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const feedDb = await feedPeer.createDatabase();
+      const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
+
+      const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
+
+      // Space-only task (should NOT appear as a child of the feed).
+      feedDb.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await feedDb.flush();
+
+      const objects = await feedDb.query(Query.select(Filter.id(feed.id)).children()).run();
+      expect(objects).toHaveLength(2);
+      const titles = objects.map((obj: any) => obj.title).sort();
+      expect(titles).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
   });
 
   describe.skip('text search (old indexer)', () => {
@@ -1538,11 +1764,11 @@ describe('Query', () => {
       console.time('create');
       const counts = Object.fromEntries(ANIMALS.map((animal) => [animal, 0]));
       for (const _ of range(10_000)) {
-        const animal = faker.helpers.arrayElement(ANIMALS);
+        const animal = random.helpers.arrayElement(ANIMALS);
         counts[animal]++;
         db.add(
           Obj.make(TestSchema.Expando, {
-            title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10),
+            title: random.lorem.sentence(10) + ' ' + animal + ' ' + random.lorem.sentence(10),
           }),
         );
         if (_ % 1000 === 0) {
@@ -1557,7 +1783,7 @@ describe('Query', () => {
       console.timeEnd('flush');
 
       console.time('query');
-      const needle = faker.helpers.arrayElement(ANIMALS);
+      const needle = random.helpers.arrayElement(ANIMALS);
       const objects = await db.query(Query.select(Filter.text(needle, { type: 'full-text' }))).run();
       console.timeEnd('query');
       console.log('objects', {
@@ -2050,8 +2276,8 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (obj) => {
-        obj.name = name;
+      Obj.change(contact, (contact) => {
+        contact.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));
 
@@ -2083,6 +2309,250 @@ describe('Query', () => {
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
       }
+    });
+  });
+
+  describe('Filter.childOf', () => {
+    test('two echo objects - positive test', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const child = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent,
+          name: 'Child',
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(parent))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Child' });
+    });
+
+    test('two echo objects - negative test', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const unrelated = db.add(Obj.make(TestSchema.Expando, { name: 'Unrelated' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(parent))).run();
+      expect(objects).toHaveLength(0);
+    });
+
+    test('chain of three echo objects - transitive positive', async () => {
+      const { db } = await builder.createDatabase();
+      const grandparent = db.add(Obj.make(TestSchema.Expando, { name: 'Grandparent' }));
+      const parent = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: grandparent,
+          name: 'Parent',
+        }),
+      );
+      const child = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent,
+          name: 'Child',
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(grandparent))).run();
+      expect(objects).toHaveLength(2);
+      const names = objects.map((o: any) => o.name).sort();
+      expect(names).toEqual(['Child', 'Parent']);
+    });
+
+    test('chain of three echo objects - transitive negative', async () => {
+      const { db } = await builder.createDatabase();
+      const grandparent = db.add(Obj.make(TestSchema.Expando, { name: 'Grandparent' }));
+      const parent = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: grandparent,
+          name: 'Parent',
+        }),
+      );
+      const child = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent,
+          name: 'Child',
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(grandparent, { transitive: false }))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Parent' });
+    });
+
+    test('chain of three echo objects - non-transitive positive', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const child = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent,
+          name: 'Child',
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(parent, { transitive: false }))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Child' });
+    });
+
+    test('chain of three echo objects - non-transitive negative', async () => {
+      const { db } = await builder.createDatabase();
+      const grandparent = db.add(Obj.make(TestSchema.Expando, { name: 'Grandparent' }));
+      const parent = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: grandparent,
+          name: 'Parent',
+        }),
+      );
+      const unrelated = db.add(Obj.make(TestSchema.Expando, { name: 'Unrelated' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(grandparent, { transitive: false }))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Parent' });
+    });
+
+    test('object in feed', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      await db.flush();
+
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(feed)).from(db, { includeFeeds: true })).run();
+      expect(objects).toHaveLength(1);
+      expect((objects[0] as TestSchema.Task).title).toEqual('Task in feed');
+    });
+
+    test('A -> Feed -> B: childOf([A]) matches B', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const parentObj = db.add(Obj.make(TestSchema.Expando, { name: 'ParentA' }));
+      const feed = db.add(
+        Obj.make(Feed.Feed, {
+          [Obj.Parent]: parentObj,
+          name: 'child-feed',
+        }),
+      );
+      await db.flush();
+
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf(parentObj)).from(db, { includeFeeds: true })).run();
+      const taskResults = objects.filter((obj: any) => obj.title === 'Grandchild task');
+      expect(taskResults.length).toBeGreaterThanOrEqual(1);
+    });
+
+    test('childOf with type filter prevents Feed from being returned', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const parentObj = db.add(Obj.make(TestSchema.Expando, { name: 'ParentA' }));
+      const feed = db.add(
+        Obj.make(Feed.Feed, {
+          [Obj.Parent]: parentObj,
+          name: 'child-feed',
+        }),
+      );
+      await db.flush();
+
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Task from feed' })]);
+      await db.flush();
+
+      const objects = await db
+        .query(
+          Query.select(Filter.and(Filter.childOf(parentObj), Filter.type(TestSchema.Task))).from(db, {
+            includeFeeds: true,
+          }),
+        )
+        .run();
+      expect(objects).toHaveLength(1);
+      expect((objects[0] as TestSchema.Task).title).toEqual('Task from feed');
+      expect(objects.every((obj: any) => Obj.getTypename(obj) !== 'org.dxos.type.feed')).toBe(true);
+    });
+
+    test('negative test with 2 feeds - items from only one matching filter', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const feed1 = db.add(Feed.make({ name: 'feed-1' }));
+      const feed2 = db.add(Feed.make({ name: 'feed-2' }));
+      await db.flush();
+
+      const feedDxn1 = Feed.getQueueDxn(feed1)!;
+      const feedDxn2 = Feed.getQueueDxn(feed2)!;
+      const queue1 = queues.get(feedDxn1);
+      const queue2 = queues.get(feedDxn2);
+
+      await queue1.append([Obj.make(TestSchema.Task, { title: 'Task in feed 1' })]);
+      await queue2.append([Obj.make(TestSchema.Task, { title: 'Task in feed 2' })]);
+      await db.flush();
+
+      const objects1 = await db.query(Query.select(Filter.childOf(feed1)).from(db, { includeFeeds: true })).run();
+      expect(objects1).toHaveLength(1);
+      expect((objects1[0] as TestSchema.Task).title).toEqual('Task in feed 1');
+
+      const objects2 = await db.query(Query.select(Filter.childOf(feed2)).from(db, { includeFeeds: true })).run();
+      expect(objects2).toHaveLength(1);
+      expect((objects2[0] as TestSchema.Task).title).toEqual('Task in feed 2');
+    });
+
+    test('childOf with Ref argument', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const child = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent,
+          name: 'Child',
+        }),
+      );
+      await db.flush();
+
+      const parentRef = Ref.make(parent);
+      const objects = await db.query(Query.select(Filter.childOf(parentRef))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Child' });
+    });
+
+    test('childOf with array of parents', async () => {
+      const { db } = await builder.createDatabase();
+      const parent1 = db.add(Obj.make(TestSchema.Expando, { name: 'Parent1' }));
+      const parent2 = db.add(Obj.make(TestSchema.Expando, { name: 'Parent2' }));
+      const child1 = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent1,
+          name: 'Child1',
+        }),
+      );
+      const child2 = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Parent]: parent2,
+          name: 'Child2',
+        }),
+      );
+      const unrelated = db.add(Obj.make(TestSchema.Expando, { name: 'Unrelated' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.childOf([parent1, parent2]))).run();
+      expect(objects).toHaveLength(2);
+      const names = objects.map((o: any) => o.name).sort();
+      expect(names).toEqual(['Child1', 'Child2']);
     });
   });
 });

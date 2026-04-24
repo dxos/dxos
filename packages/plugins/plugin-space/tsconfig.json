@@ -139,7 +139,7 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-searchlist"
+      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -173,6 +173,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-status-bar"

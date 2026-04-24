@@ -19,7 +19,6 @@ import {
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
-
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';
@@ -173,24 +172,24 @@ export class SignalClient extends Resource implements SignalClientMethods {
     };
   }
 
-  async join(args: JoinRequest): Promise<void> {
+  async join(_ctx: Context, args: JoinRequest): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
     this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
-  async leave(args: LeaveRequest): Promise<void> {
+  async leave(_ctx: Context, args: LeaveRequest): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordLeave();
     this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
-  async query(params: QueryRequest): Promise<SwarmResponse> {
+  async query(_ctx: Context, params: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage(msg: Message): Promise<void> {
+  async sendMessage(_ctx: Context, msg: Message): Promise<void> {
     return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');

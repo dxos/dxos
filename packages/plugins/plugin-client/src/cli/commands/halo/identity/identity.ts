@@ -23,7 +23,6 @@ export const handler = Effect.fn(function* () {
       yield* Console.log('Identity not initialized.');
     }
   } else {
-    yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
     if (json) {
       yield* Console.log(
         JSON.stringify(

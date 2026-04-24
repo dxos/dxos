@@ -9,12 +9,11 @@ import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';
-
 import { useCredentials } from './useCredentials';
 import { useIdentity } from './useIdentity';
 
@@ -117,9 +116,7 @@ const Test = () => {
         </Button>
       </div>
       <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded-sm'>
-        <SyntaxHighlighter language='json'>
-          {JSON.stringify({ identity, credentials: credentials.length }, null, 2)}
-        </SyntaxHighlighter>
+        <JsonHighlighter data={{ identity, credentials: credentials.length }} />
       </div>
     </>
   );

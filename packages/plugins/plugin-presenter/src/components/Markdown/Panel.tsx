@@ -36,7 +36,7 @@ export const Panel = ({ children, classNames }: PanelProps) => {
   // https://www.npmjs.com/package/react-markdown
   return (
     <div ref={containerRef} className={mx('flex grow relative overflow-hidden bg-attention-surface', classNames)}>
-      <div className={mx('flex w-full h-full overflow-hidden absolute')} style={props}>
+      <div className={mx('dx-container absolute')} style={props}>
         {width && height && children}
       </div>
     </div>

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ModelName } from '@dxos/ai';
 
-const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio'] as const;
+const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio', 'ollama'] as const;
 
 const ModelProvider = Schema.Literal(...ModelProviders);
 type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
@@ -27,15 +27,23 @@ const createModelLabel = (model: ModelName) => {
 export const AiServicePresets: AiServicePreset[] = [
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-opus-4-0' as const,
+    model: '@anthropic/claude-opus-4-6' as const,
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-sonnet-4-0' as const,
+    model: '@anthropic/claude-sonnet-4-5' as const,
   },
   {
     provider: 'dxos-remote' as const,
     model: '@anthropic/claude-3-5-haiku-20241022' as const,
+  },
+  {
+    provider: 'ollama' as const,
+    model: 'gpt-oss:20b' as const,
+  },
+  {
+    provider: 'ollama' as const,
+    model: 'gemma4:latest' as const,
   },
   {
     provider: 'lm-studio' as const,

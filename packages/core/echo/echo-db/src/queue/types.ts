@@ -9,9 +9,9 @@ import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/in
 import { type DXN, type ObjectId } from '@dxos/keys';
 
 /**
+ * @deprecated Migrate to Feed
  * Client-side view onto an EDGE queue.
  */
-// TODO(dmaretskyi): Move the interface into @dxos/echo package.
 // TODO(dmaretskyi): Remove type parameter -- all queues are untyped, and we use query to enforce type.
 export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
   readonly dxn: DXN;

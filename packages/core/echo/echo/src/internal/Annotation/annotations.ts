@@ -15,7 +15,6 @@ import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
@@ -90,14 +89,15 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
  * Fully qualified globally unique typename.
  * Example: `org.dxos.type.message`
  */
-// TODO(burdon): Reconcile with short DXN format.
-// TODO(burdon): Change "type" => "schema" throughout.
-export const TypenameSchema = Schema.String.pipe(Schema.pattern(/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/)).annotations(
-  {
-    description: 'Fully qualified globally unique typename in lowercase reverse-DNS form.',
-    example: 'org.dxos.type.message',
-  },
-);
+// TODO(wittjosiah): Factor out to DXN spec.
+export const TypenameSchema = Schema.String.pipe(
+  Schema.pattern(
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  ),
+).annotations({
+  description: 'Fully qualified globally unique typename in reverse-DNS form.',
+  example: 'org.dxos.type.message',
+});
 
 /**
  * Semantic version format: `major.minor.patch`
@@ -443,7 +443,6 @@ export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Identifies if a property should be included in a form or not.
  * By default, all properties are included in forms, so this is opt-out.
  */
-// TODO(burdon): UI concern.
 export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInput');
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 

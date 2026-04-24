@@ -403,7 +403,7 @@ describe('query', () => {
       //   input: '',
       //   expected: Query.select(Filter.typename('org.dxos.type.person', { jobTitle: 'investor' }))
       //     .reference('organization')
-      //     .targetOf(Relation.of('org.dxos.relation.has-subject')) // TODO(burdon): Invert?
+      //     .targetOf(Relation.of('org.dxos.relation.hasSubject')) // TODO(burdon): Invert?
       //     .source(),
       // },
     ];

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Column, Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
@@ -65,44 +65,48 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <Flex column classNames='p-1'>
-          <Input.Root>
-            <Input.TextInput />
-          </Input.Root>
-        </Flex>
+        <Column.Root gutter='xs' classNames='py-form-chrome'>
+          <Column.Center>
+            <Flex column>
+              <Input.Root>
+                <Input.TextInput placeholder={label} />
+              </Input.Root>
+            </Flex>
+          </Column.Center>
+        </Column.Root>
       </Panel.Content>
     </Panel.Root>
   );
 };
 
 const DefaultStory = () => {
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('upper');
+  const [splitterMode, setSplitterMode] = useState<SplitterMode>('top');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
-    setSplitterMode(splitterMode === 'both' ? 'lower' : splitterMode);
+    setSplitterMode(splitterMode === 'split' ? 'bottom' : splitterMode);
   }, [keyboardOpen]);
 
   return (
     <WithKeyboard>
       <MobileLayout.Root onKeyboardOpenChange={setKeyboardOpen}>
-        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
+        <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'top' }}>
           <Splitter.Root mode={splitterMode} ratio={0.5}>
-            <Splitter.Panel position='upper'>
+            <Splitter.Panel position='top'>
               <StoryPanel label='Main'>
-                {splitterMode === 'upper' && (
-                  <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('both')} />
+                {splitterMode === 'top' && (
+                  <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
                 )}
               </StoryPanel>
             </Splitter.Panel>
-            <Splitter.Panel position='lower'>
+            <Splitter.Panel position='bottom'>
               <StoryPanel label='Drawer'>
                 <Toolbar.IconButton
-                  icon={splitterMode === 'lower' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
-                  label={splitterMode === 'lower' ? 'Collapse' : 'Expand'}
-                  onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'both' ? 'lower' : 'both'))}
+                  icon={splitterMode === 'bottom' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
+                  label={splitterMode === 'bottom' ? 'Collapse' : 'Expand'}
+                  onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'split' ? 'bottom' : 'split'))}
                 />
-                <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('upper')} />
+                <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('top')} />
               </StoryPanel>
             </Splitter.Panel>
           </Splitter.Root>

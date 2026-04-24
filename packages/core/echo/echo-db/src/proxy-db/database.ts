@@ -29,7 +29,6 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
 
@@ -179,7 +178,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
-      await this._coreDatabase.open({ rootUrl: this._rootUrl });
+      await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
     }
 
     await this._schemaRegistry.open();
@@ -198,9 +197,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
-        await this._coreDatabase.open({ rootUrl });
+        await this._coreDatabase.open(this._ctx, { rootUrl });
       } else {
-        await this._coreDatabase.updateSpaceState({ rootUrl });
+        await this._coreDatabase.updateSpaceState(this._ctx, { rootUrl });
       }
     }
   }
@@ -257,7 +256,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const schema = Obj.getSchema(obj);
+      const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);

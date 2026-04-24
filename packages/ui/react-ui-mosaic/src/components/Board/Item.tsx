@@ -13,7 +13,6 @@ import { getHashStyles } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
-
 import { useBoard } from './Board';
 import { useBoardColumn } from './Column';
 
@@ -38,7 +37,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         column != null && model.onItemDelete
           ? [
               createMenuAction('delete-item', () => model.onItemDelete?.(column, data), {
-                label: t('delete menu label'),
+                label: t('delete-menu.label'),
                 icon: 'ph--trash--regular',
               }),
             ]
@@ -64,12 +63,12 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
           location={location}
           debug={debug}
         >
-          <Focus.Group asChild>
+          <Focus.Item asChild>
             <Card.Root
               classNames={classNames}
               data-testid='board-item'
-              onClick={() => rootRef.current?.focus()}
               ref={composedRef}
+              onClick={(event) => event.currentTarget.focus()}
             >
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
@@ -80,7 +79,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
-                    label={t('action menu label')}
+                    label={t('action-menu.label')}
                   />
                 </Menu.Trigger>
                 <Menu.Content items={items} />
@@ -97,7 +96,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 )}
               </Card.Row>
             </Card.Root>
-          </Focus.Group>
+          </Focus.Item>
         </Mosaic.Tile>
       </Menu.Root>
     );

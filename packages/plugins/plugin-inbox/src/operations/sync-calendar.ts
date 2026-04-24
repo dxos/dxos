@@ -10,12 +10,11 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import { SyncCalendar } from './definitions';
-import { CalendarFunctions } from './google/calendar';
 
 const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
   Operation.withHandler(
@@ -24,9 +23,10 @@ const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
       const db = Obj.getDatabase(calendar);
       invariant(db);
       const runtime = computeRuntime.getRuntime(db.spaceId);
+      const { CalendarFunctions } = yield* Effect.promise(() => import('./google/calendar'));
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
-          invokeFunctionWithTracing(CalendarFunctions.Sync, {
+          Operation.invoke(CalendarFunctions.Sync, {
             calendar: Ref.make(calendar),
           }),
         ),
@@ -37,8 +37,8 @@ const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
             id: `${meta.id}/sync-calendar-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync calendar error title', { ns: meta.id }],
-            closeLabel: ['close label', { ns: meta.id }],
+            title: ['sync-calendar-error.title', { ns: meta.id }],
+            closeLabel: ['close.label', { ns: meta.id }],
           });
         }),
       );

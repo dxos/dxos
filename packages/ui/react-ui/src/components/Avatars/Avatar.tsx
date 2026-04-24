@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-avatar.pcss';
-
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
+import '@dxos/lit-ui/dx-avatar.pcss';
 import {
   type AvatarAnimation,
   type AvatarStatus,

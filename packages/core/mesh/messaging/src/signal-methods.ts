@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Lifecycle } from '@dxos/context';
+import { type Context, type Lifecycle } from '@dxos/context';
 import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
   type JoinRequest,
@@ -51,22 +51,22 @@ export interface SignalMethods {
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join: (params: JoinRequest) => Promise<void>;
+  join: (ctx: Context, params: JoinRequest) => Promise<void>;
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave: (params: LeaveRequest) => Promise<void>;
+  leave: (ctx: Context, params: LeaveRequest) => Promise<void>;
 
   /**
    * Query peers in the swarm without joining it.
    */
-  query: (params: QueryRequest) => Promise<SwarmResponse>;
+  query: (ctx: Context, params: QueryRequest) => Promise<SwarmResponse>;
 
   /**
    * Send message to peer.
    */
-  sendMessage: (message: Message) => Promise<void>;
+  sendMessage: (ctx: Context, message: Message) => Promise<void>;
 
   /**
    * Start receiving messages from peer.

@@ -9,8 +9,8 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { QuerySandbox } from '@dxos/echo-query';
 import { createObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
@@ -71,7 +71,7 @@ const DefaultStory = (props: QueryEditorProps) => {
       <Panel.Content>
         <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
           <QueryEditor {...props} initialValue={object.content} extensions={extensions} />
-          <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
+          <JsonHighlighter data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
         </div>
       </Panel.Content>
     </Panel.Root>

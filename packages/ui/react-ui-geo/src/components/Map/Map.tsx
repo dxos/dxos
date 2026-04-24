@@ -10,8 +10,8 @@ import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHand
 import { createRoot } from 'react-dom/client';
 import { MapContainer, type MapContainerProps, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
-import { ComposableProps, ThemeProvider, type ThemedClassName, Tooltip } from '@dxos/react-ui';
-import { composableProps, defaultTx, mx } from '@dxos/ui-theme';
+import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { composable, composableProps, defaultTx, mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
@@ -49,15 +49,12 @@ const [MapContextProvider, useMapContext] = createContext<MapContextValue>('Map'
 // Root
 //
 
-type MapRootProps = ComposableProps<
-  HTMLDivElement,
-  ThemedClassName<PropsWithChildren<Pick<MapContextValue, 'onChange'>>>
->;
+type MapRootProps = Pick<MapContextValue, 'onChange'>;
 
 /**
  * Context provider for the map. Must wrap Map.Content.
  */
-const MapRoot = forwardRef<HTMLDivElement, MapRootProps>(({ children, onChange, ...props }, forwardedRef) => {
+const MapRoot = composable<HTMLDivElement, MapRootProps>(({ children, onChange, ...props }, forwardedRef) => {
   // TODO(burdon): Use attention: const [attention, setAttention] = useState(false);
   const attention = false;
   return (
@@ -65,7 +62,7 @@ const MapRoot = forwardRef<HTMLDivElement, MapRootProps>(({ children, onChange, 
       <div
         {...composableProps(props, {
           role: 'none',
-          className: 'dx-container grid dx-focus-ring-inset',
+          classNames: 'dx-container grid dx-focus-ring-inset',
         })}
         ref={forwardedRef}
       >

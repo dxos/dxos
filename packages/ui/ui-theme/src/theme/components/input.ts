@@ -11,16 +11,7 @@ import {
   type Size,
 } from '@dxos/ui-types';
 
-import {
-  coarseBlockSize,
-  coarseDimensions,
-  fineBlockSize,
-  fineDimensions,
-  focusRing,
-  staticDisabled,
-  staticFocusRing,
-  subduedFocus,
-} from '../../fragments';
+import { densityDimensions, staticDisabled } from '../../fragments';
 import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '../../util';
 
 export type InputStyleProps = Partial<{
@@ -67,30 +58,30 @@ const inputValence = (valence?: MessageValence) => {
 };
 
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full bg-transparent text-current placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  props.density === 'fine' ? fineBlockSize : coarseBlockSize,
-  subduedFocus,
+  'py-0 w-full bg-transparent text-current placeholder-placeholder',
+  'dx-focus-subdued',
+  densityDimensions(props.density),
   props.disabled && staticDisabled,
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
-  props.density === 'fine' ? fineDimensions : coarseDimensions,
+  densityDimensions(props.density),
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
+  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention-surface',
   inputValence(props.validationValence),
   props.disabled && staticDisabled,
-  props.focused && staticFocusRing,
+  props.focused && 'dx-focus-static',
 ];
 
 const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
@@ -100,7 +91,7 @@ const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       ? mx(...sharedStaticInputStyles(props), ...etc)
       : mx(
           ...sharedDefaultInputStyles(props),
-          !props.disabled && focusRing,
+          !props.disabled && 'dx-focus-ring',
           inputValence(props.validationValence),
           ...etc,
         );
@@ -121,7 +112,7 @@ const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled },
     !disabled && booleanInputSurfaceHover,
     // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.
     'cursor-pointer shrink-0 rounded-full px-1 mx-1 relative',
-    focusRing,
+    'dx-focus-ring',
     ...etc,
   );
 

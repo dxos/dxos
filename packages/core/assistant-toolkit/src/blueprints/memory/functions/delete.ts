@@ -14,6 +14,7 @@ export default DeleteMemory.pipe(
     Effect.fn(function* ({ memory }) {
       const memoryObj = yield* Database.load(memory);
       yield* Database.remove(memoryObj);
+      yield* Database.flush();
     }),
   ),
 );

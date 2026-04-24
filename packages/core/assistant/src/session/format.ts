@@ -7,17 +7,19 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
+import type { ObjectNotFoundError } from '@dxos/echo/Err';
+import { type FunctionNotFoundError } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Operation, type OperationRegistry } from '@dxos/operation';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
-
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunError, type AiSessionRunProps } from './session';
+import { type AiRequestRunError, type AiRequestRunProps } from './request';
 
 /**
  * Formats the system prompt.
@@ -27,7 +29,11 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiRequestRunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+  string,
+  FunctionNotFoundError | ObjectNotFoundError,
+  Database.Service | OperationRegistry.Service | Operation.Service
+> =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
       blueprints,
@@ -65,7 +71,7 @@ export const formatSystemPrompt = ({
       Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );
-  });
+  }).pipe(Effect.withSpan('formatSystemPrompt'));
 
 /**
  * Formats the user prompt.
@@ -75,7 +81,7 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiSessionRunProps<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
+}: Pick<AiRequestRunProps, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiRequestRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 
@@ -109,9 +115,9 @@ export const formatUserPrompt = ({
     return Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
-      blocks: [...blocks, { _tag: 'text', text: prompt }],
+      blocks: typeof prompt === 'string' ? [...blocks, { _tag: 'text', text: prompt }] : [...blocks, ...prompt],
     });
-  });
+  }).pipe(Effect.withSpan('formatUserPrompt'));
 
 const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();
@@ -132,7 +138,7 @@ const createArtifactUpdateBlock = (
   return {
     _tag: 'text',
     // TODO(dmaretskyi): Does this need to be a special content-block?
-    disposition: 'artifact-update',
+    disposition: 'synthetic',
     text: trim`
       The following artifacts have been updated since the last message:
       ${[...artifactDiff.entries()]

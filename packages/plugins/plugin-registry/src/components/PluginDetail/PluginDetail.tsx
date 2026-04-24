@@ -2,25 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { ComposableProps, Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { composableProps, getStyles, mx } from '@dxos/ui-theme';
+import { Button, Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
-export type PluginDetailProps = ComposableProps<
-  HTMLDivElement,
-  {
-    plugin: Plugin.Plugin;
-    enabled?: boolean;
-    onEnabledChange?: (enabled: boolean) => void;
-  }
->;
+export type PluginDetailProps = {
+  plugin: Plugin.Plugin;
+  enabled?: boolean;
+  onEnabledChange?: (enabled: boolean) => void;
+  /**
+   * When provided, an Uninstall button is rendered. Leave undefined for core
+   * or non-removable plugins.
+   */
+  onUninstall?: () => void;
+  /**
+   * When provided, the plugin is not installed and an Install button is shown
+   * in place of the enable Switch.
+   */
+  onInstall?: () => void;
+  installing?: boolean;
+};
 
-export const PluginDetail = forwardRef<HTMLDivElement, PluginDetailProps>(
-  ({ plugin, enabled, onEnabledChange, ...props }, forwardedRef) => {
+export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
+  ({ plugin, enabled, onEnabledChange, onUninstall, onInstall, installing, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const {
       id,
@@ -44,9 +52,15 @@ export const PluginDetail = forwardRef<HTMLDivElement, PluginDetailProps>(
             <div role='none' className='flex flex-col gap-6'>
               <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
                 <h2 className='text-xl'>{name}</h2>
-                <Input.Root>
-                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Input.Root>
+                {onInstall ? (
+                  <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
+                    {installing ? t('installing.label') : t('install.label')}
+                  </Button>
+                ) : (
+                  <Input.Root>
+                    <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                  </Input.Root>
+                )}
                 <p className='pt-0.5 text-sm text-description'>{id}</p>
               </div>
               <div role='none'>
@@ -63,19 +77,24 @@ export const PluginDetail = forwardRef<HTMLDivElement, PluginDetailProps>(
                 <div className='flex gap-2'>
                   {homePage && (
                     <Link href={homePage} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
-                      {t('home page label')}
+                      {t('home-page.label')}
                       <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                     </Link>
                   )}
 
                   {source && (
                     <Link href={source} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
-                      {t('source label')}
+                      {t('source.label')}
                       <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                     </Link>
                   )}
                 </div>
               </div>
+              {onUninstall && (
+                <div role='none'>
+                  <Button onClick={onUninstall}>{t('uninstall.label')}</Button>
+                </div>
+              )}
             </div>
           </div>
         </ScrollArea.Viewport>

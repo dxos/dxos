@@ -9,15 +9,17 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { YouTubeBlueprint } from './blueprints';
-import { AppGraphBuilder, BlueprintDefinition, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { YouTubeBlueprint } from '#blueprints';
+import { AppGraphBuilder, BlueprintDefinition, Migrations, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { Channel, Video } from '#types';
+
 import { translations } from './translations';
-import { Channel, Video } from './types';
 
 export const YouTubePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -62,5 +64,9 @@ export const YouTubePlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
+  }),
   Plugin.make,
 );

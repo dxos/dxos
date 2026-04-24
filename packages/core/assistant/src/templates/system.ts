@@ -29,13 +29,14 @@ export const createSystemPrompt = (options: Partial<SystemPromptOptions> = {}) =
     }),
   );
 
+/**
+ * NOTE: We are forbidden from accessing randomness at model level in cloudflare, so we have to have pre-generated ids.
+ */
+const SYSTEM_ID = '01K2J2FZWH39F55CS7B26GP1Q3';
+
 export const templates = {
-  /** Editable system prompt.*/
   system: Template.make({
-    /**
-     * NOTE: We are forbidden from accessing randomness at model level in cloudflare, so we have to have pre-generated ids.
-     */
-    id: '01K2J2FZWH39F55CS7B26GP1Q3',
+    id: SYSTEM_ID,
     source: SYSTEM,
   }),
 };

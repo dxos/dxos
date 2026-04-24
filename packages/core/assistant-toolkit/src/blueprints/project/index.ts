@@ -2,6 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as ProjectBlueprint } from './blueprint';
-export { Agent, Qualifier, GetContext, AddArtifact, ProjectHandlers } from './functions';
-export { syncProjectTriggers } from './sync-triggers';
+export { default as AgentBlueprint } from './blueprint';
+export { AgentWorker, Qualifier, GetContext, AddArtifact, AgentBlueprintHandlers } from './functions';

@@ -8,14 +8,14 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
+import { Plan, Agent } from '../../../types';
 import { UpdateTasks } from './definitions';
-import { Plan, Project } from '../../../types';
 
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ tasks: newTasks }) {
-      const project = yield* Project.getFromChatContext;
-      const plan = yield* Database.load(project.plan);
+      const agent = yield* Agent.getFromChatContext;
+      const plan = yield* Database.load(agent.plan);
 
       Obj.change(plan, (plan) => {
         for (const task of newTasks) {

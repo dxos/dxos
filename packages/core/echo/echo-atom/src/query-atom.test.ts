@@ -9,9 +9,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type EchoDatabase, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { SpaceId } from '@dxos/keys';
 
 import * as AtomQuery from './query-atom';

@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import ReactPlugin from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';

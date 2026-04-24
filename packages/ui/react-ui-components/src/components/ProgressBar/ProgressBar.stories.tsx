@@ -5,23 +5,22 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl } from '../TextCrawl';
-
 import { ProgressBar, type ProgressBarProps } from './ProgressBar';
 
-const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: faker.lorem.sentences(1) });
+const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: random.lorem.sentences(1) });
 
 type TestItem = { id: string; text: string };
 
-type StoryProps = Partial<ProgressBarProps> & {
+type DefaultStoryProps = Partial<ProgressBarProps> & {
   items?: TestItem[];
 };
 
-const DefaultStory = ({ items, ...props }: StoryProps) => {
+const DefaultStory = ({ items, ...props }: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
   const [nodes, setNodes] = useState<TestItem[]>(items ?? []);
   const lines = useMemo(() => nodes.map((item) => item.text), [nodes]);

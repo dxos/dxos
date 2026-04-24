@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './react-surface';
+import { Capability } from '@dxos/app-framework';
+
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

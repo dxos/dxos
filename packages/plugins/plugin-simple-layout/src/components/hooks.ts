@@ -4,9 +4,9 @@
 
 import { useEffect } from 'react';
 
-import { expandAttendableId } from '@dxos/react-ui-attention';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
+import { expandAttendableId } from '@dxos/react-ui-attention';
 
 /**
  * Expand graph nodes along the full path from root to the given node ID.

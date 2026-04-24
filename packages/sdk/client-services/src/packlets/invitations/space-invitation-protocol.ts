@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
@@ -22,7 +23,6 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
-
 import { type InvitationProtocol } from './invitation-protocol';
 import { computeExpirationTime } from './utils';
 
@@ -170,7 +170,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
+  async accept(ctx: Context, response: AdmissionResponse): Promise<Partial<Invitation>> {
     invariant(response.space);
     const { credential, controlTimeframe, dataTimeframe } = response.space;
     const assertion = getCredentialAssertion(credential);
@@ -182,11 +182,12 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
 
     // Create local space.
-    await this._spaceManager.acceptSpace({
+    await this._spaceManager.acceptSpace(ctx, {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,
       dataTimeframe,
+      tags: assertion.tags,
     });
 
     await this._signingContext.recordCredential(credential);

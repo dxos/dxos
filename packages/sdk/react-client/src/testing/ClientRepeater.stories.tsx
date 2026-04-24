@@ -7,12 +7,11 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Input } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useClient } from '../client';
 import { useSpace } from '../echo';
-
 import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater';
 
 const meta = {
@@ -24,9 +23,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const JsonPanel = ({ value }: { value: any }) => (
-  <SyntaxHighlighter language='json'>{JSON.stringify(value, undefined, 2)}</SyntaxHighlighter>
-);
+const JsonPanel = ({ value }: { value: any }) => <JsonHighlighter data={value} />;
 
 const ClientStory = () => {
   const client = useClient();

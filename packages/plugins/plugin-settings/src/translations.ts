@@ -4,14 +4,14 @@
 
 import { type Resource } from '@dxos/app-toolkit';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'open settings label': 'Open settings',
-        'app settings label': 'Settings',
+        'open-settings.label': 'Open settings',
+        'app-settings.label': 'Settings',
       },
     },
   },

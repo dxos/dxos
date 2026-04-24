@@ -6,6 +6,5 @@
 
 export * from './density';
 export * from './disabled';
-export * from './focus';
 export * from './hover';
 export * from './text';

@@ -5,10 +5,10 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Entity, Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { type SearchResult } from '../types';
+import { type SearchResult } from '#types';
 
 export const queryStringToMatch = (queryString?: string): RegExp | undefined => {
   const trimmed = queryString?.trim();
@@ -57,7 +57,7 @@ export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?
 
       results.push({
         id: object.id,
-        type: getIcon(Obj.getSchema(object)),
+        type: getIcon(Entity.getSchema(object)),
         label,
         match,
         // TODO(burdon): Truncate.

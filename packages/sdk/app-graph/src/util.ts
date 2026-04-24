@@ -67,13 +67,29 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
 };
 
 /**
- * Build a qualified node ID by joining a parent path with a local segment.
+ * Build a qualified node ID by joining path segments.
  */
-export const qualifyId = (parentId: string, segmentId: string): string => `${parentId}${PATH}${segmentId}`;
+export const qualifyId = (parentId: string, ...segmentIds: string[]): string => [parentId, ...segmentIds].join(PATH);
 
 /**
  * Validate that a segment ID does not contain the path separator.
  */
 export const validateSegmentId = (id: string): void => {
   invariant(!id.includes(PATH), `Node segment ID must not contain '${PATH}': ${id}`);
+};
+
+/**
+ * Extract the parent qualified ID (everything before the last path separator).
+ * Returns undefined for IDs with no parent (single segment).
+ */
+export const getParentId = (qualifiedId: string): string | undefined => {
+  const lastSlash = qualifiedId.lastIndexOf(PATH);
+  return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
+};
+
+/**
+ * Extract the last segment of a qualified ID.
+ */
+export const getSegmentId = (qualifiedId: string): string => {
+  return qualifiedId.split(PATH).pop() ?? qualifiedId;
 };

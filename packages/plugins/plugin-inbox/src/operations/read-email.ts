@@ -11,7 +11,6 @@ import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 import { renderMarkdown } from '../util';
-
 import { ReadEmail } from './definitions';
 
 const handler: Operation.WithHandler<typeof ReadEmail> = ReadEmail.pipe(

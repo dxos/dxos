@@ -4,7 +4,6 @@
 
 import { EventEmitter } from 'node:events';
 import { callbackify } from 'node:util';
-
 import { type RandomAccessStorage } from 'random-access-storage';
 
 import { synchronized } from '@dxos/async';

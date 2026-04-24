@@ -5,15 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { companionSegment } from '@dxos/app-toolkit';
 import { Obj, Relation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { Create, Select } from './definitions';
-
 import { ThreadCapabilities } from '../types';
+import { Create, Select } from './definitions';
 
 const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
@@ -40,7 +39,7 @@ const handler: Operation.WithHandler<typeof Create> = Create.pipe(
 
       yield* Operation.invoke(Select, { current: Obj.getDXN(thread).toString() });
       yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-        companion: companionSegment('comments'),
+        companion: linkedSegment('comments'),
       });
     }),
   ),

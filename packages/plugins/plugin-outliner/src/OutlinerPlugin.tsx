@@ -9,13 +9,15 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, Migrations, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { Journal, Outline } from '#types';
+
 import { translations } from './translations';
-import { Journal, Outline } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -63,5 +65,9 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
+  }),
   Plugin.make,
 );

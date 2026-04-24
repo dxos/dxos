@@ -16,7 +16,7 @@ export namespace TestHelpers {
   /**
    * Skip the test if the condition is false.
    *
-   * Exmaple:
+   * Example:
    * ```ts
    * it.effect(
    *   'should process an agentic loop using Claude',
@@ -41,7 +41,7 @@ export namespace TestHelpers {
   /**
    * Skip the test if the condition is true.
    *
-   * Exmaple:
+   * Example:
    * ```ts
    * it.effect(
    *   'should process an agentic loop using Claude',
@@ -86,7 +86,7 @@ export namespace TestHelpers {
   /**
    * Provide TestContext from test parameters.
    *
-   * Exmaple:
+   * Example:
    * ```ts
    * it.effect(
    *   'with context',

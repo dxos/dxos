@@ -13,28 +13,28 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
-import { useMembers, useSpace } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useMembers, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
 
-import { useQueueModelAdapter } from '../../hooks';
-import { SerializationModel } from '../../model';
+import { useQueueModelAdapter } from '#hooks';
 import {
   MessageBuilder,
   TestItem,
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
-} from '../../testing';
+} from '#testing';
+
+import { SerializationModel } from '../../model';
 import { translations } from '../../translations';
 import { renderByline } from '../../util';
-
 import { Transcription, type TranscriptionProps } from './Transcription';
 
-faker.seed(1);
+random.seed(1);
 
 /**
  * Story wrapper with test controls.
@@ -51,9 +51,7 @@ const TranscriptContainer: FC<
       <Transcription model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
-          <SyntaxHighlighter language='json' className='text-sm'>
-            {JSON.stringify(model.toJSON())}
-          </SyntaxHighlighter>
+          <JsonHighlighter data={model.toJSON()} indent={0} classNames='text-sm' />
         </div>
         <Toolbar.Root classNames='justify-end'>
           <IconButton
@@ -68,12 +66,15 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: Message.Message[] } & Pick<TranscriptionProps, 'ignoreAttention' | 'attendableId'>;
+type DefaultStoryProps = { messages?: Message.Message[] } & Pick<
+  TranscriptionProps,
+  'ignoreAttention' | 'attendableId'
+>;
 
 /**
  * Basic story mutates array of messages.
  */
-const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) => {
+const BasicStory = ({ messages: initialMessages = [], ...props }: DefaultStoryProps) => {
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
@@ -135,9 +136,9 @@ const QueueStory = ({
   queueId,
   onReset,
   ...props
-}: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
+}: DefaultStoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
-  const space = useSpace();
+  const [space] = useSpaces();
   const members = useMembers(space?.id).map((member) => member.identity);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
@@ -150,7 +151,7 @@ const QueueStory = ({
 // TODO(burdon): Reconcile with QueueStory.
 const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
-  const space = useSpace();
+  const [space] = useSpaces();
   const members = useMembers(space?.key).map((member) => member.identity);
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, []);
@@ -199,7 +200,7 @@ const meta = {
 
 export default meta;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const [messages, setMessages] = useState<Message.Message[]>([]);
   useEffect(() => {
     void Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())).then(setMessages);

@@ -9,12 +9,12 @@ import { type View } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
+import { ObjectForm } from '@dxos/react-ui-form';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { ObjectForm } from '../../components';
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type ObjectCardStackProps = {
   view: View.View;
@@ -48,7 +48,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
       <Panel.Content>
         {selectedObjects.length === 0 ? (
           <Message.Root>
-            <Message.Title>{t('row details no selection label')}</Message.Title>
+            <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
           </Message.Root>
         ) : (
           <Mosaic.Root>

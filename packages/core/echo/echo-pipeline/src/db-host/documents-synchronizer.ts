@@ -61,7 +61,7 @@ export class DocumentsSynchronizer extends Resource {
               try {
                 log('loading document', { documentId });
                 const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
-                  Context.default(),
+                  this._ctx,
                   documentId as DocumentId,
                   { fetchFromNetwork: true },
                 );
@@ -100,12 +100,14 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  async update(updates: DocumentUpdate[]): Promise<void> {
+  async update(ctx: Context, updates: DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation } of updates) {
       await this._writeMutation(documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
-    await this._params.automergeHost.flush({ documentIds: updates.map(({ documentId }) => documentId as DocumentId) });
+    await this._params.automergeHost.flush(ctx, {
+      documentIds: updates.map(({ documentId }) => documentId as DocumentId),
+    });
   }
 
   private _startSync(doc: DocHandle<DatabaseDirectory>) {

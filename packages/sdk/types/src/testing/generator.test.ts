@@ -7,17 +7,17 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { type Database, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
 import { Message, Organization, Person, Pipeline } from '../types';
 
-faker.seed(1);
+random.seed(1);
 
 // TODO(burdon): Evolve dxos/random to support this directly.
 const generator: ValueGenerator = {
-  ...faker,
+  ...random,
 } as any as ValueGenerator;
 
 const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {

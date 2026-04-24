@@ -64,7 +64,7 @@ describe('identity/identity-manager', () => {
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
     const identity = await identityManager.createIdentity();
     expect(identity).to.exist;
@@ -77,7 +77,7 @@ describe('identity/identity-manager', () => {
     await peer1.metadataStore.load();
     await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
-    await peer1.identityManager.close();
+    await peer1.identityManager.close(Context.default());
     await peer1.feedStore.close();
     await peer1.metadataStore.close();
 
@@ -95,7 +95,7 @@ describe('identity/identity-manager', () => {
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;
@@ -112,7 +112,7 @@ describe('identity/identity-manager', () => {
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
     });
-    await identity1.joinNetwork();
+    await identity1.joinNetwork(Context.default());
 
     const peer2 = await setupPeer({ signalContext });
 
@@ -148,7 +148,7 @@ describe('identity/identity-manager', () => {
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
     });
-    await identity2.joinNetwork();
+    await identity2.joinNetwork(Context.default());
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
     await peer2.identityManager.acceptIdentity(identity2, identityRecord);

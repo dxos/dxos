@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Effect from 'effect/Effect';
 import React, {
   ReactNode,
   type ComponentType,
@@ -12,10 +15,6 @@ import React, {
   useState,
   createElement,
 } from 'react';
-
-import * as Effect from 'effect/Effect';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
 
 import { AiService } from '@dxos/ai';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -145,11 +144,10 @@ const buildGenUiSystemPrompt = (): string => {
       on:click='org.dxos.plugin.layout.operation.add-toast({"id":"t1","title":"Done!"})'
 
     Supported tags:
-${componentCatalog}
+    ${componentCatalog}
 
     Available operations (use the key as-is in on:* attributes):
-
-${operationCatalog}
+    ${operationCatalog}
 
     Operation argument reference:
     - add-toast: {"id":"<unique>", "title":"<text>", "description":"<text>", "icon":"<phosphor-id>", "duration":<ms>}

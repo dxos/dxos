@@ -13,7 +13,6 @@ import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { hues } from '@dxos/ui-theme';
 
 import { SpaceEvents, SpaceCapabilities } from '../types';
-
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 

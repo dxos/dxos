@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'node:util';
-
 import { describe, expect, test } from 'vitest';
 
 import { isNode } from '@dxos/util';
@@ -11,7 +10,6 @@ import { isNode } from '@dxos/util';
 import { TestSchema, updateCounter } from '../../../testing';
 import { createObject } from '../../Obj';
 import { ATTR_META } from '../types';
-
 import { makeObject } from './make-object';
 import { objectData } from './proxy-types';
 import { change } from './reactive';

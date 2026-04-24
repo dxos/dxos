@@ -15,8 +15,8 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
-import * as entityInternal from './internal/Entity';
 import * as internal from './internal';
+import * as entityInternal from './internal/Entity';
 import * as Obj from './Obj';
 import type * as Type from './Type';
 
@@ -67,7 +67,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
   // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
   //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
   internal.EchoRelationSchema({
-    typename: 'org.dxos.schema.any-relation',
+    typename: 'org.dxos.schema.anyRelation',
     version: '0.0.0',
     source: Obj.Unknown,
     target: Obj.Unknown,
@@ -237,7 +237,9 @@ export const getSource = <T extends Unknown | Snapshot>(relation: T): SourceOf<T
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationSourceId];
-  invariant(obj !== undefined, `Invalid source: ${relation.id}`);
+  if (obj === undefined) {
+    throw new Error(`Relation source could not be resolved.`);
+  }
   return obj as SourceOf<T>;
 };
 
@@ -250,7 +252,9 @@ export const getTarget = <T extends Unknown | Snapshot>(relation: T): TargetOf<T
   assertArgument(isRelation(relation), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(relation);
   const obj = (relation as internal.InternalObjectProps)[internal.RelationTargetId];
-  invariant(obj !== undefined, `Invalid target: ${relation.id}`);
+  if (obj === undefined) {
+    throw new Error(`Relation target could not be resolved.`);
+  }
   return obj as TargetOf<T>;
 };
 

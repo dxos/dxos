@@ -6,7 +6,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -16,7 +16,7 @@ import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import { translations } from '../translations';
 
-faker.seed(1234);
+random.seed(1234);
 
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',

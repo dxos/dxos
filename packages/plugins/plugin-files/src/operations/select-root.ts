@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { SelectRoot } from './definitions';
-
 import { FileCapabilities } from '../types';
+import { SelectRoot } from './definitions';
 
 const handler: Operation.WithHandler<typeof SelectRoot> = SelectRoot.pipe(
   Operation.withHandler(

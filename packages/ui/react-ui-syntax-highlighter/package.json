@@ -29,6 +29,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "jsonpath-plus": "catalog:",
     "react-syntax-highlighter": "catalog:"

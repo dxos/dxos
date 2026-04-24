@@ -2,25 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { createContext } from '@radix-ui/react-context';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
   type FunctionComponent,
-  type PropsWithChildren,
   forwardRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { type DialogSize, osTranslations } from '@dxos/ui-theme';
+import { composableProps, type DialogSize, osTranslations, slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
-import { SlottableProps } from '../..';
 
 //
 // Root
@@ -30,7 +31,12 @@ type DialogRootProps = DialogPrimitive.DialogProps;
 
 const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   <ElevationProvider elevation='dialog'>
-    <DialogPrimitive.Root {...props} />
+    <DialogPrimitive.Root
+      // NOTE: Radix warning unless set to undefined.
+      // https://www.radix-ui.com/primitives/docs/components/dialog#description
+      aria-describedby={undefined}
+      {...props}
+    />
   </ElevationProvider>
 );
 
@@ -132,18 +138,18 @@ DialogContent.displayName = DIALOG_CONTENT_NAME;
 // Header
 //
 
-type DialogHeaderProps = PropsWithChildren;
+type DialogHeaderProps = SlottableProps;
 
-const DialogHeader: ForwardRefExoticComponent<DialogHeaderProps> = forwardRef<HTMLHeadingElement, DialogHeaderProps>(
-  ({ children }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <Column.Row className={tx('dialog.header')} center ref={forwardedRef}>
-        {children}
-      </Column.Row>
-    );
-  },
-);
+const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('dialog.header', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // CloseIconButton
@@ -157,7 +163,7 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
     return (
       <IconButton
         {...props}
-        label={label ?? t('close dialog label')}
+        label={label ?? t('close-dialog.label')}
         icon='ph--x--regular'
         iconOnly
         size={4}
@@ -172,14 +178,16 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 // Body
 //
 
-type DialogBodyProps = SlottableProps<HTMLDivElement>;
+type DialogBodyProps = SlottableProps;
 
-const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ children, asChild, ...props }, forwardedRef) => {
+const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Column.Content {...props} asChild={asChild} className={tx('dialog.body', {})} ref={forwardedRef}>
+    <Comp {...rest} className={tx('dialog.body', {}, className)} ref={forwardedRef}>
       {children}
-    </Column.Content>
+    </Comp>
   );
 });
 
@@ -221,20 +229,18 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
 // ActionBar
 //
 
-type DialogActionBarProps = ThemedClassName<PropsWithChildren>;
+type DialogActionBarProps = SlottableProps;
 
-const DialogActionBar = forwardRef<HTMLDivElement, DialogActionBarProps>(
-  ({ children, classNames, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <Column.Row center>
-        <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-          {children}
-        </div>
-      </Column.Row>
-    );
-  },
-);
+const DialogActionBar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className: classNames, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // Close

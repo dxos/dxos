@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { type TreeData } from './TreeItem';
 
@@ -26,18 +26,18 @@ export const TestItemSchema = Schema.Struct({
 });
 
 export const createTree = (n = 4, d = 4): TestItem => ({
-  id: faker.string.uuid(),
-  name: faker.commerce.productName(),
+  id: random.string.uuid(),
+  name: random.commerce.productName(),
   icon:
     d === 3
       ? undefined
-      : faker.helpers.arrayElement([
+      : random.helpers.arrayElement([
           'ph--planet--regular',
           'ph--sailboat--regular',
           'ph--house--regular',
           'ph--gear--regular',
         ]),
-  items: d > 0 ? faker.helpers.multiple(() => createTree(n, d - 1), { count: n }) : [],
+  items: d > 0 ? random.helpers.multiple(() => createTree(n, d - 1), { count: n }) : [],
 });
 
 const removeItem = (tree: TestItem, source: TreeData) => {

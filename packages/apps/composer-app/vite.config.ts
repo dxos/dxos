@@ -2,23 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import importSource from '@dxos/vite-plugin-import-source';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
+// import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
+import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import importSource from '@dxos/vite-plugin-import-source';
+import { vitePluginLog } from '@dxos/vite-plugin-log';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -51,6 +54,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
+  env.command === 'serve' && vitePluginLog(),
   wasm(),
   // sourcemaps(),
 ];
@@ -212,6 +216,34 @@ export default defineConfig((env) => ({
   plugins: [
     ...sharedPlugins(env),
 
+    // RSS proxy middleware for CORS-free feed fetching.
+    {
+      name: 'rss-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/rss', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const feedUrl = url.searchParams.get('url');
+          if (!feedUrl) {
+            res.statusCode = 400;
+            res.end('Missing url parameter');
+            return;
+          }
+          try {
+            const response = await globalThis.fetch(feedUrl);
+            const contentType = response.headers.get('content-type');
+            if (contentType) {
+              res.setHeader('content-type', contentType);
+            }
+            res.statusCode = response.status;
+            res.end(await response.text());
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
+
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
@@ -295,33 +327,7 @@ export default defineConfig((env) => ({
       ],
     }),
 
-    importMapPlugin({
-      modules: [
-        '@dxos/app-framework',
-        '@dxos/app-graph',
-        '@dxos/client',
-        '@dxos/client/devtools',
-        '@dxos/client/echo',
-        '@dxos/client/halo',
-        '@dxos/client/invitations',
-        '@dxos/client/mesh',
-        '@dxos/client-protocol',
-        '@dxos/client-services',
-        '@dxos/config',
-        '@dxos/echo',
-        '@dxos/react-client',
-        '@dxos/react-client/devtools',
-        '@dxos/react-client/echo',
-        '@dxos/react-client/halo',
-        '@dxos/react-client/invitations',
-        '@dxos/react-client/mesh',
-        '@dxos/schema',
-        '@effect/platform',
-        'effect',
-        'react',
-        'react-dom',
-      ],
-    }),
+    importMapPlugin(),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
@@ -441,7 +447,7 @@ export default defineConfig((env) => ({
  * Default makes most chunks have names like index-[hash].js.
  */
 function chunkFileNames(chunkInfo: any) {
-  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index.[^\/]+$/gm)) {
+  if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
     let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
@@ -455,57 +461,4 @@ function chunkFileNames(chunkInfo: any) {
   }
 
   return 'assets/[name]-[hash].js';
-}
-
-function importMapPlugin(options: { modules: string[] }): Plugin[] {
-  const chunkRefIds: Record<string, string> = {};
-  let imports: Record<string, string> = {};
-
-  return [
-    {
-      name: 'import-map:get-chunk-ref-ids',
-      async buildStart() {
-        if (this.environment.mode === 'dev') {
-          return;
-        }
-
-        for (const m of options.modules) {
-          const resolved = await this.resolve(m);
-          if (resolved) {
-            // Emit the chunk during build start.
-            chunkRefIds[m] = this.emitFile({
-              type: 'chunk',
-              id: resolved.id,
-              // Preserve the original exports.
-              preserveSignature: 'strict',
-            });
-          }
-        }
-      },
-
-      generateBundle() {
-        imports = Object.fromEntries(options.modules.map((m) => [m, `/${this.getFileName(chunkRefIds[m])}`]));
-      },
-    },
-    {
-      name: 'import-map:transform-index-html',
-      enforce: 'post',
-      transformIndexHtml(html: string) {
-        const tags = [
-          {
-            tag: 'script',
-            attrs: {
-              type: 'importmap',
-            },
-            children: JSON.stringify({ imports }, null, 2),
-          },
-        ];
-
-        return {
-          html,
-          tags,
-        };
-      },
-    },
-  ];
 }

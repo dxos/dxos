@@ -11,12 +11,13 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { type MaybePromise } from '@dxos/util';
 
-import { useInputSurfaceLookup } from '../../hooks';
-import { meta } from '../../meta';
-import { type CreateObject } from '../../types';
+import { useInputSurfaceLookup } from '#hooks';
+import { meta } from '#meta';
+import { type CreateObject } from '#types';
+
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */
@@ -140,24 +141,23 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='gap-form-gap'>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.schema-input'
-          placeholder={t('schema input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((option) => (
-            <SearchList.Item
-              key={option.id}
-              value={option.id}
-              label={option.label}
-              icon={option.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.id)}
-            />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.schema-input'
+        placeholder={t('schema-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((option) => (
+          <SearchList.Item
+            key={option.id}
+            value={option.id}
+            label={option.label}
+            icon={option.icon ?? 'ph--placeholder--regular'}
+            onSelect={() => onChange(option.id)}
+          />
+        ))}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };
@@ -202,25 +202,24 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.space-input'
-          placeholder={t('space input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((space) => {
-            return (
-              <SearchList.Item
-                key={space.id}
-                value={space.id}
-                label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-                onSelect={() => onChange?.(space.db)}
-              />
-            );
-          })}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((space) => {
+          return (
+            <SearchList.Item
+              key={space.id}
+              value={space.id}
+              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              onSelect={() => onChange?.(space.db)}
+            />
+          );
+        })}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };

@@ -11,7 +11,6 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { type Queue } from '../queue';
-
 import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', () => {
@@ -65,7 +64,7 @@ describe('queues', () => {
         .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(Obj.getSchema(resolved)).toEqual(TestSchema.Person);
+      expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
     }
 
     {
@@ -74,7 +73,7 @@ describe('queues', () => {
         .resolve(DXN.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(Obj.getSchema(resolved)).toEqual(TestSchema.Person);
+      expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
     }
   });
 

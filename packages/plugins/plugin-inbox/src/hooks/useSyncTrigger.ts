@@ -5,14 +5,15 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Trigger } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { Query, useObject, useQuery } from '@dxos/react-client/echo';
 
-import { Calendar } from '../types';
+import { Calendar } from '#types';
 
 /**
  * Finds or imports a function by key from Edge into the space database.
@@ -23,7 +24,7 @@ const ensureFunction = async (
   db: Database.Database,
   functionKey: string,
 ): Promise<Operation.PersistentOperation | undefined> => {
-  const deployed = await getDeployedFunctions(client, true);
+  const deployed = await getDeployedFunctions(Context.default(), client, true);
   const match = deployed.find((fn) => fn.key === functionKey);
   if (!match) {
     return undefined;
@@ -96,7 +97,7 @@ export const useSyncTrigger = ({
       const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
-        spec: { kind: 'timer', cron: '*/5 * * * *' },
+        spec: Trigger.specTimer('*/5 * * * *'),
         function: Ref.make(fn),
         input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
       });

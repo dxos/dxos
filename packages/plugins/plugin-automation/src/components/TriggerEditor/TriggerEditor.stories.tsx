@@ -8,19 +8,19 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { Operation } from '@dxos/operation';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
-import { functions } from '../../testing';
-import { translations } from '../../translations';
+import { functions } from '#testing';
 
+import { translations } from '../../translations';
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [
@@ -47,7 +47,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     const trigger = space.db.add(
       Trigger.make({
         function: Ref.make(fn),
-        spec: { kind: 'webhook' },
+        spec: Trigger.specWebhook(),
         input: {
           from: 'USD',
           to: 'JPY',
@@ -99,7 +99,7 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(TestSchema.ContactType, {
-              name: faker.person.fullName(),
+              name: random.person.fullName(),
               identifiers: [],
             }),
           );
@@ -160,8 +160,8 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Queue — should show DXN field (the queue address). DXN is a combobox, not an input, so use getByText.
-    await selectKind(combobox, 'q');
+    // Feed — should show DXN field (the queue address). DXN is a combobox, not an input, so use getByText.
+    await selectKind(combobox, 'f');
     await expect(canvas.findByText('DXN')).resolves.toBeInTheDocument();
   },
 };

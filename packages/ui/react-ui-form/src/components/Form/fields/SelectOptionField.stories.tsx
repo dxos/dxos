@@ -12,7 +12,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '../../../translations';
 import { TestLayout } from '../../testing';
 import { Form } from '../Form';
-
 import { SelectOptionField } from './SelectOptionField';
 
 const schema = Schema.Struct({
@@ -37,10 +36,12 @@ const DefaultStory = () => {
         fieldMap={{ options: SelectOptionField }}
         onSave={(values) => setValues(values)}
       >
-        <Form.Content>
-          <Form.FieldSet />
-          <Form.Actions />
-        </Form.Content>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Actions />
+          </Form.Content>
+        </Form.Viewport>
       </Form.Root>
     </TestLayout>
   );

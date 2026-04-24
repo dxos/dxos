@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
 import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-ui-search';
 
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
@@ -116,7 +116,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
 
     return (
       <Combobox.Content {...props} onSearch={handleSearch} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
-        <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
+        <Combobox.Input placeholder={t('ref-field-combobox-input.placeholder')} autoFocus />
         <Combobox.List>
           {results.map((option) => (
             <Combobox.Item
@@ -159,7 +159,7 @@ const CreateItem = ({
 
   const label = createOptionLabel
     ? t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })
-    : t('create option label');
+    : t('create-option.label');
 
   return (
     <Combobox.Item

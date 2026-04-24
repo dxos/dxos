@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import '../../../styles/graph.css';
+
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
@@ -10,8 +12,8 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withRegistry } from '@dxos/storybook-utils';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -32,10 +34,7 @@ import {
 import { type SVGContext } from '../../hooks';
 import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
-
 import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
-
-import '../../../styles/graph.css';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 
@@ -50,7 +49,7 @@ const projectorTypes: Record<ProjectorType, Factory> = {
   relational: GraphRelationalProjector as Factory,
 };
 
-type StoryProps = GraphProps & {
+type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
@@ -73,7 +72,7 @@ const DefaultStory = ({
   projectorType: _projectorType = 'force',
   projectorOptions,
   ...props
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
   const registry = useContext(RegistryContext);
@@ -261,11 +260,7 @@ const DefaultStory = ({
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
           <Card.Root>
-            <SyntaxHighlighter
-              language='json'
-              classNames='text-xs my-form-padding px-form-padding bg-transparent'
-              code={JSON.stringify(popover, null, 2)}
-            />
+            <JsonHighlighter data={popover} classNames='text-xs my-form-padding px-form-padding bg-transparent' />
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
@@ -320,7 +315,14 @@ const Debug = ({
         <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
         <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
-      <JsonFilter data={data} classNames='text-sm' />
+      <Syntax.Root data={data}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code classNames='text-sm' />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </div>
   );
 };

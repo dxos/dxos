@@ -9,6 +9,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
+import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   type JsonPath,
@@ -18,8 +20,6 @@ import {
   getPropertyMetaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';
@@ -985,7 +985,7 @@ describe('ProjectionModel', () => {
       ),
     }).pipe(
       Type.object({
-        typename: 'org.dxos.type.contact-with-array-of-emails',
+        typename: 'org.dxos.type.contactWithArrayOfEmails',
         version: '0.1.0',
       }),
     );

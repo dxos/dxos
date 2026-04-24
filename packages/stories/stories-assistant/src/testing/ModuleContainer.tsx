@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
@@ -9,13 +10,15 @@ import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { type ComponentProps, ContextModule } from '../components';
@@ -29,7 +32,7 @@ export type ModuleContainerProps = {
 export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showContext }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  const space = useSpace();
+  const [space] = useSpaces();
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -53,7 +56,12 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
+    const feedTarget = await chat.feed.load();
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const runtime = await runAndForwardErrors(
+      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    );
+    const binder = new AiContextBinder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 

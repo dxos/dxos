@@ -7,6 +7,7 @@ export * from './breadcrumb';
 export * from './card';
 export * from './button';
 export * from './dialog';
+export * from './focus';
 export * from './icon';
 export * from './icon-button';
 export * from './input';

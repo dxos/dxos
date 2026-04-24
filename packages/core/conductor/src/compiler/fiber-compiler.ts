@@ -10,16 +10,9 @@ import * as Scope from 'effect/Scope';
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-  createDefectLogger,
-} from '@dxos/functions';
-import { type FunctionServices } from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, QueueService, Trace, createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
@@ -34,7 +27,6 @@ import {
   ValueBag,
   isNotExecuted,
 } from '../types';
-
 import {
   type GraphDiagnostic,
   InputKind,
@@ -343,7 +335,7 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-      const layer: Layer.Layer<FunctionServices> = yield* this._createServiceLayer();
+      const layer = yield* this._createServiceLayer();
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
@@ -356,6 +348,7 @@ export class GraphExecutor {
    * Creates a layer with all required services from the current context.
    */
   private _createServiceLayer() {
+    // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     return Effect.gen(this, function* () {
       return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
@@ -364,9 +357,10 @@ export class GraphExecutor {
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
-        Layer.succeed(Feed.Service, yield* Feed.Service),
-        Layer.succeed(FunctionInvocationService, yield* FunctionInvocationService),
-        Layer.succeed(TracingService, yield* TracingService),
+        Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
+        Layer.succeed(Operation.Service, yield* Operation.Service),
+        Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
+        Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
       );
     });
   }

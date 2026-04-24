@@ -4,21 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
+import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
- * Create an identity and wait for the default space to be ready.
- * Returns the identity and default space for further setup.
+ * Create an identity and a personal space.
+ * Returns the identity and space for further setup.
  */
 export const initializeIdentity = (
   client: Client,
-): Effect.Effect<{ identity: Identity; defaultSpace: Space }, never, never> =>
+): Effect.Effect<{ identity: Identity; personalSpace: Space }, never, never> =>
   Effect.gen(function* () {
     const identity = yield* Effect.promise(() => client.halo.createIdentity());
-    yield* Effect.promise(() => client.spaces.waitUntilReady());
-    const defaultSpace = client.spaces.default;
-    yield* Effect.promise(() => defaultSpace.waitUntilReady());
-    return { identity, defaultSpace };
+    const personalSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG] }));
+    yield* Effect.promise(() => personalSpace.waitUntilReady());
+    return { identity, personalSpace };
   });

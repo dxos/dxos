@@ -29,6 +29,8 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@virtuoso.dev/masonry": "catalog:",

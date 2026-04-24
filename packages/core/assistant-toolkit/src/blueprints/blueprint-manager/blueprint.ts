@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { QueryBlueprints, EnableBlueprints } from './functions';
+import { EnableBlueprints, QueryBlueprints, UpdateBlueprints } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprint-manager';
 
@@ -19,6 +19,7 @@ const make = () =>
       source: trim`
         You can query available blueprints and enable them in the current conversation.
         Use [query-blueprints] to refresh the list of available blueprints.
+        Use [refresh-blueprints] to update blueprint objects stored in the database from the built-in registry when they have drifted.
         Use [enable-blueprints] to enable blueprints by their keys. Always call [query-blueprints] first.
         Only blueprints with agentCanEnable=true can be enabled by the agent.
 
@@ -38,7 +39,7 @@ const make = () =>
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({ operations: [QueryBlueprints, EnableBlueprints] }),
+    tools: Blueprint.toolDefinitions({ operations: [QueryBlueprints, EnableBlueprints, UpdateBlueprints] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

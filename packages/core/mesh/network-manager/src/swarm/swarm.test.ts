@@ -18,7 +18,6 @@ import { ComplexSet } from '@dxos/util';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
 import { createRtcTransportFactory } from '../transport';
-
 import { ConnectionState } from './connection';
 import { ConnectionLimiter } from './connection-limiter';
 import { Swarm } from './swarm';
@@ -159,9 +158,9 @@ describe.skip('Swarm', () => {
     const messages = new ComplexSet<{ author: PeerInfo; recipient: PeerInfo }>(
       ({ author, recipient }) => author.peerKey + recipient.peerKey,
     );
-    signalManager.sendMessage = async (message) => {
+    signalManager.sendMessage = async (ctx, message) => {
       messages.add({ author: message.author, recipient: message.recipient });
-      return sendOriginal(message);
+      return sendOriginal(ctx, message);
     };
     // Stop signaling to stop connection in initiation state.
     signalManager.freeze();

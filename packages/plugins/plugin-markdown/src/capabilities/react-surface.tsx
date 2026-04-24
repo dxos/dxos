@@ -1,0 +1,121 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import React, { forwardRef, useCallback, useMemo } from 'react';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import {
+  Surface,
+  useAtomCapability,
+  useAtomCapabilityState,
+  useCapability,
+  useSettingsState,
+} from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { Text } from '@dxos/schema';
+import { type EditorViewMode } from '@dxos/ui-editor';
+
+import { MarkdownSettings } from '#components';
+import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '#containers';
+import { meta } from '#meta';
+import { Markdown, MarkdownCapabilities } from '#types';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'surface.document',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        role: ['article', 'section', 'tabpanel'],
+        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        component: ({ data, role, ref }) => {
+          return (
+            <Container
+              id={Obj.getDXN(data.subject).toString()}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'surface.text',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        // TODO(burdon): Why is attendableId required? See EventArticle.tsx
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Text.Text),
+          AppSurface.object(AppSurface.Section, Text.Text),
+          AppSurface.object(AppSurface.Tabpanel, Text.Text),
+        ),
+        component: ({ data, role, ref }) => {
+          return (
+            <Container
+              id={Obj.getDXN(data.subject).toString()}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'surface.plugin-settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+          return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
+      Surface.create({
+        id: 'surface.preview',
+        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text]),
+        component: ({ data }) => <MarkdownCard {...data} />,
+      }),
+    ]),
+  ),
+);
+
+/**
+ * Common wrapper.
+ */
+const Container = forwardRef<
+  HTMLDivElement,
+  AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
+>(({ id, attendableId, subject, role }, forwardedRef) => {
+  const selectionManager = useCapability(AttentionCapabilities.Selection);
+  const settings = useAtomCapability(MarkdownCapabilities.Settings);
+  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
+  const extensions = useCapability(MarkdownCapabilities.Extensions);
+  const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
+
+  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+  const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
+    (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+    [id, setState],
+  );
+
+  return (
+    <MarkdownContainer
+      role={role}
+      subject={subject}
+      id={id}
+      attendableId={attendableId}
+      settings={settings}
+      selectionManager={selectionManager}
+      extensionProviders={extensionProviders}
+      editorStateStore={editorState}
+      viewMode={viewMode}
+      onViewModeChange={handleViewModeChange}
+      ref={forwardedRef}
+    />
+  );
+});

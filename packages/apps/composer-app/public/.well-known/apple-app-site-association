@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["9428WC5MR8.org.dxos.composer"],
+        "components": [{ "/": "/*" }]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "9428WC5MR8.org.dxos.composer"
+    ]
+  }
+}

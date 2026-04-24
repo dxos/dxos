@@ -5,10 +5,11 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
-import { SEARCH_RESULT, meta } from './meta';
+import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
+import { SEARCH_RESULT, meta } from '#meta';
+import { type SearchResult } from '#types';
+
 import { translations } from './translations';
-import { type SearchResult } from './types';
 
 export const SearchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

@@ -4,8 +4,8 @@
 
 /* eslint-disable no-console */
 
-import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
@@ -18,7 +18,7 @@ import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
 
@@ -43,7 +43,7 @@ export const SyncBench = () => {
 
   const spaceId = useAtomValue(spaceIdAtom) as SpaceId | undefined;
   const setSpaceId = useAtomSet(spaceIdAtom);
-  const space = spaceId ? client.spaces.get(spaceId) : client.spaces.default;
+  const space = spaceId ? client.spaces.get(spaceId) : client.spaces.get()[0];
 
   const [syncState, setSyncState] = useState<SpaceSyncState>();
   useEffect(() => {
@@ -136,22 +136,18 @@ export const SyncBench = () => {
           <Button onClick={() => createObjects(1000)}>Create 1000</Button>
         </ButtonGroup>
       </div>
-      <SyntaxHighlighter language='json'>
-        {JSON.stringify(
-          {
-            config: showConfig ? config.values : 'hidden',
-            identity: {
-              did: identity?.did,
-            },
-            space: {
-              id: space?.id,
-            },
-            syncState,
+      <JsonHighlighter
+        data={{
+          config: showConfig ? config.values : 'hidden',
+          identity: {
+            did: identity?.did,
           },
-          null,
-          2,
-        )}
-      </SyntaxHighlighter>
+          space: {
+            id: space?.id,
+          },
+          syncState,
+        }}
+      />
     </div>
   );
 };

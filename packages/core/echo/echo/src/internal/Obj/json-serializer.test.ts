@@ -10,19 +10,18 @@ import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
-import { RelationSourceId, RelationTargetId, getObjectDXN } from '../Entity';
 import { makeObject } from '../common/proxy';
-import { Ref, StaticRefResolver } from '../Ref';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
-
+import { RelationSourceId, RelationTargetId, getObjectDXN } from '../Entity';
+import { Ref, StaticRefResolver } from '../Ref';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
 
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
     const contact = makeObject(TestSchema.Person, { name: 'Alice' });
-    Obj.change(contact, (obj) => {
-      getMetaChecked(obj).keys.push({ id: '12345', source: 'example.com' });
+    Obj.change(contact, (contact) => {
+      getMetaChecked(contact).keys.push({ id: '12345', source: 'example.com' });
     });
 
     const task = createObject(TestSchema.Task, {

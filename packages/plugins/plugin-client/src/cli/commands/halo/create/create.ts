@@ -9,12 +9,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
+import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ClientOperation } from '../../../../operations';
+import { ClientOperation } from '#operations';
+
 import { printIdentity } from '../util';
 
 export const handler = Effect.fn(function* ({
@@ -39,9 +43,12 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  yield* Effect.promise(() => client.spaces.waitUntilReady());
-  yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-  const space = client.spaces.default;
+  // Create personal space for the CLI identity.
+  const space = yield* Effect.promise(() =>
+    client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+  );
+  yield* Effect.promise(() => space.waitUntilReady());
+  yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

@@ -13,7 +13,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {
@@ -104,6 +105,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -161,13 +165,16 @@
       "path": "../../ui/react-ui-markdown"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-searchlist"
+      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"
@@ -216,6 +223,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-space"

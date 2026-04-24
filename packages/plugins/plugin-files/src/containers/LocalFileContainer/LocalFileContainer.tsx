@@ -6,14 +6,14 @@ import * as Option from 'effect/Option';
 import React, { type FC, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { Button, Panel, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { FilesOperation } from '../../operations';
-import { type LocalEntity, type LocalFile } from '../../types';
+import { meta } from '#meta';
+import { FilesOperation } from '#operations';
+import { type LocalEntity, type LocalFile } from '#types';
 
 export type LocalFileContainerProps = {
   file: LocalFile;
@@ -21,8 +21,11 @@ export type LocalFileContainerProps = {
 
 export const LocalFileContainer: FC<LocalFileContainerProps> = ({ file }) => {
   const transformedData = useMemo(
-    () => ({ subject: file.text ? { id: file.id, text: file.text } : file }),
-    [file.id, Boolean(file.text)],
+    () => ({
+      attendableId: file.id,
+      subject: file.text ? { id: file.id, text: file.text } : file,
+    }),
+    [file.id, file.text],
   );
 
   if (file.permission !== 'granted') {
@@ -34,7 +37,7 @@ export const LocalFileContainer: FC<LocalFileContainerProps> = ({ file }) => {
     return null;
   }
 
-  return <Surface.Surface role='article' data={transformedData} />;
+  return <Surface.Surface type={AppSurface.Article} data={transformedData} />;
 };
 
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
@@ -51,7 +54,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
       <Panel.Content asChild>
         <div role='none' className='overflow-auto p-8 grid place-items-center'>
           <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
-            {t('missing file permissions')}
+            {t('missing-file-permissions.message')}
             {action && node && Node.isAction(action) && (
               <Button onClick={() => void runAction(action, { parent: node })}>
                 {toLocalizedString(action.properties.label, t)}

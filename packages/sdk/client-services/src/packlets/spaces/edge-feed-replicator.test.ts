@@ -107,7 +107,7 @@ describe('EdgeFeedReplicator', () => {
     const { feed } = await attachReplicator(messenger);
     await appendMessage(feed);
 
-    sendSpy.mockImplementationOnce(async (request: any) => {
+    sendSpy.mockImplementationOnce(async (_ctx: any, request: any) => {
       sendResponseMessage(request, encodeCbor({ type: 'metadata', feedKey: feed.key.toHex(), length: 0 }));
       return Promise.resolve();
     });

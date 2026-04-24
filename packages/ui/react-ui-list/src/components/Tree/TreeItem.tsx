@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   type Instruction,
   type ItemMode,
   attachInstruction,
   extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import React, {
@@ -25,7 +25,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
+import { TreeItem as NaturalTreeItem, Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '@dxos/react-ui';
 import {
   ghostFocusWithin,
   ghostHover,
@@ -129,6 +129,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const canSelectItem = canSelect?.({ item, path }) ?? true;
   const data = { id, path, item } satisfies TreeData;
+  const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -139,6 +140,7 @@ const RawTreeItem = <T extends { id: string } = any>({
 
   const isItemDraggable = draggableProp && itemDraggable !== false;
   const isItemDroppable = itemDroppable !== false;
+  const nativeDragText = id;
 
   useEffect(() => {
     if (!draggableProp) {
@@ -151,6 +153,12 @@ const RawTreeItem = <T extends { id: string } = any>({
       draggable({
         element: buttonRef.current!,
         getInitialData: () => data,
+        getInitialDataForExternal: () => {
+          if (!shouldSeedNativeDragData) {
+            return {};
+          }
+          return { 'text/plain': nativeDragText };
+        },
         onDragStart: () => {
           setState('dragging');
           if (open) {
@@ -297,7 +305,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         key={id}
         id={id}
         aria-labelledby={`${id}__label`}
-        parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
+        parentOf={parentOf?.join(TREEGRID_PARENT_OF_SEPARATOR)}
         data-object-id={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
