@@ -201,7 +201,7 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
 /**
  * Validate an entity against its schema.
  *
- * The schema used is the one returned by `Obj.getSchema(entity)`. If the entity has no schema
+ * The schema used is the one returned by `Entity.getSchema(entity)`. If the entity has no schema
  * associated with it (either via runtime registry or persistent schema registry), returns an
  * empty array.
  *

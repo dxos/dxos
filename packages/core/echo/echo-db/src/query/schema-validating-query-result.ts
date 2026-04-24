@@ -3,10 +3,15 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { Entity, type QueryResult } from '@dxos/echo';
-import { QueryAST } from '@dxos/echo-protocol';
+import { type Entity, type QueryResult } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo-protocol';
 
-import { type SchemaResolvers, assertQueryTypenamesResolvable } from './schema-validation';
+import {
+  type SchemaResolvers,
+  assertQueryTypenamesResolvable,
+  filterEntriesWithResolvableSchema,
+  filterObjectsWithResolvableSchema,
+} from './schema-validation';
 
 /**
  * Decorator over a {@link QueryResult} that enforces schema validation semantics:
@@ -25,45 +30,16 @@ export class SchemaValidatingQueryResult<
     private readonly _queryAst: QueryAST.Query,
   ) {}
 
-  private _skip(): boolean {
-    const options = QueryAST.getEffectiveOptions(this._queryAst);
-    return options?.skipSchemaValidation === true;
-  }
-
   private _assertTypenames(): void {
     assertQueryTypenamesResolvable(this._queryAst, this._resolvers);
   }
 
-  private _filterEntries<E extends QueryResult.Entry<T>>(entries: E[]): E[] {
-    if (this._skip()) {
-      return entries;
-    }
-    return entries.filter((entry) => {
-      if (entry.result == null) return true;
-      const typeDxn = Entity.getTypeDXN(entry.result);
-      if (typeDxn == null) return true;
-      if (this._resolvers.runtime.getSchemaByDXN(typeDxn) != null) return true;
-      if (this._resolvers.persistent != null && this._resolvers.persistent.getSchemaByDXN(typeDxn) != null) {
-        return true;
-      }
-      return false;
-    });
+  private _filterEntries(entries: QueryResult.Entry<T>[]): QueryResult.Entry<T>[] {
+    return filterEntriesWithResolvableSchema(this._queryAst, entries, this._resolvers);
   }
 
   private _filterObjects(objects: T[]): T[] {
-    if (this._skip()) {
-      return objects;
-    }
-    return objects.filter((obj) => {
-      if (obj == null) return false;
-      const typeDxn = Entity.getTypeDXN(obj);
-      if (typeDxn == null) return true;
-      if (this._resolvers.runtime.getSchemaByDXN(typeDxn) != null) return true;
-      if (this._resolvers.persistent != null && this._resolvers.persistent.getSchemaByDXN(typeDxn) != null) {
-        return true;
-      }
-      return false;
-    });
+    return filterObjectsWithResolvableSchema(this._queryAst, objects, this._resolvers);
   }
 
   get entries(): QueryResult.Entry<T>[] {

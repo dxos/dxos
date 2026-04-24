@@ -109,8 +109,11 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   public getSchemaByDXN(dxn: DXN): Type.RuntimeType | undefined {
     switch (dxn.kind) {
       case DXN.kind.ECHO: {
+        // NOTE: Can't delegate to `query({ backingObjectId })` here because the runtime branch of
+        // `filterOrderResults` doesn't honor `backingObjectId`, so it'd fall back to unrelated
+        // runtime entries. `getSchemaById` already resolves cached + persistent ids correctly.
         const id = dxn.asEchoDXN()?.echoId;
-        return id ? this.query({ backingObjectId: id }).runSync()[0] : undefined;
+        return id ? this.getSchemaById(id) : undefined;
       }
       case DXN.kind.TYPE: {
         const components = dxn.asTypeDXN();

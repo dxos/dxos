@@ -587,8 +587,8 @@ const collectFilterTypenames = (filter: Filter, out: string[]): void => {
 };
 
 /**
- * Resolve the effective query options by taking the inner-most (first encountered) option
- * set in the AST. Returns undefined if no options clauses are present.
+ * Resolve the effective query options by taking the outer-most (first-visited) option
+ * clause in the AST. Returns undefined if no options clauses are present.
  */
 export const getEffectiveOptions = (query: Query): QueryOptions | undefined => {
   let options: QueryOptions | undefined;

@@ -420,6 +420,6 @@ const assertSchemaRegistered = (obj: Entity.Unknown, database?: Database.Databas
   const persistentHas = persistentRegistry?.hasSchema(schema as any) ?? false;
   if (!runtimeHas && !persistentHas) {
     const typename = (schema as any).typename;
-    throw new Error(typename ? `Schema not registered Schema: ${typename}` : 'Schema not registered');
+    throw new Error(typename ? `Schema not registered: ${typename}` : 'Schema not registered');
   }
 };

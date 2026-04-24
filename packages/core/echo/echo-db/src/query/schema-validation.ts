@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Entity } from '@dxos/echo';
+import { Entity, type QueryResult } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
@@ -30,6 +30,19 @@ export const isSchemaValidationSkipped = (query: QueryAST.Query): boolean => {
 };
 
 /**
+ * Returns true if the given typename DXN can be resolved in either registry.
+ */
+export const canResolveSchema = (dxn: DXN, resolvers: SchemaResolvers): boolean => {
+  if (resolvers.runtime.getSchemaByDXN(dxn) != null) {
+    return true;
+  }
+  if (resolvers.persistent != null && resolvers.persistent.getSchemaByDXN(dxn) != null) {
+    return true;
+  }
+  return false;
+};
+
+/**
  * Validates that every typename referenced by the query can be resolved either in the runtime or
  * persistent schema registry.
  *
@@ -43,8 +56,9 @@ export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolvers:
   const typenames = QueryAST.collectTypenames(query);
   const unresolved: string[] = [];
   for (const typename of typenames) {
-    const dxn = DXN.parse(typename);
-    if (!canResolveSchema(dxn, resolvers)) {
+    // Use tryParse so malformed typenames surface as "unknown" rather than aborting validation.
+    const dxn = DXN.tryParse(typename);
+    if (dxn == null || !canResolveSchema(dxn, resolvers)) {
       unresolved.push(typename);
     }
   }
@@ -52,6 +66,13 @@ export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolvers:
   if (unresolved.length > 0) {
     throw new Error(`Query references unknown typename(s): ${unresolved.join(', ')}`);
   }
+};
+
+const hasResolvableSchema = (entity: Entity.Unknown | null | undefined, resolvers: SchemaResolvers): boolean => {
+  if (entity == null) return false;
+  const typeDxn = Entity.getTypeDXN(entity);
+  if (typeDxn == null) return true;
+  return canResolveSchema(typeDxn, resolvers);
 };
 
 /**
@@ -66,23 +87,23 @@ export const filterObjectsWithResolvableSchema = <T extends Entity.Unknown>(
   if (isSchemaValidationSkipped(query)) {
     return entities as T[];
   }
-
-  return entities.filter((entity) => {
-    if (entity == null) return false;
-    const typeDxn = Entity.getTypeDXN(entity);
-    if (typeDxn == null) {
-      return true;
-    }
-    return canResolveSchema(typeDxn, resolvers);
-  });
+  return entities.filter((entity) => hasResolvableSchema(entity, resolvers));
 };
 
-const canResolveSchema = (dxn: DXN, resolvers: SchemaResolvers): boolean => {
-  if (resolvers.runtime.getSchemaByDXN(dxn) != null) {
-    return true;
+/**
+ * Same as {@link filterObjectsWithResolvableSchema} but operates on {@link QueryResult.Entry} items,
+ * filtering by `entry.result`.
+ */
+export const filterEntriesWithResolvableSchema = <T extends Entity.Unknown, E extends QueryResult.Entry<T>>(
+  query: QueryAST.Query,
+  entries: readonly E[],
+  resolvers: SchemaResolvers,
+): E[] => {
+  if (isSchemaValidationSkipped(query)) {
+    return entries as E[];
   }
-  if (resolvers.persistent != null && resolvers.persistent.getSchemaByDXN(dxn) != null) {
-    return true;
-  }
-  return false;
+  return entries.filter((entry) => {
+    if (entry.result == null) return true;
+    return hasResolvableSchema(entry.result, resolvers);
+  });
 };

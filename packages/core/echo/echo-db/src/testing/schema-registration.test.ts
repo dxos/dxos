@@ -149,7 +149,7 @@ describe('schema registration semantics', () => {
       // Confirm the object is visible while the schema is registered.
       const withSchemaResults = await db.query(Query.select(Filter.everything())).run();
       expect(
-        withSchemaResults.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename),
+        withSchemaResults.filter((entity) => Entity.getTypename(entity) === EphemeralSchema.typename),
       ).toHaveLength(1);
 
       // Simulate the schema disappearing from the runtime registry (and it was never persisted).
@@ -159,15 +159,13 @@ describe('schema registration semantics', () => {
       const bypassResults = await db
         .query(Query.select(Filter.everything()).options({ skipSchemaValidation: true }))
         .run();
-      expect(
-        bypassResults.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename),
-      ).toHaveLength(1);
+      expect(bypassResults.filter((entity) => Entity.getTypename(entity) === EphemeralSchema.typename)).toHaveLength(1);
 
       // Without skipSchemaValidation the object is filtered out.
       const filteredResults = await db.query(Query.select(Filter.everything())).run();
-      expect(
-        filteredResults.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename),
-      ).toHaveLength(0);
+      expect(filteredResults.filter((entity) => Entity.getTypename(entity) === EphemeralSchema.typename)).toHaveLength(
+        0,
+      );
     });
 
     test('queue objects whose schema cannot be resolved are filtered out', async () => {
@@ -227,7 +225,7 @@ describe('schema registration semantics', () => {
       (peer.client.graph.schemaRegistry as any)._registry.delete(EphemeralSchema.typename);
 
       const results = await db.query(Query.select(Filter.everything()).options({ skipSchemaValidation: true })).run();
-      const ephemeral = results.filter((entity) => Obj.getTypename(entity as any) === EphemeralSchema.typename);
+      const ephemeral = results.filter((entity) => Entity.getTypename(entity) === EphemeralSchema.typename);
       expect(ephemeral).toHaveLength(1);
     });
 
@@ -256,25 +254,10 @@ describe('schema registration semantics', () => {
       expect(errors).toEqual([]);
     });
 
-    test('returns ArrayFormatterIssue-shaped entries', async () => {
-      await using peer = await builder.createPeer({ types: [TestSchema.Person] });
-      const db = await peer.createDatabase();
-      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
-
-      const errors = Entity.getValidationErrors(alice);
-      // Each issue has the ArrayFormatter shape even for an empty result (the array itself).
-      for (const issue of errors) {
-        expect(issue).toHaveProperty('path');
-        expect(issue).toHaveProperty('message');
-        expect(Array.isArray(issue.path)).toBe(true);
-        expect(typeof issue.message).toBe('string');
-      }
-    });
-
     test('returns empty array when entity has no schema', async () => {
       const obj = Obj.make(TestSchema.Expando, { foo: 'bar' });
       const errors = Entity.getValidationErrors(obj as any);
-      expect(Array.isArray(errors)).toBe(true);
+      expect(errors).toEqual([]);
     });
   });
 });

@@ -382,7 +382,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
   if (schema?.typename) {
-    return new Error(`${message} Schema: ${schema.typename}`);
+    return new Error(`${message}: ${schema.typename}`);
   }
 
   return new Error(message);
