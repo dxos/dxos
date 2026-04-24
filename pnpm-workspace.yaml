@@ -15,18 +15,18 @@ catalog:
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
-  '@astrojs/starlight': ^0.32.5
   '@assistant-ui/react': ^0.12.24
+  '@astrojs/starlight': ^0.32.5
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@automerge/automerge': 3.2.5
   '@automerge/automerge-repo': 2.6.0-subduction.10
-  '@automerge/automerge-subduction': 0.7.0
   '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.10
   '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.10
   '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.10
+  '@automerge/automerge-subduction': 0.7.0
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
@@ -328,6 +328,7 @@ catalog:
   blockstore-core: ^5.0.1
   blockstore-idb: ^2.0.0
   body-parser: ^1.20.3
+  bs58check: ^4.0.0
   buffer: ^6.0.3
   buffer-alloc: ^1.1.0
   buffer-from: ^0.1.1

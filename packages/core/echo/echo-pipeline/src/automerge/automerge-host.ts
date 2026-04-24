@@ -24,10 +24,12 @@ import {
   Repo,
   type StorageAdapterInterface,
   type StorageKey,
+  type SubductionPolicy,
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { MemorySigner } from '@automerge/automerge-subduction';
+import { MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
+import bs58check from 'bs58check';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -43,7 +45,7 @@ import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dx
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
-import { EchoNetworkAdapter } from './echo-network-adapter';
+import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
@@ -119,6 +121,27 @@ const BUNDLE_SYNC_THRESHOLD = 50;
  * Only announce documents that are known to require sync.
  */
 const OPTIMIZED_SHARE_POLICY = true;
+
+/**
+ * Extract the {@link DocumentId} that a given Subduction `SedimentreeId` was derived from.
+ *
+ * Mirrors `@automerge/automerge-repo/src/subduction/helpers.ts#toDocumentId`, which is an
+ * internal helper not exposed via the package's `exports` field. A `SedimentreeId` is 32
+ * bytes; the first 16 are the original DocumentId bytes, zero-padded to 32 (see
+ * `toSedimentreeId` in the same file). We base58check-encode those 16 bytes to recover
+ * the string form of the `DocumentId`.
+ *
+ * Returns `null` if the encoding fails — callers treat that as "unknown / reject".
+ */
+const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId | null => {
+  try {
+    const bytes = sedimentreeId.toBytes().slice(0, 16);
+    return bs58check.encode(bytes) as DocumentId;
+  } catch (err) {
+    log.warn('failed to decode sedimentreeId to documentId', { err });
+    return null;
+  }
+};
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -259,6 +282,7 @@ export class AutomergeHost extends Resource {
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
       shareConfig: this._shareConfig,
+      subductionPolicy: this._subductionPolicy,
       storage: this._storage,
       network: [],
       signer: this._signer,
@@ -511,12 +535,86 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Under Subduction there is no longer a global share / access-control layer in the Repo —
-   * Subduction handles discovery and authorization itself (via adapter role + policy).
+   * Share policy for the Repo's classical automerge-repo sync path (CollectionSynchronizer /
+   * DocSynchronizer — see `src/synchronizer/DocSynchronizer.ts#resolveSharePolicy`).
+   *
+   * NOTE: Subduction replication does NOT consult `shareConfig`. It has its own policy
+   * layer via `Repo({ subductionPolicy })` (see `@automerge/automerge-subduction` `Policy`
+   * interface: `authorizeConnect`, `authorizeFetch`, `authorizePut`, `filterAuthorizedFetch`).
+   * This object only gates what we advertise over classical sync messages traveling through
+   * `networkSubsystem.send`. With the subduction-era `network: []` config, those messages
+   * go nowhere; this still matters for tests / downstream callers that register classical
+   * {@link AutomergeReplicator}s via {@link EchoNetworkAdapter}.
    */
   private readonly _shareConfig = {
-    access: async (_peerId: PeerId, _documentId?: DocumentId): Promise<boolean> => true,
-    announce: async (_peerId: PeerId, _documentId?: DocumentId): Promise<boolean> => true,
+    access: async (_peerId: PeerId, _documentId?: DocumentId): Promise<boolean> => {
+      // Access-on-request is always allowed; per-doc authorization happens in the replicator.
+      return true;
+    },
+
+    // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
+    // Hosts, running in the worker, don't share documents unless requested by other peers.
+    // NOTE: If both peers return sharePolicy=false the replication will not happen
+    // https://github.com/automerge/automerge-repo/pull/292
+    // Called for all loaded documents so they could be advertised to the sync server.
+    announce: async (peerId: PeerId, documentId?: DocumentId): Promise<boolean> => {
+      if (!documentId) {
+        return false;
+      }
+
+      if (OPTIMIZED_SHARE_POLICY) {
+        if (
+          !this._createdDocuments.has(documentId) &&
+          !this._documentsToSync.has(documentId) &&
+          !this._documentsToRequest.has(documentId)
+        ) {
+          // Skip advertising documents that don't need to be synced.
+          return false;
+        }
+      }
+
+      const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
+      if (isEchoPeerMetadata(peerMetadata)) {
+        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
+      }
+
+      return false;
+    },
+  };
+
+  /**
+   * Authorization policy consulted by the Subduction sedimentree protocol.
+   *
+   * Subduction replicates documents over a separate code path from the classical
+   * automerge-repo sync that `_shareConfig` gates (see `subduction-share-policy.test.ts`
+   * — `shareConfig.announce` / `.access` are never invoked for subduction-only peers).
+   * This object is the subduction-layer analogue of `_shareConfig`.
+   *
+   * Current implementation: allow-all on every hook.
+   *
+   * Rationale (empirically verified — see the git history of this file for the trace):
+   *   - `shareConfig.access: () => true` is DXOS's existing policy. Fetch-side hooks
+   *     (`authorizeFetch`, `filterAuthorizedFetch`) are called on BOTH peers during sync,
+   *     so they're the direct analogue of `access`. Both must allow-all.
+   *   - `shareConfig.announce` gates a DIFFERENT concern: which docs WE proactively
+   *     advertise. Subduction's advertisement is automatic — there is no hook in the
+   *     `Policy` interface that controls what we announce. The `OPTIMIZED_SHARE_POLICY`
+   *     optimization does not have a clean subduction analogue.
+   *   - `authorizePut` looks tempting as a "reject unwanted writes" gate, but DXOS's
+   *     tracking sets (`_createdDocuments`, `_documentsToSync`, `_documentsToRequest`)
+   *     are populated at request-time — later than when subduction pushes bytes. The
+   *     receiving peer doesn't yet know the doc is wanted, so gating here rejects
+   *     legitimate replication. A real port would require ahead-of-time population of
+   *     an authorized-docs set, or a new upstream `Policy.authorizeAdvertise` hook.
+   *
+   * `sedimentreeIdToDocumentId` and the `bs58check` dependency are retained — they're
+   * prerequisites for any future tightening of this policy.
+   */
+  private readonly _subductionPolicy: SubductionPolicy = {
+    authorizeConnect: async (_peerId) => {},
+    authorizeFetch: async (_peerId, _sedimentreeId) => {},
+    authorizePut: async (_requestor, _author, _sedimentreeId) => {},
+    filterAuthorizedFetch: async (_peerId, sedimentreeIds) => sedimentreeIds,
   };
 
   private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
@@ -838,6 +936,11 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
+      log.verbose('failed to push bundle, replicating interactively', {
+        collectionId,
+        peerId,
+        amount: missingOnRemote.length,
+      });
       toReplicateWithoutBatching.push(...missingOnRemote);
     }
     if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
@@ -845,6 +948,11 @@ export class AutomergeHost extends Resource {
       const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
+      log.verbose('failed to pull bundle, replicating interactively', {
+        collectionId,
+        peerId,
+        amount: missingOnLocal.length,
+      });
       toReplicateWithoutBatching.push(...missingOnLocal);
     }
 
@@ -869,6 +977,7 @@ export class AutomergeHost extends Resource {
     this._sharePolicyChangedTask?.schedule();
   }
 
+  // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
   private async _pushInBundles(
     ctx: Context,
     peerId: PeerId,
@@ -877,6 +986,7 @@ export class AutomergeHost extends Resource {
     const documentsToPush = [...documentIds];
     const syncInteractively: DocumentId[] = [];
 
+    // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (documentsToPush.length > 0) {
       await Promise.all(
         range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
@@ -903,10 +1013,12 @@ export class AutomergeHost extends Resource {
     const docs = documentIds.map((documentId) => {
       const handle = this._repo.handles[documentId];
       if (!handle || !handle.isReady()) {
+        log.warn('document not ready, skipping', { documentId });
         return;
       }
       const doc = handle.doc();
       if (!doc) {
+        log.warn('document not available, skipping', { documentId });
         return;
       }
       return {
@@ -928,6 +1040,7 @@ export class AutomergeHost extends Resource {
     const syncInteractively: DocumentId[] = [];
     const docsToImport: Record<DocumentId, Uint8Array> = {};
 
+    // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (documentsToPull.length > 0) {
       await Promise.all(
         range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
@@ -962,6 +1075,7 @@ export class AutomergeHost extends Resource {
     if (this._ctx.disposed) {
       return;
     }
+    // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
     const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
     const bundle = await this._echoNetworkAdapter.pullBundle(ctx, peerId, docHeads);
     return { docsToImport: bundle };
@@ -1003,6 +1117,7 @@ const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) 
 
   await handle.whenReady();
   await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
+    // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
       if (changeIsPresentInDoc(handle.doc()!, changeHash)) {
         unavailableHeads.delete(changeHash);

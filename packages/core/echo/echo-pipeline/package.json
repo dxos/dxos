@@ -84,6 +84,7 @@
     "@dxos/util": "workspace:*",
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
+    "bs58check": "catalog:",
     "crc-32": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",
@@ -92,8 +93,7 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "fast-check": "catalog:",
-    "get-port-please": "catalog:",
-    "ws": "catalog:"
+    "get-port-please": "catalog:"
   },
   "publishConfig": {
     "access": "public"
