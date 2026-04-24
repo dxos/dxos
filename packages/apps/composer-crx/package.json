@@ -13,8 +13,7 @@
   "type": "module",
   "scripts": {
     "pack:crx": "crx pack out/composer-crx -o composer.crx",
-    "pack:webext": "web-ext build --source-dir out/composer-crx",
-    "sync:dist": "node ./scripts/sync-dist.mjs"
+    "pack:webext": "web-ext build --source-dir out/composer-crx"
   },
   "dependencies": {
     "@ai-sdk/react": "catalog:",
