@@ -54,9 +54,8 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const extraTagsById = useAutoTags(entries);
 
-    // Snapshot of installed plugin ids at mount time. Used to decide which
-    // section a plugin renders in — new installs stay in the Community section
-    // for the current session so rows don't jump around mid-interaction.
+    // Snapshot of installed plugin ids at mount time. Used to sort installed
+    // plugins to the top without having newly-installed rows jump up mid-session.
     const [installedSnapshot] = useState<ReadonlySet<string>>(
       () => new Set(manager.getPlugins().map((plugin) => plugin.meta.id)),
     );
@@ -72,21 +71,25 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       return map;
     }, [sortedEntries]);
 
-    const { installedItems, communityItems } = useMemo(() => {
+    // Single list with installed-at-mount plugins sorted to the top. Sort order
+    // is based on the mount-time snapshot so rows don't jump as the user
+    // installs plugins during the session.
+    const items = useMemo(() => {
       const catalogIds = new Set(sortedEntries.map((entry) => entry.meta.id));
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
-      const fromCatalogInstalled = sortedEntries
-        .filter((entry) => installedSnapshot.has(entry.meta.id))
-        .map(toDisplayPlugin);
-      // URL-loaded plugins that are not in the catalog also belong in "Installed".
-      const fromUrlInstalled = plugins.filter(
+      const fromCatalog = sortedEntries.map(toDisplayPlugin);
+      const fromUrlOnly = plugins.filter(
         (plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id),
       );
-      const installedItems = [...fromCatalogInstalled, ...fromUrlInstalled].sort(sortPlugins);
-      const communityItems = sortedEntries
-        .filter((entry) => !installedSnapshot.has(entry.meta.id))
-        .map(toDisplayPlugin);
-      return { installedItems, communityItems };
+      const installedFirst = [...fromCatalog, ...fromUrlOnly].sort((a, b) => {
+        const aInstalled = installedSnapshot.has(a.meta.id);
+        const bInstalled = installedSnapshot.has(b.meta.id);
+        if (aInstalled !== bInstalled) {
+          return aInstalled ? -1 : 1;
+        }
+        return sortPlugins(a, b);
+      });
+      return installedFirst;
     }, [sortedEntries, installedSnapshot, plugins]);
 
     const handleChange = useCallback(
@@ -148,50 +151,22 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       [invokePromise],
     );
 
-    const hasAny = installedItems.length > 0 || communityItems.length > 0;
-
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          {hasAny ? (
-            <>
-              {installedItems.length > 0 && (
-                <>
-                  <h2 className='px-4 pt-4 pb-0 text-description text-xs uppercase tracking-wider'>
-                    {t('installed-section.label')}
-                  </h2>
-                  <PluginList
-                    plugins={installedItems}
-                    installed={installedIds}
-                    enabled={enabled}
-                    extraTagsById={extraTagsById}
-                    onClick={handleClick}
-                    onChange={handleChange}
-                    hasSettings={hasSettings}
-                    onSettings={handleSettings}
-                  />
-                </>
-              )}
-              {communityItems.length > 0 && (
-                <>
-                  <h2 className='px-4 pt-4 pb-0 text-description text-xs uppercase tracking-wider'>
-                    {t('community-section.label')}
-                  </h2>
-                  <PluginList
-                    plugins={communityItems}
-                    installed={installedIds}
-                    installing={installingIds}
-                    enabled={enabled}
-                    extraTagsById={extraTagsById}
-                    onClick={handleClick}
-                    onChange={handleChange}
-                    onInstall={handleInstall}
-                    hasSettings={hasSettings}
-                    onSettings={handleSettings}
-                  />
-                </>
-              )}
-            </>
+          {items.length > 0 ? (
+            <PluginList
+              plugins={items}
+              installed={installedIds}
+              installing={installingIds}
+              enabled={enabled}
+              extraTagsById={extraTagsById}
+              onClick={handleClick}
+              onChange={handleChange}
+              onInstall={handleInstall}
+              hasSettings={hasSettings}
+              onSettings={handleSettings}
+            />
           ) : error ? (
             <div className='p-4 text-description'>Failed to load community plugins: {error.message}</div>
           ) : loading ? (

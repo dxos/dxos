@@ -2,20 +2,45 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { type PluginEntry } from '@dxos/protocols';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
 import { LOAD_PLUGIN_DIALOG } from '../containers';
+import { loadCommunityPluginsOnce } from '../hooks';
+
+/**
+ * Turns a community manifest entry into a minimal {@link Plugin.Plugin} so it
+ * can be attached as the graph node's `data`. The synthesized plugin has no
+ * modules and only exists so the article surface can render details for
+ * community plugins that haven't been installed yet.
+ */
+const toDisplayPlugin = (entry: PluginEntry): Plugin.Plugin =>
+  ({
+    [Plugin.PluginTypeId]: Plugin.PluginTypeId,
+    meta: entry.meta,
+    modules: [],
+  }) as Plugin.Plugin;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+
+    // Holds the community plugin catalog. Populated lazily on first connector
+    // evaluation so community plugin nodes exist in the graph for the article
+    // surface to resolve.
+    const communityEntriesAtom = Atom.make<readonly PluginEntry[]>([]).pipe(Atom.keepAlive);
+    let loadStarted = false;
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -132,11 +157,47 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'plugins',
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
-        connector: () => {
+        connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
-          return Effect.succeed(
-            manager.getPlugins().map((plugin) =>
-              Node.make({
+          const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.id));
+
+          // Kick off community catalog load on first graph evaluation so that
+          // non-installed community plugins can be opened via their graph path.
+          if (!loadStarted) {
+            loadStarted = true;
+            try {
+              const client = capabilities.get(ClientCapabilities.Client);
+              const edgeClient = client.edge.http;
+              loadCommunityPluginsOnce(edgeClient)
+                .then((entries) => registry.set(communityEntriesAtom, entries))
+                .catch((error: unknown) => {
+                  log.catch(error);
+                  loadStarted = false;
+                });
+            } catch (error: unknown) {
+              log.catch(error);
+              loadStarted = false;
+            }
+          }
+
+          const installedNodes = manager.getPlugins().map((plugin) =>
+            Node.make({
+              id: plugin.meta.id,
+              type: 'org.dxos.plugin',
+              data: plugin,
+              properties: {
+                label: plugin.meta.name ?? plugin.meta.id,
+                icon: plugin.meta.icon ?? 'ph--circle--regular',
+                disposition: 'hidden',
+              },
+            }),
+          );
+
+          const communityNodes = get(communityEntriesAtom)
+            .filter((entry) => !installedIds.has(entry.meta.id))
+            .map((entry) => {
+              const plugin = toDisplayPlugin(entry);
+              return Node.make({
                 id: plugin.meta.id,
                 type: 'org.dxos.plugin',
                 data: plugin,
@@ -145,9 +206,10 @@ export default Capability.makeModule(
                   icon: plugin.meta.icon ?? 'ph--circle--regular',
                   disposition: 'hidden',
                 },
-              }),
-            ),
-          );
+              });
+            });
+
+          return Effect.succeed([...installedNodes, ...communityNodes]);
         },
       }),
     ]);

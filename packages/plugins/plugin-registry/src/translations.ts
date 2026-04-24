@@ -31,8 +31,6 @@ export const translations = [
         'install.label': 'Install',
         'installing.label': 'Installing…',
         'uninstall.label': 'Uninstall',
-        'installed-section.label': 'Installed',
-        'community-section.label': 'Community',
       },
     },
   },

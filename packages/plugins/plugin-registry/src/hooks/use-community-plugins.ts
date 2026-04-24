@@ -26,7 +26,12 @@ export const resetCommunityPluginsCache = (): void => {
   cachedByBaseUrl.clear();
 };
 
-const loadOnce = (client: EdgeHttpClient): Promise<readonly PluginEntry[]> => {
+/**
+ * Fetches the community plugin registry once per session and returns the cached promise
+ * on subsequent calls. Available to both React hooks and non-React callers
+ * (e.g., graph builders) that already have an {@link EdgeHttpClient}.
+ */
+export const loadCommunityPluginsOnce = (client: EdgeHttpClient): Promise<readonly PluginEntry[]> => {
   const baseUrl = client.baseUrl;
   const existing = cachedByBaseUrl.get(baseUrl);
   if (existing) {
@@ -55,7 +60,7 @@ export const useCommunityPlugins = (): CommunityPluginsState => {
 
   useEffect(() => {
     let cancelled = false;
-    loadOnce(edgeClient)
+    loadCommunityPluginsOnce(edgeClient)
       .then((entries) => {
         if (!cancelled) {
           setState({ entries, loading: false, error: null });

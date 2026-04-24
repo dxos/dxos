@@ -19,10 +19,16 @@ export type PluginDetailProps = {
    * or non-removable plugins.
    */
   onUninstall?: () => void;
+  /**
+   * When provided, the plugin is not installed and an Install button is shown
+   * in place of the enable Switch.
+   */
+  onInstall?: () => void;
+  installing?: boolean;
 };
 
 export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
-  ({ plugin, enabled, onEnabledChange, onUninstall, ...props }, forwardedRef) => {
+  ({ plugin, enabled, onEnabledChange, onUninstall, onInstall, installing, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const {
       id,
@@ -46,9 +52,15 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             <div role='none' className='flex flex-col gap-6'>
               <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
                 <h2 className='text-xl'>{name}</h2>
-                <Input.Root>
-                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Input.Root>
+                {onInstall ? (
+                  <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
+                    {installing ? t('installing.label') : t('install.label')}
+                  </Button>
+                ) : (
+                  <Input.Root>
+                    <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                  </Input.Root>
+                )}
                 <p className='pt-0.5 text-sm text-description'>{id}</p>
               </div>
               <div role='none'>
