@@ -30,17 +30,22 @@ export default Capability.makeModule(
             Node.makeAction({
               id: 'sync',
               data: Effect.fnUntraced(function* () {
-                const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(board);
-                invariant(db);
-                const runtime = computeRuntime.getRuntime(db.spaceId);
-                yield* Effect.tryPromise(() =>
-                  runtime.runPromise(
-                    Operation.invoke(SyncBoard, {
-                      board: Ref.make(board),
-                    }),
-                  ),
-                ).pipe(
+                // Wrap the entire action (capability lookup + runtime invoke)
+                // inside the error-toast path so setup failures don't slip past
+                // the catchAll and leave the user without feedback.
+                yield* Effect.gen(function* () {
+                  const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+                  const db = Obj.getDatabase(board);
+                  invariant(db);
+                  const runtime = computeRuntime.getRuntime(db.spaceId);
+                  yield* Effect.tryPromise(() =>
+                    runtime.runPromise(
+                      Operation.invoke(SyncBoard, {
+                        board: Ref.make(board),
+                      }),
+                    ),
+                  );
+                }).pipe(
                   Effect.tap(() =>
                     Operation.invoke(LayoutOperation.AddToast, {
                       id: 'sync-board-success',

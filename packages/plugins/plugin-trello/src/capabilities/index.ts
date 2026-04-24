@@ -10,5 +10,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   'OperationHandler',
   () => import('./operation-handler'),
 );
-export const PollSync = Capability.lazy('PollSync', () => import('./poll-sync'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

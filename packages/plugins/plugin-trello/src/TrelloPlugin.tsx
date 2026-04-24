@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, OperationHandler, PollSync, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { Trello } from '#types';
 
@@ -56,10 +56,5 @@ export const TrelloPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'poll-sync',
-    activatesOn: ActivationEvents.Startup,
-    activate: PollSync,
-  }),
   Plugin.make,
 );
