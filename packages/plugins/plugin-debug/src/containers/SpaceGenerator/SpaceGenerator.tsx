@@ -13,7 +13,7 @@ import { Sketch } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
@@ -118,9 +118,11 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
               <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
               <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
               <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-              <SyntaxHighlighter language='json' classNames='text-xs'>
-                {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-              </SyntaxHighlighter>
+              <JsonHighlighter
+                data={{ space, ...info }}
+                replacer={jsonKeyReplacer({ truncate: true })}
+                classNames='text-xs'
+              />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>

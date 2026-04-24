@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { CSSProperties } from 'react';
-import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
+import React, { type CSSProperties } from 'react';
+import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
@@ -17,11 +17,16 @@ const languages = {
   ts: 'typescript',
 };
 
-export type SyntaxHighlighterProps = NaturalSyntaxHighlighterProps & {
+export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
   fallback?: string;
 };
 
 /**
+ * Inline, non-scrolling wrapper around `react-syntax-highlighter`.
+ *
+ * Use directly for small snippets (e.g. inside markdown code blocks).
+ * For scrollable panels, compose with `Syntax.Viewport`.
+ *
  * NOTE: Using `light-async` version directly from dist to avoid any chance of the heavy one being loaded.
  * The lightweight version will load specific language parsers asynchronously.
  *
@@ -36,28 +41,23 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
     const { themeMode } = useThemeContext();
 
     return (
-      <ScrollArea.Root {...composableProps({ classNames, className })} thin ref={forwardedRef}>
-        <ScrollArea.Viewport>
-          {/* NOTE: The div prevents NativeSyntaxHighlighter from managing scrolling. */}
-          <div role='none'>
-            <NativeSyntaxHighlighter
-              language={languages[language as keyof typeof languages] || language}
-              style={(style as { [key: string]: CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
-              customStyle={{
-                background: 'unset',
-                border: 'none',
-                boxShadow: 'none',
-                padding: 0,
-                margin: 0,
-              }}
-              {...nativeProps}
-            >
-              {/* Non-empty fallback prevents collapse. */}
-              {children || fallback}
-            </NativeSyntaxHighlighter>
-          </div>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <div {...composableProps({ classNames, className })} role='none' ref={forwardedRef}>
+        <NativeSyntaxHighlighter
+          language={languages[language as keyof typeof languages] || language}
+          style={(style as { [key: string]: CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
+          customStyle={{
+            background: 'unset',
+            border: 'none',
+            boxShadow: 'none',
+            padding: 0,
+            margin: 0,
+          }}
+          {...nativeProps}
+        >
+          {/* Non-empty fallback prevents collapse. */}
+          {children || fallback}
+        </NativeSyntaxHighlighter>
+      </div>
     );
   },
 );

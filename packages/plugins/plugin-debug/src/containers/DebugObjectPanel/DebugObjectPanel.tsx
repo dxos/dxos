@@ -9,7 +9,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Grid, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
   object: Obj.Unknown;
@@ -38,7 +38,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
-            <Json.Data data={selectedObject} />
+            <JsonHighlighter data={selectedObject} />
           </Grid>
         </Panel.Content>
       </Panel.Root>
