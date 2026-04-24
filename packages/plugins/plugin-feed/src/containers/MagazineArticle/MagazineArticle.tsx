@@ -174,7 +174,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content thin centered padding>
-              <Masonry.Viewport items={tileItems} getId={(data) => Obj.getDXN(data.post).toString()} />
+              <Masonry.Viewport
+                classNames='py-2'
+                items={tileItems}
+                getId={(data) => Obj.getDXN(data.post).toString()}
+              />
             </Masonry.Content>
           </Masonry.Root>
         )}
