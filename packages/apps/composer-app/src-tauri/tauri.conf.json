@@ -26,11 +26,19 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": true,
-    "externalBin": ["sidecar/ollama"],
+    "externalBin": [
+      "sidecar/ollama"
+    ],
     "iOS": {
       "developmentTeam": "9428WC5MR8"
     },
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
     "macOS": {
       "entitlements": "./Entitlements.plist",
       "hardenedRuntime": true,
@@ -45,14 +53,18 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["composer"]
+        "schemes": [
+          "composer"
+        ]
       }
     },
     "updater": {
-      "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"],
+      "endpoints": [
+        "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"
+      ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK"
     }
   },
   "productName": "Composer",
-  "version": "0.8.3"
+  "version": "0.9.0"
 }
