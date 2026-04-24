@@ -56,7 +56,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "telegram": "^2.26.22"
+    "telegram": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
