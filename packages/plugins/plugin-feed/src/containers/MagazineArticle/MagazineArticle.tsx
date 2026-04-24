@@ -22,8 +22,6 @@ import { type Magazine, type Subscription } from '#types';
 import { fetchArticle } from '../../util';
 import { MagazineTile } from './MagazineTile';
 
-type CurateState = 'idle' | 'syncing' | 'curating';
-
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
