@@ -120,11 +120,7 @@ function deepRedactToolJson(node) {
         node[k] = '[REDACTED]';
         continue;
       }
-      if (
-        (k === 'title' || k === 'snippet' || k === 'subject') &&
-        v.length > 0 &&
-        !v.startsWith('[REDACTED')
-      ) {
+      if ((k === 'title' || k === 'snippet' || k === 'subject') && v.length > 0 && !v.startsWith('[REDACTED')) {
         node[k] = '[REDACTED]';
         continue;
       }

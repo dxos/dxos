@@ -710,9 +710,7 @@ describe('Spaces', () => {
     expect(importedFeed.name).toEqual('test-feed');
 
     // Query the messages from within the feed on client 2.
-    const messages = await importedSpace.db
-      .query(Query.type(TestSchema$.Expando).from(importedFeed))
-      .run();
+    const messages = await importedSpace.db.query(Query.type(TestSchema$.Expando).from(importedFeed)).run();
     expect(messages.length).toEqual(2);
     expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
   });
