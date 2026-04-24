@@ -9,7 +9,6 @@ import React, {
   createContext,
   forwardRef,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -17,9 +16,8 @@ import React, {
 import { Input, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
-import { type CreateReplacerProps } from '@dxos/util';
 
-import { JsonHighlighter } from '../JsonHighlighter';
+import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter';
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
 //
@@ -37,7 +35,7 @@ type SyntaxContextType = {
   filterText: string;
   setFilterText: (text: string) => void;
   filterError: Error | null;
-  replacer?: CreateReplacerProps;
+  replacer?: JsonReplacer;
 };
 
 const SyntaxContext = createContext<SyntaxContextType | null>(null);
@@ -60,35 +58,24 @@ type SyntaxRootProps = PropsWithChildren<{
   // Text mode.
   language?: string;
   source?: string;
-  // JSON mode (presence of `data` prop selects JSON mode).
+  // JSON mode (defined `data` selects JSON mode; explicit `undefined` falls back to text mode).
   data?: any;
-  replacer?: CreateReplacerProps;
+  replacer?: JsonReplacer;
 }>;
 
-/** Headless context provider. Selects JSON mode when `data` prop is present; text mode otherwise. */
-const SyntaxRoot: FC<SyntaxRootProps> = (props) => {
-  const { children, language, source, replacer } = props;
-  const isJson = 'data' in props;
-  const data = props.data;
+/** Headless context provider. Selects JSON mode when `data` is defined; text mode otherwise. */
+const SyntaxRoot: FC<SyntaxRootProps> = ({ children, language, source, replacer, data }) => {
+  const isJson = data !== undefined;
   const [filterText, setFilterText] = useState('');
-  const [filteredData, setFilteredData] = useState(data);
-  const [filterError, setFilterError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    if (!isJson) {
-      return;
+  const { filteredData, filterError } = useMemo<{ filteredData: any; filterError: Error | null }>(() => {
+    if (!isJson || !filterText.trim().length) {
+      return { filteredData: data, filterError: null };
     }
-    if (!filterText.trim().length) {
-      setFilteredData(data);
-      setFilterError(null);
-    } else {
-      try {
-        setFilteredData(JSONPath({ path: filterText, json: data }));
-        setFilterError(null);
-      } catch (err) {
-        setFilteredData(data);
-        setFilterError(err as Error);
-      }
+    try {
+      return { filteredData: JSONPath({ path: filterText, json: data }), filterError: null };
+    } catch (err) {
+      return { filteredData: data, filterError: err as Error };
     }
   }, [isJson, data, filterText]);
 

@@ -9,7 +9,7 @@ import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/u
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps } from '../SyntaxHighlighter';
 
-type JsonReplacer = CreateReplacerProps | ((key: string, value: any) => any);
+export type JsonReplacer = CreateReplacerProps | ((key: string, value: any) => any);
 
 export type JsonHighlighterProps = Omit<SyntaxHighlighterProps, 'children' | 'language'> & {
   data?: any;
