@@ -20,6 +20,9 @@ const LINEAR_GRAPHQL = 'https://api.linear.app/graphql';
 export type LinearAuth = { readonly apiKey: string };
 
 export const readLinearAuth = (): LinearAuth | undefined => {
+  // TODO(linear): migrate to the AccessToken/credential-store pattern used by
+  // plugin-inbox so the API key isn't exposed to XSS via localStorage. Tracked
+  // in plans/adopt-access-token-for-sync-plugins.md.
   const apiKey = globalThis.localStorage?.getItem('LINEAR_API_KEY');
   if (!apiKey) {
     return undefined;
@@ -36,7 +39,18 @@ const graphql = async <T>(auth: LinearAuth, query: string, variables?: Record<st
     },
     body: JSON.stringify({ query, variables }),
   });
-  const body = (await response.json()) as { data?: T; errors?: { message: string }[] };
+  // Read body as text first so a non-JSON error page (rate-limit HTML, proxy,
+  // auth gateway) surfaces the real HTTP status instead of a SyntaxError from
+  // response.json().
+  const text = await response.text();
+  let body: { data?: T; errors?: { message: string }[] } = {};
+  if (text.length > 0) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      throw new Error(`linear ${response.status}: ${text.slice(0, 200)}`);
+    }
+  }
   if (!response.ok || body.errors) {
     const message = body.errors?.map((entry) => entry.message).join('; ') ?? `linear ${response.status}`;
     throw new Error(message);
@@ -56,7 +70,10 @@ type RecentIssuesResponse = {
       description: string | null;
       updatedAt: string;
       priority: number;
-      state: { name: string } | null;
+      // Fetch stable `type` enum (backlog/unstarted/started/completed/
+      // canceled/triage) rather than user-editable `name`. Teams routinely
+      // rename states ("Done" → "Shipped") which silently broke status mapping.
+      state: { type: string } | null;
       team: { key: string } | null;
       assignee: { displayName: string } | null;
       labels: { nodes: { name: string }[] } | null;
@@ -64,19 +81,21 @@ type RecentIssuesResponse = {
   };
 };
 
-/** Map Linear state names to Composer Task status. */
-const mapStatus = (linearState: string | undefined): 'todo' | 'in-progress' | 'done' | undefined => {
-  if (!linearState) {
-    return undefined;
+/** Map Linear WorkflowState.type enum to Composer Task status. */
+const mapStatus = (linearStateType: string | undefined): 'todo' | 'in-progress' | 'done' | undefined => {
+  switch (linearStateType) {
+    case 'completed':
+    case 'canceled':
+      return 'done';
+    case 'started':
+      return 'in-progress';
+    case 'backlog':
+    case 'unstarted':
+    case 'triage':
+      return 'todo';
+    default:
+      return undefined;
   }
-  const lower = linearState.toLowerCase();
-  if (lower === 'done' || lower === 'completed' || lower === 'closed' || lower === 'merged') {
-    return 'done';
-  }
-  if (lower === 'in progress' || lower === 'started' || lower === 'in review') {
-    return 'in-progress';
-  }
-  return 'todo';
 };
 
 /** Map Linear priority (1=urgent..4=low, 0=none) to Task priority. */
@@ -109,7 +128,7 @@ export const fetchRecentIssues = async (
           description
           updatedAt
           priority
-          state { name }
+          state { type }
           team { key }
           assignee { displayName }
           labels { nodes { name } }
@@ -125,7 +144,7 @@ export const fetchRecentIssues = async (
       },
       title: `[${issue.identifier}] ${issue.title}`,
       description: issue.description ?? undefined,
-      status: mapStatus(issue.state?.name),
+      status: mapStatus(issue.state?.type),
       priority: mapPriority(issue.priority),
     }),
   );
@@ -205,14 +224,19 @@ export const updateIssue = async (
       }
     }
   `;
-  await graphql<{ issueUpdate: { success: boolean } }>(auth, mutation, { issueId, input });
-  log.info('linear: updated issue', { issueId, input });
+  const result = await graphql<{ issueUpdate: { success: boolean } }>(auth, mutation, { issueId, input });
+  if (!result.issueUpdate.success) {
+    throw new Error(`linear: issueUpdate returned success=false for ${issueId}`);
+  }
+  // Log only the field names that changed, not their values — titles and
+  // priority-change patterns can be sensitive in some workspaces.
+  log.info('linear: updated issue', { issueId, fields: Object.keys(input) });
 };
 
 /** One-shot auth check — returns the viewer's display name on success. */
 export const whoAmI = async (auth: LinearAuth): Promise<string> => {
   type Response = { viewer: { displayName: string } };
   const data = await graphql<Response>(auth, 'query { viewer { displayName } }');
-  log.info('linear: authenticated', { viewer: data.viewer.displayName });
+  log.info('linear: authenticated');
   return data.viewer.displayName;
 };

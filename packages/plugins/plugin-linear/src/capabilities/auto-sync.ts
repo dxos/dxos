@@ -31,30 +31,61 @@ const addToRootCollection = (space: any, obj: any): void => {
   }
 };
 
-const syncOnce = async (space: any, auth: { apiKey: string }): Promise<void> => {
+const syncOnce = async (
+  space: any,
+  auth: { apiKey: string },
+  snapshots: Map<string, { status?: string; priority?: string; title?: string }>,
+): Promise<void> => {
   const remoteTasks = await fetchRecentIssues(auth);
   const existingTasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
-  const existingLinearIds = new Set<string>();
+  const existingByLinearId = new Map<string, Task.Task>();
   for (const task of existingTasks) {
     const linearId = getLinearId(task);
     if (linearId) {
-      existingLinearIds.add(linearId);
+      existingByLinearId.set(linearId, task);
     }
   }
 
   let added = 0;
-  for (const task of remoteTasks) {
-    const linearId = getLinearId(task);
-    if (linearId && existingLinearIds.has(linearId)) {
+  let updated = 0;
+  for (const remote of remoteTasks) {
+    const linearId = getLinearId(remote);
+    if (!linearId) {
       continue;
     }
-    space.db.add(task);
-    addToRootCollection(space, task);
-    added++;
+    const existing = existingByLinearId.get(linearId);
+    if (!existing) {
+      space.db.add(remote);
+      addToRootCollection(space, remote);
+      added++;
+      continue;
+    }
+    // Pull remote-side edits into the existing Composer Task. Apply change
+    // only when the field differs so we avoid firing spurious mutations.
+    let changed = false;
+    Obj.change(existing, (mutable: Task.Task) => {
+      if (mutable.title !== remote.title) { mutable.title = remote.title; changed = true; }
+      if (mutable.description !== remote.description) {
+        mutable.description = remote.description;
+        changed = true;
+      }
+      if (mutable.status !== remote.status) { mutable.status = remote.status; changed = true; }
+      if (mutable.priority !== remote.priority) { mutable.priority = remote.priority; changed = true; }
+    });
+    if (changed) {
+      updated++;
+      // Refresh the write-back baseline so the remote update we just applied
+      // isn't echoed back as a local edit on the next write-back tick.
+      snapshots.set(existing.id, {
+        status: existing.status,
+        priority: existing.priority,
+        title: existing.title,
+      });
+    }
   }
 
-  if (added > 0) {
-    log.info('linear: synced issues', { added, total: remoteTasks.length });
+  if (added > 0 || updated > 0) {
+    log.info('linear: synced issues', { added, updated, total: remoteTasks.length });
   }
 
   const existingKanbans: Kanban.Kanban[] = await space.db.query(Filter.type(Kanban.Kanban)).run();
@@ -81,9 +112,11 @@ const syncOnce = async (space: any, auth: { apiKey: string }): Promise<void> => 
   }
 };
 
-const startWriteBack = (space: any, auth: { apiKey: string }): void => {
-  const snapshots = new Map<string, { status?: string; priority?: string; title?: string }>();
-
+const startWriteBack = (
+  space: any,
+  auth: { apiKey: string },
+  snapshots: Map<string, { status?: string; priority?: string; title?: string }>,
+): ReturnType<typeof setInterval> => {
   void (async () => {
     const tasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
     for (const task of tasks) {
@@ -93,7 +126,7 @@ const startWriteBack = (space: any, auth: { apiKey: string }): void => {
     }
   })();
 
-  setInterval(async () => {
+  return setInterval(async () => {
     try {
       const tasks: Task.Task[] = await space.db.query(Filter.type(Task.Task)).run();
       for (const task of tasks) {
@@ -148,6 +181,12 @@ export default Capability.makeModule(
 
     const client = yield* Capability.get(ClientCapabilities.Client);
 
+    // Track every timer we start so the addFinalizer below can cancel them on
+    // capability teardown (HMR, sign-out, plugin disable). Without this the
+    // intervals keep firing against a disposed space.
+    const snapshots = new Map<string, { status?: string; priority?: string; title?: string }>();
+    const timers: ReturnType<typeof setInterval>[] = [];
+
     yield* Effect.tryPromise({
       try: async () => {
         const space = await waitForSpace(client);
@@ -155,21 +194,32 @@ export default Capability.makeModule(
           return;
         }
 
-        await syncOnce(space, auth);
-        startWriteBack(space, auth);
+        await syncOnce(space, auth, snapshots);
+        timers.push(startWriteBack(space, auth, snapshots));
 
-        setInterval(async () => {
-          try {
-            await syncOnce(space, auth);
-          } catch (error) {
-            log.warn('linear: periodic sync failed', { error: error instanceof Error ? error.message : String(error) });
-          }
-        }, SYNC_INTERVAL_MS);
+        timers.push(
+          setInterval(async () => {
+            try {
+              await syncOnce(space, auth, snapshots);
+            } catch (error) {
+              log.warn('linear: periodic sync failed', { error: error instanceof Error ? error.message : String(error) });
+            }
+          }, SYNC_INTERVAL_MS),
+        );
       },
       catch: (error: unknown) => {
         log.warn('linear: sync failed', { error: error instanceof Error ? error.message : String(error) });
         return new Error(error instanceof Error ? error.message : String(error));
       },
     });
+
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        for (const timer of timers) {
+          clearInterval(timer);
+        }
+        log.info('linear: sync capability torn down', { timers: timers.length });
+      }),
+    );
   }),
 );
