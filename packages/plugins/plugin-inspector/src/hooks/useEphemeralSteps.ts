@@ -24,8 +24,22 @@ import { type InspectorStep } from '#types';
 export const useEphemeralSteps = (traceMessages: readonly Trace.Message[]): InspectorStep[] => {
   const [steps, setSteps] = useState<InspectorStep[]>([]);
   const processedCountRef = useRef(0);
+  const messagesIdentityRef = useRef<readonly Trace.Message[] | undefined>(undefined);
 
   useEffect(() => {
+    // Reset internal state when the trace-messages array identity changes
+    // (e.g. space switched → a new atom yields a different array). Otherwise
+    // a stale processedCountRef could skip events or the old step list could
+    // leak into the new space.
+    if (messagesIdentityRef.current !== traceMessages) {
+      messagesIdentityRef.current = traceMessages;
+      processedCountRef.current = 0;
+      setSteps([]);
+      if (traceMessages.length === 0) {
+        return;
+      }
+    }
+
     if (traceMessages.length <= processedCountRef.current) {
       return;
     }
