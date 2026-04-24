@@ -4,6 +4,7 @@
 
 import { JSONPath } from 'jsonpath-plus';
 import React, {
+  type FC,
   type PropsWithChildren,
   createContext,
   forwardRef,
@@ -65,7 +66,7 @@ type SyntaxRootProps = PropsWithChildren<{
 }>;
 
 /** Headless context provider. Selects JSON mode when `data` prop is present; text mode otherwise. */
-const SyntaxRoot = forwardRef<HTMLDivElement, SyntaxRootProps>((props, _forwardedRef) => {
+const SyntaxRoot: FC<SyntaxRootProps> = (props) => {
   const { children, language, source, replacer } = props;
   const isJson = 'data' in props;
   const data = props.data;
@@ -107,7 +108,7 @@ const SyntaxRoot = forwardRef<HTMLDivElement, SyntaxRootProps>((props, _forwarde
   );
 
   return <SyntaxContext.Provider value={context}>{children}</SyntaxContext.Provider>;
-});
+};
 
 SyntaxRoot.displayName = SYNTAX_ROOT_NAME;
 
@@ -176,7 +177,7 @@ type SyntaxViewportProps = ComposableProps;
 /** Optional scroll wrapper. Compose around `Syntax.Code` to make it scrollable. */
 const SyntaxViewport = composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props, { classNames: 'flex-1 min-h-0' })} thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

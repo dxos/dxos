@@ -225,7 +225,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
-        <Tabs.Panel value='input'>
+        <Tabs.Panel value='input' classNames='min-h-0 min-w-0 w-full overflow-auto'>
           <JsonHighlighter data={span.input} />
         </Tabs.Panel>
         {isLogQueue && (

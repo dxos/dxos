@@ -40,11 +40,21 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
   ) => {
     const { themeMode } = useThemeContext();
 
+    // The `style` prop here is a Prism theme (a token → CSSProperties map), not a React style.
+    // `composableProps` from parent composites may inject `style: {}` for DOM merging; treat it
+    // as "no custom theme" so the default theme still applies.
+    const hasCustomTheme = style && typeof style === 'object' && Object.keys(style).length > 0;
+    const prismTheme = hasCustomTheme
+      ? (style as { [key: string]: CSSProperties })
+      : themeMode === 'dark'
+        ? dark
+        : light;
+
     return (
       <div {...composableProps({ classNames, className })} role='none' ref={forwardedRef}>
         <NativeSyntaxHighlighter
           language={languages[language as keyof typeof languages] || language}
-          style={(style as { [key: string]: CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
+          style={prismTheme}
           customStyle={{
             background: 'unset',
             border: 'none',
