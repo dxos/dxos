@@ -7,5 +7,4 @@ export * from './graph-query-context';
 export * from './query-context';
 export * from './query-result';
 export * from './schema-validation';
-export * from './schema-validating-query-result';
 export * from './util';

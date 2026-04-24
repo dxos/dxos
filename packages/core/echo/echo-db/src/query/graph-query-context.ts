@@ -16,12 +16,22 @@ import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
+import {
+  type SchemaResolvers,
+  assertQueryTypenamesResolvable,
+  filterEntriesWithResolvableSchema,
+} from './schema-validation';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
   onStart: () => void;
   onStop: () => void;
+  /**
+   * Optional schema resolvers for validating typenames referenced by the query and filtering
+   * out results whose schema cannot be resolved. When absent, no schema validation is performed.
+   */
+  schemaResolvers?: SchemaResolvers;
 };
 
 /**
@@ -101,7 +111,11 @@ export class GraphQueryContext implements QueryContext {
     if (!this._query) {
       return [];
     }
-    return Array.from(this._sources).flatMap((source) => source.getResults());
+    // NOTE: Intentionally does not assert typenames are resolvable here: getResults is called
+    // reactively from QueryResultImpl on `changed` events; throwing would surface as an unhandled
+    // rejection rather than reaching the caller. Assertion lives on the user-initiated `run`.
+    const merged = Array.from(this._sources).flatMap((source) => source.getResults());
+    return this._filterResolvable(merged);
   }
 
   async run(
@@ -109,6 +123,7 @@ export class GraphQueryContext implements QueryContext {
     query: QueryAST.Query,
     { timeout = 30_000 }: QueryResult.RunOptions = {},
   ): Promise<QueryResult.EntityEntry[]> {
+    this._assertTypenamesResolvable(query);
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
         log('run query', {
@@ -132,7 +147,20 @@ export class GraphQueryContext implements QueryContext {
       return [];
     }
     const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
-    return mergedResults;
+    return this._filterResolvable(mergedResults, query);
+  }
+
+  private _assertTypenamesResolvable(query: QueryAST.Query): void {
+    if (this._params.schemaResolvers == null) return;
+    assertQueryTypenamesResolvable(query, this._params.schemaResolvers);
+  }
+
+  private _filterResolvable(
+    entries: QueryResult.EntityEntry[],
+    query: QueryAST.Query | undefined = this._query,
+  ): QueryResult.EntityEntry[] {
+    if (this._params.schemaResolvers == null || query == null) return entries;
+    return filterEntriesWithResolvableSchema(query, entries, this._params.schemaResolvers);
   }
 
   update(query: QueryAST.Query): void {

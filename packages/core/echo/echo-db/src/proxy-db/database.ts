@@ -29,7 +29,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import { SchemaValidatingQueryResult } from '../query';
+import { QueryResultImpl } from '../query';
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
 
@@ -234,12 +234,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       query = query.from({ spaceIds: [this.spaceId] });
     }
 
-    const inner = this._coreDatabase.graph.query(query);
-    return new SchemaValidatingQueryResult(
-      inner,
-      { runtime: this.graph.schemaRegistry, persistent: this._schemaRegistry },
-      query.ast,
-    );
+    const context = this._coreDatabase.graph._createQueryContext({
+      schemaResolvers: {
+        runtime: this.graph.schemaRegistry,
+        persistent: this._schemaRegistry,
+      },
+    });
+    return new QueryResultImpl(context, query);
   }
 
   /**

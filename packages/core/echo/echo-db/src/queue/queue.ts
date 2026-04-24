@@ -16,7 +16,7 @@ import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { QueryResultImpl, SchemaValidatingQueryResult } from '../query';
+import { QueryResultImpl, type SchemaResolvers } from '../query';
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 
@@ -257,19 +257,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
-    const inner = new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
-    const runtime = (this._database?.graph.schemaRegistry ?? this._graph?.schemaRegistry) as any;
-    if (runtime == null) {
-      return inner;
-    }
-    return new SchemaValidatingQueryResult(
-      inner,
-      {
-        runtime,
-        persistent: this._database?.schemaRegistry as any,
-      },
-      queryWithScope.ast,
-    );
+    const runtime = this._database?.graph.schemaRegistry ?? this._graph?.schemaRegistry;
+    const schemaResolvers: SchemaResolvers | undefined =
+      runtime == null ? undefined : { runtime: runtime as any, persistent: this._database?.schemaRegistry as any };
+    return new QueryResultImpl(new QueueQueryContext(this, this._ctx, schemaResolvers), queryWithScope);
   }
 
   async sync({

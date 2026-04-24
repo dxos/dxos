@@ -16,7 +16,14 @@ import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
 import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
-import { GraphQueryContext, type QueryContext, QueryResultImpl, type QuerySource, SpaceQuerySource } from './query';
+import {
+  GraphQueryContext,
+  type QueryContext,
+  QueryResultImpl,
+  type QuerySource,
+  type SchemaResolvers,
+  SpaceQuerySource,
+} from './query';
 import type { Queue, QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = false;
@@ -110,6 +117,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     return new QueryResultImpl(this._createLiveObjectQueryContext(), query);
+  }
+
+  /**
+   * Create a query context with optional schema resolvers for validation.
+   * @internal
+   */
+  _createQueryContext(options: { schemaResolvers?: SchemaResolvers } = {}): QueryContext {
+    return this._createLiveObjectQueryContext(options);
   }
 
   /**
@@ -416,7 +431,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this._updateEvent.emit(updateEvent);
   }
 
-  private _createLiveObjectQueryContext(): QueryContext {
+  private _createLiveObjectQueryContext({ schemaResolvers }: { schemaResolvers?: SchemaResolvers } = {}): QueryContext {
     const context = new GraphQueryContext({
       onStart: () => {
         this._queryContexts.add(context);
@@ -424,6 +439,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       onStop: () => {
         this._queryContexts.delete(context);
       },
+      schemaResolvers,
     });
 
     for (const database of this._databases.values()) {
