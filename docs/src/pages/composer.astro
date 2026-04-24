@@ -6,6 +6,7 @@ import IconChevronRight from '../components/svg/IconChevronRight.astro';
 import IconExternalLink from '../components/svg/IconExternalLink.astro';
 import IconGitHub from '../components/svg/IconGitHub.astro';
 import IconDiscord from '../components/svg/IconDiscord.astro';
+import IconBluesky from '../components/svg/IconBluesky.astro';
 import IconX from '../components/svg/IconX.astro';
 ---
 <WebflowLayout
@@ -24,8 +25,8 @@ import IconX from '../components/svg/IconX.astro';
             <div class="button-group">
               <div class="div-block-29">
                 <div show-subscribe="" class="show-subscribe">
-                  <div set-subscribe-cookie="" class="form-block w-form">
-                    <form id="wf-form-Early-access" name="wf-form-Early-access" data-name="Early-access" redirect="/composer-welcome" data-redirect="/composer-welcome" method="post" class="early-access-form" data-wf-page-id="66fab71bdf95a9e03ee9018b" data-wf-element-id="45bd54de-42f6-1ba6-4ed5-39d157bbf0d4"><input class="form-input w-input" maxlength="256" name="Email" data-name="Email" placeholder="Email" type="email" id="Email" required=""><input type="submit" data-wait="Please wait..." set-subscribe-cookie="" data-w-id="45bd54de-42f6-1ba6-4ed5-39d157bbf0d6" class="button is-secondary w-button" value="Request Access"></form>
+                  <div class="form-block w-form">
+                    <form class="early-access-form"><input class="form-input w-input" maxlength="256" name="email" placeholder="Email" type="email" id="Email" required><input type="submit" class="button is-secondary w-button" value="Request Access"></form>
                     <div class="success-message w-form-done">
                       <div>Thank you! Check your email to confirm your address</div>
                     </div>
@@ -40,7 +41,7 @@ import IconX from '../components/svg/IconX.astro';
                       <div class="heading-style-h5">You&#x27;re on the list! </div>
                       <div class="text-style-muted balanced">Please check your email to confirm your subscription. </div>
                     </div>
-                    <a data-w-id="d62d14e8-33a4-86a7-ca92-681e94fce8b4" href="composer-welcome.html" class="button is-secondary w-inline-block">
+                    <a href="/composer-welcome" class="button is-secondary w-inline-block">
                       <div>Welcome </div>
                       <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
                     </a>
@@ -51,6 +52,9 @@ import IconX from '../components/svg/IconX.astro';
                       </a>
                       <a href="https://dxos.org/discord" target="_blank" class="button is-link is-icon-only c w-inline-block">
                         <div class="icon-1x1-xsmall w-embed"><IconDiscord /></div>
+                      </a>
+                      <a href="https://bsky.app/profile/dxos.org" target="_blank" class="button is-link is-icon-only c w-inline-block">
+                        <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
                       </a>
                       <a href="https://x.com/dxos_org" target="_blank" class="button is-link is-icon-only c w-inline-block">
                         <div class="icon-1x1-xsmall w-embed"><IconX /></div>
@@ -748,8 +752,8 @@ import IconX from '../components/svg/IconX.astro';
             <div class="button-group is-center">
               <div class="div-block-29">
                 <div show-subscribe="" class="show-subscribe">
-                  <div set-subscribe-cookie="" class="form-block w-form">
-                    <form id="wf-form-Early-access" name="wf-form-Early-access" data-name="Early-access" redirect="/composer-welcome" data-redirect="/composer-welcome" method="post" class="early-access-form" data-wf-page-id="66fab71bdf95a9e03ee9018b" data-wf-element-id="45bd54de-42f6-1ba6-4ed5-39d157bbf0d4"><input class="form-input w-input" maxlength="256" name="Email" data-name="Email" placeholder="Email" type="email" id="Email" required=""><input type="submit" data-wait="Please wait..." set-subscribe-cookie="" data-w-id="45bd54de-42f6-1ba6-4ed5-39d157bbf0d6" class="button is-secondary w-button" value="Request Access"></form>
+                  <div class="form-block w-form">
+                    <form class="early-access-form"><input class="form-input w-input" maxlength="256" name="email" placeholder="Email" type="email" id="Email" required><input type="submit" class="button is-secondary w-button" value="Request Access"></form>
                     <div class="success-message w-form-done">
                       <div>Thank you! Check your email to confirm your address</div>
                     </div>
@@ -764,7 +768,7 @@ import IconX from '../components/svg/IconX.astro';
                       <div class="heading-style-h5">You&#x27;re on the list! </div>
                       <div class="text-style-muted balanced">Please check your email to confirm your subscription. </div>
                     </div>
-                    <a data-w-id="d62d14e8-33a4-86a7-ca92-681e94fce8b4" href="composer-welcome.html" class="button is-secondary w-inline-block">
+                    <a href="/composer-welcome" class="button is-secondary w-inline-block">
                       <div>Welcome </div>
                       <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
                     </a>
@@ -775,6 +779,9 @@ import IconX from '../components/svg/IconX.astro';
                       </a>
                       <a href="https://dxos.org/discord" target="_blank" class="button is-link is-icon-only c w-inline-block">
                         <div class="icon-1x1-xsmall w-embed"><IconDiscord /></div>
+                      </a>
+                      <a href="https://bsky.app/profile/dxos.org" target="_blank" class="button is-link is-icon-only c w-inline-block">
+                        <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
                       </a>
                       <a href="https://x.com/dxos_org" target="_blank" class="button is-link is-icon-only c w-inline-block">
                         <div class="icon-1x1-xsmall w-embed"><IconX /></div>
@@ -795,4 +802,30 @@ import IconX from '../components/svg/IconX.astro';
         </div>
       </div>
   <WebflowFooter accent="blue" />
+  <script is:inline>
+    document.querySelectorAll('.early-access-form').forEach(function (form) {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const email = form.querySelector('[name="email"]').value;
+        const block = form.closest('.w-form');
+        try {
+          const res = await fetch('https://hub.dxos.network/account/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          });
+          if (!res.ok) throw new Error('signup failed');
+          block.querySelector('.w-form-done').style.display = 'block';
+          form.style.display = 'none';
+          const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+          document.cookie = 'user_subscribed=true; expires=' + expires + '; path=/';
+          document.querySelectorAll('[show-subscribe]').forEach(function (el) { el.style.display = 'none'; });
+          document.querySelectorAll('[show-welcome]').forEach(function (el) { el.style.display = 'block'; });
+        } catch (_) {
+          block.querySelector('.w-form-fail').style.display = 'block';
+          form.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </WebflowLayout>
