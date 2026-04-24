@@ -24,59 +24,62 @@ import {
 export class SchemaValidatingQueryResult<
   T extends Entity.Unknown = Entity.Unknown,
 > implements QueryResult.QueryResult<T> {
+  readonly #inner: QueryResult.QueryResult<T>;
+  readonly #resolvers: SchemaResolvers;
+  readonly #queryAst: QueryAST.Query;
   #typenamesAsserted = false;
 
-  constructor(
-    private readonly _inner: QueryResult.QueryResult<T>,
-    private readonly _resolvers: SchemaResolvers,
-    private readonly _queryAst: QueryAST.Query,
-  ) {}
+  constructor(inner: QueryResult.QueryResult<T>, resolvers: SchemaResolvers, queryAst: QueryAST.Query) {
+    this.#inner = inner;
+    this.#resolvers = resolvers;
+    this.#queryAst = queryAst;
+  }
 
   // Cache the success of the assertion -- once typenames resolve successfully, skip subsequent
   // lookups on this instance. Failures are not cached so transient misses (e.g., late-registered
   // system types during space initialization) eventually succeed.
-  private _assertTypenames(): void {
+  #assertTypenames(): void {
     if (this.#typenamesAsserted) return;
-    assertQueryTypenamesResolvable(this._queryAst, this._resolvers);
+    assertQueryTypenamesResolvable(this.#queryAst, this.#resolvers);
     this.#typenamesAsserted = true;
   }
 
-  private _filterEntries(entries: QueryResult.Entry<T>[]): QueryResult.Entry<T>[] {
-    return filterEntriesWithResolvableSchema(this._queryAst, entries, this._resolvers);
+  #filterEntries(entries: QueryResult.Entry<T>[]): QueryResult.Entry<T>[] {
+    return filterEntriesWithResolvableSchema(this.#queryAst, entries, this.#resolvers);
   }
 
-  private _filterObjects(objects: T[]): T[] {
-    return filterObjectsWithResolvableSchema(this._queryAst, objects, this._resolvers);
+  #filterObjects(objects: T[]): T[] {
+    return filterObjectsWithResolvableSchema(this.#queryAst, objects, this.#resolvers);
   }
 
   get entries(): QueryResult.Entry<T>[] {
-    this._assertTypenames();
-    return this._filterEntries(this._inner.entries);
+    this.#assertTypenames();
+    return this.#filterEntries(this.#inner.entries);
   }
 
   get results(): T[] {
-    this._assertTypenames();
-    return this._filterObjects(this._inner.results);
+    this.#assertTypenames();
+    return this.#filterObjects(this.#inner.results);
   }
 
   async run(opts?: QueryResult.RunOptions): Promise<T[]> {
-    this._assertTypenames();
-    return this._filterObjects(await this._inner.run(opts));
+    this.#assertTypenames();
+    return this.#filterObjects(await this.#inner.run(opts));
   }
 
   async runEntries(opts?: QueryResult.RunOptions): Promise<QueryResult.Entry<T>[]> {
-    this._assertTypenames();
-    return this._filterEntries(await this._inner.runEntries(opts));
+    this.#assertTypenames();
+    return this.#filterEntries(await this.#inner.runEntries(opts));
   }
 
   runSync(): T[] {
-    this._assertTypenames();
-    return this._filterObjects(this._inner.runSync());
+    this.#assertTypenames();
+    return this.#filterObjects(this.#inner.runSync());
   }
 
   runSyncEntries(): QueryResult.Entry<T>[] {
-    this._assertTypenames();
-    return this._filterEntries(this._inner.runSyncEntries());
+    this.#assertTypenames();
+    return this.#filterEntries(this.#inner.runSyncEntries());
   }
 
   async first(opts?: QueryResult.RunOptions): Promise<T> {
@@ -93,10 +96,10 @@ export class SchemaValidatingQueryResult<
   }
 
   subscribe(callback?: (query: QueryResult.QueryResult<T>) => void, opts?: QueryResult.SubscriptionOptions): CleanupFn {
-    this._assertTypenames();
+    this.#assertTypenames();
     if (!callback) {
-      return this._inner.subscribe(undefined, opts);
+      return this.#inner.subscribe(undefined, opts);
     }
-    return this._inner.subscribe(() => callback(this), opts);
+    return this.#inner.subscribe(() => callback(this), opts);
   }
 }
