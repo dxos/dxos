@@ -10,7 +10,7 @@ import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
@@ -24,10 +24,11 @@ type Metadata = {
 export type ChatProps = ThemedClassName<{
   host?: string;
   onPing?: () => Promise<string | null>;
+  onClip?: () => void;
   url?: string;
 }>;
 
-export const Chat = ({ classNames, host, url }: ChatProps) => {
+export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
@@ -189,6 +190,14 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
             />
           </div>
         </div>
+      )}
+
+      {onClip && (
+        <Toolbar.Root>
+          <Toolbar.IconButton icon='ph--paperclip--regular' label={t('clip.button')} onClick={onClip} />
+          <Toolbar.Separator />
+          <Toolbar.Text classNames='text-sm'>{t('clip.hint.description')}</Toolbar.Text>
+        </Toolbar.Root>
       )}
     </div>
   );
