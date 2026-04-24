@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DXOS Log Plugin Example</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      h1 {
+        color: #333;
+      }
+      .log-section {
+        margin: 2rem 0;
+        padding: 1rem;
+        background: #f5f5f5;
+        border-radius: 8px;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        margin: 0.5rem;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background: #0066cc;
+        color: white;
+        font-size: 1rem;
+      }
+      button:hover {
+        background: #0055aa;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DXOS Vite Log Plugin Example</h1>
+    <p>This is a minimal test app for the <code>@dxos/vite-plugin-log</code> plugin.</p>
+
+    <div class="log-section">
+      <h2>Test Logging</h2>
+      <p>
+        Click the buttons below to trigger different log levels. Check the terminal and <code>app.log</code> file for
+        output.
+      </p>
+      <div>
+        <button id="btn-info">Log Info</button>
+        <button id="btn-warn">Log Warn</button>
+        <button id="btn-error">Log Error</button>
+        <button id="btn-debug">Log Debug</button>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <h2>Instructions</h2>
+      <ol>
+        <li>Run <code>pnpm dev</code> in this directory</li>
+        <li>Open the browser console to see client-side logs</li>
+        <li>Check the terminal for server-side log output</li>
+        <li>Check <code>app.log</code> file for persisted logs</li>
+      </ol>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
