@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vite-plugin-log",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Vite dev server plugin: stream @dxos/log NDJSON to a local file via HMR channel.",
   "homepage": "https://dxos.org",

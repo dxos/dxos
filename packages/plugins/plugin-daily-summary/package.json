@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-daily-summary",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Daily activity summary plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

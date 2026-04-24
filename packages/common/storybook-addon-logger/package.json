@@ -1,6 +1,6 @@
 {
   "name": "@dxos/storybook-addon-logger",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Storybook addon for logging.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
