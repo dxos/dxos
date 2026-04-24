@@ -10,7 +10,7 @@ import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
@@ -127,7 +127,16 @@ export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
   return (
     <div className={mx('flex flex-col gap-2 overflow-hidden bg-base-surface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
-      <div className='flex relative'>
+      <div role='toolbar' className='flex relative items-center'>
+        {onClip && (
+          <IconButton
+            variant='ghost'
+            icon='ph--paperclip--regular'
+            iconOnly
+            label={t('clip.button')}
+            onClick={onClip}
+          />
+        )}
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
@@ -190,14 +199,6 @@ export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
             />
           </div>
         </div>
-      )}
-
-      {onClip && (
-        <Toolbar.Root>
-          <Toolbar.IconButton icon='ph--paperclip--regular' label={t('clip.button')} onClick={onClip} />
-          <Toolbar.Separator />
-          <Toolbar.Text classNames='text-sm'>{t('clip.hint.description')}</Toolbar.Text>
-        </Toolbar.Root>
       )}
     </div>
   );
