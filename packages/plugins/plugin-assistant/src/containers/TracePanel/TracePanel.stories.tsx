@@ -204,10 +204,7 @@ const DefaultStory = () => {
 export const WithSnapshot: Story = {
   render: () => {
     const [space] = useSpaces();
-    const allFeeds = useQuery(space?.db, Query.type(Feed.Feed));
-    console.log({ allFeeds });
     const [feed] = useQuery(space?.db, FeedTraceSink.query);
-    console.log({ feed });
     const traceMessages = useQuery(
       space?.db,
       feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
@@ -215,13 +212,7 @@ export const WithSnapshot: Story = {
     dbg(traceMessages);
     const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
     dbg(commits);
-    return (
-      <div>
-        commits={commits.length} branches={branches.length}
-      </div>
-    );
-    // return <Timeline branches={branches} commits={commits} showTimestamp />;
-    // return null;
+    return <Timeline branches={branches} commits={commits} showTimestamp />;
   },
   decorators: [
     withTheme(),
@@ -234,11 +225,12 @@ export const WithSnapshot: Story = {
           onClientInitialized: ({ client }) =>
             Effect.promise(async () => {
               await client.halo.createIdentity();
-              const data = await import('../../testing/data/email-agent-trace.dx.json');
-              await client.spaces.import({
+              const data = await import('../../testing/data/trace-timeline.dx.json');
+              const space = await client.spaces.import({
                 filename: 'trace-events.dx.json',
                 contents: new TextEncoder().encode(JSON.stringify(data)),
               });
+              await space.db.flush();
             }),
         }),
       ],
