@@ -695,7 +695,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const snapshot = { ...getSnapshot(currentRow) };
       setValue(snapshot, field.path, transformedValue);
 
-      const schema = Obj.getSchema(currentRow);
+      const schema = Obj.getSchema(currentRow as unknown as Obj.Unknown);
       invariant(schema);
 
       const validationResult = validateSchema(schema, snapshot);

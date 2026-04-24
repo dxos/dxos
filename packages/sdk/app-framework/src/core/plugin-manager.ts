@@ -70,7 +70,12 @@ export interface PluginManager {
   getEventsFired(): readonly string[];
   getPendingReset(): readonly string[];
 
-  add(id: string): Effect.Effect<boolean, Error>;
+  /**
+   * Loads a plugin via the plugin loader and registers it without enabling it.
+   * Returns the loaded plugin so callers can enable it by its canonical id
+   * (which may differ from the locator used to load it, e.g. URL loaders).
+   */
+  add(id: string): Effect.Effect<Plugin.Plugin, Error>;
   enable(id: string): Effect.Effect<boolean, Error>;
   remove(id: string): boolean;
   disable(id: string): Effect.Effect<boolean, Error>;
@@ -220,14 +225,15 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Adds a plugin to the manager via the plugin loader.
+   * The plugin is registered but not enabled; call `enable` separately to activate it.
    * @param id The id of the plugin.
    */
-  add(id: string): Effect.Effect<boolean, Error> {
+  add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
       const plugin = yield* this._pluginLoader(id);
       this._addPlugin(plugin);
-      return yield* this.enable(plugin.meta.id);
+      return plugin;
     });
   }
 

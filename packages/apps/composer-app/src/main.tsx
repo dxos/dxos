@@ -33,7 +33,13 @@ import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
-import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
+import {
+  defaultStorageIsEmpty,
+  isFalse,
+  isTrue,
+  runStorageResetMigration,
+  shouldRunStorageResetMigration,
+} from './util';
 
 declare global {
   interface ImportMeta {
@@ -105,6 +111,13 @@ const main = async () => {
   profiler?.mark('config:start');
 
   let config = await setupConfig();
+
+  if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
+    await runStorageResetMigration();
+    window.location.replace(window.location.href);
+    return;
+  }
+
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))

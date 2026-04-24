@@ -56,12 +56,14 @@ export const makeDeckCompanion = <TData = any>({
   icon,
   data,
   position,
+  joyride,
 }: {
   id: string;
   label: Label;
   icon: string;
   data: TData;
   position?: Position;
+  joyride?: string;
 }): Node.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
@@ -71,6 +73,7 @@ export const makeDeckCompanion = <TData = any>({
     icon,
     disposition: 'hidden',
     ...(position !== undefined && { position }),
+    ...(joyride !== undefined && { joyride }),
   },
 });
 

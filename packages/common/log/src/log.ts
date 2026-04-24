@@ -3,7 +3,7 @@
 //
 
 import { type LogConfig, LogLevel, type LogOptions } from './config';
-import { type LogContext, type LogProcessor } from './context';
+import { type LogContext, LogEntry, type LogProcessor } from './context';
 import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
 import { createConfig } from './options';
@@ -98,15 +98,8 @@ export const createLog = (): LogImp => {
     error?: Error,
   ) => {
     // TODO(burdon): Do the filter matching upstream (here) rather than in each processor?
-    log._config.processors.forEach((processor) =>
-      processor(log._config, {
-        level,
-        message,
-        context,
-        meta,
-        error,
-      }),
-    );
+    const entry = new LogEntry({ level, message, context, meta, error });
+    log._config.processors.forEach((processor) => processor(log._config, entry));
   };
 
   /**

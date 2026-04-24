@@ -21,7 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Operation, type OperationRegistry } from '@dxos/operation';
-import { Message } from '@dxos/types';
+import { Message, type ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
 import {
@@ -41,7 +41,7 @@ export interface McpServerConfig {
 }
 
 export interface AiSessionRunProps<R = never> {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
