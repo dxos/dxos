@@ -5,8 +5,14 @@
 import { mx } from '@dxos/ui-theme';
 import { type ClassNameValue } from '@dxos/ui-types';
 
-// From icon-plugin.
-const ICONS_URL = '/icons.svg';
+/**
+ * Base URL of the icon sprite sheet emitted by `@dxos/vite-plugin-icons`.
+ * Defaults to `/icons.svg` which works inside hosted apps served at the
+ * site root. Callers running in a different origin context (e.g. browser
+ * extensions that inject into arbitrary pages) can override by assigning
+ * `Domino.iconsUrl` before first use.
+ */
+const DEFAULT_ICONS_URL = '/icons.svg';
 
 /**
  * Super lightweight chainable DOM builder.
@@ -14,8 +20,11 @@ const ICONS_URL = '/icons.svg';
 export class Domino<T extends HTMLElement | SVGElement> {
   static SVG = 'http://www.w3.org/2000/svg';
 
+  /** Overridable at module level so `Domino.svg()` can resolve from any origin. */
+  static iconsUrl: string = DEFAULT_ICONS_URL;
+
   // TODO(burdon): Make private.
-  static icon = (icon: string) => ICONS_URL + '#' + icon;
+  static icon = (icon: string) => Domino.iconsUrl + '#' + icon;
 
   /**
    * Creates an SVG icon element from the icon sprite sheet.
@@ -83,8 +92,27 @@ export class Domino<T extends HTMLElement | SVGElement> {
     return this;
   }
 
-  on(event: string, handler: (e: Event) => void): this {
-    this._el.addEventListener(event, handler);
+  /**
+   * Typed event listener. Accepts the standard `AddEventListenerOptions`
+   * third argument so callers can opt into `capture`, `once`, `passive`.
+   */
+  on<K extends keyof HTMLElementEventMap>(
+    event: K,
+    handler: (e: HTMLElementEventMap[K]) => void,
+    options?: boolean | AddEventListenerOptions,
+  ): this;
+  on(event: string, handler: (e: Event) => void, options?: boolean | AddEventListenerOptions): this;
+  on(event: string, handler: (e: Event) => void, options?: boolean | AddEventListenerOptions): this {
+    this._el.addEventListener(event, handler, options);
+    return this;
+  }
+
+  /**
+   * Convenience for attaching the root element to a parent node — useful at
+   * the end of a chain to avoid a trailing `.root` / `parent.appendChild()`.
+   */
+  mount(parent: Node): this {
+    parent.appendChild(this._el);
     return this;
   }
 

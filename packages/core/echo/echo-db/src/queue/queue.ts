@@ -58,7 +58,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       }
 
       const decodedObjects = await Promise.all(
-        (objects ?? []).map(async (obj) => {
+        (objects ?? []).map(async (encoded) => {
+          let obj: ObjectJSON;
+          try {
+            obj = JSON.parse(encoded) as ObjectJSON;
+          } catch (err) {
+            log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
+            return undefined;
+          }
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
@@ -204,15 +211,15 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     }
     this.updated.emit();
 
-    const json = items.map((item) => Entity.toJSON(item));
+    const encoded = items.map((item) => JSON.stringify(Entity.toJSON(item)));
 
     try {
-      for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
+      for (let i = 0; i < encoded.length; i += QUEUE_APPEND_BATCH_SIZE) {
         await this._service.insertIntoQueue({
           subspaceTag: this._subspaceTag,
           spaceId: this._spaceId,
           queueId: this._queueId,
-          objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
+          objects: encoded.slice(i, i + QUEUE_APPEND_BATCH_SIZE),
         });
       }
     } catch (err) {
@@ -305,7 +312,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         queueIds: [this._queueId],
       },
     });
-    return objects as ObjectJSON[];
+    return (objects ?? []).map((encoded) => JSON.parse(encoded) as ObjectJSON);
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {

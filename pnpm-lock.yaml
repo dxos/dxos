@@ -274,8 +274,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.1.4
-      version: 2.1.4
+      specifier: 2.2.3
+      version: 2.2.3
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -1980,7 +1980,7 @@ importers:
         version: 0.29.0(effect@3.20.0)(vitest@4.1.5)
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.1.4
+        version: 2.2.3
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -2130,7 +2130,7 @@ importers:
         version: 3.23.2
       fast-xml-parser:
         specifier: '>=5.3.6'
-        version: 5.3.7
+        version: 5.7.1
       glob:
         specifier: '>=10.5.0'
         version: 13.0.3
@@ -2163,7 +2163,7 @@ importers:
         version: 8.0.0(typescript@6.0.3)
       minimatch:
         specifier: '>=10.2.1'
-        version: 10.2.2
+        version: 10.2.5
       node-fetch:
         specifier: 'catalog:'
         version: 2.7.0
@@ -2390,6 +2390,12 @@ importers:
       '@dxos/plugin-conductor':
         specifier: workspace:*
         version: link:../../plugins/plugin-conductor
+      '@dxos/plugin-crx':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-crx
+      '@dxos/plugin-crx-bridge':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-crx-bridge
       '@dxos/plugin-daily-summary':
         specifier: workspace:*
         version: link:../../plugins/plugin-daily-summary
@@ -3036,6 +3042,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../../ui/ui
       agents:
         specifier: 'catalog:'
         version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@4.20260303.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)
@@ -5621,7 +5630,7 @@ importers:
         version: 3.6.0
       fast-xml-parser:
         specifier: '>=5.3.6'
-        version: 5.3.7
+        version: 5.7.1
       jsonata:
         specifier: 'catalog:'
         version: 2.1.0
@@ -8456,6 +8465,89 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-crx:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.3)(scheduler@0.27.0)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+
+  packages/plugins/plugin-crx-bridge:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.27.3)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.10))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/plugins/plugin-daily-summary:
     dependencies:
       '@dxos/ai':
@@ -9177,6 +9269,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9216,6 +9311,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -9230,7 +9328,7 @@ importers:
         version: 3.6.0
       fast-xml-parser:
         specifier: '>=5.3.6'
-        version: 5.3.7
+        version: 5.7.1
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -11674,6 +11772,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -18888,6 +18989,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
+      '@fluentui/react-tabster':
+        specifier: 'catalog:'
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -20271,7 +20375,7 @@ importers:
         version: 4.6.1
       minimatch:
         specifier: '>=10.2.1'
-        version: 10.2.2
+        version: 10.2.5
       ts-morph:
         specifier: 'catalog:'
         version: 16.0.0
@@ -20563,7 +20667,7 @@ importers:
     dependencies:
       minimatch:
         specifier: '>=10.2.1'
-        version: 10.2.2
+        version: 10.2.5
       oxc-resolver:
         specifier: 'catalog:'
         version: 11.9.0
@@ -23568,41 +23672,46 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.1.4':
-    resolution: {integrity: sha512-u8PZQIT/k9h/EIQEjEcmtd4vQBr7KqnLaG+uFqhiZTIe++RTtgMlH8GYMoqLwg2VHGIxV0OURMGt9x8Qjm9/EQ==}
+  '@moonrepo/cli@2.2.3':
+    resolution: {integrity: sha512-Y2yX2yw2ieRQ8/LHmlLgJT0RGPcPbKlrmpTw/trsrMuW5UElzqgObztf1bB3jbOfTVjcbWmNqKP7aDDST0u3/w==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.1.4':
-    resolution: {integrity: sha512-pEp0GMHOT5hJrfL4q3zecvbUJ0xYWVqNzWFPFJWTZxbhTWYCbuOTGTPCpT21XY9URIJHUGKc+m8PXMc7DrRYow==}
+  '@moonrepo/core-linux-arm64-gnu@2.2.3':
+    resolution: {integrity: sha512-O2mLzDvgJd7Bgxkvq37RJsm9XAG5avA+7cD49ZIgeBKlGD8+3KZ+DmOz5SD1CELaxXrgOSh2c2vorlBzaXNmZA==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-arm64-musl@2.1.4':
-    resolution: {integrity: sha512-U42RJD2io986lQQ+uUmWElAIMSWfuoyXpao2aHuMn/ACxOi5xPTozPWkoLb1v53w+irCbsD8WVovJ4wY+vB/VQ==}
+  '@moonrepo/core-linux-arm64-musl@2.2.3':
+    resolution: {integrity: sha512-QD5mStzFfkhDb5Fha8Jw/rX3SlnOkSKsyBJWsMWn5WahCqV0NMOOOf4PrAAywO3NTKDorGEipqGJdqec7lIizg==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-linux-x64-gnu@2.1.4':
-    resolution: {integrity: sha512-NvcevuDLzMeGFAYqNVNHZJ5C2hx5GJerUW5Snwi+28/KcPpNq2z31W5c8EivUzsc1iopV6Oy85FEohNzci9sPw==}
+  '@moonrepo/core-linux-x64-gnu@2.2.3':
+    resolution: {integrity: sha512-Ip68pMsXbVVfCOb3csWFv3jQtatbbHuLgQ50MUVRx8VYi2L8sPwVTGuyU57tNcMLXqeOCJxgBrTvFq/U9ElQ5g==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-x64-musl@2.1.4':
-    resolution: {integrity: sha512-f00vupGU1pUie/ycuj9v6iRL2cP318pS2dxBH4iI6M83xVw3BL2FxIoXklk5Ji3P7EJhIG48j7dKVID6VdrNVA==}
+  '@moonrepo/core-linux-x64-musl@2.2.3':
+    resolution: {integrity: sha512-10bUudg3eTrs0N/4tbH2CFWoOEuf3K7WhTypop4zArPCrq5sl5rG2Ik/wZNn40h4JdF09I7A2ZCGWlubsudd5g==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-macos-arm64@2.1.4':
-    resolution: {integrity: sha512-4bdSgstioFiBKx26uu6U1G0n5Sk8JpkpxfVj3zsNITFfT3fdS5oBMU8Z18uYIf4v1l3poIQ7r0T2R1MdMOkJyw==}
+  '@moonrepo/core-macos-arm64@2.2.3':
+    resolution: {integrity: sha512-5/2cVkMVwsS/3aKPe5xzL8eegZz3V74xE7Wruf847UavfN0YuoIew14PfaTz5Pt69hAapdnXDiF8kmbSaKkWKA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.1.4':
-    resolution: {integrity: sha512-KhkxZ1aJVeRsrOOrDlE6oB5gDny0ETOQdIoDFBFR6hDEGZ4OFHrRBScLjwK7RteQGCV1YKo47uIiIbmIN1wMvg==}
+  '@moonrepo/core-macos-x64@2.2.3':
+    resolution: {integrity: sha512-T23dHlXqZWUkxLu45Piy8jxlzEImAurWQN1TVr06oTxZMSSTqzfyY+2Vk6GuyYnsZg0ELNnPW2ljnkEkczzy0g==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@moonrepo/core-windows-x64-msvc@2.2.3':
+    resolution: {integrity: sha512-ez8/0AnMdzfUtbDitynJtR10PhG7CME3UCavLamE5BvV7dHUvtzLHipxVZIHWGx0gTEtQx6XpyDukYOozXGVlA==}
     cpu: [x64]
     os: [win32]
 
@@ -23665,6 +23774,9 @@ packages:
   '@noble/hashes@1.3.2':
     resolution: {integrity: sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==}
     engines: {node: '>= 16'}
+
+  '@nodable/entities@2.1.0':
+    resolution: {integrity: sha512-nyT7T3nbMyBI/lvr6L5TyWbFJAI9FTgVRakNoBqCD+PmID8DzFrrNdLLtHMwMszOtqZa8PAOV24ZqDnQrhQINA==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -29614,9 +29726,9 @@ packages:
     resolution: {integrity: sha512-F3PH5k5juxom4xktynS7MoFY+NUWH5LC4CnH11YB8NPew+HLpmBLCybSAEyb2F+4pRXhuhWqFesoQd6DAyc2hw==}
     engines: {node: '>=18'}
 
-  brace-expansion@5.0.2:
-    resolution: {integrity: sha512-Pdk8c9poy+YhOgVWw1JNN22/HcivgKWwpxKq04M/jTmHyCZn12WPJebZxdjSa5TmBqISrUSgNYU3eRORljfCCw==}
-    engines: {node: 20 || >=22}
+  brace-expansion@5.0.5:
+    resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
+    engines: {node: 18 || 20 || >=22}
 
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
@@ -31662,8 +31774,11 @@ packages:
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
 
-  fast-xml-parser@5.3.7:
-    resolution: {integrity: sha512-JzVLro9NQv92pOM/jTCR6mHlJh2FGwtomH8ZQjhFj/R29P2Fnj38OgPJVtcvYw6SuKClhgYuwUZf5b3rd8u2mA==}
+  fast-xml-builder@1.1.5:
+    resolution: {integrity: sha512-4TJn/8FKLeslLAH3dnohXqE3QSoxkhvaMzepOIZytwJXZO69Bfz0HBdDHzOTOon6G59Zrk6VQ2bEiv1t61rfkA==}
+
+  fast-xml-parser@5.7.1:
+    resolution: {integrity: sha512-8Cc3f8GUGUULg34pBch/KGyPLglS+OFs05deyOlY7fL2MTagYPKrVQNmR1fLF/yJ9PH5ZSTd3YDF6pnmeZU+zA==}
     hasBin: true
 
   fastest-stable-stringify@2.0.2:
@@ -34460,8 +34575,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  minimatch@10.2.2:
-    resolution: {integrity: sha512-+G4CpNBxa5MprY+04MbgOw1v7So6n5JY166pFi9KfYwT78fxScCeSNQSNzp6dpPSW2rONOps6Ocam1wFhCgoVw==}
+  minimatch@10.2.5:
+    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
 
   minimist-options@4.1.0:
@@ -35215,6 +35330,10 @@ packages:
   path-exists@4.0.0:
     resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
     engines: {node: '>=8'}
+
+  path-expression-matcher@1.5.0:
+    resolution: {integrity: sha512-cbrerZV+6rvdQrrD+iGMcZFEiiSrbv9Tfdkvnusy6y0x0GKBXREFg/Y65GhIfm0tnLntThhzCnfKwp1WRjeCyQ==}
+    engines: {node: '>=14.0.0'}
 
   path-is-inside@1.0.2:
     resolution: {integrity: sha512-DUWJr3+ULp4zXmol/SZkFf3JGsS9/SIv+Y3Rt93/UjPpDpklB5f1er4O3POIbUuUJ3FXgqte2Q7SrU6zAqwk8w==}
@@ -37179,8 +37298,8 @@ packages:
   striptags@3.2.0:
     resolution: {integrity: sha512-g45ZOGzHDMe2bdYMdIvdAfCQkCTDMGBazSw1ypMowwGIee7ZQ5dU0rBJ8Jqgl+jAKIv4dbeE1jscZq9wid1Tkw==}
 
-  strnum@2.1.2:
-    resolution: {integrity: sha512-l63NF9y/cLROq/yqKXSLtcMeeyOfnSQlfMSlzFt/K73oIaD8DGaQWd7Z34X9GPiKqP5rbSh84Hl4bOlLcjiSrQ==}
+  strnum@2.2.3:
+    resolution: {integrity: sha512-oKx6RUCuHfT3oyVjtnrmn19H1SiCqgJSg+54XqURKp5aCMbrXrhLjRN9TjuwMjiYstZ0MzDrHqkGZ5dFTKd+zg==}
 
   strtok3@6.3.0:
     resolution: {integrity: sha512-fZtbhtvI9I48xDSywd/somNqgUHl2L2cstmXCCif0itOf96jeW18MBSyrLuNicYQVkvpOxkZtkzujiTJ9LW5Jw==}
@@ -40005,7 +40124,7 @@ snapshots:
   '@aws-sdk/xml-builder@3.953.0':
     dependencies:
       '@smithy/types': 4.11.0
-      fast-xml-parser: 5.3.7
+      fast-xml-parser: 5.7.1
       tslib: 2.8.1
 
   '@aws/lambda-invoke-store@0.2.2': {}
@@ -41852,7 +41971,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 3.0.3
       debug: 4.4.3(supports-color@5.5.0)
-      minimatch: 10.2.2
+      minimatch: 10.2.5
     transitivePeerDependencies:
       - supports-color
 
@@ -42854,33 +42973,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.1.4':
+  '@moonrepo/cli@2.2.3':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.1.4
-      '@moonrepo/core-linux-arm64-musl': 2.1.4
-      '@moonrepo/core-linux-x64-gnu': 2.1.4
-      '@moonrepo/core-linux-x64-musl': 2.1.4
-      '@moonrepo/core-macos-arm64': 2.1.4
-      '@moonrepo/core-windows-x64-msvc': 2.1.4
+      '@moonrepo/core-linux-arm64-gnu': 2.2.3
+      '@moonrepo/core-linux-arm64-musl': 2.2.3
+      '@moonrepo/core-linux-x64-gnu': 2.2.3
+      '@moonrepo/core-linux-x64-musl': 2.2.3
+      '@moonrepo/core-macos-arm64': 2.2.3
+      '@moonrepo/core-macos-x64': 2.2.3
+      '@moonrepo/core-windows-x64-msvc': 2.2.3
 
-  '@moonrepo/core-linux-arm64-gnu@2.1.4':
+  '@moonrepo/core-linux-arm64-gnu@2.2.3':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.1.4':
+  '@moonrepo/core-linux-arm64-musl@2.2.3':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.1.4':
+  '@moonrepo/core-linux-x64-gnu@2.2.3':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.1.4':
+  '@moonrepo/core-linux-x64-musl@2.2.3':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.1.4':
+  '@moonrepo/core-macos-arm64@2.2.3':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.1.4':
+  '@moonrepo/core-macos-x64@2.2.3':
+    optional: true
+
+  '@moonrepo/core-windows-x64-msvc@2.2.3':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
@@ -42951,6 +43074,8 @@ snapshots:
       uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
 
   '@noble/hashes@1.3.2': {}
+
+  '@nodable/entities@2.1.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -47220,7 +47345,7 @@ snapshots:
   '@ts-morph/common@0.17.0':
     dependencies:
       fast-glob: 3.3.3
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       mkdirp: 1.0.4
       path-browserify: 1.0.1
 
@@ -47855,7 +47980,7 @@ snapshots:
       debug: 4.4.3(supports-color@5.5.0)
       fast-glob: 3.3.3
       is-glob: 4.0.3
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       semver: 7.7.3
       ts-api-utils: 2.1.0(typescript@6.0.3)
       typescript: 6.0.3
@@ -48192,7 +48317,7 @@ snapshots:
       leven: 3.1.0
       markdown-it: 14.1.0
       mime: 1.6.0
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       parse-semver: 1.1.1
       read: 1.0.7
       secretlint: 10.2.2
@@ -49783,7 +49908,7 @@ snapshots:
       widest-line: 5.0.0
       wrap-ansi: 9.0.2
 
-  brace-expansion@5.0.2:
+  brace-expansion@5.0.5:
     dependencies:
       balanced-match: 4.0.2
 
@@ -51178,7 +51303,7 @@ snapshots:
       js-yaml: 3.14.1
       json5: 2.2.3
       lodash: 4.17.23
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       multimatch: 5.0.0
       please-upgrade-node: 3.2.0
       readdirp: 3.6.0
@@ -51477,7 +51602,7 @@ snapshots:
     dependencies:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       semver: 7.7.3
 
   ee-first@1.1.1: {}
@@ -51761,7 +51886,7 @@ snapshots:
       eslint: 10.0.3(jiti@2.6.1)
       eslint-import-context: 0.1.9(unrs-resolver@1.11.1)
       is-glob: 4.0.3
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       semver: 7.7.3
       stable-hash-x: 0.2.0
       unrs-resolver: 1.11.1
@@ -51819,7 +51944,7 @@ snapshots:
       imurmurhash: 0.1.4
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
@@ -52143,9 +52268,16 @@ snapshots:
 
   fast-uri@3.0.6: {}
 
-  fast-xml-parser@5.3.7:
+  fast-xml-builder@1.1.5:
     dependencies:
-      strnum: 2.1.2
+      path-expression-matcher: 1.5.0
+
+  fast-xml-parser@5.7.1:
+    dependencies:
+      '@nodable/entities': 2.1.0
+      fast-xml-builder: 1.1.5
+      path-expression-matcher: 1.5.0
+      strnum: 2.2.3
 
   fastest-stable-stringify@2.0.2: {}
 
@@ -52259,7 +52391,7 @@ snapshots:
 
   filelist@1.0.4:
     dependencies:
-      minimatch: 10.2.2
+      minimatch: 10.2.5
 
   filing-cabinet@5.0.3:
     dependencies:
@@ -52691,7 +52823,7 @@ snapshots:
 
   glob@13.0.3:
     dependencies:
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       minipass: 7.1.2
       path-scurry: 2.0.1
 
@@ -54022,7 +54154,7 @@ snapshots:
       async: 3.2.5
       chalk: 4.1.2
       filelist: 1.0.4
-      minimatch: 10.2.2
+      minimatch: 10.2.5
 
   javascript-natural-sort@0.7.1: {}
 
@@ -54799,7 +54931,7 @@ snapshots:
       commander: 13.1.0
       convert-source-map: 2.0.0
       esbuild-wasm: 0.16.17
-      fast-xml-parser: 5.3.7
+      fast-xml-parser: 5.7.1
       fflate: 0.8.2
       magic-string: 0.30.21
 
@@ -55715,9 +55847,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  minimatch@10.2.2:
+  minimatch@10.2.5:
     dependencies:
-      brace-expansion: 5.0.2
+      brace-expansion: 5.0.5
 
   minimist-options@4.1.0:
     dependencies:
@@ -55780,7 +55912,7 @@ snapshots:
       he: 1.2.0
       js-yaml: 4.1.1
       log-symbols: 4.1.0
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       ms: 2.1.3
       serialize-javascript: 6.0.2
       strip-json-comments: 3.1.1
@@ -55862,7 +55994,7 @@ snapshots:
       array-differ: 3.0.0
       array-union: 2.1.0
       arrify: 2.0.1
-      minimatch: 10.2.2
+      minimatch: 10.2.5
 
   multipasta@0.2.7: {}
 
@@ -56637,6 +56769,8 @@ snapshots:
   path-exists@3.0.0: {}
 
   path-exists@4.0.0: {}
+
+  path-expression-matcher@1.5.0: {}
 
   path-is-inside@1.0.2: {}
 
@@ -57659,7 +57793,7 @@ snapshots:
 
   readdir-glob@1.1.3:
     dependencies:
-      minimatch: 10.2.2
+      minimatch: 10.2.5
 
   readdirp@3.6.0:
     dependencies:
@@ -58405,7 +58539,7 @@ snapshots:
       bytes: 3.0.0
       content-disposition: 0.5.2
       mime-types: 2.1.18
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       path-is-inside: 1.0.2
       path-to-regexp: 8.3.0
       range-parser: 1.2.0
@@ -59215,7 +59349,7 @@ snapshots:
 
   striptags@3.2.0: {}
 
-  strnum@2.1.2: {}
+  strnum@2.2.3: {}
 
   strtok3@6.3.0:
     dependencies:
@@ -59477,7 +59611,7 @@ snapshots:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 13.0.3
-      minimatch: 10.2.2
+      minimatch: 10.2.5
 
   text-decoder@1.2.7:
     dependencies:
@@ -59915,7 +60049,7 @@ snapshots:
       '@gerrit0/mini-shiki': 3.4.0
       lunr: 2.3.9
       markdown-it: 14.1.0
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       typescript: 6.0.3
       yaml: 2.8.2
 
@@ -60220,7 +60354,7 @@ snapshots:
       buffer-indexof-polyfill: 1.0.2
       duplexer2: 0.1.4
       fstream: 1.0.12
-      graceful-fs: 4.2.11
+      graceful-fs: 4.2.10
       listenercount: 1.0.1
       readable-stream: 2.3.7
       setimmediate: 1.0.5
@@ -60681,7 +60815,7 @@ snapshots:
       is-plain-obj: 4.1.0
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
-      minimatch: 10.2.2
+      minimatch: 10.2.5
       puppeteer-core: 20.9.0(typescript@6.0.3)
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0
