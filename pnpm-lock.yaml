@@ -3035,6 +3035,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../../ui/ui
       agents:
         specifier: 'catalog:'
         version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.3)(zod@4.1.12))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@4.20260303.0)(ai@6.0.97(zod@4.1.12))(react@19.2.3)(zod@4.1.12)

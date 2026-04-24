@@ -8,9 +8,10 @@ export type ClipKindDef = {
   kind: ClipKind;
   label: string;
   /**
-   * Emoji used in the picker toolbar. Kept as a literal character (rather
-   * than a Phosphor icon name) so the picker doesn't need the DXOS icon
-   * sprite, which isn't available to content scripts on arbitrary pages.
+   * Phosphor icon symbol name, as emitted into the extension's icon sprite
+   * by `@dxos/vite-plugin-icons`. Rendered via `Domino.svg()`; the picker
+   * sets `Domino.iconsUrl` to the extension's runtime URL so the sprite
+   * resolves even when the picker is injected into an arbitrary page.
    */
   icon: string;
 };
@@ -21,7 +22,7 @@ export type ClipKindDef = {
  * `mapping.ts` + `Clip.SUPPORTED_KINDS`.
  */
 export const CLIP_KINDS: readonly ClipKindDef[] = [
-  { kind: 'person', label: 'Person', icon: '👤' },
-  { kind: 'organization', label: 'Organization', icon: '🏢' },
-  { kind: 'note', label: 'Note', icon: '📝' },
+  { kind: 'person', label: 'Person', icon: 'ph--user--regular' },
+  { kind: 'organization', label: 'Organization', icon: 'ph--building-office--regular' },
+  { kind: 'note', label: 'Note', icon: 'ph--note--regular' },
 ];
