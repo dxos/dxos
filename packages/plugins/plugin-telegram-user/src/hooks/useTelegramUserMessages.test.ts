@@ -52,10 +52,30 @@ describe('extractChatInfo', () => {
 describe('normalizeMessage', () => {
   const chat = { id: '42', title: 'Bob', type: 'user' as const, unread: 0 };
 
-  test('returns undefined for messages with no text (media-only, service, etc.)', ({ expect }) => {
+  test('returns undefined for service messages with no text and no media', ({ expect }) => {
     expect(normalizeMessage({ id: 1, message: '', date: 100 }, chat)).toBeUndefined();
     expect(normalizeMessage({ id: 1, message: undefined, date: 100 }, chat)).toBeUndefined();
     expect(normalizeMessage({ id: 1, date: 100 }, chat)).toBeUndefined();
+  });
+
+  test('renders [media] for photo-only messages', ({ expect }) => {
+    const out = normalizeMessage({ id: 1, message: '', date: 100, photo: { id: 'abc' } }, chat);
+    expect(out?.text).toBe('[media]');
+  });
+
+  test('renders [media] for messages with msg.media set', ({ expect }) => {
+    const out = normalizeMessage({ id: 1, date: 100, media: { className: 'MessageMediaPhoto' } }, chat);
+    expect(out?.text).toBe('[media]');
+  });
+
+  test('renders [media] for sticker messages', ({ expect }) => {
+    const out = normalizeMessage({ id: 1, message: '', date: 100, sticker: {} }, chat);
+    expect(out?.text).toBe('[media]');
+  });
+
+  test('still prefers real text over [media] placeholder when both are present', ({ expect }) => {
+    const out = normalizeMessage({ id: 1, message: 'caption', date: 100, photo: {} }, chat);
+    expect(out?.text).toBe('caption');
   });
 
   test('populates a minimal message from chat info + msg.message', ({ expect }) => {

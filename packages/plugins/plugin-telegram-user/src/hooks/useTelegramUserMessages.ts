@@ -65,7 +65,9 @@ export const useTelegramUserMessages = (client: any | null) => {
           if (chatInfo) {
             trackChat(chatInfo);
           }
-          if (dialog.message && typeof dialog.message.message === 'string' && dialog.message.message.length > 0) {
+          // normalizeMessage handles the text-vs-media decision itself; let it run
+          // on anything we got back and just use its undefined return as the filter.
+          if (dialog.message) {
             const normalized = normalizeMessage(dialog.message, chatInfo);
             if (normalized) {
               seed.push(normalized);
@@ -161,9 +163,27 @@ export const extractChatInfo = (entity: any): TelegramUserChat | undefined => {
   return undefined;
 };
 
+/** Heuristic: does this gramjs Message have attached media we should surface as [media]? */
+const hasMedia = (msg: any): boolean => {
+  if (!msg) {
+    return false;
+  }
+  if (msg.media) {
+    return true;
+  }
+  if (msg.photo || msg.document || msg.video || msg.audio || msg.sticker || msg.voice) {
+    return true;
+  }
+  return false;
+};
+
 /** Flatten a gramjs Message into the feed's shape. */
 export const normalizeMessage = (msg: any, chat: TelegramUserChat | undefined): TelegramUserMessage | undefined => {
-  const text = typeof msg?.message === 'string' ? msg.message : '';
+  const rawText = typeof msg?.message === 'string' ? msg.message : '';
+  // If text is empty but media is attached, render a [media] placeholder
+  // instead of dropping the message. Matches the behavior documented in
+  // the plugin README and keeps the unified inbox complete.
+  const text = rawText || (hasMedia(msg) ? '[media]' : '');
   if (!text) {
     return undefined;
   }
