@@ -215,7 +215,12 @@ export const WithSnapshot: Story = {
     dbg(traceMessages);
     const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
     dbg(commits);
-    return <Timeline branches={branches} commits={commits} showTimestamp />;
+    return (
+      <div>
+        commits={commits.length} branches={branches.length}
+      </div>
+    );
+    // return <Timeline branches={branches} commits={commits} showTimestamp />;
     // return null;
   },
   decorators: [
