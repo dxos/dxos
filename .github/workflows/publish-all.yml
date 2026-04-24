@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
-  id-token: write # Required for npm trusted publisher OIDC
+  contents: write # Required to upload release assets.
+  id-token: write # Required for npm trusted publisher OIDC.
 
 jobs:
   publish:
@@ -127,5 +127,5 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: github.event_name == 'release' && github.event.action == 'published'

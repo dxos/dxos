@@ -5,6 +5,11 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write # Required to push update branches.
+  pull-requests: write # Required to open dependency PRs.
+  packages: read # Required to pull the container image from ghcr.
+
 jobs:
   update:
     strategy:
@@ -44,14 +49,14 @@ jobs:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
-        password: ${{ secrets.CREATE_PR_TOKEN }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           lfs: true
-          token: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract branch
         id: extract_branch
@@ -74,4 +79,4 @@ jobs:
           delete-branch: true
           title: 'chore: Update ${{ matrix.packages.name }} dependencies'
           draft: false
-          token: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
