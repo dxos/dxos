@@ -230,7 +230,7 @@ const collectQueueMessages = async (echoHost: EchoHost, queueDxn: DXN): Promise<
         after: cursor,
       },
     });
-    const batch = (result.objects ?? []) as Obj.JSON[];
+    const batch = (result.objects ?? []).map((encoded) => JSON.parse(encoded) as Obj.JSON);
     if (batch.length === 0) {
       break;
     }
