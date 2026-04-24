@@ -12,7 +12,11 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { AutomergeReplicatorConnection } from './echo-replicator';
+import type {
+  AutomergeReplicatorConnection,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
+} from './echo-replicator';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 
@@ -20,13 +24,17 @@ export type MeshReplicatorConnectionProps = {
   ownPeerId: string;
   onRemoteConnected: () => void;
   onRemoteDisconnected: () => void;
+  shouldAdvertise: (params: ShouldAdvertiseProps) => Promise<boolean>;
+  shouldSyncCollection: (params: ShouldSyncCollectionProps) => boolean;
   replicatorFactory?: AutomergeReplicatorFactory;
 };
 
 /**
- * Mesh-side replicator connection — carries subduction byte frames over the Teleport
- * `AutomergeReplicator` extension. No classical sync / share-policy / bundle logic: the
- * subduction protocol handles discovery, authorization, and delta sync end-to-end.
+ * Mesh-side replicator connection — carries both subduction byte frames and DXOS
+ * collection-sync (`sync-request` / `sync-state`) frames over the Teleport
+ * `AutomergeReplicator` extension. The two multiplex on the same wire; Subduction
+ * filters by `type === 'subduction-connection'` so collection-sync control frames
+ * never reach the sedimentree layer.
  */
 export class MeshReplicatorConnection extends Resource implements AutomergeReplicatorConnection {
   public readable: ReadableStream<AutomergeProtocolMessage>;
@@ -103,6 +111,18 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
   get isEnabled() {
     return this._isEnabled;
+  }
+
+  get bundleSyncEnabled(): boolean {
+    return false;
+  }
+
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
+    return this._params.shouldAdvertise(params);
+  }
+
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
+    return this._params.shouldSyncCollection(params);
   }
 
   /**

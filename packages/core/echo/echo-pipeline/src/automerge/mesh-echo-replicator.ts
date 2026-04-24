@@ -3,33 +3,51 @@
 //
 
 import { type Context } from '@dxos/context';
+import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
+import { ComplexSet, defaultMap } from '@dxos/util';
 
-import { type AutomergeReplicator, type AutomergeReplicatorContext } from './echo-replicator';
+import { createIdFromSpaceKey } from '../common/space-id';
+import {
+  type AutomergeReplicator,
+  type AutomergeReplicatorContext,
+  type ShouldAdvertiseProps,
+} from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
+import { getSpaceIdFromCollectionId } from './space-collection';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
 /**
- * Peer-to-peer mesh replicator — a subduction byte tunnel over Teleport.
+ * Peer-to-peer mesh replicator. Carries both the subduction byte tunnel and the DXOS
+ * collection-sync (`sync-request` / `sync-state`) frames over Teleport's
+ * `AutomergeReplicator` extension.
  *
- * Under Subduction, per-document / per-collection share policies are handled inside the
- * subduction protocol itself via the signer and discovery policy. This replicator only
- * carries bytes; it no longer performs device-scoped share-policy checks.
- *
- * TODO(mykola): Remove {@link authorizeDevice} once the subduction policy layer fully
- * replaces the device-key authorization flow.
+ * Device-scoped share-policy checks (`shouldAdvertise`, `shouldSyncCollection`) gate which
+ * documents / collections are visible on this connection; Subduction's own discovery and
+ * policy layer provides a second line of defense at the sedimentree layer.
  */
 export class MeshEchoReplicator implements AutomergeReplicator {
   /**
    * We might have multiple connections open with a peer (one per space), but there'll be only one enabled
    * connection at any given moment, because there's a single repo for all the spaces.
+   * When a connection closes (space was closed) it gets removed from the list and the next connection
+   * in the line gets enabled.
    */
   private readonly _connectionsPerPeer = new Map<string, MeshReplicatorConnection[]>();
+
+  /**
+   * A set of all connections (enabled and disabled).
+   */
   private readonly _connections = new Set<MeshReplicatorConnection>();
+
+  /**
+   * spaceId -> deviceKey[]
+   */
+  private readonly _authorizedDevices = new Map<SpaceId, ComplexSet<PublicKey>>();
 
   private _context: AutomergeReplicatorContext | null = null;
 
@@ -68,7 +86,8 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
         const existingConnections = this._connectionsPerPeer.get(connection.peerId);
         if (existingConnections?.length) {
-          // A second (duplicate) teleport channel to the same peer — queue it but don't enable.
+          const enabledConnection = existingConnections[0];
+          this._context.onConnectionAuthScopeChanged(enabledConnection);
           existingConnections.push(connection);
         } else {
           this._connectionsPerPeer.set(connection.peerId, [connection]);
@@ -102,17 +121,82 @@ export class MeshEchoReplicator implements AutomergeReplicator {
           }
         }
       },
+      shouldAdvertise: async (params: ShouldAdvertiseProps) => {
+        log('shouldAdvertise', { peerId: connection.peerId, documentId: params.documentId });
+        invariant(this._context);
+        try {
+          const spaceKey = await this._context.getContainingSpaceForDocument(params.documentId);
+          if (!spaceKey) {
+            const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({
+              documentId: params.documentId,
+              peerId: connection.peerId,
+            });
+            log('document not found locally for share policy check', {
+              peerId: connection.peerId,
+              documentId: params.documentId,
+              acceptDocument: remoteDocumentExists,
+            });
+
+            // If a document is not present locally return true if another peer claims to have it.
+            return remoteDocumentExists;
+          }
+
+          const spaceId = await createIdFromSpaceKey(spaceKey);
+          const authorizedDevices = this._authorizedDevices.get(spaceId);
+
+          if (!connection.remoteDeviceKey) {
+            log('device key not found for share policy check', {
+              peerId: connection.peerId,
+              documentId: params.documentId,
+            });
+            return false;
+          }
+
+          const isAuthorized = authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
+          log('share policy check', {
+            localPeer: this._context.peerId,
+            remotePeer: connection.peerId,
+            documentId: params.documentId,
+            deviceKey: connection.remoteDeviceKey,
+            spaceKey,
+            isAuthorized,
+          });
+          return isAuthorized;
+        } catch (err) {
+          log.catch(err);
+          return false;
+        }
+      },
+      shouldSyncCollection: ({ collectionId }) => {
+        const spaceId = getSpaceIdFromCollectionId(collectionId as CollectionId);
+        const authorizedDevices = this._authorizedDevices.get(spaceId);
+
+        if (!connection.remoteDeviceKey) {
+          log('device key not found for collection sync check', {
+            peerId: connection.peerId,
+            collectionId,
+          });
+          return false;
+        }
+
+        return authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
+      },
     });
     this._connections.add(connection);
 
     return connection.replicatorExtension;
   }
 
-  /**
-   * @deprecated No-op under Subduction — device authorization is handled inside the
-   * subduction protocol layer. Kept for API compatibility until callers migrate.
-   */
-  async authorizeDevice(_spaceKey: PublicKey, _deviceKey: PublicKey): Promise<void> {
-    // No-op.
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
+    log('authorizeDevice', { spaceKey, deviceKey });
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
+    for (const connection of this._connections) {
+      if (connection.isEnabled && connection.remoteDeviceKey && connection.remoteDeviceKey.equals(deviceKey)) {
+        if (this._connectionsPerPeer.has(connection.peerId)) {
+          this._context?.onConnectionAuthScopeChanged(connection);
+        }
+      }
+    }
   }
 }

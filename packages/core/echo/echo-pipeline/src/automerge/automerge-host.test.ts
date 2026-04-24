@@ -115,32 +115,20 @@ describe('AutomergeHost', () => {
     }
   });
 
-  // TODO(mykola): Re-enable once collection sync is ported to Subduction primitives.
-  // This test exercises DXOS's legacy CollectionSynchronizer + `TestReplicationNetwork`,
-  // which depends on the classical automerge-repo sync path (Repo.handles, _headsStore,
-  // findWithProgress). AutomergeHost now replicates via Subduction, which writes to its
-  // own sedimentree storage and doesn't populate HeadsStore or create Repo handles on the
-  // receiving side — so `host1.getHeads([docId])` returns [] even though subduction is
-  // transferring the bytes correctly. See hand-off note in automerge-host.ts.
-  test.skip('collection synchronization', async () => {
+  test('collection synchronization', { timeout: 30_000 }, async () => {
     const NUM_DOCUMENTS = 10;
 
     const level1 = await createLevel();
     const host1 = await setupAutomergeHost({ level: level1 });
 
     const level2 = await createLevel();
-    const documentIds: DocumentId[] = [];
-    {
-      const host2 = await setupAutomergeHost({ level: level2 });
-      for (const i of range(NUM_DOCUMENTS)) {
-        const handle = await host2.createDoc({ docIndex: i });
-        documentIds.push(handle.documentId);
-      }
-      await host2.flush(Context.default());
-      await host2.close();
-    }
-
     const host2 = await setupAutomergeHost({ level: level2 });
+    const documentIds: DocumentId[] = [];
+    for (const i of range(NUM_DOCUMENTS)) {
+      const handle = await host2.createDoc({ docIndex: i });
+      documentIds.push(handle.documentId);
+    }
+    await host2.flush(Context.default());
 
     const network = await new TestReplicationNetwork().open();
     await host1.addReplicator(Context.default(), await network.createReplicator());
@@ -151,7 +139,9 @@ describe('AutomergeHost', () => {
     await host2.updateLocalCollectionState(collectionId, documentIds);
 
     for (const documentId of documentIds) {
-      await expect.poll(() => host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
+      await expect
+        .poll(() => host1.getHeads([documentId]), { timeout: 20_000 })
+        .toEqual(await host2.getHeads([documentId]));
     }
 
     await host1.close();

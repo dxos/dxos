@@ -2,17 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
+import {
+  type DocumentId,
+  type Heads,
+  type Message,
+  NetworkAdapter,
+  type PeerId,
+  type PeerMetadata,
+} from '@automerge/automerge-repo';
 
-import { Trigger, synchronized } from '@dxos/async';
+import { Event, Trigger, synchronized } from '@dxos/async';
 import { type Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
+import { isNonNullable } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
-import { type AutomergeReplicator, type AutomergeReplicatorConnection } from './echo-replicator';
+import {
+  type AutomergeReplicator,
+  type AutomergeReplicatorConnection,
+  type RemoteDocumentExistenceCheckProps,
+  type ShouldAdvertiseProps,
+  type ShouldSyncCollectionProps,
+} from './echo-replicator';
+import {
+  type CollectionQueryMessage,
+  type CollectionStateMessage,
+  isCollectionQueryMessage,
+  isCollectionStateMessage,
+} from './network-protocol';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -24,6 +44,9 @@ export interface NetworkDataMonitor {
 
 export type EchoNetworkAdapterProps = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+  isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckProps) => Promise<boolean>;
+  onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
+  onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   monitor?: NetworkDataMonitor;
 };
 
@@ -32,15 +55,17 @@ type ConnectionEntry = {
   connection: AutomergeReplicatorConnection;
   reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
   writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
+  requestedDocuments: Set<DocumentId>;
 };
 
 /**
  * {@link NetworkAdapter} that bridges DXOS replicators (e.g. edge replicator, mesh replicator)
  * to automerge-repo's {@link Repo}.
  *
- * Under the Subduction transport model this adapter is a byte tunnel: it forwards all
- * `subduction-connection` frames between the Repo and the active replicator connections.
- * The legacy classical-sync / collection-sync / bundle-sync plumbing was removed.
+ * Carries both the subduction byte tunnel and the collection-sync control plumbing
+ * (sync-request / sync-state messages, share-policy passthroughs, bundle-sync).
+ * The two coexist on the same adapter: Subduction filters by `type === 'subduction-connection'`
+ * so sync-request / sync-state never leak into sedimentree storage.
  */
 export class EchoNetworkAdapter extends NetworkAdapter {
   private readonly _replicators = new Set<AutomergeReplicator>();
@@ -51,6 +76,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
+
+  public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
 
   constructor(private readonly _params: EchoNetworkAdapterProps) {
     super();
@@ -75,7 +102,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   override disconnect(): void {
-    // No-op.
+    // No-op
   }
 
   @synchronized
@@ -106,6 +133,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     await this._connected.wait({ timeout: 10_000 });
   }
 
+  public onConnectionAuthScopeChanged(peer: PeerId): void {
+    const entry = this._connections.get(peer);
+    if (entry) {
+      this._onConnectionAuthScopeChanged(entry.connection);
+    }
+  }
+
   @synchronized
   async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
@@ -117,6 +151,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       peerId: this.peerId,
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
+      onConnectionAuthScopeChanged: this._onConnectionAuthScopeChanged.bind(this),
+      isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
       getContainingSpaceIdForDocument: async (documentId) => {
         const key = await this._params.getContainingSpaceForDocument(documentId);
@@ -133,12 +169,87 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      return false;
+    }
+
+    return connection.connection.shouldAdvertise(params);
+  }
+
+  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      return false;
+    }
+
+    return connection.connection.shouldSyncCollection(params);
+  }
+
+  sendSyncRequest(collectionId: string, targetId: PeerId): void {
+    const message: CollectionQueryMessage = {
+      type: 'collection-query',
+      senderId: this.peerId as PeerId,
+      targetId,
+      collectionId,
+    };
+    this._send(message);
+  }
+
+  sendSyncState(collectionId: string, targetId: PeerId, state: unknown): void {
+    const message: CollectionStateMessage = {
+      type: 'collection-state',
+      senderId: this.peerId as PeerId,
+      targetId,
+      collectionId,
+      state,
+    };
+    this._send(message);
+  }
+
+  // TODO(dmaretskyi): Remove.
+  getPeersInterestedInCollection(collectionId: string): PeerId[] {
+    return Array.from(this._connections.values())
+      .map((connection) => {
+        return connection.connection.shouldSyncCollection({ collectionId })
+          ? (connection.connection.peerId as PeerId)
+          : null;
+      })
+      .filter(isNonNullable);
+  }
+
+  bundleSyncEnabledForPeer(peerId: PeerId): boolean {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      return false;
+    }
+    return connection.connection.bundleSyncEnabled;
+  }
+
+  async pushBundle(ctx: Context, peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      throw new Error('Connection not found.');
+    }
+    return connection.connection.pushBundle!(ctx, bundle);
+  }
+
+  async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      throw new Error('Connection not found.');
+    }
+    return connection.connection.pullBundle!(ctx, docHeads);
+  }
+
   private _send(message: Message): void {
     const connectionEntry = this._connections.get(message.targetId);
     if (!connectionEntry) {
       throw new Error('Connection not found.');
     }
 
+    // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
     const start = Date.now();
     connectionEntry.writer
       .write(message as AutomergeProtocolMessage)
@@ -162,14 +273,16 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       connection,
       reader: connection.readable.getReader(),
       writer: connection.writable.getWriter(),
+      requestedDocuments: new Set(),
     };
 
     this._connections.set(connection.peerId as PeerId, connectionEntry);
 
-    // Read inbound messages and forward to the Repo.
+    // Read inbound messages.
     queueMicrotask(async () => {
       try {
         while (true) {
+          // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
           const { done, value } = await connectionEntry.reader.read();
           if (done) {
             break;
@@ -189,8 +302,22 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordPeerConnected(connection.peerId);
   }
 
-  private _onMessage(_connectionEntry: ConnectionEntry, message: Message): void {
-    this.emit('message', message);
+  private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {
+    const amMessage = message as AutomergeProtocolMessage;
+    if (amMessage.type === 'request') {
+      this.documentRequested.emit({
+        documentId: amMessage.documentId as DocumentId,
+        peerId: connectionEntry.connection.peerId as PeerId,
+      });
+    }
+
+    if (isCollectionQueryMessage(message)) {
+      this._params.onCollectionStateQueried(message.collectionId, message.senderId);
+    } else if (isCollectionStateMessage(message)) {
+      this._params.onCollectionStateReceived(message.collectionId, message.senderId, message.state);
+    } else {
+      this.emit('message', message);
+    }
     this._params.monitor?.recordMessageReceived(message);
   }
 
@@ -207,6 +334,18 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     void entry.reader.cancel().catch((err) => log.catch(err));
 
     this._connections.delete(connection.peerId as PeerId);
+  }
+
+  /**
+   * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
+   * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
+   */
+  private _onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void {
+    log('Connection auth scope changed', { peerId: connection.peerId });
+    const entry = this._connections.get(connection.peerId as PeerId);
+    invariant(entry);
+    this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
+    this._emitPeerCandidate(connection);
   }
 
   private _emitPeerCandidate(connection: AutomergeReplicatorConnection): void {

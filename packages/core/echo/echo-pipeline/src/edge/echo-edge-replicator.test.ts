@@ -2,20 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { cbor } from '@automerge/automerge-repo';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeHttpClient, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
+import { EdgeService } from '@dxos/protocols';
+import { createBuf } from '@dxos/protocols/buf';
+import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { openAndClose } from '@dxos/test-utils';
+import { compositeKey } from '@dxos/util';
 
 import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
 import { EchoEdgeReplicator } from './echo-edge-replicator';
 
-// TODO(mykola): Expand coverage — end-to-end subduction frame relay tests belong here
-// once a full subduction fixture is available.
 describe('EchoEdgeReplicator', () => {
   test('opens a subduction connection when connectToSpace is called', async () => {
     const { client } = await createClientServer();
@@ -32,7 +36,73 @@ describe('EchoEdgeReplicator', () => {
     await replicator.disconnect();
   });
 
+  test('reconnects', async () => {
+    const { client, server } = await createClientServer();
+
+    const spaceId = SpaceId.random();
+
+    const { context, connectionOpen } = createMockContext();
+    const replicator = await connectReplicator(client, context);
+    await replicator.connectToSpace(Context.default(), spaceId);
+
+    client.setIdentity(await createEphemeralEdgeIdentity());
+    await connectionOpen.waitForCount(1);
+
+    // Subduction-era restart: edge emits a `subduction-reconnect` frame on the same
+    // SUBDUCTION_REPLICATOR service id; the connection tears down and the replicator
+    // opens a fresh connection on the next mutex pass.
+    const reconnectFrame = createSubductionReconnectMessage(
+      { identityKey: client.identityKey, peerKey: client.peerKey },
+      spaceId,
+    );
+    await server.sendMessage(reconnectFrame);
+    await connectionOpen.waitForCount(1);
+
+    // Double restart to check for race conditions.
+    client.setIdentity(await createEphemeralEdgeIdentity());
+    await server.sendMessage(reconnectFrame);
+    await connectionOpen.waitForCount(1);
+
+    await replicator.disconnect();
+  });
+
+  describe('shouldAdvertise', () => {
+    test('true if space document belongs to connection space', async () => {
+      const { client } = await createClientServer();
+
+      const spaceId = SpaceId.random();
+      const documentId = PublicKey.random().toHex();
+      const { context, openConnections, connectionOpen } = createMockContext({
+        documentSpaceId: { [documentId]: spaceId },
+      });
+      const replicator = await connectReplicator(client, context);
+      await replicator.connectToSpace(Context.default(), spaceId);
+
+      await connectionOpen.waitForCount(1);
+      expect(openConnections.length).toBe(1);
+      expect(await openConnections[0].shouldAdvertise({ documentId })).toBeTruthy();
+    });
+
+    test('checks remote collection if space id can not be resolved', async () => {
+      const { client } = await createClientServer();
+
+      const spaceId = SpaceId.random();
+      const documentId = PublicKey.random().toHex();
+      const remoteCollections: { [peerId: string]: { [documentId: string]: boolean } } = {};
+      const { context, openConnections, connectionOpen } = createMockContext({ remoteCollections });
+      const replicator = await connectReplicator(client, context);
+      await replicator.connectToSpace(Context.default(), spaceId);
+
+      await connectionOpen.waitForCount(1);
+      const connection = openConnections[0];
+      expect(await connection.shouldAdvertise({ documentId })).toBeFalsy();
+      remoteCollections[connection.peerId] = { [documentId]: true };
+      expect(await connection.shouldAdvertise({ documentId })).toBeTruthy();
+    });
+  });
+
   const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
+    // EdgeHttpClient functionality is not tested here.
     const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
     await replicator.connect(Context.default(), context);
     onTestFinished(() => replicator.disconnect());
@@ -48,12 +118,18 @@ describe('EchoEdgeReplicator', () => {
   };
 });
 
-const createMockContext = () => {
+const createMockContext = (args?: {
+  remoteCollections?: { [peerId: string]: { [documentId: string]: boolean } };
+  documentSpaceId?: { [documentId: string]: SpaceId };
+}) => {
   const connectionOpen = new Event();
   const openConnections: AutomergeReplicatorConnection[] = [];
   const context: AutomergeReplicatorContext = {
-    getContainingSpaceIdForDocument: async () => null,
+    getContainingSpaceIdForDocument: async (documentId) => args?.documentSpaceId?.[documentId] ?? null,
     getContainingSpaceForDocument: async () => null,
+    isDocumentInRemoteCollection: async (params) =>
+      args?.remoteCollections?.[params.peerId]?.[params.documentId] ?? false,
+    onConnectionAuthScopeChanged: () => {},
     onConnectionClosed: (connection) => {
       const idx = openConnections.indexOf(connection);
       if (idx >= 0) {
@@ -69,5 +145,11 @@ const createMockContext = () => {
   return { context, openConnections, connectionOpen };
 };
 
-// Local re-import because vitest's openAndClose is exported from test-utils.
-import { openAndClose } from '@dxos/test-utils';
+const createSubductionReconnectMessage = (target: Peer, spaceId: SpaceId) =>
+  createBuf(MessageSchema, {
+    target: [target],
+    serviceId: compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId),
+    payload: {
+      value: cbor.encode({ type: 'subduction-reconnect' }),
+    },
+  });

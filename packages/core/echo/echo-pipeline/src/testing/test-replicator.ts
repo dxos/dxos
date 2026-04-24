@@ -160,6 +160,18 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     public readonly readable: ReadableStream<AutomergeProtocolMessage>,
     public readonly writable: WritableStream<AutomergeProtocolMessage>,
   ) {}
+
+  get bundleSyncEnabled(): boolean {
+    return false;
+  }
+
+  async shouldAdvertise(): Promise<boolean> {
+    return true;
+  }
+
+  shouldSyncCollection(): boolean {
+    return true;
+  }
 }
 
 export const testAutomergeReplicatorFactory: TeleportAutomergeReplicator.AutomergeReplicatorFactory = (params) => {

@@ -20,10 +20,15 @@ import {
 import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey } from '@dxos/util';
 
+import type { CollectionId } from '@dxos/echo-protocol';
+
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorConnection,
   type AutomergeReplicatorContext,
+  type ShouldAdvertiseProps,
+  type ShouldSyncCollectionProps,
+  getSpaceIdFromCollectionId,
 } from '../automerge';
 
 /**
@@ -53,15 +58,17 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _mutex = new Mutex();
+  private readonly _disableSharePolicy: boolean;
 
   private _ctx?: Context = undefined;
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
 
-  constructor({ edgeConnection, edgeHttpClient }: EchoEdgeReplicatorProps) {
+  constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeReplicatorProps) {
     this._edgeConnection = edgeConnection;
     this._edgeHttpClient = edgeHttpClient;
+    this._disableSharePolicy = disableSharePolicy ?? false;
   }
 
   async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
@@ -138,6 +145,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
       edgeConnection: this._edgeConnection,
       spaceId,
       context: this._context,
+      sharedPolicyEnabled: !this._disableSharePolicy,
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
@@ -188,6 +196,7 @@ type EdgeReplicatorConnectionsProps = {
   edgeConnection: EdgeConnection;
   spaceId: SpaceId;
   context: AutomergeReplicatorContext;
+  sharedPolicyEnabled: boolean;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
   onRestartRequested: () => Promise<void>;
@@ -198,6 +207,9 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
   private readonly _edgeConnection: EdgeConnection;
   private readonly _remotePeerId: string;
   private readonly _subductionServiceId: string;
+  private readonly _spaceId: SpaceId;
+  private readonly _context: AutomergeReplicatorContext;
+  private readonly _sharedPolicyEnabled: boolean;
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
@@ -210,12 +222,17 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
   constructor({
     edgeConnection,
     spaceId,
+    context,
+    sharedPolicyEnabled,
     onRemoteConnected,
     onRemoteDisconnected,
     onRestartRequested,
   }: EdgeReplicatorConnectionsProps) {
     super();
     this._edgeConnection = edgeConnection;
+    this._spaceId = spaceId;
+    this._context = context;
+    this._sharedPolicyEnabled = sharedPolicyEnabled;
     // Generate a unique peer id for every connection so sync-state is fresh on reconnect.
     this._subductionServiceId = compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId);
     this._remotePeerId = `${this._subductionServiceId}-${this._connectionId}`;
@@ -269,6 +286,40 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
 
   get peerId(): string {
     return this._remotePeerId;
+  }
+
+  get bundleSyncEnabled(): boolean {
+    return false;
+  }
+
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
+    if (!this._sharedPolicyEnabled) {
+      return true;
+    }
+    const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
+    if (!spaceId) {
+      const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({
+        documentId: params.documentId,
+        peerId: this._remotePeerId as PeerId,
+      });
+      log.verbose('document not found locally for share policy check', {
+        documentId: params.documentId,
+        acceptDocument: remoteDocumentExists,
+        remoteId: this._remotePeerId,
+      });
+      // If a document is not present locally return true only if it already exists on edge.
+      return remoteDocumentExists;
+    }
+    return spaceId === this._spaceId;
+  }
+
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
+    if (!this._sharedPolicyEnabled) {
+      return true;
+    }
+    const spaceId = getSpaceIdFromCollectionId(params.collectionId as CollectionId);
+    // Only sync collections of form `space:id:rootDoc`; edge ignores legacy `space:id` collections.
+    return spaceId === this._spaceId && params.collectionId.split(':').length === 3;
   }
 
   private _onMessage(message: RouterMessage): void {
