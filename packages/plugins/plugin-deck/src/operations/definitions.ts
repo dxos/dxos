@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
-const PartAdjustmentSchema = Schema.Union(
+const PartAdjustment = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotations({ description: 'Open the companion plank.' }),
   Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
@@ -17,7 +17,8 @@ const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
   Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
 );
-export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
+
+export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustment>;
 
 export const Adjust = Operation.make({
   meta: {
@@ -28,7 +29,7 @@ export const Adjust = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     id: Schema.String.annotations({ description: 'The id of the plank to adjust.' }),
-    type: PartAdjustmentSchema.annotations({ description: 'The type of adjustment to make.' }),
+    type: PartAdjustment.annotations({ description: 'The type of adjustment to make.' }),
   }),
   output: Schema.Void,
 });
@@ -47,6 +48,7 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
+// TODO(burdon): Rename UpdateCompanion?
 export const ChangeCompanion = Operation.make({
   meta: {
     key: `${meta.id}.operation.change-companion`,

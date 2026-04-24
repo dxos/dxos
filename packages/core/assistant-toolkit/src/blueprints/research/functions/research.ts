@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -11,22 +11,20 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as String from 'effect/String';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
-import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
+import { AiService, ConsolePrinter, OpaqueToolkit } from '@dxos/ai';
+import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Research } from './definitions';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../../crud';
 import { ResearchGraph } from '../types';
 import { ResearchDataTypes } from '../types';
-
+import { Research } from './definitions';
 import PROMPT from './research-instructions.tpl?raw';
 
 /**
@@ -55,11 +53,11 @@ export default Research.pipe(
         }
 
         yield* Database.flush();
-        yield* TracingService.emitStatus({ message: 'Starting research...' });
+        yield* Trace.emitStatus('Starting research...');
 
         const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
 
-        let toolkit: Toolkit.Any = NativeWebSearch;
+        let toolkitDef: Toolkit.Any = NativeWebSearch;
         let handlers: Layer.Layer<any, any> = Layer.empty as any;
 
         const objectDXNs: DXN[] = [];
@@ -69,24 +67,26 @@ export default Research.pipe(
             onAppend: (dxns) => objectDXNs.push(...dxns),
           });
 
-          toolkit = Toolkit.merge(toolkit, LocalSearchToolkit, GraphWriterToolkit);
+          toolkitDef = Toolkit.merge(toolkitDef, LocalSearchToolkit, GraphWriterToolkit);
           handlers = Layer.mergeAll(handlers, LocalSearchHandler, GraphWriterHandler).pipe(
             Layer.provide(ResearchGraph.contextQueueLayer),
           ) as any;
         }
 
-        const finishedToolkit = yield* createToolkit({ toolkit }).pipe(Effect.provide(handlers));
+        const toolkit = yield* createToolkit({
+          toolkit: OpaqueToolkit.make(toolkitDef as Toolkit.Toolkit<any>, handlers),
+        });
 
-        const session = new AiSession({
+        const request = new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
         });
-        const result = yield* session.run({
+        const result = yield* request.run({
           prompt: query,
           system: join(
             Template.process(PROMPT, { entityExtraction }),
             instructions && `<instructions>${instructions}</instructions>`,
           ),
-          toolkit: finishedToolkit,
+          toolkit,
         });
 
         const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(dxn)).pipe(
@@ -102,11 +102,12 @@ export default Research.pipe(
         Layer.mergeAll(
           AiService.model('@anthropic/claude-sonnet-4-0'),
           ToolExecutionServices,
-          FunctionInvocationService.layerNotAvailable,
-        ).pipe(Layer.provide(GenericToolkit.providerEmpty)),
+          Trace.writerLayerNoop,
+        ).pipe(Layer.provide(OpaqueToolkit.providerEmpty)),
       ),
     ),
   ),
+  Operation.opaqueHandler,
 );
 
 // TODO(burdon): Factor out.

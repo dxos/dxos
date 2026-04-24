@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
-import { Actor, Message } from '@dxos/types';
-
-import { Calendar, Mailbox } from '../types';
-import { meta } from '../meta';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
+import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { CredentialsService, QueueService, Trace } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { Actor, Message } from '@dxos/types';
+
+import { meta } from '#meta';
+
+import { Calendar, Mailbox } from '../types';
 
 const INBOX_OPERATION = `${meta.id}.operation`;
 
@@ -61,6 +62,9 @@ export const DraftEmail = Operation.make({
     replyTo: Schema.optional(Ref.Ref(Message.Message)).annotations({
       description: 'The message to reply to.',
     }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox to scope the draft to.',
+    }),
   }),
   output: Schema.Struct({
     newMessageDXN: Schema.String,
@@ -70,12 +74,15 @@ export const DraftEmail = Operation.make({
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.draft-email-and-open`, name: 'Draft email and open' },
+  meta: {
+    key: `${INBOX_OPERATION}.draft-email-and-open`,
+    name: 'Draft email and open',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
-    replyToMessage: Schema.optional(Schema.Any),
+    message: Schema.optional(Schema.Any),
     subject: Schema.optional(Schema.String),
     body: Schema.optional(Schema.String),
     // TODO(wittjosiah): Should be Mailbox.Mailbox.
@@ -136,7 +143,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.Service, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService, Trace.TraceService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -172,7 +179,7 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  services: [Database.Service, Feed.Service, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -215,7 +222,7 @@ export const ReadEmail = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-  services: [Database.Service, Feed.Service],
+  services: [Database.Service, Feed.FeedService],
 });
 
 export const SummarizeMailbox = Operation.make({
@@ -246,7 +253,7 @@ export const SummarizeMailbox = Operation.make({
       description: 'The summary of the mailbox.',
     }),
   }),
-  services: [Database.Service, Feed.Service, AiService.AiService, QueueService],
+  services: [Database.Service, Feed.FeedService, AiService.AiService, QueueService],
 });
 
 export const ClassifyEmail = Operation.make({
@@ -272,7 +279,7 @@ export const ClassifyEmail = Operation.make({
     }),
     Schema.Void,
   ),
-  services: [AiService.AiService, Database.Service, QueueService],
+  services: [AiService.AiService, Database.Service, Feed.FeedService],
 });
 
 export const ExtractContact = Operation.make({

@@ -7,15 +7,16 @@ import * as Effect from 'effect/Effect';
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
-import { OperationHandler } from '../capabilities/operation-handler';
-import { meta } from '../meta';
-import { Calendar, Mailbox } from '../types';
+import { OperationHandler } from '#capabilities';
+import { meta } from '#meta';
+import { Calendar, Mailbox } from '#types';
 
 // TODO(wittjosiah): Factor out shared modules.
+
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: [

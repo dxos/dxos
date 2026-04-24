@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { createSlide } from '../../testing';
+import { createSlide } from '#testing';
 
 import { Panel } from './Panel';
 import { Slide, type SlideProps } from './Slide';

@@ -7,25 +7,24 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
 import { Table } from '../../types';
-
 import { TableCellEditor } from './TableCellEditor';
 
-type StoryProps = {
+type DefaultStoryProps = {
   editing: GridEditing;
 };
 
 // TODO(burdon): Broken layout.
-const DefaultStory = ({ editing }: StoryProps) => {
+const DefaultStory = ({ editing }: DefaultStoryProps) => {
   const { model, table } = useTestTableModel();
 
   if (!model || !table) {
@@ -59,9 +58,9 @@ const meta = {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             Obj.make(Task.Task, {
-              title: faker.person.fullName(),
-              status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
-              description: faker.lorem.sentence(),
+              title: random.person.fullName(),
+              status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              description: random.lorem.sentence(),
             }),
           );
         });

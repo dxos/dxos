@@ -250,6 +250,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/assistant-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/assistant-toolkit/package.json",
           "jsonpath": "$.version"
         },
@@ -480,6 +485,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-worker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/env-tests/package.json",
           "jsonpath": "$.version"
         },
@@ -525,6 +535,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-daily-summary/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },
@@ -535,12 +550,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-excalidraw/package.json",
+          "path": "packages/plugins/plugin-discord/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-feed/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -561,6 +581,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-iroh-beacon/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -605,6 +630,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-native-filesystem/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-navtree/package.json",
           "jsonpath": "$.version"
         },
@@ -645,6 +675,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sample/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
@@ -665,6 +700,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sidekick/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-simple-layout/package.json",
           "jsonpath": "$.version"
         },
@@ -676,6 +716,21 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-space/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-spacetime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-spec/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-spotlight/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -711,6 +766,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-tictactoe/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -985,7 +1045,7 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-searchlist/package.json",
+          "path": "packages/ui/react-ui-search/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1121,6 +1181,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-import-source/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-log/package.json",
           "jsonpath": "$.version"
         },
         {

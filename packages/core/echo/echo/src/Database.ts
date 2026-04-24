@@ -20,8 +20,8 @@ import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { isInstanceOf } from './internal/Annotation';
-import type { Ref } from './internal/Ref/ref';
 import { type AnyProperties } from './internal/common/types';
+import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
@@ -229,24 +229,28 @@ export const resolve: {
     }
     invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
     return object as any;
-  })) as any;
+  }).pipe(Effect.withSpan('Database.resolve'))) as any;
 
 /**
  * Loads an object reference.
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn(function* (ref) {
-  const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
-  if (!object) {
-    return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
-  }
-  return object;
-});
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn('Database.load')(
+  function* (ref) {
+    const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
+    if (!object) {
+      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
+    }
+    return object;
+  },
+);
 
 /**
  * Loads an object reference option.
  */
 // TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
-export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
+export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(
+  'Database.loadOption',
+)(function* (ref) {
   const object = yield* load(ref).pipe(Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)));
 
   return Option.fromNullable(object);
@@ -257,21 +261,23 @@ export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, nev
  * @see {@link Database.add}
  */
 export const add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add(obj)));
+  Service.pipe(Effect.map(({ db }) => db.add(obj))).pipe(Effect.withSpan('Database.add'));
 
 /**
  * Removes an object from the database.
  * @see {@link Database.remove}
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.remove(obj)));
+  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'));
 
 /**
  * Flushes pending changes to disk.
  * @see {@link Database.flush}
  */
 export const flush = (opts?: FlushOptions) =>
-  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
+  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts)))).pipe(
+    Effect.withSpan('Database.flush'),
+  );
 
 /**
  * Creates a `QueryResult` object that can be subscribed to.
@@ -292,7 +298,36 @@ export const runQuery: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
   <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
 } = (queryOrFilter: Query.Any | Filter.Any) =>
-  query(queryOrFilter as any).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
+  query(queryOrFilter as any).pipe(
+    Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
+    Effect.withSpan('Database.runQuery'),
+  );
+
+/**
+ * Executes the query once and returns the first result as or None.
+ */
+export const runQueryFirst: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<Option.Option<Filter.Type<F>>, never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  query(queryOrFilter as any).pipe(
+    Effect.flatMap((queryResult) =>
+      promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
+    ),
+    Effect.withSpan('Database.runQueryFirst'),
+  );
+
+/**
+ * Persists schemas in the database so they replicate to other clients.
+ * @see {@link SchemaRegistry.SchemaRegistry.register}
+ */
+export const registerSchema = (
+  input: SchemaRegistry.RegisterSchemaInput[],
+): Effect.Effect<Type.RuntimeType[], never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
+    Effect.withSpan('Database.registerSchema'),
+  );
 
 /**
  * Creates a schema query result that can be subscribed to.

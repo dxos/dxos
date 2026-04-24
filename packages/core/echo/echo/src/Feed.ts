@@ -10,8 +10,9 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 
+import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
@@ -19,7 +20,6 @@ import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
-import * as Annotation from './Annotation';
 
 /**
  * Runtime schema for a Feed object.
@@ -34,6 +34,14 @@ export const Feed = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Identifier for the feed's kind (e.g., plugin id). */
   kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Feed namespace.
+   * Controls how feed data is stored and replicated.
+   * - `data`: Data feed (default).
+   * - `trace`: Trace feed.
+   */
+  namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.feed',
@@ -54,12 +62,6 @@ export interface Feed extends Schema.Schema.Type<typeof Feed> {}
 //
 // Types
 //
-
-/**
- * Meta key source for storing the backing DXN bound to a feed object.
- */
-// TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
-export const DXN_KEY = 'org.dxos.key.feed';
 
 /**
  * Opaque cursor for iterating over feed items.
@@ -94,14 +96,38 @@ export interface RetentionOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Reads the queue DXN from feed metadata.
+ * Derives the queue DXN from the feed object's DXN.
+ * Returns `undefined` when the feed is not stored in a space yet.
  *
- * @deprecated
+ * Used internally by the feed service layer.
  */
-// TODO(wittjosiah): Align backing feed dxn's with object DXN.
 export const getQueueDxn = (feed: Feed): DXN | undefined => {
-  const keys = Obj.getKeys(feed, DXN_KEY);
-  return keys.length === 0 ? undefined : DXN.parse(keys[0].id);
+  const self = Obj.getDXN(feed).asEchoDXN();
+  if (!self || !self.spaceId) {
+    return undefined;
+  }
+  return new DXN(DXN.kind.QUEUE, [feed.namespace ?? 'data', self.spaceId, self.echoId]);
+};
+
+/**
+ * Creates a Feed object from a queue DXN, inferring the feed's id and namespace from the DXN parts.
+ *
+ * The resulting Feed, when added to the same space as the queue, will have a queue DXN
+ * equal to the input (see `Feed.getQueueDxn`). Useful when migrating `Ref(Queue)` fields to
+ * `Ref(Feed.Feed)`.
+ *
+ * @remarks Unsafe because the caller must ensure the queue DXN's space matches the database
+ * the feed is added to; the feed id is set from the queue id, bypassing id generation.
+ */
+export const unsafeFromQueueDXN = (queueDxn: DXN): Feed => {
+  const parts = queueDxn.asQueueDXN();
+  if (!parts) {
+    throw new Error(`Expected a queue DXN, got: ${queueDxn.toString()}`);
+  }
+  return Obj.make(Feed, {
+    id: parts.queueId as ObjectId,
+    namespace: parts.subspaceTag === 'trace' ? 'trace' : undefined,
+  });
 };
 
 //
@@ -113,8 +139,8 @@ export const getQueueDxn = (feed: Feed): DXN | undefined => {
  * Provides the bridge to the underlying storage implementation.
  * Must be provided by the application layer (e.g., echo-db).
  */
-export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
-  Service,
+export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
+  FeedService,
   {
     /**
      * Appends items to a feed.
@@ -138,20 +164,30 @@ export class Service extends Context.Tag('@dxos/echo/Feed/Service')<
 >() {}
 
 /**
+ * @deprecated Use `FeedService` instead.
+ */
+export type Service = FeedService;
+
+/**
+ * @deprecated Use `FeedService` instead.
+ */
+export const Service = FeedService;
+
+/**
  * Layer that provides a Feed service that throws when accessed.
  * Useful as a default layer when no feed service is available.
  */
-export const notAvailable: Layer.Layer<Service> = Layer.succeed(Service, {
+export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService, {
   append: () => {
-    throw new Error('Feed.Service not available');
+    throw new Error('Feed.FeedService not available');
   },
   remove: () => {
-    throw new Error('Feed.Service not available');
+    throw new Error('Feed.FeedService not available');
   },
   query: () => {
-    throw new Error('Feed.Service not available');
+    throw new Error('Feed.FeedService not available');
   },
-} as Context.Tag.Service<Service>);
+} as Context.Tag.Service<FeedService>);
 
 //
 // Operations
@@ -165,9 +201,9 @@ export const notAvailable: Layer.Layer<Service> = Layer.succeed(Service, {
  * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Hello' })]);
  * ```
  */
-export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
+export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
   Effect.gen(function* () {
-    const service = yield* Service;
+    const service = yield* FeedService;
     yield* Effect.promise(() => service.append(feed, items));
   });
 
@@ -180,9 +216,9 @@ export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void,
  * ```
  */
 // TODO(dmaretskyi): Should we allow snapshots here? - what does it mean to remove a snapshot?
-export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, Service> =>
+export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, FeedService> =>
   Effect.gen(function* () {
-    const service = yield* Service;
+    const service = yield* FeedService;
     const ids = items.map((item) => item.id);
     yield* Effect.promise(() => service.remove(feed, ids));
   });
@@ -201,10 +237,16 @@ export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Ef
 //                   const object = yield* feed.pipe(Feed.query(Filter.type(Person))).first;
 // ... unify for Database and schema queries.
 export const query: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
+  <Q extends Query.Any>(
+    feed: Feed,
+    query: Q,
+  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
+  <F extends Filter.Any>(
+    feed: Feed,
+    filter: F,
+  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Service.pipe(Effect.map((service) => service.query(feed, queryOrFilter as any) as QueryResult.QueryResult<any>));
+  FeedService.pipe(Effect.map((service) => service.query(feed, queryOrFilter as any) as QueryResult.QueryResult<any>));
 
 /**
  * Executes a feed query once and returns the results.
@@ -215,8 +257,8 @@ export const query: {
  * ```
  */
 export const runQuery: {
-  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
+  <Q extends Query.Any>(feed: Feed, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
+  <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
   query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
 
@@ -231,21 +273,21 @@ export const runQuery: {
  * ```
  */
 // TODO(wittjosiah): Implement cursor operations. Use Effect streams?
-export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, Service> =>
+export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, FeedService> =>
   Effect.succeed({ _tag: 'Cursor' } as Cursor<T>);
 
 /**
  * Returns the next item from a feed cursor.
  * Currently stubbed — cursor operations are not yet implemented.
  */
-export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, Service> =>
+export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, FeedService> =>
   Effect.die('Feed.next is not yet implemented');
 
 /**
  * Returns the next item from a feed cursor as an Option.
  * Currently stubbed — cursor operations are not yet implemented.
  */
-export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, Service> =>
+export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, FeedService> =>
   Effect.die('Feed.nextOption is not yet implemented');
 
 /**
@@ -258,5 +300,5 @@ export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<
  * ```
  */
 // TODO(feed): Implement when queue retention is supported.
-export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, Service> =>
+export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, FeedService> =>
   Effect.void;

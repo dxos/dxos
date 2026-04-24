@@ -16,6 +16,8 @@ import {
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
+  type ExportSpaceOptions,
+  LegacySpaceProperties,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
@@ -49,7 +51,7 @@ import {
   type Contact,
   CreateEpochRequest,
   Invitation,
-  type SpaceArchive,
+  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
@@ -60,6 +62,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
   type Epoch,
+  MembershipPolicy,
   SpaceMember as HaloSpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -76,7 +79,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
 export class SpaceProxy implements Space, CustomInspectable {
   readonly [SPACE_TAG] = true as const;
 
-  private _ctx = new Context();
+  private _ctx = Context.default();
 
   /**
    * Sent whenever any space data changes.
@@ -194,13 +197,22 @@ export class SpaceProxy implements Space, CustomInspectable {
     };
   }
 
+  @trace.info({ spanAttribute: true })
   get id(): SpaceId {
     return this._data.id as SpaceId;
   }
 
-  @trace.info()
+  @trace.info({ spanAttribute: true })
   get key() {
     return this._data.spaceKey;
+  }
+
+  get tags(): string[] {
+    return this._data.tags ?? [];
+  }
+
+  get membershipPolicy(): MembershipPolicy {
+    return this._data.membershipPolicy ?? MembershipPolicy.INVITE;
   }
 
   get db(): EchoDatabase {
@@ -285,6 +297,17 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   /**
+   * Called by SpaceList before open() to ensure this._ctx carries the parent trace context
+   * before initialization has run.
+   * @internal Package-private.
+   */
+  _setParentCtx(parentCtx: Context): void {
+    if (!this._initialized && !this._initializing) {
+      this._ctx = new Context({ parent: parentCtx });
+    }
+  }
+
+  /**
    * Called by SpaceList to notify that a reconnection is starting.
    * The space will ignore state updates until the backend reaches READY again.
    * @internal Package-private.
@@ -302,7 +325,7 @@ export class SpaceProxy implements Space, CustomInspectable {
    * @internal Package-private.
    */
   @synchronized
-  async _processSpaceUpdate(space: SpaceData): Promise<void> {
+  async _processSpaceUpdate(ctx: Context, space: SpaceData): Promise<void> {
     // During reconnection, if we're waiting for the backend to re-initialize,
     // ignore all updates until it reaches READY (or REQUIRES_MIGRATION) again.
     if (this._awaitingBackendReady) {
@@ -341,9 +364,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._data = space;
 
     if (isFirstTimeInitializing) {
-      await this._initialize();
+      await this._initialize(ctx);
     } else if (isReopening) {
-      await this._initializeDb();
+      this._ctx = new Context({ parent: ctx });
+      await this._initializeDb(ctx);
     } else if (shouldReset) {
       await this._reset();
     }
@@ -374,15 +398,17 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
   }
 
-  private async _initialize(): Promise<void> {
+  private async _initialize(ctx: Context): Promise<void> {
     if (this._initializing || this._initialized) {
       return;
     }
 
+    this._ctx = new Context({ parent: ctx });
+
     log('initializing...', { space: this.key });
     this._initializing = true;
     await this._invitationsProxy.open();
-    await this._initializeDb();
+    await this._initializeDb(ctx);
 
     this._initialized = true;
     this._initializing = false;
@@ -393,7 +419,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeDb(): Promise<void> {
+  private async _initializeDb(ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
     {
@@ -403,7 +429,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       } else {
         log.warn('no automerge root found for space', { spaceId: this.id });
       }
-      await this._db.open();
+      await this._db.open(ctx);
     }
 
     log('ready');
@@ -416,19 +442,21 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
-        (query) => {
-          if (query.results.length === 1) {
-            this._properties = query.results[0];
-            propertiesAvailable.wake();
-            this._stateUpdate.emit(this._currentState);
-            scheduleMicroTask(this._ctx, () => {
-              unsubscribe();
-            });
-          }
-        },
-        { fire: true },
-      );
+      const unsubscribe = this._db
+        .query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties)))
+        .subscribe(
+          (query) => {
+            if (query.results.length === 1) {
+              this._properties = query.results[0];
+              propertiesAvailable.wake();
+              this._stateUpdate.emit(this._currentState);
+              scheduleMicroTask(this._ctx, () => {
+                unsubscribe();
+              });
+            }
+          },
+          { fire: true },
+        );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
@@ -447,7 +475,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _reset(): Promise<void> {
     log('destroying...');
     await this._ctx.dispose();
-    this._ctx = new Context();
+    this._ctx = Context.default();
     await this._invitationsProxy.close();
     await this._db.close();
     this._initializationComplete.reset();
@@ -459,19 +487,29 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   async open(): Promise<void> {
+    await this._openInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _openInternal(ctx: Context): Promise<void> {
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_ACTIVE },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx },
     );
   }
 
   async close(): Promise<void> {
+    await this._closeInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _closeInternal(ctx: Context): Promise<void> {
     if (this._databaseOpen) {
       await this._db.flush();
     }
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx },
     );
   }
 
@@ -497,7 +535,7 @@ export class SpaceProxy implements Space, CustomInspectable {
           '@type': message['@type'] || 'google.protobuf.Struct',
         },
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: this._ctx },
     );
   }
 
@@ -508,7 +546,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     const stream = this._clientServices.services.SpacesService.subscribeMessages(
       { spaceKey: this.key, channel },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: this._ctx },
     );
     stream.subscribe(callback);
     return () => stream.close();
@@ -524,11 +562,14 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   async admitContact(contact: Contact): Promise<void> {
-    await this._clientServices.services.SpacesService!.admitContact({
-      spaceKey: this.key,
-      role: HaloSpaceMember.Role.ADMIN,
-      contact,
-    });
+    await this._clientServices.services.SpacesService!.admitContact(
+      {
+        spaceKey: this.key,
+        role: HaloSpaceMember.Role.ADMIN,
+        contact,
+      },
+      { ctx: this._ctx },
+    );
   }
 
   /**
@@ -536,11 +577,14 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
     this._throwIfNotInitialized();
-    return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
-      memberKey: request.memberKey,
-      newRole: request.newRole,
-    });
+    return this._clientServices.services.SpacesService!.updateMemberRole(
+      {
+        spaceKey: this.key,
+        memberKey: request.memberKey,
+        newRole: request.newRole,
+      },
+      { ctx: this._ctx },
+    );
   }
 
   /**
@@ -552,11 +596,14 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _removeMember(memberKey: PublicKey): Promise<void> {
-    return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
-      memberKey,
-      newRole: HaloSpaceMember.Role.REMOVED,
-    });
+    return this._clientServices.services.SpacesService!.updateMemberRole(
+      {
+        spaceKey: this.key,
+        memberKey,
+        newRole: HaloSpaceMember.Role.REMOVED,
+      },
+      { ctx: this._ctx },
+    );
   }
 
   private async _createEpoch({
@@ -566,6 +613,20 @@ export class SpaceProxy implements Space, CustomInspectable {
     migration?: CreateEpochRequest.Migration;
     automergeRootUrl?: string;
   } = {}): Promise<void> {
+    await this._createEpochInternal(this._ctx, { migration, automergeRootUrl });
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _createEpochInternal(
+    ctx: Context,
+    {
+      migration,
+      automergeRootUrl,
+    }: {
+      migration?: CreateEpochRequest.Migration;
+      automergeRootUrl?: string;
+    } = {},
+  ): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
     const { controlTimeframe: targetTimeframe } = await this._clientServices.services.SpacesService!.createEpoch(
       {
@@ -573,7 +634,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         migration,
         automergeRootUrl,
       },
-      { timeout: EPOCH_CREATION_TIMEOUT },
+      { timeout: EPOCH_CREATION_TIMEOUT, ctx },
     );
 
     if (targetTimeframe) {
@@ -587,10 +648,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _getCredentials(): Promise<Credential[]> {
-    const stream = this._clientServices.services.SpacesService?.queryCredentials({
-      spaceKey: this.key,
-      noTail: true,
-    });
+    const stream = this._clientServices.services.SpacesService?.queryCredentials(
+      {
+        spaceKey: this.key,
+        noTail: true,
+      },
+      { ctx: this._ctx },
+    );
     invariant(stream, 'SpacesService not available');
     return await Stream.consumeData(stream);
   }
@@ -621,7 +685,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         spaceKey: this.key,
         edgeReplication: setting,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: this._ctx },
     );
     // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
     await asyncTimeout(
@@ -637,7 +701,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     timeout?: number;
     onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
   }): Promise<void> {
-    await using ctx = Context.default();
+    await using ctx = new Context({ parent: this._ctx });
 
     if (this._data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
       throw new Error('Edge replication is disabled');
@@ -690,11 +754,12 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
   }
 
-  private async _export(): Promise<SpaceArchive> {
+  private async _export(options?: ExportSpaceOptions): Promise<SpaceArchive> {
     await this._db.flush();
-    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({
-      spaceId: this.id,
-    });
+    const { archive } = await this._clientServices.services.SpacesService!.exportSpace(
+      { spaceId: this.id, format: options?.format ?? SpaceArchive.Format.BINARY },
+      { ctx: this._ctx },
+    );
     return archive;
   }
 }

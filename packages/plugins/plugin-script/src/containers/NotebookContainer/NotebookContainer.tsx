@@ -9,26 +9,26 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
+import { Operation } from '@dxos/operation';
+import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '../../components';
-import { meta } from '../../meta';
+import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
+import { meta } from '#meta';
+import { type Notebook } from '#types';
+
 import { ComputeGraph } from '../../notebook';
-import { type Notebook } from '../../types';
 
 const INCLUDE_BLUEPRINTS = [
   'org.dxos.blueprint.assistant',
@@ -38,7 +38,10 @@ const INCLUDE_BLUEPRINTS = [
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = SurfaceComponentProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
+export type NotebookContainerProps = AppSurface.ObjectArticleProps<
+  Notebook.Notebook,
+  Pick<TypescriptEditorProps, 'env'>
+>;
 
 export const NotebookContainer = ({ role, subject: notebook, attendableId, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
@@ -74,8 +77,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
                 }
               });
             } else {
-              Obj.change(graph, (obj) => {
-                obj.query.ast = ast as Obj.Mutable<typeof ast>;
+              Obj.change(graph, (graph) => {
+                graph.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
           }
@@ -133,10 +136,10 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        Obj.change(notebook, (obj) => {
-          const cell = obj.cells.splice(from, 1)[0];
+        Obj.change(notebook, (notebook) => {
+          const cell = notebook.cells.splice(from, 1)[0];
           if (cell) {
-            obj.cells.splice(to, 0, cell);
+            notebook.cells.splice(to, 0, cell);
           }
         });
       }
@@ -169,8 +172,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      Obj.change(notebook, (obj) => {
-        obj.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (notebook) => {
+        notebook.cells.splice(idx, 0, cell);
       });
     },
     [db, notebook],
@@ -181,8 +184,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        Obj.change(notebook, (obj) => {
-          obj.cells.splice(idx, 1);
+        Obj.change(notebook, (notebook) => {
+          notebook.cells.splice(idx, 1);
         });
       }
     },
@@ -195,14 +198,14 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
         <Toolbar.Root disabled={!hasAttention}>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
+              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
             </DropdownMenu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
           </DropdownMenu.Root>
           <Toolbar.IconButton
             icon='ph--play--fill'
             iconOnly
-            label={t('compute label')}
+            label={t('compute.label')}
             classNames='text-success-text'
             onClick={handleCompute}
           />
@@ -235,19 +238,8 @@ const runPrompt = Effect.fn(function* ({
   onResult: (result: string) => void;
 }) {
   const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
-  const tracer = yield* TracingService;
-  const trace = yield* tracer.traceInvocationStart({
-    target: undefined,
-    payload: {
-      data: {},
-    },
-  });
-
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(
-    Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
-    Effect.exit,
-  );
+  const result = yield* Operation.invoke(AgentPrompt, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {
@@ -258,11 +250,5 @@ const runPrompt = Effect.fn(function* ({
     onSuccess: (result: any) => {
       onResult(result.note);
     },
-  });
-
-  yield* tracer.traceInvocationEnd({
-    trace,
-    // TODO(dmaretskyi): Might miss errors.
-    exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
   });
 });

@@ -8,7 +8,8 @@ import { Capability } from '@dxos/app-framework';
 import { Format } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+
 import { translations } from '../translations';
 
 const t = translations[0]['en-US'][meta.id];
@@ -18,13 +19,13 @@ export const UserFeedback = Schema.Struct({
     Schema.nonEmptyString(),
     Schema.maxLength(4_096),
     Schema.annotations({
-      title: t['feedback textarea label'],
-      description: t['feedback textarea placeholder'],
+      title: t['feedback-textarea.label'],
+      description: t['feedback-textarea.placeholder'],
     }),
   ),
   includeLogs: Schema.Boolean.pipe(
     Schema.annotations({
-      title: t['include debug logs label'],
+      title: t['include-debug-logs.label'],
     }),
     Schema.optional,
   ),

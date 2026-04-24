@@ -14,11 +14,12 @@ import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
+import type * as Obj from './Obj';
 import * as Ref from './Ref';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Types.Contravariant<T> };
+  '~Filter': { value: Types.Covariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -278,7 +279,7 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * Predicate for property to be in the provided array.
  * @param values - Values to check against.
  */
-const in$ = <T>(...values: T[]): Filter<T | undefined> => {
+const in$ = <T>(...values: T[]): Filter<T> => {
   return new FilterClass({
     type: 'in',
     values,
@@ -302,11 +303,68 @@ export const contains = <T>(value: T): Filter<readonly T[] | undefined> => {
  * @param from - Start of the range (inclusive).
  * @param to - End of the range (exclusive).
  */
-export const between = <T>(from: T, to: T): Filter<unknown> => {
+export const between = <T>(from: T, to: T): Filter<T> => {
   return new FilterClass({
     type: 'range',
     from,
     to,
+  });
+};
+
+type TimeRange = { after?: Date | number; before?: Date | number };
+
+const _toUnixMs = (date: Date | number): number => (typeof date === 'number' ? date : date.getTime());
+
+const _timeRangeFilter = (field: 'updatedAt' | 'createdAt', range: TimeRange): Any => {
+  const filters: Any[] = [];
+  if (range.after != null) {
+    filters.push(new FilterClass({ type: 'timestamp', field, operator: 'gte', value: _toUnixMs(range.after) }));
+  }
+  if (range.before != null) {
+    filters.push(new FilterClass({ type: 'timestamp', field, operator: 'lte', value: _toUnixMs(range.before) }));
+  }
+  if (filters.length === 0) {
+    return everything();
+  }
+  return filters.length === 1 ? filters[0] : and(...filters);
+};
+
+/**
+ * Filter objects by updatedAt timestamp.
+ */
+export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', range);
+
+/**
+ * Filter objects by createdAt timestamp.
+ */
+export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
+
+export type ChildOfOptions = {
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive?: boolean;
+};
+
+/**
+ * Filter objects that are children of the specified parent(s).
+ * Accepts ECHO objects, Refs, or arrays of either.
+ * Refs are resolved to DXNs without loading; objects use {@link Obj.getDXN}.
+ * With transitive=true (default), also matches grandchildren and beyond.
+ */
+export const childOf = (
+  parents: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+  options?: ChildOfOptions,
+): Any => {
+  const items = Array.isArray(parents) ? parents : [parents];
+  const dxns = items.map((item) => {
+    if (Ref.isRef(item)) {
+      return item.dxn.toString();
+    }
+    return internal.getDXN(item).toString();
+  });
+  return new FilterClass({
+    type: 'child-of',
+    parents: dxns,
+    transitive: options?.transitive ?? true,
   });
 };
 
@@ -389,3 +447,8 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
     Match.orElse((value) => eq(value).ast),
   );
 };
+
+/**
+ * Returns a human-readable string representation of a Filter AST.
+ */
+export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);

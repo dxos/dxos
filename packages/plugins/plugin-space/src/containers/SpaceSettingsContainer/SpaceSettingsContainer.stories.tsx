@@ -11,7 +11,6 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-
 import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 
 const Story = (props: Partial<SpaceSettingsContainerProps>) => {
@@ -29,7 +28,7 @@ const meta = {
   render: Story,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({ createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [OperationPlugin(), RuntimePlugin()] }),

@@ -2,6 +2,7 @@
  * Tldraw
  */
 
+/** TODO(burdon): Move to tldraw */
 .tl-background {
   --color-background: var(--color-base-surface);
 }

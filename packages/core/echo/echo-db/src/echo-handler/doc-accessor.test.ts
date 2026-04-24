@@ -10,7 +10,6 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder } from '../testing';
-
 import { createDocAccessor } from './doc-accessor';
 
 describe('diff', () => {

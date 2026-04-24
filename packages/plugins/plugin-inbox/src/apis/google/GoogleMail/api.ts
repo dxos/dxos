@@ -7,7 +7,6 @@ import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
-
 import { ErrorResponse, GoogleError, LabelsResponse, ListMessagesResponse, Message } from './types';
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
@@ -96,7 +95,11 @@ export const sendMessage = Effect.fn('sendMessage')(function* (
   return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify(message) }).pipe(
     Effect.flatMap(
       decodeAndHandleErrors(
-        Schema.Struct({ id: Schema.String, threadId: Schema.String, labelIds: Schema.Array(Schema.String) }),
+        Schema.Struct({
+          id: Schema.String,
+          threadId: Schema.String,
+          labelIds: Schema.Array(Schema.String),
+        }),
       ),
     ),
   );

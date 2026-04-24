@@ -11,7 +11,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
-
 import { ChessModel } from './chess';
 import { Chessboard, type ChessboardProps } from './Chessboard';
 
@@ -109,5 +108,6 @@ export const Debug: Story = {
 };
 
 export const Grid = {
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   render: GridStory,
 };

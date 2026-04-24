@@ -23,7 +23,7 @@ export const StackViewType = Schema.Struct({
   sections: Schema.Record({ key: Schema.String, value: SectionSchema }),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.stack-view',
+    typename: 'org.dxos.type.stackView',
     version: '0.1.0',
   }),
 );

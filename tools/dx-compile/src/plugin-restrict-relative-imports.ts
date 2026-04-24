@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import path from 'node:path';
-
 import { type Plugin } from 'esbuild';
+import path from 'node:path';
 
 /**
  * ESBuild plugin that restricts relative imports to be within a specified directory.

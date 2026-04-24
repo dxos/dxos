@@ -6,8 +6,9 @@ import { useEffect, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 
+import { TranscriptionCapabilities } from '#types';
+
 import { type Transcriber } from '../transcriber';
-import { TranscriptionCapabilities } from '../types';
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.

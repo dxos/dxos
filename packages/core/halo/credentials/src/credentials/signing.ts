@@ -27,6 +27,18 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   }
   delete copy.id; // ID is not part of the signature payload.
 
+  // Normalize empty repeated fields in the assertion to avoid proto3 serialization asymmetry.
+  // Proto3 does not encode empty repeated fields, but the codec may restore them as [] after deserialization,
+  // causing a signature mismatch if the original signing payload did not include the field.
+  const assertion = (copy.subject as any)?.assertion;
+  if (assertion) {
+    for (const key of Object.keys(assertion)) {
+      if (Array.isArray(assertion[key]) && assertion[key].length === 0) {
+        delete assertion[key];
+      }
+    }
+  }
+
   return Buffer.from(canonicalStringify(copy));
 };
 

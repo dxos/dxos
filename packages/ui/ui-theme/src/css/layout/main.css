@@ -18,13 +18,6 @@
     z-index: 0;
   }
 
-  /**
-   * Main Mobile app.
-   */
-  .dx-main-mobile-layout {
-    @apply absolute inset-0 overflow-hidden flex flex-col;
-  }
-
   /** TODO(burdon): Reconcile with dx-main-bounce-layout */
   .dx-main-content-padding-transitions {
     transition-duration: 200ms;

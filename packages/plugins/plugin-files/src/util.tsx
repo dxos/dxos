@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type LocalDirectory, type LocalEntity, type LocalFile } from './types';
+import { type LocalDirectory, type LocalEntity, type LocalFile } from '#types';
 
 export const PREFIX = 'fs';
 

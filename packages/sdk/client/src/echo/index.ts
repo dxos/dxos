@@ -9,6 +9,7 @@ export { Entity, Relation, Type, Database } from '@dxos/echo';
 export {
   createObject,
   createSubscription,
+  defineObjectMigration,
   getVersion,
   type EchoDatabase,
   type ObjectMigration,
@@ -29,7 +30,7 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-export { importSpace } from './import';
+export { importSpace, type ImportSpaceOptions } from './import';
 export {
   createEmptyEdgeSyncState,
   parseId,

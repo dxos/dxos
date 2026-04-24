@@ -10,8 +10,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { AccessToken } from '@dxos/types';
 
-import { TokensPanel } from '../../components';
-import { TokenManagerOperation } from '../../operations';
+import { TokensPanel } from '#components';
+import { TokenManagerOperation } from '#operations';
 
 export type TokensContainerProps = {
   db: Database.Database;

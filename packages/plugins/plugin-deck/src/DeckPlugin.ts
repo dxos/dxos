@@ -16,12 +16,12 @@ import {
   OperationHandler,
   ReactRoot,
   ReactSurface,
-  Toolkit,
   UrlHandler,
-} from './capabilities';
-import { meta } from './meta';
+} from '#capabilities';
+import { meta } from '#meta';
+import { DeckEvents } from '#types';
+
 import { translations } from './translations';
-import { DeckEvents } from './types';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
@@ -35,11 +35,11 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [DeckEvents.SettingsReady],
+    firesAfterActivation: [DeckEvents.SettingsReady],
     activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: DeckEvents.SettingsReady,
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.OperationInvokerReady),
     activate: CheckAppScheme,
   }),
   Plugin.addModule({
@@ -47,7 +47,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
+    firesAfterActivation: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
   Plugin.addModule({
@@ -58,11 +58,6 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   //   activatesOn: Events.SetupArtifactDefinition,
   //   activate: Tools,
   // }),
-  Plugin.addModule({
-    // TODO(wittjosiah): Shouldn't use the startup event.
-    activatesOn: ActivationEvents.Startup,
-    activate: Toolkit,
-  }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, DeckEvents.StateReady),
     activate: UrlHandler,

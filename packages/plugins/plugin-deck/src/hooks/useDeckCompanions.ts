@@ -8,7 +8,7 @@ import { useConnections } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/ui-types';
 import { type Position, byPosition } from '@dxos/util';
 
-import { DECK_COMPANION_TYPE } from '../types';
+import { DECK_COMPANION_TYPE } from '#types';
 
 export type DeckCompanion = NodeType.Node<
   any,
@@ -19,6 +19,7 @@ export type DeckCompanion = NodeType.Node<
     /** If true, the panel will not be wrapped in a scroll area. */
     fixed?: boolean;
     position?: Position;
+    joyride?: string;
   }
 >;
 

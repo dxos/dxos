@@ -9,7 +9,8 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
-import { meta } from './meta';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
@@ -24,19 +25,19 @@ export const PwaPlugin = Plugin.define(meta).pipe(
         onNeedRefresh: () => {
           void invokePromise(LayoutOperation.AddToast, {
             id: `${meta.id}.need-refresh`,
-            title: ['need refresh label', { ns: meta.id }],
-            description: ['need refresh description', { ns: meta.id }],
+            title: ['need-refresh.label', { ns: meta.id }],
+            description: ['need-refresh.description', { ns: meta.id }],
             duration: 4 * 60 * 1000, // 4m
-            actionLabel: ['refresh label', { ns: meta.id }],
-            actionAlt: ['refresh alt', { ns: meta.id }],
+            actionLabel: ['refresh.label', { ns: meta.id }],
+            actionAlt: ['refresh.alt', { ns: meta.id }],
             onAction: () => updateSW(true),
           });
         },
         onOfflineReady: () => {
           void invokePromise(LayoutOperation.AddToast, {
             id: `${meta.id}.offline-ready`,
-            title: ['offline ready label', { ns: meta.id }],
-            closeLabel: ['confirm label', { ns: meta.id }],
+            title: ['offline-ready.label', { ns: meta.id }],
+            closeLabel: ['confirm.label', { ns: meta.id }],
           });
         },
         onRegisterError: (err) => {

@@ -5,14 +5,14 @@
 import { useCallback, useState } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { search } from '../search';
-import { type SearchResult } from '../types';
+import { type SearchResult } from '#types';
 
+import { search } from '../search';
 import { getStringProperty } from './sync';
 
 export type UseWebSearchProps = {
@@ -44,7 +44,7 @@ export const useWebSearch = ({ query, context }: UseWebSearchProps): UseWebSearc
       });
 
       const mappedResults = results.data.map((result): SearchResult => {
-        const schema = Obj.getSchema(result);
+        const schema = Entity.getSchema(result);
         return {
           id: result.id,
           label: getStringProperty(result, ['name', 'title', 'label']),

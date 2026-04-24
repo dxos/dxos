@@ -5,13 +5,10 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-// NOTE: Must not import from index to avoid pulling in react dependencies.
-import { Client } from '../capabilities/client';
-import { OperationHandler } from '../capabilities/operation-handler';
-import { SchemaDefs } from '../capabilities/schema-defs';
-import { meta } from '../meta';
-import { ClientEvents } from '../types';
-import { type ClientPluginOptions } from '../types';
+import { Client, OperationHandler, SchemaDefs } from '#capabilities';
+import { meta } from '#meta';
+import { ClientEvents } from '#types';
+import { type ClientPluginOptions } from '#types';
 
 import { config, device, edge, halo, profile } from './commands';
 
@@ -22,12 +19,12 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule((options) => ({
     id: Capability.getModuleTag(Client),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [ClientEvents.ClientReady],
+    firesAfterActivation: [ClientEvents.ClientReady],
     activate: () => Client(options),
   })),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [AppActivationEvents.SetupSchema],
+    firesBeforeActivation: [AppActivationEvents.SetupSchema],
     activate: SchemaDefs,
   }),
   Plugin.make,

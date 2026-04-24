@@ -12,7 +12,6 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-
 import { TestBuilder } from './test-builder';
 
 type Options = {

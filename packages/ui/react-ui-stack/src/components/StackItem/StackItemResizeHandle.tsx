@@ -7,7 +7,6 @@ import React from 'react';
 import { ResizeHandle } from '@dxos/react-ui-dnd';
 
 import { useStack, useStackItem } from '../StackContext';
-
 import { DEFAULT_EXTRINSIC_SIZE } from './StackItem';
 
 const MIN_WIDTH = 20;

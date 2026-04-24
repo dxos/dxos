@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom';
+import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
 import type * as PlatformError from '@effect/platform/Error';
 import * as FileSystem from '@effect/platform/FileSystem';
-import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
-import { Registry } from '@effect-atom/atom';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -13,14 +14,20 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { type Key } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
-import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Database, type Key } from '@dxos/echo';
+import { ServiceResolver, Trace } from '@dxos/functions';
+import {
+  FunctionImplementationResolver,
+  ProcessManager,
+  TriggerDispatcher,
+  TriggerStateStore,
+} from '@dxos/functions-runtime';
+import { OperationHandlerSet } from '@dxos/operation';
 
 import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -30,7 +37,6 @@ export type TriggerRuntimeServices =
   | TriggerStateStore
   | ToolResolverService
   | ToolExecutionService
-  | TracingService
   | AiChatServices;
 
 export type TriggerRuntimeLayerOptions = {
@@ -73,7 +79,7 @@ export const triggerRuntimeLayer = ({
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       // Use the same merged toolkit as chat.
-      const toolkit = GenericToolkit.merge(...toolkits);
+      const toolkit = OpaqueToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)
       const baseChatLayer = chatLayer({ provider: 'edge', spaceId, functions: blueprintOperationHandlers });
@@ -81,13 +87,17 @@ export const triggerRuntimeLayer = ({
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
+        Layer.provide(ProcessManager.layer()),
+        Layer.provide(ServiceResolver.layerRequirements(Database.Service, OpaqueToolkit.OpaqueToolkitProvider)),
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
-        Layer.provideMerge(TracingService.layerNoop),
+        Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
-        Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+        Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
         Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: blueprintOperationHandlers })),
         Layer.provideMerge(baseChatLayer),
+        Layer.provideMerge(OperationHandlerSet.provide(blueprintOperationHandlers)),
+        Layer.provide(KeyValueStore.layerMemory),
       );
     }),
   );

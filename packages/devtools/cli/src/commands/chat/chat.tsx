@@ -10,9 +10,10 @@ import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { type AiConversation } from '@dxos/assistant';
+import { getPersonalSpace } from '@dxos/app-toolkit';
+import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
@@ -31,7 +32,6 @@ import {
   toolkits,
   types,
 } from '../../util';
-
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
 
@@ -84,7 +84,7 @@ export const chat = Command.make(
       );
 
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const toolkit = GenericToolkit.merge(...toolkits);
+      const toolkit = OpaqueToolkit.merge(...toolkits);
       const processor = new ChatProcessor({
         runtime,
         toolkit,
@@ -92,14 +92,14 @@ export const chat = Command.make(
         metadata: service.metadata,
         registry,
       });
-      const [conversation, setConversation] = createSignal<AiConversation | undefined>(undefined);
+      const [conversation, setConversation] = createSignal<AiSession | undefined>(undefined);
 
       invariant(client.halo.identity);
-      const space = yield* Effect.promise(async () => {
-        // TODO(burdon): Hangs if identity is not ready.
-        await client.spaces.waitUntilReady();
-        return client.spaces.default;
-      });
+      const space = getPersonalSpace(client) ?? client.spaces.get()[0];
+      if (!space) {
+        log.error('no space available for chat');
+        return;
+      }
 
       const handleChatLoad = async () => {
         const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
@@ -127,7 +127,7 @@ export const chat = Command.make(
         await current?.close();
 
         log.info('creating conversation', { blueprints });
-        const next = await processor.createConversation(space, blueprints);
+        const next = await processor.createSession(space, blueprints);
         setConversation(next);
         return next;
       };

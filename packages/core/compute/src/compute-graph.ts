@@ -8,11 +8,10 @@ import { Event } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { type FunctionInvocationService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
@@ -69,7 +68,7 @@ export class ComputeGraph extends Resource {
 
   constructor(
     private readonly _hf: HyperFormula,
-    private readonly _runtime: ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>,
+    private readonly _runtime: ManagedRuntime.ManagedRuntime<Operation.Service, never>,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {

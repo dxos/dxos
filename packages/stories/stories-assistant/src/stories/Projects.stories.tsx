@@ -3,22 +3,26 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { type FC, useCallback } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { ChatModule, type ComponentProps } from '../components';
@@ -28,17 +32,17 @@ import { config, getDecorators } from '../testing';
 
 const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
-type StoryProps = {
+type DefaultStoryProps = {
   modules: FC<ComponentProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
 
-const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
+const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryProps) => {
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
-  const space = useSpace();
+  const [space] = useSpaces();
   useAsyncEffect(async () => {
     if (!space) {
       return;
@@ -61,7 +65,12 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
+    const feedTarget = await chat.feed.load();
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const runtime = await runAndForwardErrors(
+      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    );
+    const binder = new AiContextBinder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
@@ -70,7 +79,8 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   }, []);
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
+  const feedTarget = chats.at(-1)?.feed.target;
+  const binder = useContextBinder(space, feedTarget);
   const objects = binder?.getObjects() ?? [];
 
   if (!space) {
@@ -121,7 +131,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
     >
       {objects.map((object) => (
         <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
+          <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object, attendableId: object.id }} />
         </StackItem.Root>
       ))}
     </Stack>

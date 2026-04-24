@@ -466,8 +466,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(parent);
 
-          Obj.change(parent, (obj) => {
-            obj.stringArray![0] = '2';
+          Obj.change(parent, (parent) => {
+            parent.stringArray![0] = '2';
           });
           expect(array[0]).to.eq('2');
           expect(updates.count, 'update count').to.eq(1);
@@ -478,8 +478,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
           expect(array.length).to.eq(3);
 
-          Obj.change(parent, (obj) => {
-            obj.stringArray!.push('4');
+          Obj.change(parent, (parent) => {
+            parent.stringArray!.push('4');
           });
           expect(array.length).to.eq(4);
           expect(updates.count, 'update count').to.eq(1);
@@ -489,8 +489,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(parent);
 
-          Obj.change(parent, (obj) => {
-            obj.stringArray!.length = 2;
+          Obj.change(parent, (parent) => {
+            parent.stringArray!.length = 2;
           });
           expect(array.length).to.eq(2);
           expect(updates.count, 'update count').to.eq(1);
@@ -500,8 +500,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const { array, parent } = await createReactiveArray(['1', '2', '3']);
           using updates = updateCounter(parent);
 
-          Obj.change(parent, (obj) => {
-            obj.stringArray!.push('4');
+          Obj.change(parent, (parent) => {
+            parent.stringArray!.push('4');
           });
           expect(array).to.deep.eq(['1', '2', '3', '4']);
           expect(updates.count, 'update count').to.eq(1);
@@ -512,8 +512,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let value: string | undefined;
-          Obj.change(parent, (obj) => {
-            value = obj.stringArray!.pop();
+          Obj.change(parent, (parent) => {
+            value = parent.stringArray!.pop();
           });
           expect(value).to.eq('3');
           expect(array).to.deep.eq(['1', '2']);
@@ -525,8 +525,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let value: string | undefined;
-          Obj.change(parent, (obj) => {
-            value = obj.stringArray!.shift();
+          Obj.change(parent, (parent) => {
+            value = parent.stringArray!.shift();
           });
           expect(value).to.eq('1');
           expect(array).to.deep.eq(['2', '3']);
@@ -538,8 +538,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let newLength: number = 0;
-          Obj.change(parent, (obj) => {
-            newLength = obj.stringArray!.unshift('0');
+          Obj.change(parent, (parent) => {
+            newLength = parent.stringArray!.unshift('0');
           });
           expect(newLength).to.eq(4);
           expect(array).to.deep.eq(['0', '1', '2', '3']);
@@ -551,8 +551,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let removed: string[] = [];
-          Obj.change(parent, (obj) => {
-            removed = obj.stringArray!.splice(1, 1, '4');
+          Obj.change(parent, (parent) => {
+            removed = parent.stringArray!.splice(1, 1, '4');
           });
           expect(removed).to.deep.eq(['2']);
           expect(array).to.deep.eq(['1', '4', '3']);
@@ -564,8 +564,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let returnValue: string[] = [];
-          Obj.change(parent, (obj) => {
-            returnValue = obj.stringArray!.sort();
+          Obj.change(parent, (parent) => {
+            returnValue = parent.stringArray!.sort();
           });
           expect(returnValue === array).to.be.true;
           expect(array).to.deep.eq(['1', '2', '3']);
@@ -583,8 +583,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           using updates = updateCounter(parent);
 
           let returnValue: string[] = [];
-          Obj.change(parent, (obj) => {
-            returnValue = obj.stringArray!.reverse();
+          Obj.change(parent, (parent) => {
+            returnValue = parent.stringArray!.reverse();
           });
           expect(returnValue === array).to.be.true;
           expect(array).to.deep.eq(['3', '2', '1']);

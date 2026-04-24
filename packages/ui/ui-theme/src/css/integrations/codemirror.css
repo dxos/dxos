@@ -6,6 +6,7 @@
  * TODO(burdon): This could move into the ui-editor package (similar to graph.css).
  */
 
+/** TODO(burdon): Move to ui-editor */
 @theme {
   --color-cm-codeblock: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-cm-active-line: light-dark(
@@ -25,8 +26,9 @@
   --color-cm-comment-surface: light-dark(var(--color-amber-800), var(--color-amber-200));
 
   /* Markdown syntax highlighting */
-  --color-cm-code: light-dark(var(--color-neutral-700), var(--color-neutral-300));
+  --color-cm-code: light-dark(var(--color-stone-600), var(--color-stone-400));
+  --color-cm-code-inline: light-dark(var(--color-green-500), var(--color-green-500));
   --color-cm-code-mark: var(--color-blue-500);
-  --color-cm-mark-opacity: 0.5;
-  --color-cm-heading: light-dark(var(--color-neutral-900), var(--color-neutral-400));
+  --color-cm-heading: light-dark(var(--color-blue-700), var(--color-blue-300));
+  --color-cm-heading-number: light-dark(var(--color-blue-600), var(--color-blue-400));
 }

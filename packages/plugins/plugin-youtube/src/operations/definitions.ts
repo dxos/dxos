@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { Database, Feed, Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 import { Channel, Video } from '../types';
 
@@ -40,7 +40,7 @@ export const Sync = Operation.make({
     channelTitle: Schema.String.pipe(Schema.optional),
   }),
   types: [Channel.YouTubeChannel, Video.YouTubeVideo],
-  services: [Database.Service, Feed.Service, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService],
 });
 
 export const ClearSyncedVideos = Operation.make({
@@ -58,5 +58,5 @@ export const ClearSyncedVideos = Operation.make({
     removedVideos: Schema.Number,
   }),
   types: [Channel.YouTubeChannel, Video.YouTubeVideo],
-  services: [Database.Service, Feed.Service],
+  services: [Database.Service, Feed.FeedService],
 });

@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import readline from 'node:readline/promises';
-
 import * as Effect from 'effect/Effect';
+import readline from 'node:readline/promises';
 
 export type MultilinePromptResult = { type: 'input'; value: string } | { type: 'exit' } | { type: 'empty' };
 

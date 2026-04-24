@@ -10,7 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 type SchemaPanelProps = { space: Space };
 
@@ -19,8 +19,8 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const schemas = useQuerySpaceSchemas(space);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('schema verbose label')} description={t('schema description')}>
+    <Settings.Viewport>
+      <Settings.Section title={t('schema-verbose.label')} description={t('schema.description')}>
         <div
           role='none'
           className={mx([
@@ -29,7 +29,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
             'border border-separator rounded-md',
           ])}
         >
-          {schemas.length === 0 && <div className='text-center py-4'>{t('no schemas found message')}</div>}
+          {schemas.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
           {schemas.map((schema) => (
             <div role='none' key={schema.id}>
               {schema.typename}
@@ -37,7 +37,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
           ))}
         </div>
       </Settings.Section>
-    </Settings.Root>
+    </Settings.Viewport>
   );
 };
 

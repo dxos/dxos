@@ -22,6 +22,10 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
     return false;
   }
 
+  if (!Obj.getDatabase(subject) || !Obj.getTypename(subject)) {
+    return false;
+  }
+
   const schema = Obj.getSchema(subject);
   return !(schema != null && Option.getOrElse(Annotation.SystemTypeAnnotation.get(schema), () => false));
 };
@@ -67,7 +71,7 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
           void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
         },
         {
-          label: t('open label'),
+          label: t('open.label'),
           icon: OPEN_ICON,
         },
       ),

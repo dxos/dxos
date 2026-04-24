@@ -5,8 +5,8 @@
 import { type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
-import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
+import { type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 
 /*
 
@@ -79,7 +79,11 @@ export interface DataService {
   getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
   execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
-  createDocument(ctx: TraceContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
+  createDocument(
+    ctx: TraceContext,
+    spaceId: SpaceId,
+    initialValue?: Record<string, any>,
+  ): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
   changeDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;

@@ -12,18 +12,18 @@ import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
-import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
+import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
-import { Operation } from '@dxos/operation';
-
+import { CredentialsService, FunctionInvocationService, QueueService } from '../services';
+import * as Trace from '../Trace';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
@@ -49,7 +49,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
       if (
         (serviceTags.includes(Database.Service.key) ||
           serviceTags.includes(QueueService.key) ||
-          serviceTags.includes(Feed.Service.key)) &&
+          serviceTags.includes(Feed.FeedService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -157,7 +157,7 @@ class FunctionContext extends Resource {
       ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
-    const tracing = TracingService.layerNoop;
+    const operationServiceLayer = MockedOperationServiceLayer;
 
     const aiLayer = this.context.services.functionsAiService
       ? AiModelResolver.AiModelResolver.buildAiService.pipe(
@@ -174,7 +174,17 @@ class FunctionContext extends Resource {
         )
       : AiService.notAvailable;
 
-    return Layer.mergeAll(dbLayer, queuesLayer, feedLayer, credentials, functionInvocationService, aiLayer, tracing);
+    return Layer.mergeAll(
+      dbLayer,
+      queuesLayer,
+      feedLayer,
+      credentials,
+      functionInvocationService,
+      operationServiceLayer,
+      aiLayer,
+      // TODO(dmaretskyi): Forward trace events.
+      Trace.writerLayerNoop,
+    );
   }
 }
 
@@ -182,6 +192,12 @@ const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService,
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
   resolveFunction: () => Effect.die('Not implemented.'),
 });
+
+const MockedOperationServiceLayer = Layer.succeed(Operation.Service, {
+  invoke: () => Effect.die('Calling operations from functions is not implemented yet.'),
+  schedule: () => Effect.die('Not implemented.'),
+  invokePromise: async () => ({ error: new Error('Not implemented') }),
+} as any);
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
   if (value == null) {

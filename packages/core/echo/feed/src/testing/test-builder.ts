@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -52,7 +52,7 @@ export class TestBuilder extends Resource {
           isServer: i === 0,
           actorId: `peer-${i}`,
           serverPeerId: i === 0 ? undefined : 'peer-0',
-          sendMessage: (msg) => this.#routeMessage(msg),
+          sendMessage: (ctx, msg) => this.#routeMessage(ctx, msg),
           logSql,
         }),
     );
@@ -83,14 +83,14 @@ export class TestBuilder extends Resource {
   }
 
   /** Route a message to the peer identified by recipientPeerId. Runs the recipient's handleMessage with that peer's runtime. */
-  #routeMessage(msg: ProtocolMessage): Effect.Effect<void, unknown, never> {
+  #routeMessage(ctx: Context, msg: ProtocolMessage): Effect.Effect<void, unknown, never> {
     const peer = this.#peers.find((p) => p.peerId === msg.recipientPeerId);
     if (peer == null) {
       return Effect.die(new Error(`TestPeer not found: ${msg.recipientPeerId}`));
     }
     const handleEffect =
       peer.syncServer != null
-        ? peer.syncServer.handleMessage(msg)
+        ? peer.syncServer.handleMessage(ctx, msg)
         : peer.syncClient != null
           ? peer.syncClient.handleMessage(msg)
           : null;
@@ -129,7 +129,7 @@ export class TestPeer extends Resource {
     isServer: boolean;
     actorId: string;
     serverPeerId?: string;
-    sendMessage: (msg: ProtocolMessage) => Effect.Effect<void, unknown, never>;
+    sendMessage: (ctx: Context, msg: ProtocolMessage) => Effect.Effect<void, unknown, never>;
     logSql?: boolean;
   }) {
     super();
@@ -211,13 +211,13 @@ export class TestPeer extends Resource {
 
   pull({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
     return this.#client!
-      .pull({ spaceId, feedNamespace, limit })
+      .pull(Context.default(), { spaceId, feedNamespace, limit })
       .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
   }
 
   push({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
     return this.#client!
-      .push({ spaceId, feedNamespace, limit })
+      .push(Context.default(), { spaceId, feedNamespace, limit })
       .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
   }
 }

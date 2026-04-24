@@ -92,7 +92,7 @@ export const ComputeGraph = Schema.Struct({
   output: Schema.optional(ComputeNode),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.compute-graph',
+    typename: 'org.dxos.type.computeGraph',
     version: '0.1.0',
   }),
 );

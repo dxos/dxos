@@ -8,9 +8,10 @@ import { test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { configPreset } from '@dxos/config';
-import { Operation } from '@dxos/operation';
+import { Context } from '@dxos/context';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
+import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -47,7 +48,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Functi
       new URL('../templates/anthropic.ts', import.meta.url).pathname,
     );
 
-    const result = await functionsServiceClient.invoke(func, {
+    const result = await functionsServiceClient.invoke(Context.default(), func, {
       message: 'Hello, world!',
     });
     console.log(result);
@@ -78,7 +79,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Functi
       entryPoint,
       verbose: true,
     });
-    const func = await functionsServiceClient.deploy({
+    const func = await functionsServiceClient.deploy(Context.default(), {
       version: '0.0.1',
       ownerPublicKey: space.key,
       entryPoint: artifact.entryPoint,

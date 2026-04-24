@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { $, cd, chalk, fs, path } from 'zx';
 import { createRequire } from 'module';
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { $, cd, chalk, fs, path } from 'zx';
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);

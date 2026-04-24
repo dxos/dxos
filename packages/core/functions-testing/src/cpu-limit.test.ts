@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { FunctionRuntimeKind } from '@dxos/protocols';
@@ -26,6 +27,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const result = await functionsServiceClient.invoke(
+      Context.default(),
       func,
       {
         iterations: 100,
@@ -49,12 +51,12 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* */30 * * * *' },
+        spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 100 },
       }),
     );
     await sync(space);
-    const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
     console.log(result);
   });
 
@@ -70,27 +72,27 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* */30 * * * *' },
+        spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 1_000_000_000 },
       }),
     );
     await sync(space);
     {
-      const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
       console.log(result);
     }
 
     {
-      const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
       console.log(result);
     }
 
     {
-      Obj.change(trigger, (obj) => {
-        obj.input!.iterations = 100;
+      Obj.change(trigger, (trigger) => {
+        trigger.input!.iterations = 100;
       });
       await sync(space);
-      const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
       console.log(result);
     }
   });
@@ -107,7 +109,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* * * * * *' },
+        spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 1_000_000 },
       }),
     );
@@ -127,21 +129,21 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* * * * * *' },
+        spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 100 },
       }),
     );
     await sync(space);
     await observeInvocations(space, 5);
 
-    Obj.change(trigger, (obj) => {
-      obj.input!.iterations = 1_000_000_000;
+    Obj.change(trigger, (trigger) => {
+      trigger.input!.iterations = 1_000_000_000;
     });
     await sync(space);
     await observeInvocations(space, 10);
 
-    Obj.change(trigger, (obj) => {
-      obj.input!.iterations = 100;
+    Obj.change(trigger, (trigger) => {
+      trigger.input!.iterations = 100;
     });
     await sync(space);
     await observeInvocations(space, 1_000);

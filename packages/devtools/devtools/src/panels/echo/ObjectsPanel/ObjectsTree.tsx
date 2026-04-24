@@ -15,7 +15,7 @@ import { Annotation, type Database, Entity, Filter, Obj, Query, Relation } from 
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { Icon, Treegrid } from '@dxos/react-ui';
+import { Icon, Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -57,7 +57,7 @@ const ObjectsTreeRow = ({ node, level }: { node: ObjectsTreeItem; level: number 
   const setExpanded = useAtomSet(model.expanded(node.id));
   const children = useAtomValue(model.getChildren(node.id));
   const hasChildren = children.length > 0;
-  const parentOf = hasChildren ? children.map((child) => child.id).join(Treegrid.PARENT_OF_SEPARATOR) : undefined;
+  const parentOf = hasChildren ? children.map((child) => child.id).join(TREEGRID_PARENT_OF_SEPARATOR) : undefined;
 
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
@@ -188,7 +188,7 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Option.fromNullable(Obj.getSchema(entity)).pipe(
+    const { icon, hue } = Option.fromNullable(Entity.getSchema(entity)).pipe(
       Option.flatMap(Annotation.IconAnnotation.get),
       Option.getOrElse(() => ({
         icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,

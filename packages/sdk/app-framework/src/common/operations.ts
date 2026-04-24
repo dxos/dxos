@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/operation';
 
 import { Capability } from '../core';
-
 import { Label } from './translations';
 
 const UNDO_NAMESPACE = 'org.dxos.app-framework.undo';

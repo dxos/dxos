@@ -10,12 +10,11 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 import { SyncMailbox } from './definitions';
-import { GmailFunctions } from './google/gmail';
 
 const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
   Operation.withHandler(
@@ -24,9 +23,10 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
       const db = Obj.getDatabase(mailbox);
       invariant(db);
       const runtime = computeRuntime.getRuntime(db.spaceId);
+      const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
-          invokeFunctionWithTracing(GmailFunctions.Sync, {
+          Operation.invoke(GmailFunctions.Sync, {
             mailbox: Ref.make(mailbox),
           }),
         ),
@@ -37,8 +37,8 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
             id: `${meta.id}/sync-mailbox-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync mailbox error title', { ns: meta.id }],
-            closeLabel: ['close label', { ns: meta.id }],
+            title: ['sync-mailbox-error.title', { ns: meta.id }],
+            closeLabel: ['close.label', { ns: meta.id }],
           });
         }),
       );

@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { PromptArticle } from './PromptArticle';
-
-export default PromptArticle;
+export { PromptArticle as default } from './PromptArticle';

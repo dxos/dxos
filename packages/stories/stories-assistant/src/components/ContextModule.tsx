@@ -4,18 +4,20 @@
 
 import React from 'react';
 
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
+import { Toolbar } from '@dxos/react-ui';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { type ComponentProps } from './types';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Toolbar } from '@dxos/react-ui';
-import { Surface } from '@dxos/app-framework/ui';
 
 export const ContextModule = ({ space }: ComponentProps) => {
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
+  const feedTarget = chats.at(-1)?.feed.target;
+  const binder = useContextBinder(space, feedTarget);
   const objects = binder?.getObjects() ?? [];
 
   return (
@@ -26,7 +28,7 @@ export const ContextModule = ({ space }: ComponentProps) => {
       <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
         {objects.map((object) => (
           <StackItem.Root key={object.id} item={object}>
-            <Surface.Surface role='section' limit={1} data={{ subject: object }} />
+            <Surface.Surface type={AppSurface.Section} limit={1} data={{ subject: object, attendableId: 'story' }} />
           </StackItem.Root>
         ))}
       </Stack>

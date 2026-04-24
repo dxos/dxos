@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -31,7 +32,7 @@ describe('DocHandleProxy', () => {
     await docsSynchronizer.addDocuments([documentId]);
 
     const mutation = clientHandle._getPendingChanges()!;
-    await docsSynchronizer.update([{ documentId, mutation }]);
+    await docsSynchronizer.update(Context.default(), [{ documentId, mutation }]);
     expect(workerHandle.doc()?.text).to.equal(text);
   });
 
@@ -93,7 +94,7 @@ describe('DocHandleProxy', () => {
 
     // Send client mutation to foreign peer.
     const clientUpdate = clientHandle._getPendingChanges()!;
-    await synchronizer.update([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
+    await synchronizer.update(Context.default(), [{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
     for (const handle of [clientHandle, workerHandle] as const) {
       expect(handle.doc()?.clientText).to.equal(clientText);

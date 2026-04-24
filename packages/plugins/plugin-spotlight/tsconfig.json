@@ -1,0 +1,32 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-graph"
+    }
+  ]
+}

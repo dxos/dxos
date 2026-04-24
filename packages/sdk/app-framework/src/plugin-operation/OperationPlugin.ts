@@ -4,7 +4,6 @@
 
 import { ActivationEvents } from '../common';
 import { Capability, Plugin } from '../core';
-
 import { meta } from './meta';
 
 const OperationInvoker = Capability.lazy('OperationInvoker', () => import('./invoker-capability'));
@@ -13,8 +12,8 @@ const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import(
 export const OperationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.ManagedRuntimeReady,
-    activatesBefore: [ActivationEvents.SetupOperationHandler],
-    activatesAfter: [ActivationEvents.OperationInvokerReady],
+    firesBeforeActivation: [ActivationEvents.SetupOperationHandler],
+    firesAfterActivation: [ActivationEvents.OperationInvokerReady],
     activate: OperationInvoker,
   }),
   Plugin.addModule({

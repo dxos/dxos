@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 
-import { Chessboard } from '../../components';
-import { type Chess } from '../../types';
+import { Chessboard } from '#components';
+import { type Chess } from '#types';
 
-export type ChessCardProps = SurfaceComponentProps<Chess.Game>;
+export type ChessCardProps = AppSurface.ObjectCardProps<Chess.Game>;
 
 export const ChessCard = ({ subject: game }: ChessCardProps) => {
   return (

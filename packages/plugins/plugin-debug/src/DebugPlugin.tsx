@@ -9,8 +9,9 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { type LogBuffer } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export type DebugPluginOptions = {
@@ -19,6 +20,7 @@ export type DebugPluginOptions = {
 };
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
+
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),

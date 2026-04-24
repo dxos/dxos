@@ -11,22 +11,22 @@ import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Editor, translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { Markdown } from '#types';
+
 import { translations } from '../../translations';
-import { Markdown } from '../../types';
+import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
 
-import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
+type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
-type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
-
-const DefaultStory = (props: StoryProps) => {
-  const space = useSpace();
+const DefaultStory = (props: DefaultStoryProps) => {
+  const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const id = doc && Obj.getDXN(doc).toString();
   if (!id) {
@@ -35,16 +35,20 @@ const DefaultStory = (props: StoryProps) => {
 
   return (
     <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
-      <MarkdownEditor.Root id={id} object={doc} {...props}>
-        <Panel.Root>
-          <Panel.Toolbar asChild>
-            <MarkdownEditor.Toolbar />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <MarkdownEditor.Content />
-          </Panel.Content>
-        </Panel.Root>
-      </MarkdownEditor.Root>
+      <MarkdownEditorProvider id={id} object={doc} {...props}>
+        {(editorRootProps) => (
+          <Editor.Root {...editorRootProps}>
+            <Panel.Root>
+              <Panel.Toolbar asChild>
+                <MarkdownEditor.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <MarkdownEditor.Content />
+              </Panel.Content>
+            </Panel.Root>
+          </Editor.Root>
+        )}
+      </MarkdownEditorProvider>
     </AttendableContainer>
   );
 };
@@ -62,8 +66,8 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              defaultSpace.db.add(
+              const { personalSpace } = yield* initializeIdentity(client);
+              personalSpace.db.add(
                 Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
               );
             }),

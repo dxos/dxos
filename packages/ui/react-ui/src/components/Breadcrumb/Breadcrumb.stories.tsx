@@ -7,7 +7,6 @@ import React from 'react';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb';
 
 const DefaultStory = (props: BreadcrumbRootProps) => {

@@ -3,7 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -199,7 +199,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
     return Effect.gen(this, function* () {
       const match = yield* this._getHandlers().pipe(
-        Effect.map((handlers) => handlers.find((reg) => reg.meta.key === operation.meta.key)),
+        // Last registration wins so plugins can override earlier handlers (e.g. story testing hooks).
+        Effect.map((handlers) => handlers.findLast((reg) => reg.meta.key === operation.meta.key)),
       );
 
       return match?.handler;
@@ -218,6 +219,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     return Effect.gen(this, function* () {
       const handler = yield* this._resolveHandler(op);
       if (!handler) {
+        // TODO(burdon): Only throw in development mode.
         return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }
 

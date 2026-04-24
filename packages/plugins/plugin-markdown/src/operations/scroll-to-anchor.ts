@@ -9,9 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { Cursor, setSelection } from '@dxos/ui-editor';
 
-import { ScrollToAnchor } from './definitions';
-
 import { MarkdownCapabilities } from '../types';
+import { ScrollToAnchor } from './definitions';
 
 const handler: Operation.WithHandler<typeof ScrollToAnchor> = ScrollToAnchor.pipe(
   Operation.withHandler(

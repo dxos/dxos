@@ -104,7 +104,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return [...new Set(this._objectDocumentHandles.values())];
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
     if (this._spaceRootDocHandle != null) {
       return;
@@ -169,11 +169,20 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (!links) {
       return;
     }
+    // Load links that were previously requested and are waiting.
     const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
       this._objectsPendingDocumentLoad.has(objectId),
     );
     this._loadLinkedObjects(Object.fromEntries(linksAwaitingLoad));
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    // Load newly discovered links that we are not already tracking.
+    const newLinks = Object.entries(links).filter(
+      ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
+    );
+    if (newLinks.length > 0) {
+      this._loadLinkedObjects(Object.fromEntries(newLinks));
+    }
   }
 
   public getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {

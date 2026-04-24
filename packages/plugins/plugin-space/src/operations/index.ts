@@ -14,7 +14,6 @@ export const SpaceOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./duplicate-object'),
   () => import('./get-share-link'),
   () => import('./join'),
-  () => import('./lock'),
   () => import('./migrate'),
   () => import('./open'),
   () => import('./open-create-object'),
@@ -28,6 +27,5 @@ export const SpaceOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./restore-objects'),
   () => import('./share'),
   () => import('./snapshot'),
-  () => import('./unlock'),
   () => import('./wait-for-object'),
 );

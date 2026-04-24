@@ -177,7 +177,7 @@ const RootInner = <S extends CanvasBoard.Shape = CanvasBoard.Shape>(
         tabIndex={0}
         style={{ contain: 'layout' }}
         className={mx(
-          'relative w-full h-full overflow-hidden',
+          'dx-container relative',
           ready ? 'transition-opacity delay-[0.5s] duration-[0.5s] opacity-100' : 'opacity-0',
           classNames,
         )}

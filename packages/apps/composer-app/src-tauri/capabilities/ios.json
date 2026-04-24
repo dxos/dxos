@@ -6,8 +6,8 @@
     "haptics:allow-notification-feedback",
     "haptics:allow-selection-feedback",
     "haptics:allow-vibrate",
-    "web-auth:default",
-    "web-auth:allow-authenticate"
+    "web-auth:allow-authenticate",
+    "web-auth:default"
   ],
   "platforms": ["iOS"],
   "windows": ["main"]

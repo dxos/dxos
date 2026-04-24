@@ -7,17 +7,16 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
 import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
-
 import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
 
-faker.seed(999);
+random.seed(999);
 
 const meta = {
   title: 'plugins/plugin-preview/cards/Card',
@@ -80,13 +79,13 @@ export const _Json = {
   render: () => {
     const data = {
       subject: {
-        id: faker.string.uuid(),
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-        tags: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
+        id: random.string.uuid(),
+        name: random.person.fullName(),
+        email: random.internet.email(),
+        tags: [random.lorem.word(), random.lorem.word(), random.lorem.word()],
         nested: {
-          count: faker.number.int({ max: 100 }),
-          active: faker.datatype.boolean(),
+          count: random.number.int({ max: 100 }),
+          active: random.datatype.boolean(),
         },
       },
     };

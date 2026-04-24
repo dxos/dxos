@@ -1,17 +1,22 @@
 //
 // Copyright 2025 DXOS.org
 //
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService } from '@dxos/ai';
-import { Database, Feed } from '@dxos/echo';
-import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { AiService } from '@dxos/ai';
+import { Context as DxosContext } from '@dxos/context';
+import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
-import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
-import { RemoteFunctionExecutionService } from './remote-function-execution-service';
+import { LocalFunctionExecutionService } from './local-function-execution';
+import type { RemoteFunctionExecutionService as RemoteFunctionExecutionServiceType } from './remote-function-execution-service';
+
+type RemoteService = Context.Tag.Service<RemoteFunctionExecutionServiceType>;
+const RemoteFunctionExecutionServiceTag: Context.Tag<RemoteFunctionExecutionServiceType, RemoteService> =
+  Context.GenericTag('@dxos/functions/RemoteFunctionExecutionService');
 
 /**
  * Layer that provides FunctionInvocationService implementation routing between local and remote execution.
@@ -20,16 +25,17 @@ export const FunctionInvocationServiceLayer = Layer.effect(
   FunctionInvocationService,
   Effect.gen(function* () {
     const localExecutionService = yield* LocalFunctionExecutionService;
-    const remoteExecutionService = yield* RemoteFunctionExecutionService;
+    const remoteExecutionService = yield* RemoteFunctionExecutionServiceTag;
 
     return {
-      invokeFunction: <I, O>(
-        functionDef: Operation.Definition<I, O, any>,
-        input: I,
-      ): Effect.Effect<O, never, InvocationServices> =>
+      invokeFunction: <I, O>(functionDef: Operation.Definition<I, O, any>, input: I): Effect.Effect<O> =>
         Effect.gen(function* () {
           if (functionDef.meta?.deployedId) {
-            return yield* remoteExecutionService.callFunction<I, O>(functionDef.meta.deployedId, input);
+            return yield* remoteExecutionService.callFunction<I, O>(
+              DxosContext.default(),
+              functionDef.meta.deployedId,
+              input,
+            );
           }
 
           return yield* localExecutionService.invokeFunction(functionDef, input);
@@ -67,36 +73,3 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
     return functionInvocationService;
   }),
 );
-
-/**
- * Layer for testing with optional function implementations.
- */
-export const FunctionInvocationServiceLayerTest = ({
-  functions = OperationHandlerSet.make(),
-}: {
-  functions?: OperationHandlerSet.OperationHandlerSet;
-} = {}): Layer.Layer<
-  FunctionInvocationService,
-  never,
-  AiService.AiService | CredentialsService | Database.Service | QueueService | Feed.Service
-> =>
-  FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-    Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
-    Layer.provide(RemoteFunctionExecutionService.layerMock),
-  );
-
-/**
- * @deprecated Use {@link FunctionInvocationServiceLayerTest} instead.
- */
-export const FunctionInvocationServiceLayerTestMocked = ({
-  functions,
-}: {
-  functions?: OperationHandlerSet.OperationHandlerSet;
-}): Layer.Layer<FunctionInvocationService> =>
-  FunctionInvocationServiceLayerTest({ functions }).pipe(
-    Layer.provide(AiService.notAvailable),
-    Layer.provide(CredentialsService.configuredLayer([])),
-    Layer.provide(Database.notAvailable),
-    Layer.provide(QueueService.notAvailable),
-    Layer.provide(Feed.notAvailable),
-  );

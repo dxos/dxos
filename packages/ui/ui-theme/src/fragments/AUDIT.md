@@ -55,4 +55,3 @@ External packages importing fragment definitions from `ui-theme/src/fragments`.
 
 - `subtleHover` from `hover.ts`
 - `hoverableOpenControlItem`, `groupHoverControlItemWithTransition` from `hover.ts` (only 2-3 uses)
-- `descriptionTextPrimary` from `text.ts` (only 1 use)

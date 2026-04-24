@@ -3,9 +3,8 @@
 //
 
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
-
 import * as yaml from 'js-yaml';
+import { resolve } from 'path';
 import { describe, test } from 'vitest';
 
 import { type SignatureData, parseSignature } from './extract';

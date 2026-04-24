@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -235,7 +236,7 @@ describe('Serializer', () => {
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      const root = await peer.host.createSpaceRoot(spaceKey);
+      const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       {
         const db = await peer.openDatabase(spaceKey, root.url);

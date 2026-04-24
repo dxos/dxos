@@ -72,7 +72,7 @@ export namespace QueryPlan {
    * Specifier to scan the database for objects.
    * Optimized to utilize database indexes.
    */
-  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector;
+  export type Selector = WildcardSelector | IdSelector | TypeSelector | TextSelector | TimestampSelector;
 
   export type WildcardSelector = {
     _tag: 'WildcardSelector';
@@ -111,6 +111,19 @@ export namespace QueryPlan {
      * Optionally select only objects of the given typenames.
      */
     typename: DXN.String[] | null;
+  };
+
+  /**
+   * Select objects by timestamp range (createdAt / updatedAt).
+   * Uses the ObjectMetaIndex timestamp columns.
+   */
+  export type TimestampSelector = {
+    _tag: 'TimestampSelector';
+
+    updatedAfter?: number;
+    updatedBefore?: number;
+    createdAfter?: number;
+    createdBefore?: number;
   };
 
   /**

@@ -12,7 +12,6 @@ import { mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-
 import { MenuSignifierHorizontal } from './MenuSignifier';
 
 export type KeyBinding = {

@@ -25,7 +25,6 @@ import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
-
 import { type EchoDatabase } from './database';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 

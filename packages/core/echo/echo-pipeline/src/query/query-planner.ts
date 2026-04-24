@@ -2,13 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Order } from '@dxos/echo';
+import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
+
+/**
+ * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
+ */
+const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
+  if (query === null) {
+    return new QueryError({
+      message: 'Query too complex',
+      context: { query: null },
+    });
+  }
+  const prettyQuery = Query.pretty(Query.fromAst(query));
+  return new QueryError({
+    message: `Query too complex: ${prettyQuery}`,
+    context: { query, prettyQuery },
+  });
+};
 
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
@@ -126,10 +143,7 @@ export class QueryPlanner {
           ]);
         }
         if (context.selectionInverted) {
-          throw new QueryError({
-            message: 'Query too complex',
-            context: { query: context.originalQuery },
-          });
+          throw queryTooComplexError(context.originalQuery);
         }
 
         // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
@@ -221,13 +235,50 @@ export class QueryPlanner {
         ]);
       }
 
+      // Timestamp
+      case 'timestamp': {
+        if (context.selectionInverted) {
+          throw new QueryError({
+            message:
+              'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            context: { query: context.originalQuery },
+          });
+        }
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: _timestampFilterToSelector(filter),
+          },
+          ...this._generateDeletedHandlingSteps(context),
+        ]);
+      }
+
+      // ChildOf
+      case 'child-of': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
       // Compare
       case 'compare':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       case 'in':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       case 'range':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
 
       // Boolean
       case 'not':
@@ -235,8 +286,88 @@ export class QueryPlanner {
           ...context,
           selectionInverted: !context.selectionInverted,
         });
-      case 'and':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+      case 'and': {
+        const flatFilters = _flattenAnd(filter.filters);
+        const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
+        const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
+        const otherFilters = flatFilters.filter((f) => f.type !== 'timestamp' && f.type !== 'child-of');
+
+        if (timestampFilters.length > 0 && context.selectionInverted) {
+          throw new QueryError({
+            message:
+              'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            context: { query: context.originalQuery },
+          });
+        }
+
+        if (timestampFilters.length > 0 && otherFilters.length <= 1 && childOfFilters.length === 0) {
+          const innerFilter = otherFilters[0];
+          const innerPlan = innerFilter
+            ? this._generateSelectionFromFilter(innerFilter, context)
+            : QueryPlan.Plan.make([
+                {
+                  _tag: 'SelectStep',
+                  scope: context.scope,
+                  selector: { _tag: 'WildcardSelector' },
+                },
+                ...this._generateDeletedHandlingSteps(context),
+              ]);
+
+          const selectIdx = innerPlan.steps.findIndex((s) => s._tag === 'SelectStep');
+          if (selectIdx !== -1) {
+            const newSteps = [...innerPlan.steps];
+            newSteps.splice(selectIdx + 1, 0, {
+              _tag: 'FilterStep',
+              filter: { type: 'and', filters: timestampFilters },
+            });
+            return QueryPlan.Plan.make(newSteps);
+          }
+
+          const selector = _mergeTimestampSelectors(timestampFilters.map(_timestampFilterToSelector));
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector,
+            },
+            ...this._generateDeletedHandlingSteps(context),
+          ]);
+        }
+
+        if (timestampFilters.length > 0 && childOfFilters.length === 0) {
+          throw new QueryError({
+            message:
+              'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
+            context: { query: context.originalQuery },
+          });
+        }
+
+        if (childOfFilters.length > 0) {
+          const remainingFilters = flatFilters.filter((f) => f.type !== 'child-of');
+          const innerPlan =
+            remainingFilters.length === 1
+              ? this._generateSelectionFromFilter(remainingFilters[0], context)
+              : remainingFilters.length > 1
+                ? this._generateSelectionFromFilter({ type: 'and', filters: remainingFilters }, context)
+                : QueryPlan.Plan.make([
+                    {
+                      _tag: 'SelectStep',
+                      scope: context.scope,
+                      selector: { _tag: 'WildcardSelector' },
+                    },
+                    ...this._generateDeletedHandlingSteps(context),
+                  ]);
+
+          const childOfSteps: QueryPlan.Step[] = childOfFilters.map((f) => ({
+            _tag: 'FilterStep' as const,
+            filter: f,
+          }));
+
+          return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
+        }
+
+        throw queryTooComplexError(context.originalQuery);
+      }
       case 'or':
         // Optimized case
         if (filter.filters.every(isTrivialTypenameFilter)) {
@@ -262,7 +393,7 @@ export class QueryPlanner {
             },
           ]);
         } else {
-          throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+          throw queryTooComplexError(context.originalQuery);
         }
 
       default:
@@ -734,6 +865,54 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
     direction,
   },
 });
+
+/**
+ * Recursively flattens nested `and` filters into a single list.
+ */
+const _flattenAnd = (filters: readonly QueryAST.Filter[]): QueryAST.Filter[] => {
+  const result: QueryAST.Filter[] = [];
+  for (const f of filters) {
+    if (f.type === 'and') {
+      result.push(..._flattenAnd(f.filters));
+    } else {
+      result.push(f);
+    }
+  }
+  return result;
+};
+
+const _timestampFilterToSelector = (filter: QueryAST.FilterTimestamp): QueryPlan.TimestampSelector => {
+  const selector: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
+  const key =
+    filter.field === 'updatedAt'
+      ? filter.operator === 'gte' || filter.operator === 'gt'
+        ? 'updatedAfter'
+        : 'updatedBefore'
+      : filter.operator === 'gte' || filter.operator === 'gt'
+        ? 'createdAfter'
+        : 'createdBefore';
+  selector[key] = filter.value;
+  return selector;
+};
+
+const _mergeTimestampSelectors = (selectors: QueryPlan.TimestampSelector[]): QueryPlan.TimestampSelector => {
+  const merged: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
+  for (const s of selectors) {
+    if (s.updatedAfter != null) {
+      merged.updatedAfter = Math.max(merged.updatedAfter ?? 0, s.updatedAfter);
+    }
+    if (s.updatedBefore != null) {
+      merged.updatedBefore = Math.min(merged.updatedBefore ?? Infinity, s.updatedBefore);
+    }
+    if (s.createdAfter != null) {
+      merged.createdAfter = Math.max(merged.createdAfter ?? 0, s.createdAfter);
+    }
+    if (s.createdBefore != null) {
+      merged.createdBefore = Math.min(merged.createdBefore ?? Infinity, s.createdBefore);
+    }
+  }
+  return merged;
+};
 
 const isTrivialTypenameFilter = (filter: QueryAST.Filter): boolean => {
   return (

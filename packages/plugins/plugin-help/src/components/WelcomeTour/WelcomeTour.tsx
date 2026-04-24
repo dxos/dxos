@@ -9,7 +9,8 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { HelpContext, type Step } from '../../types';
+import { HelpContext, type Step } from '#types';
+
 import { Tooltip, floaterProps } from '../Tooltip';
 
 const addStepClass = (target: string | HTMLElement) => {
@@ -162,6 +163,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
         callback={callback}
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}
+        spotlightPadding={0}
       />
     </HelpContext.Provider>
   );

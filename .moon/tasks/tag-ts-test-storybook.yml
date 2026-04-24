@@ -14,6 +14,7 @@ tasks:
       - /tools/storybook-react/.storybook/main.ts
       - /tools/storybook-react/.storybook/vitest.setup.ts
       - /vitest.base.config.ts
+      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
       - .storybook/*
       - vitest.config.ts
       - $VITEST_COVERAGE

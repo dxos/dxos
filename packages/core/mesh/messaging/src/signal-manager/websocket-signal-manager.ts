@@ -3,7 +3,7 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,7 +22,6 @@ import {
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
-
 import { type SignalManager } from './signal-manager';
 import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 
@@ -105,30 +104,30 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peer }: JoinRequest): Promise<void> {
+  async join(_ctx: Context, { topic, peer }: JoinRequest): Promise<void> {
     log('join', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._forEachServer((server) => server.join({ topic, peer }));
+    await this._forEachServer((server) => server.join(_ctx, { topic, peer }));
   }
 
   @synchronized
-  async leave({ topic, peer }: LeaveRequest): Promise<void> {
+  async leave(_ctx: Context, { topic, peer }: LeaveRequest): Promise<void> {
     log('leaving', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._forEachServer((server) => server.leave({ topic, peer }));
+    await this._forEachServer((server) => server.leave(_ctx, { topic, peer }));
   }
 
-  async query({ topic }: QueryRequest): Promise<SwarmResponse> {
+  async query(_ctx: Context, { topic }: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
+  async sendMessage(_ctx: Context, { author, recipient, payload }: Message): Promise<void> {
     log('signal', { recipient });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
-        .sendMessage({ author, recipient, payload })
+        .sendMessage(_ctx, { author, recipient, payload })
         .then(() => this._clearServerFailedFlag(serverName, index))
         .catch((err) => {
           if (err instanceof RateLimitExceededError) {

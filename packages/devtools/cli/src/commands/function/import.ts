@@ -11,6 +11,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, flushAndSync, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { Operation } from '@dxos/operation';
@@ -32,7 +33,7 @@ export const importCommand = Command.make(
       yield* Effect.promise(() => client.addTypes([Operation.PersistentOperation]));
 
       // Produce normalized in-memory FunctionType objects for display.
-      const fns = yield* Effect.promise(() => getDeployedFunctions(client, true));
+      const fns = yield* Effect.promise(() => getDeployedFunctions(Context.default(), client, true));
       if (fns.length === 0) {
         return yield* Effect.fail(new Error('No deployed functions available'));
       }

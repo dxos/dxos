@@ -17,7 +17,6 @@ import {
   keymap,
   lineNumbers,
   placeholder,
-  scrollPastEnd,
 } from '@codemirror/view';
 import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -31,10 +30,10 @@ import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
 import { baseTheme, createFontTheme, editorGutter } from '../styles';
-
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
+import { scrollPastEnd } from './scroll-past-end';
 
 //
 // Basic
@@ -184,8 +183,7 @@ export type ThemeExtensionsOptions = {
     editor?: {
       className?: string;
     };
-    scroll?: {
-      // NOTE: Do not apply vertical padding to scroll container.
+    scroller?: {
       className?: string;
     };
     content?: {
@@ -223,7 +221,7 @@ export const createThemeExtensions = ({
   slots: slotsProp,
   syntaxHighlighting: syntaxHighlightingProp,
 }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, slotsProp, defaultThemeSlots);
+  const slots: NonNullable<ThemeExtensionsOptions['slots']> = defaultsDeep({}, slotsProp, defaultThemeSlots);
   return [
     baseTheme,
     EditorView.darkTheme.of(themeMode === 'dark'),
@@ -232,11 +230,13 @@ export const createThemeExtensions = ({
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
-    slots.scroll?.className &&
+    slots.scroller?.className &&
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
-            view.scrollDOM.classList.add(...slots.scroll.className.split(/\s+/));
+            if (slots.scroller?.className) {
+              view.scrollDOM.classList.add(...slots.scroller.className.split(/\s+/));
+            }
           }
         },
       ),

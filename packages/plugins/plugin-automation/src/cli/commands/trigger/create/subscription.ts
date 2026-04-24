@@ -52,7 +52,7 @@ export const subscription = Command.make(
           }).pipe(Prompt.run),
         onSome: (value) => Effect.succeed(value),
       });
-      const queryAst = Query.select(Filter.type(typename)).ast;
+      const subscriptionQuery = Query.select(Filter.type(typename));
 
       const deepOption = yield* Option.match(options.deep, {
         onNone: () =>
@@ -103,13 +103,10 @@ export const subscription = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: {
-          kind: 'subscription',
-          query: {
-            ast: queryAst,
-          },
-          options: Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined,
-        },
+        spec: Trigger.specSubscription(
+          subscriptionQuery,
+          Object.keys(subscriptionOptions).length > 0 ? subscriptionOptions : undefined,
+        ),
         input,
       });
       yield* Database.add(trigger);

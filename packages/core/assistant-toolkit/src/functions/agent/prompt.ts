@@ -2,128 +2,222 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
-import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
-import { AiConversation, type ContextBinding, AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
+import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
+import {
+  AiSession,
+  getOperationFromTool,
+  makeToolExecutionService,
+  makeToolResolverFromOperations,
+} from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { type Message } from '@dxos/types';
+import { trim } from '@dxos/util';
 
+import { PromptError } from '../../errors';
+import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 
-import * as Chat from '../../types/Chat';
-
-const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
-
-const observer = GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' }));
-
-const lastTextFromMessages = (messages: Message.Message[]): string | undefined => {
-  const blocks = messages.flatMap((message) => message.blocks);
-  for (let index = blocks.length - 1; index >= 0; index--) {
-    const block = blocks[index]!;
-    if (block._tag === 'text') {
-      return block.text;
-    }
-  }
-  return undefined;
-};
+const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* (data) {
-      log.info('processing input', { input: data.input });
+    Effect.fnUntraced(
+      function* (data) {
+        log.info('processing input', { input: data.input });
 
-      const input = yield* Ref.isRef(data.input)
-        ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
-        : Effect.succeed(data.input);
+        const input = yield* Ref.isRef(data.input)
+          ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
+          : Effect.succeed(data.input);
 
-      yield* Database.flush();
-      const prompt = yield* Database.load(data.prompt);
-      const systemPrompt = data.systemPrompt ? yield* Database.load(data.systemPrompt) : undefined;
-      yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
+        yield* Database.flush();
+        const prompt = yield* Database.load(data.prompt);
+        yield* Trace.emitStatus(`Running ${prompt.id}`);
 
-      log.info('starting agent', { prompt: prompt.id, input });
+        log.info('starting agent', { prompt: prompt.id, input });
 
-      const blueprints = yield* Function.pipe(
-        prompt.blueprints,
-        Array.appendAll(systemPrompt?.blueprints ?? []),
-        Effect.forEach(Database.loadOption),
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
-
-      const objects = yield* Function.pipe(
-        prompt.context,
-        Array.appendAll(systemPrompt?.context ?? []),
-        Effect.forEach(Database.loadOption),
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
-
-      const promptInstructions = yield* Database.load(prompt.instructions.source);
-      const promptText = Template.process(promptInstructions.content, input);
-
-      const systemInstructions = systemPrompt ? yield* Database.load(systemPrompt.instructions.source) : undefined;
-      const systemText = systemInstructions ? Template.process(systemInstructions.content, {}) : undefined;
-
-      const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
-
-      if (data.chat) {
-        const chat = yield* Database.load(data.chat);
-        invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
-        const chatQueue = yield* Database.load(chat.queue);
-        invariant(chatQueue, 'Chat queue not found.');
-
-        const conversation = yield* acquireReleaseResource(
-          () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
+        const blueprints = yield* Function.pipe(
+          prompt.blueprints,
+          Effect.forEach(Database.loadOption),
+          Effect.map(Array.filter(Option.isSome)),
+          Effect.map(Array.map((option) => option.value)),
         );
 
+        const objects = yield* Function.pipe(
+          prompt.context,
+          Effect.forEach(Database.loadOption),
+          Effect.map(Array.filter(Option.isSome)),
+          Effect.map(Array.map((option) => option.value)),
+        );
+
+        const promptInstructions = yield* Database.load(prompt.instructions.source);
+        let promptText = Template.process(promptInstructions.content, input);
+
+        if (input !== undefined) {
+          promptText += `\n<input>${JSON.stringify(input)}</input>`;
+        }
+
+        let systemText = trim`
+          You are an agent running in the non-interactive mode.
+          The user is unable to see what you are doing, and cannot answer any questions.
+          Do not ask questions.
+          Complete the task before you, and at the end call [completeJob] with the output.
+          If you are unable to complete the task, call [completeJob] with the failure reason.
+          If no output is required, call [completeJob] with an empty object: {}
+          Do not stop until you call [completeJob].
+        `;
+        if (data.systemInstructions) {
+          systemText += `\n\n${data.systemInstructions}`;
+        }
+
+        const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
+
+        let feed: Feed.Feed;
+        if (data.chat) {
+          const chat = yield* Database.load(data.chat);
+          invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
+          feed = yield* Database.load(chat.feed);
+        } else {
+          feed = yield* Database.add(Feed.make());
+        }
+
+        const resultSink = yield* Deferred.make<unknown, PromptError>();
+        const promptToolkit = makePromptAgentToolkit({
+          output: Schema.Any, // TODO(dmaretskyi): Use prompt's output schema.
+          resultSink,
+        });
+
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+
         yield* Effect.promise(() =>
-          conversation.context.bind({
+          session.context.bind({
             blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
             objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
           }),
         );
 
-        const messages = yield* conversation
+        yield* session
           .createRequest({
             prompt: promptText,
             system: systemText,
-            observer,
+            toolkit: promptToolkit,
           })
-          .pipe(Effect.provide(modelLayer));
+          .pipe(
+            Effect.provide(
+              Layer.mergeAll(modelLayer, ToolExecutionService({ feed }), makeToolResolverFromOperations()),
+            ),
+          );
 
-        return {
-          note: lastTextFromMessages(messages),
-        };
-      }
+        return yield* Deferred.poll(resultSink).pipe(
+          Effect.flatten,
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () =>
+            Effect.gen(function* () {
+              yield* session
+                .createRequest({
+                  prompt: 'You must signal task completion by calling [completeJob] with the output or failure reason.',
+                  system: systemText,
+                  toolkit: promptToolkit,
+                })
+                .pipe(
+                  Effect.provide(
+                    Layer.mergeAll(modelLayer, ToolExecutionService({ feed }), makeToolResolverFromOperations()),
+                  ),
+                );
 
-      const toolkit = yield* createToolkit({ blueprints });
-
-      const session = new AiSession({ observer });
-      const result = yield* session
-        .run({
-          prompt: promptText,
-          system: systemText,
-          blueprints,
-          objects: objects as Obj.Unknown[],
-          toolkit,
-        })
-        .pipe(Effect.provide(modelLayer));
-
-      return {
-        note: lastTextFromMessages(result),
-      };
-    }, Effect.scoped),
+              return yield* Deferred.poll(resultSink).pipe(
+                Effect.flatten,
+                Effect.flatten,
+                Effect.catchTag('NoSuchElementException', () =>
+                  Effect.fail(new PromptError('Agent did not signal task completion.', {})),
+                ),
+              );
+            }),
+          ),
+        );
+      },
+      Effect.scoped,
+      Effect.provide(Trace.writerLayerNoop),
+    ),
   ),
+  Operation.opaqueHandler,
 );
+
+const makePromptAgentToolkit = (options: {
+  output: Schema.Schema.Any;
+  resultSink: Deferred.Deferred<unknown, PromptError>;
+}) => {
+  class PromptAgentToolkit extends Toolkit.make(
+    Tool.make('completeJob', {
+      parameters: {
+        success: Schema.optional(Schema.Any), // TODO(dmaretskyi): Pipe output schema here.
+        failure: Schema.optional(
+          Schema.Struct({
+            message: Schema.String.annotations({
+              description: 'Short message describing the error.',
+            }),
+            description: Schema.optional(Schema.String).annotations({
+              description: 'Optional longer message describing in detail what went wrong',
+            }),
+          }),
+        ),
+      },
+    }),
+  ) {}
+  const layer = PromptAgentToolkit.toLayer({
+    completeJob: Effect.fnUntraced(function* (result) {
+      if (result.failure) {
+        yield* Deferred.fail(
+          options.resultSink,
+          new PromptError(result.failure.message, {
+            description: result.failure.description,
+          }),
+        );
+      } else {
+        yield* Deferred.succeed(options.resultSink, result.success);
+      }
+    }),
+  });
+
+  return OpaqueToolkit.make(PromptAgentToolkit, layer);
+};
+
+interface ToolExecutionServiceOptions {
+  feed: Feed.Feed;
+}
+
+const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
+  Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const operationInvoker = yield* Operation.Service;
+      return makeToolExecutionService({
+        invoke: (tool, input) =>
+          Effect.gen(function* () {
+            const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
+            log('invoking operation', { operationDef, input });
+            const result = yield* operationInvoker
+              .invoke(operationDef, input, {
+                conversation: Obj.getDXN(feed).toString(),
+              })
+              .pipe(Effect.orDie);
+            log('result', { result });
+            return result;
+          }),
+      });
+    }),
+  );

@@ -18,7 +18,7 @@ export type CardStyleProps = {
 
 const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card dx-card-min-width min-h-(--dx-rail-item) group/card relative _overflow-hidden',
+    'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
     border &&
       'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
@@ -34,7 +34,7 @@ const cardToolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
 const cardTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
 const cardContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__content contents [&>:last-child]:pb-1', ...etc);
+  mx('dx-card__content contents pb-1 last:pb-0', ...etc);
 
 const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
@@ -46,9 +46,9 @@ const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' },
 
 const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
-    'dx-card__text flex overflow-hidden',
+    'dx-card__text items-center overflow-hidden',
     variant === 'default' && 'py-1',
-    variant === 'description' && 'py-1.5',
+    variant === 'description' && 'py-1.5 text-description',
     ...etc,
   );
 
@@ -73,6 +73,9 @@ const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
+const cardRow: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+  mx('dx-card__row col-span-3 grid grid-cols-subgrid', ...etc);
+
 const cardIconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
   mx(
     'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
@@ -85,6 +88,7 @@ export const cardTheme: Theme<CardStyleProps> = {
   toolbar: cardToolbar,
   title: cardTitle,
   content: cardContent,
+  row: cardRow,
   heading: cardHeading,
   text: cardText,
   'text-span': cardTextSpan,

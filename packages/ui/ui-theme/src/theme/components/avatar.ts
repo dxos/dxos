@@ -29,7 +29,7 @@ export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly 
   mx('text-description', srOnly && 'sr-only', ...etc);
 
 export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
-  mx('w-full h-full bg-(--surface-bg)', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
+  mx('h-full w-full bg-(--surface-bg)', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
 
 export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(

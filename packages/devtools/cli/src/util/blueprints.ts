@@ -2,19 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 
-import { GenericToolkit } from '@dxos/ai';
-import { ArtifactId } from '@dxos/assistant';
+import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { OperationHandlerSet } from '@dxos/operation';
 import { Feed, Tag, type Type } from '@dxos/echo';
+import { OperationHandlerSet } from '@dxos/operation';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessHandlers } from '@dxos/plugin-chess/operations';
@@ -89,29 +84,12 @@ export const operationHandlers = OperationHandlerSet.merge(
   TranscriptionOperationHandlerSet,
 );
 
-const StubDeckToolkit = Toolkit.make(
-  Tool.make('open-item', {
-    description: 'Opens an item in the application.',
-    parameters: { id: ArtifactId },
-    success: Schema.Any,
-    failure: Schema.Never,
-  }),
-);
-
-export const toolkits: GenericToolkit.GenericToolkit[] = [
+export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
   // NOTE: Toolkits referenced by blueprints above need to be added here.
-  GenericToolkit.make(WebSearchToolkit, Layer.empty),
+  OpaqueToolkit.make(WebSearchToolkit, Layer.empty),
 
   // TODO(burdon): Remove?
-  GenericToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
-
-  // TODO(burdon): Remove Composer tools.
-  GenericToolkit.make(
-    StubDeckToolkit,
-    StubDeckToolkit.toLayer({
-      'open-item': ({ id }) => Effect.logInfo('open item', { id }),
-    }),
-  ),
+  OpaqueToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
 ];
 
 export const types: Type.AnyEntity[] = [

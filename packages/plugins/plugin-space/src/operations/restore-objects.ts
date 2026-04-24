@@ -32,10 +32,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreObjects> = Spa
         }
       });
 
-      Obj.change(parentCollection, (obj) => {
+      Obj.change(parentCollection, (parentCollection) => {
         indices.forEach((index: number, i: number) => {
           if (index !== -1) {
-            obj.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
+            parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
           }
         });
       });

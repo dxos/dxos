@@ -26,7 +26,7 @@ export const add = Command.make(
     preset: Options.text('preset').pipe(Options.withDescription('OAuth preset name (e.g., google)'), Options.optional),
     source: Options.text('source').pipe(Options.withDescription('Token source'), Options.optional),
     token: Options.text('token').pipe(Options.withDescription('Token value'), Options.optional),
-    note: Options.text('note').pipe(Options.withDescription('Token note/description'), Options.optional),
+    note: Options.text('note').pipe(Options.withDescription('Token note'), Options.optional),
   },
   ({ preset, source, token, note }) =>
     Effect.gen(function* () {
@@ -87,10 +87,7 @@ export const add = Command.make(
 //
 
 const selectPresetInteractively = Effect.fn(function* () {
-  const presetChoices = OAUTH_PRESETS.map((p) => ({
-    title: `${p.label} - ${p.note}`,
-    value: p.label,
-  }));
+  const presetChoices = OAUTH_PRESETS.map(({ label }) => ({ title: label, value: label }));
   const selectedLabel = yield* Prompt.select({
     message: 'Select OAuth preset:',
     choices: presetChoices,
@@ -132,8 +129,7 @@ const resolvePresetFromCommandLine = (presetValue: string): Effect.Effect<OAuthP
 const addOAuthPresetToken = Effect.fn(function* (preset: OAuthPreset, json: boolean) {
   const accessToken = Obj.make(AccessToken.AccessToken, {
     source: preset.source,
-    note: preset.note,
-    token: '', // Will be populated by OAuth flow
+    token: '', // Will be populated by OAuth flow.
   });
 
   yield* performOAuthFlow(preset, accessToken);
@@ -141,15 +137,18 @@ const addOAuthPresetToken = Effect.fn(function* (preset: OAuthPreset, json: bool
   yield* printTokenResult(accessToken, json);
 });
 
-const addCustomToken = Effect.fn(function* (data: { source: string; token: string; note?: string }, json: boolean) {
+const addCustomToken = Effect.fn(function* (
+  data: Pick<AccessToken.AccessToken, 'source' | 'token' | 'note'>,
+  json: boolean,
+) {
   if (!data.source || !data.token) {
     return yield* Effect.fail(new Error('Source and token are required for custom tokens'));
   }
 
   const accessToken = Obj.make(AccessToken.AccessToken, {
     source: data.source,
-    note: data.note || '',
     token: data.token,
+    note: data.note,
   });
 
   yield* Database.add(accessToken);

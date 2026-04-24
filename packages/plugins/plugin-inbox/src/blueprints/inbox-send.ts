@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '../operations';
+import { InboxOperation } from '#operations';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox-send';
 

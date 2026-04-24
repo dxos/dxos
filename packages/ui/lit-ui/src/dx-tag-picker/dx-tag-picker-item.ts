@@ -46,12 +46,10 @@ export class DxTagPickerItem extends LitElement {
   override render() {
     const className = `dx-tag dx-tag-picker-item${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
     return html`<span class=${className} data-remove=${!!this.removeLabel} data-hue=${this.hue} id=${this.id}
-      ><button class="dx-focus-ring" @click=${this.handleClickActivate}>${this.label}</button>${
-        this.removeLabel &&
-        html`<button class="dx-focus-ring" aria-label=${this.removeLabel} @click=${this.handleClickRemove}>
+      ><button class="dx-focus-ring" @click=${this.handleClickActivate}>${this.label}</button>${this.removeLabel &&
+      html`<button class="dx-focus-ring" aria-label=${this.removeLabel} @click=${this.handleClickRemove}>
         <dx-icon icon="ph--x--regular" />
-      </button>`
-      }</span
+      </button>`}</span
     >`;
   }
 

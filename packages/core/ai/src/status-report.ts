@@ -14,7 +14,6 @@ import { ObjectId } from '@dxos/keys';
  * LLMs are prompted to emit <status>Brewing tea</status> tokens during their execution to notify the client of their current status.
  */
 export const AgentStatus = Schema.Struct({
-  // See {@link TracingService.TraceContext}
   parentMessage: Schema.optional(ObjectId),
   toolCallId: Schema.optional(Schema.String),
   created: Schema.String.pipe(
@@ -24,7 +23,7 @@ export const AgentStatus = Schema.Struct({
   message: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.agent-status',
+    typename: 'org.dxos.type.agentStatus',
     version: '0.1.0',
   }),
 );

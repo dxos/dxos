@@ -10,7 +10,7 @@ import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { FIND_PARAMS, LevelDBStorageAdapter } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
@@ -80,13 +80,13 @@ export class AutomergeReplicant {
   }): Promise<DocumentsResult> {
     performance.mark('create:begin');
     const handles = range(docsCount).map(() =>
-      this._repo!.create<DocStruct>({ text: faker.string.hexadecimal({ length: mutationSize }) }),
+      this._repo!.create<DocStruct>({ text: random.string.hexadecimal({ length: mutationSize }) }),
     );
     const docsCreated: DocumentsResult['docsCreated'] = {};
     for (const handle of handles) {
       for (let i = 0; i < mutationAmount; i++) {
         handle.change((doc) => {
-          const mutation = faker.string.hexadecimal({ length: mutationSize });
+          const mutation = random.string.hexadecimal({ length: mutationSize });
           let newText: string;
           if (doc.text.length < maximumDocSize) {
             newText = doc.text + mutation;

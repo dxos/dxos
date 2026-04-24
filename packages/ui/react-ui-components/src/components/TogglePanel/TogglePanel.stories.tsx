@@ -6,10 +6,10 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { faker } from '@dxos/random';
-import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { random } from '@dxos/random';
+import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';
@@ -23,7 +23,7 @@ class Generator {
   readonly text: Atom.Atom<string[]>;
 
   constructor(private readonly _registry: Registry.Registry) {
-    this._current = Atom.make<string>(faker.lorem.sentence(5));
+    this._current = Atom.make<string>(random.lorem.sentence(5));
     this._lines = Atom.make<string[]>([]);
     this.count = Atom.make((get) => get(this._lines).length);
     this.text = Atom.make((get) => [...get(this._lines), get(this._current)]);
@@ -37,7 +37,7 @@ class Generator {
       if (current.length > 0) {
         this._registry.set(this._current, current + ' ');
       }
-      const newCurrent = this._registry.get(this._current) + faker.lorem.words(Math.ceil(Math.random() * 2));
+      const newCurrent = this._registry.get(this._current) + random.lorem.words(Math.ceil(Math.random() * 2));
       this._registry.set(this._current, newCurrent);
       if (Math.random() > 0.95) {
         this._registry.set(this._lines, [...lines, newCurrent + '.']);
@@ -70,16 +70,18 @@ const DefaultStory = (props: TogglePanelRootProps) => {
   }, [running]);
 
   return (
-    <div className='flex flex-col w-[30rem]'>
-      <Toolbar.Root>
-        <Input.Root>
-          <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
-        </Input.Root>
-        <div className='grow' />
-        <div>{count}</div>
-      </Toolbar.Root>
-      <div className='flex p-4'>
-        <TogglePanel.Root classNames='border border-separator rounded-md' {...props}>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Input.Root>
+            <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
+          </Input.Root>
+          <div className='grow' />
+          <div>{count}</div>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <TogglePanel.Root classNames='border border-separator' {...props}>
           <TogglePanel.Header
             icon={
               running ? (
@@ -89,12 +91,14 @@ const DefaultStory = (props: TogglePanelRootProps) => {
           >
             Test
           </TogglePanel.Header>
-          <TogglePanel.Content classNames='bg-modal-surface'>
-            <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
+          <TogglePanel.Content>
+            <TogglePanel.Viewport>
+              <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
+            </TogglePanel.Viewport>
           </TogglePanel.Content>
         </TogglePanel.Root>
-      </div>
-    </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -114,10 +118,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {},
-};
-
-export const Shrink: Story = {
-  args: {
-    shrink: true,
-  },
 };

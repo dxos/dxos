@@ -12,11 +12,24 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#types": "./src/types/index.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./harness": {
+      "source": "./src/harness.ts",
+      "types": "./dist/types/src/harness.d.ts",
+      "browser": "./dist/lib/browser/harness.mjs",
+      "node": "./dist/lib/node-esm/harness.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

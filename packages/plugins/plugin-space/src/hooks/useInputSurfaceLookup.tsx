@@ -19,7 +19,7 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormField
     ({ schema, prop, fieldProps }) => {
       const data = { prop, schema, ...baseData };
       if (Surface.isAvailable(pluginManager.capabilities, { role: 'form-input', data })) {
-        return <Surface.Surface role='form-input' data={data} {...fieldProps} />;
+        return <Surface.Surface role='form-input' data={data} {...(fieldProps as Record<string, any>)} />;
       }
     },
     [pluginManager, baseData],

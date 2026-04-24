@@ -9,18 +9,26 @@ import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { AttentionEvents } from '@dxos/plugin-attention/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
-import { CalendarBlueprint, InboxBlueprint } from './blueprints';
-import { AppGraphBuilder, BlueprintDefinition, OperationHandler, ReactSurface } from './capabilities';
-import { meta } from './meta';
+import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  InboxSettings,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
+import { meta } from '#meta';
+import { InboxOperation } from '#operations';
+import { Calendar, InboxEvents, Mailbox } from '#types';
+
 import { translations } from './translations';
-import { InboxOperation } from './operations';
-import { Calendar, Mailbox } from './types';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 
@@ -30,6 +38,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addMetadataModule({
     metadata: [
       {
@@ -110,6 +119,11 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [InboxEvents.SettingsReady],
+    activate: InboxSettings,
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,

@@ -4,21 +4,21 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '../../components';
-import { meta } from '../../meta';
-import { type Chess } from '../../types';
+import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
+import { meta } from '#meta';
+import { type Chess } from '#types';
 
-export type ChessArticleProps = SurfaceComponentProps<Chess.Game>;
+export type ChessArticleProps = AppSurface.ObjectArticleProps<Chess.Game>;
 
-export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
+export const ChessArticle = ({ role, attendableId: _attendableId, subject: game }: ChessArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
-  const [open, setOpen] = useState(true);
+  const [showInfo, setShowInfo] = useState(true);
   const controller = useRef<ChessboardController>(null);
 
   const handleSelect = useCallback<NonNullable<ChessboardInfoProps['onSelect']>>((index) => {
@@ -33,33 +33,34 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
             <Toolbar.IconButton
               icon='ph--info--regular'
               iconOnly
-              label={t('toggle info button')}
-              disabled={open}
+              label={t('toggle-info.button')}
+              disabled={showInfo}
               classNames={mx('invisible @3xl:visible')}
-              onClick={() => setOpen((open) => !open)}
+              onClick={() => setShowInfo((open) => !open)}
             />
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content>
           <div
             className={mx(
-              'grid h-full w-full gap-2',
-              open && '@3xl:grid-cols-[1fr_320px]',
+              'grid h-full w-full',
+              showInfo && '@3xl:grid-cols-[1fr_320px] gap-8',
+              role === 'article' && 'p-4',
               role === 'section' && 'aspect-square',
-              role === 'section' && open && '@3xl:aspect-auto',
+              role === 'section' && showInfo && '@3xl:aspect-auto',
             )}
           >
             <Chessboard.Content>
-              <Chessboard.Board classNames='m-4 rounded-xs overflow-hidden' orientation={orientation} />
+              <Chessboard.Board classNames='border rounded-xs' orientation={orientation} />
             </Chessboard.Content>
-            {open && (
-              <div className='hidden @3xl:flex flex-col p-8 justify-center items-center overflow-hidden'>
+            {showInfo && (
+              <div className='hidden @3xl:flex flex-col justify-center items-center overflow-hidden'>
                 <Chessboard.Info
                   orientation={orientation}
                   min={8}
                   max={8}
                   onOrientationChange={setOrientation}
-                  onClose={() => setOpen(false)}
+                  onClose={() => setShowInfo(false)}
                   onSelect={handleSelect}
                 />
               </div>

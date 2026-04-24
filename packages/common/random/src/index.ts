@@ -4,4 +4,4 @@
 
 export * from '@ngneat/falso';
 
-export * from './faker';
+export { random } from './random';

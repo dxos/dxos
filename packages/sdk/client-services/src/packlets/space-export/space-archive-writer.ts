@@ -7,8 +7,15 @@ import type * as tar from '@obsidize/tar-browserify';
 import { type Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
-import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';
-import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  FEED_ARCHIVE_BLOCKS_PER_CHUNK,
+  type FeedArchiveBlock,
+  type FeedArchiveMetadata,
+  SpaceArchiveFileStructure,
+  type SpaceArchiveMetadata,
+  SpaceArchiveVersion,
+} from '@dxos/protocols';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { createFilename } from '@dxos/util';
 
 export type SpaceArchiveBeginProps = {
@@ -57,6 +64,34 @@ export class SpaceArchiveWriter extends Resource {
     this._archive.addBinaryFile(`${SpaceArchiveFileStructure.documents}/${documentId}.bin`, data);
   }
 
+  /**
+   * Writes a feed with its metadata and blocks to the archive.
+   * Blocks are written in chunks of {@link FEED_ARCHIVE_BLOCKS_PER_CHUNK}.
+   */
+  async writeFeed(feedId: string, namespace: string, blocks: FeedArchiveBlock[]): Promise<void> {
+    assertArgument(feedId, 'feedId', 'Feed ID is required');
+    assertArgument(namespace, 'namespace', 'Namespace is required');
+    assertState(this._archive, 'Not open');
+
+    const feedPath = `${SpaceArchiveFileStructure.feeds}/${feedId}`;
+
+    const metadata: FeedArchiveMetadata = {
+      id: feedId,
+      namespace,
+    };
+    this._archive.addTextFile(`${feedPath}/${SpaceArchiveFileStructure.feedMetadata}`, JSON.stringify(metadata));
+
+    for (let chunkIndex = 0; chunkIndex * FEED_ARCHIVE_BLOCKS_PER_CHUNK < blocks.length; chunkIndex++) {
+      const start = chunkIndex * FEED_ARCHIVE_BLOCKS_PER_CHUNK;
+      const end = Math.min(start + FEED_ARCHIVE_BLOCKS_PER_CHUNK, blocks.length);
+      const chunk = blocks.slice(start, end);
+      this._archive.addTextFile(
+        `${feedPath}/${SpaceArchiveFileStructure.feedBlocksPrefix}${chunkIndex}.json`,
+        JSON.stringify(chunk),
+      );
+    }
+  }
+
   async finish(): Promise<SpaceArchive> {
     assertState(this._archive, 'Not open');
     assertState(this._meta, 'Not started');
@@ -80,6 +115,7 @@ export class SpaceArchiveWriter extends Resource {
     return {
       filename: createFilename({ parts: [this._meta.spaceId], ext: 'tar' }),
       contents: binary,
+      format: SpaceArchive.Format.BINARY,
     };
   }
 }

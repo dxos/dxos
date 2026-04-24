@@ -17,7 +17,6 @@ import { type AsyncCallback, Callback } from '@dxos/util';
 
 import { type MetadataStore } from '../metadata';
 import { type PipelineAccessor } from '../pipeline';
-
 import { ControlPipeline } from './control-pipeline';
 import { type SpaceProtocol } from './space-protocol';
 
@@ -172,29 +171,29 @@ export class Space extends Resource {
     return Array.from(this._controlPipeline.spaceState.feeds.values());
   }
 
-  @trace.span()
+  @trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     log('opening...');
 
     // Order is important.
-    await this._controlPipeline.start();
+    await this._controlPipeline.start(ctx);
 
     log('opened');
   }
 
   @synchronized
-  public async startProtocol(): Promise<void> {
+  public async startProtocol(ctx: Context): Promise<void> {
     invariant(this.isOpen);
-    await this.protocol.start();
+    await this.protocol.start(ctx);
     await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     log('closing...', { key: this._key });
 
     // Closes in reverse order to open.
-    await this.protocol.stop();
+    await this.protocol.stop(ctx);
     await this._controlPipeline.stop();
 
     log('closed');

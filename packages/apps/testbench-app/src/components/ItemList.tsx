@@ -2,26 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { ComposableProps, IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { composableProps, mx, subtleHover } from '@dxos/ui-theme';
+import { composable, composableProps, mx, subtleHover } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 
-export type ItemListProps<T> = ComposableProps<
-  HTMLDivElement,
-  {
-    objects: T[];
-  } & Pick<ItemProps<T>, 'debug' | 'onDelete'>
->;
+export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
-export const ItemList = forwardRef<HTMLDivElement, ItemListProps<Obj.Any>>(
+export const ItemList = composable<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
@@ -66,7 +61,8 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: Obj.Any, prop: string) => object[prop];
-  const setValue = (object: Obj.Any, prop: string, value: any) => Obj.change(object, (obj) => (obj[prop] = value));
+  const setValue = (object: Obj.Any, prop: string, value: any) =>
+    Obj.change(object, (object) => (object[prop] = value));
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>

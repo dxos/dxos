@@ -11,6 +11,9 @@ import { BoardManager } from './board-manager';
 const PORT = 9008;
 const STORY_URL = storybookUrl('ui-react-ui-mosaic-board--spec', PORT);
 
+const ABOVE_OFFSET = -20;
+const BELOW_OFFSET = 50;
+
 test.describe('Board', () => {
   let page: Page;
   let board: BoardManager;
@@ -49,7 +52,7 @@ test.describe('Board', () => {
     const secondLabel = await column.item(1).title().textContent();
 
     // Drag first item below the second item.
-    await column.item(0).dragTo(column.item(1).locator, { x: 0, y: 20 });
+    await column.item(0).dragTo(column.item(1).locator, { x: 0, y: BELOW_OFFSET });
 
     // Item count should stay the same.
     await expect(column.items()).toHaveCount(countBefore);
@@ -70,7 +73,7 @@ test.describe('Board', () => {
     const draggedLabel = await col0.item(0).title().textContent();
 
     // Drag above the first item in the target column.
-    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: -10 });
+    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: ABOVE_OFFSET });
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col1.items()).toHaveCount(col1CountBefore + 1);
@@ -86,7 +89,7 @@ test.describe('Board', () => {
     const draggedLabel = await col0.item(0).title().textContent();
 
     // Drag to below the first item in the target column.
-    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: 10 });
+    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: BELOW_OFFSET });
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col1.items()).toHaveCount(col1CountBefore + 1);
@@ -104,7 +107,9 @@ test.describe('Board', () => {
     // Hold ~20px above the footer to trigger pragmatic auto-scroll,
     // then drop on the last item once it scrolls into view.
     const footer = col1.locator.getByTestId('board-column-add-item');
-    await col0.item(0).dragToEndWithAutoScroll(footer, col1.item(col1CountBefore - 1).locator, { x: 0, y: 20 });
+    await col0
+      .item(0)
+      .dragToEndWithAutoScroll(footer, col1.item(col1CountBefore - 1).locator, { x: 0, y: BELOW_OFFSET });
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col1.items()).toHaveCount(col1CountBefore + 1);
@@ -120,7 +125,7 @@ test.describe('Board', () => {
     const draggedLabel = await col0.item(0).title().textContent();
 
     // Drag into the empty column body area.
-    await col0.item(0).dragTo(col2.header(), { x: 0, y: 40 });
+    await col0.item(0).dragTo(col2.header(), { x: 0, y: BELOW_OFFSET });
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col2.items()).toHaveCount(1);

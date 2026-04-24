@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
 import { renderHook, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
+import { TestSchema } from '@dxos/echo/testing';
 
 import { useObject } from './useObject';
 

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, assert, describe, it } from '@effect/vitest';
 import { type Atom, Registry } from '@effect-atom/atom-react';
+import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
-import * as Exit from 'effect/Exit';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
@@ -18,7 +18,6 @@ import { invariant } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents } from '../common';
-
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import type * as CapabilityManager from './capability-manager';
@@ -77,11 +76,35 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       const added = yield* manager.add(testMeta.id);
-      assert.isTrue(added);
+      assert.strictEqual(added, testPlugin);
       assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
+      assert.deepStrictEqual(manager.getEnabled(), []);
       const removed = manager.remove(testMeta.id);
       assert.isTrue(removed);
       assert.deepStrictEqual(manager.getPlugins(), []);
+    }),
+  );
+
+  it.effect('should add plugin when locator differs from meta.id', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.make(Plugin.define(testMeta));
+      const testPlugin = Test();
+
+      const urlLocator = 'https://example.com/plugin.mjs';
+      const urlLoader = Effect.fn(function* (locator: string) {
+        if (locator === urlLocator) {
+          return testPlugin;
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: urlLoader });
+      const added = yield* manager.add(urlLocator);
+      assert.strictEqual(added, testPlugin);
+      assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
+      assert.deepStrictEqual(manager.getEnabled(), []);
+      yield* manager.enable(added.meta.id);
+      assert.deepStrictEqual(manager.getEnabled(), [testMeta.id]);
     }),
   );
 
@@ -199,6 +222,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       const error = yield* Effect.flip(manager.activate(FailEvent));
       assert.strictEqual(error.message, 'test');
     }),
@@ -231,6 +255,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       const error = yield* Effect.flip(manager.activate(DefectEvent));
 
       // Verify the error was caught and propagated.
@@ -277,6 +302,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       const error = yield* Effect.flip(manager.activate(DefectEvent));
 
       // Verify the error was caught and propagated.
@@ -341,6 +367,7 @@ describe('PluginManager', () => {
       );
 
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       yield* activating.await;
       yield* activated.await;
@@ -391,6 +418,7 @@ describe('PluginManager', () => {
 
       {
         yield* manager.add(testMeta.id);
+        yield* manager.enable(testMeta.id);
         const result = yield* manager.activate(ActivationEvents.Startup);
         assert.isTrue(result);
         assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
@@ -455,16 +483,19 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
 
       yield* manager.add(Plugin1.meta.id);
+      yield* manager.enable(Plugin1.meta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(Number).length, 1);
 
       yield* manager.add(Plugin2.meta.id);
+      yield* manager.enable(Plugin2.meta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id, plugin2.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(Number).length, 2);
 
       yield* manager.add(Plugin3.meta.id);
+      yield* manager.enable(Plugin3.meta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [
         plugin1.modules[0].id,
@@ -495,6 +526,7 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
 
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), []);
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
@@ -528,6 +560,7 @@ describe('PluginManager', () => {
       assert.strictEqual(count, 0);
 
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(CountEvent);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
@@ -552,7 +585,7 @@ describe('PluginManager', () => {
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
-          activatesBefore: [CountEvent],
+          firesBeforeActivation: [CountEvent],
           activate: Effect.fnUntraced(function* () {
             const capabilityManager = yield* Capability.Service;
             computeTotal(capabilityManager);
@@ -587,7 +620,9 @@ describe('PluginManager', () => {
       const manager = PluginManager.make({ pluginLoader });
       {
         yield* manager.add(Test.meta.id);
+        yield* manager.enable(Test.meta.id);
         yield* manager.add(Count.meta.id);
+        yield* manager.enable(Count.meta.id);
         yield* manager.activate(ActivationEvents.Startup);
         assert.deepStrictEqual(manager.getActive(), [
           ...testPlugin.modules.map((m) => m.id),
@@ -670,6 +705,7 @@ describe('PluginManager', () => {
       assert.strictEqual(pendingResetUpdates.count, 0);
 
       yield* manager.add(Plugin1.meta.id);
+      yield* manager.enable(Plugin1.meta.id);
       assert.strictEqual(pluginUpdates.count, 1);
       assert.strictEqual(enabledUpdates.count, 1);
       assert.strictEqual(modulesUpdates.count, 1);
@@ -686,6 +722,7 @@ describe('PluginManager', () => {
       assert.strictEqual(pendingResetUpdates.count, 0);
 
       yield* manager.add(Plugin2.meta.id);
+      yield* manager.enable(Plugin2.meta.id);
       assert.strictEqual(pluginUpdates.count, 2);
       assert.strictEqual(enabledUpdates.count, 2);
       assert.strictEqual(modulesUpdates.count, 2);
@@ -702,6 +739,7 @@ describe('PluginManager', () => {
       assert.strictEqual(pendingResetUpdates.count, 2);
 
       yield* manager.add(Plugin3.meta.id);
+      yield* manager.enable(Plugin3.meta.id);
       assert.strictEqual(pluginUpdates.count, 3);
       assert.strictEqual(enabledUpdates.count, 3);
       assert.strictEqual(modulesUpdates.count, 3);
@@ -773,6 +811,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(SlowPlugin.meta.id);
+      yield* manager.enable(SlowPlugin.meta.id);
 
       // Fork the activation so we can control time with TestClock.
       const activationFiber = yield* Effect.fork(manager.activate(SlowEvent));
@@ -821,6 +860,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(ConcurrentPlugin.meta.id);
+      yield* manager.enable(ConcurrentPlugin.meta.id);
 
       // Fork two concurrent activations with DIFFERENT events.
       // Both events trigger the same module, so both will try to call _loadModule.
@@ -869,7 +909,9 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(Plugin1.meta.id);
+      yield* manager.enable(Plugin1.meta.id);
       yield* manager.add(Plugin2.meta.id);
+      yield* manager.enable(Plugin2.meta.id);
       yield* manager.activate(ActivationEvents.Startup);
       assert.strictEqual(manager.getActive().length, 2);
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
@@ -906,6 +948,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       assert.isFalse(deactivated);
 
@@ -951,7 +994,9 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(Plugin1.meta.id);
+      yield* manager.enable(Plugin1.meta.id);
       yield* manager.add(Plugin2.meta.id);
+      yield* manager.enable(Plugin2.meta.id);
       yield* manager.activate(ActivationEvents.Startup);
 
       yield* manager.shutdown();
@@ -974,6 +1019,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       assert.isTrue(manager.getEventsFired().length > 0);
 
@@ -1006,6 +1052,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
 
       const activationFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
       yield* activationStarted.await;
@@ -1042,6 +1089,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
 
       const pluginsBefore = manager.getPlugins();
@@ -1077,6 +1125,7 @@ describe('PluginManager', () => {
 
       const manager = PluginManager.make({ pluginLoader });
       yield* manager.add(testMeta.id);
+      yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       assert.strictEqual(activateCount, 1);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);

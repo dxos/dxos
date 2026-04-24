@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ChatContainer } from './ChatContainer';
-
-export default ChatContainer;
+export { ChatContainer as default } from './ChatContainer';

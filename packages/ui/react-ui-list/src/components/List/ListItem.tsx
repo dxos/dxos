@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import {
   type Edge,
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
@@ -242,7 +242,7 @@ export const ListItemDeleteButton = ({
       disabled={isDisabled}
       icon={icon}
       iconOnly
-      label={label ?? t('delete label')}
+      label={label ?? t('delete.label')}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
   );
@@ -257,7 +257,7 @@ export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled
       disabled={disabled}
       icon='ph--dots-six-vertical--regular'
       iconOnly
-      label={t('drag handle label')}
+      label={t('drag-handle.label')}
       ref={dragHandleRef}
     />
   );

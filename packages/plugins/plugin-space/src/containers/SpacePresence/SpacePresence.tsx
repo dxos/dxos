@@ -26,8 +26,8 @@ import {
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { meta } from '../../meta';
-import { type ObjectViewerProps, SpaceCapabilities } from '../../types';
+import { meta } from '#meta';
+import { type ObjectViewerProps, SpaceCapabilities } from '#types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -249,7 +249,7 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
   const { t } = useTranslation(meta.id);
 
   return (
-    <Tooltip.Trigger asChild content={t('presence label', { count })} side='bottom'>
+    <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
       <AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}
