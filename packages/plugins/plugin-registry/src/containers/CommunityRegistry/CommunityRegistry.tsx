@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Plugin, UrlLoader } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
@@ -21,6 +21,9 @@ import { getPluginPath, meta } from '#meta';
 import { useAutoTags, useCommunityPlugins } from '../../hooks';
 
 const sortEntries = (a: PluginEntry, b: PluginEntry) =>
+  (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
+
+const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
 
 /**
@@ -47,9 +50,18 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     const { entries, loading, error } = useCommunityPlugins();
     const enabled = useAtomValue(manager.enabled);
     const plugins = useAtomValue(manager.plugins);
-    const installedIds = useMemo(() => new Set(plugins.map((plugin) => plugin.meta.id)), [plugins]);
+    const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.id), [plugins]);
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const extraTagsById = useAutoTags(entries);
+
+    // Snapshot of installed plugin ids at mount time. Used to decide which
+    // section a plugin renders in — new installs stay in the Community section
+    // for the current session so rows don't jump around mid-interaction.
+    const [installedSnapshot] = useState<ReadonlySet<string>>(
+      () => new Set(manager.getPlugins().map((plugin) => plugin.meta.id)),
+    );
+
+    const [installingIds, setInstallingIds] = useState<readonly string[]>([]);
 
     const sortedEntries = useMemo(() => [...entries].sort(sortEntries), [entries]);
     const moduleUrlById = useMemo(() => {
@@ -60,32 +72,28 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       return map;
     }, [sortedEntries]);
 
-    // Plugins the user loaded by URL that aren't in the Edge catalog belong in
-    // the community section — otherwise they'd be invisible (they're filtered
-    // out of Official/Recommended by `useRemotePluginIds`).
-    const displayPlugins = useMemo(() => {
+    const { installedItems, communityItems } = useMemo(() => {
       const catalogIds = new Set(sortedEntries.map((entry) => entry.meta.id));
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
-      const fromCatalog = sortedEntries.map(toDisplayPlugin);
-      const fromUrl = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
-      return [...fromCatalog, ...fromUrl].sort((a, b) =>
-        (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id),
+      const fromCatalogInstalled = sortedEntries
+        .filter((entry) => installedSnapshot.has(entry.meta.id))
+        .map(toDisplayPlugin);
+      // URL-loaded plugins that are not in the catalog also belong in "Installed".
+      const fromUrlInstalled = plugins.filter(
+        (plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id),
       );
-    }, [sortedEntries, plugins]);
+      const installedItems = [...fromCatalogInstalled, ...fromUrlInstalled].sort(sortPlugins);
+      const communityItems = sortedEntries
+        .filter((entry) => !installedSnapshot.has(entry.meta.id))
+        .map(toDisplayPlugin);
+      return { installedItems, communityItems };
+    }, [sortedEntries, installedSnapshot, plugins]);
 
     const handleChange = useCallback(
       (pluginId: string, nextEnabled: boolean) =>
         Effect.gen(function* () {
           if (nextEnabled) {
-            if (installedIds.has(pluginId)) {
-              yield* manager.enable(pluginId);
-            } else {
-              const moduleUrl = moduleUrlById[pluginId];
-              if (!moduleUrl) {
-                return;
-              }
-              yield* manager.add(moduleUrl);
-            }
+            yield* manager.enable(pluginId);
           } else {
             yield* manager.disable(pluginId);
           }
@@ -95,7 +103,29 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
             properties: { plugin: pluginId, enabled: nextEnabled, source: 'community' },
           });
         }).pipe(runAndForwardErrors),
-      [invoke, manager, installedIds, moduleUrlById],
+      [invoke, manager],
+    );
+
+    const handleInstall = useCallback(
+      (pluginId: string) => {
+        const moduleUrl = moduleUrlById[pluginId];
+        if (!moduleUrl) {
+          return;
+        }
+        setInstallingIds((prev) => (prev.includes(pluginId) ? prev : [...prev, pluginId]));
+        Effect.gen(function* () {
+          const plugin = yield* manager.add(moduleUrl);
+          yield* manager.enable(plugin.meta.id);
+          yield* invoke(ObservabilityOperation.SendEvent, {
+            name: 'plugins.install',
+            properties: { plugin: plugin.meta.id, source: 'community' },
+          });
+        }).pipe(
+          Effect.ensuring(Effect.sync(() => setInstallingIds((prev) => prev.filter((pid) => pid !== pluginId)))),
+          runAndForwardErrors,
+        );
+      },
+      [invoke, manager, moduleUrlById],
     );
 
     const handleClick = useCallback(
@@ -118,19 +148,50 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       [invokePromise],
     );
 
+    const hasAny = installedItems.length > 0 || communityItems.length > 0;
+
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          {displayPlugins.length > 0 ? (
-            <PluginList
-              plugins={displayPlugins}
-              enabled={enabled}
-              extraTagsById={extraTagsById}
-              onClick={handleClick}
-              onChange={handleChange}
-              hasSettings={hasSettings}
-              onSettings={handleSettings}
-            />
+          {hasAny ? (
+            <>
+              {installedItems.length > 0 && (
+                <>
+                  <h2 className='px-4 pt-4 pb-0 text-description text-xs uppercase tracking-wider'>
+                    {t('installed-section.label')}
+                  </h2>
+                  <PluginList
+                    plugins={installedItems}
+                    installed={installedIds}
+                    enabled={enabled}
+                    extraTagsById={extraTagsById}
+                    onClick={handleClick}
+                    onChange={handleChange}
+                    hasSettings={hasSettings}
+                    onSettings={handleSettings}
+                  />
+                </>
+              )}
+              {communityItems.length > 0 && (
+                <>
+                  <h2 className='px-4 pt-4 pb-0 text-description text-xs uppercase tracking-wider'>
+                    {t('community-section.label')}
+                  </h2>
+                  <PluginList
+                    plugins={communityItems}
+                    installed={installedIds}
+                    installing={installingIds}
+                    enabled={enabled}
+                    extraTagsById={extraTagsById}
+                    onClick={handleClick}
+                    onChange={handleChange}
+                    onInstall={handleInstall}
+                    hasSettings={hasSettings}
+                    onSettings={handleSettings}
+                  />
+                </>
+              )}
+            </>
           ) : error ? (
             <div className='p-4 text-description'>Failed to load community plugins: {error.message}</div>
           ) : loading ? (

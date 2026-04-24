@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -14,10 +14,15 @@ export type PluginDetailProps = {
   plugin: Plugin.Plugin;
   enabled?: boolean;
   onEnabledChange?: (enabled: boolean) => void;
+  /**
+   * When provided, an Uninstall button is rendered. Leave undefined for core
+   * or non-removable plugins.
+   */
+  onUninstall?: () => void;
 };
 
 export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
-  ({ plugin, enabled, onEnabledChange, ...props }, forwardedRef) => {
+  ({ plugin, enabled, onEnabledChange, onUninstall, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const {
       id,
@@ -73,6 +78,11 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   )}
                 </div>
               </div>
+              {onUninstall && (
+                <div role='none'>
+                  <Button onClick={onUninstall}>{t('uninstall.label')}</Button>
+                </div>
+              )}
             </div>
           </div>
         </ScrollArea.Viewport>
