@@ -3,18 +3,12 @@
 //
 
 import * as Command from '@effect/cli/Command';
+import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
 
+import { getDispatcher } from '../dispatcher';
 import { multilinePrompt } from '../util';
-
-/** Resolves the `bin/dx` wrapper relative to this file so the child process inherits the same dev/source-mode setup. */
-const resolveBinDx = (): string => {
-  const currentFile = fileURLToPath(import.meta.url);
-  return resolve(dirname(currentFile), '..', '..', 'bin', 'dx');
-};
 
 /**
  * Splits a raw input line into argv tokens. Supports single/double-quoted
@@ -36,7 +30,12 @@ export const repl = Command.make(
   {},
   (): Effect.Effect<void, unknown, never> =>
     Effect.gen(function* () {
-      const binDx = resolveBinDx();
+      const dispatch = getDispatcher();
+
+      // Mimic the argv that `Command.run` receives from `process.argv`:
+      // the first two elements are ignored by the Effect CLI parser, so we
+      // just reuse whatever launched this process.
+      const argvPrefix: string[] = [process.argv[0] ?? 'bun', process.argv[1] ?? 'dx'];
 
       yield* Console.log('DXOS Interactive Shell');
       yield* Console.log('Enter a `dx` command (multi-line supported — press Enter twice to submit).');
@@ -56,26 +55,20 @@ export const repl = Command.make(
           continue;
         }
 
-        const argv = tokenize(result.value);
-        if (argv.length === 0) {
+        const tokens = tokenize(result.value);
+        if (tokens.length === 0) {
           continue;
         }
 
-        yield* Effect.tryPromise({
-          try: async () => {
-            const proc = Bun.spawn([binDx, ...argv], {
-              stdin: 'inherit',
-              stdout: 'inherit',
-              stderr: 'inherit',
-            });
-            await proc.exited;
-            if (proc.exitCode !== 0) {
-              // Keep the REPL alive on non-zero exits so the user can retry.
-              console.error(`(exit code ${proc.exitCode})`);
-            }
-          },
-          catch: (cause) => new Error(`Failed to dispatch command: ${String(cause)}`),
-        }).pipe(Effect.catchAll((error) => Console.error(String(error))));
+        // Dispatch in-process. Command failures are caught so the REPL
+        // stays alive for the next prompt.
+        yield* dispatch([...argvPrefix, ...tokens]).pipe(
+          Effect.catchAllCause((cause) =>
+            Cause.isInterruptedOnly(cause)
+              ? Effect.void
+              : Console.error(Cause.pretty(cause)),
+          ),
+        );
       }
 
       yield* Console.log('Goodbye.');

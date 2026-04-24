@@ -26,6 +26,7 @@ import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 
 import { admin, chat, debug, dx, fn, hub, repl } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
+import { setDispatcher } from './dispatcher';
 
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
@@ -88,6 +89,19 @@ const program = Effect.gen(function* () {
   });
 
   const layer = Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty);
+
+  // Register in-process dispatcher so `repl` can reuse the already-built
+  // command tree and plugin layer instead of spawning a child `dx` process
+  // per command. See src/dispatcher.ts.
+  // NOTE: The final `as` matches the same Effect type-system workaround
+  // applied at the outer `program` scope — `Command.run`'s inferred
+  // `Requirements` channel becomes overly restrictive even when the layer
+  // provides everything.
+  setDispatcher(
+    (argv) =>
+      Command.run(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
+  );
+
   return yield* Command.run(command, CLI_CONFIG)(process.argv).pipe(Effect.provide(layer));
 }).pipe(
   Effect.provide(Layer.mergeAll(BunContext.layer, Logger.pretty)),
