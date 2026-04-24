@@ -134,9 +134,7 @@ export default Capability.makeModule(
             [data.subject.space, invokePromise],
           );
 
-          return (
-            <SpaceGenerator classNames='dx-document' space={data.subject.space} onCreateObjects={handleCreateObject} />
-          );
+          return <SpaceGenerator role={role} space={data.subject.space} onCreateObjects={handleCreateObject} />;
         },
       }),
       Surface.create({
