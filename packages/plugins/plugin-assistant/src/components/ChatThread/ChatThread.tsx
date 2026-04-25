@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -78,12 +78,8 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     return (
       <div
         role='none'
+        data-hue={userHue}
         className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
-        style={
-          {
-            '--user-fill': `var(--color-${userHue}-fill)`,
-          } as CSSProperties
-        }
       >
         <MarkdownStream
           registry={componentRegistry}

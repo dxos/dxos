@@ -64,7 +64,7 @@ const bottomRowIcons = [14,1,17,24,22,10,3,9,4,20,5,21,6,18,13].map(
             </div>
           </a>
           {plugins.map((plugin) => (
-            <a class="dxos_stack-card plugin w-inline-block" href="#">
+            <div class="dxos_stack-card plugin w-inline-block">
               {plugin.data.icon && (
                 <img src={plugin.data.icon} loading="lazy" alt={plugin.data.name} class="plugin-icon" />
               )}
@@ -73,7 +73,7 @@ const bottomRowIcons = [14,1,17,24,22,10,3,9,4,20,5,21,6,18,13].map(
                 <div class="heading-style-h5">{plugin.data.name}</div>
                 <div class="text-style-muted balanced">{plugin.data.summary}</div>
               </div>
-            </a>
+            </div>
           ))}
         </div>
       </div>

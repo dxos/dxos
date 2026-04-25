@@ -8,12 +8,6 @@ tags: []
 featureImage: /blog/images/shell-panels-1.jpg
 ---
 
-0:00
-
-/0:20
-
-1×
-
 > [Composer](https://composer.space) is a super-app for intelligence, where developers can collaborate real-time, organize knowledge, extend with custom data structures, and run private machine learning and AI against their knowledge locally. It's built on the DXOS SDK, an open source project for local-first, collaborative apps that preserve privacy by synchronizing user data peer-to-peer.
 
 We recently released v0.5.2 of the SDK, which includes "delegated invitations" - an improvement to the sync protocol for joining new users into spaces. Now, any online member of the space may admit a guest bearing an invitation, not just the original inviter. This completes a key scenario for DXOS apps – the ability to "fire-and-forget" invitation links to collaborators, letting them join at any later time.

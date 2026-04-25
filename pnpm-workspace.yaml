@@ -16,11 +16,13 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
+  '@astrojs/rss': ^4.0.17
   '@astrojs/starlight': ^0.38.2
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
+  '@atproto/api': ^0.19.5
   '@automerge/automerge': 3.2.3
   '@automerge/automerge-repo': 2.5.1
   '@automerge/automerge-repo-network-broadcastchannel': 2.5.1
@@ -30,6 +32,7 @@ catalog:
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
   '@babylonjs/loaders': ^7.54.3
+  '@bryanguffey/astro-standard-site': ^1.0.3
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
@@ -366,6 +369,7 @@ catalog:
   debounce: ^2.2.0
   debug: ^4.3.4
   deep-equal: ^2.2.3
+  defuddle: ^0.18.1
   del: ^5.1.0
   depcheck: ^1.4.7
   dfx: ^0.127.0
@@ -747,3 +751,6 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
+  - semver@5.7.2
+  - semver@6.3.1
+  - semver

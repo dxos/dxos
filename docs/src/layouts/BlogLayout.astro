@@ -21,6 +21,7 @@ const { title, description = 'DXOS Blog', ogImage = '/webflow/images/dxos-home-o
   ogImage={ogImage}
   wfPageId="blog"
 >
+  <slot name="head" slot="head" />
   <style is:inline slot="head">
     .blog-article img {
       max-width: 100%;

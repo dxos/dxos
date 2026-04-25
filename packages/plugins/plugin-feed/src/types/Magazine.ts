@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
@@ -24,7 +24,10 @@ export const Magazine = Schema.Struct({
   /** Feeds to pull content from. */
   feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
   /** Long-form brief describing what content the Magazine should gather. */
-  instructions: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  instructions: Ref.Ref(Text.Text).pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'Instructions' }),
+  ),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
 }).pipe(

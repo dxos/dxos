@@ -20,15 +20,15 @@
     "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.17",
+    "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
-    "@bryanguffey/astro-standard-site": "^1.0.3",
+    "@bryanguffey/astro-standard-site": "catalog:",
     "astro": "catalog:",
     "sharp": "catalog:",
     "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
-    "@atproto/api": "^0.19.5",
+    "@atproto/api": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",

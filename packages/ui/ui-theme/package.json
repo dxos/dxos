@@ -27,13 +27,6 @@
       "require": "./dist/plugin/node-cjs/plugins/ThemePlugin.cjs"
     }
   },
-  "typesVersions": {
-    "*": {
-      "plugin": [
-        "dist/types/src/plugins/ThemePlugin.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

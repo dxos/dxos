@@ -77,10 +77,8 @@ const parseFrontmatter = (content: string): { frontmatter: BlogFrontmatter; body
         let value = line.slice(colonIdx + 1).trim();
         currentKey = key;
 
-        if (value === '' || value === '[]') {
-          if (value === '[]') {
-            frontmatter[key] = [];
-          }
+        if (value === '[]') {
+          frontmatter[key] = [];
           continue;
         }
 

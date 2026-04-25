@@ -5,11 +5,9 @@
 import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout } from '@dxos/app-toolkit/ui';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
 
-import { ChangeCompanion } from '../operations/definitions';
+import { LayoutOperation } from '../../operations';
+import { useLayout } from './useLayout';
 
 export type ShowItemOptions = {
   /** Attention context id — typically the master surface's attendableId. */
@@ -39,9 +37,9 @@ export const useShowItem = () => {
 
   return useCallback(
     async ({ contextId, selectionId, companion, path }: ShowItemOptions) => {
-      await invokePromise(AttentionOperation.Select, {
+      await invokePromise(LayoutOperation.Select, {
         contextId,
-        selection: { mode: 'single', id: selectionId },
+        subject: { mode: 'single', id: selectionId },
       });
 
       switch (layout.mode) {
@@ -62,7 +60,7 @@ export const useShowItem = () => {
           break;
       }
 
-      return invokePromise(ChangeCompanion, { companion });
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: companion });
     },
     [invokePromise, layout.mode],
   );

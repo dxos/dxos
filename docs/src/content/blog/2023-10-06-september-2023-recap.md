@@ -22,7 +22,7 @@ Our primary focus in September was preparing DXOS for the demos at our events, w
 
 ### Release 0.2.3
 
-![](/blog/images/270084340-ca80ad63-bad1-42f8-8649-1828eb47b3f5-1.png)
+![aurora-grid mosaic layout UI component](/blog/images/270084340-ca80ad63-bad1-42f8-8649-1828eb47b3f5-1.png)
 
 `aurora-grid` for mosaic layouts
 
@@ -32,12 +32,6 @@ Our primary focus in September was preparing DXOS for the demos at our events, w
 Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.3).
 
 ### Release 0.2.1
-
-0:00
-
-/0:12
-
-1×
 
 In Release 0.2.1, we improved the appearance and code quality and applied consistent border styling to the `Table` component.
 
@@ -54,12 +48,6 @@ The key highlights are:
 Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.1).
 
 ### Release 0.2.0
-
-0:00
-
-/1:12
-
-1×
 
 **In Release 0.2.0, we introduced several improvements and fixes to DXOS apps and plugins, as well as some devtools and UI components.**
 

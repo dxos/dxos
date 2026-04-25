@@ -4,10 +4,11 @@
 
 import { type AnyEntity } from '@dxos/echo/internal';
 import type { DXN, SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import type { ServiceContainer } from './internal';
 
-export interface QueryResult {
+export interface QueuesQueryResult {
   objects: AnyEntity[];
   nextCursor: string | null;
   prevCursor: string | null;
@@ -19,7 +20,7 @@ export interface QueryResult {
  * @deprecated
  */
 export interface QueuesAPI {
-  queryQueue(queue: DXN, options?: {}): Promise<QueryResult>;
+  queryQueue(queue: DXN, options?: {}): Promise<QueuesQueryResult>;
   insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void>;
 }
 
@@ -32,10 +33,18 @@ export class QueuesAPIImpl implements QueuesAPI {
     private readonly _spaceId: SpaceId,
   ) {}
 
-  async queryQueue(queue: DXN, options?: {}): Promise<QueryResult> {
+  async queryQueue(queue: DXN, options?: {}): Promise<QueuesQueryResult> {
     const result = await this._serviceContainer.queryQueue(queue);
+    const objects = (result.objects ?? []).flatMap((encoded): AnyEntity[] => {
+      try {
+        return [JSON.parse(encoded) as AnyEntity];
+      } catch (err) {
+        log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
+        return [];
+      }
+    });
     return {
-      objects: (result.objects ?? []).map((encoded) => JSON.parse(encoded) as AnyEntity),
+      objects,
       nextCursor: result.nextCursor ?? null,
       prevCursor: result.prevCursor ?? null,
     };

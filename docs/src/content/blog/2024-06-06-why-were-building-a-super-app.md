@@ -2,7 +2,7 @@
 title: "Why we're building a super-app"
 slug: why-were-building-a-super-app
 date: 2024-06-06
-description: 'Composer is an open source "Super App" that provides teams with a fully customizable and extensible teams in a single integrated environment.'
+description: "Composer is an open source \"Super App\" that provides teams with a fully customizable and extensible environment."
 author: Rich Burdon
 tags:
   - Composer
@@ -55,7 +55,7 @@ We're building with things like:
 - [tldraw](https://github.com/tldraw/tldraw)
 - and of course, the magic peer-to-peer reactivity of DXOS.
 
-We're choosing react for it's established learning tracks and the wide audience of developers. It's the tech our team has the most overlap with, and we look forward to the opportunity to add more framework support at a later time. Right now we want to focus on what makes our app unique.
+We're choosing react for its established learning tracks and the wide audience of developers. It's the tech our team has the most overlap with, and we look forward to the opportunity to add more framework support at a later time. Right now we want to focus on what makes our app unique.
 
 ### Everything is pluggable
 

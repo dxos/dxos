@@ -8,8 +8,6 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { type Space } from '@dxos/react-client/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -63,9 +61,12 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
       switch (action.type) {
         case 'current': {
           const message = drafts.find((m) => m.id === action.messageId);
-          void invokePromise(AttentionOperation.Select, {
+          if (!message) {
+            return;
+          }
+          void invokePromise(LayoutOperation.Select, {
             contextId: id,
-            selection: { mode: 'single', id: message?.id },
+            subject: { mode: 'single', id: message.id },
           });
 
           const companion = linkedSegment('message');
@@ -81,8 +82,8 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               navigation: 'immediate',
             });
           } else if (message) {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
+            void invokePromise(LayoutOperation.UpdateCompanion, {
+              subject: companion,
             });
           }
           break;

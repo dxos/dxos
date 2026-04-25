@@ -49,6 +49,6 @@ We do not sell or rent your personal information to third parties.
 
 We're continuing to shape and improve our applications and SDK, with your user privacy and security in mind.
 
-We may update this Privacy Policy from time to time. Changes to the policy will be be made to this page and will be effective upon publication of the changes.
+We may update this Privacy Policy from time to time. Changes to the policy will be made to this page and will be effective upon publication of the changes.
 
 If you have any questions about this Privacy Policy, please contact us at [**privacy@dxos.org**](mailto:privacy@dxos.org).

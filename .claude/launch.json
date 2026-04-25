@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "composer-crx",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "composer-crx:serve"],
+      "port": 5173
+    },
+    {
       "name": "composer-app",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "composer-app:serve"],
