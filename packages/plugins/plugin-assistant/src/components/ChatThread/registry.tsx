@@ -231,18 +231,13 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
 const escapeXmlTextContent = (raw: string): string =>
   raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/**
- * Strip actual list-marker prefixes without removing meaningful leading content.
- */
-const stripBulletLikeLinePrefixes = (raw: string): string =>
-  raw
-    .split(/\r?\n/)
-    .map((line) => line.replace(/^\s*(?:[-*+•]|\d+[.)]\s)/, ''))
-    .join('\n');
-
 const renderXMLBlock = (tag: string, opts: { content?: string; pending?: boolean; attributes?: string }) => {
-  // Replace paragraph breaks so that markdown parser does not split the content into multiple paragraphs.
-  const content = escapeXmlTextContent(stripBulletLikeLinePrefixes((opts.content ?? '').replace(/\n\n/g, ' ').trim()));
+  // Replace paragraph breaks so that the markdown parser does not split the content into multiple paragraphs.
+  // NOTE: do not strip leading list-marker prefixes (`-`, `*`, `1. `, ...) per line — the streaming
+  // tag's range is replaced atomically by the XML widget so the inner markdown is never user-visible,
+  // and stripping can collapse a line to empty mid-stream (e.g. when only `1. ` has arrived), breaking
+  // the prefix-extension contract that `MessageSyncer` relies on for incremental appends.
+  const content = escapeXmlTextContent((opts.content ?? '').replace(/\n\n/g, ' ').trim());
 
   if (opts.pending) {
     return `<${tag}${opts.attributes ? ` ${opts.attributes}` : ''}>${content}`;
