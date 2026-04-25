@@ -9,10 +9,9 @@
 //
 
 import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as https from 'node:https';
 import * as http from 'node:http';
-
+import * as https from 'node:https';
+import * as path from 'node:path';
 import TurndownService from 'turndown';
 
 const GHOST_BASE_URL = 'https://blog.dxos.org';
@@ -64,31 +63,33 @@ const downloadFile = (url: string, dest: string): Promise<void> => {
     fs.mkdirSync(dir, { recursive: true });
 
     const transport = url.startsWith('https') ? https : http;
-    transport.get(url, (response) => {
-      if (response.statusCode === 301 || response.statusCode === 302) {
-        const redirectUrl = response.headers.location;
-        if (redirectUrl) {
-          downloadFile(redirectUrl, dest).then(resolve).catch(reject);
+    transport
+      .get(url, (response) => {
+        if (response.statusCode === 301 || response.statusCode === 302) {
+          const redirectUrl = response.headers.location;
+          if (redirectUrl) {
+            downloadFile(redirectUrl, dest).then(resolve).catch(reject);
+            return;
+          }
+        }
+
+        if (response.statusCode !== 200) {
+          reject(new Error(`Failed to download ${url}: HTTP ${response.statusCode}`));
           return;
         }
-      }
 
-      if (response.statusCode !== 200) {
-        reject(new Error(`Failed to download ${url}: HTTP ${response.statusCode}`));
-        return;
-      }
-
-      const file = fs.createWriteStream(dest);
-      response.pipe(file);
-      file.on('finish', () => {
-        file.close();
-        resolve();
-      });
-      file.on('error', (err) => {
-        fs.unlinkSync(dest);
-        reject(err);
-      });
-    }).on('error', reject);
+        const file = fs.createWriteStream(dest);
+        response.pipe(file);
+        file.on('finish', () => {
+          file.close();
+          resolve();
+        });
+        file.on('error', (err) => {
+          fs.unlinkSync(dest);
+          reject(err);
+        });
+      })
+      .on('error', reject);
   });
 };
 
@@ -118,7 +119,13 @@ const formatDate = (isoDate: string): string => {
 };
 
 const escapeYaml = (value: string): string => {
-  if (value.includes(':') || value.includes('#') || value.includes('"') || value.includes("'") || value.startsWith(' ')) {
+  if (
+    value.includes(':') ||
+    value.includes('#') ||
+    value.includes('"') ||
+    value.includes("'") ||
+    value.startsWith(' ')
+  ) {
     return `"${value.replace(/"/g, '\\"')}"`;
   }
   return value;

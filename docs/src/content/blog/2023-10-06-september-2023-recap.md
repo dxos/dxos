@@ -8,7 +8,7 @@ tags: []
 featureImage: /blog/images/dxos-team-1.jpeg
 ---
 
-September was an _event_ful month. The DXOS team traveled to St. Louis and attended [Strange Loop](#strange-loop) and a [Local-first Software Unconference](/blog/dxos-at-localfirst-in-st-louis). We also completed some major protocol upgrades and overhauled Composer, massively improving the drag-n-drop behavior, and rolling out new plugins and an improved layout.
+September was an \_event_ful month. The DXOS team traveled to St. Louis and attended [Strange Loop](#strange-loop) and a [Local-first Software Unconference](/blog/dxos-at-localfirst-in-st-louis). We also completed some major protocol upgrades and overhauled Composer, massively improving the drag-n-drop behavior, and rolling out new plugins and an improved layout.
 
 ## Strange Loop
 
@@ -26,8 +26,8 @@ Our primary focus in September was preparing DXOS for the demos at our events, w
 
 `aurora-grid` for mosaic layouts
 
--   Added new components and stories for the `aurora-grid` package, which is a UI library for creating grid and mosaic layouts.
--   Adding identity and device key and a swarm layout to devtools.
+- Added new components and stories for the `aurora-grid` package, which is a UI library for creating grid and mosaic layouts.
+- Adding identity and device key and a swarm layout to devtools.
 
 Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.3).
 
@@ -37,19 +37,19 @@ Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.3)
 
 /0:12
 
- 1× 
+1×
 
 In Release 0.2.1, we improved the appearance and code quality and applied consistent border styling to the `Table` component.
 
 The key highlights are:
 
--   new [tasks template](https://docs.dxos.org/guide/cli/app-templates.html#tasks-template) 
--   configurable batching
--   fixed shell dark mode
--   composer new drag and drop foundation and fixed presence computation
--   neater vault reset page
--   interactive demo on the [DXOS website](https://dxos.org)
--   docs about shell and default space
+- new [tasks template](https://docs.dxos.org/guide/cli/app-templates.html#tasks-template) 
+- configurable batching
+- fixed shell dark mode
+- composer new drag and drop foundation and fixed presence computation
+- neater vault reset page
+- interactive demo on the [DXOS website](https://dxos.org)
+- docs about shell and default space
 
 Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.1).
 
@@ -59,18 +59,18 @@ Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.1)
 
 /1:12
 
- 1× 
+1×
 
-__In Release 0.2.0, we introduced several improvements and fixes to DXOS apps and plugins, as well as some devtools and UI components.__
+**In Release 0.2.0, we introduced several improvements and fixes to DXOS apps and plugins, as well as some devtools and UI components.**
 
 We released a breaking change which required you to reset your ECHO database through the upgrade.
 
 Here are the key highlights: 
 
--   new spaces API and shell API
--   composer quality of life improvements, vim mode and show closed spaces
--   aurora light theme changes
--   tasks app example
+- new spaces API and shell API
+- composer quality of life improvements, vim mode and show closed spaces
+- aurora light theme changes
+- tasks app example
 
 Full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.2.0).
 

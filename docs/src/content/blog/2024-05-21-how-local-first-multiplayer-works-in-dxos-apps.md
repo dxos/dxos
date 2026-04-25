@@ -12,7 +12,7 @@ featureImage: /blog/images/shell-panels-1.jpg
 
 /0:20
 
- 1× 
+1×
 
 > [Composer](https://composer.space) is a super-app for intelligence, where developers can collaborate real-time, organize knowledge, extend with custom data structures, and run private machine learning and AI against their knowledge locally. It's built on the DXOS SDK, an open source project for local-first, collaborative apps that preserve privacy by synchronizing user data peer-to-peer.
 
@@ -26,9 +26,9 @@ In local-first applications we have to deal with distributed state without the l
 
 DXOS provides some primitives and data structures to help:
 
--   A `space` is an instance of an ECHO local database which replicates objects between a set of cloud peers.
--   An `identity` is roughly a public key that is used to identify users and their different devices.
--   An `invitation` is a way members can invite new peers to join a space.
+- A `space` is an instance of an ECHO local database which replicates objects between a set of cloud peers.
+- An `identity` is roughly a public key that is used to identify users and their different devices.
+- An `invitation` is a way members can invite new peers to join a space.
 
 To share something between peers, objects can be added to a space, and other peers can be invited to join that space in order to begin replicating it. ECHO is based on the [Automerge CRDT](https://automerge.org/), so both real time and offline collaboration is possible without manual conflict resolution.
 
