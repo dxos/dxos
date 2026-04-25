@@ -5,7 +5,6 @@
 
 import { getCollection } from 'astro:content';
 
-import BlogLayout from '../../layouts/BlogLayout.astro';
 
 const posts = (await getCollection('blog')).sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),

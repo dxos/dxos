@@ -112,10 +112,11 @@
     ".idea/**",
     ".vscode/**",
     ".claude/**",
-    "docs",
     "templates/**",
     "scripts/**",
     "docs/legacy/**",
+    "docs/public/webflow/**",
+    "docs/scripts/**",
     "tools/swc-log-plugin/tests/__swc_snapshots__/**",
     "tools/swc-log-plugin/test-rig/**"
   ],

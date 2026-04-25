@@ -5,10 +5,7 @@
 
 import { getCollection, render } from 'astro:content';
 
-import Comments from '@bryanguffey/astro-standard-site/components/Comments.astro';
 
-import BlogLayout from '../../layouts/BlogLayout.astro';
-import IconChevronRight from '../../components/svg/IconChevronRight.astro';
 
 const canonicalUrl = new URL(`/blog/${Astro.params.slug}`, Astro.site ?? 'https://dxos.org').href;
 

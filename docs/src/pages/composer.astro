@@ -1,13 +1,9 @@
 ---
-import WebflowLayout from '../layouts/WebflowLayout.astro';
-import WebflowNav from '../components/WebflowNav.astro';
-import WebflowFooter from '../components/WebflowFooter.astro';
-import IconChevronRight from '../components/svg/IconChevronRight.astro';
-import IconExternalLink from '../components/svg/IconExternalLink.astro';
-import IconGitHub from '../components/svg/IconGitHub.astro';
-import IconDiscord from '../components/svg/IconDiscord.astro';
-import IconBluesky from '../components/svg/IconBluesky.astro';
-import IconX from '../components/svg/IconX.astro';
+//
+// Copyright 2026 DXOS.org
+//
+
+
 ---
 <WebflowLayout
   title="Composer by DXOS"
@@ -803,7 +799,11 @@ import IconX from '../components/svg/IconX.astro';
       </div>
   <WebflowFooter accent="blue" />
   <script is:inline>
-    document.querySelectorAll('.early-access-form').forEach(function (form) {
+    //
+// Copyright 2026 DXOS.org
+//
+
+document.querySelectorAll('.early-access-form').forEach(function (form) {
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         const email = form.querySelector('[name="email"]').value;
