@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
@@ -14,7 +15,7 @@ import { handler } from './list';
 describe('spaces list', () => {
   it('should list empty space list', () =>
     Effect.gen(function* () {
-      yield* handler();
+      yield* handler({ wait: Option.none() });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
@@ -26,7 +27,7 @@ describe('spaces list', () => {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.create());
-      yield* handler();
+      yield* handler({ wait: Option.none() });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);

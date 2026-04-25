@@ -6,7 +6,7 @@ import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -179,11 +179,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
         </div>
       )}
 
-      {data && (
-        <SyntaxHighlighter language='json' className={mx(wrapper, 'text-xs')}>
-          {JSON.stringify(data, null, 2)}
-        </SyntaxHighlighter>
-      )}
+      {data && <JsonHighlighter data={data} classNames={mx(wrapper, 'text-xs')} />}
     </div>
   );
 };

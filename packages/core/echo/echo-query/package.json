@@ -24,9 +24,6 @@
     "./api.d.ts": "./dist/query-lite/index.d.ts"
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"

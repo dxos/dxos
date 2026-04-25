@@ -23,7 +23,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
@@ -132,12 +132,14 @@ const DefaultComponent = () => {
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <Json.Root data={{ view: kanban.view.target, schema }}>
-          <Json.Content>
-            <Json.Filter />
-            <Json.Data classNames='text-xs' />
-          </Json.Content>
-        </Json.Root>
+        <Syntax.Root data={{ view: kanban.view.target, schema }}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       </div>
     </div>
   );

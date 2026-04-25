@@ -30,13 +30,6 @@
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "src",
     "dist"
