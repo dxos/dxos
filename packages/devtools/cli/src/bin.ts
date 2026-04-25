@@ -27,6 +27,15 @@ import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 import { admin, chat, debug, dx, fn, hub, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
+import { installStderrFilter } from './util';
+
+// Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
+// of the process. The warnings come from eager space initialisation in
+// ClientPlugin and similar — they're noise to a user running e.g.
+// `dx space list`. Set DX_KEEP_WARNINGS=1 to opt out.
+if (!process.env.DX_KEEP_WARNINGS) {
+  installStderrFilter();
+}
 
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;

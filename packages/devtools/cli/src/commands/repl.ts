@@ -45,64 +45,12 @@ const rewriteHelpAliases = (tokens: string[]): string[] => {
   return tokens;
 };
 
-/**
- * Filters background timeout warnings out of stderr while the REPL is alive
- * so they don't bleed into the prompt. The warnings come from
- * `warnAfterTimeout` in @dxos/debug — they fire when plugin layer activation
- * (e.g. eager space initialisation in ClientPlugin) takes longer than its
- * threshold, which is normal during REPL idle.
- *
- * Returns a restore function that the REPL must call on exit.
- *
- * NOTE: the regex intentionally anchors on a stable prefix only — the full
- * message wording in @dxos/debug may be reworded without breaking the
- * filter. Any subsequent indented stack-trace lines are also dropped, which
- * may incidentally swallow unrelated indented stderr that arrives in the
- * same microtask; low-probability and acceptable for REPL noise.
- */
-const installStderrFilter = (): (() => void) => {
-  const originalWrite = process.stderr.write.bind(process.stderr);
-  const TIMEOUT_WARNING_PREFIX_RE = /^Action `[^`]+` is taking more/;
-  let suppressing = false;
-
-  // process.stderr.write has multiple overloads; we cast to the broad form.
-  // Node's stream.write contract accepts an optional callback as the final
-  // argument. We MUST invoke it even when suppressing to avoid hanging any
-  // caller that awaits flush completion.
-  (process.stderr as any).write = (chunk: any, ...rest: any[]): boolean => {
-    const maybeCallback = rest[rest.length - 1];
-    const callback: ((err?: Error | null) => void) | undefined =
-      typeof maybeCallback === 'function' ? (maybeCallback as any) : undefined;
-    const text = typeof chunk === 'string' ? chunk : (chunk?.toString?.() ?? '');
-    // Stack trace lines follow the warning message — keep dropping until we
-    // hit a non-indented line.
-    if (suppressing) {
-      if (/^\s/.test(text) || text.trim() === '') {
-        callback?.();
-        return true;
-      }
-      suppressing = false;
-    }
-    if (TIMEOUT_WARNING_PREFIX_RE.test(text)) {
-      suppressing = true;
-      callback?.();
-      return true;
-    }
-    return originalWrite(chunk, ...rest);
-  };
-
-  return () => {
-    (process.stderr as any).write = originalWrite;
-  };
-};
-
 export const repl = Command.make(
   'repl',
   {},
   (): Effect.Effect<void, unknown, never> =>
     Effect.gen(function* () {
       const dispatch = getDispatcher();
-      const restoreStderr = installStderrFilter();
 
       // Mimic the argv that `Command.run` receives from `process.argv`:
       // the first two elements are ignored by the Effect CLI parser, so we
@@ -144,7 +92,6 @@ export const repl = Command.make(
 
         yield* Console.log('Goodbye.');
       } finally {
-        restoreStderr();
         closeLineReader();
       }
     }) as Effect.Effect<void, unknown, never>,
