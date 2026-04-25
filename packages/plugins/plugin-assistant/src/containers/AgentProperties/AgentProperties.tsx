@@ -18,15 +18,9 @@ import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { Editor } from '@dxos/react-ui-editor';
+import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
-import {
-  createBasicExtensions,
-  createDataExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-} from '@dxos/ui-editor';
+import { createDataExtensions } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
@@ -109,17 +103,15 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   );
 
   const instructions = useAtomValue(AtomRef.make(agent.instructions));
-  const extension = useMemo(
+  const dataExtensions = useMemo(
     () =>
-      instructions && [
-        createBasicExtensions({ placeholder: t('instructions.placeholder') }),
-        createThemeExtensions({ syntaxHighlighting: true }),
-        createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) }),
-        createMarkdownExtensions(),
-        decorateMarkdown(),
-      ],
-    [instructions, agent.id, t],
+      instructions ? [createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) })] : [],
+    [instructions, agent.id],
   );
+  const extension = useBasicMarkdownExtensions({
+    basic: { placeholder: t('instructions.placeholder') },
+    extensions: dataExtensions,
+  });
 
   return (
     <div role='none' className='dx-expander flex flex-col'>

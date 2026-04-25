@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { FeedArticle, MagazineArticle, PostArticle, SubscriptionsArticle } from '#containers';
+import { FeedArticle, MagazineArticle, MagazineProperties, PostArticle, SubscriptionsArticle } from '#containers';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
@@ -47,6 +47,12 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      // Magazine properties surface (instructions editor).
+      Surface.create({
+        id: 'magazine-properties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Magazine.Magazine),
+        component: ({ data }) => <MagazineProperties subject={data.subject} />,
       }),
       // Post article surface — renders a single Post's detail view.
       Surface.create({

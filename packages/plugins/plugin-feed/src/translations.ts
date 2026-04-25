@@ -40,6 +40,8 @@ export const translations = [
         'object-deleted.label': 'Magazine deleted',
       },
       [meta.id]: {
+        'instructions.label': 'Instructions',
+        'instructions.placeholder': 'Describe what content the Magazine should gather…',
         'plugin.name': 'Feed',
         'empty-feed.message': 'No posts yet',
         'feed-companion.label': 'Feed',

@@ -9270,6 +9270,9 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../../core/echo/echo-atom
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9300,12 +9303,18 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9328,6 +9337,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
