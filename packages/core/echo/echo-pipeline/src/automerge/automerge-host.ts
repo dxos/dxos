@@ -213,7 +213,7 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
       defaultMap(this._documentsRequested, peerId, () => new Set()).add(documentId);
-      if (this._useSubduction) {
+      if (!this._useSubduction) {
         this._sharePolicyChangedTask!.schedule();
       }
     });
@@ -388,6 +388,10 @@ export class AutomergeHost extends Resource {
     if (state.state === 'ready') {
       return state.handle;
     }
+    if (!this._useSubduction) {
+      this._documentsToRequest.add(progress.documentId);
+      this._sharePolicyChangedTask!.schedule();
+    }
     const readyPromise = progress.whenReady();
     return opts?.timeout
       ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
@@ -411,7 +415,7 @@ export class AutomergeHost extends Resource {
       if (initialValue instanceof Uint8Array) {
         const handle = this._repo.import<T>(initialValue, { docId: opts?.documentId });
         this._createdDocuments.add(handle.documentId);
-        if (this._useSubduction) {
+        if (!this._useSubduction) {
           this._sharePolicyChangedTask!.schedule();
         }
         return handle;
@@ -424,7 +428,7 @@ export class AutomergeHost extends Resource {
       // TODO(dmaretskyi): There's a more efficient way.
       const handle = this._repo.import<T>(save(initialValue as Doc<T>), { docId: opts?.documentId });
       this._createdDocuments.add(handle.documentId);
-      if (this._useSubduction) {
+      if (!this._useSubduction) {
         this._sharePolicyChangedTask!.schedule();
       }
       return handle;
@@ -867,15 +871,16 @@ export class AutomergeHost extends Resource {
       count: toReplicateWithoutBatching.length,
     });
 
-    // Trigger Subduction to fetch/announce the missing documents. `findWithProgress` is the
-    // fire-and-forget trigger — it creates a DocHandle, the Subduction source registers a
-    // query for the sedimentreeId, and once bytes arrive `_afterSave` populates `HeadsStore`
-    // so collection sync sees the updated heads on the next diff.
+    // Trigger replication of the missing documents. `findWithProgress` is the
+    // fire-and-forget trigger — it creates a DocHandle and attaches sources. Under classical
+    // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
+    // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
+    // `HeadsStore` so collection sync sees the updated heads on the next diff.
     for (const documentId of toReplicateWithoutBatching) {
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);
     }
-    if (this._useSubduction) {
+    if (!this._useSubduction) {
       this._sharePolicyChangedTask!.schedule();
     }
   }
