@@ -30,9 +30,8 @@ tasks:
       - dist/cli-linux-x64/
       - dist/cli-win32-x64/
   dev:
-    command: ./dxnext
-    deps:
-      - ^:compile
+    # Runs the CLI directly from source (no build step) via ./bin/dx.
+    command: ./bin/dx
     preset: server
   publish:
     command: bun
