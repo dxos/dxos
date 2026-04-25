@@ -9,8 +9,6 @@ import {
   getHeads,
   equals as headsEquals,
   isAutomerge,
-  load,
-  loadIncremental,
   save,
 } from '@automerge/automerge';
 import {
@@ -301,7 +299,7 @@ export class AutomergeHost extends Resource {
       ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
     );
 
-    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
       // NOTE: Intentionally NOT calling `_echoNetworkAdapter.onConnectionAuthScopeChanged` —
@@ -415,7 +413,7 @@ export class AutomergeHost extends Resource {
       if (initialValue instanceof Uint8Array) {
         const handle = this._repo.import<T>(initialValue, { docId: opts?.documentId });
         this._createdDocuments.add(handle.documentId);
-        this._sharePolicyChangedTask?.schedule();
+        this._sharePolicyChangedTask!.schedule();
         return handle;
       }
 
@@ -704,70 +702,10 @@ export class AutomergeHost extends Resource {
     if (storeRequestIds.length > 0) {
       const storedHeads = await this._headsStore.getHeads(storeRequestIds);
       for (let i = 0; i < storedHeads.length; i++) {
-        const documentId = storeRequestIds[i];
-        const stored = storedHeads[i];
-        if (stored) {
-          result[storeResultIndices[i]] = stored;
-          continue;
-        }
-        // Fallback: reconstruct from the automerge storage sublevel for pre-HeadsStore
-        // persisted docs (no network fetch).
-        const doc = await this._loadDocFromStorage(documentId);
-        result[storeResultIndices[i]] = doc ? getHeads(doc) : undefined;
+        result[storeResultIndices[i]] = storedHeads[i];
       }
     }
     return result;
-  }
-
-  /**
-   * Reconstruct an automerge doc from its on-disk chunks without touching the network.
-   *
-   * `automerge-repo`'s `StorageSubsystem` writes chunks under keys shaped like
-   * `[documentId, 'snapshot' | 'incremental' | 'sync-state', hash]`. A doc may have:
-   * - one or more snapshot chunks (after a compaction the old snapshot is usually removed,
-   *   but occasionally multiple can coexist during a compaction race),
-   * - zero or more incremental chunks (`saveSince` deltas applied on top).
-   *
-   * Applying concatenated bytes through `A.load` yields invalid headers; instead we
-   * load each snapshot, then fold in each incremental via `A.loadIncremental`.
-   */
-  private async _loadDocFromStorage(documentId: DocumentId): Promise<Doc<unknown> | undefined> {
-    const chunks = await this._storage.loadRange([documentId]);
-    if (chunks.length === 0) {
-      return undefined;
-    }
-
-    const snapshots = chunks.filter((chunk) => chunk.key[1] === 'snapshot');
-    const incrementals = chunks.filter((chunk) => chunk.key[1] === 'incremental');
-
-    let doc: Doc<unknown> | undefined;
-    try {
-      for (const snapshot of snapshots) {
-        if (!snapshot.data || snapshot.data.length === 0) {
-          continue;
-        }
-        if (!doc) {
-          doc = load(snapshot.data);
-        } else {
-          doc = loadIncremental(doc, snapshot.data);
-        }
-      }
-      for (const incremental of incrementals) {
-        if (!incremental.data || incremental.data.length === 0) {
-          continue;
-        }
-        if (!doc) {
-          doc = load(incremental.data);
-        } else {
-          doc = loadIncremental(doc, incremental.data);
-        }
-      }
-    } catch (err) {
-      log.warn('failed to load document from storage', { documentId, err });
-      return undefined;
-    }
-
-    return doc;
   }
 
   /**
@@ -924,6 +862,7 @@ export class AutomergeHost extends Resource {
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
+      toReplicateWithoutBatching,
       count: toReplicateWithoutBatching.length,
     });
 
@@ -1095,6 +1034,7 @@ const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
 
 const decodeCollectionState = (state: unknown): CollectionState => {
   invariant(typeof state === 'object' && state !== null, 'Invalid state');
+
   return state as CollectionState;
 };
 
