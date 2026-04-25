@@ -23,11 +23,10 @@ import {
   type StorageAdapterInterface,
   type StorageKey,
   type SubductionPolicy,
-  initSubduction,
   interpretAsDocumentId,
+  initSubduction,
 } from '@automerge/automerge-repo';
-import { MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
-import bs58check from 'bs58check';
+import { type MemorySigner } from '@automerge/automerge-subduction';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -52,6 +51,8 @@ export type PeerIdProvider = () => string | undefined;
 
 export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
 
+const SUBDUCTION_SERVICE_NAME = 'dxos-subduction';
+
 export type AutomergeHostProps = {
   db: LevelDB;
   dataMonitor?: EchoDataMonitor;
@@ -63,15 +64,14 @@ export type AutomergeHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   /**
-   * Cryptographic identity used by Subduction handshakes. If omitted, a fresh
-   * {@link MemorySigner} is generated on open (suitable for tests / ephemeral peers).
+   * Enable Subduction sedimentree transport.
+   *
+   * When `false` (default), the host wires {@link EchoNetworkAdapter} as a classical
+   * automerge-repo network adapter and skips all Subduction-specific initialization
+   * (WASM init, signer generation, subduction policy / adapters). When `true`, the
+   * host runs Subduction as the document byte transport.
    */
-  signer?: MemorySigner;
-
-  /**
-   * Service name used by Subduction discovery mode.
-   */
-  subductionServiceName?: string;
+  useSubduction?: boolean;
 };
 
 export type LoadDocOptions = {
@@ -112,27 +112,6 @@ const BUNDLE_SYNC_THRESHOLD = 50;
  * Only announce documents that are known to require sync.
  */
 const OPTIMIZED_SHARE_POLICY = true;
-
-/**
- * Extract the {@link DocumentId} that a given Subduction `SedimentreeId` was derived from.
- *
- * Mirrors `@automerge/automerge-repo/src/subduction/helpers.ts#toDocumentId`, which is an
- * internal helper not exposed via the package's `exports` field. A `SedimentreeId` is 32
- * bytes; the first 16 are the original DocumentId bytes, zero-padded to 32 (see
- * `toSedimentreeId` in the same file). We base58check-encode those 16 bytes to recover
- * the string form of the `DocumentId`.
- *
- * Returns `null` if the encoding fails — callers treat that as "unknown / reject".
- */
-const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId | null => {
-  try {
-    const bytes = sedimentreeId.toBytes().slice(0, 16);
-    return bs58check.encode(bytes) as DocumentId;
-  } catch (err) {
-    log.warn('failed to decode sedimentreeId to documentId', { err });
-    return null;
-  }
-};
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -204,21 +183,19 @@ export class AutomergeHost extends Resource {
 
   private _sharePolicyChangedTask?: DeferredTask;
 
-  private _signer: MemorySigner | undefined;
-  private readonly _subductionServiceName: string;
+  private _signer: MemorySigner | undefined = undefined;
+  private readonly _useSubduction: boolean;
 
   constructor({
     db,
     dataMonitor,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
-    signer,
-    subductionServiceName,
+    useSubduction = false,
   }: AutomergeHostProps) {
     super();
     this._db = db;
-    this._signer = signer;
-    this._subductionServiceName = subductionServiceName ?? 'dxos-subduction';
+    this._useSubduction = useSubduction;
     this._storage = new LevelDBStorageAdapter({
       db: db.sublevel('automerge'),
       callbacks: {
@@ -236,7 +213,9 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
       defaultMap(this._documentsRequested, peerId, () => new Set()).add(documentId);
-      this._sharePolicyChangedTask!.schedule();
+      if (this._useSubduction) {
+        this._sharePolicyChangedTask!.schedule();
+      }
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._peerIdProvider = peerIdProvider;
@@ -254,40 +233,49 @@ export class AutomergeHost extends Resource {
 
     await this._storage.open?.();
 
-    // `Repo` unconditionally constructs a Subduction `MemorySigner`, which requires the
-    // Subduction WASM module to be initialized first. `Repo` itself imports from
-    // `@automerge/automerge-subduction/slim`, which does not auto-init.
+    // `Repo` unconditionally constructs a Subduction `SubductionSource` (with a fresh
+    // `MemorySigner` when none is injected) regardless of whether we register any
+    // `subductionAdapters`. That source's signer needs the Subduction WASM module
+    // initialized first — `Repo` imports from `@automerge/automerge-subduction/slim`,
+    // which does not auto-init. So WASM init runs in both modes.
     await initSubduction();
 
-    // Generate a default signer after WASM init if none was injected.
-    this._signer ??= MemorySigner.generate();
+    if (this._useSubduction) {
+      const { MemorySigner } = await import('@automerge/automerge-subduction');
+      this._signer ??= MemorySigner.generate();
 
-    // Construct the automerge repo with Subduction as the byte transport.
-    //
-    // `network: []` — no classical automerge-repo sync runs. Document bytes flow through
-    // Subduction's sedimentree protocol (`subductionAdapters`). The same `EchoNetworkAdapter`
-    // instance multiplexes `subduction-connection` frames (for Subduction) and
-    // `sync-request` / `sync-state` frames (for `CollectionSynchronizer`) — the latter are
-    // intercepted inside the adapter's `_onMessage` and never reach Subduction.
-    this._repo = new Repo({
-      peerId: this._peerId as PeerId,
-      shareConfig: this._shareConfig,
-      subductionPolicy: this._subductionPolicy,
-      storage: this._storage,
-      network: [],
-      signer: this._signer,
-      subductionAdapters: [
-        {
-          adapter: this._echoNetworkAdapter,
-          serviceName: this._subductionServiceName,
-          // DXOS hosts are always clients — the edge DO is the single `accept` peer in
-          // the DXOS-client <-> edge topology. `connect` uses Subduction's discovery mode,
-          // so peer-to-peer connections (e.g., mesh replicator, test networks) also work
-          // with `connect` on both sides.
-          role: 'connect',
-        },
-      ],
-    });
+      this._repo = new Repo({
+        peerId: this._peerId as PeerId,
+        shareConfig: this._shareConfig,
+        subductionPolicy: this._subductionPolicy,
+        storage: this._storage,
+        network: [],
+        signer: this._signer,
+        subductionAdapters: [
+          {
+            adapter: this._echoNetworkAdapter,
+            serviceName: SUBDUCTION_SERVICE_NAME,
+            // DXOS hosts are always clients — the edge DO is the single `accept` peer in
+            // the DXOS-client <-> edge topology. `connect` uses Subduction's discovery mode,
+            // so peer-to-peer connections (e.g., mesh replicator, test networks) also work
+            // with `connect` on both sides.
+            role: 'connect',
+          },
+        ],
+      });
+    } else {
+      // Classical automerge-repo wiring: the EchoNetworkAdapter is registered as a
+      // network adapter and document bytes flow through the standard sync protocol.
+      // `Repo` will internally construct an unused `MemorySigner` for its always-on
+      // `SubductionSource`; with no `subductionAdapters` passed in that source has no
+      // peers to talk to, so it's effectively dormant.
+      this._repo = new Repo({
+        peerId: this._peerId as PeerId,
+        shareConfig: this._shareConfig,
+        storage: this._storage,
+        network: [this._echoNetworkAdapter],
+      });
+    }
 
     let updatingAuthScope = false;
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
@@ -302,12 +290,20 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
-      // NOTE: Intentionally NOT calling `_echoNetworkAdapter.onConnectionAuthScopeChanged` —
-      // that was a classical-sync optimization to re-run automerge-repo's share-policy for
-      // newly-learned documents. Under Subduction, the adapter's `onConnectionAuthScopeChanged`
-      // tears the peer down and re-adds it, which interrupts the Subduction handshake and
-      // causes repeated close/reopen cycles. Subduction handles policy via its own signer /
-      // policy layer, so no automerge-repo share-policy update is needed here.
+      // Under Subduction the adapter's `onConnectionAuthScopeChanged` tears the peer down
+      // and re-adds it, which interrupts the Subduction handshake and causes repeated
+      // close/reopen cycles. Subduction handles policy via its own signer / policy layer,
+      // so no automerge-repo share-policy update is needed there.
+      // For the classical sync path (useSubduction=false) we re-run the share-policy for
+      // newly-learned documents so the adapter advertises them on the next sync round.
+      if (!this._useSubduction && newDocsAppeared) {
+        updatingAuthScope = true;
+        try {
+          this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+        } finally {
+          updatingAuthScope = false;
+        }
+      }
     });
 
     this._syncTask = new DeferredTask(this._ctx, async () => {
@@ -329,9 +325,11 @@ export class AutomergeHost extends Resource {
 
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
       log('share policy changed');
-      // Under Subduction the classical share-policy machinery doesn't run, so this is a
-      // no-op today. Kept as a hook so the adapter's `documentRequested` path stays
-      // compatible with the main-branch wiring.
+      this._repo.shareConfigChanged();
+      // Under Subduction the classical share-policy machinery doesn't run, so we skip
+      // `shareConfigChanged()`. Subduction handles policy via its own signer / policy
+      // layer; the adapter's `documentRequested` path still wakes this task for parity
+      // with the main-branch wiring.
     });
 
     await this._echoNetworkAdapter.open();
@@ -413,7 +411,9 @@ export class AutomergeHost extends Resource {
       if (initialValue instanceof Uint8Array) {
         const handle = this._repo.import<T>(initialValue, { docId: opts?.documentId });
         this._createdDocuments.add(handle.documentId);
-        this._sharePolicyChangedTask!.schedule();
+        if (this._useSubduction) {
+          this._sharePolicyChangedTask!.schedule();
+        }
         return handle;
       }
 
@@ -424,7 +424,9 @@ export class AutomergeHost extends Resource {
       // TODO(dmaretskyi): There's a more efficient way.
       const handle = this._repo.import<T>(save(initialValue as Doc<T>), { docId: opts?.documentId });
       this._createdDocuments.add(handle.documentId);
-      this._sharePolicyChangedTask!.schedule();
+      if (this._useSubduction) {
+        this._sharePolicyChangedTask!.schedule();
+      }
       return handle;
     } else {
       if (initialValue instanceof Uint8Array) {
@@ -436,7 +438,9 @@ export class AutomergeHost extends Resource {
       }
       const handle = await this._repo.create2<T>(initialValue);
       this._createdDocuments.add(handle.documentId);
-      this._sharePolicyChangedTask!.schedule();
+      if (this._useSubduction) {
+        this._sharePolicyChangedTask!.schedule();
+      }
       return handle;
     }
   }
@@ -565,9 +569,6 @@ export class AutomergeHost extends Resource {
    *     receiving peer doesn't yet know the doc is wanted, so gating here rejects
    *     legitimate replication. A real port would require ahead-of-time population of
    *     an authorized-docs set, or a new upstream `Policy.authorizeAdvertise` hook.
-   *
-   * `sedimentreeIdToDocumentId` and the `bs58check` dependency are retained — they're
-   * prerequisites for any future tightening of this policy.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
     authorizeConnect: async (_peerId) => {},
@@ -874,7 +875,9 @@ export class AutomergeHost extends Resource {
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);
     }
-    this._sharePolicyChangedTask!.schedule();
+    if (this._useSubduction) {
+      this._sharePolicyChangedTask!.schedule();
+    }
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
