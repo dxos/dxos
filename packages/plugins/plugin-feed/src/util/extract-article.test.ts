@@ -4,7 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { extractArticle } from './extract-article';
+import { extractArticle, pruneTrailingChrome } from './extract-article';
+
+const parse = (html: string): Document => new DOMParser().parseFromString(html, 'text/html');
 
 describe('extractArticle', () => {
   test('returns empty result for empty input', async () => {
@@ -87,6 +89,46 @@ describe('extractArticle', () => {
     const result = await extractArticle(html, 'https://example.com/news');
     expect(result.markdown).not.toMatch(/More from this author/i);
     expect(result.markdown).toMatch(/News body/);
+  });
+
+  test('pruneTrailingChrome preserves a heading that is naturally last (no chrome removed before it)', () => {
+    // Direct DOM test — defuddle's later passes may independently drop a
+    // lone trailing heading, so we assert against the post-prune DOM rather
+    // than the final markdown to isolate the pruner's guard.
+    const doc = parse(`
+      <html><body>
+        <article>
+          <h1>The piece</h1>
+          <p>Body paragraph.</p>
+          <h2>Conclusion</h2>
+        </article>
+      </body></html>
+    `);
+    pruneTrailingChrome(doc);
+    const article = doc.querySelector('article')!;
+    expect(article.querySelector('h2')?.textContent).toBe('Conclusion');
+    expect(article.querySelectorAll('h2,p').length).toBe(2);
+  });
+
+  test('pruneTrailingChrome strips the heading paired with a chrome block it titles', () => {
+    const doc = parse(`
+      <html><body>
+        <article>
+          <h1>The piece</h1>
+          <p>Body paragraph.</p>
+          <h2>Narrower topics</h2>
+          <ul>
+            <li><a href="/Tag/AIOps/">AIOps</a></li>
+            <li><a href="/Tag/Anthropic/">Anthropic</a></li>
+          </ul>
+        </article>
+      </body></html>
+    `);
+    pruneTrailingChrome(doc);
+    const article = doc.querySelector('article')!;
+    expect(article.querySelector('ul')).toBeNull();
+    expect(article.querySelector('h2')).toBeNull();
+    expect(article.querySelectorAll('p').length).toBe(1);
   });
 
   test('does not strip a "Topics" section in the middle of the article', async () => {

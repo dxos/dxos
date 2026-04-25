@@ -153,30 +153,34 @@ const findContentRoot = (doc: Document): Element | null =>
  * a tag-href list). Stop at the first non-chrome block — body content
  * resumes there.
  */
-const pruneTrailingChrome = (doc: Document): void => {
+/** @internal exported for unit testing the chrome-pruning rules in isolation. */
+export const pruneTrailingChrome = (doc: Document): void => {
   const root = findContentRoot(doc);
   if (!root) {
     return;
   }
   let child = root.lastElementChild;
+  // Track whether the previous loop iteration removed a chrome element. The
+  // pair-wise heading rule (see below) only fires when it did — naturally
+  // trailing headings on legitimate articles (e.g. an essay ending with
+  // `<h2>Conclusion</h2>` and no body after it) must be preserved.
+  let removedPrevious = false;
   while (child) {
     const previous = child.previousElementSibling;
     if (isChromeElement(child)) {
       child.remove();
       child = previous;
+      removedPrevious = true;
       continue;
     }
-    // Pair-wise: a heading directly above what we just removed is the
-    // section title; remove it too.
-    if (isHeading(child)) {
-      const next = child.nextElementSibling;
-      if (next == null) {
-        // Nothing after the heading (we just removed it on the prior turn) —
-        // the heading is now trailing, treat as chrome too.
-        child.remove();
-        child = previous;
-        continue;
-      }
+    // Pair-wise: a heading that is now trailing (because we just removed
+    // its content section on the prior turn) is the chrome section's title
+    // — strip it too.
+    if (removedPrevious && isHeading(child) && child.nextElementSibling == null) {
+      child.remove();
+      child = previous;
+      // `removedPrevious` stays true: removing the title still counts.
+      continue;
     }
     break;
   }
