@@ -12,14 +12,14 @@ import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { type Subscription } from '#types';
 
-import { formatDate } from '../../util';
+import { ensureStarTag, formatDate, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
-const STAR_TAG = 'starred';
-
 export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   const { t } = useTranslation(meta.id);
+  const db = Obj.getDatabase(post);
+  const starTag = useStarTag(db);
 
   // Resolve the source feed ref so its name can appear in the meta line.
   useEffect(() => {
@@ -31,7 +31,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
 
   const metaLine = [post.author, post.feed?.target?.name, formatDate(post.published)].filter(Boolean).join(' · ');
   const archived = Boolean(post.archived);
-  const starred = (post.tags ?? []).includes(STAR_TAG);
+  const starred = hasMetaTag(post, starTag);
 
   const handleOpenOriginal = useCallback(() => {
     if (post.link) {
@@ -54,12 +54,12 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   }, [post]);
 
   const handleToggleStar = useCallback(() => {
-    Obj.change(post, (post) => {
-      const mutable = post as Obj.Mutable<typeof post>;
-      const current = mutable.tags ?? [];
-      mutable.tags = current.includes(STAR_TAG) ? current.filter((tag) => tag !== STAR_TAG) : [...current, STAR_TAG];
-    });
-  }, [post]);
+    if (!db) {
+      return;
+    }
+    const tag = starTag ?? ensureStarTag(db);
+    toggleMetaTag(post, tag);
+  }, [db, post, starTag]);
 
   return (
     <Panel.Root role={role}>

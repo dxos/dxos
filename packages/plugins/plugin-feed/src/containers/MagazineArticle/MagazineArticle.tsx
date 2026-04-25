@@ -17,9 +17,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
-import { type Magazine, type Subscription } from '#types';
+import { type Magazine, Subscription } from '#types';
 
-import { fetchArticle } from '../../util';
+import { fetchArticle, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile } from './MagazineTile';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
@@ -35,6 +35,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const [error, setError] = useState<string>();
   const [sort, setSort] = useState<'date' | 'rank'>('date');
   const [showArchived, setShowArchived] = useState(false);
+  const [onlyStarred, setOnlyStarred] = useState(false);
+  const db = Obj.getDatabase(subject);
+  const starTag = useStarTag(db);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle. Also pre-load each
@@ -51,6 +54,30 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       }
     }
   }, [subject.posts]);
+
+  // When the user removes a feed from the magazine via ObjectProperties, prune any
+  // curated posts whose source feed is no longer present. Posts without a known
+  // source feed (e.g. synced before `Post.feed` was added) are left alone.
+  useEffect(() => {
+    const feedDxns = new Set(subject.feeds.map((ref) => ref.dxn.toString()));
+    const orphanIds = new Set<string>();
+    for (const postRef of subject.posts) {
+      const post = postRef.target;
+      const feedRef = post?.feed;
+      if (!feedRef) {
+        continue;
+      }
+      if (!feedDxns.has(feedRef.dxn.toString())) {
+        orphanIds.add(postRef.dxn.toString());
+      }
+    }
+    if (orphanIds.size === 0) {
+      return;
+    }
+    Obj.change(subject, (subject) => {
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(ref.dxn.toString()));
+    });
+  }, [subject, subject.feeds, subject.posts]);
 
   const posts = useMemo(() => {
     const resolved: Subscription.Post[] = [];
@@ -69,8 +96,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       resolved.push(target);
     }
 
-    // Filter archived unless explicitly shown.
-    const visible = showArchived ? resolved : resolved.filter((post) => !post.archived);
+    // Filter archived unless explicitly shown, then optionally filter to starred only.
+    let visible = showArchived ? resolved : resolved.filter((post) => !post.archived);
+    if (onlyStarred) {
+      visible = visible.filter((post) => hasMetaTag(post, starTag));
+    }
 
     if (sort === 'rank') {
       // Lower rank = more relevant; posts without rank fall to the bottom.
@@ -92,7 +122,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
     };
     return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
-  }, [subject.posts, sort, showArchived]);
+  }, [subject.posts, sort, showArchived, onlyStarred, starTag]);
 
   const handleCurate = useCallback(async () => {
     if (state !== 'idle') {
@@ -209,6 +239,15 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             </Toolbar.ToggleGroupItem>
             <Toolbar.ToggleGroupItem value='rank' aria-label={t('sort-by-rank.label')} title={t('sort-by-rank.label')}>
               <Icon icon='ph--list-numbers--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
+          <Toolbar.ToggleGroup
+            type='single'
+            value={onlyStarred ? 'on' : ''}
+            onValueChange={(value) => setOnlyStarred(value === 'on')}
+          >
+            <Toolbar.ToggleGroupItem value='on' aria-label={t('only-starred.label')} title={t('only-starred.label')}>
+              <Icon icon={onlyStarred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
             </Toolbar.ToggleGroupItem>
           </Toolbar.ToggleGroup>
           <Toolbar.ToggleGroup

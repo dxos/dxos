@@ -10,6 +10,12 @@ import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
+/**
+ * Label of the canonical {@link Tag.Tag} object used by the star toggle.
+ * Toggling adds/removes that tag's DXN from the Post's `Obj.getMeta().tags`.
+ */
+export const STAR_TAG = 'starred';
+
 /** Feed protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;

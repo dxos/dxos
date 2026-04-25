@@ -63,6 +63,7 @@ export const translations = [
         'sort-by-date.label': 'Sort by date',
         'sort-by-rank.label': 'Sort by rank',
         'show-archived.label': 'Show archived',
+        'only-starred.label': 'Show starred only',
         'close.label': 'Close',
       },
     },
