@@ -4,6 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
@@ -17,7 +18,6 @@ import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
@@ -94,10 +94,15 @@ export const chat = Command.make(
       });
       const [conversation, setConversation] = createSignal<AiSession | undefined>(undefined);
 
-      invariant(client.halo.identity);
+      if (!client.halo.identity) {
+        yield* Console.error('No HALO identity configured. Run `dx halo create --displayName "<name>"` first.');
+        return;
+      }
       const space = getPersonalSpace(client) ?? client.spaces.get()[0];
       if (!space) {
-        log.error('no space available for chat');
+        yield* Console.error(
+          'No space available for chat. Run `dx halo create` (creates one automatically) or `dx space create --name "<name>"`.',
+        );
         return;
       }
 
