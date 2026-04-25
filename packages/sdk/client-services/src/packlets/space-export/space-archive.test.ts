@@ -17,6 +17,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { detectSpaceArchiveFormat } from './archive-format';
 import { buildDatabaseDirectoryFromObjects, readSerializedSpaceArchive } from './serialized-space-reader';
+import { objectStructureToObjJson, orderObjJsonFields } from './serialized-space-writer';
 import { extractSpaceArchive } from './space-archive-reader';
 import { SpaceArchiveWriter } from './space-archive-writer';
 
@@ -376,6 +377,65 @@ describe('SpaceArchive', () => {
       expect(structure.data).toEqual({ title: 'hello' });
       expect(structure.system?.type).toEqual({ '/': 'dxn:type:example.Thing' });
       expect(structure.system?.kind).toBe('object');
+    });
+
+    test('objectStructureToObjJson emits fields in canonical order', () => {
+      const id = ObjectId.random();
+      const sourceId = ObjectId.random();
+      const targetId = ObjectId.random();
+      const parentId = ObjectId.random();
+      const obj = objectStructureToObjJson(id, {
+        data: { title: 'hello', count: 42 },
+        meta: { keys: [] },
+        system: {
+          type: { '/': 'dxn:type:example.Link' },
+          kind: 'relation',
+          source: { '/': sourceId },
+          target: { '/': targetId },
+          parent: { '/': parentId },
+          deleted: true,
+        },
+      });
+
+      expect(Object.keys(obj)).toEqual([
+        'id',
+        '@type',
+        '@meta',
+        '@deleted',
+        '@parent',
+        '@relationSource',
+        '@relationTarget',
+        'title',
+        'count',
+      ]);
+    });
+
+    test('orderObjJsonFields reorders feed queue messages with id/@type/@meta first', () => {
+      const id = ObjectId.random();
+      const message = {
+        payload: { value: 'x' },
+        timestamp: 1000,
+        id,
+        '@meta': { keys: [] },
+        '@type': 'dxn:type:example.Message',
+      } as any;
+
+      const ordered = orderObjJsonFields(message);
+      expect(Object.keys(ordered)).toEqual(['id', '@type', '@meta', 'payload', 'timestamp']);
+      expect(ordered).toEqual(message);
+    });
+
+    test('orderObjJsonFields preserves unknown @-prefixed fields between system and data', () => {
+      const id = ObjectId.random();
+      const obj = {
+        data: 1,
+        '@custom': 'extension',
+        '@type': 'dxn:type:example.Thing',
+        id,
+      } as any;
+
+      const ordered = orderObjJsonFields(obj);
+      expect(Object.keys(ordered)).toEqual(['id', '@type', '@custom', 'data']);
     });
 
     test('buildDatabaseDirectoryFromObjects flags relations', () => {

@@ -139,6 +139,39 @@ describe('FeedFetcher', () => {
       expect(result.posts[0].link).toBe('https://example.com/atom-1');
     });
 
+    test('extracts text from RSS elements that carry attributes', async ({ expect }) => {
+      const xmlWithAttrs = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title type="text">Feed With Attrs</title>
+    <description xml:lang="en">Feed description.</description>
+    <item>
+      <title type="html">Post With Attrs</title>
+      <link>https://example.com/post-3</link>
+      <description type="html">Post &amp; body.</description>
+      <author>Dana</author>
+      <pubDate>2025-05-10T12:00:00Z</pubDate>
+      <guid isPermaLink="false">post-3</guid>
+    </item>
+  </channel>
+</rss>`;
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(xmlWithAttrs),
+      });
+
+      const result = await fetchRss('https://example.com/rss');
+
+      expect(result.feed.name).toBe('Feed With Attrs');
+      expect(result.feed.description).toBe('Feed description.');
+      expect(result.posts).toHaveLength(1);
+      expect(result.posts[0].title).toBe('Post With Attrs');
+      expect(result.posts[0].description).toBe('Post & body.');
+      expect(result.posts[0].author).toBe('Dana');
+      expect(result.posts[0].guid).toBe('post-3');
+      expect(result.posts[0].link).toBe('https://example.com/post-3');
+    });
+
     test('uses CORS proxy when provided', async ({ expect }) => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,

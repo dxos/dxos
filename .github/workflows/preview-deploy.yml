@@ -1,0 +1,78 @@
+name: Preview Deploy
+
+# Deploys the composer-app preview bundle built by preview.yml to Cloudflare
+# Pages. Uses workflow_run so this workflow executes from the BASE branch
+# (trusted), which means secrets are safe to use here. The untrusted PR code
+# never runs in this workflow — we only download the pre-built artifact.
+
+on:
+  workflow_run:
+    workflows: ['Preview Build']
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Download preview bundle
+        uses: actions/download-artifact@v5
+        with:
+          name: composer-preview-bundle
+          path: preview
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read deploy metadata
+        id: meta
+        run: |
+          PR_NUMBER=$(cat preview/preview-meta/pr-number)
+          HEAD_SHA=$(cat preview/preview-meta/head-sha)
+          # Validate — guard against a malicious artifact injecting arbitrary values.
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: $PR_NUMBER" >&2
+            exit 1
+          fi
+          if ! [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid head SHA: $HEAD_SHA" >&2
+            exit 1
+          fi
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "branch_alias=pr-$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Install wrangler
+        run: npm install --global wrangler@3
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          wrangler pages deploy preview/packages/apps/composer-app/out/composer \
+            --project-name composer \
+            --branch "${{ steps.meta.outputs.branch_alias }}" \
+            | tee deploy.log
+          URL=$(grep -Eo 'https://[a-z0-9-]+\.composer-app\.pages\.dev' deploy.log | head -n1)
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "alias=https://${{ steps.meta.outputs.branch_alias }}.composer-app.pages.dev" >> $GITHUB_OUTPUT
+
+      - name: Comment preview URL on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.meta.outputs.pr_number }}
+          header: composer-preview
+          message: |
+            ### Composer preview
+
+            - Branch alias: ${{ steps.deploy.outputs.alias }}
+            - Deployment: ${{ steps.deploy.outputs.url }}
+
+            Built from ${{ steps.meta.outputs.head_sha }}.

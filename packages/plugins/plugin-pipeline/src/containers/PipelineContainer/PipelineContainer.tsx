@@ -5,16 +5,14 @@
 import React, { useCallback, useEffect } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/ui';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import {
   AppSurface,
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -36,8 +34,8 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
 
   const handleColumnAdd = useCallback(
     () =>
-      invokePromise(DeckOperation.ChangeCompanion, {
-        companion: linkedSegment('settings'),
+      invokePromise(LayoutOperation.UpdateCompanion, {
+        subject: linkedSegment('settings'),
       }),
     [invokePromise],
   );

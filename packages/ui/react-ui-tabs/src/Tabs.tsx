@@ -256,7 +256,7 @@ const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => {
   const { value: contextValue } = useTabsContext('TabsTab');
   return (
     <Activity mode={contextValue === props.value ? 'visible' : 'hidden'}>
-      <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
+      <TabsPrimitive.Content {...props} className={mx('p-0! dx-focus-ring-inset-over-all', classNames)}>
         {children}
       </TabsPrimitive.Content>
     </Activity>

@@ -21,7 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Operation, type OperationRegistry } from '@dxos/operation';
-import { Message } from '@dxos/types';
+import { Message, type ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
 import {
@@ -34,11 +34,22 @@ import {
 } from '../session';
 import { AiContextBinder, AiContextService } from './context';
 
+export interface McpServerConfig {
+  url: string;
+  protocol: 'sse' | 'http';
+  apiKey?: string;
+}
+
 export interface AiSessionRunProps<R = never> {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
+
+  /**
+   * Space-level MCP servers to connect alongside blueprint-defined ones.
+   */
+  mcpServers?: readonly McpServerConfig[];
 }
 
 export type AiSessionOptions = {
@@ -151,12 +162,13 @@ export class AiSession extends Resource {
       do {
         yield* Effect.promise(() => this.context.sync());
         const currentBlueprints = this.context.getBlueprints();
-        const mcps = yield* connectMcpServers(currentBlueprints);
+        const mcps = yield* connectMcpServers(currentBlueprints, params.mcpServers);
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           blueprints: currentBlueprints,
           opaqueToolkits: mcps,
         });
+
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
@@ -164,11 +176,7 @@ export class AiSession extends Resource {
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* request.runAgentTurn({
-          system,
-          toolkit,
-        });
-
+        const { done } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
           break;
         }
@@ -259,15 +267,29 @@ const aiContextFromSession = Layer.effect(
   }),
 );
 
-const connectMcpServers = (blueprints: readonly Blueprint.Blueprint[]): Effect.Effect<OpaqueToolkit.OpaqueToolkit[]> =>
-  pipe(
+const connectMcpServers = (
+  blueprints: readonly Blueprint.Blueprint[],
+  spaceMcpServers: readonly McpServerConfig[] = [],
+): Effect.Effect<OpaqueToolkit.OpaqueToolkit[]> => {
+  const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),
-    Effect.forEach(({ url, protocol }) =>
-      McpToolkit.make({ url, kind: protocol }).pipe(
+    Array.map(({ url, protocol }) => ({ url, kind: protocol })),
+  );
+  const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
+    url,
+    kind: protocol,
+    apiKey,
+  }));
+  const allServers = [...blueprintServers, ...spaceServers];
+
+  return pipe(
+    allServers,
+    Effect.forEach((options) =>
+      McpToolkit.make(options).pipe(
         // NOTE: Type-inference fails here without explicit void return.
         Effect.tap((toolkit): void =>
-          log.info('Connected to MCP server', { url, tools: Object.keys(toolkit.toolkit.tools).length }),
+          log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
         ),
         Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
         Effect.either,
@@ -275,3 +297,4 @@ const connectMcpServers = (blueprints: readonly Blueprint.Blueprint[]): Effect.E
     ),
     Effect.map(Array.filterMap((_) => Either.getRight(_))),
   );
+};

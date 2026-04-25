@@ -29,13 +29,6 @@
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "react": [
-        "./dist/src/react.d.ts"
-      ]
-    }
-  },
   "files": [
     "src",
     "dist"

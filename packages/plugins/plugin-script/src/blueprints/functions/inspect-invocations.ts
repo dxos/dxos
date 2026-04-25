@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Obj, Query } from '@dxos/echo';
-import { getUserFunctionIdInMetadata, QueueService } from '@dxos/functions';
-import { type InvocationTraceEvent, createInvocationSpans } from '@dxos/functions-runtime';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
+import { InvocationTraceEndEvent, InvocationTraceStartEvent, createInvocationSpans } from '@dxos/functions-runtime';
 import { Operation } from '@dxos/operation';
 
 import { InspectInvocations } from './definitions';
@@ -19,13 +19,14 @@ export default InspectInvocations.pipe(
       const maxResults = limit ?? 20;
 
       const [properties] = yield* Database.runQuery(Query.type(SpaceProperties));
-      if (!properties?.invocationTraceQueue?.target) {
+      if (!properties?.invocationTraceFeed) {
         return { invocations: [], total: 0 };
       }
 
-      const queue = yield* QueueService.getQueue<InvocationTraceEvent>(properties.invocationTraceQueue.target.dxn);
-      const events = yield* Effect.promise(() => queue.queryObjects());
-      const allSpans = createInvocationSpans(events);
+      const feed = yield* Database.load(properties.invocationTraceFeed);
+      const startEvents = yield* Feed.runQuery(feed, Filter.type(InvocationTraceStartEvent));
+      const endEvents = yield* Feed.runQuery(feed, Filter.type(InvocationTraceEndEvent));
+      const allSpans = createInvocationSpans([...startEvents, ...endEvents]);
 
       const functionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
 

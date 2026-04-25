@@ -8,7 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
+import { CredentialsService, QueueService, Trace } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Actor, Message } from '@dxos/types';
 
@@ -143,7 +143,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService, Trace.TraceService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -279,7 +279,7 @@ export const ClassifyEmail = Operation.make({
     }),
     Schema.Void,
   ),
-  services: [AiService.AiService, Database.Service, QueueService],
+  services: [AiService.AiService, Database.Service, Feed.FeedService],
 });
 
 export const ExtractContact = Operation.make({

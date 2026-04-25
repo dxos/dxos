@@ -16,7 +16,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { type Trace } from '@dxos/functions';
 import { ProcessManager } from '@dxos/functions-runtime';
 
-import { AiContextBinder } from '../conversation';
+import { type McpServerConfig, AiContextBinder } from '../conversation';
 import { AgentProcess } from './agent-process';
 
 export interface Service {
@@ -110,6 +110,11 @@ export const layer = (opts?: {
    * Default model used by sessions that don't specify one explicitly.
    */
   model?: ModelName;
+
+  /**
+   * Provider for space-level MCP server configs.
+   */
+  getMcpServers?: () => McpServerConfig[];
 }): Layer.Layer<AgentService, never, ProcessManager.ProcessManagerService> =>
   Layer.effect(
     AgentService,
@@ -129,6 +134,7 @@ export const layer = (opts?: {
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,
+              getMcpServers: opts?.getMcpServers,
             });
             const processes = yield* processManager.list({ target, key: executable.key });
 

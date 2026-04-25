@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Feed, Obj } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -51,8 +51,10 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
 
         // Append new posts to the ECHO feed queue.
         if (newPosts.length > 0) {
+          const feedRef = Ref.make(subscriptionFeed);
           const postObjects = newPosts.map((post) =>
             Obj.make(Subscription.Post, {
+              feed: feedRef,
               title: post.title,
               link: post.link,
               description: post.description,

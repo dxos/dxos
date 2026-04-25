@@ -964,6 +964,8 @@ export class QueryExecutor extends Resource {
 
           case 'to-children': {
             // Traverse from parent to children using the SQL index.
+            // Covers both standard parent/child hierarchy (via the `parent` field) and
+            // feed -> queue items (via the `queueId` field — a feed's queue id matches the feed's object id).
             // Group working set by spaceId.
             const bySpace = new Map<SpaceId, ObjectId[]>();
             for (const item of workingSet) {
@@ -975,26 +977,19 @@ export class QueryExecutor extends Resource {
               }
             }
 
-            // Query children for each space.
-            const allChildren: { spaceId: SpaceId; objectId: ObjectId }[] = [];
+            const beginIndexQuery = performance.now();
+            const allMetas: ObjectMeta[] = [];
             for (const [spaceId, parentIds] of bySpace) {
               const children = await this._runInRuntime(
                 this._indexEngine.queryChildren({ spaceId: [spaceId], parentIds }),
               );
-
-              for (const child of children) {
-                allChildren.push({ spaceId, objectId: child.objectId as ObjectId });
-              }
+              allMetas.push(...children);
             }
-
-            trace.indexHits += allChildren.length;
+            trace.indexHits += allMetas.length;
+            trace.indexQueryTime += performance.now() - beginIndexQuery;
 
             const documentLoadStart = performance.now();
-            const results = await Promise.all(
-              allChildren.map(({ spaceId, objectId }) =>
-                this._loadFromDXN(DXN.fromLocalObjectId(objectId), { sourceSpaceId: spaceId }),
-              ),
-            );
+            const results = await this._loadDocumentsAfterSqlQuery(allMetas);
             trace.documentsLoaded += results.filter(isNonNullable).length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 

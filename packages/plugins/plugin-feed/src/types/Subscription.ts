@@ -10,6 +10,12 @@ import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
+/**
+ * Label of the canonical {@link Tag.Tag} object used by the star toggle.
+ * Toggling adds/removes that tag's DXN from the Post's `Obj.getMeta().tags`.
+ */
+export const STAR_TAG = 'starred';
+
 /** Feed protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
@@ -65,6 +71,8 @@ export const makeFeed = (props: Omit<Obj.MakeProps<typeof Feed>, 'feed'> = {}): 
 
 /** A single post/entry within a subscription feed. */
 export const Post = Schema.Struct({
+  /** Source subscription feed; populated by `SyncFeed` so curated posts can show provenance. */
+  feed: Ref.Ref(Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
   /** Post title. */
   title: Schema.String.pipe(Schema.optional),
   /** URL link to the original article. */
@@ -77,6 +85,20 @@ export const Post = Schema.Struct({
   published: Schema.String.pipe(Schema.optional),
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
+  /** Agent/curation-extracted snippet of the article body; suitable for tile preview. */
+  snippet: Schema.String.pipe(Schema.optional),
+  /** Full article body plain text, populated on demand from fetchArticle. */
+  content: Schema.String.pipe(Schema.optional),
+  /** Hero image URL extracted from the article page. */
+  imageUrl: Schema.String.pipe(Schema.optional),
+  /** ISO 8601 timestamp when the Post was first read; absence = unread. */
+  readAt: Schema.String.pipe(Schema.optional),
+  /** Agent-assigned tags (populated by a future tagging feature). */
+  tags: Schema.Array(Schema.String).pipe(Schema.optional),
+  /** Agent-assigned rank within a magazine (lower = more relevant). Set by the curation flow. */
+  rank: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
+  /** Archive flag — archived posts are hidden by default in the magazine view. */
+  archived: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.subscription.post',

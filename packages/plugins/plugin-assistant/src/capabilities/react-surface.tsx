@@ -13,7 +13,7 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
+import { Feed, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -91,9 +91,11 @@ export default Capability.makeModule(() =>
           data.subject === 'invocations',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const feed = space?.properties.invocationTraceFeed?.target;
+          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
+
           return (
             <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>

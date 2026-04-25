@@ -7,10 +7,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -34,7 +32,7 @@ export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calend
 export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const layout = useLayout();
+  const showItem = useShowItem();
   const id = attendableId ?? Obj.getDXN(calendar).toString();
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
@@ -54,9 +52,9 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     ({ date }: { date: Date }) => {
       const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
-        void invokePromise(AttentionOperation.Select, {
+        void invokePromise(LayoutOperation.Select, {
           contextId: id,
-          selection: { mode: 'single', id: match.id },
+          subject: { mode: 'single', id: match.id },
         });
       }
     },
@@ -67,36 +65,18 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     (action) => {
       switch (action.type) {
         case 'current': {
-          void invokePromise(AttentionOperation.Select, {
+          const event = events.find((entry) => entry.id === action.eventId);
+          void showItem({
             contextId: id,
-            selection: { mode: 'single', id: action.eventId },
+            selectionId: action.eventId,
+            companion: linkedSegment('event'),
+            path: event ? getObjectPathFromObject(event) : undefined,
           });
-
-          const companion = linkedSegment('event');
-          if (layout.mode === 'simple') {
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else if (layout.mode === 'multi') {
-            const event = events.find((entry) => entry.id === action.eventId);
-            if (event) {
-              void invokePromise(LayoutOperation.Open, {
-                subject: [getObjectPathFromObject(event)],
-                pivotId: id,
-                navigation: 'immediate',
-              });
-            }
-          } else {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
-          }
           break;
         }
       }
     },
-    [events, id, invokePromise, layout.mode],
+    [events, id, showItem],
   );
 
   return (

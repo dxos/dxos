@@ -137,6 +137,7 @@ export const FormField = (props: FormFieldProps) => {
     label,
     placeholder,
     layout,
+    db,
     ...fieldState,
   };
 

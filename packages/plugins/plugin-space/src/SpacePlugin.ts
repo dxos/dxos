@@ -182,7 +182,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [SpaceEvents.StateReady],
+    firesAfterActivation: [SpaceEvents.StateReady],
     activate: SpaceState,
   }),
   Plugin.addModule(
@@ -201,7 +201,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         id: Capability.getModuleTag(ReactSurface),
         activatesOn: ActivationEvents.SetupReactSurface,
         // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
-        activatesBefore: [SpaceEvents.SetupSettingsPanel],
+        firesBeforeActivation: [SpaceEvents.SetupSettingsPanel],
         activate: () => ReactSurface({ createInvitationUrl }),
       };
     },
@@ -240,7 +240,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.PersonalSpaceReady],
+    firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -255,12 +255,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SetupMigration,
-    activate: Migrations,
-  }),
-  Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.make,
 );

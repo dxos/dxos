@@ -13,12 +13,15 @@ import { Sketch } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
-import { jsonKeyReplacer, sortKeys } from '@dxos/util';
+import { sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '#components';
+
+// TODO(burdon): Make extensible.
+const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph];
+const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -29,8 +32,6 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
   ({ space, onCreateObjects, children, ...props }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const client = useClient();
-    const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-    const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
@@ -38,7 +39,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     // Register types.
     useAsyncEffect(async () => {
       await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
-    }, [client]);
+    }, [client, presets]);
 
     // Create type generators.
     const typeMap = useMemo(() => {
@@ -47,15 +48,13 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       );
 
       return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
-    }, [client, recordTypes, invokePromise]);
+    }, [client, invokePromise, presets]);
 
     // Query space to get info.
-    const updateInfo = async () => {
-      // Create schema map.
+    const updateInfo = useCallback(async () => {
       const echoSchema = await space.db.schemaRegistry.query().run();
       const staticSchema = await space.db.graph.schemaRegistry.query().run();
 
-      // Create object map.
       const objects = await space.db.query(Filter.everything()).run();
       const objectMap = sortKeys(
         objects.reduce<Record<string, number>>((map, obj) => {
@@ -76,9 +75,9 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         },
         objects: objectMap,
       });
-    };
+    }, [space]);
 
-    useAsyncEffect(updateInfo, [space]);
+    useAsyncEffect(updateInfo, [updateInfo]);
 
     const handleCreateData = useCallback(
       async (typename: string) => {
@@ -89,7 +88,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
           await updateInfo();
         }
       },
-      [typeMap, count],
+      [typeMap, count, space, onCreateObjects, updateInfo],
     );
 
     return (
@@ -114,13 +113,10 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         </Panel.Toolbar>
         <Panel.Content asChild>
           <ScrollArea.Root thin orientation='vertical'>
-            <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
+            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
               <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
               <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
               <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-              <SyntaxHighlighter language='json' classNames='text-xs'>
-                {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-              </SyntaxHighlighter>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>
