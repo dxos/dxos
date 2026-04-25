@@ -2,40 +2,114 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 
 import * as FormBuilder from './form-builder';
 
+export type FormatSpaceOptions = {
+  verbose?: boolean;
+  truncateKeys?: boolean;
+  /**
+   * If set, wait up to this many seconds for the space to reach
+   * `SPACE_READY` before reading its fields. If unset, read whatever state
+   * is available right now — much safer for `space list` etc., where a
+   * single stuck space would otherwise hang the entire command.
+   */
+  waitSeconds?: number;
+};
+
+const DEFAULT_OPTIONS: Required<FormatSpaceOptions> = {
+  verbose: false,
+  truncateKeys: false,
+  waitSeconds: 0,
+};
+
+/**
+ * Per-async-read internal timeout. Some `space.internal.*` getters do
+ * filesystem / network IO and can themselves hang on a partially-loaded
+ * space; cap each one so the command can never be held hostage by SDK
+ * internals.
+ */
+const READ_TIMEOUT_SECONDS = 2;
+
+const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =>
+  Effect.tryPromise(run).pipe(
+    Effect.timeoutFail({
+      duration: Duration.seconds(READ_TIMEOUT_SECONDS),
+      onTimeout: () => new Error(`${label} timed out`),
+    }),
+    Effect.catchAll(() => Effect.succeed(fallback)),
+  );
+
+const tryWithFallbackSync = <T>(read: () => T, fallback: T): T => {
+  try {
+    return read();
+  } catch {
+    return fallback;
+  }
+};
+
 // TODO(wittjosiah): Use @effect/printer.
-export const formatSpace = Effect.fn(function* (space: Space, options = { verbose: false, truncateKeys: false }) {
-  yield* Effect.tryPromise(() => space.waitUntilReady());
+export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpaceOptions = {}) {
+  const { waitSeconds } = { ...DEFAULT_OPTIONS, ...options };
+
+  // Opt-in wait. Defaults to NO wait so a single stuck space can't hang
+  // an enumeration command (e.g. `dx space list`).
+  if (waitSeconds > 0) {
+    yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
+      Effect.timeoutFail({
+        duration: Duration.seconds(waitSeconds),
+        onTimeout: () => new Error('waitUntilReady timed out'),
+      }),
+      Effect.catchAll(() => Effect.void),
+    );
+  }
+
+  const state = tryWithFallbackSync(() => space.state.get(), SpaceState.SPACE_INITIALIZING);
+  const ready = state === SpaceState.SPACE_READY;
 
   // TODO(burdon): Factor out.
   // TODO(burdon): Agent needs to restart before `ready` is available.
-  const { open, ready } = space.internal.data.metrics ?? {};
-  const startup = open && ready && ready.getTime() - open.getTime();
+  const metrics = tryWithFallbackSync(
+    () => space.internal.data.metrics,
+    undefined as { open?: Date; ready?: Date } | undefined,
+  );
+  const startup = metrics?.open && metrics?.ready ? metrics.ready.getTime() - metrics.open.getTime() : undefined;
 
   // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
   // const host = client.services.services.DevtoolsHost!;
-  const pipeline = space.internal.data.pipeline;
+  const pipeline = tryWithFallbackSync(() => space.internal.data.pipeline, undefined);
   const epoch = pipeline?.currentEpoch?.subject.assertion.number;
 
-  const syncState = aggregateSyncState(yield* Effect.tryPromise(() => space.internal.db.coreDatabase.getSyncState()));
+  // The sync-state read does IO; cap it so a stuck space can't hang the
+  // command. Falls back to a "no peers" placeholder.
+  const syncStateRaw = yield* tryWithFallback('getSyncState', () => space.internal.db.coreDatabase.getSyncState(), {
+    peers: {},
+  } as SpaceSyncState);
+  const syncState = aggregateSyncState(syncStateRaw);
+
+  const name = ready ? tryWithFallbackSync(() => space.properties.name, undefined) : 'loading...';
+  const members = tryWithFallbackSync(() => space.members.get().length, 0);
+  const objects = tryWithFallbackSync(() => space.internal.db.coreDatabase.getAllObjectIds().length, 0);
+  const key = options.truncateKeys
+    ? tryWithFallbackSync(() => space.key.truncate(), '')
+    : tryWithFallbackSync(() => space.key.toHex(), '');
 
   return {
     id: space.id,
-    state: SpaceState[space.state.get()],
-    name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : 'loading...',
+    state: SpaceState[state],
+    name,
 
-    members: space.members.get().length,
-    objects: space.internal.db.coreDatabase.getAllObjectIds().length,
+    members,
+    objects,
 
-    key: options.truncateKeys ? space.key.truncate() : space.key.toHex(),
+    key,
     epoch,
     startup,
-    automergeRoot: space.internal.data.pipeline?.spaceRootUrl,
+    automergeRoot: pipeline?.spaceRootUrl,
     // appliedEpoch,
     syncState: `${syncState.count} ${getSyncIndicator(syncState.up, syncState.down)} (${syncState.peers} peers)`,
   };

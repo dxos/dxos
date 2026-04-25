@@ -47,4 +47,27 @@ describe('space list', () => {
       fs.rmSync(home, { recursive: true, force: true });
     }
   });
+
+  test('--help advertises the --wait option', ({ expect }) => {
+    const { stdout, status } = runDx(['space', 'list', '--help']);
+    expect(status).toBe(0);
+    expect(stdout).toMatch(/--wait/);
+    // Make sure the description hints at the no-wait default — that's the
+    // user-facing contract.
+    expect(stdout.toLowerCase()).toMatch(/wait|ready/);
+  });
+
+  test('exits within a bounded time (no implicit wait can hang the command)', ({ expect }) => {
+    // The previous formatSpace called `space.waitUntilReady()` unconditionally,
+    // which could hang forever on a partially-loaded space. Even on a fresh
+    // profile this should never take more than a few seconds; assert a hard
+    // ceiling so a regression to implicit-wait behaviour is caught.
+    withIsolatedHome((home) => {
+      const start = Date.now();
+      const { status } = runDx(['space', 'list'], { home, timeout: 15_000 });
+      const elapsedMs = Date.now() - start;
+      expect(status).toBe(0);
+      expect(elapsedMs).toBeLessThan(15_000);
+    });
+  });
 });

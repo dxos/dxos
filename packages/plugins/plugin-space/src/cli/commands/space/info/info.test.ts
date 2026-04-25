@@ -19,7 +19,7 @@ describe('space info', () => {
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const space = yield* Effect.tryPromise(() => client.spaces.create());
       yield* Effect.tryPromise(() => space.waitUntilReady());
-      yield* handler({ spaceId: Option.some(space.id) });
+      yield* handler({ spaceId: Option.some(space.id), wait: Option.none() });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
