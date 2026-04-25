@@ -25,9 +25,10 @@ import {
   type SharePolicy,
   type StorageAdapterInterface,
   generateAutomergeUrl,
+  initSubduction,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -48,6 +49,12 @@ import { MeshEchoReplicator } from './mesh-echo-replicator';
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 
 describe('AutomergeRepo', () => {
+  // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
+  // initialized first or the constructor throws on `memorysigner_new`.
+  beforeAll(async () => {
+    await initSubduction();
+  });
+
   test('change events', () => {
     const repo = new Repo({ network: [] });
     const handle = repo.create<{ field?: string }>();
