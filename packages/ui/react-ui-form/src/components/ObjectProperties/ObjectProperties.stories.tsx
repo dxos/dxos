@@ -59,9 +59,16 @@ type Article = Schema.Schema.Type<typeof Article>;
 // field at construction time.
 //
 
+// Mirrors the shape of `Subscription.Feed`: a required hidden field whose
+// value is a `Ref` to a backing object, plus an optional hidden field. The
+// factory must construct the backing object and link it.
+const NoteBacking = Schema.Struct({}).pipe(Type.object({ typename: 'org.dxos.test.note-backing', version: '0.1.0' }));
+type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
+
 const Note = Schema.Struct({
   title: Schema.String,
-  signature: Schema.String.pipe(FormInputAnnotation.set(false)),
+  cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
+  backing: Ref.Ref(NoteBacking).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.test.note',
@@ -69,7 +76,8 @@ const Note = Schema.Struct({
   }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'amber' }),
-  FactoryAnnotation.set(((values: any) => Obj.make(Note, { ...values, signature: 'auto-generated' })) as FactoryFn),
+  FactoryAnnotation.set(((values: any) =>
+    Obj.make(Note, { ...values, backing: Ref.make(Obj.make(NoteBacking, {})) })) as FactoryFn),
 );
 type Note = Schema.Schema.Type<typeof Note>;
 
@@ -206,7 +214,7 @@ const notebookDecorators = [
   withClientProvider({
     createIdentity: true,
     createSpace: true,
-    types: [Notebook, Note, Tag.Tag],
+    types: [Notebook, Note, NoteBacking, Tag.Tag],
     onCreateSpace: async ({ space }) => {
       space.db.add(Obj.make(Notebook, { name: 'Untitled notebook', notes: [] }));
     },

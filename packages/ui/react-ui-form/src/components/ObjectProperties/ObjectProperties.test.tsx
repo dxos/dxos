@@ -73,13 +73,14 @@ describe('ObjectProperties — inline create flow', () => {
       await CreateHiddenFieldPlay.run();
       const { db, object } = getDebug();
 
-      // The new Note should exist in the DB with the synthesised signature.
+      // The new Note should exist in the DB with the synthesised backing ref.
       const notes = (await db.query(Filter.typename('org.dxos.test.note' as any)).run()) as any[];
       const created = notes.find((note: any) => note.title === 'Ideas');
       expect(created, 'new Note with title "Ideas" should be in the database').toBeDefined();
-      expect((created as any).signature, 'FactoryAnnotation should have populated the hidden `signature` field').toBe(
-        'auto-generated',
-      );
+      expect(
+        (created as any).backing,
+        'FactoryAnnotation should have populated the hidden `backing` ref',
+      ).toBeDefined();
 
       // The notebook's notes array should reference the new Note.
       const notebook = object as any;
