@@ -69,6 +69,38 @@ describe('AtomRef - Basic Functionality', () => {
     // Update count should still be 1 - ref atom doesn't subscribe to target changes.
     expect(updateCount).toBe(1);
   });
+
+  // Sibling client (sharing services) creates a brand-new ref target. The atom
+  // must update once the target's document propagates and resolves.
+  test('atom resolves target created by sibling client', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await testBuilder.createPeer({
+      types: [TestSchema.Person, TestSchema.Container],
+    });
+    await using db1 = await peer.createDatabase(spaceKey);
+    const parent1 = db1.add(Obj.make(TestSchema.Container, { objects: [] }));
+    await db1.flush();
+
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
+    const [parent2] = await db2.query(Filter.id(parent1.id)).run();
+
+    const newPerson = db2.add(
+      Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'alice@example.com' }),
+    );
+    Obj.change(parent2, (p) => {
+      p.objects = [...(p.objects ?? []), Ref.make(newPerson)];
+    });
+    await db2.flush();
+
+    await expect.poll(() => (parent1.objects ?? []).length).toBeGreaterThan(0);
+    const atom = AtomObj.make(parent1.objects![0]);
+
+    let lastValue: any;
+    registry.subscribe(atom, (value) => (lastValue = value), { immediate: true });
+
+    await expect.poll(() => lastValue?.name).toBe('Alice');
+  });
 });
 
 describe('AtomRef - Referential Equality', () => {
@@ -177,79 +209,6 @@ describe('AtomRef - Referential Equality', () => {
     expect(registry.get(atom1)?.name).toBe('Target');
     expect(registry.get(atom2)?.name).toBe('Target');
     expect(registry.get(atom3)?.name).toBe('Target');
-  });
-});
-
-describe('AtomRef - Cross-client reactive loading', () => {
-  let testBuilder: EchoTestBuilder;
-  let registry: Registry.Registry;
-
-  beforeEach(async () => {
-    testBuilder = await new EchoTestBuilder().open();
-    registry = Registry.make();
-  });
-
-  afterEach(async () => {
-    await testBuilder.close();
-  });
-
-  // Reproduces the journal quick-entry bug: two clients sharing services, where
-  // sibling client adds a brand new object referenced from an existing parent.
-  // The ref atom for the new entry must eventually update with the loaded target,
-  // even if the ref's document arrives at client 1 slightly after the parent mutation.
-  test('ref atom eventually resolves a target created by a sibling client', { timeout: 15_000 }, async () => {
-    const [spaceKey] = PublicKey.randomSequence();
-
-    await using peer = await testBuilder.createPeer({
-      types: [TestSchema.Person, TestSchema.Container],
-    });
-
-    // Client 1 creates the database with a Container parent.
-    await using db1 = await peer.createDatabase(spaceKey);
-    const parent1 = db1.add(Obj.make(TestSchema.Container, { objects: [] }));
-    await db1.flush();
-
-    // Client 2 opens the same database via a sibling client.
-    await using client2 = await peer.createClient();
-    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, {
-      client: client2,
-    });
-
-    // Wait for the parent to be replicated to client 2.
-    const [parent2] = await db2.query(Filter.id(parent1.id)).run();
-    expect(parent2).toBeDefined();
-
-    const newPerson = db2.add(
-      Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'alice@example.com' }),
-    );
-    Obj.change(parent2!, (p) => {
-      p.objects = [...(p.objects ?? []), Ref.make(newPerson)];
-    });
-    await db2.flush();
-
-    // Wait until client 1 sees the parent's objects list update with the new ref.
-    await expect.poll(() => (parent1.objects ?? []).length, { timeout: 10_000 }).toBeGreaterThan(0);
-
-    // Take the ref from client 1's side (i.e., the ref whose target hasn't been
-    // materialized locally yet) and subscribe via the atom. This is what
-    // useObject(entryRef) does in the journal component.
-    const ref = parent1.objects![0];
-    const atom = AtomObj.make(ref);
-
-    let lastValue: any;
-    registry.subscribe(
-      atom,
-      (value) => {
-        lastValue = value;
-      },
-      { immediate: true },
-    );
-
-    // The atom must eventually reflect the loaded target.
-    // BEFORE the fix: the atom never updates because ref.load() throws when the
-    // entry's document hasn't propagated yet, the error is swallowed, and there
-    // is no retry/subscription to resolve it later.
-    await expect.poll(() => lastValue?.name, { timeout: 10_000 }).toBe('Alice');
   });
 });
 
