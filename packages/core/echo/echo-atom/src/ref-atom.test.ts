@@ -88,8 +88,8 @@ describe('AtomRef - Basic Functionality', () => {
     const newPerson = db2.add(
       Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'alice@example.com' }),
     );
-    Obj.change(parent2, (p) => {
-      p.objects = [...(p.objects ?? []), Ref.make(newPerson)];
+    Obj.change(parent2, (parent2) => {
+      parent2.objects = [...(parent2.objects ?? []), Ref.make(newPerson)];
     });
     await db2.flush();
 
