@@ -60,13 +60,16 @@ export const ShortcutInput = ({ value, onChange, requireNonModifierKey = true }:
   const [draft, setDraft] = useState<string | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
 
-  const stopRecording = useCallback((commit: boolean) => {
-    setRecording(false);
-    if (commit && draft) {
-      onChange(draft);
-    }
-    setDraft(null);
-  }, [draft, onChange]);
+  const stopRecording = useCallback(
+    (commit: boolean) => {
+      setRecording(false);
+      if (commit && draft) {
+        onChange(draft);
+      }
+      setDraft(null);
+    },
+    [draft, onChange],
+  );
 
   // Cancel on outside click.
   useEffect(() => {
@@ -182,9 +185,7 @@ export const ShortcutInput = ({ value, onChange, requireNonModifierKey = true }:
       >
         <Icon icon={recording ? 'ph--x--regular' : 'ph--record--regular'} size={4} />
         <span className='ml-1'>
-          {recording
-            ? t('settings.spotlight-shortcut.cancel.label')
-            : t('settings.spotlight-shortcut.record.label')}
+          {recording ? t('settings.spotlight-shortcut.cancel.label') : t('settings.spotlight-shortcut.record.label')}
         </span>
       </Button>
     </div>
