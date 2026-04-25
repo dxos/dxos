@@ -25,7 +25,7 @@ export type FeedType = Schema.Schema.Type<typeof FeedType>;
  * syncing a {@link Feed} or curating a Magazine. Applied when the object
  * has no explicit `keep` value.
  */
-export const DEFAULT_KEEP = 10;
+export const DEFAULT_KEEP = 3;
 
 /**
  * Subscription feed schema: an RSS/Atom/AT Protocol subscription.
@@ -44,9 +44,9 @@ export const Feed = Schema.Struct({
   /** URL of the feed's icon/image. */
   iconUrl: Schema.String.pipe(Schema.optional),
   /**
-   * Maximum number of (non-starred) Posts retained in the feed's queue when
-   * syncing. Older posts beyond this bound are dropped; starred posts are
-   * preserved regardless. Defaults to {@link DEFAULT_KEEP} when unset.
+   * Maximum number of (non-starred) Posts retained in the feed's queue when syncing.
+   * Older posts beyond this bound are dropped; starred posts are preserved regardless.
+   * Defaults to {@link DEFAULT_KEEP} when unset.
    */
   keep: Schema.Number.pipe(
     Schema.annotations({

@@ -72,43 +72,45 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
         }
       }
 
-      let appended = 0;
-      Obj.change(magazine, (magazine) => {
-        const mutable = magazine as Obj.Mutable<typeof magazine>;
-        const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
-        const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
-        if (fresh.length > 0) {
-          mutable.posts = [...mutable.posts, ...fresh];
-        }
-        appended = fresh.length;
+      // Compute the final post list — fresh additions plus existing, then pruned
+      // by the `keep` bound — outside `Obj.change`. Doing two sequential
+      // `mutable.posts = ...` writes inside one change block deep-maps the same
+      // refs twice, which trips a "object already in db" invariant in ECHO's
+      // ref handler. A single write avoids that.
+      const existingDxns = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
+      const freshAdditions = added.filter((ref) => !existingDxns.has(ref.dxn.toString()));
+      const appended = freshAdditions.length;
 
-        // Drop oldest non-starred curated posts beyond the `keep` bound.
-        // Refs whose targets aren't yet resolved are conservatively kept —
-        // a future curation pass with resolved targets will reconsider them.
-        const keep = magazine.keep ?? Subscription.DEFAULT_KEEP;
-        const starTag = findStarTag(space.db);
-        const resolved: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
-        const unresolved: Array<Ref.Ref<Subscription.Post>> = [];
-        for (const ref of mutable.posts) {
-          const post = ref.target;
-          if (post) {
-            resolved.push({ ref, post });
-          } else {
-            unresolved.push(ref);
-          }
+      const combinedRefs: Ref.Ref<Subscription.Post>[] = [...magazine.posts, ...freshAdditions];
+      const keep = magazine.keep ?? Subscription.DEFAULT_KEEP;
+      const starTag = findStarTag(space.db);
+      // Refs whose targets aren't yet resolved are conservatively kept — a
+      // future curation pass with resolved targets will reconsider them.
+      const resolved: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
+      const unresolved: Ref.Ref<Subscription.Post>[] = [];
+      for (const ref of combinedRefs) {
+        const post = ref.target;
+        if (post) {
+          resolved.push({ ref, post });
+        } else {
+          unresolved.push(ref);
         }
-        const { kept } = partitionByKeepBound(
-          resolved.map(({ post }) => post),
-          keep,
-          starTag,
-        );
-        const keptDxns = new Set(kept.map((post) => Obj.getDXN(post).toString()));
-        const filteredResolved = resolved.filter(({ ref }) => keptDxns.has(ref.dxn.toString())).map(({ ref }) => ref);
-        const next = [...filteredResolved, ...unresolved];
-        if (next.length !== mutable.posts.length) {
+      }
+      const { kept } = partitionByKeepBound(
+        resolved.map(({ post }) => post),
+        keep,
+        starTag,
+      );
+      const keptDxns = new Set(kept.map((post) => Obj.getDXN(post).toString()));
+      const filteredResolved = resolved.filter(({ ref }) => keptDxns.has(ref.dxn.toString())).map(({ ref }) => ref);
+      const next = [...filteredResolved, ...unresolved];
+
+      if (appended > 0 || next.length !== magazine.posts.length) {
+        Obj.change(magazine, (magazine) => {
+          const mutable = magazine as Obj.Mutable<typeof magazine>;
           mutable.posts = next;
-        }
-      });
+        });
+      }
 
       return { added: appended };
     }),

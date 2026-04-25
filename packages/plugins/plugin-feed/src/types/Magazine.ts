@@ -29,10 +29,9 @@ export const Magazine = Schema.Struct({
     Schema.annotations({ title: 'Instructions' }),
   ),
   /**
-   * Maximum number of (non-starred) curated Posts retained on the magazine
-   * after curation. Older posts beyond this bound are dropped; starred posts
-   * are preserved regardless. Defaults to {@link Subscription.DEFAULT_KEEP}
-   * when unset.
+   * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
+   * Older posts beyond this bound are dropped; starred posts are preserved regardless.
+   * Defaults to {@link Subscription.DEFAULT_KEEP} when unset.
    */
   keep: Schema.Number.pipe(
     Schema.annotations({
