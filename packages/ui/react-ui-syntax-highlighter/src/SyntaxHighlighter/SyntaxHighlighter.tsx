@@ -7,7 +7,7 @@ import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'rea
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { useThemeContext } from '@dxos/react-ui';
+import { Clipboard, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
@@ -19,6 +19,7 @@ const languages = {
 
 export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
   fallback?: string;
+  showCopyButton?: boolean;
 };
 
 /**
@@ -35,10 +36,20 @@ export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
  */
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
   (
-    { children, language = 'text', fallback = zeroWidthSpace, classNames, className, style, ...nativeProps },
+    {
+      children,
+      language = 'text',
+      fallback = zeroWidthSpace,
+      showCopyButton,
+      classNames,
+      className,
+      style,
+      ...nativeProps
+    },
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
+    const source = React.Children.toArray(children).join('') || fallback;
 
     // The `style` prop here is a Prism theme (a token → CSSProperties map), not a React style.
     // `composableProps` from parent composites may inject `style: {}` for DOM merging; treat it
@@ -51,7 +62,21 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
         : light;
 
     return (
-      <div {...composableProps({ classNames, className })} role='none' ref={forwardedRef}>
+      <div
+        {...composableProps({ classNames, className }, { classNames: showCopyButton && 'relative group' })}
+        role='none'
+        ref={forwardedRef}
+      >
+        {showCopyButton && (
+          <Clipboard.Provider>
+            <Clipboard.IconButton
+              value={source}
+              variant='ghost'
+              size={4}
+              classNames='absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus:opacity-100'
+            />
+          </Clipboard.Provider>
+        )}
         <NativeSyntaxHighlighter
           language={languages[language as keyof typeof languages] || language}
           style={prismTheme}
@@ -65,7 +90,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           {...nativeProps}
         >
           {/* Non-empty fallback prevents collapse. */}
-          {children || fallback}
+          {source}
         </NativeSyntaxHighlighter>
       </div>
     );
