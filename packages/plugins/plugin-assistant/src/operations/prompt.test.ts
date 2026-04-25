@@ -2,19 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Array } from 'effect';
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { ContextBinding } from '@dxos/assistant';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
