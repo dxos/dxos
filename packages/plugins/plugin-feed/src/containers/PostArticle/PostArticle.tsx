@@ -96,6 +96,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
               onClick={handleMarkUnread}
             />
           )}
+          <Toolbar.Separator />
           {post.link && (
             <Toolbar.IconButton
               label={t('open-original.label')}
@@ -113,7 +114,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
               <h1 className='text-xl font-semibold'>{post.title ?? t('post-title.placeholder')}</h1>
               {metaLine && <div className='text-xs text-subdued'>{metaLine}</div>}
               {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' />}
-              {(post.content || post.snippet) && <MarkdownViewer content={post.content ?? post.snippet} />}
+              {(post.content || post.snippet) && <MarkdownViewer content={post.content || post.snippet} />}
             </article>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
