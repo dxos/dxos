@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Array } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
@@ -9,7 +10,7 @@ import { describe, test } from 'vitest';
 import { ContextBinding } from '@dxos/assistant';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -38,70 +39,44 @@ describe('Agent prompt (composer plugin harness)', () => {
         plugins: [ClientPlugin({}), AssistantPlugin(), AutomationPlugin()],
       });
 
-      const client = harness.get(ClientCapabilities.Client);
-      const { personalSpace } = await runAndForwardErrors(initializeIdentity(client));
-
-      const echoBindings = Layer.mergeAll(
-        Database.layer(personalSpace.db),
-        QueueService.layer(personalSpace.queues),
-        createFeedServiceLayer(personalSpace.queues),
-      );
-
+      const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
       const computeProvider = await harness.waitForCapability(AutomationCapabilities.ComputeRuntime, {
         timeout: 30_000,
       });
-      const spaceRuntime = computeProvider.getRuntime(personalSpace.id);
 
-      const setupProgram = Effect.gen(function* () {
-        const feed = yield* Database.add(Feed.make());
-        const queueDxn = Feed.getQueueDxn(feed)!;
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
+      await computeProvider.getRuntime(personalSpace.id).runPromise(
+        Effect.gen(function* () {
+          const feed = yield* Database.add(Feed.make());
 
-        const countMessages = () =>
-          Effect.promise(async () => {
-            const items = await queue.queryObjects();
-            return items.filter(Obj.instanceOf(Message.Message)).length;
+          const messageCountBefore = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+            Effect.map(Array.length),
+          );
+
+          const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+          const prompt = yield* Database.add(
+            Prompt.make({
+              name: 'chat-mode-test',
+              instructions: 'Reply with a single word: ack.',
+              blueprints: [],
+              context: [],
+            }),
+          );
+          yield* Database.flush();
+
+          const result = yield* Operation.invoke(AgentPrompt, {
+            prompt: Ref.make(prompt),
+            input: {},
+            chat: Ref.make(chat),
           });
 
-        const messageCountBefore = yield* countMessages();
+          const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+            Effect.map(Array.length),
+          );
 
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        const prompt = yield* Database.add(
-          Prompt.make({
-            name: 'chat-mode-test',
-            instructions: 'Reply with a single word: ack.',
-            blueprints: [],
-            context: [],
-          }),
-        );
-
-        yield* Database.flush();
-
-        return { prompt, chat, messageCountBefore, queueDxn };
-      });
-
-      const { prompt, chat, messageCountBefore, queueDxn } = await runAndForwardErrors(
-        setupProgram.pipe(Effect.provide(echoBindings)),
-      );
-
-      const result = await spaceRuntime.runPromise(
-        Operation.invoke(AgentPrompt, {
-          prompt: Ref.make(prompt),
-          input: {},
-          chat: Ref.make(chat),
+          expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
+          expect(result).toBe('ack');
         }),
       );
-
-      const countAfterProgram = Effect.gen(function* () {
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
-        const items = yield* Effect.promise(() => queue.queryObjects());
-        return items.filter(Obj.instanceOf(Message.Message)).length;
-      });
-
-      const messageCountAfter = await runAndForwardErrors(countAfterProgram.pipe(Effect.provide(echoBindings)));
-
-      expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
-      expect(result).toBe('ack');
     },
     60_000,
   );
