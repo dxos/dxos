@@ -57,6 +57,7 @@
     "typescript/no-this-alias": "off",
     "typescript/no-unnecessary-parameter-property-assignment": "off",
     "typescript/no-unsafe-unary-minus": "off",
+    "typescript/no-useless-default-assignment": "off",
     "typescript/no-useless-empty-export": "off",
     "typescript/require-array-sort-compare": "off",
     "typescript/restrict-template-expressions": "off",
