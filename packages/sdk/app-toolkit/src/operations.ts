@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
+import { SelectionSchema } from '@dxos/react-ui-attention';
 
 import { Label } from './translations';
 
@@ -366,6 +367,45 @@ export namespace LayoutOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       subject: Schema.String.annotations({ description: 'The id of the item to expose.' }),
+    }),
+    output: Schema.Void,
+  });
+
+  //
+  // Companion Operations
+  //
+
+  /** Key intentionally kept under the deck plugin namespace for handler compatibility. */
+  export const ChangeCompanion = Operation.make({
+    meta: {
+      key: 'org.dxos.plugin.deck.operation.change-companion',
+      name: 'Change Companion',
+      description: 'Change the companion plank for a primary plank.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      companion: Schema.Union(Schema.String, Schema.Null),
+    }),
+    output: Schema.Void,
+  });
+}
+
+const ATTENTION_PLUGIN = 'org.dxos.plugin.attention';
+
+/**
+ * Operations for the Attention plugin.
+ */
+export namespace AttentionOperation {
+  export const Select = Operation.make({
+    meta: {
+      key: `${ATTENTION_PLUGIN}.operation.select`,
+      name: 'Select',
+      description: 'Select items in an attention context.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
+      selection: SelectionSchema.annotations({ description: 'The selection to apply.' }),
     }),
     output: Schema.Void,
   });

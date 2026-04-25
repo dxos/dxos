@@ -5,11 +5,9 @@
 import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout } from '@dxos/app-toolkit/ui';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
 
-import { ChangeCompanion } from '../operations/definitions';
+import { AttentionOperation, LayoutOperation } from '../../operations';
+import { useLayout } from './useLayout';
 
 export type ShowItemOptions = {
   /** Attention context id — typically the master surface's attendableId. */
@@ -62,7 +60,7 @@ export const useShowItem = () => {
           break;
       }
 
-      return invokePromise(ChangeCompanion, { companion });
+      return invokePromise(LayoutOperation.ChangeCompanion, { companion });
     },
     [invokePromise, layout.mode],
   );

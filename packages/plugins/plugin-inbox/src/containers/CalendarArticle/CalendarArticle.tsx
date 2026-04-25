@@ -10,7 +10,7 @@ import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { useShowItem } from '@dxos/plugin-deck';
+import { useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';

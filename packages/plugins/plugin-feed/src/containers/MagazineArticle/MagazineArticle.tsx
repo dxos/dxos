@@ -9,7 +9,7 @@ import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useShowItem } from '@dxos/plugin-deck';
+import { useShowItem } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
