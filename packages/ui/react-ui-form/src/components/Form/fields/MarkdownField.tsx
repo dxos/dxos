@@ -69,13 +69,30 @@ export const MarkdownField = ({
     );
   };
 
+  const renderStatic = () => {
+    if (isRef) {
+      const reference = value as Ref.Ref<any> | undefined;
+      return reference ? <RefStaticText reference={reference} /> : null;
+    }
+    return <p className='whitespace-pre-wrap'>{(value as string | undefined) ?? ''}</p>;
+  };
+
   return (
     <Input.Root validationValence={status}>
       {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
-      {layout === 'static' ? <p>{isRef ? '' : (value ?? '')}</p> : renderEditor()}
+      {layout === 'static' ? renderStatic() : renderEditor()}
       {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
+};
+
+/** Read-only static rendering for a `Ref<Text>` value: resolve the ref and print its content. */
+const RefStaticText = ({ reference }: { reference: Ref.Ref<any> }) => {
+  const text = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
+  if (!text?.content) {
+    return null;
+  }
+  return <p className='whitespace-pre-wrap'>{text.content}</p>;
 };
 
 type RefMarkdownEditorProps = {

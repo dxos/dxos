@@ -16,7 +16,7 @@ import {
 export type UseBasicMarkdownExtensionsOptions = {
   /** Placeholder text shown when the editor is empty. */
   placeholder?: string;
-  /** Disables markdown visual decorations. Defaults to enabled. */
+  /** Enables markdown visual decorations. Pass `false` to disable. Defaults to `true`. */
   decorate?: boolean;
   /**
    * Extra extensions appended to the returned array.

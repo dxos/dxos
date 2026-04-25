@@ -79,8 +79,10 @@ const RefStory = () => {
 
 const EmptyRefSchema = Schema.Struct({
   instructions: Schema.optional(
-    Ref.Ref(Text.Text).pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown)),
-  ).annotations({ title: 'Instructions' }),
+    Ref.Ref(Text.Text)
+      .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
+      .annotations({ title: 'Instructions' }),
+  ),
 });
 
 const EmptyRefStory = () => {
@@ -119,7 +121,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const String: Story = {
+export const StringBacked: Story = {
   render: () => <StringStory />,
 };
 
