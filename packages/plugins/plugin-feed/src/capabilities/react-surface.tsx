@@ -23,6 +23,7 @@ export default Capability.makeModule(() =>
           <SubscriptionsArticle role={role} attendableId={data.attendableId} subject={data.subject} />
         ),
       }),
+      // TODO(burdon): This doesn't show-up.
       // Companion view: FeedArticle shown alongside the feeds-root.
       Surface.create({
         id: 'feed-article',

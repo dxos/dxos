@@ -14,10 +14,6 @@ export type PostStackAction = { type: 'current'; postId: string };
 
 export type PostStackActionHandler = (action: PostStackAction) => void;
 
-//
-// PostStack
-//
-
 export type PostStackProps = {
   id: string;
   posts?: Subscription.Post[];
@@ -77,10 +73,6 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
 
 PostStack.displayName = 'PostStack';
 
-//
-// PostTile
-//
-
 type PostTileData = {
   post: Subscription.Post;
   onAction?: PostStackActionHandler;
@@ -102,7 +94,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef}>
+        <Card.Root ref={forwardedRef} fullWidth>
           <Card.Toolbar>
             <Card.IconBlock>
               <Card.Icon icon='ph--dot-outline--regular' />
