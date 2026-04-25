@@ -3,3 +3,8 @@ language: typescript
 tags:
   - typecheck
   - pack
+tasks:
+  lint:
+    command: 'true'
+    options:
+      runFromWorkspaceRoot: true
