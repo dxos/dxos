@@ -2,7 +2,7 @@
 title: December 2023 Recap
 slug: december-2023-recap
 date: 2023-12-30
-description: Explore the power of the Effect ecosystem and community with us in Vienna, Austria on February 22-24. 
+description: Explore the power of the Effect ecosystem and community with us in Vienna, Austria on February 22-24.
 author: Rich Burdon
 tags: []
 featureImage: /blog/images/Screenshot-2024-01-11-at-2.01.35-PM-1.png
@@ -24,11 +24,11 @@ On December 10, Jess Martin spoke about redefining apps and data on the 78th epi
 
 ### Release 0.3.9
 
--   Composer is now merged with composer labs (all the plugins from labs are now available in composer behind a toggle in the settings panel).
--   Network performance and stability improvements.
--   ECHO replication performance improvements.
+- Composer is now merged with composer labs (all the plugins from labs are now available in composer behind a toggle in the settings panel).
+- Network performance and stability improvements.
+- ECHO replication performance improvements.
 
-Explore all the details in the full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.3.9 ).
+Explore all the details in the full release notes on [GitHub](https://github.com/dxos/dxos/releases/tag/v0.3.9).
 
 ## ICYMI
 

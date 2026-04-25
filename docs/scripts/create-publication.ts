@@ -28,7 +28,8 @@ const main = async () => {
   const result = await publisher.publishPublication({
     name: 'DXOS Blog',
     url: 'https://dxos.org',
-    description: 'News, engineering deep-dives, and updates from the DXOS team. Building the new standard for collaborative local-first software.',
+    description:
+      'News, engineering deep-dives, and updates from the DXOS team. Building the new standard for collaborative local-first software.',
     basicTheme: {
       background: { r: 10, g: 10, b: 10 },
       foreground: { r: 230, g: 237, b: 243 },

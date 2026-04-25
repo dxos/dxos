@@ -13,15 +13,15 @@ Today we're excited to share a **Technical Preview** of the DXOS platform, an op
 
 🐲
 
-DXOS is a ****Technical Preview.**** Please don't use this for production data. We're working towards a stable and secure 1.0 release.
+DXOS is a \***\*Technical Preview.\*\*** Please don't use this for production data. We're working towards a stable and secure 1.0 release.
 
 ## What is DXOS
 
 DXOS is a developer platform for building beautiful, local-first, collaborative applications. It consists of three main components that work together:
 
--   [ECHO](https://docs.dxos.org/guide/platform/), a distributed, local-first data store
--   [HALO](https://docs.dxos.org/guide/platform/halo.html), an encrypted identity solution
--   [KUBE](https://docs.dxos.org/guide/platform/kube.html), runtime services for peer-to-peer applications
+- [ECHO](https://docs.dxos.org/guide/platform/), a distributed, local-first data store
+- [HALO](https://docs.dxos.org/guide/platform/halo.html), an encrypted identity solution
+- [KUBE](https://docs.dxos.org/guide/platform/kube.html), runtime services for peer-to-peer applications
 
 We wrap these three components together in a set of SDKs (currently, [React](https://docs.dxos.org/guide/react/) and [TypeScript](https://docs.dxos.org/guide/typescript/)) that enable developers to deliver sophisticated applications quickly.
 
@@ -33,7 +33,7 @@ With today's Technical Preview, DXOS is suitable for building real-world applica
 
 /0:29
 
- 1× 
+1×
 
 Quickly build peer-to-peer apps with state synchronization.
 
@@ -54,6 +54,6 @@ We'd love to hear what you're interested in building. You can talk with the team
 
 The **Technical Preview** marks a milestone for DXOS. DXOS has always been open source, but now we're working with the garage door up. Here are three things we're working on right now:
 
--   [**Composer**](https://composer.dxos.org)**.** We're building a local-first, collaborative, extensible text editor. We built a minimal markdown editor to power the Composer Extension, and now we're extending it into a plugin-friendly environment for hosting DXOS apps. It's shaping up to be something in between Notion and Airtable with a sprinkle of macOS Widgets.
--   **Personal agents.** Peer-to-peer is an excellent collaboration model for several reasons: latency is incredibly low with no server round-trips, peers can still communicate over a local network even without internet. But there are challenges as well: peers have to be online at the same time to share state with one another and data isn't backed up on another device. [Personal agents](https://github.com/dxos/dxos/blob/main/docs/docs/design/remote-agents.md) are a solution we're working on to enable persistent replication and secure off-device backups.
--   **Stability, reliability, security.** We're using our own DXOS apps in production every day. And that means the platform needs to be stable, reliable, and secure. While the platform is largely peer-to-peer and decentralized, there are still some centralized points of failure. We're working on hardening that infrastructure and improving the documentation and DX for those who wish to self-host.
+- [**Composer**](https://composer.dxos.org)**.** We're building a local-first, collaborative, extensible text editor. We built a minimal markdown editor to power the Composer Extension, and now we're extending it into a plugin-friendly environment for hosting DXOS apps. It's shaping up to be something in between Notion and Airtable with a sprinkle of macOS Widgets.
+- **Personal agents.** Peer-to-peer is an excellent collaboration model for several reasons: latency is incredibly low with no server round-trips, peers can still communicate over a local network even without internet. But there are challenges as well: peers have to be online at the same time to share state with one another and data isn't backed up on another device. [Personal agents](https://github.com/dxos/dxos/blob/main/docs/docs/design/remote-agents.md) are a solution we're working on to enable persistent replication and secure off-device backups.
+- **Stability, reliability, security.** We're using our own DXOS apps in production every day. And that means the platform needs to be stable, reliable, and secure. While the platform is largely peer-to-peer and decentralized, there are still some centralized points of failure. We're working on hardening that infrastructure and improving the documentation and DX for those who wish to self-host.

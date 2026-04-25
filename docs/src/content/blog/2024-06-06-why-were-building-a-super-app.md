@@ -2,7 +2,7 @@
 title: "Why we're building a super-app"
 slug: why-were-building-a-super-app
 date: 2024-06-06
-description: "Composer is an open source \"Super App\" that provides teams with a fully customizable and extensible teams in a single integrated environment."
+description: 'Composer is an open source "Super App" that provides teams with a fully customizable and extensible teams in a single integrated environment.'
 author: Rich Burdon
 tags:
   - Composer
@@ -19,11 +19,11 @@ We think there is hidden value buried between the walls of all the different app
 
 Our requirements were:
 
--   to work and collaborate in real time — or offline — in the browser, and on all our devices;
--   to have less fragmentation of knowledge locations, to have a single place to go to for all our tracking and organizing needs;
--   to remove foreign data silos and the complexity associated with juggling multiple third-party accounts;
--   to have complete control and ownership of our data;
--   to be able to easily extend the software as our needs and use cases evolve;
+- to work and collaborate in real time — or offline — in the browser, and on all our devices;
+- to have less fragmentation of knowledge locations, to have a single place to go to for all our tracking and organizing needs;
+- to remove foreign data silos and the complexity associated with juggling multiple third-party accounts;
+- to have complete control and ownership of our data;
+- to be able to easily extend the software as our needs and use cases evolve;
 
 Above all, we wanted to lessen the fragmentation and cognitive burden associated with organizing our ideas, knowledge, and process as a team.
 
@@ -39,21 +39,21 @@ Check it out at [https://dxos.org/composer](https://dxos.org/composer).
 
 With it, you can:
 
--   collaborate online or offline in a peer-to-peer and privacy preserving fashion;
--   work on and organize markdown files, lists, and other kinds of media;
--   extend, bring in your data, UI components, and scenarios;
+- collaborate online or offline in a peer-to-peer and privacy preserving fashion;
+- work on and organize markdown files, lists, and other kinds of media;
+- extend, bring in your data, UI components, and scenarios;
 
 We're building with things like:
 
--   [vite](https://vitejs.dev/)
--   [typescript](https://www.typescriptlang.org/)
--   [react](https://reactjs.org/)
--   [tailwind](https://tailwindcss.com/)
--   [radix ui](https://radix-ui.com/)
--   [effect](https://effect.website/)
--   [automerge](https://automerge.org/)
--   [tldraw](https://github.com/tldraw/tldraw)
--   and of course, the magic peer-to-peer reactivity of DXOS.
+- [vite](https://vitejs.dev/)
+- [typescript](https://www.typescriptlang.org/)
+- [react](https://reactjs.org/)
+- [tailwind](https://tailwindcss.com/)
+- [radix ui](https://radix-ui.com/)
+- [effect](https://effect.website/)
+- [automerge](https://automerge.org/)
+- [tldraw](https://github.com/tldraw/tldraw)
+- and of course, the magic peer-to-peer reactivity of DXOS.
 
 We're choosing react for it's established learning tracks and the wide audience of developers. It's the tech our team has the most overlap with, and we look forward to the opportunity to add more framework support at a later time. Right now we want to focus on what makes our app unique.
 

@@ -20,11 +20,10 @@
 //   ANNOUNCE=true npx tsx docs/scripts/sync-to-atproto.ts
 //
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
 import { AtpAgent, RichText } from '@atproto/api';
 import { StandardSitePublisher, transformContent } from '@bryanguffey/astro-standard-site';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const handle = process.env.ATPROTO_HANDLE;
 const appPassword = process.env.ATPROTO_APP_PASSWORD;

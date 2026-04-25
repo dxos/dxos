@@ -19,8 +19,8 @@ export const App = () => {
         <div
           key={task.id}
           onClick={() => {
-            Obj.change(task, (obj) => {
-              obj.completed = true;
+            Obj.change(task, (task) => {
+              task.completed = true;
             });
           }}
         >

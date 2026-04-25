@@ -1,5 +1,5 @@
 ---
-title: "What is \"Cloudless\" software?"
+title: 'What is "Cloudless" software?'
 slug: what-do-we-mean-by-cloudless-software
 date: 2024-04-29
 description: There are still signaling servers for peer discovery, but all data exchange happens peer-to-peer, and no servers have access to the data.
@@ -30,6 +30,6 @@ Join our [Discord](https://dxos.org/discord) - we'd love to hear from you.
 
 Learn more:
 
--   How WebRTC works - [a post by Dennis Ivy](https://medium.com/agora-io/how-does-webrtc-work-996748603141)
--   [CRDTs](https://crdt.tech/)
--   [libp2p pubsub](https://docs.libp2p.io/concepts/pubsub/overview/)
+- How WebRTC works - [a post by Dennis Ivy](https://medium.com/agora-io/how-does-webrtc-work-996748603141)
+- [CRDTs](https://crdt.tech/)
+- [libp2p pubsub](https://docs.libp2p.io/concepts/pubsub/overview/)
