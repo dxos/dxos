@@ -115,7 +115,17 @@ const isTagURLBlock = (el: Element): boolean => {
   return matching.length / links.length > 0.6;
 };
 
+/**
+ * True when the element has no body-content descendants. Body content is
+ * paragraphs, blockquotes, code/pre, figures, images, and tables — the
+ * signal that a block contributes article substance, not chrome. (Lists and
+ * raw `<a>` tags don't count: tag clouds and link rails are entirely those.)
+ */
+const hasNoBodyContent = (el: Element): boolean =>
+  el.querySelector('p, blockquote, pre, code, figure, img, table') == null;
+
 const isChromeElement = (el: Element): boolean => {
+  // Strong structural signals — fire alone.
   const tag = el.tagName;
   if (tag === 'ASIDE' || tag === 'NAV' || tag === 'FOOTER') {
     return true;
@@ -124,15 +134,23 @@ const isChromeElement = (el: Element): boolean => {
   if (role === 'navigation' || role === 'complementary' || role === 'contentinfo') {
     return true;
   }
+  // Link-only list is purely structural and self-contained — safe.
+  if (isLinkOnlyList(el)) {
+    return true;
+  }
+  // Tag-href ratio AND class-hint can both fire on a wrapper that *contains*
+  // a tag rail nested deep among real article paragraphs (the rail's links
+  // skew the container's link counts above threshold). Only treat as chrome
+  // when the element has no body-content descendants — i.e. it's structurally
+  // a link rail itself, not a body wrapper that happens to nest one.
+  if (!hasNoBodyContent(el)) {
+    return false;
+  }
+  if (isTagURLBlock(el)) {
+    return true;
+  }
   const classNameAndId = `${(el.getAttribute('class') ?? '').toString()} ${el.id ?? ''}`;
   if (CHROME_CLASS_PATTERN.test(classNameAndId)) {
-    return true;
-  }
-  if (isLinkOnlyList(el) || isTagURLBlock(el)) {
-    return true;
-  }
-  // High link density on a sizeable block — tag clouds and link rails.
-  if ((el.textContent ?? '').trim().length > 20 && linkDensity(el) >= 0.7) {
     return true;
   }
   return false;
@@ -147,42 +165,64 @@ const findContentRoot = (doc: Document): Element | null =>
   doc.querySelector('article') ?? doc.querySelector('main') ?? doc.querySelector('[role="main"]') ?? doc.body;
 
 /**
- * Walk trailing children of the content root from the end, removing chrome
- * blocks. A heading immediately preceding a chrome block is also removed
- * (the heading is the chrome's title, e.g. "Narrower topics" sitting above
- * a tag-href list). Stop at the first non-chrome block — body content
- * resumes there.
+ * First pass: scan all descendants of the content root and remove elements
+ * that look like chrome wherever they appear. An element qualifies when:
+ *   - its class/id contains a chrome keyword
+ *     (`tag`, `topic`, `related`, `comments`, `share`, `widget`, `sidebar`,
+ *      `footer`, `recommend`, etc.), AND
+ *   - it has no body-content descendants (paragraphs, blockquotes, figures,
+ *     tables) — i.e. it's a self-contained widget, not an article wrapper
+ *     that happens to share a keyword.
+ * Plus elements that are structurally just a list of links (tag clouds,
+ * "related" rails) regardless of class.
+ *
+ * This catches chrome buried alongside body content in real-world layouts
+ * (e.g. theregister's `<div class="similar_topics">` and `<div class="comments">`
+ * nested as siblings of the article body inside `<div id="article-wrapper">`).
  */
+const pruneChromeDescendants = (root: Element): void => {
+  const candidates = Array.from(root.querySelectorAll('*'));
+  for (const el of candidates) {
+    // Skip elements already detached because an ancestor was removed.
+    if (!root.contains(el)) {
+      continue;
+    }
+    if (isChromeElement(el)) {
+      el.remove();
+    }
+  }
+};
+
+/**
+ * Second pass: when the descendant scan removed an element that used to sit
+ * at the trailing edge of the article, the heading that titled it is now
+ * dangling. Strip it.
+ *
+ * Naturally-trailing headings on legitimate articles (essays ending with
+ * `<h2>Conclusion</h2>`) are preserved because we only fire when the
+ * original trailing edge was actually severed.
+ */
+const trimDanglingTrailingHeading = (root: Element): void => {
+  let cursor = root.lastElementChild;
+  while (cursor && isHeading(cursor) && cursor.nextElementSibling == null) {
+    const previous = cursor.previousElementSibling;
+    cursor.remove();
+    cursor = previous;
+  }
+};
+
 /** @internal exported for unit testing the chrome-pruning rules in isolation. */
 export const pruneTrailingChrome = (doc: Document): void => {
   const root = findContentRoot(doc);
   if (!root) {
     return;
   }
-  let child = root.lastElementChild;
-  // Track whether the previous loop iteration removed a chrome element. The
-  // pair-wise heading rule (see below) only fires when it did — naturally
-  // trailing headings on legitimate articles (e.g. an essay ending with
-  // `<h2>Conclusion</h2>` and no body after it) must be preserved.
-  let removedPrevious = false;
-  while (child) {
-    const previous = child.previousElementSibling;
-    if (isChromeElement(child)) {
-      child.remove();
-      child = previous;
-      removedPrevious = true;
-      continue;
-    }
-    // Pair-wise: a heading that is now trailing (because we just removed
-    // its content section on the prior turn) is the chrome section's title
-    // — strip it too.
-    if (removedPrevious && isHeading(child) && child.nextElementSibling == null) {
-      child.remove();
-      child = previous;
-      // `removedPrevious` stays true: removing the title still counts.
-      continue;
-    }
-    break;
+  // Capture the original trailing edge so we can tell after pruning whether
+  // any chrome was removed FROM the end (vs only from mid-article).
+  const originalLastChild = root.lastElementChild;
+  pruneChromeDescendants(root);
+  if (originalLastChild && !root.contains(originalLastChild)) {
+    trimDanglingTrailingHeading(root);
   }
 };
 
