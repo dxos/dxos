@@ -11,18 +11,17 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 const fixture = path.resolve(dirname, 'stderr-filter.fixture.ts');
 
 /**
- * End-to-end-ish proof that `installStderrFilter()` actually wraps
- * `process.stderr.write` in a real subprocess: spawn the fixture, capture
- * stderr, and assert that the warnings + their stack frames are gone but
- * surrounding real stderr is preserved.
+ * End-to-end-ish proof that `installStderrFilter()` actually intercepts the
+ * APIs production code uses: `console.warn` (where `warnAfterTimeout` from
+ * @dxos/debug writes) AND `process.stderr.write` (defence in depth).
  *
- * This complements the pure unit tests in `stderr-filter.test.ts` (which
- * exercise the state machine) and ensures the integration with Node's
- * stream API works as expected.
+ * Bun bypasses `process.stderr.write` for `console.warn` — overriding only
+ * one channel is the bug this PR fixes. The fixture exercises BOTH so a
+ * regression in either channel is caught immediately.
  */
 
 describe('installStderrFilter (subprocess)', () => {
-  test('drops timeout warnings + stack frames; preserves real lines', ({ expect }) => {
+  test('drops warnings emitted via console.warn AND process.stderr.write; preserves real lines', ({ expect }) => {
     const result = spawnSync('bun', ['run', '--conditions=source', fixture], {
       encoding: 'utf8',
       timeout: 15_000,
@@ -31,12 +30,13 @@ describe('installStderrFilter (subprocess)', () => {
     expect(result.status).toBe(0);
     const stderr = result.stderr ?? '';
 
-    // Real lines preserved.
-    expect(stderr).toContain('REAL line before warning');
-    expect(stderr).toContain('REAL line after warning');
-    expect(stderr).toContain('REAL final line');
+    // Real stderr from BOTH channels must pass through.
+    expect(stderr).toContain('REAL warn before warning');
+    expect(stderr).toContain('REAL error after warning');
+    expect(stderr).toContain('REAL line via process.stderr.write');
+    expect(stderr).toContain('REAL final line via process.stderr.write');
 
-    // Warning prefixes and their stack frames stripped.
+    // Warning prefixes (and anything in their stack frames) must be gone.
     expect(stderr).not.toContain('Action `Finding properties');
     expect(stderr).not.toContain('Action `another action');
     expect(stderr).not.toContain('warnAfterTimeout');

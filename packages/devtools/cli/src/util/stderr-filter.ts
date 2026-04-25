@@ -44,41 +44,6 @@ export const decideStderrChunk = (text: string, suppressing: boolean): { drop: b
 };
 
 /**
- * Wrap `process.stderr.write` so background timeout warnings are dropped
- * for the lifetime of the process (or until the returned restore function
- * is called).
- *
- * The returned restore lambda re-installs the original write so callers
- * (e.g. tests, REPL exit) can revert.
- *
- * Node's `stream.write` accepts an optional callback as its final arg.
- * We MUST invoke it even when suppressing or any caller awaiting flush
- * completion will hang.
- */
-export const installStderrFilter = (): (() => void) => {
-  const originalWrite = process.stderr.write.bind(process.stderr);
-  let suppressing = false;
-
-  (process.stderr as any).write = (chunk: any, ...rest: any[]): boolean => {
-    const maybeCallback = rest[rest.length - 1];
-    const callback: ((err?: Error | null) => void) | undefined =
-      typeof maybeCallback === 'function' ? (maybeCallback as any) : undefined;
-    const text = typeof chunk === 'string' ? chunk : (chunk?.toString?.() ?? '');
-    const decision = decideStderrChunk(text, suppressing);
-    suppressing = decision.suppressing;
-    if (decision.drop) {
-      callback?.();
-      return true;
-    }
-    return originalWrite(chunk, ...rest);
-  };
-
-  return () => {
-    (process.stderr as any).write = originalWrite;
-  };
-};
-
-/**
  * Filter a buffered stderr blob (e.g. captured from a subprocess) using the
  * same state machine. Test helper.
  */
@@ -97,4 +62,67 @@ export const filterStderrBuffer = (buffer: string): string => {
     }
   }
   return out;
+};
+
+/**
+ * Wrap BOTH `console.warn`/`console.error` (where `warnAfterTimeout` from
+ * @dxos/debug actually writes) AND `process.stderr.write` (defence in depth
+ * for callers that bypass console). In Bun, `console.warn` writes to fd 2
+ * directly — overriding `process.stderr.write` alone is NOT enough. Verified
+ * empirically: a `process.stderr.write` wrapper sees zero `console.warn`
+ * traffic in bun. See stderr-filter.console.test.ts for the regression
+ * guard.
+ *
+ * The returned restore lambda re-installs the originals so callers (e.g.
+ * tests, REPL exit) can revert.
+ */
+export const installStderrFilter = (): (() => void) => {
+  const originalWarn = console.warn.bind(console);
+  const originalError = console.error.bind(console);
+  const originalWrite = process.stderr.write.bind(process.stderr);
+
+  // The same suppression state machine drives every channel — they all dump
+  // to fd 2, so a warning fired through one and stack frames fired through
+  // another should still be coherent.
+  let suppressing = false;
+
+  const handleText = (text: string): { drop: boolean } => {
+    const decision = decideStderrChunk(text, suppressing);
+    suppressing = decision.suppressing;
+    return { drop: decision.drop };
+  };
+
+  // console.warn / console.error are passed printf-style args. Format them
+  // the same way Node's Console does (concat with space, append newline) so
+  // our prefix regex matches the same text the user would have seen.
+  const wrapConsole = (variant: 'warn' | 'error', original: (...args: any[]) => void) => {
+    return (...args: any[]) => {
+      const text = args.map((a) => (typeof a === 'string' ? a : String(a))).join(' ') + '\n';
+      if (handleText(text).drop) {
+        return;
+      }
+      original(...args);
+    };
+  };
+
+  console.warn = wrapConsole('warn', originalWarn);
+  console.error = wrapConsole('error', originalError);
+
+  (process.stderr as any).write = (chunk: any, ...rest: any[]): boolean => {
+    const maybeCallback = rest[rest.length - 1];
+    const callback: ((err?: Error | null) => void) | undefined =
+      typeof maybeCallback === 'function' ? (maybeCallback as any) : undefined;
+    const text = typeof chunk === 'string' ? chunk : (chunk?.toString?.() ?? '');
+    if (handleText(text).drop) {
+      callback?.();
+      return true;
+    }
+    return originalWrite(chunk, ...rest);
+  };
+
+  return () => {
+    console.warn = originalWarn;
+    console.error = originalError;
+    (process.stderr as any).write = originalWrite;
+  };
 };
