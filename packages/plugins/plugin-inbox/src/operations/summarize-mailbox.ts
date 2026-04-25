@@ -19,9 +19,9 @@ import {
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import * as Trace from '@dxos/functions/Trace';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { QueueService } from '@dxos/compute';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 

@@ -26,15 +26,15 @@ import {
   PlanningBlueprint,
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/compute';
 import { type Space } from '@dxos/client/echo';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ExampleHandlers, Trigger } from '@dxos/functions';
+import { ExampleHandlers, Trigger } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Assistant, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AssistantOperation } from '@dxos/plugin-assistant/operations';
 import { AutomationPlugin } from '@dxos/plugin-automation';

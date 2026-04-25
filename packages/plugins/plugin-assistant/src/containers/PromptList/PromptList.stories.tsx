@@ -8,7 +8,7 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';

@@ -16,10 +16,10 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { type McpServerConfig, AiSession } from '../conversation';

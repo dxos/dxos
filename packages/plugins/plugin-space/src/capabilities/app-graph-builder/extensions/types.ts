@@ -14,7 +14,7 @@ import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';

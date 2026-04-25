@@ -13,7 +13,7 @@ import * as Stream from 'effect/Stream';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Channel, Video } from '../types';
 import { YouTube } from './apis';

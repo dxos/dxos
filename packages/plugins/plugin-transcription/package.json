@@ -77,6 +77,7 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",

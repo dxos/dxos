@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Context } from '@dxos/context';
-import { type Script } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';

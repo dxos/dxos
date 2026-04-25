@@ -46,9 +46,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

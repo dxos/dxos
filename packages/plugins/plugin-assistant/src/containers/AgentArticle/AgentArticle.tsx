@@ -13,7 +13,7 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/compute';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';

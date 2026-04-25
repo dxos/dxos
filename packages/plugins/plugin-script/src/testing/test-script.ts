@@ -3,8 +3,8 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { type Space } from '@dxos/react-client/echo';
 
 /**

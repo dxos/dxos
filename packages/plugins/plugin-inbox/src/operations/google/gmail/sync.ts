@@ -14,7 +14,7 @@ import * as Stream from 'effect/Stream';
 
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';

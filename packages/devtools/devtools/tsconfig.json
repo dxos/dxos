@@ -64,6 +64,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/conductor"
     },
     {

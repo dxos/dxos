@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { OBJECT_RENAME_POPOVER } from '../constants';
 import { SpaceOperation } from './definitions';

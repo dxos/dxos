@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Agent } from '../../../types';
 import { AddArtifact } from './definitions';

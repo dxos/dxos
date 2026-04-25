@@ -10,7 +10,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 

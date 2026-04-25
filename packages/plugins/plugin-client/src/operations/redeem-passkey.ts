@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { decodeUrlSafeBase64, supportsNativePasskeys, loginNativePasskey } from '@dxos/app-toolkit';
 import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { ClientCapabilities } from '../types';
 import { RedeemPasskey } from './definitions';

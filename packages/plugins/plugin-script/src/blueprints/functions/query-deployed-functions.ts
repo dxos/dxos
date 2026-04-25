@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { QueryDeployedFunctions } from './definitions';
 

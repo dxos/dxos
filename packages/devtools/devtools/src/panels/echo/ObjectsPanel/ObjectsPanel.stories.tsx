@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { type Entity, Obj, Relation, Type } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

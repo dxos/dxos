@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

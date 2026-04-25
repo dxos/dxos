@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/async';
 import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '#types';
 

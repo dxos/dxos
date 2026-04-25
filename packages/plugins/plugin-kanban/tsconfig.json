@@ -54,6 +54,9 @@
       "path": "../../core/blueprints"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

@@ -11,7 +11,7 @@ import { AppCapabilities, AppNode, createObjectNode, getActiveSpace } from '@dxo
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';

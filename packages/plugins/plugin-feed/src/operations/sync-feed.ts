@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Feed, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 

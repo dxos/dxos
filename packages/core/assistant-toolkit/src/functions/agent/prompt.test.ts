@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 
 import { ContextBinding } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/compute';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
-import { OperationHandlerSet } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 

@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
-import { Trigger, TriggerEvent } from '@dxos/functions';
+import { Trigger, TriggerEvent } from '@dxos/compute';
 import { DXN, SpaceId } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';

@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ThreadOperation } from '@dxos/plugin-thread/operations';
 import { TranscriptOperation } from '@dxos/plugin-transcription/operations';
 import { getSpace } from '@dxos/react-client/echo';

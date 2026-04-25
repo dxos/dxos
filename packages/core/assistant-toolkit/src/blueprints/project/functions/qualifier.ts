@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';

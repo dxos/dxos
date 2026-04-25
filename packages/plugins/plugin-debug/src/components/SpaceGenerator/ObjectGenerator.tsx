@@ -8,7 +8,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, type Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { type OperationInvoker } from '@dxos/operation';
+import { type OperationInvoker } from '@dxos/compute';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Sketch } from '@dxos/plugin-sketch/types';

@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/compute';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, createInvocationSpans } from '@dxos/functions-runtime';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { InspectInvocations } from './definitions';
 

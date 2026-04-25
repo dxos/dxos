@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { RECOVERY_CODE_DIALOG } from '../constants';
 import { ClientCapabilities } from '../types';

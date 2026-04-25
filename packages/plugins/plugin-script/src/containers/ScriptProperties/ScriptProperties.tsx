@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Script } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
 
 import { BlueprintEditor } from './BlueprintEditor';
 import { FunctionBinding } from './FunctionBinding';

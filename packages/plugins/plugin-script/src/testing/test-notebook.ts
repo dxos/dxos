@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';

@@ -2,31 +2,51 @@
 
 Umbrella package for AI-aware DXOS compute primitives.
 
-## Submodules
+## Usage
 
-Stage 1: the submodules below re-export primitives from their existing home
-packages so that consumers can depend on a single surface (`@dxos/compute`).
+Importing from `@dxos/compute` is equivalent to importing from the underlying
+source packages. Namespaces preserve their nesting — there is no extra wrapping
+or unwrapping:
 
-| Submodule                                 | Source                    |
-| ----------------------------------------- | ------------------------- |
-| `@dxos/compute/Operation`                 | `@dxos/operation`         |
-| `@dxos/compute/Blueprint`                 | `@dxos/blueprints`        |
-| `@dxos/compute/Prompt`                    | `@dxos/blueprints`        |
-| `@dxos/compute/Template`                  | `@dxos/blueprints`        |
-| `@dxos/compute/Trigger`                   | `@dxos/functions`         |
-| `@dxos/compute/Script`                    | `@dxos/functions`         |
-| `@dxos/compute/Process`                   | `@dxos/functions`         |
-| `@dxos/compute/Trace`                     | `@dxos/functions/Trace`   |
-| `@dxos/compute/ServiceResolver`           | `@dxos/functions`         |
-| `@dxos/compute/StorageService`            | `@dxos/functions`         |
+```ts
+import { Blueprint, Operation, Prompt, Process, Script, Trace, Trigger } from '@dxos/compute';
 
-The top-level entry point (`@dxos/compute`) still exposes the low-level
-compute-graph / HyperFormula API used by `plugin-sheet`; this is unchanged.
+Blueprint.make({ /* ... */ });
+Operation.lazy(() => /* ... */);
+Trace.write(Trace.OperationStart, { /* ... */ });
+```
+
+This single surface subsumes:
+
+| Re-exported from   | Includes                                                        |
+| ------------------ | --------------------------------------------------------------- |
+| `@dxos/operation`  | `Operation`, `OperationInvoker`, `OperationHandlerSet`, `OperationRegistry`, errors |
+| `@dxos/blueprints` | `Blueprint`, `Prompt`, `Template`                               |
+| `@dxos/functions`  | `Process`, `Trigger`, `TriggerEvent`, `Script`, `Trace`, `ServiceResolver`, `StorageService`, `CredentialsService`, `ExampleHandlers`, services, errors, sdk |
+
+The package also continues to export the existing low-level compute graph
+(HyperFormula) API used by `plugin-sheet`.
+
+## Subpath imports
+
+For consumers that prefer per-primitive entry points, each primitive is also
+available as a subpath:
+
+```ts
+import { Blueprint } from '@dxos/compute/Blueprint';
+import { Operation } from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
+```
+
+Available subpaths: `Operation`, `Blueprint`, `Prompt`, `Template`, `Trigger`,
+`Script`, `Process`, `Trace`, `ServiceResolver`, `StorageService`.
 
 ## Roadmap
 
-- Stage 2: migrate source into `@dxos/compute` and remove the intermediate
-  `@dxos/operation`, `@dxos/blueprints`, and `@dxos/functions` packages.
+- Stage 1 (current): re-exports — consumers depend only on `@dxos/compute`
+  while the source packages stay in place.
+- Stage 2: migrate source into `@dxos/compute` and remove
+  `@dxos/operation`, `@dxos/blueprints`, and `@dxos/functions`.
 - A companion `@dxos/compute-runtime-local` package will host the local
   implementations of the services defined here (currently in
   `@dxos/functions-runtime`).

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { Create } from './definitions';

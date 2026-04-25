@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { ClientEvents } from '../types';

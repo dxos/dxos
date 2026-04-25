@@ -8,7 +8,7 @@ import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Obj, Query } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { InstallFunction } from './definitions';
 

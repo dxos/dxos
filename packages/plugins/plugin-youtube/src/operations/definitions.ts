@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Database, Feed, Ref } from '@dxos/echo';
-import { CredentialsService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { CredentialsService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 
 import { Channel, Video } from '../types';
 

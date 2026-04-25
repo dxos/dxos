@@ -6,8 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import type { Space } from '@dxos/client/echo';
 import { Filter, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';

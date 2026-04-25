@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Template } from '@dxos/blueprints';
+import { Template } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { type FunctionNotFoundError } from '@dxos/functions';
+import { type FunctionNotFoundError } from '@dxos/compute';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Operation, type OperationRegistry } from '@dxos/operation';
+import { type Operation, type OperationRegistry } from '@dxos/compute';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

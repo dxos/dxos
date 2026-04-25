@@ -10,7 +10,7 @@ import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Agent } from '../../../types';
 import { AgentWorker } from './definitions';

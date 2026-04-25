@@ -8,7 +8,7 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DataTypes } from '@dxos/schema';
 import {

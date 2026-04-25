@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { type Script } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';

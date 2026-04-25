@@ -6,7 +6,7 @@ import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useClient } from '@dxos/react-client';

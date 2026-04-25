@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Graph } from '@dxos/plugin-graph';

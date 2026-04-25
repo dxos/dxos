@@ -10,9 +10,9 @@ import * as Function from 'effect/Function';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { CredentialsService, withAuthorization } from '@dxos/functions';
+import { CredentialsService, withAuthorization } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { syncObjects } from '../../../sync';

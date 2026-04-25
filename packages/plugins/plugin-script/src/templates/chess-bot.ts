@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Chess } from '@dxos/plugin-chess/types';
 
 const ChessBot = Operation.make({

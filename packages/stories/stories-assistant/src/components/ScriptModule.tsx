@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/compute';
 import { ScriptCapabilities, ScriptContainer as ScriptContainerComponent } from '@dxos/plugin-script';
 import { useQuery } from '@dxos/react-client/echo';
 

@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Key } from '@dxos/echo';
-import { type Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/compute';
 
 import { getNextVersion, loadFunctionObject } from './echo';
 

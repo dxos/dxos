@@ -12,7 +12,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Panel } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';

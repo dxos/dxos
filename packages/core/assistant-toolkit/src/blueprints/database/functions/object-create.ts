@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Entity, Obj, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { deepMapValues } from '@dxos/util';
 
 import { ObjectCreate } from './definitions';

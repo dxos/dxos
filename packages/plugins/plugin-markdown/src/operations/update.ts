@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Update } from './definitions';
 

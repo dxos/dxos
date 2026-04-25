@@ -13,7 +13,7 @@ import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isBun } from '@dxos/util';

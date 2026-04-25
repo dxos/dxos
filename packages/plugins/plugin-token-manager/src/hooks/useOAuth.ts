@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Context } from '@dxos/context';
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';

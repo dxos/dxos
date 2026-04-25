@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Ref, Relation, Tag } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 export const Query = Operation.make({

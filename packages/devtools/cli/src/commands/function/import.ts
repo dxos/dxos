@@ -14,7 +14,7 @@ import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
 

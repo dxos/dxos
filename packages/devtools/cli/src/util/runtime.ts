@@ -15,8 +15,8 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import { CredentialsService, type QueueService, Trace } from '@dxos/functions';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { CredentialsService, type QueueService, Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 
 export type AiChatServices =
   | AiService.AiService

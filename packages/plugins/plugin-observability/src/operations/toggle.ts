@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Observability } from '@dxos/observability';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 

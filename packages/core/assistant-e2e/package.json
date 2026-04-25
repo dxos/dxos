@@ -27,6 +27,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/blueprints": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/operation": "workspace:*",

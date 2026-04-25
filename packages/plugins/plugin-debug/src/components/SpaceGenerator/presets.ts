@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';

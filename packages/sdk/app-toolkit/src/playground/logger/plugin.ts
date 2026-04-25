@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 import { AppPlugin } from '../../plugin';
 import { LogOperation } from './schema';

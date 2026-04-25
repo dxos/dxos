@@ -16,10 +16,10 @@ import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util'
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { FUNCTIONS_META_KEY } from '@dxos/functions';
+import { FUNCTIONS_META_KEY } from '@dxos/compute';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { bundle } from './bundle';

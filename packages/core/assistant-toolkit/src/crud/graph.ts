@@ -26,7 +26,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
+import { ContextQueueService } from '@dxos/compute';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';

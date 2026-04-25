@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 import { SpotlightState } from '../types';
 

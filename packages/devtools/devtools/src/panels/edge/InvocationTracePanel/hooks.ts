@@ -5,12 +5,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Script, getUserFunctionIdInMetadata } from '@dxos/compute';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';

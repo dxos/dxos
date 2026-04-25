@@ -19,7 +19,7 @@ import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type { Operation } from '@dxos/operation';
+import type { Operation } from '@dxos/compute';
 
 import { type CreateObject } from '#types';
 

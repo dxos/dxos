@@ -18,9 +18,9 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Obj } from '@dxos/echo';
-import { CredentialsService, Trace } from '@dxos/functions';
+import { CredentialsService, Trace } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Message } from '@dxos/types';
 
 import { FetchMessages, TimeRange } from './definitions';

@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';

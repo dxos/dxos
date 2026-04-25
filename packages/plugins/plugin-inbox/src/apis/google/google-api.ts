@@ -7,7 +7,7 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { GoogleCredentials } from '../../services/google-credentials';

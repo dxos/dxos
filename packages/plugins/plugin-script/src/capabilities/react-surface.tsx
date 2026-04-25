@@ -10,7 +10,7 @@ import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framewor
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/compute';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';

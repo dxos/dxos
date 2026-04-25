@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { AttentionCapabilities } from '../types';
 import { Select } from './definitions';

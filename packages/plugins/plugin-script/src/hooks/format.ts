@@ -7,7 +7,7 @@ import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 
 import { Obj } from '@dxos/echo';
-import { type Script } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 

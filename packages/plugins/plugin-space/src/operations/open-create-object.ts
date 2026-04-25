@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Collection, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { CREATE_OBJECT_DIALOG } from '../constants';
 import { SpaceCapabilities } from '../types';

@@ -8,7 +8,7 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CredentialsService } from '@dxos/functions';
+import { CredentialsService } from '@dxos/compute';
 
 import { YouTube } from './apis';
 import { GoogleCredentials } from './services/google-credentials';

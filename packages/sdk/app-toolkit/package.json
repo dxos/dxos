@@ -55,6 +55,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",

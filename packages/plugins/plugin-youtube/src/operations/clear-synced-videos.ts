@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Channel, Video } from '../types';
 import { ClearSyncedVideos } from './definitions';

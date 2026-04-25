@@ -8,7 +8,7 @@ import { type Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { type OperationInvoker } from '@dxos/operation';
+import { type OperationInvoker } from '@dxos/compute';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';

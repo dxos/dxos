@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 
 import { FormBuilder } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 

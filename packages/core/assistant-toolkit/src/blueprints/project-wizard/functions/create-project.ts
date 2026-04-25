@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Agent } from '../../../types';
 import { AgentBlueprint } from '../../project';

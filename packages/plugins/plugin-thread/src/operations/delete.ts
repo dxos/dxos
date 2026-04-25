@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { Thread } from '@dxos/types';
 

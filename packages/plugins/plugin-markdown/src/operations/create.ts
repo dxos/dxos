@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { CollectionModel } from '@dxos/schema';
 
 import { Markdown } from '../types';

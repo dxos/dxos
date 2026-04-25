@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { Query } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { SpaceOperation } from './definitions';
 

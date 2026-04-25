@@ -10,7 +10,7 @@ import * as Queue from 'effect/Queue';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/compute';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';

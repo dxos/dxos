@@ -9,7 +9,7 @@ import type * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { GoogleCredentials } from '../../services/google-credentials';

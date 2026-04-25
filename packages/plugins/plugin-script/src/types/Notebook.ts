@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/compute';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';

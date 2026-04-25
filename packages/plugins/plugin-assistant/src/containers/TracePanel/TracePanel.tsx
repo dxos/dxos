@@ -11,7 +11,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';

@@ -20,14 +20,14 @@ import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, type Key } from '@dxos/echo';
-import { ServiceResolver, Trace } from '@dxos/functions';
+import { ServiceResolver, Trace } from '@dxos/compute';
 import {
   FunctionImplementationResolver,
   ProcessManager,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';

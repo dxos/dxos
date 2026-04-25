@@ -69,6 +69,9 @@
       "path": "../blueprints"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../conductor"
     },
     {

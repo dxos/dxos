@@ -12,9 +12,9 @@ import { CommandConfig } from '@dxos/cli-util';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Database, Obj, Ref, type Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/compute';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 

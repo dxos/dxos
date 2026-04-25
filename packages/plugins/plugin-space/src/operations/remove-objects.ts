@@ -7,7 +7,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Collection, Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { isNonNullable } from '@dxos/util';
 
 import { getNestedObjects } from '../util';

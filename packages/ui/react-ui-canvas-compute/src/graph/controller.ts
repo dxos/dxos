@@ -33,9 +33,9 @@ import {
   type CredentialsService,
   type QueueService,
   Trace,
-} from '@dxos/functions';
+} from '@dxos/compute';
 import { log } from '@dxos/log';
-import type { Operation, OperationRegistry } from '@dxos/operation';
+import type { Operation, OperationRegistry } from '@dxos/compute';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
 

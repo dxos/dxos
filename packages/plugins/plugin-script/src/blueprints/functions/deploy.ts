@@ -8,10 +8,10 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { getUserFunctionIdInMetadata, type Script } from '@dxos/functions';
+import { getUserFunctionIdInMetadata, type Script } from '@dxos/compute';
 import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { getSpace } from '@dxos/react-client/echo';
 

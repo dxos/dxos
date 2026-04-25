@@ -17,7 +17,7 @@ import {
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 

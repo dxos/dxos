@@ -33,6 +33,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",

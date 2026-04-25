@@ -22,10 +22,10 @@ import {
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers, type TestTag } from '@dxos/effect/testing';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';

@@ -8,8 +8,8 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { CredentialsService, QueueService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Actor, Message } from '@dxos/types';
 
 import { meta } from '#meta';

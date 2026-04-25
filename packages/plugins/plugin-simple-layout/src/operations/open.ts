@@ -10,7 +10,7 @@ import {
   validateNavigationTarget,
 } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { layoutStateAccess } from './state-access';

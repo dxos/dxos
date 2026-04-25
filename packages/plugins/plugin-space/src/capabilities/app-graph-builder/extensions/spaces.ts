@@ -10,7 +10,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Expando } from '@dxos/schema';

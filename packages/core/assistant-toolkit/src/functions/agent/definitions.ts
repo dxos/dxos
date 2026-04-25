@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 
 import * as Chat from '../../types/Chat';
 

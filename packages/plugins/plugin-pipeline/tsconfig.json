@@ -36,6 +36,9 @@
       "path": "../../core/assistant-toolkit"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

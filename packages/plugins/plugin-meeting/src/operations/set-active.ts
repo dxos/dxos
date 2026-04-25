@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 
 import { Meeting, MeetingCapabilities } from '../types';

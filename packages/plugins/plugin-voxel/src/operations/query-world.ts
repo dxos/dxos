@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { Voxel } from '../types';
 import { QueryWorld } from './definitions';

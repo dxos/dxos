@@ -8,7 +8,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { random } from '@dxos/random';
 
 import { Randomize } from './definitions';

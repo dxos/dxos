@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Message, Transcript } from '@dxos/types';
 
 import { meta } from '#meta';

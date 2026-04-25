@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({

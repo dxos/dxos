@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space/types';

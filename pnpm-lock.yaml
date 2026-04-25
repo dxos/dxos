@@ -2332,6 +2332,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -2651,9 +2654,6 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -4413,6 +4413,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4513,6 +4516,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
@@ -4552,6 +4558,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../conductor
@@ -4727,9 +4736,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../operation
-      '@dxos/plugin-automation':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-automation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
@@ -6419,6 +6425,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -6648,6 +6657,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -6712,6 +6724,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -7784,6 +7799,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7999,6 +8017,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -8126,6 +8147,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -8250,6 +8274,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -8368,6 +8395,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -8471,6 +8501,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -8782,6 +8815,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -8942,6 +8978,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9030,6 +9069,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9172,6 +9214,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9275,6 +9320,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9375,6 +9423,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -9430,6 +9481,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -9548,6 +9602,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -9838,6 +9895,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -9974,6 +10034,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10144,6 +10207,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10301,6 +10367,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10413,6 +10482,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -10725,6 +10797,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10831,6 +10906,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -10964,6 +11042,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -11064,6 +11145,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -11194,6 +11278,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
@@ -11336,6 +11423,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -11645,6 +11735,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -11745,6 +11838,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -12134,6 +12230,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -12261,6 +12360,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -12533,6 +12635,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -12600,6 +12705,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -12715,6 +12823,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -12875,6 +12986,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -13086,6 +13200,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -13198,6 +13315,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -13274,6 +13394,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13514,6 +13637,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -13626,6 +13752,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -13693,6 +13822,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -13824,6 +13956,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -14023,6 +14158,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -14087,6 +14225,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -14250,6 +14391,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -14525,6 +14669,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -14613,6 +14760,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../common/crypto
@@ -14746,6 +14896,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -14879,6 +15032,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -14949,6 +15105,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -15180,6 +15339,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -17402,6 +17564,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -17493,9 +17658,6 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/assistant-toolkit
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

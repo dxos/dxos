@@ -5,10 +5,10 @@
 import React, { type ChangeEvent, useCallback } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { type Script } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/compute';
+import { type Script } from '@dxos/compute';
 import { getInvocationUrl } from '@dxos/functions-runtime';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';

@@ -15,7 +15,7 @@ import * as Stream from 'effect/Stream';
 
 import { Database, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';

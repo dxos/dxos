@@ -10,7 +10,7 @@ import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';

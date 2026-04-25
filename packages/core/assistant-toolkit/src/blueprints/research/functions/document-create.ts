@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Relation } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 

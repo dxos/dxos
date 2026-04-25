@@ -10,8 +10,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
 import { trim } from '@dxos/util';

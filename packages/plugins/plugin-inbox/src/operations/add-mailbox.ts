@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { getSpacePath } from '@dxos/app-toolkit';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { CollectionModel } from '@dxos/schema';
 

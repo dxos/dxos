@@ -11,7 +11,7 @@ import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

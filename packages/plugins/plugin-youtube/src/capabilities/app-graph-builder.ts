@@ -12,7 +12,7 @@ import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';

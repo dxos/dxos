@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Filter } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
+import { ContextQueueService } from '@dxos/compute';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
