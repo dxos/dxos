@@ -49,6 +49,13 @@ export class MessageSyncer {
   private _currentMessageIndex = 0;
   private _currentBlockIndex = 0;
   private _currentBlockContent?: string;
+  /**
+   * Set by `processBlocks` when a streaming block's renderer output stops being a
+   * prefix-extension of the previously-emitted content (e.g. an upstream normalisation collapses
+   * a line). The incremental append path can no longer produce a correct delta, so the caller
+   * resets the syncer and rebuilds the whole document via the buffer/`setContent` path.
+   */
+  private _needsRebuild = false;
 
   private readonly _context: MessageThreadContext;
 
@@ -70,6 +77,7 @@ export class MessageSyncer {
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
+    this._needsRebuild = false;
     void this._document.setContent('');
   }
 
@@ -77,12 +85,6 @@ export class MessageSyncer {
    * Syncs messages with the editor.
    */
   append(messages: Message.Message[], flush = false): boolean {
-    // TODO(dmaretskyi): MarkdownStream currently does not support streaming XML tags, so we need to remove pending non-text blocks.
-    // messages = messages.map((message) => ({
-    //   ...message,
-    //   blocks: message.blocks.filter((block) => !block.pending || block._tag === 'text'),
-    // }));
-
     // Check if new set of messages.
     if (this._initialMessageId !== messages[0]?.id) {
       this.reset();
@@ -90,43 +92,54 @@ export class MessageSyncer {
     }
 
     if (this._document.length === 0 && flush) {
-      const buffer: string[] = [];
-      this.processBlocks(messages, (content) => buffer.push(content));
-      const content = buffer.join('');
-      // `setContent` dispatches `xmlTagResetEffect`, which clears widget props accumulated during
-      // `processBlocks`; re-apply tool state after the document is replaced.
-      const epoch = this.#syncEpoch;
-      void this._document
-        .setContent(content)
-        .then(() => {
-          if (epoch !== this.#syncEpoch) {
-            return;
-          }
-          rehydrateToolWidgetsFromMessages(this._context, messages);
-        })
-        .catch((error) => {
-          log.warn('failed to replace thread content before widget rehydration', { error });
-        });
+      return this.#fullRebuild(messages);
+    }
 
-      return true;
-    } else {
-      this.processBlocks(messages, (content) => {
-        void this._document.append(content);
+    this._needsRebuild = false;
+    this.processBlocks(messages, (content) => {
+      void this._document.append(content);
+    });
+
+    if (this._needsRebuild) {
+      // A streaming block's render diverged from the previously-emitted content; the incremental
+      // append path cannot recover (it would duplicate the opening of the block in the document).
+      // Reset and rebuild from scratch via the `setContent` path so the document matches `messages`.
+      log.warn('non-monotonic streaming render detected; rebuilding chat thread document');
+      this.reset();
+      this._initialMessageId = messages[0]?.id;
+      return this.#fullRebuild(messages);
+    }
+
+    return false;
+  }
+
+  /**
+   * Render every block into a fresh buffer and hand the result to `setContent`, then rehydrate
+   * tool widget state once the dispatch settles.
+   */
+  #fullRebuild(messages: Message.Message[]): boolean {
+    const buffer: string[] = [];
+    this.processBlocks(messages, (content) => buffer.push(content));
+    const content = buffer.join('');
+    // `setContent` dispatches `xmlTagResetEffect`, which clears widget props accumulated during
+    // `processBlocks`; re-apply tool state after the document is replaced.
+    const epoch = this.#syncEpoch;
+    void this._document
+      .setContent(content)
+      .then(() => {
+        if (epoch !== this.#syncEpoch) {
+          return;
+        }
+        rehydrateToolWidgetsFromMessages(this._context, messages);
+      })
+      .catch((error) => {
+        log.warn('failed to replace thread content before widget rehydration', { error });
       });
 
-      return false;
-    }
+    return true;
   }
 
   private processBlocks(messages: Message.Message[], append: (content: string) => void) {
-    // console.log('sync', {
-    //   doc: this._model.view?.state.doc.length,
-    //   messages: messages.map((message) => message.blocks.length),
-    //   currentMessageIndex: this._currentMessageIndex,
-    //   currentBlockIndex: this._currentBlockIndex,
-    //   currentBlockContent: this._currentBlockContent,
-    // });
-
     let i = this._currentMessageIndex;
     for (const message of messages.slice(this._currentMessageIndex)) {
       if (i > this._currentMessageIndex) {
@@ -139,16 +152,20 @@ export class MessageSyncer {
         this._currentBlockIndex = j;
         const currentBlockContent = this._renderer(this._context, message, block);
         if (currentBlockContent) {
-          let content: string = '';
-          if (this._currentBlockContent && currentBlockContent.startsWith(this._currentBlockContent)) {
-            content = currentBlockContent.slice(this._currentBlockContent.length);
-          } else {
-            content = currentBlockContent;
+          if (this._currentBlockContent !== undefined && !currentBlockContent.startsWith(this._currentBlockContent)) {
+            // The renderer's output for a streaming block must be a prefix-extension of the
+            // previously-emitted content; otherwise the incremental append path cannot recover.
+            // Signal the caller to fall back to a full rebuild and bail out.
+            this._needsRebuild = true;
+            return;
           }
 
-          // console.log('append', { message: i, block: j, content });
+          const delta =
+            this._currentBlockContent !== undefined
+              ? currentBlockContent.slice(this._currentBlockContent.length)
+              : currentBlockContent;
           this._currentBlockContent = currentBlockContent;
-          append(content);
+          append(delta);
         }
 
         if (block.pending) {
