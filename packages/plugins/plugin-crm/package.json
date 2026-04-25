@@ -1,0 +1,115 @@
+{
+  "name": "@dxos/plugin-crm",
+  "version": "0.8.3",
+  "private": true,
+  "description": "CRM plugin for Composer. Provides a blueprint for researching people and organizations and producing structured Profile documents.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
+    "#capabilities": "./src/capabilities/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#sources": "./src/sources/index.ts",
+    "#testing": "./src/testing/index.ts",
+    "#types": "./src/types/index.ts",
+    "#util": "./src/util/index.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "node": "./dist/lib/node-esm/operations/index.mjs"
+    },
+    "./sources": {
+      "source": "./src/sources/index.ts",
+      "types": "./dist/types/src/sources/index.d.ts",
+      "browser": "./dist/lib/browser/sources/index.mjs",
+      "node": "./dist/lib/node-esm/sources/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "blueprints": [
+        "dist/types/src/blueprints/index.d.ts"
+      ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
+      ],
+      "sources": [
+        "dist/types/src/sources/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/assistant": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
