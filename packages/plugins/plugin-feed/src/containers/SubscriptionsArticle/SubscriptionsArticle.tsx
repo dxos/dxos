@@ -9,8 +9,6 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useActiveSpace, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -38,9 +36,9 @@ export const SubscriptionsArticle = ({ role, attendableId }: SubscriptionsArticl
       switch (action.type) {
         case 'current': {
           invariant(attendableId);
-          void invokePromise(AttentionOperation.Select, {
+          void invokePromise(LayoutOperation.Select, {
             contextId: attendableId,
-            selection: { mode: 'single', id: action.feedId },
+            subject: { mode: 'single', id: action.feedId },
           });
 
           const companion = linkedSegment('feed');
@@ -50,8 +48,8 @@ export const SubscriptionsArticle = ({ role, attendableId }: SubscriptionsArticl
               state: 'expanded',
             });
           } else {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
+            void invokePromise(LayoutOperation.ChangeCompanion, {
+              subject: companion,
             });
           }
           break;

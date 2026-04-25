@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 
-import { AttentionOperation, LayoutOperation } from '../../operations';
+import { LayoutOperation } from '../../operations';
 import { useLayout } from './useLayout';
 
 export type ShowItemOptions = {
@@ -37,9 +37,9 @@ export const useShowItem = () => {
 
   return useCallback(
     async ({ contextId, selectionId, companion, path }: ShowItemOptions) => {
-      await invokePromise(AttentionOperation.Select, {
+      await invokePromise(LayoutOperation.Select, {
         contextId,
-        selection: { mode: 'single', id: selectionId },
+        subject: { mode: 'single', id: selectionId },
       });
 
       switch (layout.mode) {
@@ -60,7 +60,7 @@ export const useShowItem = () => {
           break;
       }
 
-      return invokePromise(LayoutOperation.ChangeCompanion, { companion });
+      return invokePromise(LayoutOperation.ChangeCompanion, { subject: companion });
     },
     [invokePromise, layout.mode],
   );

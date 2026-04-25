@@ -40,7 +40,6 @@ import { AssistantOperation } from '@dxos/plugin-assistant/operations';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin } from '@dxos/plugin-testing';
@@ -302,7 +301,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       return Capability.contributes(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
-          Operation.withHandler(DeckOperation.ChangeCompanion, () => Effect.void),
+          Operation.withHandler(LayoutOperation.ChangeCompanion, () => Effect.void),
           Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Capabilities.AtomRegistry);

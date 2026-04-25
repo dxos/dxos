@@ -394,7 +394,7 @@ const PlankContainer = memo(
     );
 
     const handleChangeCompanion = useCallback(
-      (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+      (companion: string | null) => invokePromise(LayoutOperation.ChangeCompanion, { subject: companion }),
       [invokePromise],
     );
 

@@ -10,7 +10,6 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { useActiveSpace, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Query } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
@@ -75,9 +74,9 @@ export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleP
         subject: [mailboxPath],
         workspace: space ? getSpacePath(space.id) : undefined,
       });
-      await invokePromise(AttentionOperation.Select, {
+      await invokePromise(LayoutOperation.Select, {
         contextId: mailboxPath,
-        selection: { mode: 'single', id: message.id },
+        subject: { mode: 'single', id: message.id },
       });
     },
     [invokePromise, space, mailbox],
@@ -94,9 +93,9 @@ export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleP
         subject: [calendarPath],
         workspace: space ? getSpacePath(space.id) : undefined,
       });
-      await invokePromise(AttentionOperation.Select, {
+      await invokePromise(LayoutOperation.Select, {
         contextId: calendarPath,
-        selection: { mode: 'single', id: event.id },
+        subject: { mode: 'single', id: event.id },
       });
     },
     [invokePromise, space, calendar],
