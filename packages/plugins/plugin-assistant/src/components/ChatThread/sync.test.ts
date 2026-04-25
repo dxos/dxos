@@ -183,7 +183,9 @@ describe('reducers', () => {
       syncer.append(messages);
 
       const openTagCount = (doc.content.match(/<reasoning>/g) ?? []).length;
+      const closeTagCount = (doc.content.match(/<\/reasoning>/g) ?? []).length;
       expect(openTagCount).toBe(1);
+      expect(closeTagCount).toBe(1);
     }),
   );
 });

@@ -110,7 +110,7 @@
     @apply bg-warning-surface text-warning-surface-text border-warning-border;
   }
 
-  [data-hue='error'],
+  [data-hue='error'] .dx-panel,
   .dx-panel--error {
     @apply bg-error-surface text-error-surface-text border-error-border;
   }

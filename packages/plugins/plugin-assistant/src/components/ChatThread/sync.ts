@@ -72,13 +72,23 @@ export class MessageSyncer {
 
   reset() {
     log('reset');
+    this.#resetState();
+    void this._document.setContent('');
+  }
+
+  /**
+   * Clears in-memory sync cursors without touching the document. Used by the internal rebuild
+   * path (which immediately re-dispatches content via `#fullRebuild`) and by `reset()` (which
+   * also clears the document). Kept private so callers cannot forget to match a state reset
+   * with a document update.
+   */
+  #resetState() {
     this.#syncEpoch++;
     this._initialMessageId = undefined;
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
     this._needsRebuild = false;
-    void this._document.setContent('');
   }
 
   /**
@@ -104,8 +114,10 @@ export class MessageSyncer {
       // A streaming block's render diverged from the previously-emitted content; the incremental
       // append path cannot recover (it would duplicate the opening of the block in the document).
       // Reset and rebuild from scratch via the `setContent` path so the document matches `messages`.
+      // Use `#resetState` (not `reset()`) to avoid dispatching an extra `setContent('')` that
+      // `#fullRebuild` would immediately overwrite.
       log.warn('non-monotonic streaming render detected; rebuilding chat thread document');
-      this.reset();
+      this.#resetState();
       this._initialMessageId = messages[0]?.id;
       return this.#fullRebuild(messages);
     }
@@ -133,7 +145,13 @@ export class MessageSyncer {
         rehydrateToolWidgetsFromMessages(this._context, messages);
       })
       .catch((error) => {
-        log.warn('failed to replace thread content before widget rehydration', { error });
+        // `processBlocks` advanced the sync cursors for `messages`; if the document dispatch
+        // rejected, those cursors no longer match the document state, so any subsequent
+        // incremental append would emit incorrect deltas. Clear cursor state (while leaving the
+        // document as-is for the controller to recover) and force the next `append` to start
+        // from scratch.
+        log.warn('failed to replace thread content; resetting syncer state for next append', { error });
+        this.#resetState();
       });
 
     return true;
