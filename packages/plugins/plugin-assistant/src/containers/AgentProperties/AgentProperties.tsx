@@ -142,7 +142,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         {instructions && (
           <Editor.Root>
             <Editor.View
-              classNames='bg-input-surface border border-separator rounded-xs p-1 px-2'
+              classNames='transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2'
               extensions={extension}
             />
           </Editor.Root>
