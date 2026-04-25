@@ -3,6 +3,10 @@ language: typescript
 tags:
   - typecheck
 tasks:
+  lint:
+    command: 'true'
+    options:
+      runFromWorkspaceRoot: false
   build:
     deps:
       - prebuild
