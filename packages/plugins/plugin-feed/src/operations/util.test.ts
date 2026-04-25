@@ -9,7 +9,12 @@ import { Obj, Tag } from '@dxos/echo';
 import { Subscription } from '../types';
 import { partitionByKeepBound } from './util';
 
-const makePost = (props: { title: string; published?: string; starred?: boolean; starDxn?: string }): Subscription.Post => {
+const makePost = (props: {
+  title: string;
+  published?: string;
+  starred?: boolean;
+  starDxn?: string;
+}): Subscription.Post => {
   const post = Obj.make(Subscription.Post, { title: props.title, published: props.published });
   if (props.starred && props.starDxn) {
     Obj.change(post, (post) => {
