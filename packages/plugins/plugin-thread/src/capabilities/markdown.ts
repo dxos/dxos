@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
@@ -52,8 +52,8 @@ export default Capability.makeModule(
           update.transactions.forEach((transaction) => {
             transaction.effects.forEach(async (effect) => {
               if (effect.is(commentClickedEffect)) {
-                void invokePromise(DeckOperation.ChangeCompanion, {
-                  companion: linkedSegment('comments'),
+                void invokePromise(LayoutOperation.UpdateCompanion, {
+                  subject: linkedSegment('comments'),
                 });
               }
             });

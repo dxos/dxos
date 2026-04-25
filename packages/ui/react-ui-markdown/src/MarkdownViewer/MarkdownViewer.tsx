@@ -36,13 +36,13 @@ export const MarkdownViewer = ({ classNames, children, components, content = '' 
 
 const defaultComponents: ReactMarkdownOptions['components'] = {
   h1: ({ children }) => {
-    return <h1 className='pt-1 pb-1 text-xl'>{children}</h1>;
+    return <h1 className='pt-1 pb-1 text-accent-text text-xl'>{children}</h1>;
   },
   h2: ({ children }) => {
-    return <h2 className='pt-1 pb-1 text-lg'>{children}</h2>;
+    return <h2 className='pt-1 pb-1 text-accent-text text-lg'>{children}</h2>;
   },
   h3: ({ children }) => {
-    return <h3 className='pt-1 pb-1 text-base'>{children}</h3>;
+    return <h3 className='pt-1 pb-1 text-accent-text text-base'>{children}</h3>;
   },
   blockquote: ({ children, ...props }) => (
     <blockquote className='ps-4 mt-2 mb-2 pt-2 pb-2 border-l-4 border-accent-text text-accent-text' {...props}>
@@ -79,14 +79,19 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     </li>
   ),
   pre: ({ children }) => children,
-  // TODO(burdon): Copy/paste button.
-  code: ({ children, className }) => {
+  code: ({ children, className, node }) => {
     const [, language] = /language-(\w+)/.exec(className || '') || [];
+    const inline = !className && node?.position?.start.line === node?.position?.end.line;
+    if (inline) {
+      return <code className='rounded-xs bg-group-surface px-1 py-0.5 text-sm text-info-text'>{children}</code>;
+    }
+
     return (
       <SyntaxHighlighter
         language={language}
-        classNames='mt-2 mb-2 border border-separator rounded-xs text-sm bg-group-surface'
+        classNames='mt-2 mb-2 p-2 border border-separator rounded-xs text-sm bg-group-surface'
         PreTag='pre'
+        showCopyButton
       >
         {children}
       </SyntaxHighlighter>

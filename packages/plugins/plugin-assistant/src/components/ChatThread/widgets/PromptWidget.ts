@@ -19,10 +19,12 @@ export class PromptWidget extends WidgetType {
   }
 
   /**
-   * NOTE: Container must set var based on user's identity.
+   * NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's hue tokens
+   * (see `packages/ui/ui-theme/src/css/components/panel.css`).
    */
   override toDOM() {
-    const inner = Domino.of('div').classNames('px-3 py-1.5 bg-(--user-fill) rounded-xs').text(this.text);
-    return Domino.of('div').classNames('flex justify-end my-2').append(inner).root;
+    return Domino.of('div')
+      .classNames('flex justify-end my-2')
+      .append(Domino.of('div').classNames('dx-panel px-3 py-1.5 rounded-sm').text(this.text)).root;
   }
 }

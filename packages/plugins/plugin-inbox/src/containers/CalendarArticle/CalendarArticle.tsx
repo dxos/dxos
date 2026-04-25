@@ -6,11 +6,9 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { useShowItem } from '@dxos/plugin-deck';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -54,9 +52,9 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     ({ date }: { date: Date }) => {
       const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
-        void invokePromise(AttentionOperation.Select, {
+        void invokePromise(LayoutOperation.Select, {
           contextId: id,
-          selection: { mode: 'single', id: match.id },
+          subject: { mode: 'single', id: match.id },
         });
       }
     },

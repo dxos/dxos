@@ -40,6 +40,7 @@ export const translations = [
 
         'cancel-button.label': 'Cancel',
         'save-button.label': 'Save',
+        'create-text.label': 'Create text',
 
         // TypeFormat
         'format.boolean.label': 'Boolean',
