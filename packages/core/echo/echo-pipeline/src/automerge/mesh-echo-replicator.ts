@@ -22,13 +22,7 @@ import { getSpaceIdFromCollectionId } from './space-collection';
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 
 /**
- * Peer-to-peer mesh replicator. Carries both the subduction byte tunnel and the DXOS
- * collection-sync (`sync-request` / `sync-state`) frames over Teleport's
- * `AutomergeReplicator` extension.
- *
- * Device-scoped share-policy checks (`shouldAdvertise`, `shouldSyncCollection`) gate which
- * documents / collections are visible on this connection; Subduction's own discovery and
- * policy layer provides a second line of defense at the sedimentree layer.
+ * Used to replicate with other peers over the network.
  */
 export class MeshEchoReplicator implements AutomergeReplicator {
   /**
@@ -38,7 +32,6 @@ export class MeshEchoReplicator implements AutomergeReplicator {
    * in the line gets enabled.
    */
   private readonly _connectionsPerPeer = new Map<string, MeshReplicatorConnection[]>();
-
   /**
    * A set of all connections (enabled and disabled).
    */
@@ -114,7 +107,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
           this._context?.onConnectionClosed(connection);
           connection.disable();
 
-          // Promote the next connection to enabled.
+          // Promote the next connection to enabled
           if (existingConnections.length > 0) {
             this._context?.onConnectionOpen(existingConnections[0]);
             existingConnections[0].enable();
@@ -138,10 +131,13 @@ export class MeshEchoReplicator implements AutomergeReplicator {
             });
 
             // If a document is not present locally return true if another peer claims to have it.
+            // Simply returning true will add the peer to "generous peers list" for this document which will
+            // start replication of the document after we receive, even if the peer is not in the corresponding space.
             return remoteDocumentExists;
           }
 
           const spaceId = await createIdFromSpaceKey(spaceKey);
+
           const authorizedDevices = this._authorizedDevices.get(spaceId);
 
           if (!connection.remoteDeviceKey) {
@@ -169,6 +165,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
       },
       shouldSyncCollection: ({ collectionId }) => {
         const spaceId = getSpaceIdFromCollectionId(collectionId as CollectionId);
+
         const authorizedDevices = this._authorizedDevices.get(spaceId);
 
         if (!connection.remoteDeviceKey) {
@@ -179,7 +176,8 @@ export class MeshEchoReplicator implements AutomergeReplicator {
           return false;
         }
 
-        return authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
+        const isAuthorized = authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
+        return isAuthorized;
       },
     });
     this._connections.add(connection);

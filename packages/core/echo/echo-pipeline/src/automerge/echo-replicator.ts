@@ -52,9 +52,6 @@ export interface AutomergeReplicatorConnection {
 
   /**
    * Stream to read messages coming from the remote peer.
-   *
-   * Under Subduction transport, this stream carries only `subduction-connection` frames
-   * (the subduction byte channel tunneled through the adapter).
    */
   readable: ReadableStream<AutomergeProtocolMessage>;
 
@@ -75,7 +72,7 @@ export interface AutomergeReplicatorConnection {
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
 
   /**
-   * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBundle` and `pullBundle` methods.
+   * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBatch` and `pullBatch` methods.
    * @returns true if the batch syncing is enabled.
    */
   get bundleSyncEnabled(): boolean;
