@@ -47,17 +47,3 @@ export const UpdatePlankSize = Operation.make({
   }),
   output: Schema.Void,
 });
-
-// TODO(burdon): Rename UpdateCompanion?
-export const ChangeCompanion = Operation.make({
-  meta: {
-    key: `${meta.id}.operation.change-companion`,
-    name: 'Change Companion',
-    description: 'Change the companion plank for a primary plank.',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    companion: Schema.Union(Schema.String, Schema.Null),
-  }),
-  output: Schema.Void,
-});

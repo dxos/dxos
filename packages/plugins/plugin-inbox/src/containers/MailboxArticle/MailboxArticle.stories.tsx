@@ -8,12 +8,11 @@ import React from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -33,7 +32,7 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
       Effect.succeed(
         Capability.contributes(
           Capabilities.OperationHandler,
-          OperationHandlerSet.make(Operation.withHandler(DeckOperation.ChangeCompanion, () => Effect.void)),
+          OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),
       ),
   }),

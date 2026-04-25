@@ -28,7 +28,11 @@ const decodeEntities = (input: string): string =>
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>');
 
-/** Strip HTML tags and decode common entities to produce plain text. */
+/**
+ * Strip HTML tags and decode common entities to produce plain text.
+ * Block-level tag boundaries (paragraphs, divs, headings, list items, line breaks)
+ * are converted to newlines so paragraph structure survives the stripping.
+ */
 export const stripHtml = (html: string): string => {
   if (!html) {
     return '';
@@ -37,8 +41,16 @@ export const stripHtml = (html: string): string => {
   const withoutScripts = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
-  const withoutTags = withoutScripts.replace(/<[^>]+>/g, ' ');
-  return decodeEntities(withoutTags).replace(/\s+/g, ' ').trim();
+  // Insert paragraph breaks at common block-level boundaries before stripping tags.
+  const withParagraphBreaks = withoutScripts
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/\s*(?:p|div|section|article|header|footer|aside|h[1-6]|li|ul|ol|blockquote|pre|tr)\s*>/gi, '\n\n');
+  const withoutTags = withParagraphBreaks.replace(/<[^>]+>/g, '');
+  return decodeEntities(withoutTags)
+    .replace(/[\t\f\v ]+/g, ' ') // Collapse horizontal whitespace, preserve newlines.
+    .replace(/ *\n */g, '\n') // Trim spaces around newlines.
+    .replace(/\n{3,}/g, '\n\n') // Collapse 3+ blank lines to a single blank line.
+    .trim();
 };
 
 /** Produce a snippet of approximately `length` characters, cut on a word boundary. */

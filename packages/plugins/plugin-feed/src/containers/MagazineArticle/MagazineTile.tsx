@@ -13,13 +13,20 @@ import { formatDate } from '../../util/format-date';
 export type MagazineTileProps = {
   post: Subscription.Post;
   current?: boolean;
+  /**
+   * Source feed name. Passed in from `MagazineArticle` so the value updates reactively
+   * via the parent's `useQuery(Filter.type(Subscription.Feed))`. Resolving the ref
+   * inline (`post.feed?.target?.name`) doesn't trigger a re-render here when the
+   * feed loads asynchronously.
+   */
+  feedName?: string;
   onOpen?: (post: Subscription.Post) => void;
 };
 
-export const MagazineTile = ({ post, current, onOpen }: MagazineTileProps) => {
+export const MagazineTile = ({ post, current, feedName, onOpen }: MagazineTileProps) => {
   const read = Boolean(post.readAt);
   const date = formatDate(post.published);
-  const metaParts = [post.author, date].filter((value): value is string => Boolean(value));
+  const metaParts = [post.author, feedName, date].filter((value): value is string => Boolean(value));
   const tags = post.tags ?? [];
 
   const handleClick = useCallback(() => {
