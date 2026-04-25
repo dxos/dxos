@@ -52,7 +52,7 @@ export default Capability.makeModule(
           update.transactions.forEach((transaction) => {
             transaction.effects.forEach(async (effect) => {
               if (effect.is(commentClickedEffect)) {
-                void invokePromise(LayoutOperation.ChangeCompanion, {
+                void invokePromise(LayoutOperation.UpdateCompanion, {
                   subject: linkedSegment('comments'),
                 });
               }

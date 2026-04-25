@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
         );
 
         if (Option.isSome(companion)) {
-          yield* Operation.invoke(LayoutOperation.ChangeCompanion, { subject: companion.value.id });
+          yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion.value.id });
         }
       }
     }),

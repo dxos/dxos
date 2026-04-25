@@ -79,7 +79,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               navigation: 'immediate',
             });
           } else if (message) {
-            void invokePromise(LayoutOperation.ChangeCompanion, {
+            void invokePromise(LayoutOperation.UpdateCompanion, {
               subject: companion,
             });
           }

@@ -59,7 +59,7 @@ export const useSelectThreadOnCellFocus = () => {
       if (closestThread) {
         void (async () => {
           await invokePromise(ThreadOperation.Select, { current: Relation.getDXN(closestThread).toString() });
-          await invokePromise(LayoutOperation.ChangeCompanion, {
+          await invokePromise(LayoutOperation.UpdateCompanion, {
             subject: linkedSegment('comments'),
           });
         })();

@@ -12,7 +12,7 @@ import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { DeckCapabilities } from '../types';
 import { updateActiveDeck } from './helpers';
 
-const handler: Operation.WithHandler<typeof LayoutOperation.ChangeCompanion> = LayoutOperation.ChangeCompanion.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       if (input.subject === null) {

@@ -60,7 +60,7 @@ export const useShowItem = () => {
           break;
       }
 
-      return invokePromise(LayoutOperation.ChangeCompanion, { subject: companion });
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: companion });
     },
     [invokePromise, layout.mode],
   );

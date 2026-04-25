@@ -59,7 +59,7 @@ export default Capability.makeModule(() =>
           invariant(invokePromise, 'No operation invoker');
 
           if (part === 'multi') {
-            const { error } = await invokePromise(LayoutOperation.ChangeCompanion, {
+            const { error } = await invokePromise(LayoutOperation.UpdateCompanion, {
               subject: id,
             });
             if (error) {

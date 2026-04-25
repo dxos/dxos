@@ -37,7 +37,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
     const { t } = useTranslation(meta.id);
     const { invokePromise } = useOperationInvoker();
     const handleCloseCompanion = useCallback(() => {
-      return invokePromise(LayoutOperation.ChangeCompanion, { subject: null });
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null });
     }, [invokePromise]);
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>

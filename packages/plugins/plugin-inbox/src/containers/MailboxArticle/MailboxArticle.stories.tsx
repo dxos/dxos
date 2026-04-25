@@ -32,7 +32,7 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
       Effect.succeed(
         Capability.contributes(
           Capabilities.OperationHandler,
-          OperationHandlerSet.make(Operation.withHandler(LayoutOperation.ChangeCompanion, () => Effect.void)),
+          OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
         ),
       ),
   }),

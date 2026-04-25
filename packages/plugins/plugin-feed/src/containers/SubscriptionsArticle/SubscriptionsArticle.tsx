@@ -48,7 +48,7 @@ export const SubscriptionsArticle = ({ role, attendableId }: SubscriptionsArticl
               state: 'expanded',
             });
           } else {
-            void invokePromise(LayoutOperation.ChangeCompanion, {
+            void invokePromise(LayoutOperation.UpdateCompanion, {
               subject: companion,
             });
           }

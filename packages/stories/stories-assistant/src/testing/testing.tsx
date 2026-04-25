@@ -301,7 +301,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       return Capability.contributes(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
-          Operation.withHandler(LayoutOperation.ChangeCompanion, () => Effect.void),
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
           Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Capabilities.AtomRegistry);

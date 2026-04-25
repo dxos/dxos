@@ -38,7 +38,7 @@ const handler: Operation.WithHandler<typeof Create> = Create.pipe(
       });
 
       yield* Operation.invoke(Select, { current: Obj.getDXN(thread).toString() });
-      yield* Operation.invoke(LayoutOperation.ChangeCompanion, {
+      yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('comments'),
       });
     }),

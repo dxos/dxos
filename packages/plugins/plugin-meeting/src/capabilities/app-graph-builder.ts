@@ -172,7 +172,7 @@ export default Capability.makeModule(
                   log.warn('transcription disabled');
                 } else {
                   const companion = linkedSegment('transcript');
-                  yield* Operation.invoke(LayoutOperation.ChangeCompanion, { subject: companion });
+                  yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                 }
               }),
               properties: {

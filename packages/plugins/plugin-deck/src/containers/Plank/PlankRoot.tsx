@@ -34,7 +34,7 @@ export type PlankContextValue = {
   /** Callback to clear scroll-into-view state. */
   onScrollIntoView?: (id?: string) => void;
   /** Callback to change the companion. */
-  onChangeCompanion?: (companion: string | null) => void;
+  onUpdateCompanion?: (companion: string | null) => void;
 };
 
 export const [PlankProvider, usePlankContext] = createContext<PlankContextValue>(PLANK_NAME);

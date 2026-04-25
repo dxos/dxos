@@ -375,11 +375,11 @@ export namespace LayoutOperation {
   // Companion Operations
   //
 
-  export const ChangeCompanion = Operation.make({
+  export const UpdateCompanion = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.change-companion`,
-      name: 'Change Companion',
-      description: 'Change the companion plank for a primary plank.',
+      key: `${LAYOUT_PLUGIN}.operation.update-companion`,
+      name: 'Update Companion',
+      description: 'Update the companion plank for a primary plank.',
     },
     services: [Capability.Service],
     input: Schema.Struct({

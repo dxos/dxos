@@ -36,7 +36,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
 
   const handleColumnAdd = useCallback(
     () =>
-      invokePromise(LayoutOperation.ChangeCompanion, {
+      invokePromise(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('settings'),
       }),
     [invokePromise],

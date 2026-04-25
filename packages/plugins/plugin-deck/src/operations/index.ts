@@ -9,7 +9,7 @@ export * as DeckOperation from './definitions';
 export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-toast'),
   () => import('./adjust'),
-  () => import('./change-companion'),
+  () => import('./update-companion'),
   () => import('./close'),
   () => import('./open'),
   () => import('./revert-workspace'),
