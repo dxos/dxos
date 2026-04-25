@@ -89,6 +89,15 @@ pub fn run() {
         }
     };
 
+    // Track the currently bound spotlight shortcut so it can be swapped from the frontend.
+    #[cfg(target_os = "macos")]
+    let builder = {
+        use std::sync::Mutex;
+        builder.manage(spotlight::SpotlightShortcut(Mutex::new(
+            spotlight::SpotlightConfig::default().shortcut,
+        )))
+    };
+
     // Configure invoke handler with platform-specific commands.
     #[cfg(desktop)]
     let builder = builder.invoke_handler(tauri::generate_handler![
@@ -104,6 +113,8 @@ pub fn run() {
         xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
+        #[cfg(target_os = "macos")]
+        spotlight::set_spotlight_shortcut,
     ]);
 
     #[cfg(mobile)]
