@@ -736,7 +736,6 @@ patchedDependencies:
 
 peerDependencyRules:
   allowedVersions:
-    '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
   ignoreMissing:
@@ -751,6 +750,3 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  - semver@5.7.2
-  - semver@6.3.1
-  - semver
