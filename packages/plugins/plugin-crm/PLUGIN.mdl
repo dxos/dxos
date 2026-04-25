@@ -46,8 +46,8 @@ type ContactExtract
     fullName?: string
     email: string
     phone?: string
-    orgName?: string               # e.g., "Kobre & Kim"
-    orgDomain?: string             # e.g., "kobrekim.com" (from email host)
+    orgName?: string               # e.g., "Silverline Partners"
+    orgDomain?: string             # e.g., "silverline-partners.example" (from email host)
     locations?: string[]           # e.g., ["New York", "San Francisco"]
     urls?: string[]                # any URLs found in the signature block
     isFreeMailDomain: boolean      # gmail, outlook, icloud, yahoo, ...
@@ -102,7 +102,7 @@ blueprint CrmBlueprint
     - org.dxos.blueprint.database    # object-create, object-update, query, relation-create, load
     - org.dxos.blueprint.markdown    # create/read/update markdown documents
   contributes:
-    - plugin-crm/attach_image
+    - plugin-crm/attach-image
     - plugin-crm/ProfileOf (schema registration)
     - tools from registered ResearchSource contracts (v1: none)
   instructions: >
@@ -117,7 +117,7 @@ blueprint CrmBlueprint
       6. Profile composition following a section template (Overview,
          Background, Current Role, Organization, Key Links, Notes, Sources).
       7. ProfileOf relation creation linking the Document to its subject(s).
-      8. Best-effort image attachment via the attach_image operation.
+      8. Best-effort image attachment via the attach-image operation.
       9. Reply in the agent's normal reply style with inline object refs.
 ```
 
@@ -142,8 +142,10 @@ op attachImage
   effects: [http, echo:write]
   requires: [Database, Config, Trace]
   note: >
-    Accepted content types: image/jpeg, image/png, image/webp, image/gif,
-    image/svg+xml. Content type is inferred from the response or URL
+    Accepted content types: image/jpeg, image/png, image/webp, image/gif.
+    SVG is rejected because inline <script> and event handlers make it a
+    stored-XSS risk when downstream surfaces embed the image via <object>
+    or <iframe>. Content type is inferred from the response or URL
     extension. Failures are returned as structured errors so the agent can
     continue without the image.
 ```
@@ -155,7 +157,7 @@ service ImageService
   desc: >
     DXOS EDGE image service. Accepts a multipart/form-data upload with a
     single `file` field and returns a JSON body containing a canonical
-    `url`. Used by composer-crx today and reused verbatim by attach_image.
+    `url`. Used by composer-crx today and reused verbatim by attach-image.
   loading: lazy
   ops:
     postThumbnail(blob: Blob) → { url: string }
@@ -324,53 +326,54 @@ feat F-8: Configuration Surface (deferred)
 ## Acceptance
 
 ```mdl
-test T-1: Extractor — Madeline Ahern
-  given: an email Message with sender "Madeline Ahern <mahern@kirkconsult.com>" and signature block
-         containing "Madeline Ahern / mahern@kirkconsult.com / (510) 393-7703"
+test T-1: Extractor — corporate short signature
+  given: an email Message with sender "Priya Adebayo <padebayo@ventura-advisors.example>" and signature block
+         containing "Priya Adebayo / padebayo@ventura-advisors.example / (555) 010-0149"
   when: extractContactFromMessage(msg) is called
   then:
-    - fullName === "Madeline Ahern"
-    - email === "mahern@kirkconsult.com"
-    - phone === "(510) 393-7703"
-    - orgDomain === "kirkconsult.com"
+    - fullName === "Priya Adebayo"
+    - email === "padebayo@ventura-advisors.example"
+    - phone === "(555) 010-0149"
+    - orgDomain === "ventura-advisors.example"
     - isFreeMailDomain === false
 ```
 
 ```mdl
-test T-2: Extractor — David Joerg (free-mail)
-  given: an email Message with sender "David Joerg <dsjoerg@gmail.com>" and no corporate signature
+test T-2: Extractor — free-mail personal contact
+  given: an email Message with sender "Riley Nakamura <riley.nakamura@gmail.com>" and no corporate signature
   when: extractContactFromMessage(msg) is called
   then:
-    - fullName === "David Joerg"
-    - email === "dsjoerg@gmail.com"
+    - fullName === "Riley Nakamura"
+    - email === "riley.nakamura@gmail.com"
     - orgDomain === "gmail.com"
     - isFreeMailDomain === true
     - orgName is undefined
 ```
 
 ```mdl
-test T-3: Extractor — Michael Ng
-  given: an email Message with sender "Michael Ng <Michael.Ng@kobrekim.com>" and signature
-         block "Michael Ng / +1 415 582 4803 / www.kobrekim.com / Americas (New York, Buenos Aires, ...)"
+test T-3: Extractor — corporate rich multi-office signature
+  given: an email Message with sender "Saskia Volkov <Saskia.Volkov@silverline-partners.example>" and signature
+         block "Saskia Volkov / +1 555 010 4182 / www.silverline-partners.example /
+         Americas (New York, Buenos Aires, Chicago, Miami, San Francisco, São Paulo, Washington DC)"
   when: extractContactFromMessage(msg) is called
   then:
-    - fullName === "Michael Ng"
-    - email === "Michael.Ng@kobrekim.com"
-    - phone === "+1 415 582 4803"
-    - orgDomain === "kobrekim.com"
-    - urls contains "www.kobrekim.com"
+    - fullName === "Saskia Volkov"
+    - email === "Saskia.Volkov@silverline-partners.example"
+    - phone === "+1 555 010 4182"
+    - orgDomain === "silverline-partners.example"
+    - urls contains "www.silverline-partners.example"
     - locations contains "New York"
     - locations contains "San Francisco"
     - isFreeMailDomain === false
 ```
 
 ```mdl
-test T-4: Full-loop playground — Madeline Ahern (tuning)
-  given: a space with the Madeline email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
+test T-4: Full-loop playground — corporate short signature (tuning)
+  given: a space with the corporate-short email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
   when: the CRM blueprint is invoked with the Message ref
   then:
-    - a Person exists whose emails contains "mahern@kirkconsult.com"
-    - an Organization exists whose website ends with "kirkconsult.com" OR whose name contains "Kirk Consult"
+    - a Person exists whose emails contains "padebayo@ventura-advisors.example"
+    - an Organization exists whose website ends with "ventura-advisors.example" OR whose name contains "Ventura Advisors"
     - Person.organization references the Organization
     - a Document exists whose content contains "## Overview" and "## Sources"
     - a ProfileOf relation exists with source=Document, target=Person
@@ -378,23 +381,23 @@ test T-4: Full-loop playground — Madeline Ahern (tuning)
 ```
 
 ```mdl
-test T-5: Full-loop playground — David Joerg (free-mail)
-  given: a space with the Joerg email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
+test T-5: Full-loop playground — free-mail personal contact
+  given: a space with the freemail-personal email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
   when: the CRM blueprint is invoked with the Message ref
   then:
-    - a Person exists whose emails contains "dsjoerg@gmail.com"
+    - a Person exists whose emails contains "riley.nakamura@gmail.com"
     - NO Organization has been created solely because of the sender domain
-    - the Profile Document's Notes section mentions the former Two Sigma / Two Sigma Ventures affiliations
+    - the Profile Document's Notes section mentions any former affiliations surfaced in the message body
     - a ProfileOf relation exists with source=Document, target=Person
 ```
 
 ```mdl
-test T-6: Full-loop playground — Michael Ng
-  given: a space with the Ng email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
+test T-6: Full-loop playground — corporate rich signature
+  given: a space with the corporate-rich-signature email inserted as a Message, memoized LLM, stubbed attachImage, stubbed search
   when: the CRM blueprint is invoked with the Message ref
   then:
-    - a Person exists whose emails contains "Michael.Ng@kobrekim.com"
-    - an Organization exists whose website ends with "kobrekim.com" OR whose name contains "Kobre"
+    - a Person exists whose emails contains "Saskia.Volkov@silverline-partners.example"
+    - an Organization exists whose website ends with "silverline-partners.example" OR whose name contains "Silverline Partners"
     - Organization.location or the Profile Document mentions at least one office city
     - a Document exists following the section template
     - ProfileOf relations exist for both Person and Organization
@@ -443,7 +446,7 @@ blueprints in `@dxos/assistant-toolkit` already provide, respectively,
 high-level synthesis (`Research` / `DocumentCreate`), low-level URL fetch +
 native Anthropic web search (`Fetch` / `AnthropicWebSearch`), CRUD on ECHO
 objects, and Document lifecycle. plugin-crm declares a dependency on these
-blueprints; the agent sees their tools alongside `attach_image` and drives
+blueprints; the agent sees their tools alongside `attach-image` and drives
 the CRM workflow per the instructions. This means:
 
 - No new `upsert_person` / `upsert_organization` / `create_profile_document` / `search_web` / `fetch_url` tools.
@@ -461,17 +464,17 @@ user's authenticated LinkedIn session via the browser.
 
 ### Image attachment — no fallback search
 
-`attach_image` does not itself search for candidate images. The agent finds
+`attach-image` does not itself search for candidate images. The agent finds
 them (favicon, OG image, public Gravatar, company-website logo) via the
 web-search blueprint's `Fetch` operation and `AnthropicWebSearch` tool, then
-passes the URL to `attach_image`. This keeps the operation small,
+passes the URL to `attach-image`. This keeps the operation small,
 single-purpose, and mockable in tests.
 
 ### Free-mail domains
 
 A conservative allowlist of free-mail domains (gmail, outlook, icloud, yahoo,
 hotmail, protonmail) is treated as "no organization signal from email alone".
-This prevents the David Joerg case (dsjoerg@gmail.com) from creating a
+This prevents the free-mail fixture (riley.nakamura@gmail.com) from creating a
 "Gmail" or "Google" organization purely from the sender domain. The blueprint
 instructions call this out so the agent does not override the heuristic from
 body-text hints unless the user explicitly asks.

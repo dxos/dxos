@@ -30,7 +30,7 @@ export const AttachImage = Operation.make({
       description: 'Reference to the Person or Organization whose `image` field should be set.',
     }),
     url: Schema.String.annotations({
-      description: 'External image URL. Must be a JPEG, PNG, WebP, GIF, or SVG.',
+      description: 'External image URL. Must be a JPEG, PNG, WebP, or GIF.',
     }),
     imageServiceUrl: Schema.optional(
       Schema.String.annotations({

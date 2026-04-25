@@ -16,40 +16,40 @@ const byId = (id: (typeof EMAIL_FIXTURES)[number]['id']) => {
 };
 
 describe('extractContactFromMessage', () => {
-  test('email #1 — Madeline Ahern (corporate)', ({ expect }) => {
-    const extract = extractContactFromMessage(makeEmailMessage(byId('madeline-ahern')));
+  test('email #1 — corporate short signature', ({ expect }) => {
+    const extract = extractContactFromMessage(makeEmailMessage(byId('corporate-short')));
 
-    expect(extract.fullName).toBe('Madeline Ahern');
-    expect(extract.email).toBe('mahern@kirkconsult.com');
-    expect(extract.phone).toBe('(510) 393-7703');
-    expect(extract.orgDomain).toBe('kirkconsult.com');
+    expect(extract.fullName).toBe('Priya Adebayo');
+    expect(extract.email).toBe('padebayo@ventura-advisors.example');
+    expect(extract.phone).toBe('(555) 010-0149');
+    expect(extract.orgDomain).toBe('ventura-advisors.example');
     expect(extract.isFreeMailDomain).toBe(false);
     // Pragmatic: orgName is a best-effort fallback when no better source exists.
     expect(extract.orgName).toBeDefined();
   });
 
-  test('email #2 — David Joerg (free-mail)', ({ expect }) => {
-    const extract = extractContactFromMessage(makeEmailMessage(byId('david-joerg')));
+  test('email #2 — free-mail personal contact', ({ expect }) => {
+    const extract = extractContactFromMessage(makeEmailMessage(byId('freemail-personal')));
 
-    expect(extract.fullName).toBe('David Joerg');
-    expect(extract.email).toBe('dsjoerg@gmail.com');
+    expect(extract.fullName).toBe('Riley Nakamura');
+    expect(extract.email).toBe('riley.nakamura@gmail.com');
     expect(extract.orgDomain).toBe('gmail.com');
     expect(extract.isFreeMailDomain).toBe(true);
     // Free-mail domain must not yield an organization name.
     expect(extract.orgName).toBeUndefined();
   });
 
-  test('email #3 — Michael Ng (rich signature)', ({ expect }) => {
-    const extract = extractContactFromMessage(makeEmailMessage(byId('michael-ng')));
+  test('email #3 — corporate rich multi-office signature', ({ expect }) => {
+    const extract = extractContactFromMessage(makeEmailMessage(byId('corporate-rich-signature')));
 
-    expect(extract.fullName).toBe('Michael Ng');
-    expect(extract.email).toBe('Michael.Ng@kobrekim.com');
-    expect(extract.phone).toBe('+1 415 582 4803');
-    expect(extract.orgDomain).toBe('kobrekim.com');
+    expect(extract.fullName).toBe('Saskia Volkov');
+    expect(extract.email).toBe('Saskia.Volkov@silverline-partners.example');
+    expect(extract.phone).toBe('+1 555 010 4182');
+    expect(extract.orgDomain).toBe('silverline-partners.example');
     expect(extract.isFreeMailDomain).toBe(false);
 
     expect(extract.urls).toBeDefined();
-    expect(extract.urls!).toContain('www.kobrekim.com');
+    expect(extract.urls!).toContain('www.silverline-partners.example');
 
     expect(extract.locations).toBeDefined();
     expect(extract.locations!).toContain('New York');

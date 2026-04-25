@@ -107,8 +107,8 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
 
       For the Organization:
       4. Skip Organization creation entirely when the sender domain is a
-         free-mail domain. Note any former affiliations (like
-         "formerly at Two Sigma") in the Profile's Notes section instead.
+         free-mail domain. Note any former affiliations (e.g. "formerly at
+         <Company>") in the Profile's Notes section instead.
       5. Otherwise, \`query\` for an Organization by website (matching the
          domain) or by name. Create with \`objectCreate\` if none exists,
          otherwise \`objectUpdate\`.
@@ -189,7 +189,7 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
       Try to attach an avatar for the Person and a logo for the Organization.
       Find candidate URLs via web search or by fetching the company website
       and looking for favicon / og:image / logo. Then call the plugin-crm
-      \`attach_image\` tool with { subject, url }. Only https URLs are
+      \`attach-image\` tool with { subject, url }. Only https URLs are
       accepted and internal/private hosts are rejected; failures are
       non-fatal — if no candidate is found or the tool refuses the URL,
       continue without an image.
