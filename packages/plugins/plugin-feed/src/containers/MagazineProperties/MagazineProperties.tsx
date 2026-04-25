@@ -45,7 +45,10 @@ export const MagazineProperties = ({ subject: magazine }: MagazinePropertiesProp
         <Input.Label classNames='mt-form-gap'>{t('instructions.label')}</Input.Label>
         {instructions && (
           <Editor.Root>
-            <Editor.View classNames='border border-subdued-separator rounded-xs p-1 px-2' extensions={extension} />
+            <Editor.View
+              classNames='bg-input-surface border border-separator rounded-xs p-1 px-2'
+              extensions={extension}
+            />
           </Editor.Root>
         )}
       </Input.Root>
