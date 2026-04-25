@@ -185,13 +185,54 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       });
       setState('curating');
       await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
+      // Apply the Magazine-level `keep` bound after curation. Done in the UI
+      // (rather than inside the operation) so it lands as a separate write —
+      // chaining a second `mutable.posts = ...` after the operation's append
+      // inside one change block trips ECHO's deep-mapper dedup invariant.
+      const keep = subject.keep ?? Subscription.DEFAULT_KEEP;
+      const tag = db ? findStarTag(db) : undefined;
+      const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
+      const isStarred = (post: Subscription.Post) =>
+        tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false;
+      const timestamp = (post: Subscription.Post): number => {
+        if (!post.published) {
+          return Number.NEGATIVE_INFINITY;
+        }
+        const ms = Date.parse(post.published);
+        return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
+      };
+      const resolvedPairs: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
+      const unresolvedRefs: Ref.Ref<Subscription.Post>[] = [];
+      for (const ref of subject.posts) {
+        const post = ref.target;
+        if (post) {
+          resolvedPairs.push({ ref, post });
+        } else {
+          unresolvedRefs.push(ref);
+        }
+      }
+      const starredPairs = resolvedPairs.filter(({ post }) => isStarred(post));
+      const candidatePairs = resolvedPairs
+        .filter(({ post }) => !isStarred(post))
+        .sort((pairA, pairB) => timestamp(pairB.post) - timestamp(pairA.post));
+      const keptCandidates = candidatePairs.slice(0, Math.max(0, keep));
+      const nextRefs: Ref.Ref<Subscription.Post>[] = [
+        ...starredPairs.map(({ ref }) => ref),
+        ...keptCandidates.map(({ ref }) => ref),
+        ...unresolvedRefs,
+      ];
+      if (nextRefs.length !== subject.posts.length) {
+        Obj.change(subject, (subject) => {
+          subject.posts = nextRefs;
+        });
+      }
     } catch (err) {
       log.catch(err);
       setError(t('curate-error.message'));
     } finally {
       setState('idle');
     }
-  }, [state, subject, invokePromise, t]);
+  }, [state, subject, db, invokePromise, t]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will

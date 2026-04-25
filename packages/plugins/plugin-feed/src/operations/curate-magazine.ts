@@ -10,9 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { Subscription } from '../types';
-import { extractImageUrls, findStarTag, makeSnippet, stripHtml } from '../util';
+import { extractImageUrls, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
-import { partitionByKeepBound } from './util';
 
 /**
  * Deterministic curation invoked by the Curate button. For every uncurated
@@ -72,43 +71,21 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
         }
       }
 
-      // Compute the final post list — fresh additions plus existing, then pruned
-      // by the `keep` bound — outside `Obj.change`. Doing two sequential
-      // `mutable.posts = ...` writes inside one change block deep-maps the same
-      // refs twice, which trips a "object already in db" invariant in ECHO's
-      // ref handler. A single write avoids that.
-      const existingDxns = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
-      const freshAdditions = added.filter((ref) => !existingDxns.has(ref.dxn.toString()));
-      const appended = freshAdditions.length;
-
-      const combinedRefs: Ref.Ref<Subscription.Post>[] = [...magazine.posts, ...freshAdditions];
-      const keep = magazine.keep ?? Subscription.DEFAULT_KEEP;
-      const starTag = findStarTag(space.db);
-      // Refs whose targets aren't yet resolved are conservatively kept — a
-      // future curation pass with resolved targets will reconsider them.
-      const resolved: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
-      const unresolved: Ref.Ref<Subscription.Post>[] = [];
-      for (const ref of combinedRefs) {
-        const post = ref.target;
-        if (post) {
-          resolved.push({ ref, post });
-        } else {
-          unresolved.push(ref);
-        }
-      }
-      const { kept } = partitionByKeepBound(
-        resolved.map(({ post }) => post),
-        keep,
-        starTag,
-      );
-      const keptDxns = new Set(kept.map((post) => Obj.getDXN(post).toString()));
-      const filteredResolved = resolved.filter(({ ref }) => keptDxns.has(ref.dxn.toString())).map(({ ref }) => ref);
-      const next = [...filteredResolved, ...unresolved];
-
-      if (appended > 0 || next.length !== magazine.posts.length) {
+      // Append fresh refs to the magazine. The per-feed `keep` bound is enforced
+      // upstream in `SyncFeed` (queue prune); the Magazine-level `keep` bound is
+      // enforced separately by the Clear button so curate stays a pure additive
+      // operation — making it safe to re-run without pruning previously-curated
+      // items the user may want to keep.
+      let appended = 0;
+      if (added.length > 0) {
         Obj.change(magazine, (magazine) => {
           const mutable = magazine as Obj.Mutable<typeof magazine>;
-          mutable.posts = next;
+          const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
+          const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
+          if (fresh.length > 0) {
+            mutable.posts = [...mutable.posts, ...fresh];
+          }
+          appended = fresh.length;
         });
       }
 
