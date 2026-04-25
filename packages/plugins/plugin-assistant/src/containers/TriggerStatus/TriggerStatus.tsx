@@ -8,7 +8,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { useObject, type Database, type Space } from '@dxos/react-client/echo';
+import { useObject, type Space } from '@dxos/react-client/echo';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

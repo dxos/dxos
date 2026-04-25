@@ -18,9 +18,9 @@ export const translations = [
 
         'runtime.label': 'Trigger runtime location',
         'runtime.description': 'Determines where the triggers in this space will execute.',
-        'runtime.runtime-label.disabled': 'Triggers disabled',
-        'runtime.runtime-label.local': 'Local',
-        'runtime.runtime-label.edge': 'EDGE (experimental)',
+        'runtime.disabled.label': 'Triggers disabled',
+        'runtime.local.label': 'Local',
+        'runtime.edge.label': 'EDGE (experimental)',
 
         'functions-panel.label': 'Functions',
         'functions-verbose.label': 'Manage deployed functions',

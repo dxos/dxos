@@ -32,20 +32,20 @@ export const TriggersSettings = ({ space }: { space: Space }) => {
               iconEnd
               icon='ph--caret-down--regular'
               size={4}
-              label={t(`runtime.runtime-label.${selected}`)}
+              label={t(`runtime.${selected}.label`)}
             />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content side='bottom'>
               <DropdownMenu.Viewport>
                 <DropdownMenu.Item onClick={() => handleUpdate('disabled')}>
-                  {t(`runtime.runtime-label.disabled`)}
+                  {t(`runtime.disabled.label`)}
                 </DropdownMenu.Item>
                 <DropdownMenu.Item onClick={() => handleUpdate('local')}>
-                  {t(`runtime.runtime-label.local`)}
+                  {t(`runtime.local.label`)}
                 </DropdownMenu.Item>
                 <DropdownMenu.Item onClick={() => handleUpdate('edge')}>
-                  {t(`runtime.runtime-label.edge`)}
+                  {t(`runtime.edge.label`)}
                 </DropdownMenu.Item>
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
