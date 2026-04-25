@@ -75,13 +75,13 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               subject: companion,
               state: 'expanded',
             });
-          } else if (layout.mode === 'multi' && message && db) {
+          } else if (layout.mode === 'multi' && db) {
             void invokePromise(LayoutOperation.Open, {
               subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
               pivotId: id,
               navigation: 'immediate',
             });
-          } else if (message) {
+          } else {
             void invokePromise(LayoutOperation.UpdateCompanion, {
               subject: companion,
             });
