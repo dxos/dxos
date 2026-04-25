@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { IconButton, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { composable } from '@dxos/ui-theme';
@@ -25,6 +25,7 @@ const SAMPLE_URLS = [
   'https://www.inkandswitch.com/essay/local-first/',
   'https://martinfowler.com/articles/cant-buy-integration.html',
   'https://overreacted.io/before-you-memo/',
+  'https://www.theregister.com/2026/04/24/deepseek_v4/',
 ];
 
 const formatBytes = (n: number): string => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(1)} KB`);
@@ -91,28 +92,44 @@ const DefaultStory = () => {
         {state.status === 'ok' ? (
           <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
         ) : (
-          <div className='flex flex-col'>
-            <Toolbar.Root>
-              {SAMPLE_URLS.map((sample) => (
-                <IconButton
-                  key={sample}
-                  icon='ph--link--regular'
-                  label={new URL(sample).hostname}
-                  onClick={() => {
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Select.Root
+                  value={url}
+                  onValueChange={(sample) => {
                     setUrl(sample);
                     setState({ status: 'idle' });
                   }}
-                />
-              ))}
-            </Toolbar.Root>
-            {state.status === 'idle' && (
-              <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
-            )}
-            {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
-            {state.status === 'error' && (
-              <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
-            )}
-          </div>
+                >
+                  <Toolbar.Button asChild>
+                    <Select.TriggerButton placeholder='Sample URL' />
+                  </Toolbar.Button>
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {SAMPLE_URLS.map((sample) => (
+                          <Select.Option key={sample} value={sample}>
+                            {new URL(sample).hostname}
+                          </Select.Option>
+                        ))}
+                      </Select.Viewport>
+                      <Select.Arrow />
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content>
+              {state.status === 'idle' && (
+                <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
+              )}
+              {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
+              {state.status === 'error' && (
+                <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
+              )}
+            </Panel.Content>
+          </Panel.Root>
         )}
       </Panel.Content>
     </Panel.Root>
