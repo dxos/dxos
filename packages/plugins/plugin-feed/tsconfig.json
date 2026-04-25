@@ -42,9 +42,6 @@
       "path": "../../core/echo/echo-atom"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../../core/operation"
     },
     {
@@ -69,9 +66,6 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -79,9 +73,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

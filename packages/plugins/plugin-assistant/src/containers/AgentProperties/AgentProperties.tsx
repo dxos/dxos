@@ -11,16 +11,13 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { createDocAccessor } from '@dxos/echo-db';
+import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { FeedAnnotation } from '@dxos/schema';
-import { createDataExtensions } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
@@ -102,52 +99,29 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
     [agent],
   );
 
-  const instructions = useAtomValue(AtomRef.make(agent.instructions));
-  const dataExtensions = useMemo(
-    () =>
-      instructions ? [createDataExtensions({ id: agent.id, text: createDocAccessor(instructions, ['content']) })] : [],
-    [instructions, agent.id],
-  );
-  const extension = useBasicMarkdownExtensions({
-    placeholder: t('instructions.placeholder'),
-    extensions: dataExtensions,
-  });
+  if (subscribedObjects.length === 0) {
+    return null;
+  }
 
   return (
     <div role='none' className='dx-expander flex flex-col'>
-      {subscribedObjects.length > 0 && (
-        <>
-          <Input.Root>
-            <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
-          </Input.Root>
-
-          {subscribedObjects.map((object) => (
-            <Input.Root key={object.id}>
-              <div className='flex items-center gap-2'>
-                <Input.Checkbox
-                  checked={existingSubscriptions.includes(object)}
-                  onCheckedChange={(checked) => {
-                    handleSubscriptionChange(object, checked === true);
-                  }}
-                />
-                <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
-              </div>
-            </Input.Root>
-          ))}
-        </>
-      )}
-
       <Input.Root>
-        <Input.Label classNames='mt-form-gap'>{t('instructions.label')}</Input.Label>
-        {instructions && (
-          <Editor.Root>
-            <Editor.View
-              classNames='transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2'
-              extensions={extension}
-            />
-          </Editor.Root>
-        )}
+        <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
       </Input.Root>
+
+      {subscribedObjects.map((object) => (
+        <Input.Root key={object.id}>
+          <div className='flex items-center gap-2'>
+            <Input.Checkbox
+              checked={existingSubscriptions.includes(object)}
+              onCheckedChange={(checked) => {
+                handleSubscriptionChange(object, checked === true);
+              }}
+            />
+            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
+          </div>
+        </Input.Root>
+      ))}
     </div>
   );
 };
