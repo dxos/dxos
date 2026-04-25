@@ -16,9 +16,11 @@ export const translations = [
         'automation-verbose.label': 'Manage automations',
         'automation.description': 'You can manage all the triggers which automate your space here.',
 
-        'runtime.label': 'Enable Local Runtime',
-        'runtime.description':
-          'This will start a trigger dispatcher locally for this space to run triggers on your device while Composer is running.',
+        'runtime.label': 'Trigger runtime location',
+        'runtime.description': 'Determines where the triggers in this space will execute.',
+        'runtime.runtime-label.disabled': 'Triggers disabled',
+        'runtime.runtime-label.local': 'Local',
+        'runtime.runtime-label.edge': 'EDGE (experimental)',
 
         'functions-panel.label': 'Functions',
         'functions-verbose.label': 'Manage deployed functions',

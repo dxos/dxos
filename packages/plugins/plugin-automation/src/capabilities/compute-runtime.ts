@@ -17,8 +17,10 @@ import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionSe
 import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -102,7 +104,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       return this.#runtimes.get(spaceId)!;
     }
 
-    const layer = Layer.unwrapEffect(
+    const layer = Layer.unwrapScoped(
       Effect.gen(this, function* () {
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
@@ -133,11 +135,29 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
         this.#subscriptions.set(spaceId, mcpQuery.subscribe());
 
-        return Layer.mergeAll(
-          TriggerDispatcher.layer({ timeControl: 'natural' }),
-          Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+        return Layer.scopedDiscard(
+          Effect.gen(function* () {
+            const registry = yield* Registry.AtomRegistry;
+            const triggerDispatcher = yield* TriggerDispatcher;
+            const unsubscribe = registry.subscribe(
+              AtomObj.make(space.properties),
+              (properties: Obj.Snapshot<SpaceProperties>) => {
+                const computeEnvironment = properties.computeEnvironment ?? 'local';
+                const shouldRunTriggers = computeEnvironment === 'local';
+                if (shouldRunTriggers) {
+                  triggerDispatcher.start().pipe(Effect.runFork);
+                } else {
+                  triggerDispatcher.stop().pipe(Effect.runFork);
+                }
+              },
+              { immediate: true },
+            );
+            yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
+          }),
         )
           .pipe(
+            Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'natural' })),
+            Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
             Layer.provideMerge(
               AgentService.layer({
                 getMcpServers: () =>
@@ -255,10 +275,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(CredentialsService.layerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+          )
+          .pipe(
             Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
-          )
-          .pipe(Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty));
+            Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty),
+          );
       }),
     );
 

@@ -167,6 +167,7 @@ export const translations: Resource[] = [
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',
         'trigger-status-idle.label': 'Triggers idle',
+        'trigger-status-edge.label': 'Triggers will run on EDGE',
         'trigger-status-running.label': 'Trigger running',
         'trigger-status-error.label': 'Trigger error',
         'trigger-runtime.label': 'Auto trigger execution',

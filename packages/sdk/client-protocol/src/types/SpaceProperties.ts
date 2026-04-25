@@ -6,6 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Feed, Ref, Type } from '@dxos/echo';
 
+/**
+ * Where do triggers get executed.
+ */
+export const ComputeEnvironment = Schema.Literal('disabled', 'local', 'edge');
+export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
+
 export const SpacePropertiesSchema = Schema.Struct(
   {
     //
@@ -16,7 +22,18 @@ export const SpacePropertiesSchema = Schema.Struct(
     // TODO(burdon): Change to mode (no booleans?)
     // TODO(wittjosiah): Make optional with default value.
     edgeReplication: Schema.optional(Schema.Boolean),
+
+    /**
+     * @deprecated
+     */
     invocationTraceFeed: Schema.optional(Ref.Ref(Feed.Feed)),
+
+    /**
+     * Preference for trigger execution.
+     * *local* - triggers are executed locally on the client, edge is not running triggers.
+     * *edge* - triggers are executed on the edge, triggers are not run locally.
+     */
+    computeEnvironment: Schema.optional(ComputeEnvironment),
 
     //
     // User properties.
