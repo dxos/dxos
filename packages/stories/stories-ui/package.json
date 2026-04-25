@@ -14,9 +14,6 @@
   "sideEffects": true,
   "type": "module",
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
