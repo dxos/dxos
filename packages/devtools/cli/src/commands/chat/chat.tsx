@@ -33,6 +33,7 @@ import {
   types,
 } from '../../util';
 import { Chat } from './components';
+import { runNonInteractive } from './non-interactive';
 import { ChatProcessor } from './processor';
 
 export const chat = Command.make(
@@ -59,10 +60,16 @@ export const chat = Command.make(
       Options.withAlias('b'),
       Options.repeated,
     ),
+    prompt: Options.text('prompt').pipe(
+      Options.withDescription(
+        'When set, runs the agent loop non-interactively with this prompt and exits — no TUI. Combine with --json to get structured object output.',
+      ),
+      Options.optional,
+    ),
   },
   (options) =>
     Effect.gen(function* () {
-      const { verbose, logLevel } = yield* CommandConfig;
+      const { verbose, logLevel, json } = yield* CommandConfig;
 
       // Configure logging.
       const logBuffer = createLogBuffer();
@@ -136,6 +143,24 @@ export const chat = Command.make(
         setConversation(next);
         return next;
       };
+
+      // Non-interactive mode: --prompt runs the agent loop to completion and
+      // exits without rendering the TUI. JSON output emits an array of
+      // `{kind, dxn}` for the objects created or updated during the session.
+      const nonInteractivePrompt = Option.getOrUndefined(options.prompt);
+      if (nonInteractivePrompt !== undefined) {
+        yield* Effect.promise(async () => {
+          await runNonInteractive({
+            space,
+            processor,
+            blueprints: [...options.blueprints],
+            prompt: nonInteractivePrompt,
+            model,
+            json,
+          });
+        });
+        return;
+      }
 
       yield* Effect.promise(async () => {
         log.info('initializing', { blueprints: options.blueprints.length });

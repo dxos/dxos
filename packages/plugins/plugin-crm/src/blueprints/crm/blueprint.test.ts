@@ -72,4 +72,31 @@ describe('CRM Blueprint', () => {
       { timeout: 120_000 },
     );
   }
+
+  // Bare-email-prompt research mode: exercises the same path as
+  // `dx chat --blueprint org.dxos.blueprint.crm --prompt "research <email>"`,
+  // i.e. the agent must find-or-create a Person from the email before
+  // proceeding with the research flow described in the CRM blueprint
+  // instructions. Skipped by default — regenerate the memoized fixture with
+  // `ALLOW_LLM_GENERATION=1`.
+  it.effect.skip(
+    'researches a contact from a bare email address (find-or-create Person)',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* AgentService.createSession({
+          blueprints: [
+            CrmBlueprint.make(),
+            DatabaseBlueprint.make(),
+            ResearchBlueprint.make(),
+            WebSearchBlueprint.make(),
+          ],
+        });
+        yield* agent.submitPrompt('research priya.adebayo@ventura-advisors.example');
+        yield* agent.waitForCompletion();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 120_000 },
+  );
 });

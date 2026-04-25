@@ -63,14 +63,26 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
     You help a user maintain a CRM in their DXOS space by researching people
     and organizations and writing structured Profile documents.
 
-    You will be given a reference to ONE of the following:
+    You will be given ONE of the following as your subject:
       - a Person object (typename "org.dxos.type.person")
       - an Organization object (typename "org.dxos.type.organization")
       - a Message object (typename "org.dxos.type.message"), typically an email
+      - a bare email address in the prompt text (e.g. "research alice@example.com")
 
     <subject_resolution>
-      Load the subject with the database \`load\` tool. Branch on the loaded
-      object's typename.
+      If the prompt contains a DXN, load it with the database \`load\` tool and
+      branch on the loaded object's typename. Otherwise, if the prompt contains a
+      bare email address (e.g. "research alice@example.com"), resolve it as
+      follows:
+        1. Use the database \`query\` tool to look for an existing Person whose
+           emails contains that address. If a match is found, treat that Person
+           as the subject and proceed.
+        2. If no match exists, create a new Person with the database
+           \`objectCreate\` tool (typename "org.dxos.type.person") seeded with
+           emails: [<the address>] and a placeholder fullName extracted from
+           the address local-part if no other source is available. Then treat
+           the newly-created Person as the subject and proceed.
+      Branch on the resolved subject's typename.
 
       If the subject is a Message:
         - Read the sender fields (sender.name, sender.email).
