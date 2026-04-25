@@ -52,59 +52,140 @@ const collectImageUrls = (lead: string | undefined, contentHtml: string): string
   return urls;
 };
 
-/**
- * Trailing markdown headings that signal end-of-article boilerplate (tag
- * clouds, "related" rails, "more from this site" lists). Defuddle's content-
- * pattern removal misses these on some sites — notably theregister.com's
- * "Narrower topics" / "Broader topics" tag lists.
- */
-const TRAILING_BOILERPLATE_HEADINGS = [
-  /narrower topics/i,
-  /broader topics/i,
-  /^related(\s+(articles|topics|posts|stories|reading))?$/i,
-  /^more (from|on)\b/i,
-  /^similar (articles|posts|stories)\b/i,
-  /^you (might|may) (also|like)\b/i,
-  /^topics\b/i,
-  /^tags\b/i,
-];
+//
+// Trailing-chrome pruning
+//
+// Defuddle's heuristics already strip nav/header/footer/aside at the page
+// level, but on some sites tag clouds and "related" rails live INSIDE the
+// `<article>`/`<main>` container — defuddle keeps them because they're
+// structurally part of the body. We walk trailing children of the content
+// root and drop anything that scores as chrome (tag-href list, link-only
+// list, recognisable class/id, high link density). Only trailing siblings
+// are touched — the same heading text mid-article is left alone.
+//
+
+/** Substring patterns on class/id that mark a block as chrome. */
+const CHROME_CLASS_PATTERN =
+  /(?:^|[\s_-])(?:tag|topic|related|recirc|footer|sidebar|widget|share|social|comments?|disqus|recommend|more[-_]from|read[-_]next|outbrain|taboola)(?:[\s_-]|$)/i;
+
+/** Hrefs that point to tag/category/related routes. */
+const CHROME_HREF_PATTERN = /\/(?:tags?|topics?|categor(?:y|ies)|authors?|related|recommended)\//i;
+
+const isHeading = (el: Element): boolean => /^H[1-6]$/i.test(el.tagName);
+
+const linkDensity = (el: Element): number => {
+  const text = (el.textContent ?? '').trim();
+  if (text.length === 0) {
+    return 0;
+  }
+  const linkText = Array.from(el.querySelectorAll('a'))
+    .map((anchor) => (anchor.textContent ?? '').trim())
+    .join(' ');
+  return linkText.length / text.length;
+};
+
+/** A `<ul>` / `<ol>` whose items are essentially a single link each. */
+const isLinkOnlyList = (el: Element): boolean => {
+  if (el.tagName !== 'UL' && el.tagName !== 'OL') {
+    return false;
+  }
+  const items = Array.from(el.children).filter((child) => child.tagName === 'LI');
+  if (items.length === 0) {
+    return false;
+  }
+  return items.every((li) => {
+    const links = li.querySelectorAll('a');
+    if (links.length !== 1) {
+      return false;
+    }
+    const text = (li.textContent ?? '').trim();
+    const linkText = (links[0].textContent ?? '').trim();
+    // The <li>'s text is essentially just the link text (allow a few stray chars).
+    return text.length > 0 && Math.abs(text.length - linkText.length) <= 4;
+  });
+};
+
+/** Block where the majority of links point to tag/category/related routes. */
+const isTagURLBlock = (el: Element): boolean => {
+  const links = Array.from(el.querySelectorAll('a[href]'));
+  if (links.length < 2) {
+    return false;
+  }
+  const matching = links.filter((anchor) => CHROME_HREF_PATTERN.test(anchor.getAttribute('href') ?? ''));
+  return matching.length / links.length > 0.6;
+};
+
+const isChromeElement = (el: Element): boolean => {
+  const tag = el.tagName;
+  if (tag === 'ASIDE' || tag === 'NAV' || tag === 'FOOTER') {
+    return true;
+  }
+  const role = el.getAttribute('role');
+  if (role === 'navigation' || role === 'complementary' || role === 'contentinfo') {
+    return true;
+  }
+  const classNameAndId = `${(el.getAttribute('class') ?? '').toString()} ${el.id ?? ''}`;
+  if (CHROME_CLASS_PATTERN.test(classNameAndId)) {
+    return true;
+  }
+  if (isLinkOnlyList(el) || isTagURLBlock(el)) {
+    return true;
+  }
+  // High link density on a sizeable block — tag clouds and link rails.
+  if ((el.textContent ?? '').trim().length > 20 && linkDensity(el) >= 0.7) {
+    return true;
+  }
+  return false;
+};
 
 /**
- * Strip trailing boilerplate sections from the markdown body. Walks lines
- * from the end and truncates at the earliest heading whose text matches a
- * known boilerplate label. Only trims trailing sections — boilerplate-shaped
- * headings inside the article body are left alone.
+ * Find the element defuddle is most likely to treat as the main content
+ * root, so we prune at the same scope it'll later extract. Mirrors the
+ * common selector chain article > main > [role=main] > body.
  */
-const trimTrailingBoilerplate = (markdown: string): string => {
-  if (!markdown) {
-    return markdown;
+const findContentRoot = (doc: Document): Element | null =>
+  doc.querySelector('article') ?? doc.querySelector('main') ?? doc.querySelector('[role="main"]') ?? doc.body;
+
+/**
+ * Walk trailing children of the content root from the end, removing chrome
+ * blocks. A heading immediately preceding a chrome block is also removed
+ * (the heading is the chrome's title, e.g. "Narrower topics" sitting above
+ * a tag-href list). Stop at the first non-chrome block — body content
+ * resumes there.
+ */
+const pruneTrailingChrome = (doc: Document): void => {
+  const root = findContentRoot(doc);
+  if (!root) {
+    return;
   }
-  const lines = markdown.split('\n');
-  let truncateAt: number | undefined;
-  for (let index = lines.length - 1; index >= 0; index--) {
-    const headingMatch = /^#{1,6}\s+(.*?)\s*$/.exec(lines[index]);
-    if (!headingMatch) {
+  let child = root.lastElementChild;
+  while (child) {
+    const previous = child.previousElementSibling;
+    if (isChromeElement(child)) {
+      child.remove();
+      child = previous;
       continue;
     }
-    const text = headingMatch[1].trim();
-    if (TRAILING_BOILERPLATE_HEADINGS.some((pattern) => pattern.test(text))) {
-      truncateAt = index;
-    } else {
-      // Hit a non-boilerplate heading scanning back from the end → article
-      // body resumes here, stop walking.
-      break;
+    // Pair-wise: a heading directly above what we just removed is the
+    // section title; remove it too.
+    if (isHeading(child)) {
+      const next = child.nextElementSibling;
+      if (next == null) {
+        // Nothing after the heading (we just removed it on the prior turn) —
+        // the heading is now trailing, treat as chrome too.
+        child.remove();
+        child = previous;
+        continue;
+      }
     }
+    break;
   }
-  if (truncateAt === undefined) {
-    return markdown;
-  }
-  return lines.slice(0, truncateAt).join('\n').trimEnd();
 };
 
 const mapResult = (result: DefuddleResponse): ExtractedArticle => {
   const lead = result.image || undefined;
   return {
-    markdown: trimTrailingBoilerplate(result.contentMarkdown ?? ''),
+    markdown: result.contentMarkdown ?? '',
     html: result.content ?? '',
     title: result.title || undefined,
     author: result.author || undefined,
@@ -132,9 +213,14 @@ export const extractArticle = async (html: string, url?: string): Promise<Extrac
   }
   if (isDocumentParserAvailable()) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
+    pruneTrailingChrome(doc);
     return mapResult(new Defuddle(doc, { url, separateMarkdown: true }).parse());
   }
   // Node path: defuddle/node accepts an HTML string and returns a Promise.
+  // Trailing-chrome pruning is currently DOM-based and only runs in the
+  // browser path; agent operations using the Node path may see boilerplate
+  // bleed-through on sites like theregister.com until linkedom-based pruning
+  // is added.
   const { Defuddle: DefuddleNode } = await import('defuddle/node');
   return mapResult(await DefuddleNode(html, url, { separateMarkdown: true }));
 };

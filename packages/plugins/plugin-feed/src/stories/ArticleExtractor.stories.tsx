@@ -72,6 +72,29 @@ const DefaultStory = () => {
               classNames='is-full min-is-[24rem]'
             />
           </Input.Root>
+          <Select.Root
+            value={url}
+            onValueChange={(sample) => {
+              setUrl(sample);
+              setState({ status: 'idle' });
+            }}
+          >
+            <Toolbar.Button asChild>
+              <Select.TriggerButton placeholder='Sample URL' />
+            </Toolbar.Button>
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {SAMPLE_URLS.map((sample) => (
+                    <Select.Option key={sample} value={sample}>
+                      {new URL(sample).hostname}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+                <Select.Arrow />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
           <Toolbar.IconButton
             icon='ph--arrow-clockwise--regular'
             iconOnly
@@ -92,44 +115,15 @@ const DefaultStory = () => {
         {state.status === 'ok' ? (
           <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
         ) : (
-          <Panel.Root>
-            <Panel.Toolbar asChild>
-              <Toolbar.Root>
-                <Select.Root
-                  value={url}
-                  onValueChange={(sample) => {
-                    setUrl(sample);
-                    setState({ status: 'idle' });
-                  }}
-                >
-                  <Toolbar.Button asChild>
-                    <Select.TriggerButton placeholder='Sample URL' />
-                  </Toolbar.Button>
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {SAMPLE_URLS.map((sample) => (
-                          <Select.Option key={sample} value={sample}>
-                            {new URL(sample).hostname}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                      <Select.Arrow />
-                    </Select.Content>
-                  </Select.Portal>
-                </Select.Root>
-              </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content>
-              {state.status === 'idle' && (
-                <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
-              )}
-              {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
-              {state.status === 'error' && (
-                <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
-              )}
-            </Panel.Content>
-          </Panel.Root>
+          <div>
+            {state.status === 'idle' && (
+              <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
+            )}
+            {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
+            {state.status === 'error' && (
+              <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
+            )}
+          </div>
         )}
       </Panel.Content>
     </Panel.Root>
