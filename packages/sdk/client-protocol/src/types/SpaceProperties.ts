@@ -30,6 +30,7 @@ export const SpacePropertiesSchema = Schema.Struct(
 
     /**
      * Preference for trigger execution.
+     * *disabled* - triggers do not run locally or on EDGE.
      * *local* - triggers are executed locally on the client, edge is not running triggers.
      * *edge* - triggers are executed on the edge, triggers are not run locally.
      */

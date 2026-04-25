@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { ComputeEnvironment } from '@dxos/client-protocol';
-import { Space } from '@dxos/client/echo';
+import { type ComputeEnvironment } from '@dxos/client-protocol';
 import { useObject } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
@@ -18,8 +18,8 @@ export const TriggersSettings = ({ space }: { space: Space }) => {
   const selected = properties.computeEnvironment ?? 'local';
 
   const handleUpdate = (option: ComputeEnvironment) => {
-    changeProperties((properties) => {
-      properties.computeEnvironment = option;
+    changeProperties((draft) => {
+      draft.computeEnvironment = option;
     });
   };
 

@@ -157,7 +157,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         )
           .pipe(
             Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'natural' })),
-            Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
             Layer.provideMerge(
               AgentService.layer({
                 getMcpServers: () =>

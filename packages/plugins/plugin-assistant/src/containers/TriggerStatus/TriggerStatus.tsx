@@ -52,9 +52,9 @@ export const TriggerStatus = () => {
 
 const SpaceStatusMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
-  const { state, start, stop } = useTriggerRuntimeControls(space.db);
+  const { state } = useTriggerRuntimeControls(space.db);
   const isEnabled = state?.enabled ?? false;
-  const [properties, changeProperties] = useObject(space.properties);
+  const [properties] = useObject(space.properties);
   const computeEnvironment = properties.computeEnvironment ?? 'local';
 
   // Determine the current trigger status state.
@@ -80,7 +80,7 @@ const SpaceStatusMain = ({ space }: { space: Space }) => {
     }
 
     return 'idle';
-  }, [isEnabled, state?.invocations]);
+  }, [computeEnvironment, isEnabled, state?.invocations]);
 
   return (
     <Popover.Root>
@@ -97,13 +97,11 @@ const SpaceStatusMain = ({ space }: { space: Space }) => {
       <Popover.Portal>
         <Popover.Content side='left'>
           <TriggerStatusPopover
-            isRunning={isEnabled}
             state={triggerState}
             currentFunctionName={
               state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
             }
             lastInvocation={state?.invocations.at(-1)}
-            onToggle={isEnabled ? stop : start}
           />
           <Popover.Arrow />
         </Popover.Content>
@@ -113,19 +111,15 @@ const SpaceStatusMain = ({ space }: { space: Space }) => {
 };
 
 type TriggerStatusPopoverProps = {
-  isRunning: boolean;
   state: TriggerStatusState;
   currentFunctionName?: string;
   lastInvocation?: InvocationsState;
-  onToggle: () => void;
 };
 
 const TriggerStatusPopover = ({
-  isRunning,
   state,
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
-  onToggle,
 }: TriggerStatusPopoverProps) => {
   const { t } = useTranslation(meta.id);
 
