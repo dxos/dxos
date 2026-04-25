@@ -28,12 +28,7 @@ export const TriggersSettings = ({ space }: { space: Space }) => {
       <Settings.Item title={t('runtime.label')} description={t('runtime.description')}>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <IconButton
-              iconEnd
-              icon='ph--caret-down--regular'
-              size={4}
-              label={t(`runtime.${selected}.label`)}
-            />
+            <IconButton iconEnd icon='ph--caret-down--regular' size={4} label={t(`runtime.${selected}.label`)} />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content side='bottom'>
@@ -41,12 +36,8 @@ export const TriggersSettings = ({ space }: { space: Space }) => {
                 <DropdownMenu.Item onClick={() => handleUpdate('disabled')}>
                   {t(`runtime.disabled.label`)}
                 </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => handleUpdate('local')}>
-                  {t(`runtime.local.label`)}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => handleUpdate('edge')}>
-                  {t(`runtime.edge.label`)}
-                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => handleUpdate('local')}>{t(`runtime.local.label`)}</DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => handleUpdate('edge')}>{t(`runtime.edge.label`)}</DropdownMenu.Item>
               </DropdownMenu.Viewport>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
