@@ -13,6 +13,7 @@ const DX_POSTHOG_API_HOST = process.env.DX_POSTHOG_API_HOST;
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://dxos.org',
   integrations: [
     starlight({
       title: 'DXOS Documentation',
@@ -28,23 +29,24 @@ export default defineConfig({
         alt: 'DXOS Logotype',
         replacesTitle: true,
       },
-      social: {
-        github: 'https://github.com/dxos/dxos',
-        discord: 'https://dxos.org/discord',
-        blueSky: 'https://bsky.app/profile/dxos.org',
-        'x.com': 'https://x.com/dxos_org',
-      },
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/dxos/dxos' },
+        { icon: 'discord', label: 'Discord', href: 'https://dxos.org/discord' },
+        { icon: 'blueSky', label: 'Bluesky', href: 'https://bsky.app/profile/dxos.org' },
+        { icon: 'x.com', label: 'X', href: 'https://x.com/dxos_org' },
+      ],
       expressiveCode: {
         themes: ['github-light', 'github-dark'],
       },
+      // TODO(wittjosiah): Nested docs subdir is needed because link validation doesn't work with generateId config.
       sidebar: [
         {
           label: 'Introduction',
-          slug: 'index',
+          slug: 'docs',
         },
         {
           label: 'Composer',
-          autogenerate: { directory: 'composer' },
+          autogenerate: { directory: 'docs/composer' },
           collapsed: false,
         },
         {
@@ -52,35 +54,35 @@ export default defineConfig({
           items: [
             {
               label: 'Introduction',
-              slug: 'echo/introduction',
+              slug: 'docs/echo/introduction',
             },
             {
               label: 'Installation',
-              autogenerate: { directory: 'echo/installation' },
+              autogenerate: { directory: 'docs/echo/installation' },
             },
             {
               label: 'Typescript',
-              autogenerate: { directory: 'echo/typescript' },
+              autogenerate: { directory: 'docs/echo/typescript' },
             },
             {
               label: 'React',
-              autogenerate: { directory: 'echo/react' },
+              autogenerate: { directory: 'docs/echo/react' },
             },
           ],
           collapsed: false,
         },
         {
           label: 'HALO Identity',
-          autogenerate: { directory: 'halo' },
+          autogenerate: { directory: 'docs/halo' },
           collapsed: false,
         },
         {
           label: 'Additional Resources',
-          autogenerate: { directory: 'additional-resources' },
+          autogenerate: { directory: 'docs/additional-resources' },
           collapsed: false,
         },
       ],
-      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**'] })],
+      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**'] })],
       // PostHog snippet: https://posthog.com/docs/getting-started/install
       head:
         DX_POSTHOG_API_KEY && DX_POSTHOG_API_HOST

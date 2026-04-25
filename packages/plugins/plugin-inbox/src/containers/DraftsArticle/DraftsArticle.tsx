@@ -61,9 +61,12 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
       switch (action.type) {
         case 'current': {
           const message = drafts.find((m) => m.id === action.messageId);
+          if (!message) {
+            return;
+          }
           void invokePromise(LayoutOperation.Select, {
             contextId: id,
-            subject: { mode: 'single', id: message?.id },
+            subject: { mode: 'single', id: message.id },
           });
 
           const companion = linkedSegment('message');
@@ -72,13 +75,13 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
               subject: companion,
               state: 'expanded',
             });
-          } else if (layout.mode === 'multi' && message && db) {
+          } else if (layout.mode === 'multi' && db) {
             void invokePromise(LayoutOperation.Open, {
               subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
               pivotId: id,
               navigation: 'immediate',
             });
-          } else if (message) {
+          } else {
             void invokePromise(LayoutOperation.UpdateCompanion, {
               subject: companion,
             });
