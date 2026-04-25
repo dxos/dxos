@@ -19,7 +19,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { type Magazine, Subscription } from '#types';
 
-import { fetchArticle, hasMetaTag, useStarTag } from '../../util';
+import { fetchArticle, findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile } from './MagazineTile';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
@@ -193,6 +193,30 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
   }, [state, subject, invokePromise, t]);
 
+  // Reset the magazine's curated post list. Starred posts are preserved so
+  // the user doesn't lose manually-saved items; a follow-up Curate will
+  // repopulate from the source feeds.
+  const handleClear = useCallback(() => {
+    if (!db || subject.posts.length === 0) {
+      return;
+    }
+    const tag = findStarTag(db);
+    const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
+    const next = subject.posts.filter((ref) => {
+      const post = ref.target;
+      if (!post || !tagDxn) {
+        return false;
+      }
+      return Obj.getMeta(post).tags?.includes(tagDxn) ?? false;
+    });
+    if (next.length === subject.posts.length) {
+      return;
+    }
+    Obj.change(subject, (subject) => {
+      subject.posts = next;
+    });
+  }, [subject, db]);
+
   const handleOpen = useCallback(
     (post: Subscription.Post) => {
       if (!post.readAt) {
@@ -299,6 +323,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             </Toolbar.ToggleGroupItem>
           </Toolbar.ToggleGroup>
           <Toolbar.Separator />
+          <Toolbar.IconButton
+            label={t('clear-magazine.label')}
+            icon='ph--eraser--regular'
+            iconOnly
+            disabled={state !== 'idle' || subject.posts.length === 0}
+            onClick={handleClear}
+          />
           <Toolbar.IconButton
             label={curateTooltip ?? t('curate.label')}
             icon={state === 'idle' ? 'ph--sparkle--regular' : 'ph--circle-notch--regular'}

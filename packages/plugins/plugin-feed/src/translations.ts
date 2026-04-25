@@ -49,6 +49,7 @@ export const translations = [
         'sync-feed-error.title': 'Failed to sync feed',
         'add-feed.label': 'Add feed',
         'curate.label': 'Curate',
+        'clear-magazine.label': 'Clear (preserves starred)',
         'syncing-feeds.label': 'Syncing feeds...',
         'curating-articles.label': 'Curating articles...',
         'no-feeds.label': 'Add at least one feed first',
