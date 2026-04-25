@@ -21,6 +21,13 @@ export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
+ * Default upper bound on the number of (non-starred) Posts retained when
+ * syncing a {@link Feed} or curating a Magazine. Applied when the object
+ * has no explicit `keep` value.
+ */
+export const DEFAULT_KEEP = 10;
+
+/**
  * Subscription feed schema: an RSS/Atom/AT Protocol subscription.
  */
 export const Feed = Schema.Struct({
@@ -36,6 +43,18 @@ export const Feed = Schema.Struct({
   link: Schema.String.pipe(Schema.optional),
   /** URL of the feed's icon/image. */
   iconUrl: Schema.String.pipe(Schema.optional),
+  /**
+   * Maximum number of (non-starred) Posts retained in the feed's queue when
+   * syncing. Older posts beyond this bound are dropped; starred posts are
+   * preserved regardless. Defaults to {@link DEFAULT_KEEP} when unset.
+   */
+  keep: Schema.Number.pipe(
+    Schema.annotations({
+      title: 'Keep',
+      description: 'Maximum number of items to keep when syncing (starred items are always preserved).',
+    }),
+    Schema.optional,
+  ),
   /** Opaque sync cursor — protocol-specific. */
   cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   /** Backing ECHO feed for posts. */

@@ -10,8 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { Subscription } from '../types';
-import { extractImageUrls, makeSnippet, stripHtml } from '../util';
+import { extractImageUrls, findStarTag, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
+import { partitionByKeepBound } from './util';
 
 /**
  * Deterministic curation invoked by the Curate button. For every uncurated
@@ -71,21 +72,45 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
         }
       }
 
-      if (added.length > 0) {
-        let appended = 0;
-        Obj.change(magazine, (magazine) => {
-          const mutable = magazine as Obj.Mutable<typeof magazine>;
-          const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
-          const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
-          if (fresh.length > 0) {
-            mutable.posts = [...mutable.posts, ...fresh];
-          }
-          appended = fresh.length;
-        });
-        return { added: appended };
-      }
+      let appended = 0;
+      Obj.change(magazine, (magazine) => {
+        const mutable = magazine as Obj.Mutable<typeof magazine>;
+        const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
+        const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
+        if (fresh.length > 0) {
+          mutable.posts = [...mutable.posts, ...fresh];
+        }
+        appended = fresh.length;
 
-      return { added: 0 };
+        // Drop oldest non-starred curated posts beyond the `keep` bound.
+        // Refs whose targets aren't yet resolved are conservatively kept —
+        // a future curation pass with resolved targets will reconsider them.
+        const keep = magazine.keep ?? Subscription.DEFAULT_KEEP;
+        const starTag = findStarTag(space.db);
+        const resolved: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
+        const unresolved: Array<Ref.Ref<Subscription.Post>> = [];
+        for (const ref of mutable.posts) {
+          const post = ref.target;
+          if (post) {
+            resolved.push({ ref, post });
+          } else {
+            unresolved.push(ref);
+          }
+        }
+        const { kept } = partitionByKeepBound(
+          resolved.map(({ post }) => post),
+          keep,
+          starTag,
+        );
+        const keptDxns = new Set(kept.map((post) => Obj.getDXN(post).toString()));
+        const filteredResolved = resolved.filter(({ ref }) => keptDxns.has(ref.dxn.toString())).map(({ ref }) => ref);
+        const next = [...filteredResolved, ...unresolved];
+        if (next.length !== mutable.posts.length) {
+          mutable.posts = next;
+        }
+      });
+
+      return { added: appended };
     }),
   ),
 );

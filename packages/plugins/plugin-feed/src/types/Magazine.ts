@@ -28,6 +28,19 @@ export const Magazine = Schema.Struct({
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'Instructions' }),
   ),
+  /**
+   * Maximum number of (non-starred) curated Posts retained on the magazine
+   * after curation. Older posts beyond this bound are dropped; starred posts
+   * are preserved regardless. Defaults to {@link Subscription.DEFAULT_KEEP}
+   * when unset.
+   */
+  keep: Schema.Number.pipe(
+    Schema.annotations({
+      title: 'Keep',
+      description: 'Maximum number of curated items to keep (starred items are always preserved).',
+    }),
+    Schema.optional,
+  ),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
 }).pipe(

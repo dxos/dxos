@@ -14,8 +14,9 @@ import { Operation } from '@dxos/operation';
 import { meta } from '#meta';
 
 import { Subscription } from '../types';
-import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
+import { type FeedFetcher, fetchAtproto, fetchRss, findStarTag } from '../util';
 import { SyncFeed } from './definitions';
+import { partitionByKeepBound } from './util';
 
 /** Resolves the appropriate fetcher for the given feed type. */
 const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
@@ -50,6 +51,7 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
         const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
 
         // Append new posts to the ECHO feed queue.
+        const queue = space.queues.get(feedDxn);
         if (newPosts.length > 0) {
           const feedRef = Ref.make(subscriptionFeed);
           const postObjects = newPosts.map((post) =>
@@ -63,8 +65,20 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
               guid: post.guid,
             }),
           );
-          const queue = space.queues.get(feedDxn);
           await queue.append(postObjects);
+        }
+
+        // Drop oldest non-starred posts beyond the `keep` bound. Starred posts
+        // (tagged with the canonical star tag) are preserved regardless of age.
+        const keep = subscriptionFeed.keep ?? Subscription.DEFAULT_KEEP;
+        const queueItems = (await queue.queryObjects()) ?? [];
+        const queuedPosts = queueItems.filter((item): item is Subscription.Post =>
+          Obj.instanceOf(Subscription.Post, item),
+        );
+        const starTag = findStarTag(space.db);
+        const { dropped } = partitionByKeepBound(queuedPosts, keep, starTag);
+        if (dropped.length > 0) {
+          await queue.delete(dropped.map((post) => post.id));
         }
 
         // Advance cursor to the newest post.
