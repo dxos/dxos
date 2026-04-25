@@ -24,7 +24,7 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 
-import { admin, chat, debug, dx, fn, hub, repl } from './commands';
+import { admin, chat, debug, dx, fn, hub, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 
@@ -70,6 +70,7 @@ const program = Effect.gen(function* () {
     rootCommand: dx,
     subCommands: [
       repl,
+      reset,
 
       // TODO(wittjosiah): Factor out.
       //   Currently would require standalone plugins due to clash between solid & react compilation.
