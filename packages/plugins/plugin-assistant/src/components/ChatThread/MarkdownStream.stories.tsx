@@ -22,6 +22,7 @@ import { keyToFallback } from '@dxos/util';
 
 import { translations } from '../../translations';
 import { componentRegistry } from './registry';
+import REASONING from './testing/reasoning.md?raw';
 import THINKING from './testing/thinking.md?raw';
 import THREAD_1 from './testing/thread-1.md?raw';
 import THREAD_WIDGETS from './testing/thread-widgets.md?raw';
@@ -238,6 +239,24 @@ export const Thinking: Story = {
     seedToolWidgetsFromMarkdown: true,
     options: {
       autoScroll: true,
+    },
+  },
+};
+
+/**
+ * Streams a reasoning block whose body contains a numbered list — exercises the streaming-tail XML
+ * scan as `<reasoning>` opens, accumulates list-marker lines like `"1. "`, and finally closes. Use
+ * this to visually verify that the reasoning widget renders cleanly without duplicate opening tags
+ * (regression from the per-line bullet stripper that used to collapse `"1. "` to empty mid-stream).
+ */
+export const Reasoning: Story = {
+  args: {
+    registry: componentRegistry,
+    content: REASONING,
+    options: {
+      autoScroll: true,
+      wire: true,
+      cursor: true,
     },
   },
 };
