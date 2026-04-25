@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -53,7 +53,13 @@ export type RefFieldProps = FormFieldComponentProps &
     useSchema?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
-    onCreate?: (schema: Type.AnyEntity, values: any) => void;
+    /**
+     * Persist a newly-created object. Called after the user fills out the
+     * inline create form and clicks Save. Should add the object to the
+     * database and return it (sync or async). The returned object is then
+     * wired into this slot's form value as a Ref.
+     */
+    onCreate?: (schema: Type.AnyEntity, values: any) => Obj.Unknown | Promise<Obj.Unknown> | undefined | void;
   };
 
 export const RefField = (props: RefFieldProps) => {
@@ -112,13 +118,24 @@ export const RefField = (props: RefFieldProps) => {
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
   const createSchema = useSchema(db, typename);
 
+  // Lift the popover open state so we can dismiss it after a successful create.
+  const [open, setOpen] = useState(false);
+
   const handleCreate = useCallback(
-    (values: any) => {
-      if (createSchema && onCreate) {
-        onCreate(createSchema, values);
+    async (values: any) => {
+      if (!createSchema || !onCreate) {
+        return;
       }
+      const newObject = await onCreate(createSchema, values);
+      if (newObject) {
+        // Wire the newly-created object into this slot's form value. ArrayField
+        // owns the array; this RefField represents a single slot, so writing a
+        // Ref via `onValueChange` populates that slot.
+        onValueChange(type, Ref.make(newObject));
+      }
+      setOpen(false);
     },
-    [createSchema, onCreate],
+    [createSchema, onCreate, type, onValueChange],
   );
 
   const handleUpdate = useCallback(
@@ -158,7 +175,7 @@ export const RefField = (props: RefFieldProps) => {
             </DxAnchor>
           )
         ) : (
-          <ObjectPicker.Root>
+          <ObjectPicker.Root open={open} onOpenChange={setOpen}>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
                 <div role='none' className='flex gap-form-gap w-full'>

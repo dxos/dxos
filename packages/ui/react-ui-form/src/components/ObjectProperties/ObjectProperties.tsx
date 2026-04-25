@@ -36,16 +36,20 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
       );
     }, [object]);
 
-    const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
-      invariant(db);
-      invariant(Type.isObjectSchema(schema));
-      const newObject = db.add(Obj.make(schema, values));
-      if (Obj.instanceOf(Tag.Tag, newObject)) {
-        Obj.change(object, (object) => {
-          Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
-        });
-      }
-    }, []);
+    // Persist a newly-created object referenced by one of the form's ref
+    // fields and return it. The calling RefField wires the new Ref into its
+    // own slot's form value; for the BaseSchema `tags` array, the resulting
+    // form change is then synced back to `Obj.getMeta(object).tags` by
+    // `handleChange` below — so Tag.Tag follows the same generic path as any
+    // other ref-array field, no type-specific branching required here.
+    const handleCreate = useCallback(
+      (schema: Type.AnyEntity, values: any): Obj.Unknown => {
+        invariant(db);
+        invariant(Type.isObjectSchema(schema));
+        return db.add(Obj.make(schema, values)) as Obj.Unknown;
+      },
+      [db],
+    );
 
     // TODO(wittjosiah): Use FormRootProps type.
     const handleChange = useCallback(

@@ -35,9 +35,13 @@ describe('ObjectProperties — inline create flow', () => {
     const created = tags.find((tag) => tag.label === 'PinnedTag');
     expect(created, 'new Tag.Tag with label "PinnedTag" should be in the database').toBeDefined();
 
-    // And its DXN should be on `object.meta.tags`.
+    // And `object.meta.tags` should contain a DXN that resolves to that tag.
+    // Compare by the DXN's object-id tail since refs may be stored as relative
+    // (`dxn:echo:@:<id>`) or absolute (`dxn:echo:<spaceId>:<id>`) forms.
     const meta = Obj.getMeta(object);
-    expect(meta.tags ?? []).toContain(Obj.getDXN(created!).toString());
+    const createdId = (created as any).id as string;
+    const matched = (meta.tags ?? []).some((dxn) => dxn.endsWith(`:${createdId}`));
+    expect(matched, 'meta.tags should contain a DXN ending with the new tag\'s id').toBe(true);
   });
 
   test(
@@ -53,14 +57,16 @@ describe('ObjectProperties — inline create flow', () => {
       expect(created, 'new Author with name "Ada Lovelace" should be in the database').toBeDefined();
 
       // And the article's authors array should contain a Ref to it. This is the
-      // assertion that fails today — handleCreate persists the object but never
-      // wires the new ref into the array slot.
+      // assertion that fails before the fix — handleCreate persists the object
+      // but never wires the new ref into the array slot.
       const article = object as any;
       expect(article.authors ?? [], 'article.authors should contain a single Ref').toHaveLength(1);
+      // Compare by DXN tail to be agnostic to relative vs absolute Ref form.
+      const createdId = (created as any).id as string;
       expect(
-        article.authors[0]?.dxn?.toString(),
+        article.authors[0]?.dxn?.toString().endsWith(`:${createdId}`),
         'article.authors[0] should reference the newly-created Author',
-      ).toBe(Obj.getDXN(created!).toString());
+      ).toBe(true);
     },
   );
 });
