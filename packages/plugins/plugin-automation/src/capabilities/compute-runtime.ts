@@ -7,6 +7,7 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
@@ -139,20 +140,35 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           Effect.gen(function* () {
             const registry = yield* Registry.AtomRegistry;
             const triggerDispatcher = yield* TriggerDispatcher;
+            // Track the in-flight start/stop so a new transition cancels the previous one
+            // (preserving ordering on rapid toggles) and surfaces failures via the Effect logger.
+            let inFlight: Fiber.RuntimeFiber<unknown, unknown> | undefined;
+            const transition = (effect: Effect.Effect<unknown, unknown>) => {
+              if (inFlight) {
+                Effect.runFork(Fiber.interrupt(inFlight));
+              }
+              inFlight = Effect.runFork(
+                effect.pipe(
+                  Effect.tapErrorCause((cause) => Effect.logError('trigger dispatcher transition failed', cause)),
+                ),
+              );
+            };
             const unsubscribe = registry.subscribe(
               AtomObj.make(space.properties),
               (properties: Obj.Snapshot<SpaceProperties>) => {
                 const computeEnvironment = properties.computeEnvironment ?? 'local';
-                const shouldRunTriggers = computeEnvironment === 'local';
-                if (shouldRunTriggers) {
-                  triggerDispatcher.start().pipe(Effect.runFork);
-                } else {
-                  triggerDispatcher.stop().pipe(Effect.runFork);
-                }
+                transition(computeEnvironment === 'local' ? triggerDispatcher.start() : triggerDispatcher.stop());
               },
               { immediate: true },
             );
-            yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                unsubscribe();
+                if (inFlight) {
+                  Effect.runFork(Fiber.interrupt(inFlight));
+                }
+              }),
+            );
           }),
         )
           .pipe(
