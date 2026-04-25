@@ -16,7 +16,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useMembers, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
@@ -51,9 +51,7 @@ const TranscriptContainer: FC<
       <Transcription model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
-          <SyntaxHighlighter language='json' className='text-sm'>
-            {JSON.stringify(model.toJSON())}
-          </SyntaxHighlighter>
+          <JsonHighlighter data={model.toJSON()} indent={0} classNames='text-sm' />
         </div>
         <Toolbar.Root classNames='justify-end'>
           <IconButton

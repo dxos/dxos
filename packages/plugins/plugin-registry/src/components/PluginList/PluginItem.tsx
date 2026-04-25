@@ -6,6 +6,7 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import {
+  Button,
   type ChromaticPalette,
   Icon,
   IconButton,
@@ -24,7 +25,10 @@ import { type RegistryTagType } from '#types';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
+  /** Ids of plugins currently installed (loaded into the manager). */
   installed?: readonly string[];
+  /** Ids of plugins whose install is in flight. */
+  installing?: readonly string[];
   enabled?: readonly string[];
   /**
    * Derived tags (e.g. `community`, `local`) to display alongside the plugin's own meta.tags.
@@ -33,16 +37,24 @@ export type PluginItemProps = {
   extraTags?: readonly string[];
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;
+  /**
+   * Install handler. When provided and the plugin is not installed, an Install button
+   * is rendered in place of the enable switch.
+   */
+  onInstall?: (id: string) => void;
   hasSettings?: (id: string) => boolean;
   onSettings?: (id: string) => void;
 };
 
 export const PluginItem = ({
   plugin,
+  installed,
+  installing,
   enabled = [],
   extraTags,
   onClick,
   onChange,
+  onInstall,
   hasSettings: hasSettingsProp,
   onSettings,
 }: PluginItemProps) => {
@@ -59,6 +71,9 @@ export const PluginItem = ({
     return Array.from(set);
   }, [tags, extraTags]);
   const isEnabled = enabled.includes(id);
+  const isInstalled = installed ? installed.includes(id) : true;
+  const isInstalling = installing?.includes(id) ?? false;
+  const showInstallButton = !!onInstall && !isInstalled;
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
@@ -70,6 +85,14 @@ export const PluginItem = ({
       onChange?.(id, !isEnabled);
     },
     [id, isEnabled, onChange],
+  );
+
+  const handleInstall = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onInstall?.(id);
+    },
+    [id, onInstall],
   );
 
   const hasSettings = hasSettingsProp?.(id) ?? false;
@@ -130,9 +153,21 @@ export const PluginItem = ({
 
           <div className='grow' />
           <div className='pe-1'>
-            <Input.Root id={inputId}>
-              <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-            </Input.Root>
+            {showInstallButton ? (
+              <Button
+                aria-describedby={descriptionId}
+                density='fine'
+                variant='primary'
+                disabled={isInstalling}
+                onClick={handleInstall}
+              >
+                {isInstalling ? t('installing.label') : t('install.label')}
+              </Button>
+            ) : (
+              <Input.Root id={inputId}>
+                <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
+              </Input.Root>
+            )}
           </div>
         </div>
       </div>

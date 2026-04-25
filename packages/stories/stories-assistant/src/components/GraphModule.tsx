@@ -15,7 +15,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { type ComponentProps } from './types';
@@ -57,7 +57,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
           )}
         >
-          <Json.Data classNames='text-sm' data={filter} />
+          <JsonHighlighter classNames='text-sm' data={filter} />
         </div>
       )}
 

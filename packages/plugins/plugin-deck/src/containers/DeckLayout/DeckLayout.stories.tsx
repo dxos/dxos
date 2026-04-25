@@ -19,7 +19,7 @@ import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { OperationHandler } from '#capabilities';
@@ -188,12 +188,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 <Panel.Root>
                   <Panel.Content className='grid grid-rows-[min-content_1fr]'>
                     {attendableId && <ItemComponent id={attendableId} />}
-                    <Json.Root data={subject}>
-                      <Json.Content>
-                        <Json.Filter />
-                        <Json.Data />
-                      </Json.Content>
-                    </Json.Root>
+                    <Syntax.Root data={subject}>
+                      <Syntax.Content>
+                        <Syntax.Filter />
+                        <Syntax.Viewport>
+                          <Syntax.Code />
+                        </Syntax.Viewport>
+                      </Syntax.Content>
+                    </Syntax.Root>
                   </Panel.Content>
                 </Panel.Root>
               );
@@ -210,16 +212,18 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               }
 
               return (
-                <Json.Root
+                <Syntax.Root
                   data={{
                     primaryItem: companionTo,
                     companion: { data: subject, properties, variant },
                   }}
                 >
-                  <Json.Content>
-                    <Json.Data />
-                  </Json.Content>
-                </Json.Root>
+                  <Syntax.Content>
+                    <Syntax.Viewport>
+                      <Syntax.Code />
+                    </Syntax.Viewport>
+                  </Syntax.Content>
+                </Syntax.Root>
               );
             },
           }),

@@ -6,6 +6,10 @@ on:
 
 name: release-please
 
+permissions:
+  contents: write # Required to tag releases, push merges, and delete branches.
+  pull-requests: write # Required to create release PRs.
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -14,7 +18,7 @@ jobs:
         id: release
         uses: google-github-actions/release-please-action@v3
         with:
-          token: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.GH_DXOS_BOT_PAT }}
           default-branch: ${{ github.ref_name }}
           release-type: node
           command: github-release
@@ -22,7 +26,7 @@ jobs:
       - name: Version Bump
         uses: google-github-actions/release-please-action@v3
         with:
-          token: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.GH_DXOS_BOT_PAT }}
           default-branch: ${{ github.ref_name }}
           release-type: node
           command: manifest-pr
@@ -31,7 +35,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Checkout all branches
-          token: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.GH_DXOS_BOT_PAT }}
 
       - name: Setup Git
         run: |
@@ -102,5 +106,5 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: dawidd6/action-delete-branch@v3
         with:
-          github_token: ${{ secrets.CREATE_PR_TOKEN }}
+          github_token: ${{ secrets.GH_DXOS_BOT_PAT }}
           branches: ${{ github.ref_name }}

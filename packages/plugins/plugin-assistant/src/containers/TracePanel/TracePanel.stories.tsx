@@ -9,24 +9,29 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Database, Feed } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
+import { dbg } from '@dxos/log';
 import { OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { Timeline } from '@dxos/react-ui-components';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
+import { buildExecutionGraph } from './execution-graph';
 import { TracePanel } from './TracePanel';
 
 //
@@ -194,6 +199,43 @@ const DefaultStory = () => {
       </Panel.Content>
     </Panel.Root>
   );
+};
+
+export const WithSnapshot: Story = {
+  render: () => {
+    const [space] = useSpaces();
+    const [feed] = useQuery(space?.db, FeedTraceSink.query);
+    const traceMessages = useQuery(
+      space?.db,
+      feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+    );
+    dbg(traceMessages);
+    const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
+    dbg(commits);
+    return <Timeline branches={branches} commits={commits} showTimestamp />;
+  },
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: ({ client }) =>
+            Effect.promise(async () => {
+              await client.halo.createIdentity();
+              const data = await import('../../testing/data/trace-timeline.dx.json');
+              const space = await client.spaces.import({
+                filename: 'trace-events.dx.json',
+                contents: new TextEncoder().encode(JSON.stringify(data)),
+              });
+              await space.db.flush();
+            }),
+        }),
+      ],
+    }),
+  ],
 };
 
 const meta = {
