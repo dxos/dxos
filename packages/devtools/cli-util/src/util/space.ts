@@ -5,7 +5,6 @@
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { getPersonalSpace } from '@dxos/app-toolkit';
