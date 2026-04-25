@@ -12,7 +12,10 @@ import { Blueprint } from '@dxos/blueprints';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+// Import from the `/types` subpath rather than the package root to avoid
+// loading `MarkdownPlugin.tsx`, which trips on missing capability exports
+// in the `#capabilities` `node` resolution and is not needed for tests.
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { ProfileOf } from '#types';
