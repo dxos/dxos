@@ -108,7 +108,7 @@ export const fetchArticle = async (link: string, options: FetchArticleOptions = 
       throw new Error(`Response too large: ${contentLength} bytes`);
     }
     const html = await readCapped(response, MAX_RESPONSE_BYTES);
-    const article = extractArticle(html, url.toString());
+    const article = await extractArticle(html, url.toString());
     return {
       text: article.markdown,
       imageUrls: article.imageUrls,

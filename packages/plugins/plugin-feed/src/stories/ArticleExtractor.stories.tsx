@@ -46,7 +46,7 @@ const DefaultStory = () => {
         throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
       }
       const html = await response.text();
-      const article = extractArticle(html, url);
+      const article = await extractArticle(html, url);
       setState({ status: 'ok', article, sourceLength: html.length });
     } catch (error) {
       setState({ status: 'error', message: String(error) });
@@ -87,35 +87,36 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical' thin>
-          <ScrollArea.Viewport>
-            <div className='flex flex-col'>
-              <Toolbar.Root>
-                {SAMPLE_URLS.map((sample) => (
-                  <IconButton
-                    key={sample}
-                    icon='ph--link--regular'
-                    label={new URL(sample).hostname}
-                    onClick={() => {
-                      setUrl(sample);
-                      setState({ status: 'idle' });
-                    }}
-                  />
-                ))}
-              </Toolbar.Root>
-              {state.status === 'idle' && (
-                <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
-              )}
-              {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
-              {state.status === 'error' && (
-                <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
-              )}
-              {state.status === 'ok' && (
-                <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
-              )}
-            </div>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        {state.status === 'ok' ? (
+          <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
+        ) : (
+          <ScrollArea.Root orientation='vertical' thin>
+            <ScrollArea.Viewport>
+              <div className='flex flex-col gap-2 p-2'>
+                <Toolbar.Root>
+                  {SAMPLE_URLS.map((sample) => (
+                    <IconButton
+                      key={sample}
+                      icon='ph--link--regular'
+                      label={new URL(sample).hostname}
+                      onClick={() => {
+                        setUrl(sample);
+                        setState({ status: 'idle' });
+                      }}
+                    />
+                  ))}
+                </Toolbar.Root>
+                {state.status === 'idle' && (
+                  <p className='text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
+                )}
+                {state.status === 'loading' && <p className='text-sm text-subdued'>Fetching and extracting…</p>}
+                {state.status === 'error' && (
+                  <pre className='text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
+                )}
+              </div>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        )}
       </Panel.Content>
     </Panel.Root>
   );
@@ -150,9 +151,13 @@ const ResultView = ({ article, sourceLength, showMarkdown }: ResultViewProps) =>
 
   if (showMarkdown) {
     return (
-      <SyntaxHighlighter language='markdown' classNames='m-4 overflow-auto'>
-        {post.content}
-      </SyntaxHighlighter>
+      <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Viewport>
+          <SyntaxHighlighter language='markdown' classNames='m-4'>
+            {post.content}
+          </SyntaxHighlighter>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   }
 

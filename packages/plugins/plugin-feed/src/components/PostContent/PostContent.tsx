@@ -20,8 +20,9 @@ export type PostContentProps = {
 };
 
 /**
- * Shared presentational layout for an article-style post: title, meta line,
- * hero image, optional description, and the Markdown body.
+ * Shared presentational layout for an article-style post.
+ * Render order: title → hero image → Markdown body (`post.content` /
+ * `post.snippet`) → meta line (author · …extra · published).
  */
 export const PostContent = composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {

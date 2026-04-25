@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import Defuddle from 'defuddle/full';
+import Defuddle, { type DefuddleResponse } from 'defuddle/full';
 
 /**
  * Article extracted from a web page: main body content (denoised), plus
@@ -52,23 +52,7 @@ const collectImageUrls = (lead: string | undefined, contentHtml: string): string
   return urls;
 };
 
-/**
- * Extracts the main article from a web page's HTML using `defuddle`.
- * Discards navigation, comments, ads, and other chrome; returns the body
- * as Markdown plus structured metadata.
- *
- * Requires a DOM environment (browser or worker with `DOMParser`); throws
- * otherwise. For Node-side use, import `defuddle/node` directly.
- */
-export const extractArticle = (html: string, url?: string): ExtractedArticle => {
-  if (!html) {
-    return { markdown: '', html: '', imageUrls: [] };
-  }
-  if (!isDocumentParserAvailable()) {
-    throw new Error('extractArticle requires a DOM environment with DOMParser.');
-  }
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const result = new Defuddle(doc, { url, separateMarkdown: true }).parse();
+const mapResult = (result: DefuddleResponse): ExtractedArticle => {
   const lead = result.image || undefined;
   return {
     markdown: result.contentMarkdown ?? '',
@@ -82,4 +66,26 @@ export const extractArticle = (html: string, url?: string): ExtractedArticle => 
     imageUrls: collectImageUrls(lead, result.content ?? ''),
     wordCount: result.wordCount,
   };
+};
+
+/**
+ * Extracts the main article from a web page's HTML using `defuddle`.
+ * Discards navigation, comments, ads, and other chrome; returns the body
+ * as Markdown plus structured metadata.
+ *
+ * Works in both browser/worker (uses `DOMParser`) and Node (delegates to
+ * `defuddle/node`, which uses linkedom). The Node path is loaded lazily so
+ * the linkedom dependency stays out of browser bundles.
+ */
+export const extractArticle = async (html: string, url?: string): Promise<ExtractedArticle> => {
+  if (!html) {
+    return { markdown: '', html: '', imageUrls: [] };
+  }
+  if (isDocumentParserAvailable()) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return mapResult(new Defuddle(doc, { url, separateMarkdown: true }).parse());
+  }
+  // Node path: defuddle/node accepts an HTML string and returns a Promise.
+  const { Defuddle: DefuddleNode } = await import('defuddle/node');
+  return mapResult(await DefuddleNode(html, url, { separateMarkdown: true }));
 };
