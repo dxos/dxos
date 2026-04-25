@@ -4697,15 +4697,25 @@ importers:
 
   packages/core/compute:
     dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
+    devDependencies:
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+
+  packages/core/compute-hyperformula:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -4718,12 +4728,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../functions
-      '@dxos/functions-runtime':
-        specifier: workspace:*
-        version: link:../functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4736,12 +4740,6 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../operation
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../protocols
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8613,6 +8611,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/compute-hyperformula':
+        specifier: workspace:*
+        version: link:../../core/compute-hyperformula
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -12421,6 +12422,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/compute-hyperformula':
+        specifier: workspace:*
+        version: link:../../core/compute-hyperformula
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context

@@ -24,8 +24,8 @@ This single surface subsumes:
 | `@dxos/blueprints` | `Blueprint`, `Prompt`, `Template`                               |
 | `@dxos/functions`  | `Process`, `Trigger`, `TriggerEvent`, `Script`, `Trace`, `ServiceResolver`, `StorageService`, `CredentialsService`, `ExampleHandlers`, services, errors, sdk |
 
-The package also continues to export the existing low-level compute graph
-(HyperFormula) API used by `plugin-sheet`.
+The HyperFormula-based compute graph that previously lived here moved to
+[`@dxos/compute-hyperformula`](../compute-hyperformula).
 
 ## Subpath imports
 

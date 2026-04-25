@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { testFunctionPlugins } from '@dxos/compute/testing';
+import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';

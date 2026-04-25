@@ -57,6 +57,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/compute-hyperformula"
+    },
+    {
       "path": "../../core/conductor"
     },
     {

@@ -45,6 +45,7 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-hyperformula": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",

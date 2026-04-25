@@ -3,24 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import {
-  type CellAddress,
-  type CellRange,
-  type CellScalarValue,
-  type ComputeGraph,
-  type ComputeNode,
-  type ComputeNodeEvent,
-  DetailedCellError,
-  ExportedCellChange,
-  type SimpleCellAddress,
-  type SimpleCellRange,
-  type SimpleDate,
-  type SimpleDateTime,
-  addressFromA1Notation,
-  addressToA1Notation,
-  createSheetName,
-  isFormula,
-} from '@dxos/compute';
+import { type CellAddress, type CellRange, type CellScalarValue, type ComputeGraph, type ComputeNode, type ComputeNodeEvent, DetailedCellError, ExportedCellChange, type SimpleCellAddress, type SimpleCellRange, type SimpleDate, type SimpleDateTime, addressFromA1Notation, addressToA1Notation, createSheetName, isFormula } from '@dxos/compute-hyperformula';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';

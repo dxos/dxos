@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 // Umbrella re-exports of AI compute primitives.
@@ -9,10 +9,3 @@
 export * from '@dxos/operation';
 export * from '@dxos/blueprints';
 export * from '@dxos/functions';
-
-// Low-level compute graph (HyperFormula) API.
-export * from './compute-graph';
-export * from './compute-graph-registry';
-export * from './compute-node';
-export * from './functions';
-export * from './types';

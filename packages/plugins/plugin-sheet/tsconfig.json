@@ -54,6 +54,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/compute-hyperformula"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
