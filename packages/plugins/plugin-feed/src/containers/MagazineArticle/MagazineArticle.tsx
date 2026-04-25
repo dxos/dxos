@@ -6,20 +6,19 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useShowItem } from '@dxos/app-toolkit/ui';
-import { Entity, Obj, Ref } from '@dxos/echo';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useObject } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
-import { type Magazine, type Subscription } from '#types';
+import { type Magazine, Subscription } from '#types';
 
-import { fetchArticle } from '../../util';
+import { fetchArticle, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile } from './MagazineTile';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
@@ -33,27 +32,125 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const currentId = useSelected(id, 'single');
   const [state, setState] = useState<'idle' | 'syncing' | 'curating'>('idle');
   const [error, setError] = useState<string>();
+  const [sort, setSort] = useState<'date' | 'rank'>('date');
+  const [showArchived, setShowArchived] = useState(false);
+  const [onlyStarred, setOnlyStarred] = useState(false);
+  const db = Obj.getDatabase(subject);
+  const starTag = useStarTag(db);
+  // Reactive query of every Subscription.Feed in the space — used to render the source
+  // feed name on each tile without each tile having to subscribe to its own ref.
+  const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+  const feedNamesByDxn = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const feed of allFeeds) {
+      const name = feed.name;
+      if (name) {
+        map.set(Obj.getDXN(feed).toString(), name);
+      }
+    }
+    return map;
+  }, [allFeeds]);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
-  // becomes populated reactively on the next render cycle.
+  // becomes populated reactively on the next render cycle. Also pre-load each
+  // resolved Post's `feed` ref so `MagazineTile` can show the feed name.
   useEffect(() => {
     for (const ref of subject.posts) {
       if (!ref.target) {
         void ref.load().catch((err) => log.catch(err));
+        continue;
+      }
+      const feedRef = ref.target.feed;
+      if (feedRef && !feedRef.target) {
+        void feedRef.load().catch((err) => log.catch(err));
       }
     }
   }, [subject.posts]);
 
-  const posts = useMemo(() => {
-    const resolved: Subscription.Post[] = [];
-    for (const ref of subject.posts) {
-      const target = ref.target;
-      if (target) {
-        resolved.push(target);
+  // When the user removes a feed from the magazine via ObjectProperties, prune any
+  // curated posts whose source feed is no longer present. Posts without a known
+  // source feed (e.g. synced before `Post.feed` was added) are left alone.
+  useEffect(() => {
+    const feedDxns = new Set(subject.feeds.map((ref) => ref.dxn.toString()));
+    const orphanIds = new Set<string>();
+    for (const postRef of subject.posts) {
+      const post = postRef.target;
+      const feedRef = post?.feed;
+      if (!feedRef) {
+        continue;
+      }
+      if (!feedDxns.has(feedRef.dxn.toString())) {
+        orphanIds.add(postRef.dxn.toString());
       }
     }
-    return resolved.reverse();
-  }, [subject.posts]);
+    if (orphanIds.size === 0) {
+      return;
+    }
+    Obj.change(subject, (subject) => {
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(ref.dxn.toString()));
+    });
+  }, [subject, subject.feeds, subject.posts]);
+
+  const posts = useMemo(() => {
+    const resolved: Subscription.Post[] = [];
+    const seenDxn = new Set<string>();
+    const seenLink = new Set<string>();
+    const seenGuid = new Set<string>();
+    for (const ref of subject.posts) {
+      const target = ref.target;
+      if (!target) {
+        continue;
+      }
+      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
+      // same article (distinct Post objects, same `link` / `guid`); without secondary
+      // dedup the masonry shows them as duplicate tiles.
+      const dxn = Obj.getDXN(target).toString();
+      if (seenDxn.has(dxn)) {
+        continue;
+      }
+      if (target.link && seenLink.has(target.link)) {
+        continue;
+      }
+      if (target.guid && seenGuid.has(target.guid)) {
+        continue;
+      }
+      seenDxn.add(dxn);
+      if (target.link) {
+        seenLink.add(target.link);
+      }
+      if (target.guid) {
+        seenGuid.add(target.guid);
+      }
+      resolved.push(target);
+    }
+
+    // Filter archived unless explicitly shown, then optionally filter to starred only.
+    let visible = showArchived ? resolved : resolved.filter((post) => !post.archived);
+    if (onlyStarred) {
+      visible = visible.filter((post) => hasMetaTag(post, starTag));
+    }
+
+    if (sort === 'rank') {
+      // Lower rank = more relevant; posts without rank fall to the bottom.
+      return [...visible].sort((postA, postB) => {
+        const rankA = postA.rank ?? Number.POSITIVE_INFINITY;
+        const rankB = postB.rank ?? Number.POSITIVE_INFINITY;
+        return rankA - rankB;
+      });
+    }
+
+    // Default: most recent first. Parse `published` to a timestamp because RSS feeds
+    // commonly emit RFC 822 strings (e.g. "Mon, 25 Apr 2026 ...") which don't sort
+    // correctly lexicographically. Posts without a parseable date fall to the bottom.
+    const timestamp = (post: Subscription.Post): number => {
+      if (!post.published) {
+        return Number.NEGATIVE_INFINITY;
+      }
+      const ms = Date.parse(post.published);
+      return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
+    };
+    return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
+  }, [subject.posts, sort, showArchived, onlyStarred, starTag]);
 
   const handleCurate = useCallback(async () => {
     if (state !== 'idle') {
@@ -108,7 +205,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       // Writes the extracted body to post.content so PostArticle can render the full article,
       // and picks the first image (if any) as the hero. Failures are logged and non-fatal.
       if (post.link && !post.content) {
-        void fetchArticle(post.link)
+        // In the browser, route through the dev-server CORS proxy. Server-side callers
+        // (e.g. agent operations) pass no proxy and fetch directly.
+        const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
+        void fetchArticle(post.link, { corsProxy })
           .then(({ text, imageUrls }) => {
             const hero = imageUrls[0];
             Obj.change(post, (post) => {
@@ -135,8 +235,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   const tileItems = useMemo(
-    () => posts.map((post) => ({ post, current: post.id === currentId, onOpen: handleOpen })),
-    [posts, currentId, handleOpen],
+    () =>
+      posts.map((post) => ({
+        post,
+        current: post.id === currentId,
+        feedName: post.feed ? feedNamesByDxn.get(post.feed.dxn.toString()) : undefined,
+        onOpen: handleOpen,
+      })),
+    [posts, currentId, handleOpen, feedNamesByDxn],
   );
 
   const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
@@ -153,7 +259,44 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
+          <Toolbar.ToggleGroup
+            type='single'
+            value={sort}
+            onValueChange={(value) => {
+              if (value === 'date' || value === 'rank') {
+                setSort(value);
+              }
+            }}
+          >
+            <Toolbar.ToggleGroupItem value='date' aria-label={t('sort-by-date.label')} title={t('sort-by-date.label')}>
+              <Icon icon='ph--calendar--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+            <Toolbar.ToggleGroupItem value='rank' aria-label={t('sort-by-rank.label')} title={t('sort-by-rank.label')}>
+              <Icon icon='ph--list-numbers--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
+          <Toolbar.ToggleGroup
+            type='single'
+            value={onlyStarred ? 'on' : ''}
+            onValueChange={(value) => setOnlyStarred(value === 'on')}
+          >
+            <Toolbar.ToggleGroupItem value='on' aria-label={t('only-starred.label')} title={t('only-starred.label')}>
+              <Icon icon={onlyStarred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
+          <Toolbar.ToggleGroup
+            type='single'
+            value={showArchived ? 'show' : ''}
+            onValueChange={(value) => setShowArchived(value === 'show')}
+          >
+            <Toolbar.ToggleGroupItem
+              value='show'
+              aria-label={t('show-archived.label')}
+              title={t('show-archived.label')}
+            >
+              <Icon icon='ph--archive--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
           <Toolbar.Separator />
           <Toolbar.IconButton
             label={curateTooltip ?? t('curate.label')}
@@ -190,8 +333,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 };
 
-type TileData = { post: Subscription.Post; current: boolean; onOpen: (post: Subscription.Post) => void };
+type TileData = {
+  post: Subscription.Post;
+  current: boolean;
+  feedName?: string;
+  onOpen: (post: Subscription.Post) => void;
+};
 
 const TileAdapter = ({ data }: { data: TileData; index: number }) => (
-  <MagazineTile post={data.post} current={data.current} onOpen={data.onOpen} />
+  <MagazineTile post={data.post} current={data.current} feedName={data.feedName} onOpen={data.onOpen} />
 );
