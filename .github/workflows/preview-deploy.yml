@@ -57,12 +57,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           wrangler pages deploy preview/packages/apps/composer-app/out/composer \
-            --project-name composer-app \
+            --project-name composer \
             --branch "${{ steps.meta.outputs.branch_alias }}" \
             | tee deploy.log
-          URL=$(grep -Eo 'https://[a-z0-9-]+\.composer-app\.pages\.dev' deploy.log | head -n1)
+          URL=$(grep -Eo 'https://[a-z0-9-]+\.composer\.pages\.dev' deploy.log | head -n1)
           echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "alias=https://${{ steps.meta.outputs.branch_alias }}.composer-app.pages.dev" >> $GITHUB_OUTPUT
+          echo "alias=https://${{ steps.meta.outputs.branch_alias }}.composer.pages.dev" >> $GITHUB_OUTPUT
 
       - name: Comment preview URL on PR
         uses: marocchino/sticky-pull-request-comment@v2
