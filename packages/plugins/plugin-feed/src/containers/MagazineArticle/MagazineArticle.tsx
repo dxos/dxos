@@ -319,7 +319,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
               <Masonry.Viewport
                 classNames='py-2'
                 items={tileItems}
-                getId={(data) => Obj.getDXN(data.post).toString()}
+                getId={(data) => (data?.post ? Obj.getDXN(data.post).toString() : '')}
               />
             </Masonry.Content>
           </Masonry.Root>
@@ -341,6 +341,13 @@ type TileData = {
   onOpen: (post: Subscription.Post) => void;
 };
 
-const TileAdapter = ({ data }: { data: TileData; index: number }) => (
-  <MagazineTile post={data.post} current={data.current} feedName={data.feedName} onOpen={data.onOpen} />
-);
+// `data` is occasionally undefined while VirtuosoMasonry transitions between
+// item arrays (e.g. toggling the only-starred filter shrinks the list and the
+// virtualizer briefly requests an out-of-range index). Render nothing in that
+// case rather than crashing the plank.
+const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
+  if (!data?.post) {
+    return null;
+  }
+  return <MagazineTile post={data.post} current={data.current} feedName={data.feedName} onOpen={data.onOpen} />;
+};

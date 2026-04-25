@@ -81,13 +81,19 @@ type PostTileData = {
 type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | 'current'>;
 
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
-  const { post } = data;
+  const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
   const { t } = useTranslation(Subscription.Post.typename);
 
   const handleCurrentChange = useCallback(() => {
-    setCurrentId(post.id);
-  }, [post.id, setCurrentId]);
+    if (post) {
+      setCurrentId(post.id);
+    }
+  }, [post, setCurrentId]);
+
+  if (!post) {
+    return null;
+  }
 
   const published = post.published ? new Date(post.published).toLocaleDateString() : undefined;
 
