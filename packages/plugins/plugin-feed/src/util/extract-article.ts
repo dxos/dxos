@@ -52,10 +52,59 @@ const collectImageUrls = (lead: string | undefined, contentHtml: string): string
   return urls;
 };
 
+/**
+ * Trailing markdown headings that signal end-of-article boilerplate (tag
+ * clouds, "related" rails, "more from this site" lists). Defuddle's content-
+ * pattern removal misses these on some sites — notably theregister.com's
+ * "Narrower topics" / "Broader topics" tag lists.
+ */
+const TRAILING_BOILERPLATE_HEADINGS = [
+  /narrower topics/i,
+  /broader topics/i,
+  /^related(\s+(articles|topics|posts|stories|reading))?$/i,
+  /^more (from|on)\b/i,
+  /^similar (articles|posts|stories)\b/i,
+  /^you (might|may) (also|like)\b/i,
+  /^topics\b/i,
+  /^tags\b/i,
+];
+
+/**
+ * Strip trailing boilerplate sections from the markdown body. Walks lines
+ * from the end and truncates at the earliest heading whose text matches a
+ * known boilerplate label. Only trims trailing sections — boilerplate-shaped
+ * headings inside the article body are left alone.
+ */
+const trimTrailingBoilerplate = (markdown: string): string => {
+  if (!markdown) {
+    return markdown;
+  }
+  const lines = markdown.split('\n');
+  let truncateAt: number | undefined;
+  for (let index = lines.length - 1; index >= 0; index--) {
+    const headingMatch = /^#{1,6}\s+(.*?)\s*$/.exec(lines[index]);
+    if (!headingMatch) {
+      continue;
+    }
+    const text = headingMatch[1].trim();
+    if (TRAILING_BOILERPLATE_HEADINGS.some((pattern) => pattern.test(text))) {
+      truncateAt = index;
+    } else {
+      // Hit a non-boilerplate heading scanning back from the end → article
+      // body resumes here, stop walking.
+      break;
+    }
+  }
+  if (truncateAt === undefined) {
+    return markdown;
+  }
+  return lines.slice(0, truncateAt).join('\n').trimEnd();
+};
+
 const mapResult = (result: DefuddleResponse): ExtractedArticle => {
   const lead = result.image || undefined;
   return {
-    markdown: result.contentMarkdown ?? '',
+    markdown: trimTrailingBoilerplate(result.contentMarkdown ?? ''),
     html: result.content ?? '',
     title: result.title || undefined,
     author: result.author || undefined,
