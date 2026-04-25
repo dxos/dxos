@@ -37,6 +37,8 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     [journalSnapshot],
   );
 
+  const hasTodayEntry = useMemo(() => entryRefs.some(({ dateKey }) => dateKey === getDateString()), [entryRefs]);
+
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
       return;
@@ -65,6 +67,11 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
             autoFocus={i === entryRefs.length - 1}
           />
         ))}
+        {entryRefs.length > 0 && !hasTodayEntry && (
+          <div className='p-2'>
+            <IconButton label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
+          </div>
+        )}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

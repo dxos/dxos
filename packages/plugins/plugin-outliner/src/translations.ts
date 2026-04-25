@@ -42,6 +42,7 @@ export const translations = [
 
         'meeting-notes.label': 'Notes',
         'today.label': 'Today',
+        'start-today.label': "Start today's entry",
         'toggle-calendar.label': 'Toggle calendar',
 
         'quick-entry.label': 'Add journal entry',
