@@ -15,8 +15,15 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { meta } from '#meta';
 import { type Magazine } from '#types';
 
+/** Props for the {@link MagazineProperties} object-properties surface. */
 export type MagazinePropertiesProps = AppSurface.ObjectPropertiesProps<Magazine.Magazine>;
 
+/**
+ * Object-properties surface for {@link Magazine.Magazine}: edits the long-form
+ * `instructions` Text (`magazine.instructions.target.content`) inline as markdown.
+ * The `instructions` field is hidden from the auto-generated form via
+ * `FormInputAnnotation.set(false)`, so this surface owns its rendering.
+ */
 export const MagazineProperties = ({ subject: magazine }: MagazinePropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const instructions = useAtomValue(AtomRef.make(magazine.instructions));
@@ -28,7 +35,7 @@ export const MagazineProperties = ({ subject: magazine }: MagazinePropertiesProp
     [instructions, magazine.id],
   );
   const extension = useBasicMarkdownExtensions({
-    basic: { placeholder: t('instructions.placeholder') },
+    placeholder: t('instructions.placeholder'),
     extensions: dataExtensions,
   });
 

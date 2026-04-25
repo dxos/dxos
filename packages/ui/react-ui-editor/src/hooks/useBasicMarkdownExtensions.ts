@@ -7,10 +7,6 @@ import { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
-  type BasicExtensionsOptions,
-  type DecorateOptions,
-  type MarkdownBundleOptions,
-  type ThemeExtensionsOptions,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -18,42 +14,42 @@ import {
 } from '@dxos/ui-editor';
 
 export type UseBasicMarkdownExtensionsOptions = {
-  /** Options forwarded to {@link createBasicExtensions}. */
-  basic?: BasicExtensionsOptions;
-  /** Options forwarded to {@link createThemeExtensions}; `themeMode` is supplied by {@link useThemeContext}. */
-  theme?: Omit<ThemeExtensionsOptions, 'themeMode'>;
-  /** Options forwarded to {@link createMarkdownExtensions}. */
-  markdown?: MarkdownBundleOptions;
-  /** Options forwarded to {@link decorateMarkdown}; pass `false` to disable decoration. */
-  decorate?: DecorateOptions | false;
-  /** Extra extensions appended to the returned array (e.g., per-instance data binding). */
+  /** Placeholder text shown when the editor is empty. */
+  placeholder?: string;
+  /** Disables markdown visual decorations. Defaults to enabled. */
+  decorate?: boolean;
+  /**
+   * Extra extensions appended to the returned array.
+   * Callers must memoize this array — it is used as a dependency of {@link useMemo}.
+   */
   extensions?: Extension[];
 };
 
 /**
  * Returns the standard CodeMirror extension stack for an inline markdown editor:
- * basic editor behaviors, themed syntax highlighting (theme mode read from React context),
+ * basic editor behaviors, themed syntax highlighting (theme mode read from {@link useThemeContext}),
  * markdown parsing, and visual decorations.
  *
  * Used by surfaces such as `AgentProperties` and `MagazineProperties` to render the
  * `instructions` field of an object as a small editable markdown block.
+ *
+ * The memoization depends on primitive option values plus the `extensions` array reference,
+ * so callers passing fresh option literals each render still hit the cache.
  */
 export const useBasicMarkdownExtensions = ({
-  basic,
-  theme,
-  markdown,
-  decorate,
+  placeholder,
+  decorate = true,
   extensions,
 }: UseBasicMarkdownExtensionsOptions = {}): Extension[] => {
   const { themeMode } = useThemeContext();
   return useMemo(
     () => [
-      createBasicExtensions(basic),
-      createThemeExtensions({ syntaxHighlighting: true, ...theme, themeMode }),
-      createMarkdownExtensions(markdown),
-      ...(decorate === false ? [] : [decorateMarkdown(decorate || undefined)]),
+      createBasicExtensions({ placeholder }),
+      createThemeExtensions({ syntaxHighlighting: true, themeMode }),
+      createMarkdownExtensions(),
+      ...(decorate ? [decorateMarkdown()] : []),
       ...(extensions ?? []),
     ],
-    [basic, theme, themeMode, markdown, decorate, extensions],
+    [placeholder, themeMode, decorate, extensions],
   );
 };

@@ -109,7 +109,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
     [instructions, agent.id],
   );
   const extension = useBasicMarkdownExtensions({
-    basic: { placeholder: t('instructions.placeholder') },
+    placeholder: t('instructions.placeholder'),
     extensions: dataExtensions,
   });
 
