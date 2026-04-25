@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { PublicKey, useClient, useMulticastObservable } from '@dxos/react-client';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToString, deepMapValues } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
@@ -20,7 +20,7 @@ export const EdgeDashboardPanel = () => {
 
   return (
     <PanelContainer classNames='flex-1 flex-row'>
-      <SyntaxHighlighter language='json'>{JSON.stringify(formatData(serviceCredentials), null, 2)}</SyntaxHighlighter>
+      <JsonHighlighter data={formatData(serviceCredentials)} />
     </PanelContainer>
   );
 };

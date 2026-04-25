@@ -10,7 +10,7 @@ import { type Database, Filter, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export const DebugSpaceObjectsPanel = () => {
   const space = useActiveSpace();
@@ -46,7 +46,7 @@ const DebugSpaceObjectsPanelMain = ({ database }: { database: Database.Database 
                 <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
-            {selectedObject && <Json.Data classNames='p-1' data={selectedObject} />}
+            {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
           </Grid>
         </Panel.Content>
       </Panel.Root>

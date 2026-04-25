@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composableProps, slottable } from '@dxos/ui-theme';
 
 type TestLayoutProps = PropsWithChildren<{ json?: any }>;
@@ -15,12 +15,14 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
     <div role='none' className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
       <TestPanel>{children}</TestPanel>
       <TestPanel>
-        <Json.Root data={json}>
-          <Json.Content>
-            <Json.Filter />
-            <Json.Data testId='debug' classNames='text-xs' />
-          </Json.Content>
-        </Json.Root>
+        <Syntax.Root data={json}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code testId='debug' classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       </TestPanel>
     </div>
   );

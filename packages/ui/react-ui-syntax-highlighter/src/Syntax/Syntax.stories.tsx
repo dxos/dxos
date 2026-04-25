@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -7,8 +7,9 @@ import React from 'react';
 
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
 
-import { Json } from './Json';
+import { Syntax } from './Syntax';
 
 random.seed(0);
 
@@ -34,7 +35,6 @@ const createNode = () => {
         break;
     }
   });
-
   return data;
 };
 
@@ -42,30 +42,16 @@ const createData = ({ depth = 2, children = 3 } = {}): any => {
   const createChildren = (root: any, d = 0) => {
     if (d < depth) {
       const num = random.number.int({ min: 1, max: Math.round(Math.log(depth + 1 - d) * children) });
-      root.children = [...new Array(num)].map(() => {
-        return createChildren(createNode(), d + 1);
-      });
+      root.children = [...new Array(num)].map(() => createChildren(createNode(), d + 1));
     }
-
     return root;
   };
-
   return createChildren(createNode());
 };
 
-const createCycle = () => {
-  const data: any = {
-    a: 1,
-    b: [],
-  };
-
-  data.b.push(data);
-  return data;
-};
-
 const meta = {
-  title: 'ui/react-ui-syntax-highlighter/Json',
-  component: Json.Root,
+  title: 'ui/react-ui-syntax-highlighter/Syntax',
+  component: Syntax.Root,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta;
 
@@ -73,34 +59,41 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Standalone Json.Data — simplest usage. */
-export const Default: Story = {
-  render: (args) => <Json.Data {...args} />,
-  args: {
-    data: createData(),
-  },
-};
-
-/** Circular reference handling. */
-export const Cycle: Story = {
-  render: (args) => <Json.Data {...args} />,
-  args: {
-    data: createCycle(),
-  },
-};
-
-/** Large dataset with replacer. */
-export const Filter: Story = {
+/** JSON composite with filter and scrolling viewport. */
+export const Json: Story = {
   render: (args) => (
-    <Json.Root {...args}>
-      <Json.Content>
-        <Json.Filter />
-        <Json.Data />
-      </Json.Content>
-    </Json.Root>
+    <Syntax.Root {...args}>
+      <Syntax.Content>
+        <Syntax.Filter />
+        <Syntax.Viewport>
+          <Syntax.Code />
+        </Syntax.Viewport>
+      </Syntax.Content>
+    </Syntax.Root>
   ),
   args: {
     data: createData({ depth: 5 }),
     replacer: { maxDepth: 3, maxArrayLen: 10, maxStringLen: 10 },
-  },
+  } as any,
+};
+
+/** Text composite (TypeScript source) with scrolling viewport and no filter. */
+export const Text: Story = {
+  render: (args) => (
+    <Syntax.Root {...args}>
+      <Syntax.Viewport>
+        <Syntax.Code />
+      </Syntax.Viewport>
+    </Syntax.Root>
+  ),
+  args: {
+    language: 'tsx',
+    source: trim`
+      import React from 'react'
+
+      const Test = () => {
+        return <div>Test</div>
+      }
+    `,
+  } as any,
 };

@@ -8,7 +8,7 @@ import { Format } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
@@ -81,8 +81,6 @@ export type ObjectDataViewerProps = {
 };
 
 const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
-  const text = JSON.stringify(object, null, 2);
-
   const rowRenderer = ({
     rows,
     stylesheet,
@@ -103,11 +101,7 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
     });
   };
 
-  return (
-    <SyntaxHighlighter language='json' renderer={rowRenderer}>
-      {text}
-    </SyntaxHighlighter>
-  );
+  return <JsonHighlighter data={object} renderer={rowRenderer} />;
 };
 
 interface rendererNode {
