@@ -7,7 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj, Relation, Type } from '@dxos/echo';
+import { Obj, Ref as RefSchema, Relation, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
@@ -181,6 +181,79 @@ describe('Integration tests', () => {
     expect(objects.length).toBe(1);
     expect(objects[0].name).toBe('Alice');
     expect(objects[0].id).toBe(person.id);
+  });
+
+  test('2 clients - parent reactive update when sibling adds new ref to record property', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+
+    // Journal-like schema: parent has a record of refs, like Journal.entries.
+    const Entry = Schema.Struct({
+      text: Schema.String,
+    }).pipe(
+      Type.object({
+        typename: 'com.example.test.entry',
+        version: '0.1.0',
+      }),
+    );
+    const Parent = Schema.Struct({
+      entries: Schema.Record({ key: Schema.String, value: RefSchema.Ref(Entry) }),
+    }).pipe(
+      Type.object({
+        typename: 'com.example.test.parent',
+        version: '0.1.0',
+      }),
+    );
+
+    await using peer = await builder.createPeer({
+      types: [Parent, Entry],
+    });
+
+    // Client 1 creates the database with a parent object (empty entries record).
+    await using db1 = await peer.createDatabase(spaceKey);
+    const parentInitial = db1.add(makeObject(Parent, { entries: {} }));
+    await db1.flush();
+
+    // Client 2 opens the same database.
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, {
+      client: client2,
+    });
+
+    // Both clients have the parent loaded (mimics the main app showing the journal,
+    // and the spotlight client also having queried the journal).
+    const [parent1] = await db1.query(Filter.type(Parent)).run();
+    const [parent2] = await db2.query(Filter.type(Parent)).run();
+    expect(parent1.id).toBe(parentInitial.id);
+    expect(parent2.id).toBe(parentInitial.id);
+
+    // Subscribe to parent1 to detect when its entries record changes reactively.
+    const parent1Updated = new Trigger();
+    const unsubscribe = Obj.subscribe(parent1, () => {
+      if (Object.keys(parent1.entries).length > 0) {
+        parent1Updated.wake();
+      }
+    });
+
+    // Client 2 simulates the journal quick entry flow: adds a new entry to db
+    // and updates the parent's entries record to reference it.
+    const newEntry = db2.add(makeObject(Entry, { text: 'new entry' }));
+    Obj.change(parent2, (parent2) => {
+      parent2.entries['key1'] = Ref.make(newEntry);
+    });
+    await db2.flush();
+
+    // Client 1 should reactively notice the parent's entries record has changed.
+    await asyncTimeout(parent1Updated.wait(), 2000);
+    unsubscribe();
+
+    // Verify the parent's entries on client 1 includes the new entry.
+    expect(Object.keys(parent1.entries)).toContain('key1');
+
+    // Verify the new entry is loadable on client 1 (auto-loaded via the link).
+    const entryRef = parent1.entries['key1'];
+    await expect.poll(() => db1.getObjectById(newEntry.id), { timeout: 5000 }).toBeDefined();
+    const loadedEntry = await entryRef.load();
+    expect(loadedEntry.text).toBe('new entry');
   });
 
   // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
