@@ -59,13 +59,7 @@ type ConnectionEntry = {
 };
 
 /**
- * {@link NetworkAdapter} that bridges DXOS replicators (e.g. edge replicator, mesh replicator)
- * to automerge-repo's {@link Repo}.
- *
- * Carries both the subduction byte tunnel and the collection-sync control plumbing
- * (sync-request / sync-state messages, share-policy passthroughs, bundle-sync).
- * The two coexist on the same adapter: Subduction filters by `type === 'subduction-connection'`
- * so sync-request / sync-state never leak into sedimentree storage.
+ * Manages a set of {@link AutomergeReplicator} instances.
  */
 export class EchoNetworkAdapter extends NetworkAdapter {
   private readonly _replicators = new Set<AutomergeReplicator>();
