@@ -36,12 +36,12 @@ export const translations = [
         'plugin.name': 'Outliner',
         'delete-object.label': 'Delete object',
         'create-outline.label': 'Create outline',
-        'create-entry.label': 'Create entry',
         'text.placeholder': 'Enter text...',
         'menu.label': 'Menu',
 
         'meeting-notes.label': 'Notes',
         'today.label': 'Today',
+        'start-today.label': "Start today's entry",
         'toggle-calendar.label': 'Toggle calendar',
 
         'quick-entry.label': 'Add journal entry',
