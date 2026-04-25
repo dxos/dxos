@@ -21,7 +21,7 @@ export const App: FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
   const update = async () => {
     // https://octokit.github.io/rest.js/v19#actions-download-workflow-run-attempt-logs
     const {
-      data: { workflow_runs: items = [] },
+      data: { workflow_runs: items },
     } = await octokit.rest.actions.listWorkflowRunsForRepo({ owner, repo });
 
     setItems(items);
