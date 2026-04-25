@@ -19,7 +19,8 @@ export type MagazineTileProps = {
 export const MagazineTile = ({ post, current, onOpen }: MagazineTileProps) => {
   const read = Boolean(post.readAt);
   const date = formatDate(post.published);
-  const metaParts = [post.author, date].filter((value): value is string => Boolean(value));
+  const feedName = post.feed?.target?.name;
+  const metaParts = [post.author, feedName, date].filter((value): value is string => Boolean(value));
   const tags = post.tags ?? [];
 
   const handleClick = useCallback(() => {

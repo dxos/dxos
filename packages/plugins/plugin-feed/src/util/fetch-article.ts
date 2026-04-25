@@ -73,6 +73,15 @@ export type FetchArticleResult = {
   imageUrls: string[];
 };
 
+export type FetchArticleOptions = {
+  /**
+   * URL prefix for a server-side fetch proxy used to bypass browser CORS.
+   * The target URL is appended (URL-encoded). E.g. `'/api/rss?url='`.
+   * When omitted, the article is fetched directly.
+   */
+  corsProxy?: string;
+};
+
 /**
  * Fetches a post's article page over HTTP and returns extracted plain text
  * plus any image URLs found. Applies protocol validation, a fetch timeout,
@@ -81,10 +90,11 @@ export type FetchArticleResult = {
  * Wraps the original error as `cause` so callers can distinguish
  * AbortError (timeout) from network/fetch failures.
  */
-export const fetchArticle = async (link: string): Promise<FetchArticleResult> => {
+export const fetchArticle = async (link: string, options: FetchArticleOptions = {}): Promise<FetchArticleResult> => {
   try {
     const url = validateUrl(link);
-    const response = await fetch(url.toString(), {
+    const fetchTarget = options.corsProxy ? `${options.corsProxy}${encodeURIComponent(url.toString())}` : url.toString();
+    const response = await fetch(fetchTarget, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       redirect: 'follow',
     });

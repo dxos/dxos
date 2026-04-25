@@ -11,7 +11,7 @@ import { Entity, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useShowItem } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -33,6 +33,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const currentId = useSelected(id, 'single');
   const [state, setState] = useState<'idle' | 'syncing' | 'curating'>('idle');
   const [error, setError] = useState<string>();
+  const [sort, setSort] = useState<'date' | 'rank'>('date');
+  const [showArchived, setShowArchived] = useState(false);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle.
@@ -52,8 +54,22 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         resolved.push(target);
       }
     }
-    return resolved.reverse();
-  }, [subject.posts]);
+
+    // Filter archived unless explicitly shown.
+    const visible = showArchived ? resolved : resolved.filter((post) => !post.archived);
+
+    if (sort === 'rank') {
+      // Lower rank = more relevant; posts without rank fall to the bottom.
+      return [...visible].sort((postA, postB) => {
+        const rankA = postA.rank ?? Number.POSITIVE_INFINITY;
+        const rankB = postB.rank ?? Number.POSITIVE_INFINITY;
+        return rankA - rankB;
+      });
+    }
+
+    // Default: most recent first by published date, fall back to insertion order.
+    return [...visible].sort((postA, postB) => (postB.published ?? '').localeCompare(postA.published ?? ''));
+  }, [subject.posts, sort, showArchived]);
 
   const handleCurate = useCallback(async () => {
     if (state !== 'idle') {
@@ -108,7 +124,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       // Writes the extracted body to post.content so PostArticle can render the full article,
       // and picks the first image (if any) as the hero. Failures are logged and non-fatal.
       if (post.link && !post.content) {
-        void fetchArticle(post.link)
+        // In the browser, route through the dev-server CORS proxy. Server-side callers
+        // (e.g. agent operations) pass no proxy and fetch directly.
+        const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
+        void fetchArticle(post.link, { corsProxy })
           .then(({ text, imageUrls }) => {
             const hero = imageUrls[0];
             Obj.change(post, (post) => {
@@ -155,6 +174,35 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         <Toolbar.Root>
           <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
           <Toolbar.Separator />
+          <Toolbar.ToggleGroup
+            type='single'
+            value={sort}
+            onValueChange={(value) => {
+              if (value === 'date' || value === 'rank') {
+                setSort(value);
+              }
+            }}
+          >
+            <Toolbar.ToggleGroupItem value='date' aria-label={t('sort-by-date.label')} title={t('sort-by-date.label')}>
+              <Icon icon='ph--calendar--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+            <Toolbar.ToggleGroupItem value='rank' aria-label={t('sort-by-rank.label')} title={t('sort-by-rank.label')}>
+              <Icon icon='ph--list-numbers--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
+          <Toolbar.ToggleGroup
+            type='single'
+            value={showArchived ? 'show' : ''}
+            onValueChange={(value) => setShowArchived(value === 'show')}
+          >
+            <Toolbar.ToggleGroupItem
+              value='show'
+              aria-label={t('show-archived.label')}
+              title={t('show-archived.label')}
+            >
+              <Icon icon='ph--archive--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
           <Toolbar.IconButton
             label={curateTooltip ?? t('curate.label')}
             icon={state === 'idle' ? 'ph--sparkle--regular' : 'ph--circle-notch--regular'}
