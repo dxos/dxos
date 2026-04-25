@@ -58,19 +58,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
-      "operations": [
-        "dist/types/src/operations/index.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
