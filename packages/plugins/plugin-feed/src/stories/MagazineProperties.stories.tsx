@@ -81,38 +81,29 @@ type Story = StoryObj<typeof meta>;
  * Default Magazine ObjectProperties — exercises the auto-generated form,
  * including the markdown editor for `instructions` and the Feeds picker.
  *
- * Repro for "can't add a feed in MagazineProperties":
- * 1. Open the Feeds combobox.
- * 2. Either pick an existing feed, or fill out the inline create form to add a new one.
- * 3. Verify the feed appears in the magazine's feeds array (currently broken — does not persist).
+ * Manual flow:
+ *  1. Open the Feeds combobox.
+ *  2. Either pick an existing feed, or fill out the inline create form to add
+ *     a new one.
+ *  3. The new feed appears in the magazine's feeds array.
  */
 export const Default: Story = {};
 
 /**
- * Demonstrates the create-feed bug end-to-end as a play interaction.
+ * Drives the inline create-feed flow end-to-end and verifies the picker
+ * dismisses after a successful Save.
  *
- * Steps the play executes:
- *  1. Click the Feeds "Add" (+) button to open an empty array slot.
+ * Steps:
+ *  1. Click the Feeds "Add" (+) button to materialise an empty array slot.
  *  2. Click the slot's combobox trigger to open the picker.
  *  3. Type a query that doesn't match any existing feed.
- *  4. Click the "Create new" item, which switches the picker to the inline form.
+ *  4. Click the "Create new" item, switching the picker to the inline form.
  *  5. Fill `name` and `url`, then click Save.
  *
- * Expected behavior (currently broken — see assertions at the end):
- *  - The inline create form should close and the popover should dismiss.
- *  - The new feed should be persisted AND wired into `magazine.feeds[0]`.
- *
- * Why it's broken (for context, not part of the play):
- *  - `Subscription.Feed` requires a backing `feed: Ref.Ref(EchoFeed.Feed)` ref
- *    — the proper factory is `Subscription.makeFeed`, not the generic
- *    `Obj.make(schema, values)` path the picker takes. Schema validation can
- *    therefore fail silently, leaving the form open.
- *  - Even if the create succeeded, `ObjectProperties.handleCreate` only
- *    special-cases Tag.Tag (it pushes the new tag DXN onto `meta.tags`); for
- *    any other type it adds the object to the DB but never assigns the new
- *    Ref to the array slot's form value, so the slot stays empty.
- *  - `ObjectPicker`'s `onCreate(values)` callback drops the form path, so
- *    `ObjectProperties` couldn't update the right slot even if it wanted to.
+ * Final assertion: the create form is gone. (`Subscription.Feed`'s required
+ * backing-feed ref is supplied by `FactoryAnnotation` → `makeFeed`, hidden
+ * fields are stripped by `omitHiddenFormFields`, and `RefField` writes the
+ * new ref into the slot via `onValueChange` before dismissing the popover.)
  */
 export const CreateFeed: Story = {
   play: async ({ canvasElement }) => {
@@ -162,9 +153,12 @@ export const CreateFeed: Story = {
     // Allow any async state updates to flush.
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // EXPECTED (currently broken — see comment above): after Save the create form
-    // should be gone and `magazine.feeds[0]` should reference the new feed. The
-    // play stops here without asserting so CI stays green; observe the persisting
-    // form and empty array slot manually in the Storybook interactions panel.
+    // After Save: the create form is dismissed. Asserting on the underlying
+    // `magazine.feeds` array would require a `withClientProvider` debug-symbol
+    // hook on this story — that's covered by the unit tests in
+    // `react-ui-form/.../ObjectProperties.test.tsx` (Note schema mirrors Feed's
+    // shape: hidden required Ref + factory). Here we just verify the visible
+    // dismissal.
+    await expect(body.queryByTestId('create-referenced-object-form')).not.toBeInTheDocument();
   },
 };

@@ -52,16 +52,13 @@ const Article = Schema.Struct({
 type Article = Schema.Schema.Type<typeof Article>;
 
 //
-// `Note` mirrors the `Subscription.Feed` shape: a required field
-// (`signature`) is hidden from the form via `FormInputAnnotation.set(false)`,
+// `Note` mirrors the `Subscription.Feed` shape: a required `Ref` field
+// (`backing`) is hidden from the form via `FormInputAnnotation.set(false)`,
 // so `Obj.make(Note, values)` from the picker would reject because the form
-// values can't satisfy the schema. A `FactoryAnnotation` supplies the hidden
-// field at construction time.
+// values can't satisfy the schema. A `FactoryAnnotation` constructs the
+// backing object and links it at create time. `cursor` is an optional hidden
+// field included to exercise the same path for non-required hidden fields.
 //
-
-// Mirrors the shape of `Subscription.Feed`: a required hidden field whose
-// value is a `Ref` to a backing object, plus an optional hidden field. The
-// factory must construct the backing object and link it.
 const NoteBacking = Schema.Struct({}).pipe(Type.object({ typename: 'org.dxos.test.note-backing', version: '0.1.0' }));
 type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
 
@@ -321,14 +318,14 @@ export const CreateRefArrayPlay: Story = {
 
 /**
  * Ref-array creation against a schema with a hidden required field. `Note`
- * mirrors the shape of `Subscription.Feed`: the form omits `signature` (it's
- * `FormInputAnnotation.set(false)`) but the schema requires it. Without
- * `omitHiddenFormFields` + `FactoryAnnotation`, the form's validator would
- * reject Save and the popover would never close.
+ * mirrors the shape of `Subscription.Feed`: the form omits `backing` (a
+ * required `Ref` annotated `FormInputAnnotation.set(false)`) but the schema
+ * requires it. Without `omitHiddenFormFields` + `FactoryAnnotation`, the
+ * form's validator would reject Save and the popover would never close.
  *
  * Expected end-state after the fix:
- *   - new Note exists in DB with a synthesised `signature`
- *   - `notebook.notes[0]` references it
+ *   - new Note exists in DB with a synthesised `backing` ref
+ *   - `notebook.notes[0]` references the new Note
  *   - the create form is gone
  */
 export const CreateHiddenFieldPlay: Story = {
