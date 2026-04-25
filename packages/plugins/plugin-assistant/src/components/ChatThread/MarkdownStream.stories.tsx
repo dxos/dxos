@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
@@ -145,7 +145,7 @@ const DefaultStory = ({
   }, [controller]);
 
   return (
-    <Panel.Root style={{ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties}>
+    <Panel.Root data-hue={userHue}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.IconButton
@@ -244,6 +244,23 @@ export const Thinking: Story = {
 };
 
 /**
+ * Splits a fixture at the first `</prompt>` so the prompt can be pre-loaded as initialContent
+ * (matching production: user prompts are submitted whole and never streamed) while the assistant
+ * body is streamed. Keeps the streaming-tail XML scan focused on the tags it is meant for
+ * (`<reasoning>`, `<status>`) instead of accumulating widgets for an unclosed `<prompt>`.
+ */
+const splitPromptAndBody = (markdown: string): { prompt: string; body: string } => {
+  const closing = '</prompt>';
+  const idx = markdown.indexOf(closing);
+  if (idx === -1) {
+    return { prompt: '', body: markdown };
+  }
+  return { prompt: markdown.slice(0, idx + closing.length), body: markdown.slice(idx + closing.length) };
+};
+
+const REASONING_PARTS = splitPromptAndBody(REASONING);
+
+/**
  * Streams a reasoning block whose body contains a numbered list — exercises the streaming-tail XML
  * scan as `<reasoning>` opens, accumulates list-marker lines like `"1. "`, and finally closes. Use
  * this to visually verify that the reasoning widget renders cleanly without duplicate opening tags
@@ -252,7 +269,8 @@ export const Thinking: Story = {
 export const Reasoning: Story = {
   args: {
     registry: componentRegistry,
-    content: REASONING,
+    initialContent: REASONING_PARTS.prompt,
+    content: REASONING_PARTS.body,
     options: {
       autoScroll: true,
       wire: true,
