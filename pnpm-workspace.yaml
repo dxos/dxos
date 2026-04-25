@@ -366,6 +366,7 @@ catalog:
   debounce: ^2.2.0
   debug: ^4.3.4
   deep-equal: ^2.2.3
+  defuddle: ^0.18.1
   del: ^5.1.0
   depcheck: ^1.4.7
   dfx: ^0.127.0
