@@ -18,6 +18,15 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keyboard"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -37,6 +46,12 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-assistant"

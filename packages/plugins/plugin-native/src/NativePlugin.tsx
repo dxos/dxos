@@ -6,12 +6,14 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AssistantEvents } from '@dxos/plugin-assistant';
 
-import { Ollama, SpotlightListener, Updater } from '#capabilities';
+import { NativeSettings, Ollama, ReactSurface, SpotlightListener, Updater } from '#capabilities';
 import { meta } from '#meta';
 
 import { translations } from './translations';
 
 export const NativePlugin = Plugin.define(meta).pipe(
+  AppPlugin.addSettingsModule({ activate: NativeSettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'spotlight-listener',

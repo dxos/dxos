@@ -14,6 +14,13 @@ export const translations = [
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Update',
         'update.alt': 'Relaunch the app to update',
+        'settings.title': 'Native',
+        'settings.spotlight-shortcut.label': 'Spotlight shortcut',
+        'settings.spotlight-shortcut.description':
+          'Global keyboard shortcut to toggle the spotlight quick-access window. Click record and press the desired key combination.',
+        'settings.spotlight-shortcut.placeholder': 'Press a key combination…',
+        'settings.spotlight-shortcut.record.label': 'Record',
+        'settings.spotlight-shortcut.cancel.label': 'Cancel',
       },
     },
   },

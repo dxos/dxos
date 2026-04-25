@@ -89,6 +89,13 @@ pub fn run() {
         }
     };
 
+    // Track the currently registered spotlight shortcut so we can swap it at runtime.
+    #[cfg(target_os = "macos")]
+    let builder = {
+        use std::sync::Mutex;
+        builder.manage(Mutex::new(spotlight::SpotlightConfig::default().shortcut))
+    };
+
     // Configure invoke handler with platform-specific commands.
     #[cfg(desktop)]
     let builder = builder.invoke_handler(tauri::generate_handler![
@@ -171,6 +178,50 @@ pub fn run() {
                 if let Err(e) = menubar::init_menubar(app.handle(), spotlight_config) {
                     log::error!("Failed to initialize menu bar: {}", e);
                 }
+            }
+
+            // Listen for spotlight shortcut updates from the frontend (macOS only).
+            #[cfg(target_os = "macos")]
+            {
+                use std::sync::Mutex;
+                use tauri::{Listener, Manager};
+                use tauri_plugin_global_shortcut::GlobalShortcutExt;
+
+                let app_handle = app.handle().clone();
+                app.listen("spotlight:update-shortcut", move |event| {
+                    #[derive(serde::Deserialize)]
+                    struct Payload {
+                        shortcut: String,
+                    }
+                    let Ok(payload) = serde_json::from_str::<Payload>(event.payload()) else {
+                        log::warn!("[spotlight] Invalid shortcut payload: {}", event.payload());
+                        return;
+                    };
+                    let new_shortcut = payload.shortcut;
+                    let manager = app_handle.global_shortcut();
+                    let state = app_handle.state::<Mutex<String>>();
+                    let mut current = match state.lock() {
+                        Ok(guard) => guard,
+                        Err(err) => {
+                            log::error!("[spotlight] Shortcut state mutex poisoned: {}", err);
+                            return;
+                        }
+                    };
+                    if *current == new_shortcut {
+                        return;
+                    }
+                    if let Err(err) = manager.unregister(current.as_str()) {
+                        log::warn!("[spotlight] Failed to unregister '{}': {}", *current, err);
+                    }
+                    if let Err(err) = manager.register(new_shortcut.as_str()) {
+                        log::error!("[spotlight] Failed to register '{}': {}", new_shortcut, err);
+                        // Best-effort: try to restore the previous binding so the panel remains reachable.
+                        let _ = manager.register(current.as_str());
+                        return;
+                    }
+                    log::info!("[spotlight] Shortcut updated '{}' -> '{}'", *current, new_shortcut);
+                    *current = new_shortcut;
+                });
             }
 
             Ok(())

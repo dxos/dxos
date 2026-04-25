@@ -6,7 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { SubscriptionList } from '@dxos/async';
 import { log } from '@dxos/log';
+
+import { NativeCapabilities, Settings } from '#types';
 
 // TODO(wittjosiah): Formalize with a stricter schema if we evolve this protocol.
 type SpotlightInvokePayload = {
@@ -16,16 +19,34 @@ type SpotlightInvokePayload = {
 
 /**
  * Listens for spotlight:invoke events from the popover window and dispatches the corresponding operation.
+ * Also propagates the configured global shortcut to the Tauri backend whenever it changes.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const settingsAtom = yield* Capability.get(NativeCapabilities.Settings);
 
-    const unlisten = yield* Effect.promise(async () => {
-      const { listen } = await import('@tauri-apps/api/event');
-      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    const subscriptions = new SubscriptionList();
 
-      return listen<SpotlightInvokePayload>('spotlight:invoke', async (event) => {
+    const { listen, emit } = yield* Effect.promise(() => import('@tauri-apps/api/event'));
+    const { getCurrentWindow } = yield* Effect.promise(() => import('@tauri-apps/api/window'));
+
+    // Forward the configured shortcut to the Tauri backend whenever it changes.
+    let lastShortcut: string | undefined;
+    const syncShortcut = () => {
+      const next = registry.get(settingsAtom).spotlightShortcut ?? Settings.DEFAULT_SPOTLIGHT_SHORTCUT;
+      if (next === lastShortcut) {
+        return;
+      }
+      lastShortcut = next;
+      emit('spotlight:update-shortcut', { shortcut: next }).catch((err) => log.catch(err));
+    };
+    syncShortcut();
+    subscriptions.add(registry.subscribe(settingsAtom, syncShortcut));
+
+    const unlisten = yield* Effect.promise(() =>
+      listen<SpotlightInvokePayload>('spotlight:invoke', async (event) => {
         const { operation, payload } = event.payload;
         log.info('Received spotlight invoke event', { operation, payload });
         try {
@@ -46,12 +67,13 @@ export default Capability.makeModule(
         } catch (err) {
           log.catch(err);
         }
-      });
-    });
+      }),
+    );
+    subscriptions.add(() => unlisten());
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
-        unlisten();
+        subscriptions.clear();
       }),
     );
   }),
