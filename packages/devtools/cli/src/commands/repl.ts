@@ -8,7 +8,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { getDispatcher } from '../dispatcher';
-import { multilinePrompt } from '../util';
+import { closeLineReader, multilinePrompt } from '../util';
 
 /**
  * Splits a raw input line into argv tokens. Supports single/double-quoted
@@ -53,25 +53,39 @@ const rewriteHelpAliases = (tokens: string[]): string[] => {
  * threshold, which is normal during REPL idle.
  *
  * Returns a restore function that the REPL must call on exit.
+ *
+ * NOTE: the regex intentionally anchors on a stable prefix only — the full
+ * message wording in @dxos/debug may be reworded without breaking the
+ * filter. Any subsequent indented stack-trace lines are also dropped, which
+ * may incidentally swallow unrelated indented stderr that arrives in the
+ * same microtask; low-probability and acceptable for REPL noise.
  */
 const installStderrFilter = (): (() => void) => {
   const originalWrite = process.stderr.write.bind(process.stderr);
-  const TIMEOUT_WARNING_RE = /^Action `[^`]+` is taking more then [\d,]+ms to complete\./;
+  const TIMEOUT_WARNING_PREFIX_RE = /^Action `[^`]+` is taking more/;
   let suppressing = false;
 
   // process.stderr.write has multiple overloads; we cast to the broad form.
+  // Node's stream.write contract accepts an optional callback as the final
+  // argument. We MUST invoke it even when suppressing to avoid hanging any
+  // caller that awaits flush completion.
   (process.stderr as any).write = (chunk: any, ...rest: any[]): boolean => {
+    const maybeCallback = rest[rest.length - 1];
+    const callback: ((err?: Error | null) => void) | undefined =
+      typeof maybeCallback === 'function' ? (maybeCallback as any) : undefined;
     const text = typeof chunk === 'string' ? chunk : (chunk?.toString?.() ?? '');
     // Stack trace lines follow the warning message — keep dropping until we
     // hit a non-indented line.
     if (suppressing) {
       if (/^\s/.test(text) || text.trim() === '') {
+        callback?.();
         return true;
       }
       suppressing = false;
     }
-    if (TIMEOUT_WARNING_RE.test(text)) {
+    if (TIMEOUT_WARNING_PREFIX_RE.test(text)) {
       suppressing = true;
+      callback?.();
       return true;
     }
     return originalWrite(chunk, ...rest);
@@ -131,6 +145,7 @@ export const repl = Command.make(
         yield* Console.log('Goodbye.');
       } finally {
         restoreStderr();
+        closeLineReader();
       }
     }) as Effect.Effect<void, unknown, never>,
 ).pipe(Command.withDescription('Enter an interactive REPL to dispatch DXOS CLI commands in-process.'));

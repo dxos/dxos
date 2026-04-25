@@ -14,19 +14,30 @@ export type MultilinePromptOptions = {
 };
 
 /**
- * Lazily create a shared readline interface and line-queue for the process.
- * `readline.question()`'s promise API drops line events that arrive between
- * questions, which breaks multi-line piped input. Instead we subscribe to
- * `'line'` once and buffer arrivals into a FIFO; `nextLine()` either pops
- * from the buffer or awaits the next event (or close).
+ * Module-scoped line reader: one `readline.Interface` + one FIFO buffer per
+ * process, shared across every `multilinePrompt` call. `readline.question`'s
+ * promise API drops line events that arrive between questions, which breaks
+ * piped multi-line input. Subscribing once and buffering arrivals fixes that,
+ * but the buffer MUST outlive any single prompt — a per-call reader would
+ * lose queued lines when it closes at the end of each prompt.
+ *
+ * The reader stays alive until the owner explicitly calls `closeLineReader()`
+ * (the REPL does this on exit).
  */
 type LineReader = {
   nextLine(prompt: string): Promise<string | null>; // null on EOF
-  close(): void;
 };
 
-const createLineReader = (): LineReader => {
+let sharedReader: LineReader | undefined;
+let sharedInterface: readline.Interface | undefined;
+
+const getLineReader = (): LineReader => {
+  if (sharedReader) {
+    return sharedReader;
+  }
+
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  sharedInterface = rl;
 
   const buffered: string[] = [];
   const waiters: Array<(value: string | null) => void> = [];
@@ -48,7 +59,7 @@ const createLineReader = (): LineReader => {
     }
   });
 
-  return {
+  sharedReader = {
     nextLine(prompt: string): Promise<string | null> {
       if (buffered.length > 0) {
         return Promise.resolve(buffered.shift()!);
@@ -60,12 +71,19 @@ const createLineReader = (): LineReader => {
       process.stdout.write(prompt);
       return new Promise((resolvePromise) => waiters.push(resolvePromise));
     },
-    close() {
-      if (!closed) {
-        rl.close();
-      }
-    },
   };
+
+  return sharedReader;
+};
+
+/**
+ * Closes the shared readline interface. Call this when the owning REPL
+ * exits so the process can terminate cleanly.
+ */
+export const closeLineReader = (): void => {
+  sharedInterface?.close();
+  sharedInterface = undefined;
+  sharedReader = undefined;
 };
 
 /**
@@ -80,47 +98,43 @@ export const multilinePrompt = (
   const { primaryPrompt = '> ', continuationPrompt = '  ', exitCommands = ['quit', 'exit', 'q'] } = options;
 
   return Effect.gen(function* () {
-    const reader = createLineReader();
+    const reader = getLineReader();
 
-    try {
-      const lines: string[] = [];
-      let firstLine = true;
+    const lines: string[] = [];
+    let firstLine = true;
 
-      while (true) {
-        const line = yield* Effect.tryPromise({
-          try: () => reader.nextLine(firstLine ? primaryPrompt : continuationPrompt),
-          catch: (error) => new Error(String(error)),
-        });
+    while (true) {
+      const line = yield* Effect.tryPromise({
+        try: () => reader.nextLine(firstLine ? primaryPrompt : continuationPrompt),
+        catch: (error) => new Error(String(error)),
+      });
 
-        if (line === null) {
-          // stdin closed — treat as clean exit.
-          return { type: 'exit' } as const;
-        }
-
-        // Trailing backslash signals continuation. Strip it and keep reading.
-        if (line.endsWith('\\')) {
-          lines.push(line.slice(0, -1));
-          firstLine = false;
-          continue;
-        }
-
-        lines.push(line);
-        break;
-      }
-
-      const input = lines.join('\n').trim();
-
-      if (!input) {
-        return { type: 'empty' } as const;
-      }
-
-      if (exitCommands.includes(input.toLowerCase())) {
+      if (line === null) {
+        // stdin closed — treat as clean exit.
         return { type: 'exit' } as const;
       }
 
-      return { type: 'input', value: input } as const;
-    } finally {
-      reader.close();
+      // Trailing backslash signals continuation. Strip it and keep reading.
+      if (line.endsWith('\\')) {
+        lines.push(line.slice(0, -1));
+        firstLine = false;
+        continue;
+      }
+
+      lines.push(line);
+      break;
     }
+
+    const input = lines.join('\n').trim();
+
+    if (!input) {
+      return { type: 'empty' } as const;
+    }
+
+    if (exitCommands.includes(input.toLowerCase())) {
+      return { type: 'exit' } as const;
+    }
+
+    return { type: 'input', value: input } as const;
   });
 };

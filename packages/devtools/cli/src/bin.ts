@@ -88,7 +88,11 @@ const program = Effect.gen(function* () {
     enabled,
   });
 
-  const layer = Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty);
+  // Memoize the layer in the program scope so each `Effect.provide(layer)`
+  // — both the top-level command and every REPL dispatch — reuses the
+  // already-built services (ClientPlugin, Config, etc.) instead of rebuilding
+  // them per invocation.
+  const layer = yield* Layer.memoize(Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty));
 
   // Register in-process dispatcher so `repl` can reuse the already-built
   // command tree and plugin layer instead of spawning a child `dx` process
