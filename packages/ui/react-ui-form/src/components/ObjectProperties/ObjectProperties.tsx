@@ -11,6 +11,7 @@ import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import { FactoryAnnotation } from '@dxos/schema';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -42,11 +43,17 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     // form change is then synced back to `Obj.getMeta(object).tags` by
     // `handleChange` below — so Tag.Tag follows the same generic path as any
     // other ref-array field, no type-specific branching required here.
+    //
+    // Schemas whose required structure can't be produced by `Obj.make(schema,
+    // values)` alone (e.g. types with a required ref to a backing object) can
+    // declare a `FactoryAnnotation` to take over construction.
     const handleCreate = useCallback(
       (schema: Type.AnyEntity, values: any): Obj.Unknown => {
         invariant(db);
         invariant(Type.isObjectSchema(schema));
-        return db.add(Obj.make(schema, values)) as Obj.Unknown;
+        const factory = Option.getOrUndefined(FactoryAnnotation.get(schema));
+        const newObject = factory ? (factory(values) as Obj.Unknown) : Obj.make(schema, values);
+        return db.add(newObject) as Obj.Unknown;
       },
       [db],
     );

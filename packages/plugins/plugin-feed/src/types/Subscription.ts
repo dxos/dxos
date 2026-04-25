@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { FeedAnnotation } from '@dxos/schema';
+import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
 
 /**
  * Label of the canonical {@link Tag.Tag} object used by the star toggle.
@@ -51,6 +51,12 @@ export const Feed = Schema.Struct({
     hue: 'orange',
   }),
   FeedAnnotation.set(true),
+  // Generic-form create flows use `Obj.make(schema, values)` by default, but
+  // a Feed needs a backing `EchoFeed.Feed` linked via `feed: Ref.Ref(...)` —
+  // `makeFeed` provides that. The cast keeps Feed's inferred schema type
+  // intact: without it, TypeScript widens `S` in `FactoryAnnotation.set`'s
+  // generic constraint when the value type recursively references `Feed`.
+  FactoryAnnotation.set(((values) => makeFeed(values)) as FactoryFn),
 );
 
 export interface Feed extends Schema.Schema.Type<typeof Feed> {}
