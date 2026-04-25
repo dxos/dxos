@@ -8,6 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { IconButton, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { composable } from '@dxos/ui-theme';
 
 import { PostContent } from '../components';
 import { translations } from '../translations';
@@ -90,32 +91,28 @@ const DefaultStory = () => {
         {state.status === 'ok' ? (
           <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
         ) : (
-          <ScrollArea.Root orientation='vertical' thin>
-            <ScrollArea.Viewport>
-              <div className='flex flex-col gap-2 p-2'>
-                <Toolbar.Root>
-                  {SAMPLE_URLS.map((sample) => (
-                    <IconButton
-                      key={sample}
-                      icon='ph--link--regular'
-                      label={new URL(sample).hostname}
-                      onClick={() => {
-                        setUrl(sample);
-                        setState({ status: 'idle' });
-                      }}
-                    />
-                  ))}
-                </Toolbar.Root>
-                {state.status === 'idle' && (
-                  <p className='text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
-                )}
-                {state.status === 'loading' && <p className='text-sm text-subdued'>Fetching and extracting…</p>}
-                {state.status === 'error' && (
-                  <pre className='text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
-                )}
-              </div>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+          <div className='flex flex-col'>
+            <Toolbar.Root>
+              {SAMPLE_URLS.map((sample) => (
+                <IconButton
+                  key={sample}
+                  icon='ph--link--regular'
+                  label={new URL(sample).hostname}
+                  onClick={() => {
+                    setUrl(sample);
+                    setState({ status: 'idle' });
+                  }}
+                />
+              ))}
+            </Toolbar.Root>
+            {state.status === 'idle' && (
+              <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
+            )}
+            {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
+            {state.status === 'error' && (
+              <pre className='p-2 text-sm text-error whitespace-pre-wrap break-all'>{state.message}</pre>
+            )}
+          </div>
         )}
       </Panel.Content>
     </Panel.Root>
@@ -128,41 +125,45 @@ type ResultViewProps = {
   showMarkdown: boolean;
 };
 
-const ResultView = ({ article, sourceLength, showMarkdown }: ResultViewProps) => {
-  const post = useMemo(
-    () =>
-      Subscription.makePost({
-        title: article.title,
-        author: article.author,
-        published: article.published,
-        description: article.description,
-        imageUrl: article.image,
-        content: article.markdown,
-      }),
-    [article],
-  );
-
-  const metadata = [
-    article.domain,
-    article.wordCount && `${article.wordCount.toLocaleString()} words`,
-    `source ${formatBytes(sourceLength)}`,
-    `${article.imageUrls.length} images`,
-  ].filter((value): value is string => Boolean(value));
-
-  if (showMarkdown) {
-    return (
-      <ScrollArea.Root orientation='vertical' thin>
-        <ScrollArea.Viewport>
-          <SyntaxHighlighter language='markdown' classNames='m-4'>
-            {post.content}
-          </SyntaxHighlighter>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+const ResultView = composable<HTMLDivElement, ResultViewProps>(
+  ({ article, sourceLength, showMarkdown, ...props }, forwardedRef) => {
+    const post = useMemo(
+      () =>
+        Subscription.makePost({
+          title: article.title,
+          author: article.author,
+          published: article.published,
+          description: article.description,
+          imageUrl: article.image,
+          content: article.markdown,
+        }),
+      [article],
     );
-  }
 
-  return <PostContent post={post} metadata={metadata} />;
-};
+    const metadata = [
+      article.domain,
+      article.wordCount && `${article.wordCount.toLocaleString()} words`,
+      `source ${formatBytes(sourceLength)}`,
+      `${article.imageUrls.length} images`,
+    ].filter((value): value is string => Boolean(value));
+
+    if (showMarkdown) {
+      return (
+        <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+          <ScrollArea.Viewport>
+            <SyntaxHighlighter language='markdown' classNames='m-4'>
+              {post.content}
+            </SyntaxHighlighter>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      );
+    }
+
+    return <PostContent {...props} ref={forwardedRef} post={post} metadata={metadata} />;
+  },
+);
+
+ResultView.displayName = 'ResultView';
 
 const meta = {
   title: 'plugins/plugin-feed/stories/ArticleExtractor',
