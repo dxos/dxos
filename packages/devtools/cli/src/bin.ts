@@ -98,8 +98,7 @@ const program = Effect.gen(function* () {
   // `Requirements` channel becomes overly restrictive even when the layer
   // provides everything.
   setDispatcher(
-    (argv) =>
-      Command.run(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
+    (argv) => Command.run(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
   );
 
   return yield* Command.run(command, CLI_CONFIG)(process.argv).pipe(Effect.provide(layer));

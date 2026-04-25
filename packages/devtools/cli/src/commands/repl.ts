@@ -61,7 +61,7 @@ const installStderrFilter = (): (() => void) => {
 
   // process.stderr.write has multiple overloads; we cast to the broad form.
   (process.stderr as any).write = (chunk: any, ...rest: any[]): boolean => {
-    const text = typeof chunk === 'string' ? chunk : chunk?.toString?.() ?? '';
+    const text = typeof chunk === 'string' ? chunk : (chunk?.toString?.() ?? '');
     // Stack trace lines follow the warning message — keep dropping until we
     // hit a non-indented line.
     if (suppressing) {
@@ -123,9 +123,7 @@ export const repl = Command.make(
           // stays alive for the next prompt.
           yield* dispatch([...argvPrefix, ...tokens]).pipe(
             Effect.catchAllCause((cause) =>
-              Cause.isInterruptedOnly(cause)
-                ? Effect.void
-                : Console.error(Cause.pretty(cause)),
+              Cause.isInterruptedOnly(cause) ? Effect.void : Console.error(Cause.pretty(cause)),
             ),
           );
         }
