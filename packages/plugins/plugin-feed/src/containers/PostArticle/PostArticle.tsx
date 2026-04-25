@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
+import { Filter, Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Subscription } from '#types';
+import { Subscription } from '#types';
 
 import { ensureStarTag, formatDate, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
 
@@ -18,18 +18,25 @@ export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
 export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   const { t } = useTranslation(meta.id);
+  // Subscribe to the post so the toolbar icons (star, archive, mark-unread) re-render
+  // when their underlying state changes via Obj.change.
+  useObject(post);
   const db = Obj.getDatabase(post);
   const starTag = useStarTag(db);
 
-  // Resolve the source feed ref so its name can appear in the meta line.
-  useEffect(() => {
-    const feedRef = post.feed;
-    if (feedRef && !feedRef.target) {
-      void feedRef.load().catch((err) => log.catch(err));
+  // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
+  // synchronously when the ref is already resolved; querying feeds via useQuery means
+  // the meta line updates as soon as the feed object is loaded into the space.
+  const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+  const feedName = useMemo(() => {
+    const dxn = post.feed?.dxn.toString();
+    if (!dxn) {
+      return undefined;
     }
-  }, [post.feed]);
+    return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
+  }, [post.feed, allFeeds]);
 
-  const metaLine = [post.author, post.feed?.target?.name, formatDate(post.published)].filter(Boolean).join(' · ');
+  const metaLine = [post.author, feedName, formatDate(post.published)].filter(Boolean).join(' · ');
   const archived = Boolean(post.archived);
   const starred = hasMetaTag(post, starTag);
 
@@ -57,9 +64,12 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     if (!db) {
       return;
     }
-    const tag = starTag ?? ensureStarTag(db);
+    // Always go through ensureStarTag so we hit the same canonical tag — the closure
+    // value of `starTag` may be stale (e.g. undefined on first click before the
+    // useQuery has populated).
+    const tag = ensureStarTag(db);
     toggleMetaTag(post, tag);
-  }, [db, post, starTag]);
+  }, [db, post]);
 
   return (
     <Panel.Root role={role}>

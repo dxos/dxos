@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { extractImageUrls, stripHtml } from './extract';
+import { extractImageUrls } from './extract';
+import { htmlToMarkdown } from './html-to-markdown';
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
@@ -109,7 +110,7 @@ export const fetchArticle = async (link: string, options: FetchArticleOptions = 
     }
     const html = await readCapped(response, MAX_RESPONSE_BYTES);
     return {
-      text: stripHtml(html),
+      text: htmlToMarkdown(html),
       imageUrls: extractImageUrls(html),
     };
   } catch (error) {

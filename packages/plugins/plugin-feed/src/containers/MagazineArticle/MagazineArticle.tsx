@@ -7,10 +7,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useShowItem } from '@dxos/plugin-deck';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -38,6 +38,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const [onlyStarred, setOnlyStarred] = useState(false);
   const db = Obj.getDatabase(subject);
   const starTag = useStarTag(db);
+  // Reactive query of every Subscription.Feed in the space — used to render the source
+  // feed name on each tile without each tile having to subscribe to its own ref.
+  const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+  const feedNamesByDxn = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const feed of allFeeds) {
+      const name = feed.name;
+      if (name) {
+        map.set(Obj.getDXN(feed).toString(), name);
+      }
+    }
+    return map;
+  }, [allFeeds]);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle. Also pre-load each
@@ -81,18 +94,34 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   const posts = useMemo(() => {
     const resolved: Subscription.Post[] = [];
-    const seen = new Set<string>();
+    const seenDxn = new Set<string>();
+    const seenLink = new Set<string>();
+    const seenGuid = new Set<string>();
     for (const ref of subject.posts) {
       const target = ref.target;
       if (!target) {
         continue;
       }
-      // Dedup by DXN — older curation runs may have appended the same Post ref twice.
+      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
+      // same article (distinct Post objects, same `link` / `guid`); without secondary
+      // dedup the masonry shows them as duplicate tiles.
       const dxn = Obj.getDXN(target).toString();
-      if (seen.has(dxn)) {
+      if (seenDxn.has(dxn)) {
         continue;
       }
-      seen.add(dxn);
+      if (target.link && seenLink.has(target.link)) {
+        continue;
+      }
+      if (target.guid && seenGuid.has(target.guid)) {
+        continue;
+      }
+      seenDxn.add(dxn);
+      if (target.link) {
+        seenLink.add(target.link);
+      }
+      if (target.guid) {
+        seenGuid.add(target.guid);
+      }
       resolved.push(target);
     }
 
@@ -207,8 +236,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   const tileItems = useMemo(
-    () => posts.map((post) => ({ post, current: post.id === currentId, onOpen: handleOpen })),
-    [posts, currentId, handleOpen],
+    () =>
+      posts.map((post) => ({
+        post,
+        current: post.id === currentId,
+        feedName: post.feed ? feedNamesByDxn.get(post.feed.dxn.toString()) : undefined,
+        onOpen: handleOpen,
+      })),
+    [posts, currentId, handleOpen, feedNamesByDxn],
   );
 
   const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
@@ -299,8 +334,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 };
 
-type TileData = { post: Subscription.Post; current: boolean; onOpen: (post: Subscription.Post) => void };
+type TileData = {
+  post: Subscription.Post;
+  current: boolean;
+  feedName?: string;
+  onOpen: (post: Subscription.Post) => void;
+};
 
 const TileAdapter = ({ data }: { data: TileData; index: number }) => (
-  <MagazineTile post={data.post} current={data.current} onOpen={data.onOpen} />
+  <MagazineTile post={data.post} current={data.current} feedName={data.feedName} onOpen={data.onOpen} />
 );
