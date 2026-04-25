@@ -312,7 +312,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         queueIds: [this._queueId],
       },
     });
-    return (objects ?? []).map((encoded) => JSON.parse(encoded) as ObjectJSON);
+    return (objects ?? []).flatMap((encoded) => {
+      try {
+        return [JSON.parse(encoded) as ObjectJSON];
+      } catch (err) {
+        log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
+        return [];
+      }
+    });
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
