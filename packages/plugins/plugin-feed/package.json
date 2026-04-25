@@ -67,6 +67,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",

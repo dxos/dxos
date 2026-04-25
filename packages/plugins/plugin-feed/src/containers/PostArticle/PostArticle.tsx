@@ -8,6 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { MarkdownViewer } from '@dxos/react-ui-markdown';
 
 import { meta } from '#meta';
 import { Subscription } from '#types';
@@ -112,7 +113,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
               <h1 className='text-xl font-semibold'>{post.title ?? t('post-title.placeholder')}</h1>
               {metaLine && <div className='text-xs text-subdued'>{metaLine}</div>}
               {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' />}
-              {(post.content || post.snippet) && <p className='whitespace-pre-wrap'>{post.content ?? post.snippet}</p>}
+              {(post.content || post.snippet) && <MarkdownViewer content={post.content ?? post.snippet} />}
             </article>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
