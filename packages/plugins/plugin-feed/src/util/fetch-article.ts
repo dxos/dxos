@@ -93,7 +93,9 @@ export type FetchArticleOptions = {
 export const fetchArticle = async (link: string, options: FetchArticleOptions = {}): Promise<FetchArticleResult> => {
   try {
     const url = validateUrl(link);
-    const fetchTarget = options.corsProxy ? `${options.corsProxy}${encodeURIComponent(url.toString())}` : url.toString();
+    const fetchTarget = options.corsProxy
+      ? `${options.corsProxy}${encodeURIComponent(url.toString())}`
+      : url.toString();
     const response = await fetch(fetchTarget, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       redirect: 'follow',

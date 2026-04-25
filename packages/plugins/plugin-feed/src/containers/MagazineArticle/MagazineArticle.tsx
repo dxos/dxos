@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Entity, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useShowItem } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
@@ -37,22 +37,36 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const [showArchived, setShowArchived] = useState(false);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
-  // becomes populated reactively on the next render cycle.
+  // becomes populated reactively on the next render cycle. Also pre-load each
+  // resolved Post's `feed` ref so `MagazineTile` can show the feed name.
   useEffect(() => {
     for (const ref of subject.posts) {
       if (!ref.target) {
         void ref.load().catch((err) => log.catch(err));
+        continue;
+      }
+      const feedRef = ref.target.feed;
+      if (feedRef && !feedRef.target) {
+        void feedRef.load().catch((err) => log.catch(err));
       }
     }
   }, [subject.posts]);
 
   const posts = useMemo(() => {
     const resolved: Subscription.Post[] = [];
+    const seen = new Set<string>();
     for (const ref of subject.posts) {
       const target = ref.target;
-      if (target) {
-        resolved.push(target);
+      if (!target) {
+        continue;
       }
+      // Dedup by DXN — older curation runs may have appended the same Post ref twice.
+      const dxn = Obj.getDXN(target).toString();
+      if (seen.has(dxn)) {
+        continue;
+      }
+      seen.add(dxn);
+      resolved.push(target);
     }
 
     // Filter archived unless explicitly shown.
@@ -67,8 +81,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       });
     }
 
-    // Default: most recent first by published date, fall back to insertion order.
-    return [...visible].sort((postA, postB) => (postB.published ?? '').localeCompare(postA.published ?? ''));
+    // Default: most recent first. Parse `published` to a timestamp because RSS feeds
+    // commonly emit RFC 822 strings (e.g. "Mon, 25 Apr 2026 ...") which don't sort
+    // correctly lexicographically. Posts without a parseable date fall to the bottom.
+    const timestamp = (post: Subscription.Post): number => {
+      if (!post.published) {
+        return Number.NEGATIVE_INFINITY;
+      }
+      const ms = Date.parse(post.published);
+      return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
+    };
+    return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
   }, [subject.posts, sort, showArchived]);
 
   const handleCurate = useCallback(async () => {
@@ -172,8 +195,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
-          <Toolbar.Separator />
           <Toolbar.ToggleGroup
             type='single'
             value={sort}
@@ -203,6 +224,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
               <Icon icon='ph--archive--regular' size={4} />
             </Toolbar.ToggleGroupItem>
           </Toolbar.ToggleGroup>
+          <Toolbar.Separator />
           <Toolbar.IconButton
             label={curateTooltip ?? t('curate.label')}
             icon={state === 'idle' ? 'ph--sparkle--regular' : 'ph--circle-notch--regular'}

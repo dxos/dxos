@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -19,6 +20,15 @@ const STAR_TAG = 'starred';
 
 export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   const { t } = useTranslation(meta.id);
+
+  // Resolve the source feed ref so its name can appear in the meta line.
+  useEffect(() => {
+    const feedRef = post.feed;
+    if (feedRef && !feedRef.target) {
+      void feedRef.load().catch((err) => log.catch(err));
+    }
+  }, [post.feed]);
+
   const metaLine = [post.author, post.feed?.target?.name, formatDate(post.published)].filter(Boolean).join(' · ');
   const archived = Boolean(post.archived);
   const starred = (post.tags ?? []).includes(STAR_TAG);
@@ -92,9 +102,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
               <h1 className='text-xl font-semibold'>{post.title ?? t('post-title.placeholder')}</h1>
               {metaLine && <div className='text-xs text-subdued'>{metaLine}</div>}
               {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' />}
-              {(post.content || post.snippet) && (
-                <p className='whitespace-pre-wrap'>{post.content ?? post.snippet}</p>
-              )}
+              {(post.content || post.snippet) && <p className='whitespace-pre-wrap'>{post.content ?? post.snippet}</p>}
             </article>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
