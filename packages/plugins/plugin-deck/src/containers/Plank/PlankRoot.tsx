@@ -33,7 +33,7 @@ export type PlankContextValue = {
   onResize?: (id: string, size: number) => void;
   /** Callback to clear scroll-into-view state. */
   onScrollIntoView?: (id?: string) => void;
-  /** Callback to change the companion. */
+  /** Callback to update the companion. */
   onUpdateCompanion?: (companion: string | null) => void;
 };
 

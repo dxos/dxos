@@ -25,14 +25,17 @@ import { Mailbox } from '#types';
 import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
-// No-op handlers for deck operations invoked from article components; avoids pulling in DeckPlugin.
+// No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
 const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
       Effect.succeed(
         Capability.contributes(
           Capabilities.OperationHandler,
-          OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          ),
         ),
       ),
   }),
