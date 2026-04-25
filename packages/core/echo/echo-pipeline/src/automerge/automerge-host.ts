@@ -96,13 +96,6 @@ export type CreateDocOptions = {
 };
 
 /**
- * Historical marker — left as an empty object since the subduction-fork `Repo.find()` no
- * longer accepts `allowableStates` / similar filters. Kept exported because external
- * callers (e.g. @dxos/blade-runner) still pass it as a second argument.
- */
-export const FIND_PARAMS = {};
-
-/**
  * Maximum amount of documents to sync in a single bundle.
  */
 const BUNDLE_SIZE = 100;
@@ -168,7 +161,6 @@ export class AutomergeHost extends Resource {
   private readonly _headsStore: HeadsStore;
 
   private _syncTask: DeferredTask | undefined = undefined;
-
   /**
    * Cache of collections that would be synced on next sync task run.
    */
@@ -246,7 +238,7 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
       defaultMap(this._documentsRequested, peerId, () => new Set()).add(documentId);
-      this._sharePolicyChangedTask?.schedule();
+      this._sharePolicyChangedTask!.schedule();
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._peerIdProvider = peerIdProvider;
@@ -432,9 +424,9 @@ export class AutomergeHost extends Resource {
       }
 
       // TODO(dmaretskyi): There's a more efficient way.
-      const handle = this._repo.import(save(initialValue as Doc<T>), { docId: opts?.documentId }) as DocHandle<T>;
+      const handle = this._repo.import<T>(save(initialValue as Doc<T>), { docId: opts?.documentId });
       this._createdDocuments.add(handle.documentId);
-      this._sharePolicyChangedTask?.schedule();
+      this._sharePolicyChangedTask!.schedule();
       return handle;
     } else {
       if (initialValue instanceof Uint8Array) {
@@ -446,7 +438,7 @@ export class AutomergeHost extends Resource {
       }
       const handle = await this._repo.create2<T>(initialValue);
       this._createdDocuments.add(handle.documentId);
-      this._sharePolicyChangedTask?.schedule();
+      this._sharePolicyChangedTask!.schedule();
       return handle;
     }
   }
@@ -615,8 +607,6 @@ export class AutomergeHost extends Resource {
       return undefined;
     }
 
-    this.documentsSaved.emit();
-
     const documentId = path[0] as DocumentId;
     const handle = this._repo.handles[documentId];
     if (!handle || !handle.isReady()) {
@@ -629,7 +619,9 @@ export class AutomergeHost extends Resource {
 
     const heads = getHeads(document);
     this._headsUpdates.set(documentId, heads);
-    this._onHeadsChangedTask?.schedule();
+    invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
+    this._onHeadsChangedTask.schedule();
+    this.documentsSaved.emit();
   }
 
   @trace.info({ depth: null })
@@ -943,7 +935,7 @@ export class AutomergeHost extends Resource {
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);
     }
-    this._sharePolicyChangedTask?.schedule();
+    this._sharePolicyChangedTask!.schedule();
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
