@@ -36,7 +36,6 @@ export const translations = [
         'plugin.name': 'Outliner',
         'delete-object.label': 'Delete object',
         'create-outline.label': 'Create outline',
-        'create-entry.label': 'Create entry',
         'text.placeholder': 'Enter text...',
         'menu.label': 'Menu',
 
