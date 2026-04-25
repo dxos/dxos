@@ -9,7 +9,8 @@ import { Annotation, Feed, Ref, Type } from '@dxos/echo';
 /**
  * Where do triggers get executed.
  */
-const ComputeEnvironment = Schema.Literal('local', 'edge');
+export const ComputeEnvironment = Schema.Literal('disabled', 'local', 'edge');
+export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
 
 export const SpacePropertiesSchema = Schema.Struct(
   {
