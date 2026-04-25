@@ -22,12 +22,55 @@ const SERIALIZED_SPACE_VERSION = 1;
 
 const FEED_TYPENAME = 'org.dxos.type.feed';
 
+const ATTR_ID = 'id';
 const ATTR_TYPE = '@type';
 const ATTR_META = '@meta';
 const ATTR_DELETED = '@deleted';
 const ATTR_PARENT = '@parent';
 const ATTR_RELATION_SOURCE = '@relationSource';
 const ATTR_RELATION_TARGET = '@relationTarget';
+
+/**
+ * Canonical order of well-known system fields in a serialized object.
+ * All remaining `@*` fields follow in the order they appear on the source
+ * object, and finally the data fields are appended in their existing order.
+ */
+const SYSTEM_FIELD_ORDER: readonly string[] = [
+  ATTR_ID,
+  ATTR_TYPE,
+  ATTR_META,
+  ATTR_DELETED,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+];
+
+/**
+ * Reorder the keys of an {@link Obj.JSON} so that system fields appear first
+ * (`id`, `@type`, `@meta`, then any other `@*` attributes), followed by data
+ * fields. The returned object has identical values to the input — only the key
+ * iteration order changes.
+ */
+export const orderObjJsonFields = (obj: Obj.JSON): Obj.JSON => {
+  const source = obj as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const key of SYSTEM_FIELD_ORDER) {
+    if (key in source) {
+      result[key] = source[key];
+    }
+  }
+  for (const key of Object.keys(source)) {
+    if (key.startsWith('@') && !(key in result)) {
+      result[key] = source[key];
+    }
+  }
+  for (const key of Object.keys(source)) {
+    if (!(key in result)) {
+      result[key] = source[key];
+    }
+  }
+  return result as Obj.JSON;
+};
 
 export type WriteSerializedSpaceArchiveOptions = {
   space: DataSpace;
@@ -106,33 +149,33 @@ const collectObjectsFromDoc = (doc: DatabaseDirectory, out: Obj.JSON[]): void =>
  * `@meta` section so archives produced by this writer can be round-tripped
  * through {@link Obj.fromJSON}.
  */
-const objectStructureToObjJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
-  const result: Obj.JSON = {
-    ...structure.data,
-    id: objectId,
+export const objectStructureToObjJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+  const result: Record<string, unknown> = {
+    [ATTR_ID]: objectId,
     [ATTR_TYPE]: (structure.system?.type?.['/'] ?? '') as any,
   };
 
-  if (structure.system?.deleted) {
-    (result as any)[ATTR_DELETED] = true;
-  }
-  if (structure.system?.parent) {
-    (result as any)[ATTR_PARENT] = structure.system.parent['/'];
-  }
-  if (structure.system?.source) {
-    (result as any)[ATTR_RELATION_SOURCE] = structure.system.source['/'];
-  }
-  if (structure.system?.target) {
-    (result as any)[ATTR_RELATION_TARGET] = structure.system.target['/'];
-  }
   if (structure.meta) {
-    (result as any)[ATTR_META] = {
+    result[ATTR_META] = {
       keys: structure.meta.keys ?? [],
       ...(structure.meta.tags ? { tags: structure.meta.tags } : {}),
     };
   }
+  if (structure.system?.deleted) {
+    result[ATTR_DELETED] = true;
+  }
+  if (structure.system?.parent) {
+    result[ATTR_PARENT] = structure.system.parent['/'];
+  }
+  if (structure.system?.source) {
+    result[ATTR_RELATION_SOURCE] = structure.system.source['/'];
+  }
+  if (structure.system?.target) {
+    result[ATTR_RELATION_TARGET] = structure.system.target['/'];
+  }
+  Object.assign(result, structure.data);
 
-  return result;
+  return result as Obj.JSON;
 };
 
 const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj.JSON[]): Promise<SerializedFeed[]> => {
@@ -187,11 +230,13 @@ const collectQueueMessages = async (echoHost: EchoHost, queueDxn: DXN): Promise<
         after: cursor,
       },
     });
-    const batch = (result.objects ?? []) as Obj.JSON[];
+    const batch = (result.objects ?? []).map((encoded) => JSON.parse(encoded) as Obj.JSON);
     if (batch.length === 0) {
       break;
     }
-    messages.push(...batch);
+    for (const message of batch) {
+      messages.push(orderObjJsonFields(message));
+    }
     if (!result.nextCursor || result.nextCursor === cursor) {
       break;
     }

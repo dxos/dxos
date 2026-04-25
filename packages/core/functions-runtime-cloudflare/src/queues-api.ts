@@ -4,9 +4,14 @@
 
 import { type AnyEntity } from '@dxos/echo/internal';
 import type { DXN, SpaceId } from '@dxos/keys';
-import { type FeedProtocol } from '@dxos/protocols';
 
 import type { ServiceContainer } from './internal';
+
+export interface QueryResult {
+  objects: AnyEntity[];
+  nextCursor: string | null;
+  prevCursor: string | null;
+}
 
 // TODO(dmaretskyi): Temporary API to get the queues working.
 // TODO(dmaretskyi): To be replaced with integrating queues into echo.
@@ -14,7 +19,7 @@ import type { ServiceContainer } from './internal';
  * @deprecated
  */
 export interface QueuesAPI {
-  queryQueue(queue: DXN, options?: {}): Promise<FeedProtocol.QueryResult>;
+  queryQueue(queue: DXN, options?: {}): Promise<QueryResult>;
   insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void>;
 }
 
@@ -27,8 +32,13 @@ export class QueuesAPIImpl implements QueuesAPI {
     private readonly _spaceId: SpaceId,
   ) {}
 
-  queryQueue(queue: DXN, options?: {}): Promise<FeedProtocol.QueryResult> {
-    return this._serviceContainer.queryQueue(queue);
+  async queryQueue(queue: DXN, options?: {}): Promise<QueryResult> {
+    const result = await this._serviceContainer.queryQueue(queue);
+    return {
+      objects: (result.objects ?? []).map((encoded) => JSON.parse(encoded) as AnyEntity),
+      nextCursor: result.nextCursor ?? null,
+      prevCursor: result.prevCursor ?? null,
+    };
   }
 
   insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {

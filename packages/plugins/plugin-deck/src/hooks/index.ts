@@ -10,3 +10,4 @@ export * from './useHoistStatusbar';
 export * from './useMainSize';
 export * from './useNodeActionExpander';
 export * from './useSelectedCompanion';
+export * from './useShowItem';

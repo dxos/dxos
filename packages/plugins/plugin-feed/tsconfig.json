@@ -33,6 +33,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -61,6 +64,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-mosaic"

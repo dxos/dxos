@@ -35,7 +35,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [DeckEvents.SettingsReady],
+    firesAfterActivation: [DeckEvents.SettingsReady],
     activate: DeckSettings,
   }),
   Plugin.addModule({
@@ -47,7 +47,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
+    firesAfterActivation: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
   Plugin.addModule({
