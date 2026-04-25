@@ -2,7 +2,7 @@
 title: "Why we're building a super-app"
 slug: why-were-building-a-super-app
 date: 2024-06-06
-description: "Composer is an open source \"Super App\" that provides teams with a fully customizable and extensible environment."
+description: 'Composer is an open source "Super App" that provides teams with a fully customizable and extensible environment.'
 author: Rich Burdon
 tags:
   - Composer
