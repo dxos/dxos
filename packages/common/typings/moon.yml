@@ -4,6 +4,7 @@ tags:
   - typecheck
   - pack
 tasks:
+  # All files are .d.ts, which are excluded by the global ignorePattern, so oxlint finds nothing and exits 1.
   lint:
     command: 'true'
     options:
