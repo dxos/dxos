@@ -11,8 +11,6 @@ featureImage: /blog/images/Blog-Announcement-Image-1.jpg
 
 Today we're excited to share a **Technical Preview** of the DXOS platform, an open source project that supports the development of local-first, collaborative applications. DXOS was created by a small core team of developers from many countries. Our goal is to enable developers to quickly and easily create powerful collaborative, interoperable applications.
 
-🐲
-
 DXOS is a \***\*Technical Preview.\*\*** Please don't use this for production data. We're working towards a stable and secure 1.0 release.
 
 ## What is DXOS
@@ -28,12 +26,6 @@ We wrap these three components together in a set of SDKs (currently, [React](htt
 ## Getting started with DXOS
 
 With today's Technical Preview, DXOS is suitable for building real-world applications. We're using DXOS-powered apps ourselves on a daily basis. Here are three ways you can get started with DXOS.
-
-0:00
-
-/0:29
-
-1×
 
 Quickly build peer-to-peer apps with state synchronization.
 
