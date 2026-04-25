@@ -1,9 +1,11 @@
 ---
-//
-// Copyright 2026 DXOS.org
-//
-
-
+import WebflowLayout from '../layouts/WebflowLayout.astro';
+import DxosLogo from '../components/svg/DxosLogo.astro';
+import IconExternalLink from '../components/svg/IconExternalLink.astro';
+import IconGitHub from '../components/svg/IconGitHub.astro';
+import IconDiscord from '../components/svg/IconDiscord.astro';
+import IconBluesky from '../components/svg/IconBluesky.astro';
+import IconX from '../components/svg/IconX.astro';
 ---
 <WebflowLayout
   title="Composer Welcome"
@@ -103,11 +105,7 @@
     </div>
   </div>
   <script is:inline>
-    //
-// Copyright 2026 DXOS.org
-//
-
-document.querySelectorAll('.early-access-form').forEach(function (form) {
+    document.querySelectorAll('.early-access-form').forEach(function (form) {
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         const email = form.querySelector('[name="email"]').value;

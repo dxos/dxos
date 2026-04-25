@@ -1,10 +1,9 @@
 ---
-//
-// Copyright 2026 DXOS.org
-//
-
 import { getEntry, render } from 'astro:content';
 
+import WebflowLayout from '../layouts/WebflowLayout.astro';
+import WebflowNav from '../components/WebflowNav.astro';
+import WebflowFooter from '../components/WebflowFooter.astro';
 
 const entry = await getEntry('legal', 'terms');
 const { Content } = await render(entry);

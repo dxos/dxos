@@ -1,10 +1,10 @@
 ---
-//
-// Copyright 2026 DXOS.org
-//
-
 import { getCollection } from 'astro:content';
 
+import WebflowLayout from '../layouts/WebflowLayout.astro';
+import WebflowNav from '../components/WebflowNav.astro';
+import WebflowFooter from '../components/WebflowFooter.astro';
+import IconExternalLink from '../components/svg/IconExternalLink.astro';
 
 const plugins = (await getCollection('plugins')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
 
