@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { extractImageUrls } from './extract';
-import { htmlToMarkdown } from './html-to-markdown';
+import { extractArticle } from './extract-article';
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
@@ -109,9 +108,10 @@ export const fetchArticle = async (link: string, options: FetchArticleOptions = 
       throw new Error(`Response too large: ${contentLength} bytes`);
     }
     const html = await readCapped(response, MAX_RESPONSE_BYTES);
+    const article = extractArticle(html, url.toString());
     return {
-      text: htmlToMarkdown(html),
-      imageUrls: extractImageUrls(html),
+      text: article.markdown,
+      imageUrls: article.imageUrls,
     };
   } catch (error) {
     throw new Error(`Failed to fetch article: ${String(error)}`, {

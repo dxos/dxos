@@ -7,13 +7,13 @@ import React, { useCallback, useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
+import { PostContent } from '#components';
 import { meta } from '#meta';
 import { Subscription } from '#types';
 
-import { ensureStarTag, formatDate, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
+import { ensureStarTag, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -37,7 +37,6 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
   }, [post.feed, allFeeds]);
 
-  const metaLine = [post.author, feedName, formatDate(post.published)].filter(Boolean).join(' · ');
   const archived = Boolean(post.archived);
   const starred = hasMetaTag(post, starTag);
 
@@ -108,16 +107,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical' thin>
-          <ScrollArea.Viewport>
-            <article className='flex flex-col gap-3 p-4'>
-              <h1 className='text-xl font-semibold'>{post.title ?? t('post-title.placeholder')}</h1>
-              {metaLine && <div className='text-xs text-subdued'>{metaLine}</div>}
-              {post.imageUrl && <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' />}
-              {(post.content || post.snippet) && <MarkdownViewer content={post.content || post.snippet} />}
-            </article>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <PostContent post={post} metadata={feedName ? [feedName] : undefined} />
       </Panel.Content>
     </Panel.Root>
   );
