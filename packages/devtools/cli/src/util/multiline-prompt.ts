@@ -69,13 +69,10 @@ const createLineReader = (): LineReader => {
 };
 
 /**
- * Effect-TS compatible multi-line input prompt.
- *
- * Reads lines from stdin until an empty line, returning the accumulated
- * value. Exits cleanly on EOF (stdin close) or when the user enters one of
- * the configured exit commands.
- *
- * Inspired by OpenCode CLI multi-line input handling.
+ * Effect-TS compatible single-line prompt with optional shell-style line
+ * continuation. Press Enter to submit; end a line with `\` to continue on
+ * the next line (the trailing `\` is stripped). Exits cleanly on EOF or
+ * when the user enters one of the configured exit commands.
  */
 export const multilinePrompt = (
   options: MultilinePromptOptions = {},
@@ -95,18 +92,20 @@ export const multilinePrompt = (
           catch: (error) => new Error(String(error)),
         });
 
-        firstLine = false;
-
         if (line === null) {
           // stdin closed — treat as clean exit.
           return { type: 'exit' } as const;
         }
 
-        if (line === '') {
-          break;
+        // Trailing backslash signals continuation. Strip it and keep reading.
+        if (line.endsWith('\\')) {
+          lines.push(line.slice(0, -1));
+          firstLine = false;
+          continue;
         }
 
         lines.push(line);
+        break;
       }
 
       const input = lines.join('\n').trim();
