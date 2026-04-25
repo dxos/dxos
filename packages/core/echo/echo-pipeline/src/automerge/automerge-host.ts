@@ -389,52 +389,21 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
-  /**
-   * Loads the document handle from the repo and waits for it to be ready.
-   *
-   * Workaround: the subduction-fork `Repo.find()` via upstream `StorageSubsystem.loadDoc`
-   * does not correctly reconstruct a document when storage has both a snapshot and one or
-   * more incremental chunks (the concatenated bytes fail to parse with `loadIncremental`).
-   * Symptom: handle becomes `ready` with an empty doc. Detect this case and re-seed the
-   * handle by importing the fully-reconstructed bytes from our own loader.
-   */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
-    let handle: DocHandle<T> | undefined;
-    if (typeof documentId === 'string') {
-      handle = this._repo.handles[documentId as DocumentId];
+    // Readiness lives on the `DocumentQuery`, not the `DocHandle`: in the
+    // subduction fork `DocHandle.isReady()` is hardcoded `true` and
+    // `DocHandle.whenReady()` is a no-op. Inspect the query's actual state
+    // before deciding whether to fast-return or await it.
+    const progress = this._repo.findWithProgress<T>(documentId as DocumentId);
+    const state = progress.peek();
+    if (state.state === 'ready') {
+      return state.handle;
     }
-    if (!handle) {
-      handle = await this._repo.find(documentId as DocumentId);
-    }
-
-    if (!handle.isReady()) {
-      if (!opts?.timeout) {
-        await cancelWithContext(ctx, handle.whenReady());
-      } else {
-        await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), opts.timeout));
-      }
-    }
-
-    await this._rehydrateFromStorageIfNeeded(handle);
-
-    return handle;
-  }
-
-  /**
-   * If the Repo's storage-source returned an empty doc but disk actually has data, reload
-   * manually and apply into the handle. See `loadDoc` doc for the upstream bug context.
-   */
-  private async _rehydrateFromStorageIfNeeded(handle: DocHandle<unknown>): Promise<void> {
-    const doc = handle.doc();
-    if (doc && getHeads(doc).length > 0) {
-      return;
-    }
-    const fresh = await this._loadDocFromStorage(handle.documentId);
-    if (!fresh || getHeads(fresh).length === 0) {
-      return;
-    }
-    handle.update(() => fresh as Doc<unknown>);
+    const readyPromise = progress.whenReady();
+    return opts?.timeout
+      ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
+      : await cancelWithContext(ctx, readyPromise);
   }
 
   async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
