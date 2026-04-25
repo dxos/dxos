@@ -16,7 +16,7 @@ import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
-import { omitId } from '../Form';
+import { omitHiddenFormFields, omitId } from '../Form';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 // TODO(burdon): Factor out.
@@ -197,7 +197,10 @@ export const RefField = (props: RefFieldProps) => {
                 classNames='dx-card-popover-width'
                 options={options}
                 selectedIds={selectedIds}
-                createSchema={createSchema && omitId(createSchema)}
+                // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
+                // form's validator doesn't reject required-but-hidden fields
+                // such as backing-object refs supplied by a `FactoryAnnotation`.
+                createSchema={createSchema && omitHiddenFormFields(omitId(createSchema))}
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}

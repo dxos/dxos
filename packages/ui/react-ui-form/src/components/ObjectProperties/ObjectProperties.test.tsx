@@ -12,7 +12,7 @@ import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
 import * as stories from './ObjectProperties.stories';
 import { type ObjectPropertiesDebug } from './ObjectProperties.stories';
 
-const { CreateTagPlay, CreateRefArrayPlay } = composeStories(stories);
+const { CreateTagPlay, CreateRefArrayPlay, CreateHiddenFieldPlay } = composeStories(stories);
 
 const getDebug = (): ObjectPropertiesDebug => {
   const debug = (window as any)[OBJECT_PROPERTIES_DEBUG_SYMBOL] as ObjectPropertiesDebug | undefined;
@@ -67,6 +67,39 @@ describe('ObjectProperties — inline create flow', () => {
         article.authors[0]?.dxn?.toString().endsWith(`:${createdId}`),
         'article.authors[0] should reference the newly-created Author',
       ).toBe(true);
+    },
+  );
+
+  test(
+    'hidden required field via FactoryAnnotation: Create + Save closes form and assigns ref',
+    { timeout: 30_000 },
+    async () => {
+      await CreateHiddenFieldPlay.run();
+      const { db, object } = getDebug();
+
+      // The new Note should exist in the DB with the synthesised signature.
+      const notes = (await db.query(Filter.typename('org.dxos.test.note' as any)).run()) as any[];
+      const created = notes.find((note: any) => note.title === 'Ideas');
+      expect(created, 'new Note with title "Ideas" should be in the database').toBeDefined();
+      expect(
+        (created as any).signature,
+        'FactoryAnnotation should have populated the hidden `signature` field',
+      ).toBe('auto-generated');
+
+      // The notebook's notes array should reference the new Note.
+      const notebook = object as any;
+      expect(notebook.notes ?? [], 'notebook.notes should contain a single Ref').toHaveLength(1);
+      const createdId = (created as any).id as string;
+      expect(
+        notebook.notes[0]?.dxn?.toString().endsWith(`:${createdId}`),
+        'notebook.notes[0] should reference the newly-created Note',
+      ).toBe(true);
+
+      // The picker's create form should be gone.
+      expect(
+        document.querySelector('[data-testid="create-referenced-object-form"]'),
+        'create form should be dismissed after a successful save',
+      ).toBeNull();
     },
   );
 });

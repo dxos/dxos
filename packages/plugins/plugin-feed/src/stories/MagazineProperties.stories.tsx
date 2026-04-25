@@ -114,7 +114,7 @@ export const Default: Story = {};
  *  - `ObjectPicker`'s `onCreate(values)` callback drops the form path, so
  *    `ObjectProperties` couldn't update the right slot even if it wanted to.
  */
-export const CreateFeedBugRepro: Story = {
+export const CreateFeed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);

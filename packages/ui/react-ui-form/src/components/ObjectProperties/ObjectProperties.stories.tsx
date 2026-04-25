@@ -8,11 +8,12 @@ import React, { useEffect } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
 
 import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
@@ -49,6 +50,41 @@ const Article = Schema.Struct({
   Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'green' }),
 );
 type Article = Schema.Schema.Type<typeof Article>;
+
+//
+// `Note` mirrors the `Subscription.Feed` shape: a required field
+// (`signature`) is hidden from the form via `FormInputAnnotation.set(false)`,
+// so `Obj.make(Note, values)` from the picker would reject because the form
+// values can't satisfy the schema. A `FactoryAnnotation` supplies the hidden
+// field at construction time.
+//
+
+const Note = Schema.Struct({
+  title: Schema.String,
+  signature: Schema.String.pipe(FormInputAnnotation.set(false)),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.test.note',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['title']),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'amber' }),
+  FactoryAnnotation.set(((values: any) => Obj.make(Note, { ...values, signature: 'auto-generated' })) as FactoryFn),
+);
+type Note = Schema.Schema.Type<typeof Note>;
+
+const Notebook = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
+  notes: Schema.Array(Ref.Ref(Note)),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.test.notebook',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'amber' }),
+);
+type Notebook = Schema.Schema.Type<typeof Notebook>;
 
 //
 // Stories.
@@ -148,6 +184,39 @@ const articleDecorators = [
   }),
 ];
 
+const NotebookStory = () => {
+  const { space } = useClientStory();
+  const [object] = useQuery(space?.db, Filter.type(Notebook));
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && space?.db && object) {
+      (window as any)[OBJECT_PROPERTIES_DEBUG_SYMBOL] = { db: space.db, object } satisfies ObjectPropertiesDebug;
+    }
+  }, [space, object]);
+
+  if (!object) {
+    return <Loading />;
+  }
+  return (
+    <Panel.Root>
+      <Panel.Content asChild>
+        <ObjectProperties object={object} />
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
+const notebookDecorators = [
+  withClientProvider({
+    createIdentity: true,
+    createSpace: true,
+    types: [Notebook, Note, Tag.Tag],
+    onCreateSpace: async ({ space }) => {
+      space.db.add(Obj.make(Notebook, { name: 'Untitled notebook', notes: [] }));
+    },
+  }),
+];
+
 /**
  * Default Pipeline form — manual exploration. Includes the Tags picker (which
  * is the only ref-array path that currently works end-to-end, by virtue of
@@ -240,6 +309,50 @@ export const CreateRefArrayPlay: Story = {
     const nameInput = await within(form).findByLabelText(/^name$/i);
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'Ada Lovelace');
+    await userEvent.click(await within(form).findByTestId('save-button'));
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  },
+};
+
+/**
+ * Ref-array creation against a schema with a hidden required field. `Note`
+ * mirrors the shape of `Subscription.Feed`: the form omits `signature` (it's
+ * `FormInputAnnotation.set(false)`) but the schema requires it. Without
+ * `omitHiddenFormFields` + `FactoryAnnotation`, the form's validator would
+ * reject Save and the popover would never close.
+ *
+ * Expected end-state after the fix:
+ *   - new Note exists in DB with a synthesised `signature`
+ *   - `notebook.notes[0]` references it
+ *   - the create form is gone
+ */
+export const CreateHiddenFieldPlay: Story = {
+  render: NotebookStory,
+  decorators: notebookDecorators,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    // Two "Add item" buttons (Tags + Notes) — Notes comes second.
+    const addButtons = await canvas.findAllByRole('button', { name: /add/i }, { timeout: 10_000 });
+    await userEvent.click(addButtons[addButtons.length - 1]);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    const comboboxes = await canvas.findAllByRole('combobox', undefined, { timeout: 10_000 });
+    await expect(comboboxes.length).toBeGreaterThan(0);
+    await userEvent.click(comboboxes[0]);
+
+    const search = await body.findByPlaceholderText(/search/i, undefined, { timeout: 5000 });
+    await userEvent.type(search, 'Ideas');
+
+    const createOption = await body.findByRole('option', { name: /create/i }, { timeout: 3000 });
+    await userEvent.click(createOption);
+
+    const form = await body.findByTestId('create-referenced-object-form', undefined, { timeout: 5000 });
+    const titleInput = await within(form).findByLabelText(/^title$/i);
+    await userEvent.clear(titleInput);
+    await userEvent.type(titleInput, 'Ideas');
     await userEvent.click(await within(form).findByTestId('save-button'));
 
     await new Promise((resolve) => setTimeout(resolve, 250));
