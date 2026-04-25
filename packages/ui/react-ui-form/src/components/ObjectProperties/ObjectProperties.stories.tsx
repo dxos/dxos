@@ -16,8 +16,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
 import { translations } from '../../translations';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
 import { ObjectProperties } from './ObjectProperties';
 
 //
@@ -92,11 +92,7 @@ type Notebook = Schema.Schema.Type<typeof Notebook>;
 
 export type ObjectPropertiesDebug = {
   /** Live database the story is rendering against. */
-  db: ReturnType<typeof useClientStory>['space'] extends infer S
-    ? S extends { db: infer D }
-      ? D
-      : never
-    : never;
+  db: ReturnType<typeof useClientStory>['space'] extends infer S ? (S extends { db: infer D } ? D : never) : never;
   /** Object whose properties are being edited. */
   object: Obj.Unknown;
 };
