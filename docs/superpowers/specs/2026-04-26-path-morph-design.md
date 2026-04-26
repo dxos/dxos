@@ -34,20 +34,39 @@ Add an experimental `PathMorph` component to `@dxos/react-ui-sfx` that morphs a 
 
 import { interpolate } from 'flubber';
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// Two SVG path strings defined on a 0-100 viewBox.
-// Both share the same starting anchor (M50,10) so flubber's segment matching
-// produces a stable, low-distortion interpolation.
-const paths = [
-  // Circle: cx=50, cy=50, r=40 expressed as four cubic-bezier arcs.
-  'M50,10 C72.0914,10 90,27.9086 90,50 C90,72.0914 72.0914,90 50,90 C27.9086,90 10,72.0914 10,50 C10,27.9086 27.9086,10 50,10 Z',
-  // Six-point star: alternating outer (r=40) / inner (r=18) vertices around (50, 50).
-  'M50,10 L56,38 L84,32 L65,53 L84,68 L56,62 L50,90 L44,62 L16,68 L35,53 L16,32 L44,38 Z',
-];
+// Circle: cx=50, cy=50, r=40 expressed as four cubic-bezier arcs (handle = r · 0.5523).
+const CIRCLE_PATH =
+  'M50,10 C72.0914,10 90,27.9086 90,50 C90,72.0914 72.0914,90 50,90 C27.9086,90 10,72.0914 10,50 C10,27.9086 27.9086,10 50,10 Z';
+
+/**
+ * Builds an n-point star SVG path with alternating outer/inner radii around (cx, cy).
+ * First vertex sits at the top (angle = -π/2) so it matches the circle's anchor at (50, 10).
+ */
+const buildStarPath = (
+  cx: number,
+  cy: number,
+  outerR: number,
+  innerR: number,
+  points: number,
+): string => {
+  const cmds: string[] = [];
+  for (let i = 0; i < points * 2; i++) {
+    const angle = (Math.PI / points) * i - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    cmds.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(3)},${y.toFixed(3)}`);
+  }
+  cmds.push('Z');
+  return cmds.join(' ');
+};
+
+const STAR_PATH = buildStarPath(50, 50, 40, 18, 6);
 
 export type PathMorphProps = ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
@@ -62,9 +81,11 @@ export type PathMorphProps = ThemedClassName<{
  */
 export const PathMorph = ({ classNames, size = 100, duration = 2 }: PathMorphProps) => {
   const progress = useMotionValue(0);
-  const path = useTransform(progress, [0, 1], paths, {
-    mixer: (a, b) => interpolate(a, b, { maxSegmentLength: 2 }),
-  });
+  const interpolator = useMemo(
+    () => interpolate(CIRCLE_PATH, STAR_PATH, { maxSegmentLength: 2 }),
+    [],
+  );
+  const path = useTransform(progress, (t) => interpolator(t));
 
   useEffect(() => {
     const controls = animate(progress, [0, 1, 0], {
@@ -83,9 +104,11 @@ export const PathMorph = ({ classNames, size = 100, duration = 2 }: PathMorphPro
 };
 ```
 
-**Why these specific paths.** Both paths begin with `M50,10` (top-center anchor) and traverse clockwise. Flubber's `interpolate` matches segments by index and resamples to equalize point count via `maxSegmentLength: 2` — a small max-segment value keeps the interpolation visually smooth on a 100×100 viewport. Sharing the start point avoids an unsightly "rotation" during the morph.
+**Why these specific paths.** Both paths begin at the top-center vertex `(50, 10)` (angle = `-π/2`) and traverse clockwise. Flubber's `interpolate` matches segments by index and resamples to equalize point count via `maxSegmentLength: 2` — a small max-segment value keeps the interpolation visually smooth on a 100×100 viewport. Sharing the start point avoids an unsightly "rotation" during the morph.
 
-**`useTransform` mixer.** Motion's default mixer can't morph SVG `d` strings; we pass a `mixer` factory that calls `flubber.interpolate(a, b, …)` to produce a function `t -> path` for each segment of the input range.
+**Star path is computed, not hand-rolled.** `buildStarPath(50, 50, 40, 18, 6)` produces the 12 vertices (6 outer at r=40, 6 inner at r=18) deterministically. This avoids drift between the spec's stated radii and the actual coordinates that a hand-typed path string would have.
+
+**Why the function form of `useTransform`.** `useTransform(value, fn)` lets us call our memoized `flubber.interpolate(a, b)` directly, which already returns `(t) => string`. The alternative — `useTransform(value, [0, 1], [pathA, pathB], { mixer })` — relies on the `mixer` option name, which has historically varied across motion / framer-motion versions. The function form is unambiguous in motion v12.
 
 **Animation cycle.** `animate(progress, [0, 1, 0], { duration: duration * 2, ease: 'easeInOut', repeat: Infinity })` drives `progress` through 0 → 1 → 0 over one cycle (default 4 s total: 2 s morphing to star, 2 s morphing back). `easeInOut` softens the dwell at each shape extreme.
 
@@ -146,5 +169,5 @@ Visual verification via Storybook only. Acceptance gate:
 ## Risks
 
 - **Flubber types.** `flubber` ships either CommonJS-only or has no bundled types in some versions; the catalog add may need `@types/flubber` as a sibling devDependency. If the build fails on a missing type, add `@types/flubber` to the dev dependencies via `pnpm add --filter @dxos/react-ui-sfx --save-catalog --save-dev @types/flubber`. If types still don't resolve, declare `declare module 'flubber';` in `src/vite-env.d.ts`.
-- **`motion/react` version.** The package catalog has `motion: ^12.0.6`. `useMotionValue` / `useTransform` / `animate` / `motion.path` are all stable in v12 — no compatibility concern.
+- **`motion/react` version.** The package catalog has `motion: ^12.0.6`. `useMotionValue` / `useTransform(value, fn)` / `animate` / `motion.path` are all stable in v12 — no compatibility concern. The function form of `useTransform` (rather than the array-output form with a `mixer` option) is used specifically to avoid version-specific option naming.
 - **Viewbox + size mismatch.** `viewBox='0 0 100 100'` with `width=size` produces a 1:1 square; the consumer must respect aspect ratio if they override via `classNames`. Acceptable for an experimental component.
