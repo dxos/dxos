@@ -68,7 +68,14 @@ export const Matrix = ({
       <div className='dx-expander relative flex'>
         <AnimatePresence>
           {positions.map((variant, i) => (
-            <Dot key={i} variants={variants} variant={variant} size={dotSize} classNames='bg-primary-500' />
+            <Dot
+              key={i}
+              classNames='bg-primary-500'
+              variants={variants}
+              variant={variant}
+              size={dotSize}
+              duration={Math.min(interval / 1_000, 0.2)}
+            />
           ))}
         </AnimatePresence>
       </div>
@@ -76,17 +83,17 @@ export const Matrix = ({
   );
 };
 
-// TODO(burdon): Vary size; convert size to pixels.
 const Dot = ({
   classNames,
   variants,
   variant,
   size = 4,
-}: ThemedClassName<{ variants: Record<string, any>; variant: string; size?: number }>) => (
+  duration = 0.2,
+}: ThemedClassName<{ variants: Record<string, any>; variant: string; size?: number; duration?: number }>) => (
   <motion.div
     className={mx('absolute', classNames)}
     style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
-    transition={{ ease: 'easeInOut', duration: 0.2 }}
+    transition={{ ease: 'easeInOut', duration }}
     variants={variants}
     initial={variants[variant]}
     animate={variant}
