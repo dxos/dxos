@@ -53,7 +53,7 @@ export const Stopwatch = ({ classNames, start: startProp, icon, meta }: Stopwatc
       <span>{formatElapsed(elapsed)}</span>
       {meta != null && (
         <>
-          <span aria-hidden='true' className='opacity-50'>
+          <span aria-hidden='true' className='px-1 opacity-50'>
             ·
           </span>
           <span>{meta}</span>
@@ -64,5 +64,5 @@ export const Stopwatch = ({ classNames, start: startProp, icon, meta }: Stopwatc
 };
 
 const DefaultIcon = () => (
-  <span aria-hidden='true' className='inline-block size-2 rounded-full bg-current animate-halo-pulse' />
+  <span aria-hidden='true' className='inline-block size-2 rounded-full bg-current animate-halo-pulse text-orange-500' />
 );

@@ -29,7 +29,7 @@ export const WithMeta: Story = {
     meta: (
       <>
         <span>↑ 234</span>
-        <span aria-hidden='true' className='opacity-50'>
+        <span aria-hidden='true' className='px-1 opacity-50'>
           ·
         </span>
         <span>↓ 1.2k</span>
