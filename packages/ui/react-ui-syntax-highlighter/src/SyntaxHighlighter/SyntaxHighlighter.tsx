@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Children, type CSSProperties } from 'react';
+import React, { Children } from 'react';
 import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -20,14 +20,15 @@ const languages = {
 export type SyntaxHighlighterProps = Pick<
   NativeSyntaxHighlighterProps,
   | 'language'
+  | 'renderer'
   | 'showLineNumbers'
   | 'showInlineLineNumbers'
   | 'startingLineNumber'
   | 'wrapLines'
   | 'wrapLongLines'
   | 'PreTag'
-  | 'renderer'
 > & {
+  themeStyle?: NativeSyntaxHighlighterProps['style'];
   fallback?: string;
   copyButton?: boolean;
 };
@@ -50,7 +51,9 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
       classNames,
       className,
       children,
+      role,
       style,
+      themeStyle,
       language = 'text',
       fallback = zeroWidthSpace,
       copyButton,
@@ -61,21 +64,13 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
     const { themeMode } = useThemeContext();
     const source = Children.toArray(children).join('') || fallback;
 
-    // The `style` prop here is a Prism theme (a token → CSSProperties map), not a React style.
-    // `composableProps` from parent composites may inject `style: {}` for DOM merging; treat it
-    // as "no custom theme" so the default theme still applies.
-    const hasCustomTheme = style && typeof style === 'object' && Object.keys(style).length > 0;
-    const prismTheme = hasCustomTheme
-      ? (style as { [key: string]: CSSProperties })
-      : themeMode === 'dark'
-        ? dark
-        : light;
+    const hasCustomTheme = themeStyle && typeof themeStyle === 'object' && Object.keys(themeStyle).length > 0;
+    const prismTheme = hasCustomTheme ? themeStyle : themeMode === 'dark' ? dark : light;
 
     return (
       <div
         {...composableProps(
-          // TODO(burdon): Use scoped props?
-          { classNames, className },
+          { classNames, className, role, style },
           {
             role: 'none',
             classNames: copyButton && 'relative group',

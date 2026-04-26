@@ -158,19 +158,42 @@ export const Default: Story = {
     // Focus on the second table (Person/contacts table)
     await expect(secondGrid).toBeVisible();
 
+    // Wait for both grids' data generators to finish populating before
+    // interacting. `findByTestId` returns as soon as the cell DOM exists,
+    // but dx-grid's internal cell registry (used by `cellReadonly` and the
+    // edit-request dispatcher) is filled in lazily. If `keydown` lands
+    // before the registry has the row, `dispatchEditRequest` short-circuits
+    // and the combobox never opens — that's the "Unable to find combobox"
+    // flake. Wait for the first row of each grid to render non-empty
+    // content (a reliable proxy for "registry populated") BEFORE scrolling
+    // — once we scroll the second grid to column 4, dx-grid virtualizes
+    // columns 0-3 out of the DOM, so `grid.0.0` becomes unreachable.
+    await waitFor(
+      async () => {
+        const firstOrgCell = within(firstGrid).getByTestId('grid.0.0');
+        const orgText = (firstOrgCell.querySelector('.dx-grid__cell__content') as HTMLElement | null)?.textContent;
+        await expect(orgText).toBeTruthy();
+        const firstContactCell = within(secondGrid).getByTestId('grid.0.0');
+        const contactText = (firstContactCell.querySelector('.dx-grid__cell__content') as HTMLElement | null)
+          ?.textContent;
+        await expect(contactText).toBeTruthy();
+      },
+      { timeout: 10_000 },
+    );
+
     // Scroll to the relations column (column 4) - this mimics the scrollToColumn call
     (secondGrid.closest('dx-grid') as DxGrid).scrollToColumn(4);
 
-    // Find and click the target cell (first row, relations column)
+    // Find the target cell (first row, relations column).
     const targetCell = await within(secondGrid).findByTestId('grid.4.0', undefined, { timeout: 10_000 });
     await expect(targetCell).toBeVisible();
 
-    // Click to focus the cell
+    // Click to focus the cell.
     await userEvent.click(targetCell as HTMLElement);
     await expect(targetCell).toHaveFocus();
     await userEvent.keyboard('{Enter}');
 
-    // Look for the combobox that should appear in edit mode
+    // Look for the combobox that should appear in edit mode.
     const combobox = await body.findByRole('combobox', undefined, { timeout: 5000 });
     await userEvent.click(combobox);
 
