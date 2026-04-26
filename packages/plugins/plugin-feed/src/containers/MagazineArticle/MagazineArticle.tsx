@@ -52,8 +52,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     const map = new Map<string, string>();
     for (const feed of allFeeds) {
       // Fall back to URL when sync hasn't populated `name` yet (or the source RSS has no
-      // `<title>`) so each tile still shows provenance.
-      const label = feed.name ?? feed.url;
+      // `<title>`) so each tile still shows provenance. Use `||` so empty-string names
+      // (parser-supplied empty `<title>`) also fall through to the URL.
+      const label = feed.name || feed.url;
       if (label) {
         map.set((feed as { id: string }).id, label);
       }
