@@ -12,10 +12,14 @@ import { log } from '@dxos/log';
 import { INITIAL_URL } from './app-manager';
 import { appendBenchmarkRow, collectStartupReport, trackNetwork, waitForReady, writeReport } from './harness-helpers';
 
-if (process.env.DX_PWA !== 'false') {
-  log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
-  process.exit(1);
-}
+// Surface the DX_PWA requirement as a test-level failure rather than a hard
+// `process.exit` at spec-collection time — keeps the playwright report and
+// HTML output meaningful even when this constraint is the cause.
+test.beforeAll(() => {
+  if (process.env.DX_PWA !== 'false') {
+    throw new Error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
+  }
+});
 
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
@@ -127,8 +131,8 @@ test.describe.serial('Startup timing harness', () => {
       const report = await collectStartupReport(page, 'warm-cold');
       report.navigationToReady = navigationToReady;
       const counts = network();
-    report.transferredBytes = counts.bytes;
-    report.responseCount = counts.responses;
+      report.transferredBytes = counts.bytes;
+      report.responseCount = counts.responses;
 
       writeReport(`startup-warm-cold-${browserName}.json`, report);
       appendBenchmarkRow(report);

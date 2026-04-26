@@ -9,10 +9,11 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 /**
  * Dev-server harness config — measures `vite serve` startup, not `vite preview`.
  *
- * The webServer command is `pnpm vite serve --port 4173` so the app-manager's
- * `INITIAL_URL` (also 4173) keeps working without a second URL constant. The
- * `testMatch` constraint scopes this config to `dev-startup.spec.ts` only — the
- * production `startup.spec.ts` continues to run under `playwright.config.ts`.
+ * The webServer command is `pnpm vite --port 4173` (`serve` is vite's default
+ * subcommand) so the app-manager's `INITIAL_URL` (also 4173) keeps working
+ * without a second URL constant. The `testMatch` constraint scopes this
+ * config to `dev-startup.spec.ts` only — the production `startup.spec.ts`
+ * continues to run under `playwright.config.ts`.
  *
  * Run with:
  *

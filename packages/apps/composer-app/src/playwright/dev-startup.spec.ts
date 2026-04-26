@@ -9,10 +9,13 @@ import { log } from '@dxos/log';
 import { INITIAL_URL } from './app-manager';
 import { appendBenchmarkRow, collectStartupReport, trackNetwork, waitForReady, writeReport } from './harness-helpers';
 
-if (process.env.DX_PWA !== 'false') {
-  log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
-  process.exit(1);
-}
+// Surface the DX_PWA requirement as a test-level failure rather than a hard
+// `process.exit` at spec-collection time.
+test.beforeAll(() => {
+  if (process.env.DX_PWA !== 'false') {
+    throw new Error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
+  }
+});
 
 /**
  * Dev-server startup harness. Run via `playwright-dev.config.ts`, which boots

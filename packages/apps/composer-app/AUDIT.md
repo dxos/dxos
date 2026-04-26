@@ -824,19 +824,19 @@ Net: clearly worth it for first-impression polish.
 
 ## 10. Summary of phases shipped
 
-| Phase | What                                                 | Commit                     | Headline metric move                     |
-| ----: | ---------------------------------------------------- | -------------------------- | ---------------------------------------- |
-|     1 | Defer `OnboardingManager.initialize()` to background | `9db4acdb1f`               | **−45% cold profilerTotal**              |
-|     2 | Lazy-load plugin chunks                              | `697d645631`               | **eager bundle −96%** (8.5 MB → 393 KB)  |
-|     3 | Small wins (Promise.all, PubSub progress, mark)      | `2560fb5afb`               | flat perf, new `firstInteractive` metric |
-|   3.5 | `useLoading` debounce 1 s → 200 ms                   | `562d20e31c`               | UX cleanup (within noise)                |
-|     4 | Activation-graph hygiene                             | (reverted in `c0e35cd1d2`) | shipping-blocked by warm flake           |
-|     5 | Harness: warm-cold + throttled scenarios             | `ca88ace276`               | first `warm-cold` measurement            |
-|     6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`               | flat perf, new ops visibility            |
-|     7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`               | flat perf, dev ergonomics                |
-|     8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                 |
-|     9 | Dev-server harness (`dev-cold` scenario)             | `8df7ba14ea`               | first `dev-cold` measurement             |
-|    10 | Vite dev pre-bundling + `server.warmup`              | `efdf1dd9eb`                    | dev `navToReady` −1.4 s; pre-`main:start` −6.1 s |
+| Phase | What                                                 | Commit                     | Headline metric move                             |
+| ----: | ---------------------------------------------------- | -------------------------- | ------------------------------------------------ |
+|     1 | Defer `OnboardingManager.initialize()` to background | `9db4acdb1f`               | **−45% cold profilerTotal**                      |
+|     2 | Lazy-load plugin chunks                              | `697d645631`               | **eager bundle −96%** (8.5 MB → 393 KB)          |
+|     3 | Small wins (Promise.all, PubSub progress, mark)      | `2560fb5afb`               | flat perf, new `firstInteractive` metric         |
+|   3.5 | `useLoading` debounce 1 s → 200 ms                   | `562d20e31c`               | UX cleanup (within noise)                        |
+|     4 | Activation-graph hygiene                             | (reverted in `c0e35cd1d2`) | shipping-blocked by warm flake                   |
+|     5 | Harness: warm-cold + throttled scenarios             | `ca88ace276`               | first `warm-cold` measurement                    |
+|     6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`               | flat perf, new ops visibility                    |
+|     7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`               | flat perf, dev ergonomics                        |
+|     8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                         |
+|     9 | Dev-server harness (`dev-cold` scenario)             | `8df7ba14ea`               | first `dev-cold` measurement                     |
+|    10 | Vite dev pre-bundling + `server.warmup`              | `efdf1dd9eb`               | dev `navToReady` −1.4 s; pre-`main:start` −6.1 s |
 
 Headline cumulative (production preview): cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
 cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%. Dev:
@@ -863,10 +863,10 @@ different costs:
 
 ### Phase 9 — dev-server harness (commit `8df7ba14ea`)
 
-| Scenario                            |        Cold profilerTotal |          Cold navToReady |     Bytes |   modules |
-| ----------------------------------- | ------------------------: | -----------------------: | --------: | --------: |
-| `cold` (prod preview, phase 8 ref)  |                  ~5,400 ms |                ~8,700 ms |    41 MB |       257 |
-| **`dev-cold`** (vite serve, fresh)  |              **6,269 ms** |          **17,586 ms**   | **123 MB** |       258 |
+| Scenario                           | Cold profilerTotal | Cold navToReady |      Bytes | modules |
+| ---------------------------------- | -----------------: | --------------: | ---------: | ------: |
+| `cold` (prod preview, phase 8 ref) |          ~5,400 ms |       ~8,700 ms |      41 MB |     257 |
+| **`dev-cold`** (vite serve, fresh) |       **6,269 ms** |   **17,586 ms** | **123 MB** |     258 |
 
 **Dev cold pays ~9 s of pre-`main:start` time** (the gap between `navToReady`
 and `profilerTotal`). That's vite serving + transforming every source file
@@ -880,7 +880,7 @@ on demand — exactly the cost phase 10 targets.
   spec can reuse them without duplication.
 - New [`dev-startup.spec.ts`](src/playwright/dev-startup.spec.ts) with one
   scenario, `dev-cold`, that primes vite by navigating once, closes the
-  context, then measures a *fresh* browser context against the still-warm
+  context, then measures a _fresh_ browser context against the still-warm
   vite serve. Captures the same `StartupReport` shape as the prod harness
   so the BENCHMARKS row is uniform.
 - New [`playwright-dev.config.ts`](src/playwright/playwright-dev.config.ts)
@@ -897,11 +897,11 @@ hand-waving; with it, phase 10 has a number to move.
 
 ### Phase 10 — vite dev pre-bundling + warmup (commit `efdf1dd9eb`)
 
-|                                | Cold profilerTotal | Cold navToReady |   Pre-`main:start` gap |
-| ------------------------------ | -----------------: | --------------: | ---------------------: |
-| phase 9 (`8df7ba14ea + ⚠`)     |           6,269 ms |       17,586 ms |              11,317 ms |
-| **phase 10** (`efdf1dd9eb + ⚠`)     |          11,007 ms |   **16,180 ms** |           **5,173 ms** |
-| delta                          |   +4,738 ms (boundary shift) | **−1,406 ms** | **−6,144 ms (−54%)** |
+|                                 |         Cold profilerTotal | Cold navToReady | Pre-`main:start` gap |
+| ------------------------------- | -------------------------: | --------------: | -------------------: |
+| phase 9 (`8df7ba14ea + ⚠`)      |                   6,269 ms |       17,586 ms |            11,317 ms |
+| **phase 10** (`efdf1dd9eb + ⚠`) |                  11,007 ms |   **16,180 ms** |         **5,173 ms** |
+| delta                           | +4,738 ms (boundary shift) |   **−1,406 ms** | **−6,144 ms (−54%)** |
 
 **Changes** (in [`packages/apps/composer-app/vite.config.ts`](vite.config.ts)):
 
@@ -924,7 +924,7 @@ hand-waving; with it, phase 10 has a number to move.
 phase-boundary shift as phase 2 in prod. With the warmup + pre-bundle,
 `main:start` fires earlier (less pre-`main:start` work), so `profilerTotal`
 measures more wall-clock — the lazy plugin chunks are still served as ESM
-in dev, and now their fetches and per-file transforms happen *inside* the
+in dev, and now their fetches and per-file transforms happen _inside_ the
 profiler window. The metric that matters end-to-end is `navToReady`, which
 dropped 1.4 s. The pre-`main:start` gap (the time vite is busy serving
 files while nothing's on screen) dropped 6.1 s — that's the actual user-

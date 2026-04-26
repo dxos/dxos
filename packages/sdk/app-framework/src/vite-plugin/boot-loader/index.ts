@@ -65,9 +65,7 @@ export const bootLoaderPlugin = ({ status = 'Loading…', markSvg }: BootLoaderO
       // raw HTML, not text-escaped) so the host can pass an SVG file's contents
       // straight through. Falls back to a single-line empty `<div>` so the
       // skeleton DOM stays predictable for the smoke-test selector.
-      const markChildren = markSvg
-        ? [{ tag: 'div', attrs: { id: 'boot-loader-mark' }, children: markSvg }]
-        : [];
+      const markChildren = markSvg ? [{ tag: 'div', attrs: { id: 'boot-loader-mark' }, children: markSvg }] : [];
 
       return [
         {

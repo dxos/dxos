@@ -67,13 +67,7 @@ const PLACEHOLDER_MARK = `
   </svg>
 `;
 
-const PHASES = [
-  'Loading…',
-  'Loading framework…',
-  'Reading configuration…',
-  'Starting services…',
-  'Loading plugins…',
-];
+const PHASES = ['Loading…', 'Loading framework…', 'Reading configuration…', 'Starting services…', 'Loading plugins…'];
 
 const CyclingStory = () => {
   const [index, setIndex] = useState(0);

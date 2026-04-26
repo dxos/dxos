@@ -204,13 +204,7 @@ export default defineConfig((env) => ({
     // navigations to `internal.html` / `devtools.html` / `reset.html` /
     // `script-frame/index.html` don't trip a "discovered new dependencies"
     // reload mid-session.
-    entries: [
-      './index.html',
-      './internal.html',
-      './devtools.html',
-      './reset.html',
-      './script-frame/index.html',
-    ],
+    entries: ['./index.html', './internal.html', './devtools.html', './reset.html', './script-frame/index.html'],
   },
   resolve: {
     alias: {
