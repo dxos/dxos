@@ -66,11 +66,7 @@ export const MagazineToolbar = composable<HTMLDivElement, MagazineToolbarProps>(
           }
         }}
       >
-        <Toolbar.ToggleGroupItem
-          value='starred'
-          aria-label={t('only-starred.label')}
-          title={t('only-starred.label')}
-        >
+        <Toolbar.ToggleGroupItem value='starred' aria-label={t('only-starred.label')} title={t('only-starred.label')}>
           <Icon icon={view === 'starred' ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem

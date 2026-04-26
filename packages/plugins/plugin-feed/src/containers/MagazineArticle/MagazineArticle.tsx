@@ -171,14 +171,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     // contents change (ECHO's reactive proxy is stable per-object).
     // Including `.length` and a content fingerprint as deps forces re-computation on
     // any add/remove, so the masonry tiles re-render after Curate / Clear.
-  }, [
-    subject.posts,
-    subject.posts.length,
-    subject.posts.map((ref) => ref.dxn.toString()).join(),
-    sort,
-    view,
-    starTag,
-  ]);
+  }, [subject.posts, subject.posts.length, subject.posts.map((ref) => ref.dxn.toString()).join(), sort, view, starTag]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
