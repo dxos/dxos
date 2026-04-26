@@ -67,54 +67,43 @@ export const Shimmer = ({ classNames, children, duration = 2000 }: ShimmerProps)
 
 **Why a `mask-image` gradient (not `background-clip: text`)** — the user's spec is "animates opacity from left to right across the text". A mask gradient modulates true alpha, so the consumer's `color` / theme tokens are preserved. Vercel `ai-elements` shimmer uses `background-clip: text` with two stacked gradients ([reference](https://github.com/vercel/ai-elements/blob/main/packages/elements/src/shimmer.tsx)), which forces a hard-coded color into the gradient and loses the consumer's `text-fg-*` token during the highlight pulse. Mask is the cleaner primitive and the better fit for a generic component.
 
-**CSS additions** in [packages/ui/ui-theme/src/css/theme/animation.css](../../../packages/ui/ui-theme/src/css/theme/animation.css). The existing `@theme { ... }` block (lines 5–229) already groups all keyframes and `--animate-*` tokens; the new keyframe and token are added inside that block, **before** the closing brace, alongside the existing `Shimmer` section:
+**CSS additions** are split across the two files that already serve these concerns in the project (`animation.css` for keyframes; `utilities.css` for `@utility` blocks). One new `@keyframes` block goes in [animation.css](../../../packages/ui/ui-theme/src/css/theme/animation.css) at the **top level of the file** (sibling of the existing `@theme { ... }` block). One new `@utility shimmer-text` block, plus the `prefers-reduced-motion` rule, goes in [utilities.css](../../../packages/ui/ui-theme/src/css/utilities.css) alongside the existing `dx-*` utilities. The keyframe is **not** placed inside `@theme` and there is no matching `--animate-shimmer-text` token, because we want a single source of truth — the `@utility shimmer-text` block — that bundles the keyframe reference together with the `mask-*` declarations and the reduced-motion fallback. Adding a `--animate-*` token would create a parallel `animate-shimmer-text` utility that does *only* `animation:`, leading to two ways to invoke the same effect. We pick one path: the consumer applies `shimmer-text`.
 
 ```css
-@theme {
-  /* ... existing content ... */
-
-  /**
-   * Shimmer (text)
-   * Sweeps a brighter band across text via mask alpha — preserves the consumer's color.
-   */
-  @keyframes shimmer-text {
-    from {
-      mask-position: 200% 0;
-      -webkit-mask-position: 200% 0;
-    }
-    to {
-      mask-position: -200% 0;
-      -webkit-mask-position: -200% 0;
-    }
+/* In animation.css, sibling of the existing @theme block. */
+@keyframes shimmer-text {
+  from {
+    mask-position-x: 0%;
+    -webkit-mask-position-x: 0%;
   }
-  --animate-shimmer-text: shimmer-text 2s linear infinite;
+  to {
+    mask-position-x: 100%;
+    -webkit-mask-position-x: 100%;
+  }
 }
-```
 
-Tailwind v4's `@theme` block exposes `--animate-shimmer-text` as the `animate-shimmer-text` utility, which only sets the `animation` shorthand. The supporting `mask-*` declarations and `prefers-reduced-motion` fallback live in a sibling `@utility` block in the same file (Tailwind v4 idiom for utilities that need multiple declarations):
-
-```css
+/* In utilities.css. */
 @utility shimmer-text {
   mask-image: linear-gradient(
     90deg,
     rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.35) 35%,
+    rgba(0, 0, 0, 0.35) 25%,
     rgba(0, 0, 0, 1) 50%,
-    rgba(0, 0, 0, 0.35) 65%,
+    rgba(0, 0, 0, 0.35) 75%,
     rgba(0, 0, 0, 0.35) 100%
   );
   -webkit-mask-image: linear-gradient(
     90deg,
     rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.35) 35%,
+    rgba(0, 0, 0, 0.35) 25%,
     rgba(0, 0, 0, 1) 50%,
-    rgba(0, 0, 0, 0.35) 65%,
+    rgba(0, 0, 0, 0.35) 75%,
     rgba(0, 0, 0, 0.35) 100%
   );
-  mask-size: 300% 100%;
-  -webkit-mask-size: 300% 100%;
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
+  mask-size: 200% 100%;
+  -webkit-mask-size: 200% 100%;
+  mask-repeat: repeat-x;
+  -webkit-mask-repeat: repeat-x;
   animation: shimmer-text 2s linear infinite;
 }
 
@@ -128,7 +117,9 @@ Tailwind v4's `@theme` block exposes `--animate-shimmer-text` as the `animate-sh
 }
 ```
 
-`mask-size: 300% 100%` plus a gradient that hits `0.35` at both ends gives a continuous shimmer with no visible "off" frame at the loop seam: the gradient is 3× the element width, and the keyframe slides the mask exactly 4× its width (from `200%` to `-200%`), so a fresh highlight is always entering as the previous one exits. The component class is `shimmer-text` (no `animate-` prefix) because `@utility` blocks register their selector verbatim. The existing `--animate-shimmer` (skeleton-overlay translateX, unused) is left untouched.
+**Mask geometry — why this combination is correct.** `mask-position` percentages do not translate by N% as you might expect; they resolve to `(containerSize − imageSize) × percentage`. With `mask-size: 200% 100%` the mask image is 2× the element width, so `mask-position-x: 0%` resolves to offset `0` (image spans `[0%, 200%]` of the element) and `mask-position-x: 100%` resolves to offset `−100%` (image spans `[−100%, 100%]`). With `mask-repeat: repeat-x`, the gradient is tiled horizontally, so the element is covered at every position. As the keyframe slides the offset from `0` to `−100%`, the element sees the gradient pattern shift continuously to the right by exactly one half-tile. The loop is seamless because the gradient is symmetric end-to-end (both endpoints sit at `0.35`, matching the next tile's starting point). No "translate via pseudo-element" trick needed; one element, pure CSS.
+
+**Why no `--animate-shimmer-text` token.** Tailwind v4 hoists `@keyframes` declared inside `@theme` only when paired with a matching `--animate-*` token. Since the keyframe lives at the top level here (not inside `@theme`), it is preserved as-is by the CSS bundler regardless of token presence. The existing `--animate-shimmer` token (skeleton-overlay translateX, unused) is left untouched.
 
 ### 2. Stopwatch
 
@@ -221,7 +212,8 @@ packages/ui/react-ui-components/
       TextCrawl.stories.tsx
     index.ts                       # add ./Shimmer + ./Stopwatch
 
-packages/ui/ui-theme/src/css/theme/animation.css   # add shimmer-text keyframe + token
+packages/ui/ui-theme/src/css/theme/animation.css   # add @keyframes shimmer-text (top-level) + reduced-motion @media block
+packages/ui/ui-theme/src/css/utilities.css         # add @utility shimmer-text + reduced-motion fallback for shimmer-text class
 ```
 
 `@dxos/react-ui-components`'s `src/index.ts` re-exports `./components`, so the new components automatically land on the public surface. There is no separate `experimental/` barrel — "experimental" is a Storybook organization decision only.
@@ -256,7 +248,7 @@ No new unit tests — the components are CSS-driven and the time-formatting help
 ## Risks
 
 - **Mask-image browser support** — Safari < 16 needs `-webkit-mask-*` prefixes. The `@utility` block writes both. All other targets supported per [caniuse mask](https://caniuse.com/css-masks).
-- **Tailwind v4 `@utility` validation** — `@utility` blocks must be at the top level of the file (not nested in `@theme`). The implementation places it as a sibling of `@theme`. If the existing build doesn't recognize `@utility` (e.g. older Tailwind v4 milestone), fall back to a plain `.shimmer-text` class declaration in the same file — Tailwind v4 preserves unknown classes pass-through.
+- **Tailwind v4 `@utility` validation** — `@utility` blocks must be at the top level of the file (not nested in `@theme`). The implementation places both the keyframe and the `@utility shimmer-text` block as siblings of `@theme` (the project already uses this idiom; verify in `packages/ui/ui-theme/src/css/theme/utilities.css`). If the existing build doesn't recognize `@utility` (e.g. older Tailwind v4 milestone), fall back to a plain `.shimmer-text { ... }` rule in the same file — functionally identical for our purposes.
 - **Storybook title placement** — the spec asserts the experimental group sits under `ui/react-ui-components/experimental/...`. Implementation must verify by running storybook locally before merging; sibling stories use exactly this prefix (`title: 'ui/react-ui-components/<Component>'`), so adding the `experimental/` segment is consistent.
 - **Stopwatch tick alignment** — `setInterval` drifts under tab-throttling; using a self-rescheduling `setTimeout` aligned to `Date.now()` plus the `Math.max(0, …)` clamp makes us robust against throttling, visibility-state pauses, and future-`start` values.
 - **TextCrawl reduced-motion regression** — the existing four stories must continue to render and progress identically when reduced-motion is NOT set. Implementation verifies all four stories (Default, Cyclic, Controlled, Numbers) under both states before merging.
