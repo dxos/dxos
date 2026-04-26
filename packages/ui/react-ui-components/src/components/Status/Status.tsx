@@ -59,13 +59,24 @@ const Root = forwardRef<StatusController, RootProps>(
         return;
       }
 
+      // Anchor to a wall-clock timestamp so `elapsed` self-corrects after
+      // tab-throttling: browsers clamp setTimeout to >=1s in inactive tabs
+      // and >=1min when the page is hidden, so a count-the-ticks approach
+      // would under-report after a background period. Computing elapsed from
+      // (Date.now() - startedAt) restores the true wall-clock value on the
+      // next fired tick. The initial elapsed (preserved across stop/start)
+      // is folded into the anchor so paused intervals are excluded.
+      const startedAt = Date.now() - elapsed * TICK_MS;
       let timeout: ReturnType<typeof setTimeout>;
       const tick = () => {
-        setElapsed((e) => e + 1);
+        setElapsed(Math.floor((Date.now() - startedAt) / TICK_MS));
         timeout = setTimeout(tick, TICK_MS - (Date.now() % TICK_MS));
       };
       timeout = setTimeout(tick, TICK_MS - (Date.now() % TICK_MS));
       return () => clearTimeout(timeout);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- `elapsed` is
+      // captured once at resume; depending on it would restart the timer on
+      // every tick.
     }, [running]);
 
     useImperativeHandle(
