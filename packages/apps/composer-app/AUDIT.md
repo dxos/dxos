@@ -694,12 +694,12 @@ ledger now has more failure-mode surface area; future maintenance should
 keep an eye on the warm-test flake (currently a known issue tracked in
 the test's comment).
 
-### Phase 6 — production telemetry (commit `<TBD>`)
+### Phase 6 — production telemetry (commit `0b39281ade`)
 
 |                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
 | -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
 | phase 5 (`ca88ace276 + ⚠`) |           5,538 ms |        8,762 ms |           3,645 ms |                5,090 ms |
-| **phase 6** (`<TBD> + ⚠`)  |       **5,548 ms** |    **8,697 ms** |       **3,649 ms** |            **5,079 ms** |
+| **phase 6** (`0b39281ade + ⚠`)  |       **5,548 ms** |    **8,697 ms** |       **3,649 ms** |            **5,079 ms** |
 | delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
 
 **Changes:**
@@ -737,3 +737,39 @@ measurements only" to "top-5 slowest modules per real session in
 PostHog". The first time someone runs into a slow plugin in production,
 we'll see it in aggregate before any individual report. Net: cheap at
 the implementation cost, valuable at the ops scale.
+
+### Phase 7 — instrumentation completeness (commit `<TBD>`)
+
+|                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
+| -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
+| phase 6 (`0b39281ade + ⚠`) |           5,548 ms |        8,697 ms |           3,649 ms |                5,079 ms |
+| **phase 7** (`<TBD> + ⚠`)  |       **5,425 ms** |    **8,806 ms** |       **3,497 ms** |            **5,118 ms** |
+| delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
+
+**Changes:**
+
+- **7a. `?profiler=1` default in dev builds.** [`main.tsx`](src/main.tsx) —
+  `isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV))`.
+  Every devloop now produces an auto-recorded ledger row + console table
+  + `composer.startup` PostHog event without remembering the flag.
+  Production explicitly opts in (or out) via the URL parameter as before.
+- **7b. `BroadcastChannel` snapshot.** [`profiler.ts`](src/profiler.ts) —
+  `dump()` now also `postMessage`s the `ProfilerSnapshot` JSON on a
+  `BroadcastChannel` named `org.dxos.composer.startup-profile` (exposed
+  as `BROADCAST_CHANNEL_NAME`). Best-effort: wrapped in `try/catch` and
+  guarded by `typeof BroadcastChannel !== 'undefined'` for embedded
+  webviews. localStorage persistence stays intact for tabs that need
+  cross-reload comparison.
+
+**Why BroadcastChannel and not just keep using localStorage:** localStorage
+requires polling; a devtools panel either polls every N ms (wasteful) or
+uses the `storage` event (inconsistent across browsers, doesn't fire in
+the same tab that wrote the value). `BroadcastChannel` is push-based,
+fires in-tab and cross-tab uniformly, and was specifically designed for
+this kind of fan-out.
+
+**Complexity vs. benefit:** very small diff (~10 lines total) and zero
+behavioural change at runtime. The harness numbers are flat. Benefit is
+small but real: dev productivity (no flag-remembering) plus a clean
+push-based subscription channel for any future devtools panel. Net:
+cheap, additive, stays out of the way.

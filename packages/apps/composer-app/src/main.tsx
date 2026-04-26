@@ -78,7 +78,14 @@ const main = async () => {
     setSafeModeUrl(false);
   }
 
-  const profiler = isTrue(url.searchParams.get(PARAM_PROFILER), false) ? startupProfiler() : undefined;
+  // Phase 7a: enable the profiler by default in dev builds so every devloop
+  // produces ledger-able numbers without remembering the `?profiler=1` flag.
+  // Production explicitly opts in (or out) via the URL parameter.
+  const profilerEnabled = isTrue(
+    url.searchParams.get(PARAM_PROFILER),
+    Boolean(import.meta.env?.DEV),
+  );
+  const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
