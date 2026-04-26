@@ -11,7 +11,7 @@
 const DEFAULT_SNIPPET_LENGTH = 280;
 
 /** Decode numeric (decimal + hex) and a handful of common named HTML entities. */
-const decodeEntities = (input: string): string =>
+export const decodeEntities = (input: string): string =>
   input
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) => {
       const cp = Number.parseInt(hex, 16);
