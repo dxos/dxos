@@ -21,6 +21,26 @@ window.__bootLoader = {
       element.textContent = text;
     }
   },
+  /**
+   * Switch the progress bar from the default indeterminate slide animation
+   * to a determinate fill at `fraction` ∈ [0, 1]. Calling this once flips the
+   * `[data-determinate]` flag; subsequent calls just update the percentage.
+   * Pass a value < 0 (or omit) to revert to indeterminate.
+   */
+  progress: function (fraction) {
+    var element = document.getElementById('boot-loader-bar');
+    if (!element) {
+      return;
+    }
+    if (typeof fraction !== 'number' || fraction < 0) {
+      element.removeAttribute('data-determinate');
+      element.style.removeProperty('--boot-loader-bar-progress');
+      return;
+    }
+    var clamped = Math.max(0, Math.min(1, fraction));
+    element.setAttribute('data-determinate', '');
+    element.style.setProperty('--boot-loader-bar-progress', String(clamped * 100));
+  },
   dismiss: function () {
     var element = document.getElementById('boot-loader');
     if (element && element.parentNode) {

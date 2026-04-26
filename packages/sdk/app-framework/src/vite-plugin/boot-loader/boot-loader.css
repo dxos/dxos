@@ -47,7 +47,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.25;
+  opacity: 0.1;
 }
 
 #boot-loader-mark svg {
@@ -83,6 +83,20 @@
   100% {
     transform: translateX(250%);
   }
+}
+
+/*
+ * Determinate state — host called `window.__bootLoader.progress(fraction)`.
+ * Cancel the slide animation and pin the fill to whatever percentage the
+ * driver wrote into `--boot-loader-bar-progress` (0–100). The transition on
+ * `width` smooths the transitions between counter ticks so the fill grows
+ * continuously rather than snapping.
+ */
+#boot-loader-bar[data-determinate]::before {
+  width: calc(var(--boot-loader-bar-progress, 0) * 1%);
+  animation: none;
+  transform: none;
+  transition: width 240ms ease-out;
 }
 
 #boot-loader-status {

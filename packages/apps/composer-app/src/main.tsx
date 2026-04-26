@@ -58,9 +58,16 @@ declare global {
     /**
      * Native-DOM boot loader driver injected by `bootLoaderPlugin`
      * (`@dxos/app-framework/vite-plugin`). `status()` updates the visible
-     * status line; `dismiss()` removes the loader after React mounts.
+     * status line; `progress(fraction)` switches the bar from the
+     * indeterminate slide to a determinate fill at `fraction` ∈ [0, 1] (or
+     * pass a negative value / omit to revert to indeterminate); `dismiss()`
+     * removes the loader after React mounts.
      */
-    __bootLoader?: { status: (text: string) => void; dismiss: () => void };
+    __bootLoader?: {
+      status: (text: string) => void;
+      progress: (fraction?: number) => void;
+      dismiss: () => void;
+    };
   }
 }
 
@@ -358,7 +365,12 @@ const main = async () => {
   bootStatus('Loading plugins…');
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
-      onPluginLoaded: (loaded, total) => bootStatus(`Loading plugins (${loaded}/${total})…`),
+      onPluginLoaded: (loaded, total) => {
+        bootStatus(`Loading plugins (${loaded}/${total})…`);
+        // Drive the determinate progress bar — flips the bar out of its
+        // indeterminate slide animation and grows it as chunks land.
+        window.__bootLoader?.progress(loaded / total);
+      },
     }),
     UrlLoader.preload().catch((error) => {
       log.warn('failed to preload remote plugins', { error });
@@ -366,6 +378,7 @@ const main = async () => {
     }),
   ]);
   bootStatus('Almost ready…');
+  window.__bootLoader?.progress(1);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins);

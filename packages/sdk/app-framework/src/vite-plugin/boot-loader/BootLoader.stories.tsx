@@ -27,18 +27,35 @@ type BootLoaderProps = {
    * inherits the loader's text colour.
    */
   markSvg?: string;
+  /**
+   * Optional progress fraction in [0, 1]. When set, switches the bar from
+   * the default indeterminate slide animation to a determinate fill.
+   */
+  progress?: number;
 };
 
-const BootLoader = ({ status = 'Loading…', markSvg }: BootLoaderProps) => (
-  <>
-    <style>{css}</style>
-    <div id='boot-loader' role='status' aria-live='polite' aria-label='Initializing'>
-      {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
-      <div id='boot-loader-bar' />
-      <div id='boot-loader-status'>{status}</div>
-    </div>
-  </>
-);
+const BootLoader = ({ status = 'Loading…', markSvg, progress }: BootLoaderProps) => {
+  const determinate = typeof progress === 'number' && progress >= 0;
+  const clamped = determinate ? Math.max(0, Math.min(1, progress!)) : 0;
+  return (
+    <>
+      <style>{css}</style>
+      <div id='boot-loader' role='status' aria-live='polite' aria-label='Initializing'>
+        {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
+        <div
+          id='boot-loader-bar'
+          {...(determinate
+            ? {
+                'data-determinate': '',
+                style: { ['--boot-loader-bar-progress' as string]: String(clamped * 100) },
+              }
+            : {})}
+        />
+        <div id='boot-loader-status'>{status}</div>
+      </div>
+    </>
+  );
+};
 
 // Stand-in mark — keeps storybook self-contained (the production app pipes in
 // `packages/ui/brand/assets/icons/composer-icon-monochrome.svg` from
@@ -67,6 +84,25 @@ const CyclingStory = () => {
     return () => clearInterval(handle);
   }, []);
   return <BootLoader status={PHASES[index]} markSvg={PLACEHOLDER_MARK} />;
+};
+
+const DeterminateStory = () => {
+  // Walk progress 0 → 1 over 6 s, mirroring composer's plugin counter.
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const total = 59;
+    let loaded = 0;
+    const handle = setInterval(() => {
+      loaded += 1;
+      setProgress(loaded / total);
+      if (loaded >= total) {
+        clearInterval(handle);
+      }
+    }, 100);
+    return () => clearInterval(handle);
+  }, []);
+  const status = progress >= 1 ? 'Almost ready…' : `Loading plugins (${Math.round(progress * 59)}/59)…`;
+  return <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />;
 };
 
 const meta: Meta<typeof BootLoader> = {
@@ -109,4 +145,13 @@ export const WithMark: Story = {
  */
 export const Cycling: Story = {
   render: () => <CyclingStory />,
+};
+
+/**
+ * Determinate progress bar driven by `__bootLoader.progress(fraction)`.
+ * Mirrors composer-app's behaviour during the `getPlugins` phase — the bar
+ * fills 0 → 100% as plugin chunks resolve.
+ */
+export const Determinate: Story = {
+  render: () => <DeterminateStory />,
 };
