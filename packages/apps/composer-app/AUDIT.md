@@ -836,7 +836,7 @@ Net: clearly worth it for first-impression polish.
 |     7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`               | flat perf, dev ergonomics                |
 |     8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                 |
 |     9 | Dev-server harness (`dev-cold` scenario)             | `8df7ba14ea`               | first `dev-cold` measurement             |
-|    10 | Vite dev pre-bundling + `server.warmup`              | `<TBD>`                    | dev `navToReady` −1.4 s; pre-`main:start` −6.1 s |
+|    10 | Vite dev pre-bundling + `server.warmup`              | `efdf1dd9eb`                    | dev `navToReady` −1.4 s; pre-`main:start` −6.1 s |
 
 Headline cumulative (production preview): cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
 cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%. Dev:
@@ -895,12 +895,12 @@ behavioural change. Benefit: **first quantitative dev-server measurement
 on this branch.** Without it, all dev-server optimization talk is
 hand-waving; with it, phase 10 has a number to move.
 
-### Phase 10 — vite dev pre-bundling + warmup (commit `<TBD>`)
+### Phase 10 — vite dev pre-bundling + warmup (commit `efdf1dd9eb`)
 
 |                                | Cold profilerTotal | Cold navToReady |   Pre-`main:start` gap |
 | ------------------------------ | -----------------: | --------------: | ---------------------: |
 | phase 9 (`8df7ba14ea + ⚠`)     |           6,269 ms |       17,586 ms |              11,317 ms |
-| **phase 10** (`<TBD> + ⚠`)     |          11,007 ms |   **16,180 ms** |           **5,173 ms** |
+| **phase 10** (`efdf1dd9eb + ⚠`)     |          11,007 ms |   **16,180 ms** |           **5,173 ms** |
 | delta                          |   +4,738 ms (boundary shift) | **−1,406 ms** | **−6,144 ms (−54%)** |
 
 **Changes** (in [`packages/apps/composer-app/vite.config.ts`](vite.config.ts)):
