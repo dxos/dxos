@@ -261,7 +261,7 @@ Visual verification via Storybook is the primary acceptance gate (these are pres
 3. Confirm Storybook tree has a top-level `experimental/` group containing only `Shimmer` and `Stopwatch`.
 4. Confirm existing TextCrawl stories still pass and behave identically (same scroll / timing / cyclic behavior).
 
-No new unit tests — the components are CSS-driven and the time-formatting helper for Stopwatch is the only piece worth a vitest. A small `Stopwatch.test.ts` covers the three format tiers and the `0s`/`60s`/`3600s` boundaries.
+No new unit tests — the components are CSS-driven and the time-formatting helper for Stopwatch is the only piece worth a vitest. A small `formatElapsed.test.ts` (placed next to the helper, in its own module so the TDD step is atomic) covers the three format tiers and the `0s`/`60s`/`3600s` boundaries.
 
 ## Risks
 

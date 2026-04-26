@@ -190,24 +190,24 @@ Expected: success.
 
 - [ ] **Step 2: Start storybook**
 
-Run: `moon run react-ui-components:storybook` (or `moon run storybook-react:serve` per CLAUDE.md). Leave it running in the background for the rest of the chunks; tear down only when the whole plan is done.
+Run: `moon run storybook-react:serve` (per CLAUDE.md). Leave it running in the background for the rest of the chunks; tear down only when the whole plan is done.
 Expected: dev server starts without errors. We're not opening any story yet — this is just confirming the CSS edits don't break the Tailwind v4 pipeline.
 
 - [ ] **Step 3: If the build fails**
 
-Apply the **rollback path** documented in the spec:
+Apply the **rollback path** documented in the spec — but note that two of the four steps cannot land yet because they touch `Shimmer.tsx`, which doesn't exist until Chunk 2:
 
-1. Move `@keyframes shimmer-text` from top-level of `animation.css` into the `@theme { … }` block.
-2. Inside `@theme`, immediately after the keyframe, add:
+1. **Now (in Chunk 1):** Move `@keyframes shimmer-text` from top-level of `animation.css` into the `@theme { … }` block.
+2. **Now:** Inside `@theme`, immediately after the keyframe, add:
 
    ```css
    --animate-shimmer-text: shimmer-text 2s linear infinite;
    ```
 
-3. Remove the `animation: shimmer-text 2s linear infinite;` line from the `@utility shimmer-text` block in `utilities.css`.
-4. Update Shimmer.tsx (Chunk 2) to apply both classes: `'shimmer-text animate-shimmer-text'` instead of just `'shimmer-text'`.
+3. **Now:** Remove the `animation: shimmer-text 2s linear infinite;` line from the `@utility shimmer-text` block in `utilities.css`.
+4. **Deferred — apply during Task 2.1:** when authoring `Shimmer.tsx`, change the `className` from `'inline-block shimmer-text'` to `'inline-block shimmer-text animate-shimmer-text'`.
 
-If the rollback is needed, commit it as a separate commit with message `fix(ui-theme): move shimmer-text keyframe into @theme for Tailwind v4 compat`.
+If steps 1-3 are needed, commit them as a separate commit with message `fix(ui-theme): move shimmer-text keyframe into @theme for Tailwind v4 compat`. Add a TODO note next to Task 2.1 in your local todo list to remember step 4.
 
 ---
 
@@ -363,23 +363,27 @@ export const WithCustomColor: Story = {
   },
 };
 
-export const SlowCadence: Story = {
-  args: {
-    duration: 4_000,
-    children: '4 second cycle',
-  },
-};
-
 /**
- * Forces the `prefers-reduced-motion` media query via a story-scoped style tag, so
- * reviewers can inspect the dimmed fallback without changing OS settings.
+ * Inspects the dimmed fallback without changing OS settings — the decorator
+ * unconditionally applies the same declarations the production CSS uses
+ * inside `@media (prefers-reduced-motion: reduce)`. The `force-reduced-motion`
+ * class is local to this story and does NOT exist anywhere else in the codebase.
  */
 export const ReducedMotion: Story = {
   decorators: [
     (Story) => (
       <>
-        <style>{'@media (prefers-reduced-motion: no-preference) { .shimmer-text { animation-play-state: paused !important; opacity: 0.6 !important; mask-image: none !important; -webkit-mask-image: none !important; } }'}</style>
-        <Story />
+        <style>
+          {`.force-reduced-motion .shimmer-text {
+              animation: none;
+              mask-image: none;
+              -webkit-mask-image: none;
+              opacity: 0.6;
+            }`}
+        </style>
+        <div className='force-reduced-motion'>
+          <Story />
+        </div>
       </>
     ),
   ],
@@ -389,7 +393,7 @@ export const ReducedMotion: Story = {
 };
 ```
 
-> **Note on the `ReducedMotion` story decorator.** The decorator inverts the media query so that the fallback styles apply *unless* the user has reduced-motion enabled. This is a story-only convenience; the production CSS uses the standard `prefers-reduced-motion: reduce` query.
+> **Note on the `ReducedMotion` story decorator.** It does not touch the `prefers-reduced-motion` media query at all; it just unconditionally applies the same CSS declarations the production query uses, scoped under a `force-reduced-motion` parent class. This means the story shows the fallback regardless of the OS setting — which is the right behavior for a visual reference.
 
 - [ ] **Step 2: Verify build**
 
@@ -403,7 +407,6 @@ Open the running storybook (from Task 1.4) and navigate to **ui/react-ui-compone
 - `Default` — "Thinking…" text shimmers with a left → right pulse roughly every 2s.
 - `LongText` — pulse traverses the full wrapped paragraph, including line breaks (each line shimmers independently because the gradient is per-line in the mask).
 - `WithCustomColor` — text is sky-blue; the shimmer modulates only opacity, not color.
-- `SlowCadence` — pulse takes 4s per cycle.
 - `ReducedMotion` — text is dimly visible at constant ~60% opacity, no animation.
 
 If the pulse appears to teleport or jitter at the loop seam, the rollback path from Task 1.4 may be needed.
@@ -423,8 +426,10 @@ The Stopwatch has two parts: a pure `formatElapsed` helper (covered by unit test
 
 ### Task 3.1: TDD — write the formatElapsed test first
 
+`formatElapsed` lives in its own module so the TDD chunk produces a clean atomic commit (test + helper, no scaffolding).
+
 **Files:**
-- Create: `packages/ui/react-ui-components/src/components/Stopwatch/Stopwatch.test.ts`
+- Create: `packages/ui/react-ui-components/src/components/Stopwatch/formatElapsed.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -435,7 +440,7 @@ The Stopwatch has two parts: a pure `formatElapsed` helper (covered by unit test
 
 import { describe, test } from 'vitest';
 
-import { formatElapsed } from './Stopwatch';
+import { formatElapsed } from './formatElapsed';
 
 describe('formatElapsed', () => {
   test('zero returns 0s', ({ expect }) => {
@@ -481,24 +486,20 @@ describe('formatElapsed', () => {
 
 - [ ] **Step 2: Run the test, expect import failure**
 
-Run: `moon run react-ui-components:test -- src/components/Stopwatch/Stopwatch.test.ts`
-Expected: FAIL — module `./Stopwatch` does not exist.
+Run: `moon run react-ui-components:test -- src/components/Stopwatch/formatElapsed.test.ts`
+Expected: FAIL — module `./formatElapsed` does not exist.
 
 ### Task 3.2: Implement formatElapsed (minimum to pass)
 
 **Files:**
-- Create: `packages/ui/react-ui-components/src/components/Stopwatch/Stopwatch.tsx` (formatElapsed only for now; component skeleton next task)
+- Create: `packages/ui/react-ui-components/src/components/Stopwatch/formatElapsed.ts`
 
 - [ ] **Step 1: Implement and export**
 
-Initial contents (component placeholder added so the file is valid; expanded in Task 3.3):
-
-```tsx
+```ts
 //
 // Copyright 2025 DXOS.org
 //
-
-import React from 'react';
 
 const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
@@ -523,14 +524,11 @@ export const formatElapsed = (ms: number): string => {
   const m = Math.floor((safe % HOUR) / MINUTE);
   return `${h}h ${m}m`;
 };
-
-// Component arrives in the next task; placeholder export keeps the barrel valid early.
-export const Stopwatch = () => null;
 ```
 
 - [ ] **Step 2: Run the tests, expect pass**
 
-Run: `moon run react-ui-components:test -- src/components/Stopwatch/Stopwatch.test.ts`
+Run: `moon run react-ui-components:test -- src/components/Stopwatch/formatElapsed.test.ts`
 Expected: PASS — all 7 tests green.
 
 - [ ] **Step 3: Commit**
@@ -540,14 +538,12 @@ git add packages/ui/react-ui-components/src/components/Stopwatch
 git commit -m "feat(react-ui-components): add formatElapsed helper with tiered duration formatting"
 ```
 
-### Task 3.3: Replace the Stopwatch placeholder with the real component
+### Task 3.3: Create the Stopwatch component
 
 **Files:**
-- Modify: `packages/ui/react-ui-components/src/components/Stopwatch/Stopwatch.tsx`
+- Create: `packages/ui/react-ui-components/src/components/Stopwatch/Stopwatch.tsx`
 
-- [ ] **Step 1: Replace the placeholder**
-
-Replace the entire file with:
+- [ ] **Step 1: Write the component**
 
 ```tsx
 //
@@ -559,29 +555,9 @@ import React, { type ReactNode, useEffect, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-const SECOND = 1_000;
-const MINUTE = 60 * SECOND;
-const HOUR = 60 * MINUTE;
+import { formatElapsed } from './formatElapsed';
 
-/**
- * Formats elapsed milliseconds as a human-readable duration.
- * Tiers: `Ns` (< 60s), `Nm Xs` (< 60m), `Nh Xm` (≥ 60m).
- * Negative inputs clamp to `0s`.
- */
-export const formatElapsed = (ms: number): string => {
-  const safe = Math.max(0, ms);
-  if (safe < MINUTE) {
-    return `${Math.floor(safe / SECOND)}s`;
-  }
-  if (safe < HOUR) {
-    const m = Math.floor(safe / MINUTE);
-    const s = Math.floor((safe % MINUTE) / SECOND);
-    return `${m}m ${s}s`;
-  }
-  const h = Math.floor(safe / HOUR);
-  const m = Math.floor((safe % HOUR) / MINUTE);
-  return `${h}h ${m}m`;
-};
+const SECOND = 1_000;
 
 export type StopwatchProps = ThemedClassName<{
   /** Start time (epoch ms). Defaults to first-mount time. */
@@ -644,12 +620,7 @@ const DefaultIcon = () => (
 
 > **Why a self-rescheduling `setTimeout` instead of `setInterval`.** `setInterval` drifts under tab throttling and visibility-state changes. `setTimeout` aligned to `SECOND - (elapsed % SECOND)` always wakes up at the next whole-second boundary relative to the start time, so multiple Stopwatch instances advance in lockstep regardless of when each was mounted.
 
-- [ ] **Step 2: Re-run the tests**
-
-Run: `moon run react-ui-components:test -- src/components/Stopwatch/Stopwatch.test.ts`
-Expected: PASS — formatElapsed unchanged, all 7 tests still green.
-
-- [ ] **Step 3: Build**
+- [ ] **Step 2: Build**
 
 Run: `moon run react-ui-components:build`
 Expected: success.
@@ -925,7 +896,8 @@ Navigate to **ui/react-ui-components/TextCrawl** and confirm:
 
 Then enable reduced-motion (macOS: **System Settings → Accessibility → Display → Reduce motion**, or via the browser DevTools' "Emulate CSS media feature prefers-reduced-motion") and reload. Confirm:
 
-- All four stories advance through their lines but do so instantly (no scroll animation, no opacity fade).
+- The auto-advance cadence (`minDuration`) is unchanged — lines still progress at the same rate.
+- The *visual* transition between lines is now instant: lines snap into place with no scroll animation, and the active-line opacity flips abruptly with no fade.
 
 - [ ] **Step 7: Commit**
 
