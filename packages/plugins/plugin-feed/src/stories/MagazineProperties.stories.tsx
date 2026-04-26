@@ -59,11 +59,16 @@ const meta = {
             url: 'https://vercel.com/changelog/feed',
           }),
         );
-        space.db.add(
+        const magazine = space.db.add(
           Magazine.make({
             name: 'Distributed Systems Reading',
           }),
         );
+        // Expose the magazine + space on `window` so the play function can
+        // assert directly against the underlying ECHO state (e.g. that
+        // `magazine.feeds` actually grew after the create-feed flow).
+        (globalThis as any).__feedTestMagazine = magazine;
+        (globalThis as any).__feedTestSpace = space;
       },
     }),
   ],
@@ -151,14 +156,30 @@ export const CreateFeed: Story = {
     await userEvent.click(saveButton);
 
     // Allow any async state updates to flush.
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // After Save: the create form is dismissed. Asserting on the underlying
-    // `magazine.feeds` array would require a `withClientProvider` debug-symbol
-    // hook on this story — that's covered by the unit tests in
-    // `react-ui-form/.../ObjectProperties.test.tsx` (Note schema mirrors Feed's
-    // shape: hidden required Ref + factory). Here we just verify the visible
-    // dismissal.
+    // After Save: the create form is dismissed.
     await expect(body.queryByTestId('create-referenced-object-form')).not.toBeInTheDocument();
+
+    // First diagnose: the new Feed must exist in space.db. If this passes
+    // but the magazine.feeds assertion below fails, the bug is in the
+    // RefField → form → ObjectProperties.handleChange wiring (the user-
+    // reported "feed created but not linked" symptom).
+    const space = (globalThis as any).__feedTestSpace;
+    const allFeeds = await space.db.query(Filter.type(Subscription.Feed)).run();
+    const newFeed = allFeeds.find((feed: Subscription.Feed) => feed.name === 'My Brand New Blog');
+    await expect(newFeed, 'new Feed with name "My Brand New Blog" should be in the database').toBeDefined();
+
+    // Second: the magazine.feeds array must contain a Ref to that new Feed.
+    const magazine = (globalThis as any).__feedTestMagazine as Magazine.Magazine | undefined;
+    await expect(magazine).toBeDefined();
+    await expect(magazine!.feeds.length, 'magazine.feeds should grow by 1 after Create + Save').toBe(1);
+
+    // Third: that Ref must point to the new Feed (not some other pre-seeded
+    // one — guards against an off-by-one bug in the create flow that would
+    // overwrite the slot with a stale ref).
+    const linkedId = magazine!.feeds[0]?.dxn.toString().split(':').pop();
+    const newId = (newFeed as any).id;
+    await expect(linkedId, 'magazine.feeds[0] should reference the newly-created Feed').toBe(newId);
   },
 };
