@@ -227,25 +227,34 @@ test.describe.serial('Startup timing harness', () => {
   });
 
   test('boot loader paints before bundle is parsed', async ({ browser }) => {
-    // Verifies the native-DOM loader (inline in `index.html`) is on screen before
-    // `main.tsx` finishes executing. We can't rely on locator-based waits here,
-    // because by the time Playwright actuates them React may already have
-    // replaced #root and torn the loader DOM down. Instead, capture both signals
-    // (`__bootLoader.status` defined; `#boot-loader` rendered) inside the same
-    // initial-script block so the assertion runs *before* any user JS executes.
+    // Verifies the native-DOM loader (inline in `index.html`) is on screen
+    // before `main.tsx` finishes executing. The capture has to happen *at*
+    // `DOMContentLoaded` — not later via a locator query — because by the
+    // time Playwright would actuate one, React may already have committed
+    // its replacement and dismissed the loader. We register a one-shot
+    // listener inside `addInitScript` (which runs before any page script)
+    // that snapshots the state into `__bootLoaderSnapshot`; the assertion
+    // then reads that frozen snapshot, so future timing changes can't
+    // quietly turn this into a flake.
     const context = await browser.newContext();
     const page = await context.newPage();
 
     await page.addInitScript(() => {
-      (window as any).__bootLoaderSnapshot = () => ({
-        hasDriver: typeof (window as any).__bootLoader?.status === 'function',
-        bootLoaderInDom: !!document.getElementById('boot-loader'),
-        bootLoaderAriaLabel: document.getElementById('boot-loader')?.getAttribute('aria-label') ?? null,
-      });
+      const capture = () => {
+        (window as any).__bootLoaderSnapshot = {
+          hasDriver: typeof (window as any).__bootLoader?.status === 'function',
+          bootLoaderInDom: !!document.getElementById('boot-loader'),
+          bootLoaderAriaLabel: document.getElementById('boot-loader')?.getAttribute('aria-label') ?? null,
+        };
+      };
+      // `DOMContentLoaded` already fires once #root and the boot-loader DOM
+      // are parsed, but well before React's `createRoot.render(...)`.
+      document.addEventListener('DOMContentLoaded', capture, { once: true });
     });
     await page.goto(`${INITIAL_URL}/?profiler=1`, { waitUntil: 'domcontentloaded' });
 
-    const snapshot = await page.evaluate(() => (window as any).__bootLoaderSnapshot());
+    const snapshot = await page.evaluate(() => (window as any).__bootLoaderSnapshot);
+    expect(snapshot).toBeTruthy();
     expect(snapshot.bootLoaderInDom).toBe(true);
     expect(snapshot.bootLoaderAriaLabel).toBe('Initializing');
     expect(snapshot.hasDriver).toBe(true);

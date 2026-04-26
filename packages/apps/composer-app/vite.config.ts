@@ -356,9 +356,20 @@ export default defineConfig((env) => ({
     // Phase 8b: hand the boot loader the Composer brand mark so the visual
     // identity is established before any JS bundle parses. The SVG uses
     // `fill="currentColor"`, so it picks up the loader's `prefers-color-scheme`
-    // text colour and ships as ~1.6 KB of inline markup.
+    // text colour and ships as ~1.6 KB of inline markup. Wrapped in try/catch
+    // so an asset rename or move only loses the brand mark — the loader still
+    // renders the bar + status without it.
     bootLoaderPlugin({
-      markSvg: readFileSync(path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg'), 'utf8'),
+      markSvg: (() => {
+        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg');
+        try {
+          return readFileSync(markPath, 'utf8');
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn(`bootLoaderPlugin: composer brand mark not found at ${markPath}; running without mark.`, error);
+          return undefined;
+        }
+      })(),
     }),
 
     VitePWA({
